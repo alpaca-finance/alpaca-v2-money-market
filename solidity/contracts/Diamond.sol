@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 /******************************************************************************\
-* Author: Nick Mudge <nick@perfectabstractions.com> (https://twitter.com/mudgen)
+* Imported from: https://github.com/mudgen/diamond-3-hardhat
 * EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
 *
 * Implementation of a diamond.
