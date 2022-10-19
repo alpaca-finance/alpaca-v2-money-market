@@ -1,6 +1,6 @@
 [profile.default]
 src = 'solidity/contracts'
 out = 'out'
-libs = ['lib']
+libs = ['node_modules']
 test = 'solidity/tests'
 fs_permissions = [{ access = "read-write", path = "./"}]
