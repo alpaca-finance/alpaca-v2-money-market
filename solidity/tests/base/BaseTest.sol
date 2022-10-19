@@ -13,6 +13,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 import { DepositFacet, IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
+import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -30,8 +31,12 @@ contract BaseTest is DSTest {
 
   MockERC20 internal weth;
 
+  MockERC20 internal ibWeth;
+
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
+
+    ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -46,6 +51,7 @@ contract BaseTest is DSTest {
 
     deployDiamondLoupeFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployDepositFacet(DiamondCutFacet(address(moneyMarketDiamond)));
+    deployAdminFacet(DiamondCutFacet(address(moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(moneyMarketDiamond)));
 
@@ -119,6 +125,27 @@ contract BaseTest is DSTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (depositFacet, selectors);
+  }
+
+  function deployAdminFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (AdminFacet, bytes4[] memory)
+  {
+    AdminFacet adminFacet = new AdminFacet();
+
+    bytes4[] memory selectors = new bytes4[](3);
+    selectors[0] = adminFacet.setTokenToIbTokens.selector;
+    selectors[1] = adminFacet.tokenToIbTokens.selector;
+    selectors[2] = adminFacet.ibTokenToTokens.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(adminFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (adminFacet, selectors);
   }
 
   function deployMockErc20(

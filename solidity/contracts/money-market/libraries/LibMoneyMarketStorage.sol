@@ -8,8 +8,8 @@ library LibMoneyMarketStorage {
 
   // Storage
   struct MoneyMarketDiamondStorage {
-    // temp: map token => user => shapre
-    mapping(address => mapping(address => uint256)) userShareMap;
+    mapping(address => address) tokenToIbTokens;
+    mapping(address => address) ibTokenToTokens;
   }
 
   function moneyMarketDiamondStorage()
