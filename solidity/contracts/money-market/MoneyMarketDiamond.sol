@@ -4,8 +4,6 @@ pragma solidity 0.8.17;
 import { LibDiamond } from "./libraries/LibDiamond.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 
-import { console } from "../../tests/utils/console.sol";
-
 contract MoneyMarketDiamond {
   constructor(address _contractOwner, address _diamondCutFacet) {
     LibDiamond.setContractOwner(_contractOwner);
