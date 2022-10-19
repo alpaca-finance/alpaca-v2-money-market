@@ -4,12 +4,15 @@ pragma solidity 0.8.17;
 import { LibDiamond } from "./libraries/LibDiamond.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 
+import { console } from "../../tests/utils/console.sol";
+
 contract MoneyMarketDiamond {
   constructor(address _contractOwner, address _diamondCutFacet) {
     LibDiamond.setContractOwner(_contractOwner);
 
     IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
     bytes4[] memory functionSelectors = new bytes4[](1);
+    functionSelectors[0] = IDiamondCut.diamondCut.selector;
     cut[0] = IDiamondCut.FacetCut({
       facetAddress: _diamondCutFacet,
       action: IDiamondCut.FacetCutAction.Add,
