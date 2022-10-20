@@ -7,6 +7,7 @@ import { BaseTest } from "../base/BaseTest.sol";
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -18,6 +19,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IAdminFacet internal adminFacet;
   IDepositFacet internal depositFacet;
   ICollateralFacet internal collateralFacet;
+  IBorrowFacet internal borrowFacet;
 
   function setUp() public virtual {
     (moneyMarketDiamond) = deployPoolDiamond();
@@ -25,6 +27,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     depositFacet = IDepositFacet(moneyMarketDiamond);
     collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);
+    borrowFacet = IBorrowFacet(moneyMarketDiamond);
 
     weth.mint(ALICE, 1000 ether);
 
