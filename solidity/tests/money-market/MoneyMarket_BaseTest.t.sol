@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { BaseTest } from "../base/BaseTest.sol";
 
 // interfaces
+import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
@@ -13,13 +14,16 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
-  IDepositFacet internal depositFacet;
+
   IAdminFacet internal adminFacet;
+  IDepositFacet internal depositFacet;
+  ICollateralFacet internal collateralFacet;
 
   function setUp() public virtual {
     (moneyMarketDiamond) = deployPoolDiamond();
 
     depositFacet = IDepositFacet(moneyMarketDiamond);
+    collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);
 
     weth.mint(ALICE, 1000 ether);
