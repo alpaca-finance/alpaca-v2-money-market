@@ -4,10 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "compile": "hardhat compile && yarn build",
     "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build": "yarn run build:cjs",
-    "prepublish": "yarn build",
-    "compile": "hardhat compile && yarn build"
+    "build": "yarn run build:cjs"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
@@ -18,7 +17,6 @@
     "hardhat": "^2.9.1",
     "prettier": "^2.6.0",
     "prettier-plugin-solidity": "^1.0.0-beta.19"
-    
   },
   "devDependencies": {
     "@typechain/hardhat": "^5.0.0",

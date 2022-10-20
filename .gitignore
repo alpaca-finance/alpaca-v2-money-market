@@ -8,3 +8,5 @@ artifacts/
 cache/
 node_modules/
 typechain/
+
+yarn-error.log/
