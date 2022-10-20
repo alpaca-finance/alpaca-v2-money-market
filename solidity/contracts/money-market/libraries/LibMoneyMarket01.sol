@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import { LibCollateraleralDoublyLinkedList } from "./LibCollateraleralDoublyLinkedList.sol";
+
 library LibMoneyMarket01 {
   // keccak256("moneymarket.diamond.storage");
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
@@ -12,6 +14,7 @@ library LibMoneyMarket01 {
   struct MoneyMarketDiamondStorage {
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
+    mapping(address => LibCollateraleralDoublyLinkedList.List) subAccountCollats;
   }
 
   function moneyMarketDiamondStorage()

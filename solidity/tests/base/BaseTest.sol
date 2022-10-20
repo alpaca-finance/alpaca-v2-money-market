@@ -13,6 +13,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 import { DepositFacet, IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
+import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
 // initializers
@@ -51,6 +52,7 @@ contract BaseTest is DSTest {
 
     deployDiamondLoupeFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployDepositFacet(DiamondCutFacet(address(moneyMarketDiamond)));
+    deployCollateralFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(moneyMarketDiamond)));
@@ -125,6 +127,26 @@ contract BaseTest is DSTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (depositFacet, selectors);
+  }
+
+  function deployCollateralFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (CollateralFacet, bytes4[] memory)
+  {
+    CollateralFacet collateralFacet = new CollateralFacet();
+
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = CollateralFacet.addCollateral.selector;
+    selectors[1] = CollateralFacet.getCollaterals.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(collateralFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (collateralFacet, selectors);
   }
 
   function deployAdminFacet(DiamondCutFacet diamondCutFacet)

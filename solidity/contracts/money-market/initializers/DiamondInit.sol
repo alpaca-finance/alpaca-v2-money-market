@@ -15,6 +15,8 @@ import { IERC173 } from "../interfaces/IERC173.sol";
 import { IERC165 } from "../interfaces/IERC165.sol";
 
 import { IDepositFacet } from "../interfaces/IDepositFacet.sol";
+import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
+import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -40,5 +42,7 @@ contract DiamondInit {
 
     // add others facets
     ds.supportedInterfaces[type(IDepositFacet).interfaceId] = true;
+    ds.supportedInterfaces[type(IAdminFacet).interfaceId] = true;
+    ds.supportedInterfaces[type(ICollateralFacet).interfaceId] = true;
   }
 }
