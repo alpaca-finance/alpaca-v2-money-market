@@ -5,7 +5,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // libs
-import { LibMoneyMarketStorage } from "../libraries/LibMoneyMarketStorage.sol";
+import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
@@ -24,8 +24,8 @@ contract DepositFacet is IDepositFacet {
   );
 
   function deposit(address _token, uint256 _amount) external {
-    LibMoneyMarketStorage.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarketStorage.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 

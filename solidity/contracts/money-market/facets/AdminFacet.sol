@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LibMoneyMarketStorage } from "../libraries/LibMoneyMarketStorage.sol";
+import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 
 contract AdminFacet is IAdminFacet {
   function setTokenToIbTokens(IbPair[] memory _ibPair) external {
-    LibMoneyMarketStorage.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarketStorage.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     uint256 _ibPairLength = _ibPair.length;
     for (uint8 _i; _i < _ibPairLength; ) {
@@ -21,14 +21,14 @@ contract AdminFacet is IAdminFacet {
   }
 
   function tokenToIbTokens(address _token) external view returns (address) {
-    LibMoneyMarketStorage.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarketStorage.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.tokenToIbTokens[_token];
   }
 
   function ibTokenToTokens(address _ibToken) external view returns (address) {
-    LibMoneyMarketStorage.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarketStorage.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.ibTokenToTokens[_ibToken];
   }
 }
