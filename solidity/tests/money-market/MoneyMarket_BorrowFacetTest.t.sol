@@ -38,4 +38,17 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
   }
+
+  function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
+    uint256 _borrowAmount = 10 ether;
+    vm.startPrank(BOB);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IBorrowFacet.BorrowFacet_InvalidToken.selector,
+        address(mockToken)
+      )
+    );
+    borrowFacet.borrow(BOB, subAccount0, address(mockToken), _borrowAmount);
+    vm.stopPrank();
+  }
 }

@@ -14,6 +14,7 @@ library LibMoneyMarket01 {
   struct MoneyMarketDiamondStorage {
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
+    mapping(address => uint256) debtValues;
     mapping(address => LibCollateraleralDoublyLinkedList.List) subAccountCollats;
   }
 

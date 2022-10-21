@@ -21,6 +21,20 @@ contract BorrowFacet is IBorrowFacet {
     address _token,
     uint256 _amount
   ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+
+    if (_ibToken == address(0)) {
+      revert BorrowFacet_InvalidToken(_token);
+    }
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      _account,
+      _subAccountId
+    );
+
     ERC20(_token).safeTransfer(_account, _amount);
   }
 }

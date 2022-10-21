@@ -10,4 +10,7 @@ interface IBorrowFacet {
     address _token,
     uint256 _amount
   ) external;
+
+  // Errors
+  error BorrowFacet_InvalidToken(address _token);
 }
