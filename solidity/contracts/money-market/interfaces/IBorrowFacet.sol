@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LibCollateraleralDoublyLinkedList } from "../libraries/LibCollateraleralDoublyLinkedList.sol";
+import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface IBorrowFacet {
   function borrow(

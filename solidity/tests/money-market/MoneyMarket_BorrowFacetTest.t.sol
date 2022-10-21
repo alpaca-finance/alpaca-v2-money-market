@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IBorrowFacet, LibCollateraleralDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
+import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 
 contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   uint256 subAccount0 = 0;

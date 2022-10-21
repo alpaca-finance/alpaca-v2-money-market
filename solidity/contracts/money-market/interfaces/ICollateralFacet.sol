@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LibCollateraleralDoublyLinkedList } from "../libraries/LibCollateraleralDoublyLinkedList.sol";
+import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface ICollateralFacet {
   function addCollateral(
@@ -14,5 +14,5 @@ interface ICollateralFacet {
   function getCollaterals(address _account, uint256 _subAccountId)
     external
     view
-    returns (LibCollateraleralDoublyLinkedList.Collateral[] memory);
+    returns (LibDoublyLinkedList.Node[] memory);
 }

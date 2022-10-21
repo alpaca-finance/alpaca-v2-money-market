@@ -6,14 +6,14 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 // libs
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
-import { LibCollateraleralDoublyLinkedList } from "../libraries/LibCollateraleralDoublyLinkedList.sol";
+import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
 
 contract BorrowFacet is IBorrowFacet {
   using SafeERC20 for ERC20;
-  using LibCollateraleralDoublyLinkedList for LibCollateraleralDoublyLinkedList.List;
+  using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   function borrow(
     address _account,
@@ -30,10 +30,20 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidToken(_token);
     }
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(
-      _account,
-      _subAccountId
-    );
+    // address _subAccount = LibMoneyMarket01.getSubAccount(
+    //   _account,
+    //   _subAccountId
+    // );
+
+    // LibDoublyLinkedList.List storage debtShare = moneyMarketDs
+    //   .subAccountDebtShares[_subAccount];
+    // // init list for
+    // if (
+    //   debtShare.getNextOf(LibDoublyLinkedList.START) ==
+    //   LibDoublyLinkedList.EMPTY
+    // ) {
+    //   debtShare.init();
+    // }
 
     ERC20(_token).safeTransfer(_account, _amount);
   }

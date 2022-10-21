@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LibCollateraleralDoublyLinkedList } from "./LibCollateraleralDoublyLinkedList.sol";
+import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 
 library LibMoneyMarket01 {
   // keccak256("moneymarket.diamond.storage");
@@ -15,7 +15,9 @@ library LibMoneyMarket01 {
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) debtValues;
-    mapping(address => LibCollateraleralDoublyLinkedList.List) subAccountCollats;
+    mapping(address => uint256) debtShares;
+    mapping(address => LibDoublyLinkedList.List) subAccountCollats;
+    mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
   }
 
   function moneyMarketDiamondStorage()
@@ -36,4 +38,6 @@ library LibMoneyMarket01 {
     if (subAccountId > 255) revert LibMoneyMarket01_BadSubAccountId();
     return address(uint160(primary) ^ uint160(subAccountId));
   }
+
+  // function debtValToShare(address _ibToken, address _debtVal) external {}
 }
