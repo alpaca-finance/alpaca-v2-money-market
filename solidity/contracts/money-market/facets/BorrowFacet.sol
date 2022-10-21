@@ -30,6 +30,12 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidToken(_token);
     }
 
+    uint256 _mmTokenBalnce = ERC20(_token).balanceOf(address(this));
+
+    if (_mmTokenBalnce < _amount) {
+      revert BorrowFacet_NotEnoughToken(_amount);
+    }
+
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
       _subAccountId
@@ -45,6 +51,7 @@ contract BorrowFacet is IBorrowFacet {
       debtShare.init();
     }
 
+    // TODO: debtVal to Share
     uint256 _newAmount = debtShare.getAmount(_token) + _amount;
     debtShare.addOrUpdate(_token, _newAmount);
 

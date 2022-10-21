@@ -90,4 +90,36 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
   }
+
+  function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
+    uint256 _aliceBorrowAmount = 20 ether;
+
+    vm.startPrank(ALICE);
+
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
+
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet
+      .getDebtShares(ALICE, subAccount0);
+
+    assertEq(aliceDebtShares.length, 1);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
+
+    vm.startPrank(ALICE);
+
+    // list will be add at the front of linkList
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IBorrowFacet.BorrowFacet_NotEnoughToken.selector,
+        _aliceBorrowAmount * 2
+      )
+    );
+    borrowFacet.borrow(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _aliceBorrowAmount * 2
+    );
+    vm.stopPrank();
+  }
 }

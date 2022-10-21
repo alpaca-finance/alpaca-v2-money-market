@@ -18,4 +18,5 @@ interface IBorrowFacet {
 
   // Errors
   error BorrowFacet_InvalidToken(address _token);
+  error BorrowFacet_NotEnoughToken(uint256 _borrowAmount);
 }
