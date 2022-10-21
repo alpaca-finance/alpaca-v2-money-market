@@ -11,6 +11,11 @@ interface IBorrowFacet {
     uint256 _amount
   ) external;
 
+  function getDebtShares(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (LibDoublyLinkedList.Node[] memory);
+
   // Errors
   error BorrowFacet_InvalidToken(address _token);
 }

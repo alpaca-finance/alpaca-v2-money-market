@@ -30,11 +30,21 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
 
     weth.mint(ALICE, 1000 ether);
+    usdc.mint(ALICE, 1000 ether);
 
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    vm.stopPrank();
+
+    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](2);
     _ibPair[0] = IAdminFacet.IbPair({
       token: address(weth),
       ibToken: address(ibWeth)
+    });
+    _ibPair[1] = IAdminFacet.IbPair({
+      token: address(usdc),
+      ibToken: address(ibUsdc)
     });
 
     adminFacet.setTokenToIbTokens(_ibPair);

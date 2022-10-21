@@ -5,6 +5,7 @@ import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
 contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   uint256 subAccount0 = 0;
@@ -17,11 +18,9 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
-    mockToken.approve(moneyMarketDiamond, type(uint256).max);
 
-    weth.approve(moneyMarketDiamond, 10 ether);
-    depositFacet.deposit(address(weth), 10 ether);
+    depositFacet.deposit(address(weth), 20 ether);
+    depositFacet.deposit(address(usdc), 20 ether);
     vm.stopPrank();
   }
 
@@ -50,5 +49,45 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     );
     borrowFacet.borrow(BOB, subAccount0, address(mockToken), _borrowAmount);
     vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate()
+    external
+  {
+    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _aliceBorrowAmount2 = 20 ether;
+
+    vm.startPrank(ALICE);
+
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
+
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet
+      .getDebtShares(ALICE, subAccount0);
+
+    assertEq(aliceDebtShares.length, 1);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
+
+    vm.startPrank(ALICE);
+
+    // list will be add at the front of linkList
+    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _aliceBorrowAmount2);
+    vm.stopPrank();
+
+    aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
+
+    assertEq(aliceDebtShares.length, 2);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
+    assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount);
+
+    vm.startPrank(ALICE);
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
+
+    aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
+
+    assertEq(aliceDebtShares.length, 2);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
+    assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
   }
 }

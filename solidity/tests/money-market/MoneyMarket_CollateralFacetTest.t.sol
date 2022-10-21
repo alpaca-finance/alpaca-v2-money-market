@@ -17,7 +17,6 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
     mockToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
   }
