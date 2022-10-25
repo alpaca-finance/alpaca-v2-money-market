@@ -21,6 +21,12 @@ library LibMoneyMarket01 {
     COLLATERAL
   }
 
+  struct TokenConfig {
+    LibMoneyMarket01.AssetTier tier;
+    uint16 collateralFactor;
+    uint16 borrowingFactor;
+  }
+
   // Storage
   struct MoneyMarketDiamondStorage {
     mapping(address => address) tokenToIbTokens;
@@ -28,9 +34,11 @@ library LibMoneyMarket01 {
     mapping(address => uint256) debtValues;
     mapping(address => uint256) debtShares;
     mapping(address => uint256) collats;
+    mapping(address => uint16) collateralFactors;
+    mapping(address => uint16) borrowingFactors;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
-    mapping(address => AssetTier) assetTiers;
+    mapping(address => TokenConfig) tokenConfigs;
     address oracle;
   }
 
@@ -94,10 +102,11 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      if (
-        moneyMarketDs.assetTiers[_borrowed[_i].token] ==
-        LibMoneyMarket01.AssetTier.ISOLATE
-      ) {
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
+        _borrowed[_i].token
+      ];
+
+      if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
       }
       // TODO: get tokenPrice from oracle

@@ -9,9 +9,11 @@ interface IAdminFacet {
     address ibToken;
   }
 
-  struct AssetTierInput {
+  struct TokenConfigInput {
     address token;
     LibMoneyMarket01.AssetTier tier;
+    uint16 collateralFactor;
+    uint16 borrowingFactor;
   }
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;
@@ -20,10 +22,10 @@ interface IAdminFacet {
 
   function ibTokenToTokens(address _ibToken) external view returns (address);
 
-  function setAssetTiers(AssetTierInput[] memory _assetTierInputs) external;
+  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
-  function assetTiers(address _token)
+  function tokenConfigs(address _token)
     external
     view
-    returns (LibMoneyMarket01.AssetTier);
+    returns (LibMoneyMarket01.TokenConfig memory);
 }

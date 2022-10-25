@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { IAdminFacet, LibMoneyMarket01 } from "../../contracts/money-market/facets/AdminFacet.sol";
@@ -27,22 +27,28 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     assertEq(adminFacet.ibTokenToTokens(_ibDepositToken), _depositToken);
   }
 
-  function testCorrectness_WhenAdminSetAssetTier_ShouldWork() external {
+  function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {
     address _token = address(9998);
 
-    IAdminFacet.AssetTierInput[]
-      memory _assetTierInputs = new IAdminFacet.AssetTierInput[](1);
+    IAdminFacet.TokenConfigInput[]
+      memory _intputs = new IAdminFacet.TokenConfigInput[](1);
 
-    _assetTierInputs[0] = IAdminFacet.AssetTierInput({
+    _intputs[0] = IAdminFacet.TokenConfigInput({
       token: _token,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 5000,
+      borrowingFactor: 6000
     });
 
-    adminFacet.setAssetTiers(_assetTierInputs);
+    adminFacet.setTokenConfigs(_intputs);
+
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(
+      _token
+    );
 
     // assertEq not accept enum
-    assert(
-      adminFacet.assetTiers(_token) == LibMoneyMarket01.AssetTier.COLLATERAL
-    );
+    assertTrue(_tokenConfig.tier == LibMoneyMarket01.AssetTier.COLLATERAL);
+    assertEq(_tokenConfig.collateralFactor, 5000);
+    assertEq(_tokenConfig.borrowingFactor, 6000);
   }
 }

@@ -95,7 +95,6 @@ contract BorrowFacet is IBorrowFacet {
     }
 
     // check asset tier
-
     uint256 _totalBorrowingPowerUSDValue = LibMoneyMarket01
       .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
 
@@ -103,7 +102,8 @@ contract BorrowFacet is IBorrowFacet {
       .getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
 
     if (
-      moneyMarketDs.assetTiers[_token] == LibMoneyMarket01.AssetTier.ISOLATE
+      moneyMarketDs.tokenConfigs[_token].tier ==
+      LibMoneyMarket01.AssetTier.ISOLATE
     ) {
       if (
         !moneyMarketDs.subAccountDebtShares[_subAccount].has(_token) &&
