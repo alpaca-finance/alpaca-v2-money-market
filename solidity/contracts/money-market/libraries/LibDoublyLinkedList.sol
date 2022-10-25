@@ -117,6 +117,7 @@ library LibDoublyLinkedList {
 
   function getAll(List storage list) internal view returns (Node[] memory) {
     Node[] memory nodes = new Node[](list.size);
+    if (list.size == 0) return nodes;
     address curr = list.next[START];
     for (uint256 i = 0; curr != END; i++) {
       nodes[i] = Node({ token: curr, amount: list.amount[curr] });

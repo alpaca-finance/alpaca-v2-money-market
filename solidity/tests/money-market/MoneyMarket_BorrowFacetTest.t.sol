@@ -18,7 +18,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-
     depositFacet.deposit(address(weth), 20 ether);
     depositFacet.deposit(address(usdc), 20 ether);
     vm.stopPrank();
@@ -28,8 +27,16 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     external
   {
     uint256 _borrowAmount = 10 ether;
-    uint256 _bobBalanceBefore = weth.balanceOf(BOB);
+
     vm.startPrank(BOB);
+    collateralFacet.addCollateral(
+      BOB,
+      subAccount0,
+      address(weth),
+      _borrowAmount
+    );
+
+    uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
 
@@ -58,6 +65,8 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceBorrowAmount2 = 20 ether;
 
     vm.startPrank(ALICE);
+
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
 
     borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
@@ -96,6 +105,8 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
 
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+
     borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
@@ -120,6 +131,48 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       address(weth),
       _aliceBorrowAmount * 2
     );
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbAmount()
+    external
+  {
+    uint256 _bobDepositAmount = 10 ether;
+    uint256 _aliceBorrowAmount = 10 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    depositFacet.deposit(address(weth), _bobDepositAmount);
+
+    vm.stopPrank();
+
+    assertEq(ibWeth.balanceOf(BOB), 10 ether);
+  }
+
+  function testRevert_WhenBorrowPowerLessThanBorrowingValue_ShouldRevert()
+    external
+  {
+    uint256 _aliceCollatAmount = 5 ether;
+    uint256 _aliceBorrowAmount = 5 ether;
+
+    vm.startPrank(ALICE);
+
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _aliceCollatAmount
+    );
+
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    vm.expectRevert();
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+
     vm.stopPrank();
   }
 }

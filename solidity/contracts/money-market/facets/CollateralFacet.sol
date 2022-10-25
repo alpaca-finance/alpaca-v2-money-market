@@ -42,6 +42,7 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _newAmount = collats.getAmount(_token) + _amount;
     collats.addOrUpdate(_token, _newAmount);
 
+    moneyMarketDs.collats[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
   }
 

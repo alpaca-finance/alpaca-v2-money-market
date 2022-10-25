@@ -32,7 +32,15 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     weth.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
 
+    weth.mint(BOB, 1000 ether);
+    usdc.mint(BOB, 1000 ether);
+
     vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();

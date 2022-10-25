@@ -16,6 +16,7 @@ library LibMoneyMarket01 {
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) debtValues;
     mapping(address => uint256) debtShares;
+    mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
   }
@@ -38,6 +39,4 @@ library LibMoneyMarket01 {
     if (subAccountId > 255) revert LibMoneyMarket01_BadSubAccountId();
     return address(uint160(primary) ^ uint160(subAccountId));
   }
-
-  // function debtValToShare(address _ibToken, address _debtVal) external {}
 }
