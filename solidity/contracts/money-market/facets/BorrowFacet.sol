@@ -90,6 +90,7 @@ contract BorrowFacet is IBorrowFacet {
   }
 
   // TODO: handle token decimal when calculate value
+  // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     address _subAccount,
     address _token,
@@ -100,56 +101,14 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _tokenPrice = 1e18;
 
     uint256 _borrowingUSDValue = LibFullMath.mulDiv(_amount, _tokenPrice, 1e18);
-    uint256 _totalBorrowingPowerUSDValue = 0;
-    uint256 _totalBorrowedUSDValue = 0;
 
-    LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs
-      .subAccountCollats[_subAccount]
-      .getAll();
+    uint256 _totalBorrowingPowerUSDValue = LibMoneyMarket01
+      .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
 
-    uint256 _collatsLength = _collats.length;
-
-    for (uint256 _i = 0; _i < _collatsLength; ) {
-      // TODO: get tokenPrice from oracle
-      _tokenPrice = 1e18;
-      // TODO: add collateral factor
-      _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _collats[_i].amount,
-        _tokenPrice,
-        1e18
-      );
-
-      unchecked {
-        _i++;
-      }
-    }
-
-    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs
-      .subAccountDebtShares[_subAccount]
-      .getAll();
-
-    uint256 _borrowedLength = _borrowed.length;
-
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
-      // TODO: get tokenPrice from oracle
-      _tokenPrice = 1e18;
-      uint256 _borrowedAmount = LibShareUtil.shareToValue(
-        moneyMarketDs.debtShares[_borrowed[_i].token],
-        _borrowed[_i].amount,
-        moneyMarketDs.debtValues[_borrowed[_i].token]
-      );
-
-      // TODO: add borrow factor
-      _totalBorrowedUSDValue += LibFullMath.mulDiv(
-        _borrowedAmount,
-        _tokenPrice,
-        1e18
-      );
-
-      unchecked {
-        _i++;
-      }
-    }
+    uint256 _totalBorrowedUSDValue = LibMoneyMarket01.getTotalBorrowedUSDValue(
+      _subAccount,
+      moneyMarketDs
+    );
 
     if (
       _totalBorrowingPowerUSDValue < _totalBorrowedUSDValue + _borrowingUSDValue
