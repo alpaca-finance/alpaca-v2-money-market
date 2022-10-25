@@ -34,7 +34,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       BOB,
       subAccount0,
       address(weth),
-      _borrowAmount
+      _borrowAmount * 2
     );
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
@@ -167,7 +167,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       ALICE,
       subAccount0,
       address(weth),
-      _aliceCollatAmount
+      _aliceCollatAmount * 2
     );
 
     borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);

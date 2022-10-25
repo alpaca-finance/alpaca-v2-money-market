@@ -34,8 +34,6 @@ library LibMoneyMarket01 {
     mapping(address => uint256) debtValues;
     mapping(address => uint256) debtShares;
     mapping(address => uint256) collats;
-    mapping(address => uint16) collateralFactors;
-    mapping(address => uint16) borrowingFactors;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
     mapping(address => TokenConfig) tokenConfigs;
@@ -61,6 +59,7 @@ library LibMoneyMarket01 {
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
+  // TODO: handle decimal
   function getTotalBorrowingPowerUSDValue(
     address _subAccount,
     MoneyMarketDiamondStorage storage moneyMarketDs
@@ -72,13 +71,18 @@ library LibMoneyMarket01 {
     uint256 _collatsLength = _collats.length;
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
+        _collats[_i].token
+      ];
+
       // TODO: get tokenPrice from oracle
       uint256 _tokenPrice = 1e18;
-      // TODO: add collateral factor
+
+      // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _collats[_i].amount,
+        _collats[_i].amount * _tokenConfig.collateralFactor,
         _tokenPrice,
-        1e18
+        1e22
       );
 
       unchecked {
