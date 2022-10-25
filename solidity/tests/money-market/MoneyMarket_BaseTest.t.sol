@@ -78,7 +78,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     _assetTierInputs[1] = IAdminFacet.AssetTierInput({
       token: address(usdc),
-      tier: LibMoneyMarket01.AssetTier.CROSS
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL
     });
 
     _assetTierInputs[2] = IAdminFacet.AssetTierInput({

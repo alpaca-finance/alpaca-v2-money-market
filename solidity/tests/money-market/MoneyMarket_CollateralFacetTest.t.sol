@@ -8,17 +8,9 @@ import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-mar
 
 contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
   uint256 subAccount0 = 0;
-  MockERC20 mockToken;
 
   function setUp() public override {
     super.setUp();
-
-    mockToken = deployMockErc20("Mock token", "MOCK", 18);
-    mockToken.mint(ALICE, 1000 ether);
-
-    vm.startPrank(ALICE);
-    mockToken.approve(moneyMarketDiamond, type(uint256).max);
-    vm.stopPrank();
   }
 
   function testCorrectness_WhenAddCollateral_TokenShouldTransferFromUserToMM()
@@ -63,7 +55,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(
       ALICE,
       subAccount0,
-      address(mockToken),
+      address(usdc),
       _aliceCollateralAmount2
     );
     vm.stopPrank();
@@ -89,5 +81,21 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
     assertEq(collats[1].amount, _aliceCollateralAmount * 2, "updated weth");
+  }
+
+  function testRevert_WhenUserAddInvalidCollateral_ShouldRevert() external {
+    vm.startPrank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ICollateralFacet.CollateralFacet_InvalidAssetTier.selector
+      )
+    );
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(isolateToken),
+      1 ether
+    );
+    vm.stopPrank();
   }
 }

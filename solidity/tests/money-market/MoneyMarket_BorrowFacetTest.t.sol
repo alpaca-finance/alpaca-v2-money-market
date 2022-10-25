@@ -231,7 +231,9 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     );
 
     // trying to borrow different asset
-    vm.expectRevert();
+    vm.expectRevert(
+      abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector)
+    );
     borrowFacet.borrow(
       BOB,
       subAccount0,
