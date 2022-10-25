@@ -20,6 +20,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
     depositFacet.deposit(address(weth), 20 ether);
     depositFacet.deposit(address(usdc), 20 ether);
+    depositFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 
@@ -173,6 +174,70 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.expectRevert();
     borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
 
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserHaveNotBorrow_ShouldAbleToBorrowIsolateAsset()
+    external
+  {
+    uint256 _bobIsloateBorrowAmount = 5 ether;
+    uint256 _bobCollateralAmount = 10 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(
+      BOB,
+      subAccount0,
+      address(weth),
+      _bobCollateralAmount
+    );
+
+    borrowFacet.borrow(
+      BOB,
+      subAccount0,
+      address(isolateToken),
+      _bobIsloateBorrowAmount
+    );
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenUserAlreadyBorrowIsloateToken_ShouldRevertIfTryToBorrowDifferentToken()
+    external
+  {
+    uint256 _bobIsloateBorrowAmount = 5 ether;
+    uint256 _bobCollateralAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(
+      BOB,
+      subAccount0,
+      address(weth),
+      _bobCollateralAmount
+    );
+
+    // first borrow isolate token
+    borrowFacet.borrow(
+      BOB,
+      subAccount0,
+      address(isolateToken),
+      _bobIsloateBorrowAmount
+    );
+
+    // borrow the isolate token again should passed
+    borrowFacet.borrow(
+      BOB,
+      subAccount0,
+      address(isolateToken),
+      _bobIsloateBorrowAmount
+    );
+
+    // trying to borrow different asset
+    vm.expectRevert();
+    borrowFacet.borrow(
+      BOB,
+      subAccount0,
+      address(weth),
+      _bobIsloateBorrowAmount
+    );
     vm.stopPrank();
   }
 }

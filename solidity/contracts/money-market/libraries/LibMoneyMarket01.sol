@@ -14,6 +14,13 @@ library LibMoneyMarket01 {
 
   error LibMoneyMarket01_BadSubAccountId();
 
+  enum AssetTier {
+    UNLISTED,
+    ISOLATE,
+    CROSS,
+    COLLATERAL
+  }
+
   // Storage
   struct MoneyMarketDiamondStorage {
     mapping(address => address) tokenToIbTokens;
@@ -23,6 +30,7 @@ library LibMoneyMarket01 {
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
+    mapping(address => AssetTier) assetTiers;
     address oracle;
   }
 
@@ -74,7 +82,11 @@ library LibMoneyMarket01 {
   function getTotalBorrowedUSDValue(
     address _subAccount,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _totalBorrowedUSDValue) {
+  )
+    internal
+    view
+    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
+  {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs
       .subAccountDebtShares[_subAccount]
       .getAll();
@@ -82,6 +94,12 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
+      if (
+        moneyMarketDs.assetTiers[_borrowed[_i].token] ==
+        LibMoneyMarket01.AssetTier.ISOLATE
+      ) {
+        _hasIsolateAsset = true;
+      }
       // TODO: get tokenPrice from oracle
       uint256 _tokenPrice = 1e18;
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
