@@ -7,14 +7,14 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 // libs
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
-import { LibCollateraleralDoublyLinkedList } from "../libraries/LibCollateraleralDoublyLinkedList.sol";
+import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 
 contract CollateralFacet is ICollateralFacet {
   using SafeERC20 for ERC20;
-  using LibCollateraleralDoublyLinkedList for LibCollateraleralDoublyLinkedList.List;
+  using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   function addCollateral(
     address _account,
@@ -30,11 +30,11 @@ contract CollateralFacet is ICollateralFacet {
       _subAccountId
     );
 
-    LibCollateraleralDoublyLinkedList.List storage collats = moneyMarketDs
-      .subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage collats = moneyMarketDs.subAccountCollats[
+      _subAccount
+    ];
     if (
-      collats.getNextOf(LibCollateraleralDoublyLinkedList.START) ==
-      LibCollateraleralDoublyLinkedList.EMPTY
+      collats.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY
     ) {
       collats.init();
     }
@@ -42,13 +42,14 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _newAmount = collats.getAmount(_token) + _amount;
     collats.addOrUpdate(_token, _newAmount);
 
+    moneyMarketDs.collats[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
   }
 
   function getCollaterals(address _account, uint256 _subAccountId)
     external
     view
-    returns (LibCollateraleralDoublyLinkedList.Collateral[] memory)
+    returns (LibDoublyLinkedList.Node[] memory)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
@@ -58,8 +59,9 @@ contract CollateralFacet is ICollateralFacet {
       _subAccountId
     );
 
-    LibCollateraleralDoublyLinkedList.List storage collats = moneyMarketDs
-      .subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage collats = moneyMarketDs.subAccountCollats[
+      _subAccount
+    ];
 
     return collats.getAll();
   }

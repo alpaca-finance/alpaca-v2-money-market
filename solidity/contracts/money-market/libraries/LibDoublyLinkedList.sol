@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-library LibCollateraleralDoublyLinkedList {
-  error LibCollateraleralDoublyLinkedList_Existed();
-  error LibCollateraleralDoublyLinkedList_NotExisted();
-  error LibCollateraleralDoublyLinkedList_NotInitialized();
+library LibDoublyLinkedList {
+  error LibDoublyLinkedList_Existed();
+  error LibDoublyLinkedList_NotExisted();
+  error LibDoublyLinkedList_NotInitialized();
 
   address internal constant START = address(1);
   address internal constant END = address(1);
@@ -17,7 +17,7 @@ library LibCollateraleralDoublyLinkedList {
     mapping(address => address) prev;
   }
 
-  struct Collateral {
+  struct Node {
     address token;
     uint256 amount;
   }
@@ -38,7 +38,7 @@ library LibCollateraleralDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (has(list, addr)) revert LibCollateraleralDoublyLinkedList_Existed();
+    if (has(list, addr)) revert LibDoublyLinkedList_Existed();
 
     // Effect
     list.next[addr] = list.next[START];
@@ -57,7 +57,7 @@ library LibCollateraleralDoublyLinkedList {
     returns (List storage)
   {
     // Check
-    if (!has(list, addr)) revert LibCollateraleralDoublyLinkedList_NotExisted();
+    if (!has(list, addr)) revert LibDoublyLinkedList_NotExisted();
 
     // Effect
     address prevAddr = list.prev[addr];
@@ -80,7 +80,7 @@ library LibCollateraleralDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (has(list, addr)) revert LibCollateraleralDoublyLinkedList_Existed();
+    if (has(list, addr)) revert LibDoublyLinkedList_Existed();
 
     // Effect
     if (amount == 0) {
@@ -115,18 +115,15 @@ library LibCollateraleralDoublyLinkedList {
     return list.amount[addr];
   }
 
-  function getAll(List storage list)
-    internal
-    view
-    returns (Collateral[] memory)
-  {
-    Collateral[] memory collats = new Collateral[](list.size);
+  function getAll(List storage list) internal view returns (Node[] memory) {
+    Node[] memory nodes = new Node[](list.size);
+    if (list.size == 0) return nodes;
     address curr = list.next[START];
     for (uint256 i = 0; curr != END; i++) {
-      collats[i] = Collateral({ token: curr, amount: list.amount[curr] });
+      nodes[i] = Node({ token: curr, amount: list.amount[curr] });
       curr = list.next[curr];
     }
-    return collats;
+    return nodes;
   }
 
   function getPreviousOf(List storage list, address addr)

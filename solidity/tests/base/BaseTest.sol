@@ -14,6 +14,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facet
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 import { DepositFacet, IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
 import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
 // initializers
@@ -31,13 +32,17 @@ contract BaseTest is DSTest {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
   MockERC20 internal weth;
+  MockERC20 internal usdc;
 
   MockERC20 internal ibWeth;
+  MockERC20 internal ibUsdc;
 
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
+    usdc = deployMockErc20("USD COIN", "USDC", 18);
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
+    ibUsdc = deployMockErc20("Inerest USD COIN", "IBUSDC", 18);
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -53,6 +58,7 @@ contract BaseTest is DSTest {
     deployDiamondLoupeFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployDepositFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployCollateralFacet(DiamondCutFacet(address(moneyMarketDiamond)));
+    deployBorrowFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(moneyMarketDiamond)));
@@ -116,7 +122,7 @@ contract BaseTest is DSTest {
   {
     DepositFacet depositFacet = new DepositFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](1);
     selectors[0] = depositFacet.deposit.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
@@ -147,6 +153,26 @@ contract BaseTest is DSTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (collateralFacet, selectors);
+  }
+
+  function deployBorrowFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (BorrowFacet, bytes4[] memory)
+  {
+    BorrowFacet brrowFacet = new BorrowFacet();
+
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = BorrowFacet.borrow.selector;
+    selectors[1] = BorrowFacet.getDebtShares.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(brrowFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (brrowFacet, selectors);
   }
 
   function deployAdminFacet(DiamondCutFacet diamondCutFacet)

@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { ICollateralFacet, LibCollateraleralDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
 
 contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
   uint256 subAccount0 = 0;
@@ -17,7 +17,6 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
     mockToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
   }
@@ -50,8 +49,10 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     );
     vm.stopPrank();
 
-    LibCollateraleralDoublyLinkedList.Collateral[]
-      memory collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory collats = collateralFacet.getCollaterals(
+      ALICE,
+      subAccount0
+    );
 
     assertEq(collats.length, 1);
     assertEq(collats[0].amount, _aliceCollateralAmount);

@@ -33,7 +33,8 @@ contract DepositFacet is IDepositFacet {
       revert DepositFacet_InvalidToken(_token);
     }
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
-    uint256 _totalToken = ERC20(_token).balanceOf(address(this));
+
+    uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
 
     // calculate _shareToMint to mint before transfer token to MM
     uint256 _shareToMint = LibShareUtil.valueToShare(
@@ -46,5 +47,16 @@ contract DepositFacet is IDepositFacet {
     IIbToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
+  }
+
+  // totalToken is the amount of token remains in MM + borrowed amount
+  function _getTotalToken(
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256) {
+    return
+      ERC20(_token).balanceOf(address(this)) +
+      moneyMarketDs.debtValues[_token] -
+      moneyMarketDs.collats[_token];
   }
 }
