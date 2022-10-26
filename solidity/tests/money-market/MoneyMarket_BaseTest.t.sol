@@ -75,21 +75,21 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 0
+      borrowingFactor: 1000
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
       token: address(usdc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 0
+      borrowingFactor: 1000
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
       token: address(isolateToken),
       tier: LibMoneyMarket01.AssetTier.ISOLATE,
       collateralFactor: 9000,
-      borrowingFactor: 0
+      borrowingFactor: 1000
     });
 
     adminFacet.setTokenConfigs(_inputs);

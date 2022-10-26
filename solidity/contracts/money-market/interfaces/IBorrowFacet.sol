@@ -16,6 +16,16 @@ interface IBorrowFacet {
     view
     returns (LibDoublyLinkedList.Node[] memory);
 
+  function getTotalBorrowingPowerUSDValue(
+    address _account,
+    uint256 _subAccountId
+  ) external view returns (uint256 _totalBorrowingPowerUSDValue);
+
+  function getTotalBorrowedUSDValue(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+
   // Errors
   error BorrowFacet_InvalidToken(address _token);
   error BorrowFacet_NotEnoughToken(uint256 _borrowAmount);

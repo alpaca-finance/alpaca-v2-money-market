@@ -12,6 +12,8 @@ library LibMoneyMarket01 {
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
+  uint256 internal constant MAX_BPS = 10000;
+
   error LibMoneyMarket01_BadSubAccountId();
 
   enum AssetTier {
@@ -121,11 +123,10 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtValues[_borrowed[_i].token]
       );
 
-      // TODO: add borrow factor
       _totalBorrowedUSDValue += LibFullMath.mulDiv(
-        _borrowedAmount,
+        _borrowedAmount * (MAX_BPS + _tokenConfig.borrowingFactor),
         _tokenPrice,
-        1e18
+        1e22
       );
 
       unchecked {

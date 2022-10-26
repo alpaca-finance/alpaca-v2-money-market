@@ -138,7 +138,14 @@ contract BorrowFacet is IBorrowFacet {
     // TODO: get tokenPrice from oracle
     uint256 _tokenPrice = 1e18;
 
-    uint256 _borrowingUSDValue = LibFullMath.mulDiv(_amount, _tokenPrice, 1e18);
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs
+      .tokenConfigs[_token];
+
+    uint256 _borrowingUSDValue = LibFullMath.mulDiv(
+      _amount * (LibMoneyMarket01.MAX_BPS + _tokenConfig.borrowingFactor),
+      _tokenPrice,
+      1e22
+    );
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert BorrowFacet_BorrowingValueTooHigh(
@@ -160,5 +167,38 @@ contract BorrowFacet is IBorrowFacet {
     if (_mmTokenBalnce < _borrowAmount) {
       revert BorrowFacet_NotEnoughToken(_borrowAmount);
     }
+  }
+
+  function getTotalBorrowingPowerUSDValue(
+    address _account,
+    uint256 _subAccountId
+  ) external view returns (uint256 _totalBorrowingPowerUSDValue) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      _account,
+      _subAccountId
+    );
+
+    _totalBorrowingPowerUSDValue = LibMoneyMarket01
+      .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
+  }
+
+  function getTotalBorrowedUSDValue(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      _account,
+      _subAccountId
+    );
+
+    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01
+      .getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
   }
 }
