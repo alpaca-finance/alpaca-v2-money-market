@@ -123,6 +123,7 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtValues[_borrowed[_i].token]
       );
 
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice * (10000+ borrowingFactor)
       _totalBorrowedUSDValue += LibFullMath.mulDiv(
         _borrowedAmount * (MAX_BPS + _tokenConfig.borrowingFactor),
         _tokenPrice,
