@@ -76,9 +76,7 @@ contract LendFacet is ILendFacet {
       _totalSupply
     );
 
-    ERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _shareAmount);
-    IIbToken(_ibToken).burn(address(this), _shareAmount);
-
+    IIbToken(_ibToken).burn(msg.sender, _shareAmount);
     ERC20(_token).transfer(msg.sender, _shareValue);
 
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
