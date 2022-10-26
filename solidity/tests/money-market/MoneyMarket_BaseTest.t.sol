@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { BaseTest } from "../base/BaseTest.sol";
+import { BaseTest, console } from "../base/BaseTest.sol";
 
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
@@ -68,24 +68,31 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setTokenToIbTokens(_ibPair);
 
-    IAdminFacet.AssetTierInput[]
-      memory _assetTierInputs = new IAdminFacet.AssetTierInput[](3);
+    IAdminFacet.TokenConfigInput[]
+      memory _inputs = new IAdminFacet.TokenConfigInput[](3);
 
-    _assetTierInputs[0] = IAdminFacet.AssetTierInput({
+    _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 1000
     });
 
-    _assetTierInputs[1] = IAdminFacet.AssetTierInput({
+    _inputs[1] = IAdminFacet.TokenConfigInput({
       token: address(usdc),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 1000
     });
 
-    _assetTierInputs[2] = IAdminFacet.AssetTierInput({
+    _inputs[2] = IAdminFacet.TokenConfigInput({
       token: address(isolateToken),
-      tier: LibMoneyMarket01.AssetTier.ISOLATE
+      tier: LibMoneyMarket01.AssetTier.ISOLATE,
+      collateralFactor: 9000,
+      borrowingFactor: 1000
     });
 
-    adminFacet.setAssetTiers(_assetTierInputs);
+    adminFacet.setTokenConfigs(_inputs);
+    (_inputs);
   }
 }

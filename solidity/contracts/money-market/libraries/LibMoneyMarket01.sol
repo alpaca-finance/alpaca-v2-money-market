@@ -12,6 +12,8 @@ library LibMoneyMarket01 {
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
+  uint256 internal constant MAX_BPS = 10000;
+
   error LibMoneyMarket01_BadSubAccountId();
 
   enum AssetTier {
@@ -19,6 +21,12 @@ library LibMoneyMarket01 {
     ISOLATE,
     CROSS,
     COLLATERAL
+  }
+
+  struct TokenConfig {
+    LibMoneyMarket01.AssetTier tier;
+    uint16 collateralFactor;
+    uint16 borrowingFactor;
   }
 
   // Storage
@@ -30,7 +38,7 @@ library LibMoneyMarket01 {
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
-    mapping(address => AssetTier) assetTiers;
+    mapping(address => TokenConfig) tokenConfigs;
     address oracle;
   }
 
@@ -53,6 +61,7 @@ library LibMoneyMarket01 {
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
+  // TODO: handle decimal
   function getTotalBorrowingPowerUSDValue(
     address _subAccount,
     MoneyMarketDiamondStorage storage moneyMarketDs
@@ -64,13 +73,18 @@ library LibMoneyMarket01 {
     uint256 _collatsLength = _collats.length;
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
+        _collats[_i].token
+      ];
+
       // TODO: get tokenPrice from oracle
       uint256 _tokenPrice = 1e18;
-      // TODO: add collateral factor
+
+      // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _collats[_i].amount,
+        _collats[_i].amount * _tokenConfig.collateralFactor,
         _tokenPrice,
-        1e18
+        1e22
       );
 
       unchecked {
@@ -94,10 +108,11 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      if (
-        moneyMarketDs.assetTiers[_borrowed[_i].token] ==
-        LibMoneyMarket01.AssetTier.ISOLATE
-      ) {
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
+        _borrowed[_i].token
+      ];
+
+      if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
       }
       // TODO: get tokenPrice from oracle
@@ -108,11 +123,11 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtValues[_borrowed[_i].token]
       );
 
-      // TODO: add borrow factor
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice * (10000+ borrowingFactor)
       _totalBorrowedUSDValue += LibFullMath.mulDiv(
-        _borrowedAmount,
+        _borrowedAmount * (MAX_BPS + _tokenConfig.borrowingFactor),
         _tokenPrice,
-        1e18
+        1e22
       );
 
       unchecked {

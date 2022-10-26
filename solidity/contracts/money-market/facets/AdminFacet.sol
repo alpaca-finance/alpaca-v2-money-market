@@ -22,17 +22,19 @@ contract AdminFacet is IAdminFacet {
   }
 
   // TODO: validate role
-  function setAssetTiers(AssetTierInput[] memory _assetTierInputs) external {
+  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    uint256 _inputLength = _assetTierInputs.length;
+    uint256 _inputLength = _tokenConfigs.length;
     for (uint8 _i; _i < _inputLength; ) {
-      moneyMarketDs.assetTiers[_assetTierInputs[_i].token] = _assetTierInputs[
-        _i
-      ].tier;
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01
+        .TokenConfig({
+          tier: _tokenConfigs[_i].tier,
+          collateralFactor: _tokenConfigs[_i].collateralFactor,
+          borrowingFactor: _tokenConfigs[_i].borrowingFactor
+        });
 
-      // TODO: set collateral factor and borrow factor on tier change
+      moneyMarketDs.tokenConfigs[_tokenConfigs[_i].token] = _tokenConfig;
 
       unchecked {
         _i++;
@@ -52,13 +54,14 @@ contract AdminFacet is IAdminFacet {
     return moneyMarketDs.ibTokenToTokens[_ibToken];
   }
 
-  function assetTiers(address _token)
+  function tokenConfigs(address _token)
     external
     view
-    returns (LibMoneyMarket01.AssetTier)
+    returns (LibMoneyMarket01.TokenConfig memory)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.assetTiers[_token];
+
+    return moneyMarketDs.tokenConfigs[_token];
   }
 }

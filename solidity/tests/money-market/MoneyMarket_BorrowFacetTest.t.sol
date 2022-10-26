@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
@@ -34,7 +34,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       BOB,
       subAccount0,
       address(weth),
-      _borrowAmount
+      _borrowAmount * 2
     );
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
@@ -167,7 +167,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       ALICE,
       subAccount0,
       address(weth),
-      _aliceCollatAmount
+      _aliceCollatAmount * 2
     );
 
     borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
@@ -241,5 +241,44 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       _bobIsloateBorrowAmount
     );
     vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectly()
+    external
+  {
+    uint256 _aliceCollatAmount = 5 ether;
+
+    vm.prank(ALICE);
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _aliceCollatAmount
+    );
+
+    uint256 _borrowingPowerUSDValue = borrowFacet
+      .getTotalBorrowingPowerUSDValue(ALICE, subAccount0);
+
+    // add 5 weth, collateralFactor = 9000, weth price = 1
+    // _borrowingPowerUSDValue = 5 * 1 * 9000/ 10000 = 4.5 ether USD
+    assertEq(_borrowingPowerUSDValue, 4.5 ether);
+
+    // borrowFactor = 1000, weth price = 1
+    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 4.5 USD
+    // maximumBorrowed weth amount = 4.5 * 10000/(10000 + 1000) ~ 4.09090909090909
+    // _borrowedUSDValue = 4.09090909090909 * (10000 + 1000)/10000 = 4.499999999999999
+    vm.prank(ALICE);
+    borrowFacet.borrow(
+      ALICE,
+      subAccount0,
+      address(weth),
+      4.09090909090909 ether
+    );
+
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalBorrowedUSDValue(
+      ALICE,
+      subAccount0
+    );
+    assertEq(_borrowedUSDValue, 4.499999999999999 ether);
   }
 }
