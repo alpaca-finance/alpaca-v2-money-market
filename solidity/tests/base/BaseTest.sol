@@ -12,7 +12,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
-import { DepositFacet, IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
+import { LendFacet, ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
@@ -60,7 +60,7 @@ contract BaseTest is DSTest {
     );
 
     deployDiamondLoupeFacet(DiamondCutFacet(address(moneyMarketDiamond)));
-    deployDepositFacet(DiamondCutFacet(address(moneyMarketDiamond)));
+    deployLendFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployCollateralFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployBorrowFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(moneyMarketDiamond)));
@@ -120,23 +120,23 @@ contract BaseTest is DSTest {
     return (diamondLoupeFacet, selectors);
   }
 
-  function deployDepositFacet(DiamondCutFacet diamondCutFacet)
+  function deployLendFacet(DiamondCutFacet diamondCutFacet)
     internal
-    returns (DepositFacet, bytes4[] memory)
+    returns (LendFacet, bytes4[] memory)
   {
-    DepositFacet depositFacet = new DepositFacet();
+    LendFacet lendFacet = new LendFacet();
 
     bytes4[] memory selectors = new bytes4[](1);
-    selectors[0] = depositFacet.deposit.selector;
+    selectors[0] = lendFacet.deposit.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(depositFacet),
+      address(lendFacet),
       IDiamondCut.FacetCutAction.Add,
       selectors
     );
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (depositFacet, selectors);
+    return (lendFacet, selectors);
   }
 
   function deployCollateralFacet(DiamondCutFacet diamondCutFacet)
