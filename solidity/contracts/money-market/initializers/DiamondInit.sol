@@ -14,7 +14,7 @@ import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
 import { IERC173 } from "../interfaces/IERC173.sol";
 import { IERC165 } from "../interfaces/IERC165.sol";
 
-import { IDepositFacet } from "../interfaces/IDepositFacet.sol";
+import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 
@@ -41,7 +41,7 @@ contract DiamondInit {
     // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
 
     // add others facets
-    ds.supportedInterfaces[type(IDepositFacet).interfaceId] = true;
+    ds.supportedInterfaces[type(ILendFacet).interfaceId] = true;
     ds.supportedInterfaces[type(IAdminFacet).interfaceId] = true;
     ds.supportedInterfaces[type(ICollateralFacet).interfaceId] = true;
   }

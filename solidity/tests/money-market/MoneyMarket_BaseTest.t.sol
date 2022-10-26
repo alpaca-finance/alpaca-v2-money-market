@@ -5,7 +5,7 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 
@@ -20,14 +20,14 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
 
   IAdminFacet internal adminFacet;
-  IDepositFacet internal depositFacet;
+  ILendFacet internal lendFacet;
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
 
   function setUp() public virtual {
     (moneyMarketDiamond) = deployPoolDiamond();
 
-    depositFacet = IDepositFacet(moneyMarketDiamond);
+    lendFacet = ILendFacet(moneyMarketDiamond);
     collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);
     borrowFacet = IBorrowFacet(moneyMarketDiamond);

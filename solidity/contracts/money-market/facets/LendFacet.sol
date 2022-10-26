@@ -9,13 +9,13 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
-import { IDepositFacet } from "../interfaces/IDepositFacet.sol";
+import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 
-contract DepositFacet is IDepositFacet {
+contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
 
-  event LogDeposit(
+  event LogLend(
     address indexed _user,
     address _token,
     address _ibToken,
@@ -30,7 +30,7 @@ contract DepositFacet is IDepositFacet {
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 
     if (_ibToken == address(0)) {
-      revert DepositFacet_InvalidToken(_token);
+      revert LendFacet_InvalidToken(_token);
     }
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
 
@@ -46,7 +46,7 @@ contract DepositFacet is IDepositFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IIbToken(_ibToken).mint(msg.sender, _shareToMint);
 
-    emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
+    emit LogLend(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
   // totalToken is the amount of token remains in MM + borrowed amount

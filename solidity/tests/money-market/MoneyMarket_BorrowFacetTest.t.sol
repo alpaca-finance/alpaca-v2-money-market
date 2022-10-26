@@ -18,9 +18,9 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    depositFacet.deposit(address(weth), 20 ether);
-    depositFacet.deposit(address(usdc), 20 ether);
-    depositFacet.deposit(address(isolateToken), 20 ether);
+    lendFacet.deposit(address(weth), 20 ether);
+    lendFacet.deposit(address(usdc), 20 ether);
+    lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 
@@ -148,7 +148,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, type(uint256).max);
-    depositFacet.deposit(address(weth), _bobDepositAmount);
+    lendFacet.deposit(address(weth), _bobDepositAmount);
 
     vm.stopPrank();
 

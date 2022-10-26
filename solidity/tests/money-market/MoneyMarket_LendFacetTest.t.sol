@@ -4,9 +4,9 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IDepositFacet } from "../../contracts/money-market/facets/DepositFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 
-contract MoneyMarket_DepositFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
@@ -16,7 +16,7 @@ contract MoneyMarket_DepositFacetTest is MoneyMarket_BaseTest {
   {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    depositFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), 990 ether);
@@ -34,7 +34,7 @@ contract MoneyMarket_DepositFacetTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, _depositAmount1);
-    depositFacet.deposit(address(weth), _depositAmount1);
+    lendFacet.deposit(address(weth), _depositAmount1);
     vm.stopPrank();
 
     // frist deposit mintShare = depositAmount
@@ -44,7 +44,7 @@ contract MoneyMarket_DepositFacetTest is MoneyMarket_BaseTest {
     weth.mint(BOB, _depositAmount2);
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, _depositAmount2);
-    depositFacet.deposit(address(weth), _depositAmount2);
+    lendFacet.deposit(address(weth), _depositAmount2);
     vm.stopPrank();
 
     // mintShare = 20 * 10 / 10 = 20
@@ -59,11 +59,11 @@ contract MoneyMarket_DepositFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
     vm.expectRevert(
       abi.encodeWithSelector(
-        IDepositFacet.DepositFacet_InvalidToken.selector,
+        ILendFacet.LendFacet_InvalidToken.selector,
         _randomToken
       )
     );
-    depositFacet.deposit(_randomToken, 10 ether);
+    lendFacet.deposit(_randomToken, 10 ether);
     vm.stopPrank();
   }
 }
