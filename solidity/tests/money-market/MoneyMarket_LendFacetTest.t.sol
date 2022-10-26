@@ -66,4 +66,19 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(_randomToken, 10 ether);
     vm.stopPrank();
   }
+
+  function testCorrectness_WhenUserWithdraw_ibTokenShouldBurnedAndTransferTokenToUser()
+    external
+  {
+    // vm.startPrank(ALICE);
+    // weth.approve(moneyMarketDiamond, 10 ether);
+    // lendFacet.deposit(address(weth), 10 ether);
+    // vm.stopPrank();
+    // assertEq(weth.balanceOf(ALICE), 990 ether);
+    // assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
+    // assertEq(ibWeth.balanceOf(ALICE), 10 ether);
+    // vm.startPrank(ALICE);
+    // lendFacet.withdraw(address(ibWeth), 10 ether);
+    // vm.stopPrank();
+  }
 }
