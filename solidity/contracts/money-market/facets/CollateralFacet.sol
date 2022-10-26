@@ -25,6 +25,12 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    if (
+      moneyMarketDs.assetTiers[_token] != LibMoneyMarket01.AssetTier.COLLATERAL
+    ) {
+      revert CollateralFacet_InvalidAssetTier();
+    }
+
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
       _subAccountId

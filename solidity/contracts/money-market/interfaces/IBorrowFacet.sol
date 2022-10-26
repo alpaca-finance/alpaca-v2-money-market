@@ -24,4 +24,5 @@ interface IBorrowFacet {
     uint256 _totalBorrowedUSDValue,
     uint256 _borrowingUSDValue
   );
+  error BorrowFacet_InvalidAssetTier();
 }

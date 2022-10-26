@@ -33,16 +33,20 @@ contract BaseTest is DSTest {
 
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
   MockERC20 internal ibUsdc;
+  MockERC20 internal ibIsolateToken;
 
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
+    isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
     ibUsdc = deployMockErc20("Inerest USD COIN", "IBUSDC", 18);
+    ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -181,10 +185,12 @@ contract BaseTest is DSTest {
   {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](5);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
+    selectors[3] = adminFacet.setAssetTiers.selector;
+    selectors[4] = adminFacet.assetTiers.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

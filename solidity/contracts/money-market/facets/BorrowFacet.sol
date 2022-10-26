@@ -26,20 +26,12 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
       _subAccountId
     );
 
-    if (_ibToken == address(0)) {
-      revert BorrowFacet_InvalidToken(_token);
-    }
-
-    _checkBorrowingPower(_subAccount, _token, _amount, moneyMarketDs);
-
-    _checkAvailableToken(_token, _amount, moneyMarketDs);
+    _validate(_subAccount, _token, _amount, moneyMarketDs);
 
     LibDoublyLinkedList.List storage debtShare = moneyMarketDs
       .subAccountDebtShares[_subAccount];
@@ -89,10 +81,56 @@ contract BorrowFacet is IBorrowFacet {
     return debtShares.getAll();
   }
 
+  function _validate(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view {
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+
+    // check open market
+    if (_ibToken == address(0)) {
+      revert BorrowFacet_InvalidToken(_token);
+    }
+
+    // check asset tier
+
+    uint256 _totalBorrowingPowerUSDValue = LibMoneyMarket01
+      .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
+
+    (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset) = LibMoneyMarket01
+      .getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
+
+    if (
+      moneyMarketDs.assetTiers[_token] == LibMoneyMarket01.AssetTier.ISOLATE
+    ) {
+      if (
+        !moneyMarketDs.subAccountDebtShares[_subAccount].has(_token) &&
+        moneyMarketDs.subAccountDebtShares[_subAccount].size > 0
+      ) {
+        revert BorrowFacet_InvalidAssetTier();
+      }
+    } else if (_hasIsolateAsset) {
+      revert BorrowFacet_InvalidAssetTier();
+    }
+
+    _checkBorrowingPower(
+      _totalBorrowingPowerUSDValue,
+      _totalBorrowedUSDValue,
+      _token,
+      _amount,
+      moneyMarketDs
+    );
+
+    _checkAvailableToken(_token, _amount, moneyMarketDs);
+  }
+
   // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
-    address _subAccount,
+    uint256 _borrowingPower,
+    uint256 _borrowedValue,
     address _token,
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
@@ -102,20 +140,10 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _borrowingUSDValue = LibFullMath.mulDiv(_amount, _tokenPrice, 1e18);
 
-    uint256 _totalBorrowingPowerUSDValue = LibMoneyMarket01
-      .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
-
-    uint256 _totalBorrowedUSDValue = LibMoneyMarket01.getTotalBorrowedUSDValue(
-      _subAccount,
-      moneyMarketDs
-    );
-
-    if (
-      _totalBorrowingPowerUSDValue < _totalBorrowedUSDValue + _borrowingUSDValue
-    ) {
+    if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert BorrowFacet_BorrowingValueTooHigh(
-        _totalBorrowingPowerUSDValue,
-        _totalBorrowedUSDValue,
+        _borrowingPower,
+        _borrowedValue,
         _borrowingUSDValue
       );
     }

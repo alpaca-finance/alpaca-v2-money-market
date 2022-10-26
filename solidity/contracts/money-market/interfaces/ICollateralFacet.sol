@@ -15,4 +15,7 @@ interface ICollateralFacet {
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);
+
+  // erros
+  error CollateralFacet_InvalidAssetTier();
 }
