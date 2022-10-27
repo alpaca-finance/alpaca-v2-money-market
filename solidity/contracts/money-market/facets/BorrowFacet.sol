@@ -62,6 +62,18 @@ contract BorrowFacet is IBorrowFacet {
     ERC20(_token).safeTransfer(_account, _amount);
   }
 
+  function repay(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    // uint256 _debtAmount =  getDebt()
+  }
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
@@ -81,11 +93,11 @@ contract BorrowFacet is IBorrowFacet {
     return debtShares.getAll();
   }
 
-  function getDebtAmount(
+  function getDebt(
     address _account,
     uint256 _subAccountId,
     address _token
-  ) external view returns (uint256) {
+  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -94,16 +106,23 @@ contract BorrowFacet is IBorrowFacet {
       _subAccountId
     );
 
-    uint256 _debtShare = moneyMarketDs
-      .subAccountDebtShares[_subAccount]
-      .getAmount(_token);
+    (_debtShare, _debtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
+  }
 
-    return
-      LibShareUtil.shareToValue(
-        moneyMarketDs.debtShares[_token],
-        _debtShare,
-        moneyMarketDs.debtValues[_token]
-      );
+  function _getDebt(
+    address _subAccount,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
+    _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(
+      _token
+    );
+
+    _debtAmount = LibShareUtil.shareToValue(
+      moneyMarketDs.debtShares[_token],
+      _debtShare,
+      moneyMarketDs.debtValues[_token]
+    );
   }
 
   function _validate(

@@ -34,5 +34,13 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenUserRepayDebt_DebtValueShouldDecrease()
     external
-  {}
+  {
+    // uint256 _debtAmount = borrowFacet.getDebt(
+    //   ALICE,
+    //   subAccount0,
+    //   address(weth)
+    // );
+    // borrowFacet.repay(ALICE, subAccount0, address(weth), _debtAmount);
+    // assertEq(borrowFacet.getDebt(ALICE, subAccount0, address(weth)), 0);
+  }
 }

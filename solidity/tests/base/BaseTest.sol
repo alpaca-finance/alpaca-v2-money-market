@@ -171,7 +171,7 @@ contract BaseTest is DSTest {
     selectors[1] = BorrowFacet.getDebtShares.selector;
     selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
     selectors[3] = BorrowFacet.getTotalUsedBorrowedPower.selector;
-    selectors[4] = BorrowFacet.getDebtAmount.selector;
+    selectors[4] = BorrowFacet.getDebt.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(brrowFacet),

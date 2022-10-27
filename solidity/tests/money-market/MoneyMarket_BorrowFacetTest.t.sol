@@ -46,14 +46,13 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
 
-    uint256 _debtAmount = borrowFacet.getDebtAmount(
-      BOB,
-      subAccount0,
-      address(weth)
-    );
+    uint256 _debtAmount;
+    (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_debtAmount, _borrowAmount);
     // sanity check on subaccount1
-    assertEq(borrowFacet.getDebtAmount(BOB, subAccount1, address(weth)), 0);
+    (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount1, address(weth));
+
+    assertEq(_debtAmount, 0);
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
