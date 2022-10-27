@@ -62,7 +62,7 @@ library LibMoneyMarket01 {
   }
 
   // TODO: handle decimal
-  function getTotalBorrowingPowerUSDValue(
+  function getTotalBorrowingPower(
     address _subAccount,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _totalBorrowingPowerUSDValue) {
@@ -93,7 +93,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getTotalBorrowedUSDValue(
+  function getTotalUsedBorrowedPower(
     address _subAccount,
     MoneyMarketDiamondStorage storage moneyMarketDs
   )

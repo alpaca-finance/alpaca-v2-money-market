@@ -256,8 +256,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       _aliceCollatAmount
     );
 
-    uint256 _borrowingPowerUSDValue = borrowFacet
-      .getTotalBorrowingPowerUSDValue(ALICE, subAccount0);
+    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(
+      ALICE,
+      subAccount0
+    );
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000/ 10000 = 4.5 ether USD
@@ -275,7 +277,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       4.09090909090909 ether
     );
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalBorrowedUSDValue(
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
       ALICE,
       subAccount0
     );
