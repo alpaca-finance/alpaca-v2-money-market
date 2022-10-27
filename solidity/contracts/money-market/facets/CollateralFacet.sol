@@ -53,6 +53,27 @@ contract CollateralFacet is ICollateralFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
   }
 
+  function removeCollateral(
+    uint256 _subAccountId,
+    address _token,
+    uint256 _removeAmount
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      msg.sender,
+      _subAccountId
+    );
+
+    // TODO: validate
+    uint256 _collateralAmount = moneyMarketDs
+      .subAccountCollats[_subAccount]
+      .getAmount(_token);
+
+    ERC20(_token).transfer(msg.sender, _removeAmount);
+  }
+
   function getCollaterals(address _account, uint256 _subAccountId)
     external
     view

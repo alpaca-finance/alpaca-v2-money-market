@@ -147,9 +147,10 @@ contract BaseTest is DSTest {
   {
     CollateralFacet collateralFacet = new CollateralFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = CollateralFacet.addCollateral.selector;
     selectors[1] = CollateralFacet.getCollaterals.selector;
+    selectors[2] = CollateralFacet.removeCollateral.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(collateralFacet),
