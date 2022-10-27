@@ -16,10 +16,10 @@ interface IBorrowFacet {
     view
     returns (LibDoublyLinkedList.Node[] memory);
 
-  function getTotalBorrowingPowerUSDValue(
-    address _account,
-    uint256 _subAccountId
-  ) external view returns (uint256 _totalBorrowingPowerUSDValue);
+  function getTotalBorrowingPower(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (uint256 _totalBorrowingPowerUSDValue);
 
   function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
     external
