@@ -99,7 +99,7 @@ contract BorrowFacet is IBorrowFacet {
       .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
 
     (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset) = LibMoneyMarket01
-      .getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
+      .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
 
     if (
       moneyMarketDs.tokenConfigs[_token].tier ==
@@ -185,7 +185,7 @@ contract BorrowFacet is IBorrowFacet {
       .getTotalBorrowingPowerUSDValue(_subAccount, moneyMarketDs);
   }
 
-  function getTotalBorrowedUSDValue(address _account, uint256 _subAccountId)
+  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
@@ -199,6 +199,6 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01
-      .getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
+      .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
   }
 }

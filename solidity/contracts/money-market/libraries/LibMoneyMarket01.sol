@@ -93,7 +93,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getTotalBorrowedUSDValue(
+  function getTotalUsedBorrowedPower(
     address _subAccount,
     MoneyMarketDiamondStorage storage moneyMarketDs
   )

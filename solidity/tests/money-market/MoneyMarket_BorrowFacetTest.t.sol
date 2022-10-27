@@ -275,7 +275,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       4.09090909090909 ether
     );
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalBorrowedUSDValue(
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
       ALICE,
       subAccount0
     );

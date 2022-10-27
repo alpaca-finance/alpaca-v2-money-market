@@ -21,7 +21,7 @@ interface IBorrowFacet {
     uint256 _subAccountId
   ) external view returns (uint256 _totalBorrowingPowerUSDValue);
 
-  function getTotalBorrowedUSDValue(address _account, uint256 _subAccountId)
+  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
