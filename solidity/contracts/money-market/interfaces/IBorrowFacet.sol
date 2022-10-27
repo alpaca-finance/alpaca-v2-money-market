@@ -11,6 +11,13 @@ interface IBorrowFacet {
     uint256 _amount
   ) external;
 
+  function repay(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external;
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
@@ -31,6 +38,11 @@ interface IBorrowFacet {
     uint256 _subAccountId,
     address _token
   ) external view returns (uint256, uint256);
+
+  function getGlobalDebt(address _token)
+    external
+    view
+    returns (uint256, uint256);
 
   // Errors
   error BorrowFacet_InvalidToken(address _token);

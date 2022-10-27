@@ -6,5 +6,7 @@ interface ILendFacet {
 
   function withdraw(address _ibToken, uint256 _shareAmount) external;
 
+  function getTotalToken(address _token) external view returns (uint256);
+
   error LendFacet_InvalidToken(address _token);
 }

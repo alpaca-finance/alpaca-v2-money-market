@@ -144,7 +144,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbAmount()
+  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount()
     external
   {
     uint256 _bobDepositAmount = 10 ether;
