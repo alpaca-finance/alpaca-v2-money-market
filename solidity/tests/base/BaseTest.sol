@@ -126,8 +126,9 @@ contract BaseTest is DSTest {
   {
     LendFacet lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](1);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = lendFacet.deposit.selector;
+    selectors[1] = lendFacet.withdraw.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(lendFacet),

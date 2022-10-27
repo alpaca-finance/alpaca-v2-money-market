@@ -15,7 +15,15 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
 
-  event LogLend(
+  event LogDeposit(
+    address indexed _user,
+    address _token,
+    address _ibToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
+
+  event LogWithdraw(
     address indexed _user,
     address _token,
     address _ibToken,
@@ -46,7 +54,32 @@ contract LendFacet is ILendFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IIbToken(_ibToken).mint(msg.sender, _shareToMint);
 
-    emit LogLend(msg.sender, _token, _ibToken, _amount, _shareToMint);
+    emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
+  }
+
+  function withdraw(address _ibToken, uint256 _shareAmount) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
+
+    if (_token == address(0)) {
+      revert LendFacet_InvalidToken(_ibToken);
+    }
+
+    uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
+    uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
+
+    uint256 _shareValue = LibShareUtil.shareToValue(
+      _totalToken,
+      _shareAmount,
+      _totalSupply
+    );
+
+    IIbToken(_ibToken).burn(msg.sender, _shareAmount);
+    ERC20(_token).transfer(msg.sender, _shareValue);
+
+    emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
 
   // totalToken is the amount of token remains in MM + borrowed amount
