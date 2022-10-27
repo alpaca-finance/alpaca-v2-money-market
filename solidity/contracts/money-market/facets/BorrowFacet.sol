@@ -81,6 +81,31 @@ contract BorrowFacet is IBorrowFacet {
     return debtShares.getAll();
   }
 
+  function getDebtAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      _account,
+      _subAccountId
+    );
+
+    uint256 _debtShare = moneyMarketDs
+      .subAccountDebtShares[_subAccount]
+      .getAmount(_token);
+
+    return
+      LibShareUtil.shareToValue(
+        moneyMarketDs.debtShares[_token],
+        _debtShare,
+        moneyMarketDs.debtValues[_token]
+      );
+  }
+
   function _validate(
     address _subAccount,
     address _token,

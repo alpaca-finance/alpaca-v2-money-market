@@ -9,6 +9,7 @@ import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol"
 
 contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   uint256 subAccount0 = 0;
+  uint256 subAccount1 = 1;
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -44,6 +45,15 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
+
+    uint256 _debtAmount = borrowFacet.getDebtAmount(
+      BOB,
+      subAccount0,
+      address(weth)
+    );
+    assertEq(_debtAmount, _borrowAmount);
+    // sanity check on subaccount1
+    assertEq(borrowFacet.getDebtAmount(BOB, subAccount1, address(weth)), 0);
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {

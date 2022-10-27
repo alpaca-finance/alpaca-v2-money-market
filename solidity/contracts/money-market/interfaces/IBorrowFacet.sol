@@ -26,6 +26,12 @@ interface IBorrowFacet {
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
 
+  function getDebtAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256);
+
   // Errors
   error BorrowFacet_InvalidToken(address _token);
   error BorrowFacet_NotEnoughToken(uint256 _borrowAmount);
