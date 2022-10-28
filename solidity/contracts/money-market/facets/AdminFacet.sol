@@ -31,7 +31,9 @@ contract AdminFacet is IAdminFacet {
         .TokenConfig({
           tier: _tokenConfigs[_i].tier,
           collateralFactor: _tokenConfigs[_i].collateralFactor,
-          borrowingFactor: _tokenConfigs[_i].borrowingFactor
+          borrowingFactor: _tokenConfigs[_i].borrowingFactor,
+          maxCollateral: _tokenConfigs[_i].maxCollateral,
+          maxBorrow: _tokenConfigs[_i].maxBorrow
         });
 
       moneyMarketDs.tokenConfigs[_tokenConfigs[_i].token] = _tokenConfig;

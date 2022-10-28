@@ -98,4 +98,18 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     );
     vm.stopPrank();
   }
+
+  function testRevert_WhenUserAddCollateralThanLimit_ShouldRevert() external {
+    uint256 _collateral = 120 ether;
+
+    vm.startPrank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ICollateralFacet.CollateralFacet_ExceedCollateralLimit.selector
+      )
+    );
+    collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
+
+    vm.stopPrank();
+  }
 }

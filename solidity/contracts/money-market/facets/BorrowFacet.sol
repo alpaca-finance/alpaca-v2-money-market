@@ -302,6 +302,10 @@ contract BorrowFacet is IBorrowFacet {
     if (_mmTokenBalnce < _borrowAmount) {
       revert BorrowFacet_NotEnoughToken(_borrowAmount);
     }
+
+    if (_borrowAmount > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+      revert BorrowFacet_ExceedBorrowLimit();
+    }
   }
 
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
