@@ -19,7 +19,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 20 ether);
+    lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
@@ -291,5 +291,28 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       subAccount0
     );
     assertEq(_borrowedUSDValue, 4.499999999999999 ether);
+  }
+
+  function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit()
+    external
+  {
+    uint256 _borrowAmount = 40 ether;
+    uint256 _bobCollateral = 100 ether;
+
+    vm.startPrank(BOB);
+
+    collateralFacet.addCollateral(
+      BOB,
+      subAccount0,
+      address(weth),
+      _bobCollateral
+    );
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector
+      )
+    );
+    borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
+    vm.stopPrank();
   }
 }

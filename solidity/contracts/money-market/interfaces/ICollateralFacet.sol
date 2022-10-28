@@ -18,4 +18,5 @@ interface ICollateralFacet {
 
   // erros
   error CollateralFacet_InvalidAssetTier();
+  error CollateralFacet_ExceedCollateralLimit();
 }

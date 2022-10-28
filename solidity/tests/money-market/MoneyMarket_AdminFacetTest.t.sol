@@ -31,16 +31,18 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     address _token = address(9998);
 
     IAdminFacet.TokenConfigInput[]
-      memory _intputs = new IAdminFacet.TokenConfigInput[](1);
+      memory _inputs = new IAdminFacet.TokenConfigInput[](1);
 
-    _intputs[0] = IAdminFacet.TokenConfigInput({
+    _inputs[0] = IAdminFacet.TokenConfigInput({
       token: _token,
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
-      borrowingFactor: 6000
+      borrowingFactor: 6000,
+      maxCollateral: 1000e18,
+      maxBorrow: 100e18
     });
 
-    adminFacet.setTokenConfigs(_intputs);
+    adminFacet.setTokenConfigs(_inputs);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(
       _token
