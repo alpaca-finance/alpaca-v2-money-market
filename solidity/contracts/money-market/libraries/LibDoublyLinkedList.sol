@@ -80,7 +80,7 @@ library LibDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (has(list, addr)) revert LibDoublyLinkedList_Existed();
+    if (!has(list, addr)) revert LibDoublyLinkedList_NotExisted();
 
     // Effect
     if (amount == 0) {

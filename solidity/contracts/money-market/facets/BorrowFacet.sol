@@ -17,6 +17,20 @@ contract BorrowFacet is IBorrowFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  event LogRemoveDebt(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _removeDebtShare,
+    uint256 _removeDebtAmount
+  );
+
+  event LogRepay(
+    address indexed _user,
+    uint256 indexed _subAccountId,
+    address _token,
+    uint256 _actualRepayAmount
+  );
+
   function borrow(
     address _account,
     uint256 _subAccountId,
@@ -62,6 +76,54 @@ contract BorrowFacet is IBorrowFacet {
     ERC20(_token).safeTransfer(_account, _amount);
   }
 
+  function repay(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      _account,
+      _subAccountId
+    );
+
+    (uint256 _oldSubAccountDebtShare, ) = _getDebt(
+      _subAccount,
+      _token,
+      moneyMarketDs
+    );
+
+    uint256 _shareToRemove = LibShareUtil.valueToShare(
+      moneyMarketDs.debtShares[_token],
+      _repayAmount,
+      moneyMarketDs.debtValues[_token]
+    );
+
+    _shareToRemove = _oldSubAccountDebtShare > _shareToRemove
+      ? _shareToRemove
+      : _oldSubAccountDebtShare;
+
+    uint256 _actualRepayAmount = _removeDebt(
+      _subAccount,
+      _token,
+      _oldSubAccountDebtShare,
+      _shareToRemove,
+      moneyMarketDs
+    );
+
+    // transfer only amount to repay
+    ERC20(_token).safeTransferFrom(
+      msg.sender,
+      address(this),
+      _actualRepayAmount
+    );
+
+    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
+  }
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
@@ -79,6 +141,79 @@ contract BorrowFacet is IBorrowFacet {
       .subAccountDebtShares[_subAccount];
 
     return debtShares.getAll();
+  }
+
+  function getDebt(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      _account,
+      _subAccountId
+    );
+
+    (_debtShare, _debtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
+  }
+
+  function _getDebt(
+    address _subAccount,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
+    _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(
+      _token
+    );
+
+    _debtAmount = LibShareUtil.shareToValue(
+      moneyMarketDs.debtShares[_token],
+      _debtShare,
+      moneyMarketDs.debtValues[_token]
+    );
+  }
+
+  function getGlobalDebt(address _token)
+    external
+    view
+    returns (uint256, uint256)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    return (moneyMarketDs.debtShares[_token], moneyMarketDs.debtValues[_token]);
+  }
+
+  function _removeDebt(
+    address _subAccount,
+    address _token,
+    uint256 _oldSubAccountDebtShare,
+    uint256 _shareToRemove,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _repayAmount) {
+    uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
+    uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
+
+    // update user debtShare
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(
+      _token,
+      _oldSubAccountDebtShare - _shareToRemove
+    );
+
+    // update global debtShare
+    _repayAmount = LibShareUtil.shareToValue(
+      _oldDebtShare,
+      _shareToRemove,
+      _oldDebtValue
+    );
+
+    moneyMarketDs.debtShares[_token] -= _shareToRemove;
+    moneyMarketDs.debtValues[_token] -= _repayAmount;
+
+    // emit event
+    emit LogRemoveDebt(_subAccount, _token, _shareToRemove, _repayAmount);
   }
 
   function _validate(

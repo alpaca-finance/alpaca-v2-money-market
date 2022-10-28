@@ -92,4 +92,10 @@ contract LendFacet is ILendFacet {
       moneyMarketDs.debtValues[_token] -
       moneyMarketDs.collats[_token];
   }
+
+  function getTotalToken(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return _getTotalToken(_token, moneyMarketDs);
+  }
 }
