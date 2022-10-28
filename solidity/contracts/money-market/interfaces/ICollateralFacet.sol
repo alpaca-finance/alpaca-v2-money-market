@@ -17,7 +17,6 @@ interface ICollateralFacet {
     returns (LibDoublyLinkedList.Node[] memory);
 
   // erros
-  error CollateralFacet_InvalidToken(address _token);
   error CollateralFacet_InvalidAssetTier();
   error CollateralFacet_ExceedCollateralLimit();
 }

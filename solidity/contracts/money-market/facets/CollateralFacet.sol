@@ -73,10 +73,6 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _collateralAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    if (_token == address(0)) {
-      revert CollateralFacet_InvalidToken(_token);
-    }
-
     if (
       moneyMarketDs.tokenConfigs[_token].tier !=
       LibMoneyMarket01.AssetTier.COLLATERAL
