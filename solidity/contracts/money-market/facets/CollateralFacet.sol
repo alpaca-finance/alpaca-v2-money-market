@@ -105,7 +105,7 @@ contract CollateralFacet is ICollateralFacet {
       revert CollateralFacet_BorrowingPowerTooLow();
     }
 
-    ERC20(_token).transfer(msg.sender, _removeAmount);
+    ERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }
