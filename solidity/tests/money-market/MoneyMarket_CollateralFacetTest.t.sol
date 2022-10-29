@@ -118,6 +118,21 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(_balanceAfter - _balanceBefore, 10 ether);
   }
 
+  // assertEq(_balanceAfter - _balanceBefore, 10 ether);
+  function testRevert_WhenUserAddCollateralThanLimit_ShouldRevert() external {
+    uint256 _collateral = 120 ether;
+
+    vm.startPrank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ICollateralFacet.CollateralFacet_ExceedCollateralLimit.selector
+      )
+    );
+    collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
+
+    vm.stopPrank();
+  }
+
   function testRevert_WhenUserRemoveCollateralMoreThanExistingAmount_ShouldRevert()
     external
   {
@@ -133,7 +148,5 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
     uint256 _balanceAfter = weth.balanceOf(ALICE);
-
-    // assertEq(_balanceAfter - _balanceBefore, 10 ether);
   }
 }

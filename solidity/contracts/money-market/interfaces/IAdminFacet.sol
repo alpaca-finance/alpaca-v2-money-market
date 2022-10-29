@@ -14,6 +14,8 @@ interface IAdminFacet {
     LibMoneyMarket01.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
+    uint256 maxCollateral;
+    uint256 maxBorrow;
   }
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;

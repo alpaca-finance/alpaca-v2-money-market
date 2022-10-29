@@ -53,4 +53,5 @@ interface IBorrowFacet {
     uint256 _borrowingUSDValue
   );
   error BorrowFacet_InvalidAssetTier();
+  error BorrowFacet_ExceedBorrowLimit();
 }

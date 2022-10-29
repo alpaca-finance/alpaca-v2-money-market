@@ -25,12 +25,7 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    if (
-      moneyMarketDs.tokenConfigs[_token].tier !=
-      LibMoneyMarket01.AssetTier.COLLATERAL
-    ) {
-      revert CollateralFacet_InvalidAssetTier();
-    }
+    _validate(_token, _amount, moneyMarketDs);
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
@@ -114,5 +109,22 @@ contract CollateralFacet is ICollateralFacet {
     ];
 
     return collats.getAll();
+  }
+
+  function _validate(
+    address _token,
+    uint256 _collateralAmount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view {
+    if (
+      moneyMarketDs.tokenConfigs[_token].tier !=
+      LibMoneyMarket01.AssetTier.COLLATERAL
+    ) {
+      revert CollateralFacet_InvalidAssetTier();
+    }
+
+    if (_collateralAmount > moneyMarketDs.tokenConfigs[_token].maxCollateral) {
+      revert CollateralFacet_ExceedCollateralLimit();
+    }
   }
 }
