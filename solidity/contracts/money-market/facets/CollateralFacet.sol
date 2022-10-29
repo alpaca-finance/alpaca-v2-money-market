@@ -66,10 +66,32 @@ contract CollateralFacet is ICollateralFacet {
       _subAccountId
     );
 
-    // TODO: validate
-    uint256 _collateralAmount = moneyMarketDs
-      .subAccountCollats[_subAccount]
-      .getAmount(_token);
+    LibDoublyLinkedList.List storage _subAccountCollatList = moneyMarketDs
+      .subAccountCollats[_subAccount];
+
+    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
+
+    // Question: This check can be removed since if _removeAmount > _collateralAmount it will revert by underflow
+    if (_removeAmount > _collateralAmount) {
+      revert CollateralFacet_TooManyCollateralRemoved();
+    }
+
+    _subAccountCollatList.updateOrRemove(
+      _token,
+      _collateralAmount - _removeAmount
+    );
+
+    uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(
+      _subAccount,
+      moneyMarketDs
+    );
+
+    (uint256 _totalUsedBorrowedPower, ) = LibMoneyMarket01
+      .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+
+    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+      revert CollateralFacet_BorrowingPowerTooLow();
+    }
 
     ERC20(_token).transfer(msg.sender, _removeAmount);
   }

@@ -117,4 +117,23 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_balanceAfter - _balanceBefore, 10 ether);
   }
+
+  function testRevert_WhenUserRemoveCollateralMoreThanExistingAmount_ShouldRevert()
+    external
+  {
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
+    vm.stopPrank();
+
+    assertEq(weth.balanceOf(ALICE), 990 ether);
+    assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
+
+    uint256 _balanceBefore = weth.balanceOf(ALICE);
+    vm.prank(ALICE);
+    collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
+    uint256 _balanceAfter = weth.balanceOf(ALICE);
+
+    // assertEq(_balanceAfter - _balanceBefore, 10 ether);
+  }
 }

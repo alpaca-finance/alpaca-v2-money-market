@@ -24,4 +24,6 @@ interface ICollateralFacet {
 
   // erros
   error CollateralFacet_InvalidAssetTier();
+  error CollateralFacet_TooManyCollateralRemoved();
+  error CollateralFacet_BorrowingPowerTooLow();
 }
