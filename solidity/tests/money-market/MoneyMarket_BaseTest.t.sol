@@ -24,6 +24,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
 
+  uint256 subAccount0 = 0;
+  uint256 subAccount1 = 1;
+
   function setUp() public virtual {
     (moneyMarketDiamond) = deployPoolDiamond();
 

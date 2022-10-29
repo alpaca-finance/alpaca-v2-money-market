@@ -7,8 +7,6 @@ import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
 import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
 
 contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
-  uint256 subAccount0 = 0;
-
   function setUp() public override {
     super.setUp();
   }
@@ -118,7 +116,6 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(_balanceAfter - _balanceBefore, 10 ether);
   }
 
-  // assertEq(_balanceAfter - _balanceBefore, 10 ether);
   function testRevert_WhenUserAddCollateralThanLimit_ShouldRevert() external {
     uint256 _collateral = 120 ether;
 
@@ -144,9 +141,74 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE), 990 ether);
     assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
 
-    uint256 _balanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ICollateralFacet.CollateralFacet_TooManyCollateralRemoved.selector
+      )
+    );
     collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
-    uint256 _balanceAfter = weth.balanceOf(ALICE);
+  }
+
+  function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowedPower_ShouldRevert()
+    external
+  {
+    // BOB deposit 10 weth
+    vm.startPrank(BOB);
+    lendFacet.deposit(address(weth), 10 ether);
+    vm.stopPrank();
+
+    // alice add collateral 10 weth
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    // alice borrow 1 weth
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), 1 ether);
+
+    // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowedPower
+    // should revert
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ICollateralFacet.CollateralFacet_BorrowingPowerTooLow.selector
+      )
+    );
+    collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether);
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenUserRemoveCollateral_ShouldWork() external {
+    uint256 _balanceBefore = weth.balanceOf(ALICE);
+    uint256 _MMbalanceBefore = weth.balanceOf(moneyMarketDiamond);
+
+    uint256 _addCollateralAmount = 10 ether;
+    uint256 _removeCollateralAmount = _addCollateralAmount;
+
+    // alice add collateral 10 weth
+    vm.prank(ALICE);
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _addCollateralAmount
+    );
+
+    assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
+    assertEq(
+      weth.balanceOf(moneyMarketDiamond),
+      _MMbalanceBefore + _addCollateralAmount
+    );
+
+    vm.prank(ALICE);
+    collateralFacet.removeCollateral(
+      subAccount0,
+      address(weth),
+      _removeCollateralAmount
+    );
+
+    assertEq(weth.balanceOf(ALICE), _balanceBefore);
+    assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore);
   }
 }

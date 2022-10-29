@@ -12,9 +12,24 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 
+// TODO: remove
+import { console } from "../../../tests/utils/console.sol";
+
 contract CollateralFacet is ICollateralFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+
+  event LogAddCollateral(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _amount
+  );
+
+  event LogRemoveCollateral(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _amount
+  );
 
   function addCollateral(
     address _account,
@@ -46,6 +61,8 @@ contract CollateralFacet is ICollateralFacet {
 
     moneyMarketDs.collats[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    emit LogAddCollateral(_subAccount, _token, _amount);
   }
 
   function removeCollateral(
@@ -89,6 +106,8 @@ contract CollateralFacet is ICollateralFacet {
     }
 
     ERC20(_token).transfer(msg.sender, _removeAmount);
+
+    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }
 
   function getCollaterals(address _account, uint256 _subAccountId)
