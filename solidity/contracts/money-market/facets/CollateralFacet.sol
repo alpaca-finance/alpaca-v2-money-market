@@ -40,7 +40,7 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    _validate(_token, _amount, moneyMarketDs);
+    _validateAddCollateral(_token, _amount, moneyMarketDs);
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
@@ -130,7 +130,7 @@ contract CollateralFacet is ICollateralFacet {
     return collats.getAll();
   }
 
-  function _validate(
+  function _validateAddCollateral(
     address _token,
     uint256 _collateralAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
