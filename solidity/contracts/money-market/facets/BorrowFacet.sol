@@ -31,6 +31,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _actualRepayAmount
   );
 
+  // TODO: open another PR for refactoring borrow interface by removing _account input => should be msg.sender
   function borrow(
     address _account,
     uint256 _subAccountId,
