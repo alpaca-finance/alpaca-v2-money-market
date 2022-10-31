@@ -22,6 +22,8 @@ interface ICollateralFacet {
     view
     returns (LibDoublyLinkedList.Node[] memory);
 
+  function collats(address _token) external view returns (uint256);
+
   // erros
   error CollateralFacet_InvalidAssetTier();
   error CollateralFacet_TooManyCollateralRemoved();

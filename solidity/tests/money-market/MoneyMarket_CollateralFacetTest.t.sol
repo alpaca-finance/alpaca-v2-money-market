@@ -181,6 +181,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
       weth.balanceOf(moneyMarketDiamond),
       _MMbalanceBefore + _addCollateralAmount
     );
+    assertEq(collateralFacet.collats(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
     collateralFacet.removeCollateral(
@@ -197,5 +198,6 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore);
     assertEq(_borrowingPower, 0);
+    assertEq(collateralFacet.collats(address(weth)), 0);
   }
 }
