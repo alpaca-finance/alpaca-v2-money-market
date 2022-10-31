@@ -46,9 +46,22 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       debtValue.init();
     }
 
-    uint256 _newAmount = debtValue.getAmount(_token) + _amount;
+    LibDoublyLinkedList.List storage globalDebts = moneyMarketDs
+      .nonCollatGlobalDebtValues[_token];
 
-    debtValue.addOrUpdate(_token, _newAmount);
+    if (
+      globalDebts.getNextOf(LibDoublyLinkedList.START) ==
+      LibDoublyLinkedList.EMPTY
+    ) {
+      globalDebts.init();
+    }
+
+    uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;
+    uint256 _newGlobalDebt = globalDebts.getAmount(msg.sender) + _amount;
+
+    debtValue.addOrUpdate(_token, _newAccountDebt);
+
+    globalDebts.addOrUpdate(msg.sender, _newGlobalDebt);
 
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
@@ -115,24 +128,33 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     view
     returns (uint256)
   {
-    // LibMoneyMarket01.MoneyMarketDiamondStorage
-    // storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // TODO: return the correct value
-    return 0;
+    return LibMoneyMarket01.getNonCollatGlobalDebt(_token, moneyMarketDs);
   }
 
   function _removeDebt(
     address _account,
     address _token,
-    uint256 _oldSubAccountDebtValue,
+    uint256 _oldAccountDebtValue,
     uint256 _valueToRemove,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // update user debtShare
     moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(
       _token,
-      _oldSubAccountDebtValue - _valueToRemove
+      _oldAccountDebtValue - _valueToRemove
+    );
+
+    uint256 _oldGlobalDebt = moneyMarketDs
+      .nonCollatGlobalDebtValues[_token]
+      .getAmount(_account);
+
+    // update global debt
+    moneyMarketDs.nonCollatGlobalDebtValues[_token].updateOrRemove(
+      _account,
+      _oldGlobalDebt - _valueToRemove
     );
 
     // emit event
@@ -154,8 +176,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     // check credit
     // TODO: use the correct state vars
-    uint256 _totalBorrowingPowerUSDValue = LibMoneyMarket01
-      .getTotalBorrowingPower(_account, moneyMarketDs);
+    uint256 _totalBorrowingPowerUSDValue = 1e30;
 
     (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01
       .getTotalUsedBorrowedPower(_account, moneyMarketDs);

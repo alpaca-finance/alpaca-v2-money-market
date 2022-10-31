@@ -49,6 +49,11 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _debtAmount;
     _debtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
     assertEq(_debtAmount, _borrowAmount);
+
+    uint256 _totalDebtAmount = nonCollatBorrowFacet.nonCollatGetGlobalDebt(
+      address(weth)
+    );
+    assertEq(_totalDebtAmount, _borrowAmount);
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
@@ -64,81 +69,79 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  // function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate()
-  //   external
-  // {
-  //   uint256 _aliceBorrowAmount = 10 ether;
-  //   uint256 _aliceBorrowAmount2 = 20 ether;
+  function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate()
+    external
+  {
+    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _aliceBorrowAmount2 = 20 ether;
 
-  //   vm.startPrank(ALICE);
+    vm.startPrank(ALICE);
 
-  //   collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
 
-  //   nonCollatBorrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
-  //   vm.stopPrank();
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet
+      .nonCollatGetDebtShares(ALICE);
 
-  //   LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet
-  //     .getDebtShares(ALICE, subAccount0);
+    assertEq(aliceDebtShares.length, 1);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
 
-  //   assertEq(aliceDebtShares.length, 1);
-  //   assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
+    vm.startPrank(ALICE);
 
-  //   vm.startPrank(ALICE);
+    // list will be add at the front of linkList
+    nonCollatBorrowFacet.nonCollatBorrow(address(usdc), _aliceBorrowAmount2);
+    vm.stopPrank();
 
-  //   // list will be add at the front of linkList
-  //   nonCollatBorrowFacet.borrow(ALICE, subAccount0, address(usdc), _aliceBorrowAmount2);
-  //   vm.stopPrank();
+    aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtShares(ALICE);
 
-  //   aliceDebtShares = nonCollatBorrowFacet.getDebtShares(ALICE, subAccount0);
+    assertEq(aliceDebtShares.length, 2);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
+    assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount);
 
-  //   assertEq(aliceDebtShares.length, 2);
-  //   assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
-  //   assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount);
+    vm.startPrank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
 
-  //   vm.startPrank(ALICE);
-  //   nonCollatBorrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
-  //   vm.stopPrank();
+    aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtShares(ALICE);
 
-  //   aliceDebtShares = nonCollatBorrowFacet.getDebtShares(ALICE, subAccount0);
+    assertEq(aliceDebtShares.length, 2);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
+    assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
 
-  //   assertEq(aliceDebtShares.length, 2);
-  //   assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
-  //   assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
-  // }
+    uint256 _totalwethDebtAmount = nonCollatBorrowFacet.nonCollatGetGlobalDebt(
+      address(weth)
+    );
 
-  // function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
-  //   uint256 _aliceBorrowAmount = 20 ether;
+    assertEq(_totalwethDebtAmount, _aliceBorrowAmount * 2);
+  }
 
-  //   vm.startPrank(ALICE);
+  function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
+    uint256 _aliceBorrowAmount = 30 ether;
 
-  //   collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+    vm.startPrank(ALICE);
 
-  //   nonCollatBorrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
-  //   vm.stopPrank();
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
 
-  //   LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet
-  //     .getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet
+      .nonCollatGetDebtShares(ALICE);
 
-  //   assertEq(aliceDebtShares.length, 1);
-  //   assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
+    assertEq(aliceDebtShares.length, 1);
+    assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
 
-  //   vm.startPrank(ALICE);
+    vm.startPrank(ALICE);
 
-  //   // list will be add at the front of linkList
-  //   vm.expectRevert(
-  //     abi.encodeWithSelector(
-  //       InonCollatBorrowFacet.nonCollatBorrowFacet_NotEnoughToken.selector,
-  //       _aliceBorrowAmount * 2
-  //     )
-  //   );
-  //   nonCollatBorrowFacet.borrow(
-  //     ALICE,
-  //     subAccount0,
-  //     address(weth),
-  //     _aliceBorrowAmount * 2
-  //   );
-  //   vm.stopPrank();
-  // }
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        INonCollatBorrowFacet.NonCollatBorrowFacet_NotEnoughToken.selector,
+        _aliceBorrowAmount * 2
+      )
+    );
+
+    // this should reverts as their is only 50 weth but alice try to borrow 60 (20 + (20*2))
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount * 2);
+    vm.stopPrank();
+  }
 
   // function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount()
   //   external
