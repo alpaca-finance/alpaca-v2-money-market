@@ -37,7 +37,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     );
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
@@ -62,7 +62,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
         address(mockToken)
       )
     );
-    borrowFacet.borrow(BOB, subAccount0, address(mockToken), _borrowAmount);
+    borrowFacet.borrow(subAccount0, address(mockToken), _borrowAmount);
     vm.stopPrank();
   }
 
@@ -76,7 +76,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
 
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet
@@ -88,7 +88,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
 
     // list will be add at the front of linkList
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _aliceBorrowAmount2);
+    borrowFacet.borrow(subAccount0, address(usdc), _aliceBorrowAmount2);
     vm.stopPrank();
 
     aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
@@ -98,7 +98,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount);
 
     vm.startPrank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
@@ -115,7 +115,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
 
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet
@@ -133,12 +133,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
         _aliceBorrowAmount * 2
       )
     );
-    borrowFacet.borrow(
-      ALICE,
-      subAccount0,
-      address(weth),
-      _aliceBorrowAmount * 2
-    );
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount * 2);
     vm.stopPrank();
   }
 
@@ -150,7 +145,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -177,9 +172,9 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       _aliceCollatAmount * 2
     );
 
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.expectRevert();
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
 
     vm.stopPrank();
   }
@@ -199,7 +194,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     );
 
     borrowFacet.borrow(
-      BOB,
       subAccount0,
       address(isolateToken),
       _bobIsloateBorrowAmount
@@ -223,7 +217,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     // first borrow isolate token
     borrowFacet.borrow(
-      BOB,
       subAccount0,
       address(isolateToken),
       _bobIsloateBorrowAmount
@@ -231,7 +224,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     // borrow the isolate token again should passed
     borrowFacet.borrow(
-      BOB,
       subAccount0,
       address(isolateToken),
       _bobIsloateBorrowAmount
@@ -241,12 +233,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.expectRevert(
       abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector)
     );
-    borrowFacet.borrow(
-      BOB,
-      subAccount0,
-      address(weth),
-      _bobIsloateBorrowAmount
-    );
+    borrowFacet.borrow(subAccount0, address(weth), _bobIsloateBorrowAmount);
     vm.stopPrank();
   }
 
@@ -277,12 +264,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // maximumBorrowed weth amount = 4.5 * 10000/(10000 + 1000) ~ 4.09090909090909
     // _borrowedUSDValue = 4.09090909090909 * (10000 + 1000)/10000 = 4.499999999999999
     vm.prank(ALICE);
-    borrowFacet.borrow(
-      ALICE,
-      subAccount0,
-      address(weth),
-      4.09090909090909 ether
-    );
+    borrowFacet.borrow(subAccount0, address(weth), 4.09090909090909 ether);
 
     (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
       ALICE,
@@ -310,7 +292,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
         IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector
       )
     );
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
   }
 }

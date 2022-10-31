@@ -5,7 +5,6 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface IBorrowFacet {
   function borrow(
-    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
