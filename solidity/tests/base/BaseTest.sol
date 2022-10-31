@@ -196,7 +196,7 @@ contract BaseTest is DSTest {
 
     bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
-    selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtShares.selector;
+    selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
     selectors[2] = NonCollatBorrowFacet
       .nonCollatGetTotalBorrowingPower
       .selector;

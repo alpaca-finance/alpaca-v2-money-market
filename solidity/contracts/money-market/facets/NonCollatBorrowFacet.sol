@@ -88,7 +88,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
   }
 
-  function nonCollatGetDebtShares(address _account)
+  function nonCollatGetDebtValues(address _account)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)

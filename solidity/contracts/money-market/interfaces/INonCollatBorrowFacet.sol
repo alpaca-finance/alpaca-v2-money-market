@@ -12,7 +12,7 @@ interface INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external;
 
-  function nonCollatGetDebtShares(address _account)
+  function nonCollatGetDebtValues(address _account)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);
