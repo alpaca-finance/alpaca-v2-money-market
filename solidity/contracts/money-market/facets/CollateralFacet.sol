@@ -16,6 +16,18 @@ contract CollateralFacet is ICollateralFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  event LogAddCollateral(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _amount
+  );
+
+  event LogRemoveCollateral(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _amount
+  );
+
   function addCollateral(
     address _account,
     uint256 _subAccountId,
@@ -25,7 +37,7 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    _validate(_token, _amount, moneyMarketDs);
+    _validateAddCollateral(_token, _amount, moneyMarketDs);
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
@@ -46,6 +58,56 @@ contract CollateralFacet is ICollateralFacet {
 
     moneyMarketDs.collats[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    emit LogAddCollateral(_subAccount, _token, _amount);
+  }
+
+  function removeCollateral(
+    uint256 _subAccountId,
+    address _token,
+    uint256 _removeAmount
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(
+      msg.sender,
+      _subAccountId
+    );
+
+    LibDoublyLinkedList.List storage _subAccountCollatList = moneyMarketDs
+      .subAccountCollats[_subAccount];
+
+    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
+
+    // Question: This check can be removed since if _removeAmount > _collateralAmount it will revert by underflow
+    if (_removeAmount > _collateralAmount) {
+      revert CollateralFacet_TooManyCollateralRemoved();
+    }
+
+    _subAccountCollatList.updateOrRemove(
+      _token,
+      _collateralAmount - _removeAmount
+    );
+
+    uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(
+      _subAccount,
+      moneyMarketDs
+    );
+
+    (uint256 _totalUsedBorrowedPower, ) = LibMoneyMarket01
+      .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+
+    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
+    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+      revert CollateralFacet_BorrowingPowerTooLow();
+    }
+
+    moneyMarketDs.collats[_token] -= _removeAmount;
+
+    ERC20(_token).safeTransfer(msg.sender, _removeAmount);
+
+    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }
 
   function getCollaterals(address _account, uint256 _subAccountId)
@@ -68,7 +130,13 @@ contract CollateralFacet is ICollateralFacet {
     return collats.getAll();
   }
 
-  function _validate(
+  function collats(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.collats[_token];
+  }
+
+  function _validateAddCollateral(
     address _token,
     uint256 _collateralAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs

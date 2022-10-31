@@ -11,12 +11,22 @@ interface ICollateralFacet {
     uint256 _amount
   ) external;
 
+  function removeCollateral(
+    uint256 _subAccountId,
+    address _token,
+    uint256 _removeAmount
+  ) external;
+
   function getCollaterals(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);
 
+  function collats(address _token) external view returns (uint256);
+
   // erros
   error CollateralFacet_InvalidAssetTier();
+  error CollateralFacet_TooManyCollateralRemoved();
+  error CollateralFacet_BorrowingPowerTooLow();
   error CollateralFacet_ExceedCollateralLimit();
 }
