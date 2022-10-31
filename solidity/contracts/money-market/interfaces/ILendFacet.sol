@@ -8,5 +8,14 @@ interface ILendFacet {
 
   function getTotalToken(address _token) external view returns (uint256);
 
+  function pendingInterest(address _token) external view returns (uint256);
+
+  function accureInterest(address _token) external;
+
+  function getDebtLastAccureTime(address _token)
+    external
+    view
+    returns (uint256);
+
   error LendFacet_InvalidToken(address _token);
 }

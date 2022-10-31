@@ -5,6 +5,9 @@ import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
 
+// interfaces
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -47,6 +50,8 @@ library LibMoneyMarket01 {
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
     address oracle;
+    mapping(address => uint256) debtLastAccureTime;
+    mapping(address => IInterestRateModel) interestModels;
   }
 
   function moneyMarketDiamondStorage()

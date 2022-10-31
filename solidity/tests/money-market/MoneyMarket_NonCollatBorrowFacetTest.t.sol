@@ -8,8 +8,6 @@ import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/mone
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
 contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
-  uint256 subAccount0 = 0;
-  uint256 subAccount1 = 1;
   MockERC20 mockToken;
 
   function setUp() public override {

@@ -128,10 +128,13 @@ contract BaseTest is DSTest {
   {
     LendFacet lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = lendFacet.deposit.selector;
     selectors[1] = lendFacet.withdraw.selector;
     selectors[2] = lendFacet.getTotalToken.selector;
+    selectors[3] = lendFacet.pendingInterest.selector;
+    selectors[4] = lendFacet.accureInterest.selector;
+    selectors[5] = lendFacet.getDebtLastAccureTime.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(lendFacet),
@@ -222,13 +225,14 @@ contract BaseTest is DSTest {
   {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
     selectors[3] = adminFacet.setTokenConfigs.selector;
     selectors[4] = adminFacet.tokenConfigs.selector;
     selectors[5] = adminFacet.setNonCollatBorrower.selector;
+    selectors[6] = adminFacet.setInterestModels.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

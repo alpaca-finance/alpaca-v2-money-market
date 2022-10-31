@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract AdminFacet is IAdminFacet {
   // TODO: validate role
@@ -71,5 +72,11 @@ contract AdminFacet is IAdminFacet {
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return moneyMarketDs.tokenConfigs[_token];
+  }
+
+  function setInterestModels(address _token, address _model) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
   }
 }
