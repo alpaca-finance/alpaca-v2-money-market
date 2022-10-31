@@ -44,6 +44,12 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  function setNonCollatBorrower(address _borrower, bool _isOk) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
+  }
+
   function tokenToIbTokens(address _token) external view returns (address) {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();

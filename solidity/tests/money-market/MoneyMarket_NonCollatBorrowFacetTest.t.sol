@@ -18,6 +18,9 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
 
+    adminFacet.setNonCollatBorrower(ALICE, true);
+    adminFacet.setNonCollatBorrower(BOB, true);
+
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);
@@ -155,6 +158,18 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     // this should reverts as their is only 50 weth but alice try to borrow 60 (20 + (20*2))
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount * 2);
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenUserIsNotWhitelisted_ShouldRevert() external {
+    vm.startPrank(CAT);
+
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        INonCollatBorrowFacet.NonCollatBorrowFacet_Unauthorized.selector
+      )
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 10 ether);
     vm.stopPrank();
   }
 

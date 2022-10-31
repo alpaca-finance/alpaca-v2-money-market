@@ -47,4 +47,5 @@ interface INonCollatBorrowFacet {
   );
   error NonCollatBorrowFacet_InvalidAssetTier();
   error NonCollatBorrowFacet_ExceedBorrowLimit();
+  error NonCollatBorrowFacet_Unauthorized();
 }

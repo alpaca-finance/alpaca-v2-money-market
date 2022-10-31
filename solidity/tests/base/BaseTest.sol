@@ -223,12 +223,13 @@ contract BaseTest is DSTest {
   {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
     selectors[3] = adminFacet.setTokenConfigs.selector;
     selectors[4] = adminFacet.tokenConfigs.selector;
+    selectors[5] = adminFacet.setNonCollatBorrower.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

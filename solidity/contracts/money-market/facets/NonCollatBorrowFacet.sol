@@ -29,10 +29,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _actualRepayAmount
   );
 
-  // TODO: whitelist only
   function nonCollatBorrow(address _token, uint256 _amount) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
+      revert NonCollatBorrowFacet_Unauthorized();
+    }
 
     _validate(msg.sender, _token, _amount, moneyMarketDs);
 
