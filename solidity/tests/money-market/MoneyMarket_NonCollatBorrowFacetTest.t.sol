@@ -226,4 +226,41 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount
     );
   }
+
+  function testCorrectness_WhenUserOverRepay_ShouldOnlyRepayTheDebtHeHad()
+    external
+  {
+    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _aliceRepayAmount = 15 ether;
+
+    vm.startPrank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
+    nonCollatBorrowFacet.nonCollatRepay(
+      ALICE,
+      address(weth),
+      _aliceRepayAmount
+    );
+    uint256 _aliceWethBalanceAfter = weth.balanceOf(ALICE);
+    vm.stopPrank();
+
+    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(
+      ALICE,
+      address(weth)
+    );
+
+    assertEq(_aliceRemainingDebt, 0);
+
+    assertEq(
+      _aliceWethBalanceBefore - _aliceWethBalanceAfter,
+      _aliceBorrowAmount
+    );
+
+    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetGlobalDebt(
+      address(weth)
+    );
+
+    assertEq(_tokenDebt, 0);
+  }
 }
