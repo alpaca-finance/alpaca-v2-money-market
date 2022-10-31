@@ -12,9 +12,6 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 
-// TODO: remove
-import { console } from "../../../tests/utils/console.sol";
-
 contract CollateralFacet is ICollateralFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -101,9 +98,12 @@ contract CollateralFacet is ICollateralFacet {
     (uint256 _totalUsedBorrowedPower, ) = LibMoneyMarket01
       .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
 
+    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
     if (_totalBorrowingPower < _totalUsedBorrowedPower) {
       revert CollateralFacet_BorrowingPowerTooLow();
     }
+
+    moneyMarketDs.collats[_token] -= _removeAmount;
 
     ERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
@@ -128,6 +128,12 @@ contract CollateralFacet is ICollateralFacet {
     ];
 
     return collats.getAll();
+  }
+
+  function collats(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.collats[_token];
   }
 
   function _validateAddCollateral(
