@@ -17,11 +17,6 @@ interface INonCollatBorrowFacet {
     view
     returns (LibDoublyLinkedList.Node[] memory);
 
-  function nonCollatGetTotalBorrowingPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue);
-
   function nonCollatGetTotalUsedBorrowedPower(address _account)
     external
     view

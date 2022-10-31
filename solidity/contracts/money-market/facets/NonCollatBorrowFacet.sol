@@ -243,21 +243,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
   }
 
-  function nonCollatGetTotalBorrowingPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    // TODO: use the correct state vars
-    _totalBorrowingPowerUSDValue = LibMoneyMarket01.getTotalBorrowingPower(
-      _account,
-      moneyMarketDs
-    );
-  }
-
   function nonCollatGetTotalUsedBorrowedPower(address _account)
     external
     view
