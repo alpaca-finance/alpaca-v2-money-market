@@ -25,7 +25,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   event LogNonCollatRepay(
     address indexed _user,
-    address _token,
+    address indexed _token,
     uint256 _actualRepayAmount
   );
 
@@ -49,22 +49,22 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       debtValue.init();
     }
 
-    LibDoublyLinkedList.List storage globalDebts = moneyMarketDs
+    LibDoublyLinkedList.List storage tokenDebts = moneyMarketDs
       .nonCollatTokenDebtValues[_token];
 
     if (
-      globalDebts.getNextOf(LibDoublyLinkedList.START) ==
+      tokenDebts.getNextOf(LibDoublyLinkedList.START) ==
       LibDoublyLinkedList.EMPTY
     ) {
-      globalDebts.init();
+      tokenDebts.init();
     }
 
     uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;
-    uint256 _newGlobalDebt = globalDebts.getAmount(msg.sender) + _amount;
+    uint256 _newGlobalDebt = tokenDebts.getAmount(msg.sender) + _amount;
 
     debtValue.addOrUpdate(_token, _newAccountDebt);
 
-    globalDebts.addOrUpdate(msg.sender, _newGlobalDebt);
+    tokenDebts.addOrUpdate(msg.sender, _newGlobalDebt);
 
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
