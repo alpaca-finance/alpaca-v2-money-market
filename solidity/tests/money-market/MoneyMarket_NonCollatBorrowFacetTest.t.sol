@@ -31,13 +31,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _borrowAmount = 10 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(
-      BOB,
-      subAccount0,
-      address(weth),
-      _borrowAmount * 2
-    );
-
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _borrowAmount);
     vm.stopPrank();
