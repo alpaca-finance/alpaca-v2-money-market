@@ -195,10 +195,18 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceRepayAmount = 5 ether;
+
+    uint256 _bobBorrowAmount = 20 ether;
+
     vm.startPrank(ALICE);
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
 
     nonCollatBorrowFacet.nonCollatRepay(ALICE, address(weth), 5 ether);
+
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _bobBorrowAmount);
 
     vm.stopPrank();
 
@@ -213,6 +221,9 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       address(weth)
     );
 
-    assertEq(_tokenDebt, _aliceBorrowAmount - _aliceRepayAmount);
+    assertEq(
+      _tokenDebt,
+      (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount
+    );
   }
 }
