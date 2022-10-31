@@ -87,10 +87,14 @@ contract LendFacet is ILendFacet {
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
+    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatGlobalDebt(
+      _token,
+      moneyMarketDs
+    );
     return
-      ERC20(_token).balanceOf(address(this)) +
-      moneyMarketDs.debtValues[_token] -
-      moneyMarketDs.collats[_token];
+      (ERC20(_token).balanceOf(address(this)) +
+        moneyMarketDs.debtValues[_token] +
+        _nonCollatDebt) - moneyMarketDs.collats[_token];
   }
 
   function getTotalToken(address _token) external view returns (uint256) {

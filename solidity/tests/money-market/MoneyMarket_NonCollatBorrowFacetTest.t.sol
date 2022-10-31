@@ -143,23 +143,22 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  // function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount()
-  //   external
-  // {
-  //   uint256 _bobDepositAmount = 10 ether;
-  //   uint256 _aliceBorrowAmount = 10 ether;
+  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount()
+    external
+  {
+    uint256 _bobDepositAmount = 10 ether;
+    uint256 _aliceBorrowAmount = 10 ether;
 
-  //   vm.startPrank(ALICE);
-  //   collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
-  //   nonCollatBorrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
-  //   vm.stopPrank();
+    vm.startPrank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+    vm.stopPrank();
 
-  //   vm.startPrank(BOB);
-  //   weth.approve(moneyMarketDiamond, type(uint256).max);
-  //   lendFacet.deposit(address(weth), _bobDepositAmount);
+    vm.startPrank(BOB);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    lendFacet.deposit(address(weth), _bobDepositAmount);
 
-  //   vm.stopPrank();
+    vm.stopPrank();
 
-  //   assertEq(ibWeth.balanceOf(BOB), 10 ether);
-  // }
+    assertEq(ibWeth.balanceOf(BOB), 10 ether);
+  }
 }
