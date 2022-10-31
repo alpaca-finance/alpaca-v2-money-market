@@ -82,15 +82,21 @@ contract LendFacet is ILendFacet {
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
 
-  // totalToken is the amount of token remains in MM + borrowed amount
+  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
+  // where borrowed amount consists of over-collat and non-collat borrowing
   function _getTotalToken(
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
+    // TODO: optimize this by using global state var
+    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatTokenDebt(
+      _token,
+      moneyMarketDs
+    );
     return
-      ERC20(_token).balanceOf(address(this)) +
-      moneyMarketDs.debtValues[_token] -
-      moneyMarketDs.collats[_token];
+      (ERC20(_token).balanceOf(address(this)) +
+        moneyMarketDs.debtValues[_token] +
+        _nonCollatDebt) - moneyMarketDs.collats[_token];
   }
 
   function getTotalToken(address _token) external view returns (uint256) {

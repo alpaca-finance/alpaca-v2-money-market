@@ -15,6 +15,7 @@ import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLo
 import { LendFacet, ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
+import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
 // initializers
@@ -63,6 +64,7 @@ contract BaseTest is DSTest {
     deployLendFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployCollateralFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployBorrowFacet(DiamondCutFacet(address(moneyMarketDiamond)));
+    deployNonCollatBorrowFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(moneyMarketDiamond)));
@@ -188,18 +190,45 @@ contract BaseTest is DSTest {
     return (brrowFacet, selectors);
   }
 
+  function deployNonCollatBorrowFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (NonCollatBorrowFacet, bytes4[] memory)
+  {
+    NonCollatBorrowFacet nonCollatBorrow = new NonCollatBorrowFacet();
+
+    bytes4[] memory selectors = new bytes4[](6);
+    selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
+    selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
+    selectors[2] = NonCollatBorrowFacet
+      .nonCollatGetTotalUsedBorrowedPower
+      .selector;
+    selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
+    selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
+    selectors[5] = NonCollatBorrowFacet.nonCollatGetGlobalDebt.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(nonCollatBorrow),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (nonCollatBorrow, selectors);
+  }
+
   function deployAdminFacet(DiamondCutFacet diamondCutFacet)
     internal
     returns (AdminFacet, bytes4[] memory)
   {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
     selectors[3] = adminFacet.setTokenConfigs.selector;
     selectors[4] = adminFacet.tokenConfigs.selector;
+    selectors[5] = adminFacet.setNonCollatBorrower.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

@@ -8,7 +8,7 @@ import { ICollateralFacet } from "../../contracts/money-market/facets/Collateral
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-
+import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -23,6 +23,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ILendFacet internal lendFacet;
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
+  INonCollatBorrowFacet internal nonCollatBorrowFacet;
 
   uint256 subAccount0 = 0;
   uint256 subAccount1 = 1;
@@ -34,6 +35,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
+    nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
 
     weth.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
