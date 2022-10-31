@@ -126,7 +126,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     );
   }
 
-  function nonCollatGetGlobalDebt(address _token)
+  function nonCollatGetTokenDebt(address _token)
     external
     view
     returns (uint256)
