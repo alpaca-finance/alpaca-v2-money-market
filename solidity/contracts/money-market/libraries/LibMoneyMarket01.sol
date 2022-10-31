@@ -43,7 +43,7 @@ library LibMoneyMarket01 {
     // account -> list token debt
     mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues;
     // token -> debt of each account
-    mapping(address => LibDoublyLinkedList.List) nonCollatGlobalDebtValues;
+    mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     mapping(address => TokenConfig) tokenConfigs;
     address oracle;
   }
@@ -104,7 +104,7 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _totalNonCollatDebt) {
     LibDoublyLinkedList.Node[] memory _nonCollatDebts = moneyMarketDs
-      .nonCollatGlobalDebtValues[_token]
+      .nonCollatTokenDebtValues[_token]
       .getAll();
 
     uint256 _length = _nonCollatDebts.length;

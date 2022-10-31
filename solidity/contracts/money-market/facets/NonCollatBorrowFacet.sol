@@ -47,7 +47,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     LibDoublyLinkedList.List storage globalDebts = moneyMarketDs
-      .nonCollatGlobalDebtValues[_token];
+      .nonCollatTokenDebtValues[_token];
 
     if (
       globalDebts.getNextOf(LibDoublyLinkedList.START) ==
@@ -148,11 +148,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     );
 
     uint256 _oldGlobalDebt = moneyMarketDs
-      .nonCollatGlobalDebtValues[_token]
+      .nonCollatTokenDebtValues[_token]
       .getAmount(_account);
 
     // update global debt
-    moneyMarketDs.nonCollatGlobalDebtValues[_token].updateOrRemove(
+    moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(
       _account,
       _oldGlobalDebt - _valueToRemove
     );
