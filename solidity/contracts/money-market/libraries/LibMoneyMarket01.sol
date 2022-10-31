@@ -99,7 +99,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getNonCollatGlobalDebt(
+  function getNonCollatTokenDebt(
     address _token,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _totalNonCollatDebt) {

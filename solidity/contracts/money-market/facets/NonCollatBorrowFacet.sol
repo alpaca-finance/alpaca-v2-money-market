@@ -131,7 +131,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return LibMoneyMarket01.getNonCollatGlobalDebt(_token, moneyMarketDs);
+    return LibMoneyMarket01.getNonCollatTokenDebt(_token, moneyMarketDs);
   }
 
   function _removeDebt(

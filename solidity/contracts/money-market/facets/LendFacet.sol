@@ -87,7 +87,7 @@ contract LendFacet is ILendFacet {
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
-    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatGlobalDebt(
+    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatTokenDebt(
       _token,
       moneyMarketDs
     );
