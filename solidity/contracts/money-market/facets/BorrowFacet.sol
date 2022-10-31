@@ -31,9 +31,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _actualRepayAmount
   );
 
-  // TODO: open another PR for refactoring borrow interface by removing _account input => should be msg.sender
   function borrow(
-    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
@@ -42,7 +40,7 @@ contract BorrowFacet is IBorrowFacet {
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
-      _account,
+      msg.sender,
       _subAccountId
     );
 
@@ -74,7 +72,7 @@ contract BorrowFacet is IBorrowFacet {
     // update user's debtshare
     debtShare.addOrUpdate(_token, _newAmount);
 
-    ERC20(_token).safeTransfer(_account, _amount);
+    ERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
   function repay(
