@@ -82,7 +82,8 @@ contract LendFacet is ILendFacet {
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
 
-  // totalToken is the amount of token remains in MM + borrowed amount
+  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
+  // where borrowed amount consists of over-collat and non-collat borrowing
   function _getTotalToken(
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
