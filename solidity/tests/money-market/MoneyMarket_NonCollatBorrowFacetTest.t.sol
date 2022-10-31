@@ -47,7 +47,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
 
     uint256 _debtAmount;
-    (, _debtAmount) = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    _debtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
     assertEq(_debtAmount, _borrowAmount);
   }
 

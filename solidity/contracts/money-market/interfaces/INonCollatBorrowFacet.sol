@@ -30,12 +30,12 @@ interface INonCollatBorrowFacet {
   function nonCollatGetDebt(address _account, address _token)
     external
     view
-    returns (uint256, uint256);
+    returns (uint256);
 
   function nonCollatGetGlobalDebt(address _token)
     external
     view
-    returns (uint256, uint256);
+    returns (uint256);
 
   // Errors
   error NonCollatBorrowFacet_InvalidToken(address _token);

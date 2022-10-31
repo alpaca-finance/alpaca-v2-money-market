@@ -40,6 +40,7 @@ library LibMoneyMarket01 {
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
+    mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues;
     mapping(address => TokenConfig) tokenConfigs;
     address oracle;
   }

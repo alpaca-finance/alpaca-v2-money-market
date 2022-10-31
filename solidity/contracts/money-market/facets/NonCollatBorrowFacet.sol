@@ -20,7 +20,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   event LogNonCollatRemoveDebt(
     address indexed _account,
     address indexed _token,
-    uint256 _removeDebtShare,
     uint256 _removeDebtAmount
   );
 
@@ -30,37 +29,26 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _actualRepayAmount
   );
 
+  // TODO: whitelist only
   function nonCollatBorrow(address _token, uint256 _amount) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     _validate(msg.sender, _token, _amount, moneyMarketDs);
 
-    LibDoublyLinkedList.List storage debtShare = moneyMarketDs
-      .subAccountDebtShares[msg.sender];
+    LibDoublyLinkedList.List storage debtValue = moneyMarketDs
+      .nonCollatAccountDebtValues[msg.sender];
 
     if (
-      debtShare.getNextOf(LibDoublyLinkedList.START) ==
+      debtValue.getNextOf(LibDoublyLinkedList.START) ==
       LibDoublyLinkedList.EMPTY
     ) {
-      debtShare.init();
+      debtValue.init();
     }
 
-    uint256 _totalSupply = moneyMarketDs.debtShares[_token];
-    uint256 _totalValue = moneyMarketDs.debtValues[_token];
+    uint256 _newAmount = debtValue.getAmount(_token) + _amount;
 
-    uint256 _shareToAdd = LibShareUtil.valueToShare(
-      _totalSupply,
-      _amount,
-      _totalValue
-    );
-
-    moneyMarketDs.debtShares[_token] += _shareToAdd;
-    moneyMarketDs.debtValues[_token] += _amount;
-
-    uint256 _newAmount = debtShare.getAmount(_token) + _amount;
-    // update user's debtshare
-    debtShare.addOrUpdate(_token, _newAmount);
+    debtValue.addOrUpdate(_token, _newAmount);
 
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
@@ -73,38 +61,18 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    (uint256 _oldSubAccountDebtShare, ) = _getDebt(
-      _account,
-      _token,
-      moneyMarketDs
-    );
+    uint256 _oldDebtValue = _getDebt(_account, _token, moneyMarketDs);
 
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      moneyMarketDs.debtShares[_token],
-      _repayAmount,
-      moneyMarketDs.debtValues[_token]
-    );
+    uint256 _debtToRemove = _oldDebtValue > _repayAmount
+      ? _repayAmount
+      : _oldDebtValue;
 
-    _shareToRemove = _oldSubAccountDebtShare > _shareToRemove
-      ? _shareToRemove
-      : _oldSubAccountDebtShare;
-
-    uint256 _actualRepayAmount = _removeDebt(
-      _account,
-      _token,
-      _oldSubAccountDebtShare,
-      _shareToRemove,
-      moneyMarketDs
-    );
+    _removeDebt(_account, _token, _oldDebtValue, _debtToRemove, moneyMarketDs);
 
     // transfer only amount to repay
-    ERC20(_token).safeTransferFrom(
-      msg.sender,
-      address(this),
-      _actualRepayAmount
-    );
+    ERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
-    emit LogNonCollatRepay(_account, _token, _actualRepayAmount);
+    emit LogNonCollatRepay(_account, _token, _debtToRemove);
   }
 
   function nonCollatGetDebtShares(address _account)
@@ -116,75 +84,59 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     LibDoublyLinkedList.List storage debtShares = moneyMarketDs
-      .subAccountDebtShares[_account];
+      .nonCollatAccountDebtValues[_account];
 
     return debtShares.getAll();
   }
 
   function nonCollatGetDebt(address _account, address _token)
-    public
+    external
     view
-    returns (uint256 _debtShare, uint256 _debtAmount)
+    returns (uint256 _debtAmount)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    (_debtShare, _debtAmount) = _getDebt(_account, _token, moneyMarketDs);
+    _debtAmount = _getDebt(_account, _token, moneyMarketDs);
   }
 
   function _getDebt(
     address _account,
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
-    _debtShare = moneyMarketDs.subAccountDebtShares[_account].getAmount(_token);
-
-    _debtAmount = LibShareUtil.shareToValue(
-      moneyMarketDs.debtShares[_token],
-      _debtShare,
-      moneyMarketDs.debtValues[_token]
+  ) internal view returns (uint256 _debtAmount) {
+    _debtAmount = moneyMarketDs.nonCollatAccountDebtValues[_account].getAmount(
+      _token
     );
   }
 
   function nonCollatGetGlobalDebt(address _token)
     external
     view
-    returns (uint256, uint256)
+    returns (uint256)
   {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // LibMoneyMarket01.MoneyMarketDiamondStorage
+    // storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return (moneyMarketDs.debtShares[_token], moneyMarketDs.debtValues[_token]);
+    // TODO: return the correct value
+    return 0;
   }
 
   function _removeDebt(
     address _account,
     address _token,
-    uint256 _oldSubAccountDebtShare,
-    uint256 _shareToRemove,
+    uint256 _oldSubAccountDebtValue,
+    uint256 _valueToRemove,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _repayAmount) {
-    uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
-    uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
-
+  ) internal {
     // update user debtShare
-    moneyMarketDs.subAccountDebtShares[_account].updateOrRemove(
+    moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(
       _token,
-      _oldSubAccountDebtShare - _shareToRemove
+      _oldSubAccountDebtValue - _valueToRemove
     );
-
-    // update global debtShare
-    _repayAmount = LibShareUtil.shareToValue(
-      _oldDebtShare,
-      _shareToRemove,
-      _oldDebtValue
-    );
-
-    moneyMarketDs.debtShares[_token] -= _shareToRemove;
-    moneyMarketDs.debtValues[_token] -= _repayAmount;
 
     // emit event
-    emit LogNonCollatRemoveDebt(_account, _token, _shareToRemove, _repayAmount);
+    emit LogNonCollatRemoveDebt(_account, _token, _valueToRemove);
   }
 
   function _validate(
@@ -200,26 +152,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       revert NonCollatBorrowFacet_InvalidToken(_token);
     }
 
-    // check asset tier
+    // check credit
+    // TODO: use the correct state vars
     uint256 _totalBorrowingPowerUSDValue = LibMoneyMarket01
       .getTotalBorrowingPower(_account, moneyMarketDs);
 
-    (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset) = LibMoneyMarket01
+    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01
       .getTotalUsedBorrowedPower(_account, moneyMarketDs);
-
-    if (
-      moneyMarketDs.tokenConfigs[_token].tier ==
-      LibMoneyMarket01.AssetTier.ISOLATE
-    ) {
-      if (
-        !moneyMarketDs.subAccountDebtShares[_account].has(_token) &&
-        moneyMarketDs.subAccountDebtShares[_account].size > 0
-      ) {
-        revert NonCollatBorrowFacet_InvalidAssetTier();
-      }
-    } else if (_hasIsolateAsset) {
-      revert NonCollatBorrowFacet_InvalidAssetTier();
-    }
 
     _checkBorrowingPower(
       _totalBorrowingPowerUSDValue,
@@ -274,6 +213,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
+    // TODO: use the correct state vars
     if (_borrowAmount > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }
@@ -287,6 +227,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // TODO: use the correct state vars
     _totalBorrowingPowerUSDValue = LibMoneyMarket01.getTotalBorrowingPower(
       _account,
       moneyMarketDs
@@ -301,6 +242,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // TODO: use the correct state vars
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01
       .getTotalUsedBorrowedPower(_account, moneyMarketDs);
   }
