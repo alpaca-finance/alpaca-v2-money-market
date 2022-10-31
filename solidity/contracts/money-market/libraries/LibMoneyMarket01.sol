@@ -166,4 +166,51 @@ library LibMoneyMarket01 {
       }
     }
   }
+
+  function accureInterest(address _token) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _accureInterest(_token, moneyMarketDs);
+  }
+
+  function _pendingIntest(
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256) {
+    uint256 _lastAccureTime = moneyMarketDs.debtLastAccureTime[_token];
+
+    if (block.timestamp > _lastAccureTime) {
+      uint256 timePast = block.timestamp - _lastAccureTime;
+      // uint256 balance = ERC20(_token).balanceOf(address(this));
+      if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
+        return 0;
+      }
+
+      uint256 _interestRate = IInterestRateModel(
+        moneyMarketDs.interestModels[_token]
+      ).getInterestRate(moneyMarketDs.debtValues[_token], 0);
+
+      //FIXME change it when dynamically comes
+      return _interestRate * timePast;
+      // return ratePerSec.mul(vaultDebtVal).mul(timePast).div(1e18);
+    } else {
+      return 0;
+    }
+  }
+
+  function _accureInterest(
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    if (block.timestamp > moneyMarketDs.debtLastAccureTime[_token]) {
+      uint256 interest = _pendingIntest(_token, moneyMarketDs);
+      // uint256 toReserve = interest.mul(moneyMarketDs.getReservePoolBps()).div(
+      //   10000
+      // );
+      // reservePool = reservePool.add(toReserve);
+
+      moneyMarketDs.debtValues[_token] += interest;
+      moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
+    }
+  }
 }

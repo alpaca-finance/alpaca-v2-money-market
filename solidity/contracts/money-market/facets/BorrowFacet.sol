@@ -344,4 +344,22 @@ contract BorrowFacet is IBorrowFacet {
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01
       .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
   }
+
+  function debtLastAccureTime(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.debtLastAccureTime[_token];
+  }
+
+  function pendingInterest(address _token) public view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return LibMoneyMarket01._pendingIntest(_token, moneyMarketDs);
+  }
+
+  function accureInterest(address _token) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01._accureInterest(_token, moneyMarketDs);
+  }
 }

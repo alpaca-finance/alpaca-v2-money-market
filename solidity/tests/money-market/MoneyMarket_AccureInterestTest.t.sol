@@ -32,8 +32,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldBeCorrectPendingInterest()
     external
   {
-    console.log("before use case", block.timestamp);
-    uint256 _actualInterest = lendFacet.pendingInterest(address(weth));
+    uint256 _actualInterest = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
     uint256 _borrowAmount = 10 ether;
@@ -45,13 +44,10 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
       address(weth),
       _borrowAmount * 2
     );
-    console.log("added Collateral", block.timestamp);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
-
-    console.log("borrowed", block.timestamp);
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
 
@@ -61,14 +57,12 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_debtAmount, _borrowAmount);
 
-    console.log("timestamp", block.timestamp);
-
     vm.warp(block.timestamp + 10);
     uint256 _expectedDebtAmount = 10e18 + _borrowAmount;
 
-    uint256 _actualInterestAfter = lendFacet.pendingInterest(address(weth));
+    uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterestAfter, 10e18);
-    lendFacet.accureInterest(address(weth));
+    borrowFacet.accureInterest(address(weth));
     (, uint256 _actualDebtAmount) = borrowFacet.getDebt(
       BOB,
       subAccount0,
@@ -77,19 +71,90 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_actualDebtAmount, _expectedDebtAmount);
 
     // FIXME last accuretime
-    uint256 _actualAccureTime = lendFacet.getDebtLastAccureTime(address(weth));
-    console.log("timestamp", block.timestamp);
+    uint256 _actualAccureTime = borrowFacet.debtLastAccureTime(address(weth));
+
     assertEq(_actualAccureTime, 11);
   }
 
-  /* 
-  alice deposit
-  bob borrow
-  time passed
-  alice withdraw 
-  assert alice should get interest
-  assert bob debt increasing
-   */
+  function testCorrectness_WhenAddCollateralAndUserBorrow_ShouldNotGetInterest()
+    external
+  {
+    uint256 _balanceAliceBefore = weth.balanceOf(ALICE);
+    uint256 _balanceMMDiamondBefore = weth.balanceOf(moneyMarketDiamond);
+    uint256 _aliceCollateralAmount = 10 ether;
+
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, _aliceCollateralAmount);
+    collateralFacet.addCollateral(
+      ALICE,
+      0,
+      address(weth),
+      _aliceCollateralAmount
+    );
+    vm.stopPrank();
+
+    assertEq(
+      weth.balanceOf(ALICE),
+      _balanceAliceBefore - _aliceCollateralAmount
+    );
+    assertEq(
+      weth.balanceOf(moneyMarketDiamond),
+      _balanceMMDiamondBefore + _aliceCollateralAmount
+    );
+
+    vm.warp(block.timestamp + 10);
+
+    //when someone borrow
+    uint256 _bobBorrowAmount = 10 ether;
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(
+      BOB,
+      subAccount0,
+      address(weth),
+      _bobBorrowAmount * 2
+    );
+
+    uint256 _bobBalanceBeforeBorrow = weth.balanceOf(BOB);
+    borrowFacet.borrow(subAccount0, address(weth), _bobBorrowAmount);
+
+    (, uint256 _actualBobDebtAmountBeforeWarp) = borrowFacet.getDebt(
+      BOB,
+      subAccount0,
+      address(weth)
+    );
+    assertEq(_actualBobDebtAmountBeforeWarp, _bobBorrowAmount);
+    vm.stopPrank();
+
+    uint256 _bobBalanceAfterBorrow = weth.balanceOf(BOB);
+
+    assertEq(
+      _bobBalanceAfterBorrow - _bobBalanceBeforeBorrow,
+      _bobBorrowAmount
+    );
+    vm.warp(block.timestamp + 10);
+    borrowFacet.accureInterest(address(weth));
+    (, uint256 _actualBobDebtAmountAfter) = borrowFacet.getDebt(
+      BOB,
+      subAccount0,
+      address(weth)
+    );
+
+    assertEq(
+      _actualBobDebtAmountAfter - _actualBobDebtAmountBeforeWarp,
+      10 ether
+    );
+
+    uint256 wethAliceBeforeWithdraw = weth.balanceOf(ALICE);
+    vm.prank(ALICE);
+    collateralFacet.removeCollateral(0, address(weth), 10 ether);
+    uint256 wethAliceAfterWithdraw = weth.balanceOf(ALICE);
+    assertEq(wethAliceAfterWithdraw - wethAliceBeforeWithdraw, 10 ether);
+    LibDoublyLinkedList.Node[] memory collats = collateralFacet.getCollaterals(
+      ALICE,
+      0
+    );
+    assertEq(collats.length, 0);
+  }
 
   /* 2 borrower 1 depositors
     alice deposit
@@ -100,15 +165,20 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
   /*  1 borrower 2 depositors
    */
 
-  /* 2 borrower 2 depositors
-      alice deposit
-      bob borrowed
-      10sec passed cat deposit
-      10sec ddd borrowed
-      after accure debt
-      verify is it not be able more 
-      verify ddd interest < bob  (borrow the same amount)
-      verify cat interest < alice (deposit same amount)
+  // TODO
+  function testCorrectness_MultipleAction_ShouldGetInterestAndActionCorrectly()
+    external
+  {
+    /* 2 borrower 2 depositors
+      1.alice deposit
+      2.bob borrowed
+      3.10sec passed cat deposit
+      4.10sec eve borrowed
+      5.after accure debt
       
+      6.verify is it not be able more 
+      verify eve interest < bob  (borrow the same amount)
+      verify cat interest < alice (deposit same amount)
     */
+  }
 }

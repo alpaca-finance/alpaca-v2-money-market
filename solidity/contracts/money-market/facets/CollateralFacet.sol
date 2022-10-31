@@ -38,6 +38,7 @@ contract CollateralFacet is ICollateralFacet {
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     _validateAddCollateral(_token, _amount, moneyMarketDs);
+    LibMoneyMarket01._accureInterest(_token, moneyMarketDs);
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
@@ -69,6 +70,8 @@ contract CollateralFacet is ICollateralFacet {
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    LibMoneyMarket01._accureInterest(_token, moneyMarketDs);
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
       msg.sender,
