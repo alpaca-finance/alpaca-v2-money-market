@@ -163,7 +163,10 @@ contract CollateralFacet is ICollateralFacet {
       revert CollateralFacet_InvalidAssetTier();
     }
 
-    if (_collateralAmount > moneyMarketDs.tokenConfigs[_token].maxCollateral) {
+    if (
+      _collateralAmount + moneyMarketDs.collats[_token] >
+      moneyMarketDs.tokenConfigs[_token].maxCollateral
+    ) {
       revert CollateralFacet_ExceedCollateralLimit();
     }
   }
