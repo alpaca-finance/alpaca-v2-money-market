@@ -304,7 +304,10 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
-    if (_borrowAmount > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+    if (
+      _borrowAmount + moneyMarketDs.debtValues[_token] >
+      moneyMarketDs.tokenConfigs[_token].maxBorrow
+    ) {
       revert BorrowFacet_ExceedBorrowLimit();
     }
   }
