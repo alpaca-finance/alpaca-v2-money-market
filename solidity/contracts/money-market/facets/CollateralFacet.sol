@@ -156,12 +156,8 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _collateralAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    address _actualToken = moneyMarketDs.ibTokenToTokens[_token];
-    if (_actualToken == address(0)) {
-      _actualToken = _token;
-    }
     if (
-      moneyMarketDs.tokenConfigs[_actualToken].tier !=
+      moneyMarketDs.tokenConfigs[_token].tier !=
       LibMoneyMarket01.AssetTier.COLLATERAL
     ) {
       revert CollateralFacet_InvalidAssetTier();
@@ -169,7 +165,7 @@ contract CollateralFacet is ICollateralFacet {
 
     if (
       _collateralAmount + moneyMarketDs.collats[_token] >
-      moneyMarketDs.tokenConfigs[_actualToken].maxCollateral
+      moneyMarketDs.tokenConfigs[_token].maxCollateral
     ) {
       revert CollateralFacet_ExceedCollateralLimit();
     }

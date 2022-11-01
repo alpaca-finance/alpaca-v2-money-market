@@ -87,20 +87,21 @@ library LibMoneyMarket01 {
     uint256 _collatsLength = _collats.length;
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
-      address _token = _collats[_i].token;
-      uint256 _amount = _collats[_i].amount;
-      address _actualToken = moneyMarketDs.ibTokenToTokens[_token];
+      address _collatToken = _collats[_i].token;
+      uint256 _collatAmount = _collats[_i].amount;
+      uint256 _actualAmount = _collatAmount;
 
+      // will return address(0) if _collatToken is not ibToken
+      address _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
       if (_actualToken == address(0)) {
-        _actualToken = _token;
+        _actualToken = _collatToken;
       } else {
-        // _token is ibToken
-        uint256 _totalSupply = IIbToken(_token).totalSupply();
+        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
         uint256 _totalToken = _getTotalToken(_actualToken, moneyMarketDs);
 
-        _amount = LibShareUtil.shareToValue(
+        _actualAmount = LibShareUtil.shareToValue(
           _totalToken,
-          _amount,
+          _collatAmount,
           _totalSupply
         );
       }
@@ -114,7 +115,7 @@ library LibMoneyMarket01 {
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _amount * _tokenConfig.collateralFactor,
+        _actualAmount * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
