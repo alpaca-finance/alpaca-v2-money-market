@@ -98,9 +98,13 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserAddCollateralThanLimit_ShouldRevert() external {
-    uint256 _collateral = 120 ether;
-
+    //max collat for weth is 100 ether
+    uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
+    // first time should pass
+    collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
+
+    // the second should revert as it will exceed the limit
     vm.expectRevert(
       abi.encodeWithSelector(
         ICollateralFacet.CollateralFacet_ExceedCollateralLimit.selector
@@ -199,5 +203,70 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore);
     assertEq(_borrowingPower, 0);
     assertEq(collateralFacet.collats(address(weth)), 0);
+  }
+
+  function testCorrectness_WhenUserTransferCollateralBTWSubAccount_ShouldWork()
+    external
+  {
+    uint256 _addCollateralAmount = 10 ether;
+    uint256 _transferCollateralAmount = 1 ether;
+
+    // alice add collateral 10 weth
+    vm.prank(ALICE);
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _addCollateralAmount
+    );
+
+    uint256 _MMbalanceBeforeTransfer = weth.balanceOf(moneyMarketDiamond);
+    uint256 _balanceBeforeTransfer = weth.balanceOf(ALICE);
+    uint256 _wethCollateralAmountBeforeTransfer = collateralFacet.collats(
+      address(weth)
+    );
+
+    // alice transfer collateral from subAccount0 to subAccount1
+    vm.prank(ALICE);
+    collateralFacet.transferCollateral(
+      subAccount0,
+      subAccount1,
+      address(weth),
+      _transferCollateralAmount
+    );
+
+    LibDoublyLinkedList.Node[] memory subAccount0CollatList = collateralFacet
+      .getCollaterals(ALICE, subAccount0);
+
+    LibDoublyLinkedList.Node[] memory subAccount1CollatList = collateralFacet
+      .getCollaterals(ALICE, subAccount1);
+
+    uint256 _subAccount0BorrowingPower = borrowFacet.getTotalBorrowingPower(
+      ALICE,
+      subAccount0
+    );
+
+    uint256 _subAccount1BorrowingPower = borrowFacet.getTotalBorrowingPower(
+      ALICE,
+      subAccount1
+    );
+
+    // validate
+    // subAccount0
+    assertEq(subAccount0CollatList[0].amount, 9 ether);
+    // 9 ether * 9000/ 10000
+    assertEq(_subAccount0BorrowingPower, 8.1 ether);
+    // subAccount1
+    assertEq(subAccount1CollatList[0].amount, _transferCollateralAmount);
+    // 1 ether * 9000/ 10000
+    assertEq(_subAccount1BorrowingPower, 0.9 ether);
+
+    // Global states
+    assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBeforeTransfer);
+    assertEq(
+      collateralFacet.collats(address(weth)),
+      _wethCollateralAmountBeforeTransfer
+    );
+    assertEq(weth.balanceOf(ALICE), _balanceBeforeTransfer);
   }
 }

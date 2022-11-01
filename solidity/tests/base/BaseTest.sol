@@ -149,11 +149,12 @@ contract BaseTest is DSTest {
   {
     CollateralFacet collateralFacet = new CollateralFacet();
 
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](5);
     selectors[0] = CollateralFacet.addCollateral.selector;
     selectors[1] = CollateralFacet.getCollaterals.selector;
     selectors[2] = CollateralFacet.removeCollateral.selector;
     selectors[3] = CollateralFacet.collats.selector;
+    selectors[4] = CollateralFacet.transferCollateral.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(collateralFacet),
@@ -207,7 +208,7 @@ contract BaseTest is DSTest {
       .selector;
     selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
     selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
-    selectors[5] = NonCollatBorrowFacet.nonCollatGetGlobalDebt.selector;
+    selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(nonCollatBorrow),
