@@ -277,14 +277,11 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     external
   {
     uint256 _aliceCollatAmount = 5 ether;
-    uint256 _aliceLendAmount = 5 ether;
     uint256 _ibTokenCollatAmount = 5 ether;
 
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, _aliceLendAmount + _aliceCollatAmount);
+    weth.approve(moneyMarketDiamond, _aliceCollatAmount);
     ibWeth.approve(moneyMarketDiamond, _ibTokenCollatAmount);
-    
-    lendFacet.deposit(address(weth), _aliceLendAmount);
 
     // add by actual token
     collateralFacet.addCollateral(
@@ -309,22 +306,84 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // totalSupply = 50
+    // totalToken = 55 - 5 (balance - collat) = 50
+    // ibCollatAmount = 5
+    // borrowIbTokenAmountInToken = 5 * (50 / 50) (ibCollatAmount * (totalSupply / totalToken)) = 5
     // _borrowingPowerUSDValue of ibToken = 5 * 1 * 9000 / 10000 = 4.5 ether USD
     // then 4.5 + 4.5 = 9
     assertEq(_borrowingPowerUSDValue, 9 ether);
 
     // borrowFactor = 1000, weth price = 1
     // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 9 USD
-    // maximumBorrowed weth amount = 9 * 10000/(10000 + 1000) ~ 8.1818181818
-    // _borrowedUSDValue = 8.1818181818 * (10000 + 1000) / 10000 = 4.499999999999999
+    // maximumBorrowed weth amount = 9 * 10000/(10000 + 1000) ~ 8.181818181818181818
+    // _borrowedUSDValue = 8.181818181818181818 * (10000 + 1000) / 10000 = 8.999999999999999999
     vm.prank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), 8.1818181818 ether);
+    borrowFacet.borrow(subAccount0, address(weth), 8.181818181818181818 ether);
 
     (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
       ALICE,
       subAccount0
     );
-    assertEq(_borrowedUSDValue, 8.99999999998 ether);
+    assertEq(_borrowedUSDValue, 8.999999999999999999 ether);
+  }
+
+  function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectlyWithIbTokenCollat_ibTokenIsNot1to1WithToken()
+    external
+  {
+    uint256 _aliceCollatAmount = 5 ether;
+    uint256 _ibTokenCollatAmount = 5 ether;
+
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, _aliceCollatAmount);
+    ibWeth.approve(moneyMarketDiamond, _ibTokenCollatAmount);
+
+    // add by actual token
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _aliceCollatAmount
+    );
+    // add by ibToken
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(ibWeth),
+      _ibTokenCollatAmount
+    );
+    vm.stopPrank();
+
+    vm.prank(ALICE);
+    weth.transfer(moneyMarketDiamond, 50 ether);
+
+    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(
+      ALICE,
+      subAccount0
+    );
+
+    // add 5 weth, collateralFactor = 9000, weth price = 1
+    // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // totalSupply = 50
+    // totalToken = 105 - 5 (balance - collat) = 100
+    // ibCollatAmount = 5
+    // borrowIbTokenAmountInToken = 5 * (50 / 100) (ibCollatAmount * (totalSupply / totalToken)) = 2.5
+    // _borrowingPowerUSDValue of ibToken = 2.5 * 1 * 9000 / 10000 = 2.25 ether USD
+    // then 4.5 + 2.25 = 9
+    assertEq(_borrowingPowerUSDValue, 6.75 ether);
+
+    // borrowFactor = 1000, weth price = 1
+    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 6.75 USD
+    // maximumBorrowed weth amount = 6.75 * 10000/(10000 + 1000) ~ 6.136363636363636363
+    // _borrowedUSDValue = 6.136363636363636363 * (10000 + 1000) / 10000 ~ 6.749999999999999999
+    vm.prank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), 6.136363636363636363 ether);
+
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
+      ALICE,
+      subAccount0
+    );
+    assertEq(_borrowedUSDValue, 6.749999999999999999 ether);
   }
 
   function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit()
