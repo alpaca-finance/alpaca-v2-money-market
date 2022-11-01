@@ -389,7 +389,8 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit()
     external
   {
-    uint256 _borrowAmount = 40 ether;
+    // borrow cap is at 30 weth
+    uint256 _borrowAmount = 20 ether;
     uint256 _bobCollateral = 100 ether;
 
     vm.startPrank(BOB);
@@ -400,6 +401,11 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
       address(weth),
       _bobCollateral
     );
+
+    // first borrow should pass
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
+
+    // the second borrow will revert since it exceed the cap
     vm.expectRevert(
       abi.encodeWithSelector(
         IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector

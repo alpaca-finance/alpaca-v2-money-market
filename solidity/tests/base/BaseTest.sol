@@ -205,7 +205,7 @@ contract BaseTest is DSTest {
       .selector;
     selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
     selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
-    selectors[5] = NonCollatBorrowFacet.nonCollatGetGlobalDebt.selector;
+    selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(nonCollatBorrow),
