@@ -74,7 +74,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setTokenToIbTokens(_ibPair);
 
     IAdminFacet.TokenConfigInput[]
-      memory _inputs = new IAdminFacet.TokenConfigInput[](3);
+      memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -101,6 +101,15 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       borrowingFactor: 1000,
       maxBorrow: 1000e18,
       maxCollateral: 10000e18
+    });
+
+    _inputs[3] = IAdminFacet.TokenConfigInput({
+      token: address(ibWeth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 1000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18
     });
 
     adminFacet.setTokenConfigs(_inputs);

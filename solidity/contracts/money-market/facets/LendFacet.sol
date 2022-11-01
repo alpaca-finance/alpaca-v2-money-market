@@ -42,7 +42,7 @@ contract LendFacet is ILendFacet {
     }
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
 
-    uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
+    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     // calculate _shareToMint to mint before transfer token to MM
     uint256 _shareToMint = LibShareUtil.valueToShare(
@@ -68,7 +68,7 @@ contract LendFacet is ILendFacet {
     }
 
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
-    uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
+    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     uint256 _shareValue = LibShareUtil.shareToValue(
       _totalToken,
@@ -82,26 +82,10 @@ contract LendFacet is ILendFacet {
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
 
-  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
-  // where borrowed amount consists of over-collat and non-collat borrowing
-  function _getTotalToken(
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256) {
-    // TODO: optimize this by using global state var
-    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatTokenDebt(
-      _token,
-      moneyMarketDs
-    );
-    return
-      (ERC20(_token).balanceOf(address(this)) +
-        moneyMarketDs.debtValues[_token] +
-        _nonCollatDebt) - moneyMarketDs.collats[_token];
-  }
 
   function getTotalToken(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return _getTotalToken(_token, moneyMarketDs);
+    return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
   }
 }

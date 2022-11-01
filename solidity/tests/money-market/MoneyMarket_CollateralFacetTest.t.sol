@@ -101,9 +101,15 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     //max collat for weth is 100 ether
     uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
+
+    lendFacet.deposit(address(weth), 10 ether);
+    // add ibWethToken
+    ibWeth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+
     // first time should pass
     collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
-
+  
     // the second should revert as it will exceed the limit
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -269,4 +275,26 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     );
     assertEq(weth.balanceOf(ALICE), _balanceBeforeTransfer);
   }
+
+  // Add Collat with ibToken
+  function testCorrectness_WhenAddCollateralViaIbToken_ibTokenShouldTransferFromUserToMM() external {
+    // LEND to get ibToken
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, 10 ether);
+    lendFacet.deposit(address(weth), 10 ether);
+    vm.stopPrank();
+    
+    // Add collat by ibToken
+    vm.startPrank(ALICE);
+    ibWeth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+    vm.stopPrank();
+
+    assertEq(weth.balanceOf(ALICE), 990 ether);
+    assertEq(ibWeth.balanceOf(ALICE), 0 ether);
+
+    assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
+    assertEq(ibWeth.balanceOf(moneyMarketDiamond), 10 ether);
+  }
+
 }
