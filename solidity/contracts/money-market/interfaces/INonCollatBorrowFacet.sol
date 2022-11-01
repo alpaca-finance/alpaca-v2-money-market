@@ -27,7 +27,7 @@ interface INonCollatBorrowFacet {
     view
     returns (uint256);
 
-  function nonCollatGetGlobalDebt(address _token)
+  function nonCollatGetTokenDebt(address _token)
     external
     view
     returns (uint256);
