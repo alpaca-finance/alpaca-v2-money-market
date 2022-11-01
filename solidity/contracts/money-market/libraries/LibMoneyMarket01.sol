@@ -80,8 +80,14 @@ library LibMoneyMarket01 {
     uint256 _collatsLength = _collats.length;
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
+      address _token = _collats[_i].token;
+      address _actualToken = moneyMarketDs.ibTokenToTokens[_token];
+      if (_actualToken == address(0)) {
+        _actualToken = _token;
+      }
+      
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
-        _collats[_i].token
+        _actualToken
       ];
 
       // TODO: get tokenPrice from oracle

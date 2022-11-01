@@ -273,6 +273,60 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(_borrowedUSDValue, 4.499999999999999 ether);
   }
 
+  function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectlyWithIbTokenCollat()
+    external
+  {
+    uint256 _aliceCollatAmount = 5 ether;
+    uint256 _aliceLendAmount = 5 ether;
+    uint256 _ibTokenCollatAmount = 5 ether;
+
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, _aliceLendAmount + _aliceCollatAmount);
+    ibWeth.approve(moneyMarketDiamond, _ibTokenCollatAmount);
+    
+    lendFacet.deposit(address(weth), _aliceLendAmount);
+
+    // add by actual token
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _aliceCollatAmount
+    );
+    // add by ibToken
+    collateralFacet.addCollateral(
+      ALICE,
+      subAccount0,
+      address(ibWeth),
+      _ibTokenCollatAmount
+    );
+    vm.stopPrank();
+
+    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(
+      ALICE,
+      subAccount0
+    );
+
+    // add 5 weth, collateralFactor = 9000, weth price = 1
+    // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // _borrowingPowerUSDValue of ibToken = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // then 4.5 + 4.5 = 9
+    assertEq(_borrowingPowerUSDValue, 9 ether);
+
+    // borrowFactor = 1000, weth price = 1
+    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 9 USD
+    // maximumBorrowed weth amount = 9 * 10000/(10000 + 1000) ~ 8.1818181818
+    // _borrowedUSDValue = 8.1818181818 * (10000 + 1000) / 10000 = 4.499999999999999
+    vm.prank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), 8.1818181818 ether);
+
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
+      ALICE,
+      subAccount0
+    );
+    assertEq(_borrowedUSDValue, 8.99999999998 ether);
+  }
+
   function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit()
     external
   {
