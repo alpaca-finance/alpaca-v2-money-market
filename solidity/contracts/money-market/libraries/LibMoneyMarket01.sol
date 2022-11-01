@@ -94,9 +94,9 @@ library LibMoneyMarket01 {
       if (_actualToken == address(0)) {
         _actualToken = _token;
       } else {
-        // is ibToken
-        uint256 _totalSupply = IIbToken(_actualToken).totalSupply();
-        uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
+        // _token is ibToken
+        uint256 _totalSupply = IIbToken(_token).totalSupply();
+        uint256 _totalToken = _getTotalToken(_actualToken, moneyMarketDs);
 
         _amount = LibShareUtil.shareToValue(
           _totalToken,
