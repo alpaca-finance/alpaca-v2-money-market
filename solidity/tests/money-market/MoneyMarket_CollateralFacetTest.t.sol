@@ -98,9 +98,13 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserAddCollateralThanLimit_ShouldRevert() external {
-    uint256 _collateral = 120 ether;
-
+    //max collat for weth is 100 ether
+    uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
+    // first time should pass
+    collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
+
+    // the second should revert as it will exceed the limit
     vm.expectRevert(
       abi.encodeWithSelector(
         ICollateralFacet.CollateralFacet_ExceedCollateralLimit.selector
