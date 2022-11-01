@@ -97,7 +97,7 @@ library LibMoneyMarket01 {
         _actualToken = _collatToken;
       } else {
         uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
-        uint256 _totalToken = _getTotalToken(_actualToken, moneyMarketDs);
+        uint256 _totalToken = getTotalToken(_actualToken, moneyMarketDs);
 
         _actualAmount = LibShareUtil.shareToValue(
           _totalToken,
@@ -190,12 +190,12 @@ library LibMoneyMarket01 {
 
   // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
   // where borrowed amount consists of over-collat and non-collat borrowing
-  function _getTotalToken(
+  function getTotalToken(
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
     // TODO: optimize this by using global state var
-    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatTokenDebt(
+    uint256 _nonCollatDebt = getNonCollatTokenDebt(
       _token,
       moneyMarketDs
     );
