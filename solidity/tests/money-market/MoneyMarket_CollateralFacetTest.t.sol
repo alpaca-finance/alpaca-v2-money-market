@@ -101,9 +101,15 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     //max collat for weth is 100 ether
     uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
+
+    lendFacet.deposit(address(weth), 10 ether);
+    // add ibWethToken
+    ibWeth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+
     // first time should pass
     collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
-
+  
     // the second should revert as it will exceed the limit
     vm.expectRevert(
       abi.encodeWithSelector(
