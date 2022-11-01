@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+
+// interfaces
+import { IIbToken } from "../interfaces/IIbToken.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -81,9 +88,21 @@ library LibMoneyMarket01 {
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
       address _token = _collats[_i].token;
+      uint256 _amount = _collats[_i].amount;
       address _actualToken = moneyMarketDs.ibTokenToTokens[_token];
+
       if (_actualToken == address(0)) {
         _actualToken = _token;
+      } else {
+        // is ibToken
+        uint256 _totalSupply = IIbToken(_actualToken).totalSupply();
+        uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
+
+        _amount = LibShareUtil.shareToValue(
+          _totalToken,
+          _amount,
+          _totalSupply
+        );
       }
       
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
@@ -95,7 +114,7 @@ library LibMoneyMarket01 {
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _collats[_i].amount * _tokenConfig.collateralFactor,
+        _amount * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
@@ -166,5 +185,22 @@ library LibMoneyMarket01 {
         _i++;
       }
     }
+  }
+
+  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
+  // where borrowed amount consists of over-collat and non-collat borrowing
+  function _getTotalToken(
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256) {
+    // TODO: optimize this by using global state var
+    uint256 _nonCollatDebt = LibMoneyMarket01.getNonCollatTokenDebt(
+      _token,
+      moneyMarketDs
+    );
+    return
+      (ERC20(_token).balanceOf(address(this)) +
+        moneyMarketDs.debtValues[_token] +
+        _nonCollatDebt) - moneyMarketDs.collats[_token];
   }
 }
