@@ -43,17 +43,19 @@ contract BorrowFacet is IBorrowFacet {
       msg.sender,
       _subAccountId
     );
+    // interest must accure first
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     _validate(_subAccount, _token, _amount, moneyMarketDs);
 
-    LibDoublyLinkedList.List storage debtShare = moneyMarketDs
+    LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs
       .subAccountDebtShares[_subAccount];
 
     if (
-      debtShare.getNextOf(LibDoublyLinkedList.START) ==
+      userDebtShare.getNextOf(LibDoublyLinkedList.START) ==
       LibDoublyLinkedList.EMPTY
     ) {
-      debtShare.init();
+      userDebtShare.init();
     }
 
     uint256 _totalSupply = moneyMarketDs.debtShares[_token];
@@ -68,9 +70,10 @@ contract BorrowFacet is IBorrowFacet {
     moneyMarketDs.debtShares[_token] += _shareToAdd;
     moneyMarketDs.debtValues[_token] += _amount;
 
-    uint256 _newAmount = debtShare.getAmount(_token) + _amount;
+    uint256 _newShareAmount = userDebtShare.getAmount(_token) + _shareToAdd;
+
     // update user's debtshare
-    debtShare.addOrUpdate(_token, _newAmount);
+    userDebtShare.addOrUpdate(_token, _newShareAmount);
 
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
@@ -83,6 +86,8 @@ contract BorrowFacet is IBorrowFacet {
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     address _subAccount = LibMoneyMarket01.getSubAccount(
       _account,
@@ -167,6 +172,7 @@ contract BorrowFacet is IBorrowFacet {
       _token
     );
 
+    // Note: precision loss 1 wei when convert share back to value
     _debtAmount = LibShareUtil.shareToValue(
       moneyMarketDs.debtShares[_token],
       _debtShare,
@@ -357,12 +363,12 @@ contract BorrowFacet is IBorrowFacet {
   function pendingInterest(address _token) public view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01._pendingIntest(_token, moneyMarketDs);
+    return LibMoneyMarket01.pendingIntest(_token, moneyMarketDs);
   }
 
   function accureInterest(address _token) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01._accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
   }
 }

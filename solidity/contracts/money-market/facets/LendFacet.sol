@@ -14,6 +14,8 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
 
@@ -66,22 +68,34 @@ contract LendFacet is ILendFacet {
 
     address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
 
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+
     if (_token == address(0)) {
       revert LendFacet_InvalidToken(_ibToken);
     }
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
     uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
 
+    // uint256 _shareValue = LibShareUtil.shareToValue(
+    //   _totalSupply,
+    //   _totalToken,
+    //   _shareAmount
+    // );
+
     uint256 _shareValue = LibShareUtil.shareToValue(
+      _totalSupply,
       _totalToken,
-      _shareAmount,
-      _totalSupply
+      _shareAmount
     );
 
+    console.log("[C] withdraw:_shareAmount", _shareAmount);
+    console.log("[C] withdraw:_shareValue", _shareValue);
+    console.log("[C] withdraw:_totalToken", _totalToken);
+    console.log("[C] withdraw:_totalSupply", _totalSupply);
+
     IIbToken(_ibToken).burn(msg.sender, _shareAmount);
-    ERC20(_token).transfer(msg.sender, _shareValue);
+    ERC20(_token).safeTransfer(msg.sender, _shareValue);
 
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
