@@ -75,22 +75,11 @@ contract LendFacet is ILendFacet {
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
-    // uint256 _shareValue = LibShareUtil.shareToValue(
-    //   _totalSupply,
-    //   _totalToken,
-    //   _shareAmount
-    // );
-
     uint256 _shareValue = LibShareUtil.shareToValue(
       _shareAmount,
       _totalToken,
       _totalSupply
     );
-
-    console.log("[C] withdraw:_shareAmount", _shareAmount);
-    console.log("[C] withdraw:_shareValue", _shareValue);
-    console.log("[C] withdraw:_totalToken", _totalToken);
-    console.log("[C] withdraw:_totalSupply", _totalSupply);
 
     IIbToken(_ibToken).burn(msg.sender, _shareAmount);
     ERC20(_token).safeTransfer(msg.sender, _shareValue);
