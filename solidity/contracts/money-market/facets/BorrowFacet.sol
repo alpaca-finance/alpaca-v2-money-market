@@ -168,9 +168,9 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     _debtAmount = LibShareUtil.shareToValue(
-      moneyMarketDs.debtShares[_token],
       _debtShare,
-      moneyMarketDs.debtValues[_token]
+      moneyMarketDs.debtValues[_token],
+      moneyMarketDs.debtShares[_token]
     );
   }
 
@@ -203,9 +203,9 @@ contract BorrowFacet is IBorrowFacet {
 
     // update global debtShare
     _repayAmount = LibShareUtil.shareToValue(
-      _oldDebtShare,
       _shareToRemove,
-      _oldDebtValue
+      _oldDebtValue,
+      _oldDebtShare
     );
 
     moneyMarketDs.debtShares[_token] -= _shareToRemove;

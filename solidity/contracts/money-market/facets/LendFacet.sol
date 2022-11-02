@@ -71,8 +71,8 @@ contract LendFacet is ILendFacet {
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     uint256 _shareValue = LibShareUtil.shareToValue(
-      _totalToken,
       _shareAmount,
+      _totalToken,
       _totalSupply
     );
 
@@ -81,7 +81,6 @@ contract LendFacet is ILendFacet {
 
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
-
 
   function getTotalToken(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage
