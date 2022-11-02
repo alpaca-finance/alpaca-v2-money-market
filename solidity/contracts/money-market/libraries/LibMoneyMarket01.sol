@@ -196,25 +196,20 @@ library LibMoneyMarket01 {
   function pendingIntest(
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256) {
+  ) internal view returns (uint256 _pendingInterest) {
     uint256 _lastAccureTime = moneyMarketDs.debtLastAccureTime[_token];
-
     if (block.timestamp > _lastAccureTime) {
       uint256 _timePast = block.timestamp - _lastAccureTime;
       // uint256 balance = ERC20(_token).balanceOf(address(this));
       if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
         return 0;
       }
-
       uint256 _interestRate = IInterestRateModel(
         moneyMarketDs.interestModels[_token]
       ).getInterestRate(moneyMarketDs.debtValues[_token], 0);
-
       // TODO: change it when dynamically comes
-      return _interestRate * _timePast;
+      _pendingInterest = _interestRate * _timePast;
       // return ratePerSec.mul(vaultDebtVal).mul(timePast).div(1e18);
-    } else {
-      return 0;
     }
   }
 
