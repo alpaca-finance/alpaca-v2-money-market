@@ -15,6 +15,8 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 // interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -182,12 +184,17 @@ library LibMoneyMarket01 {
       if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
         return 0;
       }
-      uint256 _interestRate = IInterestRateModel(moneyMarketDs.interestModels[_token]).getInterestRate(
+      uint256 _interestRatePerSec = IInterestRateModel(moneyMarketDs.interestModels[_token]).getInterestRate(
         moneyMarketDs.debtValues[_token],
         0
       );
-      // TODO: change it when dynamically comes
-      _pendingInterest = _interestRate * _timePast;
+      // TODO: handle token decimals
+
+      // _pendingInterest = _interestRate * _timePast;
+      _pendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18;
+      console.log("[C] pendingIntest:1", _pendingInterest);
+      console.log("[C] pendingInterest:2", (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18);
+
       // return ratePerSec.mul(vaultDebtVal).mul(timePast).div(1e18);
     }
   }

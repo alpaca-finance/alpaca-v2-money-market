@@ -113,7 +113,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     bob borrow
   */
   function testCorrectness_WhenMultipleUserBorrow_ShouldAccureInterestCorrectly() external {
-    console.log("Before weth totalToken 1", lendFacet.getTotalToken(address(weth)));
     // BOB add ALICE add collateral
     uint256 _actualInterest = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterest, 0);
@@ -139,7 +138,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     // time past
     vm.warp(block.timestamp + 10);
-    console.log("Before weth totalToken 2", lendFacet.getTotalToken(address(weth)));
     // ALICE borrow and bob's interest accure
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = weth.balanceOf(ALICE);
@@ -151,7 +149,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
     assertEq(borrowFacet.debtLastAccureTime(address(weth)), block.timestamp);
 
-    console.log("Before weth totalToken 3", lendFacet.getTotalToken(address(weth)));
     // assert BOB
     (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     // bob borrow 10 with 0.1 interest rate per sec
