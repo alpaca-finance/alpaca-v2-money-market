@@ -33,5 +33,5 @@ interface IAdminFacet {
     view
     returns (LibMoneyMarket01.TokenConfig memory);
 
-  function setInterestModels(address _token, address model) external;
+  function setInterestModel(address _token, address model) external;
 }

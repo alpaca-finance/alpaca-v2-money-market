@@ -14,7 +14,11 @@ contract AdminFacet is IAdminFacet {
 
     uint256 _ibPairLength = _ibPair.length;
     for (uint8 _i; _i < _ibPairLength; ) {
-      LibMoneyMarket01.setIbPair(_ibPair[_i].token, _ibPair[_i].ibToken, moneyMarketDs);
+      LibMoneyMarket01.setIbPair(
+        _ibPair[_i].token,
+        _ibPair[_i].ibToken,
+        moneyMarketDs
+      );
       unchecked {
         _i++;
       }
@@ -77,7 +81,7 @@ contract AdminFacet is IAdminFacet {
     return moneyMarketDs.tokenConfigs[_token];
   }
 
-  function setInterestModels(address _token, address _model) external {
+  function setInterestModel(address _token, address _model) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);

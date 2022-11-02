@@ -18,9 +18,9 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     FixedInterestRateModel model = new FixedInterestRateModel();
-    adminFacet.setInterestModels(address(weth), address(model));
-    adminFacet.setInterestModels(address(usdc), address(model));
-    adminFacet.setInterestModels(address(isolateToken), address(model));
+    adminFacet.setInterestModel(address(weth), address(model));
+    adminFacet.setInterestModel(address(usdc), address(model));
+    adminFacet.setInterestModel(address(isolateToken), address(model));
 
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
