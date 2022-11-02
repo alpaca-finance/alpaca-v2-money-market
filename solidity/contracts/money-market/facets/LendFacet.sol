@@ -37,7 +37,7 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    LibMoneyMarket01._accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 
     if (_ibToken == address(0)) {
@@ -69,7 +69,7 @@ contract LendFacet is ILendFacet {
     if (_token == address(0)) {
       revert LendFacet_InvalidToken(_ibToken);
     }
-    LibMoneyMarket01._accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
     uint256 _totalToken = _getTotalToken(_token, moneyMarketDs);
