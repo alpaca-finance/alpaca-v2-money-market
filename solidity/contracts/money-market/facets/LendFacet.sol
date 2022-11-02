@@ -35,6 +35,10 @@ contract LendFacet is ILendFacet {
     uint256 _amountOut
   );
 
+  event LogOpenMarket(address indexed _user,
+    address _token,
+    address _ibToken);
+
   // open isolate token market, able to borrow only
   function openMarket(address _token) external returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage
@@ -69,6 +73,8 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
     LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
+
+    emit LogOpenMarket(msg.sender, _token, _newIbToken);
   }
 
   function deposit(address _token, uint256 _amount) external {
