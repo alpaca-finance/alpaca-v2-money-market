@@ -151,4 +151,24 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(BOB), 0);
     assertEq(ibWeth.totalSupply(), _expectedTotalShare);
   }
+
+  function testRevert_WhenUserDepositAndGetTinyShares_ShouldRevert() external {
+    vm.prank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(ILendFacet.LendFacet_NoTinyShares.selector)
+    );
+    lendFacet.deposit(address(weth), 1);
+  }
+
+  function testRevert_WhenUserWithdrawAndLeftWithTinyShares_ShouldRevert()
+    external
+  {
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 1 ether);
+    vm.expectRevert(
+      abi.encodeWithSelector(ILendFacet.LendFacet_NoTinyShares.selector)
+    );
+    lendFacet.withdraw(address(ibWeth), 0.5 ether);
+    vm.stopPrank();
+  }
 }

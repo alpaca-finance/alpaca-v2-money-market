@@ -13,4 +13,5 @@ interface ILendFacet {
   function debtShares(address _token) external view returns (uint256);
 
   error LendFacet_InvalidToken(address _token);
+  error LendFacet_NoTinyShares();
 }

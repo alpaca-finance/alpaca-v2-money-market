@@ -44,7 +44,7 @@ contract LendFacet is ILendFacet {
       revert LendFacet_InvalidToken(_token);
     }
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
-
+    uint256 _tokenDecimals = IIbToken(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     // calculate _shareToMint to mint before transfer token to MM
@@ -53,6 +53,10 @@ contract LendFacet is ILendFacet {
       _amount,
       _totalToken
     );
+
+    if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
+      revert LendFacet_NoTinyShares();
+    }
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IIbToken(_ibToken).mint(msg.sender, _shareToMint);
@@ -73,6 +77,7 @@ contract LendFacet is ILendFacet {
     }
 
     uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
+    uint256 _tokenDecimals = IIbToken(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     uint256 _shareValue = LibShareUtil.shareToValue(
@@ -80,6 +85,11 @@ contract LendFacet is ILendFacet {
       _totalToken,
       _totalSupply
     );
+
+    uint256 _shareLeft = _totalSupply - _shareAmount;
+    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
+      revert LendFacet_NoTinyShares();
+    }
 
     IIbToken(_ibToken).burn(msg.sender, _shareAmount);
     ERC20(_token).safeTransfer(msg.sender, _shareValue);
