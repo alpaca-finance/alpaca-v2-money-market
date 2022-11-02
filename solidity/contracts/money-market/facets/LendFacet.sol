@@ -139,15 +139,4 @@ contract LendFacet is ILendFacet {
     return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
   }
 
-  function debtValues(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtValues[_token];
-  }
-
-  function debtShares(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtShares[_token];
-  }
 }

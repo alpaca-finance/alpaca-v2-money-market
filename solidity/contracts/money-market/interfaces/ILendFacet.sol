@@ -8,10 +8,6 @@ interface ILendFacet {
 
   function getTotalToken(address _token) external view returns (uint256);
 
-  function debtValues(address _token) external view returns (uint256);
-
-  function debtShares(address _token) external view returns (uint256);
-
   function openMarket(address _token) external returns (address);
 
   error LendFacet_InvalidToken(address _token);
