@@ -254,6 +254,9 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     );
 
     // assert IB exchange rate change
+    // alice wthdraw 10 ibWeth, totalToken = 51, totalSupply = 50
+    // alice should get = 10 * 51 / 50 = 10.2 eth
+    uint256 _expectdAmount = 10.2 ether;
     _aliceBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
     lendFacet.withdraw(address(ibWeth), _borrowAmount);
@@ -261,26 +264,9 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     assertEq(
       _aliceBalanceAfter - _aliceBalanceBefore,
-      _borrowAmount,
+      _expectdAmount,
       "ALICE weth balance missmatch"
     );
-  }
-
-  // TODO
-  function testCorrectness_MultipleAction_ShouldGetInterestAndActionCorrectly()
-    external
-  {
-    /* 2 borrower 2 depositors
-      1.alice deposit
-      2.bob borrowed
-      3.10sec passed cat deposit
-      4.10sec eve borrowed
-      5.after accure debt
-      
-      6.verify is it not be able more 
-      verify eve interest < bob  (borrow the same amount)
-      verify cat interest < alice (deposit same amount)
-    */
   }
 
   function testCorrectness_WhenUserCallDeposit_InterestShouldAccrue() external {
