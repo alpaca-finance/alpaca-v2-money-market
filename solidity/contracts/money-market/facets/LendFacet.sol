@@ -60,13 +60,15 @@ contract LendFacet is ILendFacet {
       .TokenConfig({
         tier: LibMoneyMarket01.AssetTier.ISOLATE,
         collateralFactor: 0,
-        borrowingFactor: 0,
+        // todo: tbd
+        borrowingFactor: 1500,
         maxCollateral: 0,
-        maxBorrow: 0
+        // todo: tbd
+        maxBorrow: 100e18
       });
 
     LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
-    LibMoneyMarket01.setTokenConfig(_newIbToken, _tokenConfig, moneyMarketDs);
+    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
   }
 
   function deposit(address _token, uint256 _amount) external {
