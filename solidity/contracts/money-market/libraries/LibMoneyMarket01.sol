@@ -105,7 +105,7 @@ library LibMoneyMarket01 {
           _totalSupply
         );
       }
-      
+
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
         _actualToken
       ];
@@ -195,13 +195,27 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
     // TODO: optimize this by using global state var
-    uint256 _nonCollatDebt = getNonCollatTokenDebt(
-      _token,
-      moneyMarketDs
-    );
+    uint256 _nonCollatDebt = getNonCollatTokenDebt(_token, moneyMarketDs);
     return
       (ERC20(_token).balanceOf(address(this)) +
         moneyMarketDs.debtValues[_token] +
         _nonCollatDebt) - moneyMarketDs.collats[_token];
+  }
+
+  function setIbPair(
+    address _token,
+    address _ibToken,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    moneyMarketDs.tokenToIbTokens[_token] = _ibToken;
+    moneyMarketDs.ibTokenToTokens[_ibToken] = _token;
+  }
+
+  function setTokenConfig(
+    address _token,
+    TokenConfig memory _config,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    moneyMarketDs.tokenConfigs[_token] = _config;
   }
 }

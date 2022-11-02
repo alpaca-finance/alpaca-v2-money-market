@@ -34,6 +34,7 @@ contract BaseTest is DSTest {
 
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal dai; // use for open market case
   MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
@@ -43,6 +44,7 @@ contract BaseTest is DSTest {
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
+    dai = deployMockErc20("Dai Token", "DAI", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
@@ -128,10 +130,11 @@ contract BaseTest is DSTest {
   {
     LendFacet lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = lendFacet.deposit.selector;
     selectors[1] = lendFacet.withdraw.selector;
     selectors[2] = lendFacet.getTotalToken.selector;
+    selectors[3] = lendFacet.openMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(lendFacet),

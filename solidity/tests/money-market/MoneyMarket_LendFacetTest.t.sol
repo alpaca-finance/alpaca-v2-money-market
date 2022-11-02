@@ -5,6 +5,7 @@ import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
+import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
 contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function setUp() public override {
@@ -150,5 +151,28 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(BOB), 1000 ether);
     assertEq(ibWeth.balanceOf(BOB), 0);
     assertEq(ibWeth.totalSupply(), _expectedTotalShare);
+  }
+
+  function testCorrectness_WhenUserOpenNewMarket_ShouldOpenOncePerToken()
+    external
+  {
+    vm.startPrank(ALICE);
+    // should pass when register new token
+    address _ibToken = lendFacet.openMarket(address(dai));
+    assertEq(IERC20(_ibToken).name(), "Interest Bearing DAI");
+    assertEq(IERC20(_ibToken).symbol(), "IBDAI");
+
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ILendFacet.LendFacet_InvalidToken.selector,
+        address(dai)
+      )
+    );
+    lendFacet.openMarket(address(dai));
+
+    // able to deposit
+    lendFacet.deposit(address(dai), 5 ether);
+    assertEq(IERC20(_ibToken).balanceOf(ALICE), 5 ether);
+    vm.stopPrank();
   }
 }
