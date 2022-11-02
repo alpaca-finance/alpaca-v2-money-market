@@ -367,23 +367,23 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // totalSupply = 50
     // totalToken = 105 - 5 (balance - collat) = 100
     // ibCollatAmount = 5
-    // borrowIbTokenAmountInToken = 5 * (50 / 100) (ibCollatAmount * (totalSupply / totalToken)) = 2.5
-    // _borrowingPowerUSDValue of ibToken = 2.5 * 1 * 9000 / 10000 = 2.25 ether USD
-    // then 4.5 + 2.25 = 9
-    assertEq(_borrowingPowerUSDValue, 6.75 ether);
+    // borrowIbTokenAmountInToken = 5 * (100 / 50) (ibCollatAmount * (totalToken / totalSupply )) = 10
+    // _borrowingPowerUSDValue of ibToken = 10 * 1 * 9000 / 10000 = 9 ether USD
+    // then 4.5 + 9 = 13.5
+    assertEq(_borrowingPowerUSDValue, 13.5 ether);
 
     // borrowFactor = 1000, weth price = 1
-    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 6.75 USD
-    // maximumBorrowed weth amount = 6.75 * 10000/(10000 + 1000) ~ 6.136363636363636363
-    // _borrowedUSDValue = 6.136363636363636363 * (10000 + 1000) / 10000 ~ 6.749999999999999999
+    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 13.5 USD
+    // maximumBorrowed weth amount = 13.5 * 10000/(10000 + 1000) ~ 12.272727272727272727
+    // _borrowedUSDValue = 12.272727272727272727 * (10000 + 1000) / 10000 ~ 13.499999999999999999
     vm.prank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), 6.136363636363636363 ether);
+    borrowFacet.borrow(subAccount0, address(weth), 12.272727272727272727 ether);
 
     (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
       ALICE,
       subAccount0
     );
-    assertEq(_borrowedUSDValue, 6.749999999999999999 ether);
+    assertEq(_borrowedUSDValue, 13.499999999999999999 ether);
   }
 
   function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit()

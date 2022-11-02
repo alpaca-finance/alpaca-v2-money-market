@@ -100,12 +100,12 @@ library LibMoneyMarket01 {
         uint256 _totalToken = getTotalToken(_actualToken, moneyMarketDs);
 
         _actualAmount = LibShareUtil.shareToValue(
-          _totalToken,
           _collatAmount,
+          _totalToken,
           _totalSupply
         );
       }
-      
+
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
         _actualToken
       ];
@@ -170,9 +170,9 @@ library LibMoneyMarket01 {
       // TODO: get tokenPrice from oracle
       uint256 _tokenPrice = 1e18;
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
-        moneyMarketDs.debtShares[_borrowed[_i].token],
         _borrowed[_i].amount,
-        moneyMarketDs.debtValues[_borrowed[_i].token]
+        moneyMarketDs.debtValues[_borrowed[_i].token],
+        moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
       // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice * (10000+ borrowingFactor)
@@ -195,10 +195,7 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
     // TODO: optimize this by using global state var
-    uint256 _nonCollatDebt = getNonCollatTokenDebt(
-      _token,
-      moneyMarketDs
-    );
+    uint256 _nonCollatDebt = getNonCollatTokenDebt(_token, moneyMarketDs);
     return
       (ERC20(_token).balanceOf(address(this)) +
         moneyMarketDs.debtValues[_token] +
