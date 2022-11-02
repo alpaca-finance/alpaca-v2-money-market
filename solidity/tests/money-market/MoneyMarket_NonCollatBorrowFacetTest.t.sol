@@ -26,9 +26,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser()
-    external
-  {
+  function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
     uint256 _borrowAmount = 10 ether;
 
     // BOB Borrow _borrowAmount
@@ -39,10 +37,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
 
-    uint256 _bobDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(
-      BOB,
-      address(weth)
-    );
+    uint256 _bobDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
     assertEq(_bobDebtAmount, _borrowAmount);
@@ -55,18 +50,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
 
-    uint256 _aliceDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(
-      ALICE,
-      address(weth)
-    );
+    uint256 _aliceDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
     assertEq(_aliceDebtAmount, _borrowAmount);
 
     // total debt should equal sum of alice's and bob's debt
-    uint256 _totalDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(
-      address(weth)
-    );
+    uint256 _totalDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
 
     assertEq(_totalDebtAmount, _borrowAmount * 2);
     assertEq(_bobDebtAmount, _aliceDebtAmount);
@@ -76,18 +66,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _borrowAmount = 10 ether;
     vm.startPrank(BOB);
     vm.expectRevert(
-      abi.encodeWithSelector(
-        INonCollatBorrowFacet.NonCollatBorrowFacet_InvalidToken.selector,
-        address(mockToken)
-      )
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_InvalidToken.selector, address(mockToken))
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(mockToken), _borrowAmount);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate()
-    external
-  {
+  function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate() external {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceBorrowAmount2 = 20 ether;
 
@@ -96,8 +81,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet
-      .nonCollatGetDebtValues(ALICE);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -124,9 +108,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
 
-    uint256 _totalwethDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(
-      address(weth)
-    );
+    uint256 _totalwethDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
 
     assertEq(_totalwethDebtAmount, _aliceBorrowAmount * 2);
   }
@@ -139,8 +121,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet
-      .nonCollatGetDebtValues(ALICE);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -148,10 +129,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
 
     vm.expectRevert(
-      abi.encodeWithSelector(
-        INonCollatBorrowFacet.NonCollatBorrowFacet_NotEnoughToken.selector,
-        _aliceBorrowAmount * 2
-      )
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_NotEnoughToken.selector, _aliceBorrowAmount * 2)
     );
 
     // this should reverts as their is only 50 weth but alice try to borrow 60 (20 + (20*2))
@@ -162,18 +140,12 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserIsNotWhitelisted_ShouldRevert() external {
     vm.startPrank(CAT);
 
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        INonCollatBorrowFacet.NonCollatBorrowFacet_Unauthorized.selector
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_Unauthorized.selector));
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), 10 ether);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount()
-    external
-  {
+  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount() external {
     uint256 _bobDepositAmount = 10 ether;
     uint256 _aliceBorrowAmount = 10 ether;
 
@@ -190,9 +162,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(BOB), 10 ether);
   }
 
-  function testCorrectness_WhenUserRepayLessThanDebtHeHad_ShouldWork()
-    external
-  {
+  function testCorrectness_WhenUserRepayLessThanDebtHeHad_ShouldWork() external {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceRepayAmount = 5 ether;
 
@@ -210,26 +180,16 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     vm.stopPrank();
 
-    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(
-      ALICE,
-      address(weth)
-    );
+    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
 
     assertEq(_aliceRemainingDebt, _aliceBorrowAmount - _aliceRepayAmount);
 
-    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(
-      address(weth)
-    );
+    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
 
-    assertEq(
-      _tokenDebt,
-      (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount
-    );
+    assertEq(_tokenDebt, (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount);
   }
 
-  function testCorrectness_WhenUserOverRepay_ShouldOnlyRepayTheDebtHeHad()
-    external
-  {
+  function testCorrectness_WhenUserOverRepay_ShouldOnlyRepayTheDebtHeHad() external {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceRepayAmount = 15 ether;
 
@@ -237,29 +197,17 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
 
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
-    nonCollatBorrowFacet.nonCollatRepay(
-      ALICE,
-      address(weth),
-      _aliceRepayAmount
-    );
+    nonCollatBorrowFacet.nonCollatRepay(ALICE, address(weth), _aliceRepayAmount);
     uint256 _aliceWethBalanceAfter = weth.balanceOf(ALICE);
     vm.stopPrank();
 
-    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(
-      ALICE,
-      address(weth)
-    );
+    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
 
     assertEq(_aliceRemainingDebt, 0);
 
-    assertEq(
-      _aliceWethBalanceBefore - _aliceWethBalanceAfter,
-      _aliceBorrowAmount
-    );
+    assertEq(_aliceWethBalanceBefore - _aliceWethBalanceAfter, _aliceBorrowAmount);
 
-    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(
-      address(weth)
-    );
+    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
 
     assertEq(_tokenDebt, 0);
   }

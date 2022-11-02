@@ -52,10 +52,7 @@ library LibDoublyLinkedList {
     return list;
   }
 
-  function remove(List storage list, address addr)
-    internal
-    returns (List storage)
-  {
+  function remove(List storage list, address addr) internal returns (List storage) {
     // Check
     if (!has(list, addr)) revert LibDoublyLinkedList_NotExisted();
 
@@ -107,11 +104,7 @@ library LibDoublyLinkedList {
     return list;
   }
 
-  function getAmount(List storage list, address addr)
-    internal
-    view
-    returns (uint256)
-  {
+  function getAmount(List storage list, address addr) internal view returns (uint256) {
     return list.amount[addr];
   }
 
@@ -126,19 +119,11 @@ library LibDoublyLinkedList {
     return nodes;
   }
 
-  function getPreviousOf(List storage list, address addr)
-    internal
-    view
-    returns (address)
-  {
+  function getPreviousOf(List storage list, address addr) internal view returns (address) {
     return list.prev[addr];
   }
 
-  function getNextOf(List storage list, address curr)
-    internal
-    view
-    returns (address)
-  {
+  function getNextOf(List storage list, address curr) internal view returns (address) {
     return list.next[curr];
   }
 

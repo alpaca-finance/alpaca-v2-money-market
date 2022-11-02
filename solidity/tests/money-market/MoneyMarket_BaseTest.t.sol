@@ -60,18 +60,11 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     vm.stopPrank();
 
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](2);
-    _ibPair[0] = IAdminFacet.IbPair({
-      token: address(weth),
-      ibToken: address(ibWeth)
-    });
-    _ibPair[1] = IAdminFacet.IbPair({
-      token: address(usdc),
-      ibToken: address(ibUsdc)
-    });
+    _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
+    _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
     adminFacet.setTokenToIbTokens(_ibPair);
 
-    IAdminFacet.TokenConfigInput[]
-      memory _inputs = new IAdminFacet.TokenConfigInput[](3);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),

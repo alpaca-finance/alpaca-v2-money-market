@@ -23,18 +23,11 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser()
-    external
-  {
+  function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
     uint256 _borrowAmount = 10 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(
-      BOB,
-      subAccount0,
-      address(weth),
-      _borrowAmount * 2
-    );
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
@@ -56,19 +49,12 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
     uint256 _borrowAmount = 10 ether;
     vm.startPrank(BOB);
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        IBorrowFacet.BorrowFacet_InvalidToken.selector,
-        address(mockToken)
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidToken.selector, address(mockToken)));
     borrowFacet.borrow(subAccount0, address(mockToken), _borrowAmount);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate()
-    external
-  {
+  function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate() external {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceBorrowAmount2 = 20 ether;
 
@@ -79,8 +65,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet
-      .getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -118,8 +103,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet
-      .getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -127,19 +111,12 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
 
     // list will be add at the front of linkList
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        IBorrowFacet.BorrowFacet_NotEnoughToken.selector,
-        _aliceBorrowAmount * 2
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_NotEnoughToken.selector, _aliceBorrowAmount * 2));
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount * 2);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount()
-    external
-  {
+  function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount() external {
     uint256 _bobDepositAmount = 10 ether;
     uint256 _aliceBorrowAmount = 10 ether;
 
@@ -157,20 +134,13 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(BOB), 10 ether);
   }
 
-  function testRevert_WhenBorrowPowerLessThanBorrowingValue_ShouldRevert()
-    external
-  {
+  function testRevert_WhenBorrowPowerLessThanBorrowingValue_ShouldRevert() external {
     uint256 _aliceCollatAmount = 5 ether;
     uint256 _aliceBorrowAmount = 5 ether;
 
     vm.startPrank(ALICE);
 
-    collateralFacet.addCollateral(
-      ALICE,
-      subAccount0,
-      address(weth),
-      _aliceCollatAmount * 2
-    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollatAmount * 2);
 
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.expectRevert();
@@ -179,81 +149,43 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserHaveNotBorrow_ShouldAbleToBorrowIsolateAsset()
-    external
-  {
+  function testCorrectness_WhenUserHaveNotBorrow_ShouldAbleToBorrowIsolateAsset() external {
     uint256 _bobIsloateBorrowAmount = 5 ether;
     uint256 _bobCollateralAmount = 10 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(
-      BOB,
-      subAccount0,
-      address(weth),
-      _bobCollateralAmount
-    );
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _bobCollateralAmount);
 
-    borrowFacet.borrow(
-      subAccount0,
-      address(isolateToken),
-      _bobIsloateBorrowAmount
-    );
+    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsloateBorrowAmount);
     vm.stopPrank();
   }
 
-  function testRevert_WhenUserAlreadyBorrowIsloateToken_ShouldRevertIfTryToBorrowDifferentToken()
-    external
-  {
+  function testRevert_WhenUserAlreadyBorrowIsloateToken_ShouldRevertIfTryToBorrowDifferentToken() external {
     uint256 _bobIsloateBorrowAmount = 5 ether;
     uint256 _bobCollateralAmount = 20 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(
-      BOB,
-      subAccount0,
-      address(weth),
-      _bobCollateralAmount
-    );
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _bobCollateralAmount);
 
     // first borrow isolate token
-    borrowFacet.borrow(
-      subAccount0,
-      address(isolateToken),
-      _bobIsloateBorrowAmount
-    );
+    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsloateBorrowAmount);
 
     // borrow the isolate token again should passed
-    borrowFacet.borrow(
-      subAccount0,
-      address(isolateToken),
-      _bobIsloateBorrowAmount
-    );
+    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsloateBorrowAmount);
 
     // trying to borrow different asset
-    vm.expectRevert(
-      abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector)
-    );
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
     borrowFacet.borrow(subAccount0, address(weth), _bobIsloateBorrowAmount);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectly()
-    external
-  {
+  function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectly() external {
     uint256 _aliceCollatAmount = 5 ether;
 
     vm.prank(ALICE);
-    collateralFacet.addCollateral(
-      ALICE,
-      subAccount0,
-      address(weth),
-      _aliceCollatAmount
-    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollatAmount);
 
-    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(
-      ALICE,
-      subAccount0
-    );
+    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000/ 10000 = 4.5 ether USD
@@ -266,10 +198,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 4.09090909090909 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
-      ALICE,
-      subAccount0
-    );
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 4.499999999999999 ether);
   }
 
@@ -284,25 +213,12 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     ibWeth.approve(moneyMarketDiamond, _ibTokenCollatAmount);
 
     // add by actual token
-    collateralFacet.addCollateral(
-      ALICE,
-      subAccount0,
-      address(weth),
-      _aliceCollatAmount
-    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollatAmount);
     // add by ibToken
-    collateralFacet.addCollateral(
-      ALICE,
-      subAccount0,
-      address(ibWeth),
-      _ibTokenCollatAmount
-    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), _ibTokenCollatAmount);
     vm.stopPrank();
 
-    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(
-      ALICE,
-      subAccount0
-    );
+    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
@@ -321,10 +237,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 8.181818181818181818 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
-      ALICE,
-      subAccount0
-    );
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 8.999999999999999999 ether);
   }
 
@@ -339,28 +252,15 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     ibWeth.approve(moneyMarketDiamond, _ibTokenCollatAmount);
 
     // add by actual token
-    collateralFacet.addCollateral(
-      ALICE,
-      subAccount0,
-      address(weth),
-      _aliceCollatAmount
-    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollatAmount);
     // add by ibToken
-    collateralFacet.addCollateral(
-      ALICE,
-      subAccount0,
-      address(ibWeth),
-      _ibTokenCollatAmount
-    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), _ibTokenCollatAmount);
     vm.stopPrank();
 
     vm.prank(ALICE);
     weth.transfer(moneyMarketDiamond, 50 ether);
 
-    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(
-      ALICE,
-      subAccount0
-    );
+    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
@@ -379,38 +279,24 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 12.272727272727272727 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(
-      ALICE,
-      subAccount0
-    );
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 13.499999999999999999 ether);
   }
 
-  function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit()
-    external
-  {
+  function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit() external {
     // borrow cap is at 30 weth
     uint256 _borrowAmount = 20 ether;
     uint256 _bobCollateral = 100 ether;
 
     vm.startPrank(BOB);
 
-    collateralFacet.addCollateral(
-      BOB,
-      subAccount0,
-      address(weth),
-      _bobCollateral
-    );
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _bobCollateral);
 
     // first borrow should pass
     borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
 
     // the second borrow will revert since it exceed the cap
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector));
     borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
   }
