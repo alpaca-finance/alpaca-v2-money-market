@@ -28,10 +28,7 @@ interface IAdminFacet {
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external;
 
-  function tokenConfigs(address _token)
-    external
-    view
-    returns (LibMoneyMarket01.TokenConfig memory);
+  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
-  function setInterestModels(address _token, address model) external;
+  function setInterestModel(address _token, address model) external;
 }

@@ -31,9 +31,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserRepayDebt_DebtValueShouldDecrease()
-    external
-  {
+  function testCorrectness_WhenUserRepayDebt_DebtValueShouldDecrease() external {
     uint256 _debtAmount;
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
@@ -43,17 +41,13 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.repay(ALICE, subAccount0, address(weth), _debtAmount);
 
     (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
-    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(
-      address(weth)
-    );
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
   }
 
-  function testCorrectness_WhenUserRepayDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount()
-    external
-  {
+  function testCorrectness_WhenUserRepayDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
     uint256 _debtAmount;
     uint256 _repayAmount = 20 ether;
     uint256 _globalDebtShare;
@@ -68,15 +62,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _totalTokenAfter = lendFacet.getTotalToken(address(weth));
 
     (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
-    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(
-      address(weth)
-    );
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
 
     uint256 _expectedActualRepayAmount = 10 ether;
-    assertEq(
-      _wethBalanceBefore - _wethBalanceAfter,
-      _expectedActualRepayAmount
-    );
+    assertEq(_wethBalanceBefore - _wethBalanceAfter, _expectedActualRepayAmount);
     assertEq(_totalTokenAfter, _totalTokenBefore);
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
@@ -96,9 +85,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
 
     (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
-    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(
-      address(weth)
-    );
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
 
     assertEq(_wethBalanceBefore - _wethBalanceAfter, _repayAmount);
     assertEq(_debtAmount, 5 ether);

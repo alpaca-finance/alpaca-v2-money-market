@@ -10,7 +10,10 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
-import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
+
+import { IbToken } from "../IbToken.sol";
 
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
@@ -33,6 +36,48 @@ contract LendFacet is ILendFacet {
     uint256 _amountOut
   );
 
+  event LogOpenMarket(address indexed _user,
+    address indexed _token,
+    address _ibToken);
+
+  // open isolate token market, able to borrow only
+  function openMarket(address _token) external returns (address _newIbToken) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+
+    if (_ibToken != address(0)) {
+      revert LendFacet_InvalidToken(_token);
+    }
+
+    string memory _tokenSymbol = IERC20(_token).symbol();
+    uint8 _tokenDecimals = IERC20(_token).decimals();
+    _newIbToken = address(
+      new IbToken(
+        string.concat("Interest Bearing ", _tokenSymbol),
+        string.concat("IB", _tokenSymbol),
+        _tokenDecimals
+      )
+    );
+
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01
+      .TokenConfig({
+        tier: LibMoneyMarket01.AssetTier.ISOLATE,
+        collateralFactor: 0,
+        // todo: tbd
+        borrowingFactor: 1500,
+        maxCollateral: 0,
+        // todo: tbd
+        maxBorrow: 100e18
+      });
+
+    LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
+    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
+
+    emit LogOpenMarket(msg.sender, _token, _newIbToken);
+  }
+
   function deposit(address _token, uint256 _amount) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
@@ -43,8 +88,8 @@ contract LendFacet is ILendFacet {
     if (_ibToken == address(0)) {
       revert LendFacet_InvalidToken(_token);
     }
-    uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = IIbToken(_ibToken).decimals();
+    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
+    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     // calculate _shareToMint to mint before transfer token to MM
@@ -59,7 +104,7 @@ contract LendFacet is ILendFacet {
     }
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    IIbToken(_ibToken).mint(msg.sender, _shareToMint);
+    IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
@@ -76,8 +121,8 @@ contract LendFacet is ILendFacet {
       revert LendFacet_InvalidToken(_ibToken);
     }
 
-    uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = IIbToken(_ibToken).decimals();
+    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
+    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     uint256 _shareValue = LibShareUtil.shareToValue(
@@ -91,7 +136,7 @@ contract LendFacet is ILendFacet {
       revert LendFacet_NoTinyShares();
     }
 
-    IIbToken(_ibToken).burn(msg.sender, _shareAmount);
+    IbToken(_ibToken).burn(msg.sender, _shareAmount);
     ERC20(_token).safeTransfer(msg.sender, _shareValue);
 
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
@@ -103,15 +148,4 @@ contract LendFacet is ILendFacet {
     return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
   }
 
-  function debtValues(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtValues[_token];
-  }
-
-  function debtShares(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtShares[_token];
-  }
 }

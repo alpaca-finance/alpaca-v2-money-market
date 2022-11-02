@@ -16,17 +16,9 @@ contract CollateralFacet is ICollateralFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogAddCollateral(
-    address indexed _subAccount,
-    address indexed _token,
-    uint256 _amount
-  );
+  event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
 
-  event LogRemoveCollateral(
-    address indexed _subAccount,
-    address indexed _token,
-    uint256 _amount
-  );
+  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
 
   event LogTransferCollateral(
     address indexed _fromSubAccount,
@@ -41,22 +33,14 @@ contract CollateralFacet is ICollateralFacet {
     address _token,
     uint256 _amount
   ) external {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     _validateAddCollateral(_token, _amount, moneyMarketDs);
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(
-      _account,
-      _subAccountId
-    );
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs
-      .subAccountCollats[_subAccount];
-    if (
-      subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) ==
-      LibDoublyLinkedList.EMPTY
-    ) {
+    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs.subAccountCollats[_subAccount];
+    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       subAccountCollateralList.init();
     }
 
@@ -74,15 +58,11 @@ contract CollateralFacet is ICollateralFacet {
     address _token,
     uint256 _removeAmount
   ) external {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(
-      msg.sender,
-      _subAccountId
-    );
+    address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
 
     _removeCollateral(_subAccount, _token, _removeAmount, moneyMarketDs);
 
@@ -99,29 +79,18 @@ contract CollateralFacet is ICollateralFacet {
     address _token,
     uint256 _amount
   ) external {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
-    address _fromSubAccount = LibMoneyMarket01.getSubAccount(
-      msg.sender,
-      _fromSubAccountId
-    );
+    address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);
 
     _removeCollateral(_fromSubAccount, _token, _amount, moneyMarketDs);
 
-    address _toSubAccount = LibMoneyMarket01.getSubAccount(
-      msg.sender,
-      _toSubAccountId
-    );
+    address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibDoublyLinkedList.List storage toSubAccountCollateralList = moneyMarketDs
-      .subAccountCollats[_toSubAccount];
-    if (
-      toSubAccountCollateralList.getNextOf(LibDoublyLinkedList.START) ==
-      LibDoublyLinkedList.EMPTY
-    ) {
+    LibDoublyLinkedList.List storage toSubAccountCollateralList = moneyMarketDs.subAccountCollats[_toSubAccount];
+    if (toSubAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       toSubAccountCollateralList.init();
     }
     uint256 _newAmount = toSubAccountCollateralList.getAmount(_token) + _amount;
@@ -135,23 +104,17 @@ contract CollateralFacet is ICollateralFacet {
     view
     returns (LibDoublyLinkedList.Node[] memory)
   {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(
-      _account,
-      _subAccountId
-    );
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs
-      .subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs.subAccountCollats[_subAccount];
 
     return subAccountCollateralList.getAll();
   }
 
   function collats(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage
-      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.collats[_token];
   }
 
@@ -160,17 +123,11 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _collateralAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    if (
-      moneyMarketDs.tokenConfigs[_token].tier !=
-      LibMoneyMarket01.AssetTier.COLLATERAL
-    ) {
+    if (moneyMarketDs.tokenConfigs[_token].tier != LibMoneyMarket01.AssetTier.COLLATERAL) {
       revert CollateralFacet_InvalidAssetTier();
     }
 
-    if (
-      _collateralAmount + moneyMarketDs.collats[_token] >
-      moneyMarketDs.tokenConfigs[_token].maxCollateral
-    ) {
+    if (_collateralAmount + moneyMarketDs.collats[_token] > moneyMarketDs.tokenConfigs[_token].maxCollateral) {
       revert CollateralFacet_ExceedCollateralLimit();
     }
   }
@@ -181,8 +138,7 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _removeAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    LibDoublyLinkedList.List storage _subAccountCollatList = moneyMarketDs
-      .subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage _subAccountCollatList = moneyMarketDs.subAccountCollats[_subAccount];
 
     uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
 
@@ -190,18 +146,11 @@ contract CollateralFacet is ICollateralFacet {
       revert CollateralFacet_TooManyCollateralRemoved();
     }
 
-    _subAccountCollatList.updateOrRemove(
-      _token,
-      _collateralAmount - _removeAmount
-    );
+    _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _removeAmount);
 
-    uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(
-      _subAccount,
-      moneyMarketDs
-    );
+    uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
 
-    (uint256 _totalUsedBorrowedPower, ) = LibMoneyMarket01
-      .getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+    (uint256 _totalUsedBorrowedPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
 
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
     if (_totalBorrowingPower < _totalUsedBorrowedPower) {

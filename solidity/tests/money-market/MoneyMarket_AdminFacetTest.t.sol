@@ -16,10 +16,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     address _ibDepositToken = address(9999);
 
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
-    _ibPair[0] = IAdminFacet.IbPair({
-      token: _depositToken,
-      ibToken: _ibDepositToken
-    });
+    _ibPair[0] = IAdminFacet.IbPair({ token: _depositToken, ibToken: _ibDepositToken });
 
     adminFacet.setTokenToIbTokens(_ibPair);
 
@@ -30,8 +27,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {
     address _token = address(9998);
 
-    IAdminFacet.TokenConfigInput[]
-      memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: _token,
@@ -44,9 +40,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(
-      _token
-    );
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(_token);
 
     // assertEq not accept enum
     assertTrue(_tokenConfig.tier == LibMoneyMarket01.AssetTier.COLLATERAL);

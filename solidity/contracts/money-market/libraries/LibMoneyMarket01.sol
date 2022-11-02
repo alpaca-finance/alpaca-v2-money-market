@@ -61,33 +61,24 @@ library LibMoneyMarket01 {
     mapping(address => IInterestRateModel) interestModels;
   }
 
-  function moneyMarketDiamondStorage()
-    internal
-    pure
-    returns (MoneyMarketDiamondStorage storage moneyMarketStorage)
-  {
+  function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
     assembly {
       moneyMarketStorage.slot := MONEY_MARKET_STORAGE_POSITION
     }
   }
 
-  function getSubAccount(address primary, uint256 subAccountId)
-    internal
-    pure
-    returns (address)
-  {
+  function getSubAccount(address primary, uint256 subAccountId) internal pure returns (address) {
     if (subAccountId > 255) revert LibMoneyMarket01_BadSubAccountId();
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
   // TODO: handle decimal
-  function getTotalBorrowingPower(
-    address _subAccount,
-    MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _totalBorrowingPowerUSDValue) {
-    LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs
-      .subAccountCollats[_subAccount]
-      .getAll();
+  function getTotalBorrowingPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _totalBorrowingPowerUSDValue)
+  {
+    LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs.subAccountCollats[_subAccount].getAll();
 
     uint256 _collatsLength = _collats.length;
 
@@ -104,16 +95,10 @@ library LibMoneyMarket01 {
         uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
         uint256 _totalToken = getTotalToken(_actualToken, moneyMarketDs);
 
-        _actualAmount = LibShareUtil.shareToValue(
-          _collatAmount,
-          _totalToken,
-          _totalSupply
-        );
+        _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
       }
 
-      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
-        _actualToken
-      ];
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
 
       // TODO: get tokenPrice from oracle
       uint256 _tokenPrice = 1e18;
@@ -131,13 +116,12 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getNonCollatTokenDebt(
-    address _token,
-    MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _totalNonCollatDebt) {
-    LibDoublyLinkedList.Node[] memory _nonCollatDebts = moneyMarketDs
-      .nonCollatTokenDebtValues[_token]
-      .getAll();
+  function getNonCollatTokenDebt(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _totalNonCollatDebt)
+  {
+    LibDoublyLinkedList.Node[] memory _nonCollatDebts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
 
     uint256 _length = _nonCollatDebts.length;
 
@@ -150,24 +134,17 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getTotalUsedBorrowedPower(
-    address _subAccount,
-    MoneyMarketDiamondStorage storage moneyMarketDs
-  )
+  function getTotalUsedBorrowedPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
   {
-    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs
-      .subAccountDebtShares[_subAccount]
-      .getAll();
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
-        _borrowed[_i].token
-      ];
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
 
       if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
@@ -193,35 +170,29 @@ library LibMoneyMarket01 {
     }
   }
 
-  function pendingIntest(
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256) {
+  function pendingIntest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _pendingInterest)
+  {
     uint256 _lastAccureTime = moneyMarketDs.debtLastAccureTime[_token];
-
     if (block.timestamp > _lastAccureTime) {
       uint256 _timePast = block.timestamp - _lastAccureTime;
       // uint256 balance = ERC20(_token).balanceOf(address(this));
       if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
         return 0;
       }
-
-      uint256 _interestRate = IInterestRateModel(
-        moneyMarketDs.interestModels[_token]
-      ).getInterestRate(moneyMarketDs.debtValues[_token], 0);
-
+      uint256 _interestRate = IInterestRateModel(moneyMarketDs.interestModels[_token]).getInterestRate(
+        moneyMarketDs.debtValues[_token],
+        0
+      );
       // TODO: change it when dynamically comes
-      return _interestRate * _timePast;
+      _pendingInterest = _interestRate * _timePast;
       // return ratePerSec.mul(vaultDebtVal).mul(timePast).div(1e18);
-    } else {
-      return 0;
     }
   }
 
-  function accureInterest(
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
+  function accureInterest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs) internal {
     if (block.timestamp > moneyMarketDs.debtLastAccureTime[_token]) {
       uint256 _interest = pendingIntest(_token, moneyMarketDs);
       // uint256 toReserve = interest.mul(moneyMarketDs.getReservePoolBps()).div(
@@ -236,15 +207,32 @@ library LibMoneyMarket01 {
 
   // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
   // where borrowed amount consists of over-collat and non-collat borrowing
-  function getTotalToken(
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256) {
+  function getTotalToken(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256)
+  {
     // TODO: optimize this by using global state var
     uint256 _nonCollatDebt = getNonCollatTokenDebt(_token, moneyMarketDs);
     return
-      (ERC20(_token).balanceOf(address(this)) +
-        moneyMarketDs.debtValues[_token] +
-        _nonCollatDebt) - moneyMarketDs.collats[_token];
+      (ERC20(_token).balanceOf(address(this)) + moneyMarketDs.debtValues[_token] + _nonCollatDebt) -
+      moneyMarketDs.collats[_token];
+  }
+
+  function setIbPair(
+    address _token,
+    address _ibToken,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    moneyMarketDs.tokenToIbTokens[_token] = _ibToken;
+    moneyMarketDs.ibTokenToTokens[_ibToken] = _token;
+  }
+
+  function setTokenConfig(
+    address _token,
+    TokenConfig memory _config,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    moneyMarketDs.tokenConfigs[_token] = _config;
   }
 }
