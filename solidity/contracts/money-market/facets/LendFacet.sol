@@ -36,7 +36,7 @@ contract LendFacet is ILendFacet {
   );
 
   event LogOpenMarket(address indexed _user,
-    address _token,
+    address indexed _token,
     address _ibToken);
 
   // open isolate token market, able to borrow only
