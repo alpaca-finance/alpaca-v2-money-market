@@ -12,25 +12,16 @@ interface INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external;
 
-  function nonCollatGetDebtValues(address _account)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory);
+  function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
 
   function nonCollatGetTotalUsedBorrowedPower(address _account)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
 
-  function nonCollatGetDebt(address _account, address _token)
-    external
-    view
-    returns (uint256);
+  function nonCollatGetDebt(address _account, address _token) external view returns (uint256);
 
-  function nonCollatGetTokenDebt(address _token)
-    external
-    view
-    returns (uint256);
+  function nonCollatGetTokenDebt(address _token) external view returns (uint256);
 
   // Errors
   error NonCollatBorrowFacet_InvalidToken(address _token);

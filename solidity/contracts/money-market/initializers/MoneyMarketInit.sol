@@ -5,7 +5,6 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 contract MoneyMarketInit {
   function init() external {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage ds = LibMoneyMarket01
-      .moneyMarketDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage ds = LibMoneyMarket01.moneyMarketDiamondStorage();
   }
 }

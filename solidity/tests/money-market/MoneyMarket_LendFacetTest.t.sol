@@ -12,9 +12,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     super.setUp();
   }
 
-  function testCorrectness_WhenUserDeposit_TokenShouldSafeTransferFromUserToMM()
-    external
-  {
+  function testCorrectness_WhenUserDeposit_TokenShouldSafeTransferFromUserToMM() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
     lendFacet.deposit(address(weth), 10 ether);
@@ -26,9 +24,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
   }
 
-  function testCorrectness_WhenMultipleDeposit_ShouldMintShareCorrectly()
-    external
-  {
+  function testCorrectness_WhenMultipleDeposit_ShouldMintShareCorrectly() external {
     uint256 _depositAmount1 = 10 ether;
     uint256 _depositAmount2 = 20 ether;
     uint256 _expectedTotalShare = 0;
@@ -58,19 +54,12 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserDepositInvalidToken_ShouldRevert() external {
     address _randomToken = address(10);
     vm.startPrank(ALICE);
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        ILendFacet.LendFacet_InvalidToken.selector,
-        _randomToken
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
     lendFacet.deposit(_randomToken, 10 ether);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserWithdraw_ibTokenShouldBurnedAndTransferTokenToUser()
-    external
-  {
+  function testCorrectness_WhenUserWithdraw_ibTokenShouldBurnedAndTransferTokenToUser() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
     lendFacet.deposit(address(weth), 10 ether);
@@ -93,19 +82,12 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserWithdrawInvalidibToken_ShouldRevert() external {
     address _randomToken = address(10);
     vm.startPrank(ALICE);
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        ILendFacet.LendFacet_InvalidToken.selector,
-        _randomToken
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
     lendFacet.withdraw(_randomToken, 10 ether);
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenMultipleUserWithdraw_ShareShouldBurnedAndTransferTokenBackCorrectly()
-    external
-  {
+  function testCorrectness_WhenMultipleUserWithdraw_ShareShouldBurnedAndTransferTokenBackCorrectly() external {
     uint256 _depositAmount1 = 10 ether;
     uint256 _depositAmount2 = 20 ether;
     uint256 _expectedTotalShare = 0;
@@ -153,9 +135,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.totalSupply(), _expectedTotalShare);
   }
 
-  function testCorrectness_WhenUserOpenNewMarket_ShouldOpenOncePerToken()
-    external
-  {
+  function testCorrectness_WhenUserOpenNewMarket_ShouldOpenOncePerToken() external {
     vm.startPrank(ALICE);
     // should pass when register new token
     address _ibToken = lendFacet.openMarket(address(opm));
@@ -163,12 +143,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(IERC20(_ibToken).symbol(), "IBOPM");
     assertEq(IERC20(_ibToken).decimals(), 9);
 
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        ILendFacet.LendFacet_InvalidToken.selector,
-        address(opm)
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, address(opm)));
     lendFacet.openMarket(address(opm));
 
     // able to deposit

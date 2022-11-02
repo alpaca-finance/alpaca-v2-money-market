@@ -25,10 +25,7 @@ library LibLinkedList {
     return list.next[addr] != EMPTY;
   }
 
-  function add(List storage list, address addr)
-    internal
-    returns (List storage)
-  {
+  function add(List storage list, address addr) internal returns (List storage) {
     // Check
     if (has(list, addr)) revert LibLinkedList_Existed();
 
@@ -67,11 +64,7 @@ library LibLinkedList {
     return addrs;
   }
 
-  function getPreviousOf(List storage list, address addr)
-    internal
-    view
-    returns (address)
-  {
+  function getPreviousOf(List storage list, address addr) internal view returns (address) {
     address curr = list.next[START];
     if (curr == EMPTY) revert LibLinkedList_NotInitialized();
     for (uint256 i = 0; curr != END; i++) {
@@ -81,11 +74,7 @@ library LibLinkedList {
     return END;
   }
 
-  function getNextOf(List storage list, address curr)
-    internal
-    view
-    returns (address)
-  {
+  function getNextOf(List storage list, address curr) internal view returns (address) {
     return list.next[curr];
   }
 
