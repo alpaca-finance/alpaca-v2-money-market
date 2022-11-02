@@ -39,6 +39,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     weth.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
+    opm.mint(ALICE, 1000 ether);
     isolateToken.mint(ALICE, 1000 ether);
 
     weth.mint(BOB, 1000 ether);
@@ -48,6 +49,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
+    opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
@@ -57,7 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](3);
+    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](2);
     _ibPair[0] = IAdminFacet.IbPair({
       token: address(weth),
       ibToken: address(ibWeth)
@@ -66,15 +68,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       token: address(usdc),
       ibToken: address(ibUsdc)
     });
-    _ibPair[2] = IAdminFacet.IbPair({
-      token: address(isolateToken),
-      ibToken: address(ibIsolateToken)
-    });
-
     adminFacet.setTokenToIbTokens(_ibPair);
 
     IAdminFacet.TokenConfigInput[]
-      memory _inputs = new IAdminFacet.TokenConfigInput[](4);
+      memory _inputs = new IAdminFacet.TokenConfigInput[](3);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -95,15 +92,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
-      token: address(isolateToken),
-      tier: LibMoneyMarket01.AssetTier.ISOLATE,
-      collateralFactor: 9000,
-      borrowingFactor: 1000,
-      maxBorrow: 1000e18,
-      maxCollateral: 10000e18
-    });
-
-    _inputs[3] = IAdminFacet.TokenConfigInput({
       token: address(ibWeth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
@@ -114,5 +102,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
     (_inputs);
+
+    // open isolate token market
+    address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
+    ibIsolateToken = MockERC20(_ibIsolateToken);
   }
 }

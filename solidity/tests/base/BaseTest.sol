@@ -24,6 +24,8 @@ import { DiamondInit } from "../../contracts/money-market/initializers/DiamondIn
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 
+import { console } from "../utils/console.sol";
+
 contract BaseTest is DSTest {
   address internal constant ALICE = address(0x88);
   address internal constant BOB = address(0x168);
@@ -34,6 +36,7 @@ contract BaseTest is DSTest {
 
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal opm; // open market token
   MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
@@ -43,6 +46,7 @@ contract BaseTest is DSTest {
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
+    opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
@@ -128,10 +132,11 @@ contract BaseTest is DSTest {
   {
     LendFacet lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = lendFacet.deposit.selector;
     selectors[1] = lendFacet.withdraw.selector;
     selectors[2] = lendFacet.getTotalToken.selector;
+    selectors[3] = lendFacet.openMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(lendFacet),

@@ -10,7 +10,11 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
+import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
+
+import { IbToken } from "../IbToken.sol";
 
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
@@ -30,6 +34,48 @@ contract LendFacet is ILendFacet {
     uint256 _amountIn,
     uint256 _amountOut
   );
+
+  event LogOpenMarket(address indexed _user,
+    address indexed _token,
+    address _ibToken);
+
+  // open isolate token market, able to borrow only
+  function openMarket(address _token) external returns (address _newIbToken) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+
+    if (_ibToken != address(0)) {
+      revert LendFacet_InvalidToken(_token);
+    }
+
+    string memory _tokenSymbol = IERC20(_token).symbol();
+    uint8 _tokenDecimals = IERC20(_token).decimals();
+    _newIbToken = address(
+      new IbToken(
+        string.concat("Interest Bearing ", _tokenSymbol),
+        string.concat("IB", _tokenSymbol),
+        _tokenDecimals
+      )
+    );
+
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01
+      .TokenConfig({
+        tier: LibMoneyMarket01.AssetTier.ISOLATE,
+        collateralFactor: 0,
+        // todo: tbd
+        borrowingFactor: 1500,
+        maxCollateral: 0,
+        // todo: tbd
+        maxBorrow: 100e18
+      });
+
+    LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
+    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
+
+    emit LogOpenMarket(msg.sender, _token, _newIbToken);
+  }
 
   function deposit(address _token, uint256 _amount) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage
