@@ -39,7 +39,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     weth.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
-    dai.mint(ALICE, 1000 ether);
+    opm.mint(ALICE, 1000 ether);
     isolateToken.mint(ALICE, 1000 ether);
 
     weth.mint(BOB, 1000 ether);
@@ -49,7 +49,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
-    dai.approve(moneyMarketDiamond, type(uint256).max);
+    opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 

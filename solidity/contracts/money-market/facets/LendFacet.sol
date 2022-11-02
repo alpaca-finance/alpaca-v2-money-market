@@ -47,10 +47,12 @@ contract LendFacet is ILendFacet {
     }
 
     string memory _tokenSymbol = IERC20(_token).symbol();
+    uint8 _tokenDecimals = IERC20(_token).decimals();
     _newIbToken = address(
       new IbToken(
         string.concat("Interest Bearing ", _tokenSymbol),
-        string.concat("IB", _tokenSymbol)
+        string.concat("IB", _tokenSymbol),
+        _tokenDecimals
       )
     );
 
