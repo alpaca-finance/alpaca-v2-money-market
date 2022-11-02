@@ -247,4 +247,21 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtValues[_token] +
         _nonCollatDebt) - moneyMarketDs.collats[_token];
   }
+
+  function setIbPair(
+    address _token,
+    address _ibToken,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    moneyMarketDs.tokenToIbTokens[_token] = _ibToken;
+    moneyMarketDs.ibTokenToTokens[_ibToken] = _token;
+  }
+
+  function setTokenConfig(
+    address _token,
+    TokenConfig memory _config,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    moneyMarketDs.tokenConfigs[_token] = _config;
+  }
 }

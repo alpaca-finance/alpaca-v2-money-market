@@ -14,8 +14,7 @@ contract AdminFacet is IAdminFacet {
 
     uint256 _ibPairLength = _ibPair.length;
     for (uint8 _i; _i < _ibPairLength; ) {
-      moneyMarketDs.tokenToIbTokens[_ibPair[_i].token] = _ibPair[_i].ibToken;
-      moneyMarketDs.ibTokenToTokens[_ibPair[_i].ibToken] = _ibPair[_i].token;
+      LibMoneyMarket01.setIbPair(_ibPair[_i].token, _ibPair[_i].ibToken, moneyMarketDs);
       unchecked {
         _i++;
       }
@@ -37,7 +36,11 @@ contract AdminFacet is IAdminFacet {
           maxBorrow: _tokenConfigs[_i].maxBorrow
         });
 
-      moneyMarketDs.tokenConfigs[_tokenConfigs[_i].token] = _tokenConfig;
+      LibMoneyMarket01.setTokenConfig(
+        _tokenConfigs[_i].token,
+        _tokenConfig,
+        moneyMarketDs
+      );
 
       unchecked {
         _i++;
