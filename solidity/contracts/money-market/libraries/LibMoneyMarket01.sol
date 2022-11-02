@@ -170,6 +170,33 @@ library LibMoneyMarket01 {
     }
   }
 
+  function getTotalBorrowedValue(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _totalBorrowedUSDValue)
+  {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      // TODO: get tokenPrice from oracle
+      uint256 _tokenPrice = 1e18;
+      uint256 _borrowedAmount = LibShareUtil.shareToValue(
+        _borrowed[_i].amount,
+        moneyMarketDs.debtValues[_borrowed[_i].token],
+        moneyMarketDs.debtShares[_borrowed[_i].token]
+      );
+
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(_borrowedAmount, _tokenPrice, 1e18);
+
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
   function pendingIntest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view

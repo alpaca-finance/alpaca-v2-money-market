@@ -130,4 +130,12 @@ library LibDoublyLinkedList {
   function length(List storage list) internal view returns (uint256) {
     return list.size;
   }
+
+  function decreaseAmount(
+    List storage list,
+    address addr,
+    uint256 amount
+  ) internal {
+    list.amount[addr] -= amount;
+  }
 }
