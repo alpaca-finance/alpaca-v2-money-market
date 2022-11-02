@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+
+// interfaces
+import { IIbToken } from "../interfaces/IIbToken.sol";
 
 // interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -87,8 +94,27 @@ library LibMoneyMarket01 {
     uint256 _collatsLength = _collats.length;
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
+      address _collatToken = _collats[_i].token;
+      uint256 _collatAmount = _collats[_i].amount;
+      uint256 _actualAmount = _collatAmount;
+
+      // will return address(0) if _collatToken is not ibToken
+      address _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
+      if (_actualToken == address(0)) {
+        _actualToken = _collatToken;
+      } else {
+        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
+        uint256 _totalToken = getTotalToken(_actualToken, moneyMarketDs);
+
+        _actualAmount = LibShareUtil.shareToValue(
+          _collatAmount,
+          _totalToken,
+          _totalSupply
+        );
+      }
+
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[
-        _collats[_i].token
+        _actualToken
       ];
 
       // TODO: get tokenPrice from oracle
@@ -96,7 +122,7 @@ library LibMoneyMarket01 {
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _collats[_i].amount * _tokenConfig.collateralFactor,
+        _actualAmount * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
@@ -151,9 +177,9 @@ library LibMoneyMarket01 {
       // TODO: get tokenPrice from oracle
       uint256 _tokenPrice = 1e18;
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
-        moneyMarketDs.debtShares[_borrowed[_i].token],
         _borrowed[_i].amount,
-        moneyMarketDs.debtValues[_borrowed[_i].token]
+        moneyMarketDs.debtValues[_borrowed[_i].token],
+        moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
       // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice * (10000+ borrowingFactor)
@@ -208,5 +234,19 @@ library LibMoneyMarket01 {
       moneyMarketDs.debtValues[_token] += _interest;
       moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
     }
+  }
+
+  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
+  // where borrowed amount consists of over-collat and non-collat borrowing
+  function getTotalToken(
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256) {
+    // TODO: optimize this by using global state var
+    uint256 _nonCollatDebt = getNonCollatTokenDebt(_token, moneyMarketDs);
+    return
+      (ERC20(_token).balanceOf(address(this)) +
+        moneyMarketDs.debtValues[_token] +
+        _nonCollatDebt) - moneyMarketDs.collats[_token];
   }
 }
