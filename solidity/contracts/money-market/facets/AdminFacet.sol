@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract AdminFacet is IAdminFacet {
   // TODO: validate role
@@ -13,7 +14,11 @@ contract AdminFacet is IAdminFacet {
 
     uint256 _ibPairLength = _ibPair.length;
     for (uint8 _i; _i < _ibPairLength; ) {
-      LibMoneyMarket01.setIbPair(_ibPair[_i].token, _ibPair[_i].ibToken, moneyMarketDs);
+      LibMoneyMarket01.setIbPair(
+        _ibPair[_i].token,
+        _ibPair[_i].ibToken,
+        moneyMarketDs
+      );
       unchecked {
         _i++;
       }
@@ -74,5 +79,11 @@ contract AdminFacet is IAdminFacet {
       storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return moneyMarketDs.tokenConfigs[_token];
+  }
+
+  function setInterestModel(address _token, address _model) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage
+      storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
   }
 }
