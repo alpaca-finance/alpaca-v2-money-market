@@ -70,7 +70,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 1000,
+      borrowingFactor: 9000,
       maxBorrow: 30e18,
       maxCollateral: 100e18
     });
@@ -79,7 +79,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       token: address(usdc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 1000,
+      borrowingFactor: 9000,
       maxBorrow: 1e24,
       maxCollateral: 10e24
     });
@@ -88,7 +88,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       token: address(ibWeth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 1000,
+      borrowingFactor: 9000,
       maxBorrow: 30e18,
       maxCollateral: 100e18
     });

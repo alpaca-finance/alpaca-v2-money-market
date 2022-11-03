@@ -66,7 +66,7 @@ contract LendFacet is ILendFacet {
         tier: LibMoneyMarket01.AssetTier.ISOLATE,
         collateralFactor: 0,
         // todo: tbd
-        borrowingFactor: 1500,
+        borrowingFactor: 8500,
         maxCollateral: 0,
         // todo: tbd
         maxBorrow: 100e18
