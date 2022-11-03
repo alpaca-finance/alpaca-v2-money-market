@@ -106,9 +106,9 @@ contract BorrowFacet is IBorrowFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibDoublyLinkedList.List storage debtShares = moneyMarketDs.subAccountDebtShares[_subAccount];
+    LibDoublyLinkedList.List storage subAccountDebtShares = moneyMarketDs.subAccountDebtShares[_subAccount];
 
-    return debtShares.getAll();
+    return subAccountDebtShares.getAll();
   }
 
   function getDebt(
@@ -218,11 +218,7 @@ contract BorrowFacet is IBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibFullMath.mulDiv(
-      _amount * (LibMoneyMarket01.MAX_BPS + _tokenConfig.borrowingFactor),
-      _tokenPrice,
-      1e22
-    );
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
 
     // _borrowedValue > _borrowedValue => repurchase
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {

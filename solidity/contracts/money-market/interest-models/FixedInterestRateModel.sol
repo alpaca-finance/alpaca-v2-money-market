@@ -10,6 +10,6 @@ contract FixedInterestRateModel is IInterestRateModel {
     uint256 debt,
     uint256 /*floating*/
   ) external pure returns (uint256 _interestRate) {
-    _interestRate = debt == 0 ? 0 : 1e17;
+    return debt / 1000;
   }
 }
