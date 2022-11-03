@@ -2,6 +2,18 @@
 pragma solidity 0.8.17;
 
 interface IRepurchaseFacet {
+  event LogRepurchase(
+    address indexed repurchaser,
+    address _debtToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
+
+  error RepurchaseFacet_Healthy();
+  error RepurchaseFacet_RepayDebtValueTooHigh();
+  error RepurchaseFacet_InsufficientAmount();
+
   function repurchase(
     address _subAccount,
     address _debtToken,

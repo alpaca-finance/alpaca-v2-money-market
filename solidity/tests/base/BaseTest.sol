@@ -38,10 +38,12 @@ contract BaseTest is DSTest {
 
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal btc;
   MockERC20 internal opm; // open market token
   MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
+  MockERC20 internal ibBtc;
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
 
@@ -49,11 +51,13 @@ contract BaseTest is DSTest {
 
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
+    btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
+    ibBtc = deployMockErc20("Inerest Bearing Bitcoin", "IBBTC", 18);
     ibUsdc = deployMockErc20("Inerest USD COIN", "IBUSDC", 18);
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
 

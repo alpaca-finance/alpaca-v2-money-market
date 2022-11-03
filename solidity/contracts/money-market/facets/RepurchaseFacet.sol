@@ -13,21 +13,11 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { IRepurchaseFacet } from "../interfaces/IRepurchaseFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 
+import { console } from "../../../tests/utils/console.sol";
+
 contract RepurchaseFacet is IRepurchaseFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
-
-  event LogRepurchase(
-    address indexed repurchaser,
-    address _debtToken,
-    address _collatToken,
-    uint256 _amountIn,
-    uint256 _amountOut
-  );
-
-  error RepurchaseFacet_BorrowingPowerIsCovered();
-  error RepurchaseFacet_RepayDebtValueTooHigh();
-  error RepurchaseFacet_InsufficientAmount();
 
   uint8 constant REPURCHASE_BPS = 100;
 
@@ -44,8 +34,11 @@ contract RepurchaseFacet is IRepurchaseFacet {
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedValue(_subAccount, moneyMarketDs);
 
+    console.logUint(_borrowingPower);
+    console.logUint(_borrowedValue);
+
     if (_borrowingPower > _borrowedValue) {
-      revert RepurchaseFacet_BorrowingPowerIsCovered();
+      revert RepurchaseFacet_Healthy();
     }
 
     (uint256 _actualRepayAmount, uint256 _actualRepayShare) = _getActualRepayDebt(
