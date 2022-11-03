@@ -7,6 +7,7 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 
 contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -18,8 +19,9 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     FixedInterestRateModel model = new FixedInterestRateModel();
+    TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(model));
-    adminFacet.setInterestModel(address(usdc), address(model));
+    adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
     vm.startPrank(ALICE);
@@ -209,5 +211,75 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     lendFacet.withdraw(address(ibWeth), 10 ether);
 
     assertEq(borrowFacet.debtLastAccureTime(address(weth)), _timeStampBefore + _secondPassed);
+  }
+
+  function testCorrectness_WhenMMUseTripleSlopeInterestModel_InterestShouldAccureCorrectly() external {
+    // BOB add ALICE add collateral
+    uint256 _actualInterest = borrowFacet.pendingInterest(address(usdc));
+    assertEq(_actualInterest, 0);
+
+    uint256 _borrowAmount = 10 ether;
+
+    vm.prank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _borrowAmount * 2);
+
+    vm.prank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
+
+    // BOB borrow
+    vm.startPrank(BOB);
+    uint256 _bobBalanceBefore = usdc.balanceOf(BOB);
+    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
+    vm.stopPrank();
+
+    uint256 _bobBalanceAfter = usdc.balanceOf(BOB);
+
+    assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
+    vm.stopPrank();
+
+    // time past
+    uint256 _secondPassed = 1 days;
+    vm.warp(block.timestamp + _secondPassed);
+    // ALICE borrow and bob's interest accure
+    vm.startPrank(ALICE);
+    uint256 _aliceBalanceBefore = usdc.balanceOf(ALICE);
+    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
+    vm.stopPrank();
+
+    uint256 _aliceBalanceAfter = usdc.balanceOf(ALICE);
+
+    assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
+    assertEq(borrowFacet.debtLastAccureTime(address(usdc)), block.timestamp);
+
+    // assert BOB
+    (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(usdc));
+    // bob borrow 10 usdc, pool has 20 usdc, utilizetion = 50%
+    // interest rate = 10.2941176456512000% per year
+    // 1 day passed _bobExpectedDebtAmount = debtAmount + (debtAmount * seconedPass * ratePerSec)
+    // = 10 + (10 * 1 * 0.102941176456512000/365) = 10.002820306204288
+    uint256 _bobExpectedDebtAmount = 10.002820306204288 ether;
+    assertEq(_bobActualDebtAmount, _bobExpectedDebtAmount);
+
+    // // assert ALICE
+    (, uint256 _aliceActualDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(usdc));
+    // _aliceExpectedDebtAmount should be 10 ether, but precision loss
+    // so _aliceExpectedDebtAmount = 9.999999999999999999 ether
+    uint256 _aliceExpectedDebtAmount = 9.999999999999999999 ether;
+    assertEq(_aliceActualDebtAmount, _aliceExpectedDebtAmount, "Alice debtAmount missmatch");
+
+    // assert Global
+    // from BOB 10 + 0.002820306204288 =, Alice 10 = 20.002820306204288
+    assertEq(borrowFacet.debtValues(address(usdc)), 20.002820306204288 ether, "Global debtValues missmatch");
+
+    // // assert IB exchange rate change
+    // // alice wthdraw 10 ibUSDC, totalToken = 20.002820306204288, totalSupply = 20
+    // // alice should get = 10 * 20.002820306204288 / 20 = 10.2 eth
+    uint256 _expectdAmount = 10.001410153102144 ether;
+    _aliceBalanceBefore = usdc.balanceOf(ALICE);
+    vm.prank(ALICE);
+    lendFacet.withdraw(address(ibUsdc), _borrowAmount);
+    _aliceBalanceAfter = usdc.balanceOf(ALICE);
+
+    assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _expectdAmount, "ALICE weth balance missmatch");
   }
 }
