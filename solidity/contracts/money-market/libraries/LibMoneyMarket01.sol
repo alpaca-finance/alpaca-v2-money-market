@@ -11,11 +11,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IIbToken } from "../interfaces/IIbToken.sol";
-
-// interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
-
-import { console } from "solidity/tests/utils/console.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
