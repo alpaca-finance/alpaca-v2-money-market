@@ -106,9 +106,9 @@ contract BorrowFacet is IBorrowFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibDoublyLinkedList.List storage debtShares = moneyMarketDs.subAccountDebtShares[_subAccount];
+    LibDoublyLinkedList.List storage subAccountDebtShares = moneyMarketDs.subAccountDebtShares[_subAccount];
 
-    return debtShares.getAll();
+    return subAccountDebtShares.getAll();
   }
 
   function getDebt(
