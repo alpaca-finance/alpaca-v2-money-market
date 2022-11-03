@@ -253,7 +253,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     // assert BOB
     (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(usdc));
-    // bob borrow 10 usdc, pool has 20 usdc, utilizetion = 50%
+    // bob borrow 10 usdc, pool has 20 usdc, utilization = 50%
     // interest rate = 10.2941176456512000% per year
     // 1 day passed _bobExpectedDebtAmount = debtAmount + (debtAmount * seconedPass * ratePerSec)
     // = 10 + (10 * 1 * 0.102941176456512000/365) = 10.002820306204288
