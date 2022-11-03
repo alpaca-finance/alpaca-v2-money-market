@@ -17,6 +17,14 @@ contract RepurchaseFacet is IRepurchaseFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
 
+  event LogRepurchase(
+    address indexed repurchaser,
+    address _debtToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
+
   error RepurchaseFacet_BorrowingPowerIsCovered();
   error RepurchaseFacet_RepayDebtValueTooHigh();
   error RepurchaseFacet_InsufficientAmount();
@@ -25,12 +33,14 @@ contract RepurchaseFacet is IRepurchaseFacet {
 
   function repurchase(
     address _subAccount,
-    address _repayToken,
+    address _debtToken,
     address _collatToken,
     uint256 _repayAmount
   ) external returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_repayToken, moneyMarketDs);
+
+    LibMoneyMarket01.accureInterest(_debtToken, moneyMarketDs);
+
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedValue(_subAccount, moneyMarketDs);
 
@@ -41,7 +51,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     (uint256 _actualRepayAmount, uint256 _actualRepayShare) = _getActualRepayDebt(
       moneyMarketDs,
       _subAccount,
-      _repayToken,
+      _debtToken,
       _repayAmount
     );
 
@@ -50,20 +60,22 @@ contract RepurchaseFacet is IRepurchaseFacet {
       revert RepurchaseFacet_RepayDebtValueTooHigh();
     }
 
-    _collatAmountOut = _getCollatAmountOut(moneyMarketDs, _subAccount, _repayToken, _collatToken, _repayAmount);
+    _collatAmountOut = _getCollatAmountOut(moneyMarketDs, _subAccount, _debtToken, _collatToken, _repayAmount);
 
     _updateState(
       moneyMarketDs,
       _subAccount,
-      _repayToken,
+      _debtToken,
       _collatToken,
       _actualRepayAmount,
       _actualRepayShare,
       _collatAmountOut
     );
 
-    ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    ERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
+
+    emit LogRepurchase(msg.sender, _debtToken, _collatToken, _repayAmount, _collatAmountOut);
   }
 
   function _getActualRepayDebt(
