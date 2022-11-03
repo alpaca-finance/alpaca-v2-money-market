@@ -147,8 +147,7 @@ library LibMoneyMarket01 {
       if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
       }
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+      uint256 _tokenPrice = getPrice(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.debtValues[_borrowed[_i].token],
@@ -173,8 +172,7 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+      uint256 _tokenPrice = getPrice(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.debtValues[_borrowed[_i].token],
@@ -233,6 +231,22 @@ library LibMoneyMarket01 {
       // reservePool = reservePool.add(toReserve);
       moneyMarketDs.debtValues[_token] += _interest;
       moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
+    }
+  }
+
+  function accureAllSubAccountDebtToken(
+    address _subAccount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      accureInterest(_borrowed[_i].token, moneyMarketDs);
+      unchecked {
+        _i++;
+      }
     }
   }
 

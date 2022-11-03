@@ -126,6 +126,106 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
+  function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
+    // alice add more collateral
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, 0, address(weth), 40 ether);
+    // alice borrow more btc token as 30% of vault = 3 btc
+    borrowFacet.borrow(0, address(btc), 3 ether);
+    vm.stopPrank();
+
+    // criteria
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+
+    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
+
+    // collat amount should be = 80 on weth
+    // collat debt value should be | usdc: 30 | btc: 3 |
+    // collat debt share should be | usdc: 30 | btc: 3 |
+    CacheState memory _stateBefore = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 80 * 0.8 * 9000 / 10000 = 57.6 ether USD
+    oracle.setPrice(address(weth), 8e17);
+
+    // add time 1 day
+    // 0.00016921837224 is interest rate per day of (30% condition slope)
+    // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
+    // then total debt value of btc should increase by 0.00016921837224 * 3 = 0.00050765511672
+    vm.warp(1 days + 1);
+
+    // bob try repurchase with 20 usdc
+    // eth price = 0.8 USD
+    // usdc price = 1 USD
+    // reward = 0.01%
+    // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
+    // timestamp increased by 1 day, btc value should increased to 3.00050765511672
+    vm.prank(BOB);
+    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 20 ether);
+
+    // repay value = 20 * 1 = 1 USD
+    // reward amount = 20 * 1.01 = 20.20 USD
+    // converted weth amount = 20.20 / 0.8 = 25.25
+
+    uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
+    uint256 _bobWethBalanceAfter = weth.balanceOf(BOB);
+
+    // check bob balance
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 20 ether); // pay 20 usdc
+    assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 25.25 ether); // get 25.25 weth
+
+    CacheState memory _stateAfter = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    // check state
+    // note: before repurchase state should be like these
+    // collat amount should be = 80 on weth
+    // collat debt value should be | usdc: 30.0050765511672 | btc: 3.00050765511672 | after accure interest
+    // collat debt share should be | usdc: 30 | usdc: 30 |
+    // then after repurchase
+    // collat amount should be = 80 - (_collatAmountOut) = 80 - 25.25 = 54.75
+    // collat debt value should be = 30.0050765511672 - (_repayAmount) = 30.0050765511672 - 20 = 10.0050765511672
+    // _repayShare = _repayAmount * totalDebtShare / totalDebtValue = 20 * 30 / 30.0050765511672 = 19.996616205155455587
+    // collat debt share should be = 30 - (_repayShare) = 30 - 19.996616205155455587 = 10.003383794844544413
+    assertEq(_stateAfter.collat, 54.75 ether);
+    assertEq(_stateAfter.subAccountCollat, 54.75 ether);
+    assertEq(_stateAfter.debtValue, 10.0050765511672 ether);
+    assertEq(_stateAfter.debtShare, 10.003383794844544413 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 10.003383794844544413 ether);
+
+    // check state for btc should not be changed
+    CacheState memory _btcState = CacheState({
+      collat: collateralFacet.collats(address(btc)),
+      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, address(btc)),
+      debtShare: borrowFacet.debtShares(address(btc)),
+      debtValue: borrowFacet.debtValues(address(btc)),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, address(btc));
+    assertEq(_btcState.collat, 0 ether);
+    assertEq(_btcState.subAccountCollat, 0 ether);
+    assertEq(_btcState.debtValue, 3.00050765511672 ether);
+    assertEq(_btcState.debtShare, 3 ether);
+    // assertEq(_btcState.subAccountDebtShare, 3 ether);
+
+    vm.stopPrank();
+  }
+
   function testRevert_shouldRevertIfSubAccountIsHealthy() external {
     // criteria
     address _debtToken = address(usdc);

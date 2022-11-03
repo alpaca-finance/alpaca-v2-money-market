@@ -29,13 +29,10 @@ contract RepurchaseFacet is IRepurchaseFacet {
   ) external returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    LibMoneyMarket01.accureInterest(_debtToken, moneyMarketDs);
+    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedValue(_subAccount, moneyMarketDs);
-
-    console.logUint(_borrowingPower);
-    console.logUint(_borrowedValue);
 
     if (_borrowingPower > _borrowedValue) {
       revert RepurchaseFacet_Healthy();
