@@ -9,6 +9,10 @@ import { console } from "../utils/console.sol";
 // core
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
+// oracle
+import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
+import { ChainLinkPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
+
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
@@ -27,6 +31,7 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 import { console } from "../utils/console.sol";
 
 contract BaseTest is DSTest {
+  address internal constant DEPLOYER = address(0x01);
   address internal constant ALICE = address(0x88);
   address internal constant BOB = address(0x168);
   address internal constant CAT = address(0x99);
@@ -37,6 +42,7 @@ contract BaseTest is DSTest {
   MockERC20 internal weth;
   MockERC20 internal usdc;
   MockERC20 internal opm; // open market token
+  MockERC20 internal usd;
   MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
@@ -46,6 +52,7 @@ contract BaseTest is DSTest {
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
+    usd = deployMockErc20("USD FOR CHAINLINK", "USD", 18);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
