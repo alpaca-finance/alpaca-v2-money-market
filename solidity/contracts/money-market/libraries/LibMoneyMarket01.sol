@@ -11,8 +11,6 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IIbToken } from "../interfaces/IIbToken.sol";
-
-// interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
@@ -178,17 +176,19 @@ library LibMoneyMarket01 {
     uint256 _lastAccureTime = moneyMarketDs.debtLastAccureTime[_token];
     if (block.timestamp > _lastAccureTime) {
       uint256 _timePast = block.timestamp - _lastAccureTime;
-      // uint256 balance = ERC20(_token).balanceOf(address(this));
+
       if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
         return 0;
       }
-      uint256 _interestRate = IInterestRateModel(moneyMarketDs.interestModels[_token]).getInterestRate(
-        moneyMarketDs.debtValues[_token],
-        0
+      uint256 _debtValue = moneyMarketDs.debtValues[_token];
+      uint256 _floating = getFloatingBalance(_token, moneyMarketDs);
+      uint256 _interestRatePerSec = IInterestRateModel(moneyMarketDs.interestModels[_token]).getInterestRate(
+        _debtValue,
+        _floating
       );
-      // TODO: change it when dynamically comes
-      _pendingInterest = _interestRate * _timePast;
-      // return ratePerSec.mul(vaultDebtVal).mul(timePast).div(1e18);
+
+      // TODO: handle token decimals
+      _pendingInterest = (_interestRatePerSec * _timePast * _debtValue) / 1e18;
     }
   }
 
@@ -217,6 +217,14 @@ library LibMoneyMarket01 {
     return
       (ERC20(_token).balanceOf(address(this)) + moneyMarketDs.debtValues[_token] + _nonCollatDebt) -
       moneyMarketDs.collats[_token];
+  }
+
+  function getFloatingBalance(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _floating)
+  {
+    _floating = ERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
   }
 
   function setIbPair(
