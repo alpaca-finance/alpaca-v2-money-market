@@ -11,6 +11,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 // interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -56,7 +57,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
-    address oracle;
+    IPriceOracle oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
   }
@@ -100,8 +101,7 @@ library LibMoneyMarket01 {
 
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
 
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+      uint256 _tokenPrice = getPrice(_actualToken, moneyMarketDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
@@ -226,7 +226,6 @@ library LibMoneyMarket01 {
       //   10000
       // );
       // reservePool = reservePool.add(toReserve);
-
       moneyMarketDs.debtValues[_token] += _interest;
       moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
     }
@@ -261,5 +260,17 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     moneyMarketDs.tokenConfigs[_token] = _config;
+  }
+
+  function getPrice(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _price)
+  {
+    // 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff is USD
+    (_price, ) = IPriceOracle(moneyMarketDs.oracle).getPrice(
+      _token,
+      address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
+    );
   }
 }

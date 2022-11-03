@@ -5,6 +5,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract AdminFacet is IAdminFacet {
   // TODO: validate role
@@ -65,5 +66,10 @@ contract AdminFacet is IAdminFacet {
   function setInterestModel(address _token, address _model) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
+  }
+
+  function setOracle(address _oracle) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.oracle = IPriceOracle(_oracle);
   }
 }
