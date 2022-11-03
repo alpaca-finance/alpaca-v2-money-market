@@ -137,7 +137,7 @@ library LibMoneyMarket01 {
   function getTotalUsedBorrowedPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
+    returns (uint256 _totalUsedBorrowedPower, bool _hasIsolateAsset)
   {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
@@ -157,17 +157,22 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
-      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
-      _totalBorrowedUSDValue += LibFullMath.mulDiv(
-        _borrowedAmount * MAX_BPS,
-        _tokenPrice,
-        1e18 * uint256(_tokenConfig.borrowingFactor)
-      );
+      _totalUsedBorrowedPower = usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
 
       unchecked {
         _i++;
       }
     }
+  }
+
+  // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
+  function usedBorrowedPower(
+    uint256 _borrowedAmount,
+    uint256 _tokenPrice,
+    uint256 _borrowingFactor
+  ) internal pure returns (uint256 _usedBorrowedPower) {
+    // TODO: get tokenPrice from oracle
+    _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 
   function pendingIntest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)

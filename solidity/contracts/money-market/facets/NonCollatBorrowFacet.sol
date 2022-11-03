@@ -156,11 +156,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibFullMath.mulDiv(
-      _amount * LibMoneyMarket01.MAX_BPS,
-      _tokenPrice,
-      1e18 * uint256(_tokenConfig.borrowingFactor)
-    );
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
