@@ -72,4 +72,15 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IPriceOracle(_oracle);
   }
+
+  function setRepurchasersOk(address[] memory list, bool _isOk) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = list.length;
+    for (uint8 _i; _i < _length; ) {
+      moneyMarketDs.repurchasersOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
+  }
 }
