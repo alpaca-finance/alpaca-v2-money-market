@@ -155,7 +155,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     // bob borrow 10 with 0.1 interest rate per sec
     // precision loss
-    // 10 seconed passed _bobExpectedDebtAmount = 10 + (10*0.1) ~ 11 = 10999999999999999999
+    // 10 second passed _bobExpectedDebtAmount = 10 + (10*0.1) ~ 11 = 10999999999999999999
     uint256 _bobExpectedDebtAmount = 10.999999999999999999 ether;
     assertEq(_bobActualDebtAmount, _bobExpectedDebtAmount);
 
