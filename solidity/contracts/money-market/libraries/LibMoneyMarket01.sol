@@ -58,6 +58,7 @@ library LibMoneyMarket01 {
     IPriceOracle oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
+    mapping(address => bool) repurchasersOk;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

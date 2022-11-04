@@ -26,8 +26,13 @@ contract RepurchaseFacet is IRepurchaseFacet {
     address _collatToken,
     uint256 _repayAmount
   ) external returns (uint256 _collatAmountOut) {
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (!moneyMarketDs.repurchasersOk[msg.sender]) {
+      revert RepurchaseFacet_Unauthorized();
+    }
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 

@@ -123,5 +123,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     oracle.setPrice(address(usdc), 1e18);
     oracle.setPrice(address(btc), 10e18); // 10 USD
     adminFacet.setOracle(address(oracle));
+
+    // set repurchases ok
+    address[] memory _repurchasers = new address[](1);
+    _repurchasers[0] = BOB;
+    adminFacet.setRepurchasersOk(_repurchasers, true);
   }
 }
