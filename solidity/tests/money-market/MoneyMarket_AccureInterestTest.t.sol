@@ -268,7 +268,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     uint256 _aliceExpectedDebtAmount = 10 ether;
     assertEq(_aliceActualDebtAmount, _aliceExpectedDebtAmount, "Alice debtAmount missmatch");
 
-    // // assert Global
+    // assert Global
     // from BOB 10 + 0.002820306204288 =, Alice 10 = 20.002820306204288
     assertEq(borrowFacet.debtValues(address(usdc)), 20.002820306204288 ether, "Global debtValues missmatch");
 
