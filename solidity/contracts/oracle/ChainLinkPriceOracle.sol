@@ -89,7 +89,7 @@ contract ChainLinkPriceOracle is OwnableUpgradeable, IPriceOracle {
   /// @dev Return the price of token0/token1, multiplied by 1e18
   /// @param token0 Token0 to set oracle sources
   /// @param token1 Token1 to set oracle sources
-  function getPrice(address token0, address token1) external view override returns (uint256, uint256) {
+  function getPrice(address token0, address token1) public view override returns (uint256, uint256) {
     if (uint256(priceFeedCount[token0][token1]) == 0 && uint256(priceFeedCount[token1][token0]) == 0)
       revert ChainlinkPriceOracle_NoSource();
 

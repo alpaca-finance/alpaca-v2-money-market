@@ -10,6 +10,7 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
+import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
@@ -54,7 +55,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
-    address oracle;
+    IOracleChecker oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
   }

@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
+import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract AdminFacet is IAdminFacet {
@@ -65,5 +66,10 @@ contract AdminFacet is IAdminFacet {
   function setInterestModel(address _token, address _model) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
+  }
+
+  function setOracleChecker(IOracleChecker _oracle) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.oracle = _oracle;
   }
 }

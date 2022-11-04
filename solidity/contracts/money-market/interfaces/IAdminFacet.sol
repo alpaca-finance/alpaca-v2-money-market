@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 
 interface IAdminFacet {
   struct IbPair {
@@ -31,4 +32,6 @@ interface IAdminFacet {
   function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
   function setInterestModel(address _token, address model) external;
+
+  function setOracleChecker(IOracleChecker oracle) external;
 }
