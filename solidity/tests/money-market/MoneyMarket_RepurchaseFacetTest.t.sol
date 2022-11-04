@@ -417,17 +417,19 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    // set price to btc from 1 to 0.1 ether USD
-    // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD
-    // total borrowing power is 36 + 9 = 45 ether USD
-
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
-
     // add time 1 day
     // 0.0004512489926688 is interest rate per day of (80% condition slope)
     // then total debt value of usdc should increase by 0.0004512489926688 * 80 = 0.036099919413504
     vm.warp(1 days + 1);
+
+    // set price to btc from 10 to 0.1 ether USD
+    // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD
+    // total borrowing power is 36 + 9 = 45 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
 
     // bob try repurchase with 40 usdc
     // eth price = 0.2 USD
