@@ -13,8 +13,6 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { IRepurchaseFacet } from "../interfaces/IRepurchaseFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 
-import { console } from "../../../tests/utils/console.sol";
-
 contract RepurchaseFacet is IRepurchaseFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
