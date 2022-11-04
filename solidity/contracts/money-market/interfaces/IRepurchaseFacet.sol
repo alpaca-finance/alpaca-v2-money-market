@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 interface IRepurchaseFacet {
   event LogRepurchase(
     address indexed repurchaser,
-    address _debtToken,
+    address _repayToken,
     address _collatToken,
     uint256 _amountIn,
     uint256 _amountOut
@@ -17,7 +17,7 @@ interface IRepurchaseFacet {
   function repurchase(
     address _account,
     uint256 _subAccountId,
-    address _debtToken,
+    address _repayToken,
     address _collatToken,
     uint256 _amount
   ) external returns (uint256);
