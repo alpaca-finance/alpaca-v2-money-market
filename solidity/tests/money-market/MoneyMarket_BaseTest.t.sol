@@ -128,6 +128,11 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     //set oracleChecker
     chainLinkOracle = deployMockChainLinkPriceOracle();
     adminFacet.setOracle(address(chainLinkOracle));
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
 
     // set repurchases ok
     address[] memory _repurchasers = new address[](1);

@@ -16,13 +16,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
 
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-
-    vm.stopPrank();
-
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);

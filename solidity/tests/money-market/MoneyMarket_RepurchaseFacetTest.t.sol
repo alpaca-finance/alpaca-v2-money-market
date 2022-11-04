@@ -34,8 +34,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
 
     vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
     vm.stopPrank();
 
@@ -91,7 +89,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // bob try repurchase with 15 usdc
     // eth price = 0.8 USD
     // usdc price = 1 USD
-    // reward = 0.01%
+    // reward = 1%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
     vm.prank(BOB);
     repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
@@ -178,7 +176,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // bob try repurchase with 20 usdc
     // eth price = 0.8 USD
     // usdc price = 1 USD
-    // reward = 0.01%
+    // reward = 1%
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 3.00050765511672
     vm.prank(BOB);

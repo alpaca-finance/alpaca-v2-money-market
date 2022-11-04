@@ -27,7 +27,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     vm.startPrank(DEPLOYER);
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-
     vm.stopPrank();
 
     vm.startPrank(ALICE);
