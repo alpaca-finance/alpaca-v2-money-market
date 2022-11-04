@@ -230,7 +230,7 @@ contract BaseTest is DSTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](8);
+    bytes4[] memory selectors = new bytes4[](9);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
@@ -239,6 +239,7 @@ contract BaseTest is DSTest {
     selectors[5] = adminFacet.setNonCollatBorrower.selector;
     selectors[6] = adminFacet.setInterestModel.selector;
     selectors[7] = adminFacet.setOracleChecker.selector;
+    selectors[8] = adminFacet.setRepurchasersOk.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

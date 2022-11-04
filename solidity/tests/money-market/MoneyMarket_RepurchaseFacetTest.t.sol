@@ -359,6 +359,18 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
+  function testRevert_ShouldRevertRepurchaserIsNotOK() external {
+    // criteria
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+
+    vm.startPrank(CAT);
+    vm.expectRevert(abi.encodeWithSelector(IRepurchaseFacet.RepurchaseFacet_Unauthorized.selector));
+    // bob try repurchase with 2 usdc
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 2 ether);
+    vm.stopPrank();
+  }
+
   function testRevert_shouldRevertIfRepayIsTooHigh() external {
     // criteria
     address _debtToken = address(usdc);

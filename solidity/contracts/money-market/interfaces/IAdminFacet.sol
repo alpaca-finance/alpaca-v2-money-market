@@ -34,4 +34,6 @@ interface IAdminFacet {
   function setInterestModel(address _token, address model) external;
 
   function setOracleChecker(IOracleChecker oracle) external;
+
+  function setRepurchasersOk(address[] memory list, bool _isOk) external;
 }

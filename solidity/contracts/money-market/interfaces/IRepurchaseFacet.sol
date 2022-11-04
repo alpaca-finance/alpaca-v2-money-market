@@ -10,6 +10,7 @@ interface IRepurchaseFacet {
     uint256 _amountOut
   );
 
+  error RepurchaseFacet_Unauthorized();
   error RepurchaseFacet_Healthy();
   error RepurchaseFacet_RepayDebtValueTooHigh();
   error RepurchaseFacet_InsufficientAmount();
