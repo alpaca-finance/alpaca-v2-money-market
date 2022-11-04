@@ -118,6 +118,11 @@ contract CollateralFacet is ICollateralFacet {
     return moneyMarketDs.collats[_token];
   }
 
+  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
+  }
+
   function _validateAddCollateral(
     address _token,
     uint256 _collateralAmount,

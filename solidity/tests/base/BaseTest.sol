@@ -17,12 +17,14 @@ import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/
 import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { RepurchaseFacet, IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockPriceOracle } from "../mocks/MockPriceOracle.sol";
 
 import { console } from "../utils/console.sol";
 
@@ -36,22 +38,30 @@ contract BaseTest is DSTest {
 
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal btc;
   MockERC20 internal opm; // open market token
   MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
+  MockERC20 internal ibBtc;
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
 
+  MockPriceOracle internal oracle;
+
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
+    btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
+    ibBtc = deployMockErc20("Inerest Bearing Bitcoin", "IBBTC", 18);
     ibUsdc = deployMockErc20("Inerest USD COIN", "IBUSDC", 18);
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
+
+    oracle = new MockPriceOracle();
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -67,6 +77,7 @@ contract BaseTest is DSTest {
     deployBorrowFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployNonCollatBorrowFacet(DiamondCutFacet(address(moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(moneyMarketDiamond)));
+    deployRepurchaseFacet(DiamondCutFacet(address(moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(moneyMarketDiamond)));
 
@@ -141,12 +152,13 @@ contract BaseTest is DSTest {
   function deployCollateralFacet(DiamondCutFacet diamondCutFacet) internal returns (CollateralFacet, bytes4[] memory) {
     CollateralFacet collateralFacet = new CollateralFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = CollateralFacet.addCollateral.selector;
     selectors[1] = CollateralFacet.getCollaterals.selector;
     selectors[2] = CollateralFacet.removeCollateral.selector;
     selectors[3] = CollateralFacet.collats.selector;
     selectors[4] = CollateralFacet.transferCollateral.selector;
+    selectors[5] = CollateralFacet.subAccountCollatAmount.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(collateralFacet),
@@ -212,7 +224,7 @@ contract BaseTest is DSTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](7);
+    bytes4[] memory selectors = new bytes4[](8);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
@@ -220,6 +232,7 @@ contract BaseTest is DSTest {
     selectors[4] = adminFacet.tokenConfigs.selector;
     selectors[5] = adminFacet.setNonCollatBorrower.selector;
     selectors[6] = adminFacet.setInterestModel.selector;
+    selectors[7] = adminFacet.setOracle.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),
@@ -229,6 +242,22 @@ contract BaseTest is DSTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (adminFacet, selectors);
+  }
+
+  function deployRepurchaseFacet(DiamondCutFacet diamondCutFacet) internal returns (RepurchaseFacet, bytes4[] memory) {
+    RepurchaseFacet repurchaseFacet = new RepurchaseFacet();
+
+    bytes4[] memory selectors = new bytes4[](1);
+    selectors[0] = repurchaseFacet.repurchase.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(repurchaseFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (repurchaseFacet, selectors);
   }
 
   function deployMockErc20(
