@@ -9,6 +9,15 @@ import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-mar
 contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
+
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+
+    oracleChecker.setExpiredToleranceSecond(address(weth), block.timestamp);
+    oracleChecker.setExpiredToleranceSecond(address(usdc), block.timestamp);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenAddCollateral_TokenShouldTransferFromUserToMM() external {

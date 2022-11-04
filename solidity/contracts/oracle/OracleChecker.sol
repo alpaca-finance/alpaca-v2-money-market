@@ -23,24 +23,26 @@ import { LibFullMath } from "../money-market/libraries/LibFullMath.sol";
 contract OracleChecker is OwnableUpgradeable, IOracleChecker {
   using LibFullMath for uint256;
 
-  /// @dev Events
-  event LogSetOracle(address indexed _caller, address _newOracle);
-  event LogSetExpiredToleranceSecond(address indexed caller, address token, uint256 value);
-  event LogSetPriceToleranceBps(address indexed caller, address token, uint16 value);
-
-  /// @dev Errors
+  /// ---------------------------------------------------
+  /// Errors
+  /// ---------------------------------------------------
   error OracleChecker_InvalidOracleAddress();
   error OracleChecker_PriceStale();
-  error OracleChecker_ToleranceTooHigh();
 
+  /// ---------------------------------------------------
+  /// State
+  /// ---------------------------------------------------
   uint256 internal constant MAX_BPS = 10000;
-
   /// @notice An address of chainlink usd token
   address public usd;
-  /// @notice a chainLink interface to perform get price
   IPriceOracle public oracle;
-
   mapping(address => OracleCheckerTokenConfigStruct) public oracleTokenConfig;
+
+  /// ---------------------------------------------------
+  /// Event
+  /// ---------------------------------------------------
+  event LogSetOracle(address indexed _caller, address _newOracle);
+  event LogSetExpiredToleranceSecond(address indexed caller, address token, uint256 value);
 
   function initialize(IPriceOracle _oracle, address _usd) public initializer {
     OwnableUpgradeable.__Ownable_init();
@@ -52,8 +54,7 @@ contract OracleChecker is OwnableUpgradeable, IOracleChecker {
   /// @dev getTokenPrice from address
   /// @param _tokenAddress tokenAddress
   function getTokenPrice(address _tokenAddress) public view returns (uint256, uint256) {
-    (uint256 _price, uint256 _lastTimestamp) = _getOraclePrice(_tokenAddress);
-
+    (uint256 _price, uint256 _lastTimestamp) = _getOraclePrice(_tokenAddress, usd);
     return (_price, _lastTimestamp);
   }
 
@@ -69,21 +70,14 @@ contract OracleChecker is OwnableUpgradeable, IOracleChecker {
   }
 
   function setExpiredToleranceSecond(address token, uint256 value) external onlyOwner {
-    oracleTokenConfig[token].maxSecondsExpired = value;
+    oracleTokenConfig[token].toleranceExpiredSecond = value;
     emit LogSetExpiredToleranceSecond(msg.sender, token, value);
   }
 
-  function setPriceToleranceBps(address token, uint16 value) external onlyOwner {
-    if (value > MAX_BPS) {
-      revert OracleChecker_ToleranceTooHigh();
-    }
-    oracleTokenConfig[token].toleranceBps = value;
-    emit LogSetPriceToleranceBps(msg.sender, token, value);
-  }
-
-  function _getOraclePrice(address token) internal view returns (uint256, uint256) {
-    (uint256 _price, uint256 _lastUpdated) = oracle.getPrice(token, usd);
-    if (_lastUpdated < block.timestamp - oracleTokenConfig[token].maxSecondsExpired) revert OracleChecker_PriceStale();
+  function _getOraclePrice(address token0, address token1) internal view returns (uint256, uint256) {
+    (uint256 _price, uint256 _lastUpdated) = oracle.getPrice(token0, token1);
+    if (_lastUpdated < block.timestamp - oracleTokenConfig[token0].toleranceExpiredSecond)
+      revert OracleChecker_PriceStale();
     return (_price, _lastUpdated);
   }
 }

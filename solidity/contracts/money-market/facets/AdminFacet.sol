@@ -68,8 +68,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
   }
 
-  function setOracleChecker(IOracleChecker _oracle) external {
+  function setOracleChecker(IOracleChecker _oracleChecker) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.oracle = _oracle;
+    moneyMarketDs.oracleChecker = _oracleChecker;
   }
 }

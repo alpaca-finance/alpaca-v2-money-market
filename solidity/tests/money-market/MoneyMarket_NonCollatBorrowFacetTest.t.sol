@@ -19,6 +19,16 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     adminFacet.setNonCollatBorrower(ALICE, true);
     adminFacet.setNonCollatBorrower(BOB, true);
 
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+
+    oracleChecker.setExpiredToleranceSecond(address(weth), block.timestamp);
+    oracleChecker.setExpiredToleranceSecond(address(usdc), block.timestamp);
+    oracleChecker.setExpiredToleranceSecond(address(isolateToken), block.timestamp);
+    vm.stopPrank();
+
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);

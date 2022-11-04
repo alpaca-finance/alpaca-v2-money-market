@@ -12,6 +12,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
 import { ChainLinkPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
+import { OracleChecker, IOracleChecker, IPriceOracle } from "../../contracts/oracle/OracleChecker.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
@@ -27,6 +28,7 @@ import { DiamondInit } from "../../contracts/money-market/initializers/DiamondIn
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
 import { console } from "../utils/console.sol";
 
@@ -48,6 +50,8 @@ contract BaseTest is DSTest {
   MockERC20 internal ibWeth;
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
+
+  OracleChecker internal oracleChecker;
 
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
@@ -219,7 +223,7 @@ contract BaseTest is DSTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](9);
+    bytes4[] memory selectors = new bytes4[](8);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
@@ -245,5 +249,18 @@ contract BaseTest is DSTest {
     uint8 decimals
   ) internal returns (MockERC20) {
     return new MockERC20(name, symbol, decimals);
+  }
+
+  function deployOracleChecker(address _oracle, address _usd) internal returns (OracleChecker) {
+    OracleChecker checker = new OracleChecker();
+    checker.initialize(IPriceOracle(_oracle), _usd);
+    address oldOwner = checker.owner();
+    vm.prank(oldOwner);
+    checker.transferOwnership(DEPLOYER);
+    return checker;
+  }
+
+  function deployMockChainLinkPriceOracle() internal returns (MockChainLinkPriceOracle) {
+    return new MockChainLinkPriceOracle();
   }
 }

@@ -213,8 +213,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    // TODO: get tokenPrice from oracle
-    uint256 _tokenPrice = 1e18;
+    (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_token);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 

@@ -55,7 +55,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
-    IOracleChecker oracle;
+    IOracleChecker oracleChecker;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
   }
@@ -99,8 +99,7 @@ library LibMoneyMarket01 {
 
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
 
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+      (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_actualToken);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
@@ -148,8 +147,9 @@ library LibMoneyMarket01 {
       if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
       }
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+
+      (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_borrowed[_i].token);
+
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.debtValues[_borrowed[_i].token],
@@ -170,7 +170,6 @@ library LibMoneyMarket01 {
     uint256 _tokenPrice,
     uint256 _borrowingFactor
   ) internal pure returns (uint256 _usedBorrowedPower) {
-    // TODO: get tokenPrice from oracle
     _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 

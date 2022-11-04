@@ -1,4 +1,7 @@
-import { BaseTest, console, MockERC20 } from "../base/BaseTest.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
+
+import { BaseTest, console } from "../base/BaseTest.sol";
 
 import { ChainLinkPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
 import { OracleChecker } from "../../contracts/oracle/OracleChecker.sol";
@@ -7,7 +10,6 @@ import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol"
 
 contract Oracle_OracleCheckerTest is BaseTest {
   MockChainLinkPriceOracle oracle;
-  OracleChecker oracleChecker;
 
   uint256 INITIAL_TIMESTAMP = 100;
   uint256 PRICE_STALE_TIMESTAMP = 90;
@@ -27,10 +29,7 @@ contract Oracle_OracleCheckerTest is BaseTest {
     vm.startPrank(DEPLOYER);
     oracleChecker.initialize(IPriceOracle(address(oracle)), address(usd));
     oracleChecker.setExpiredToleranceSecond(address(weth), 5);
-    oracleChecker.setPriceToleranceBps(address(weth), 100);
-
     oracleChecker.setExpiredToleranceSecond(address(usdc), 5);
-    oracleChecker.setPriceToleranceBps(address(usdc), 100);
     vm.stopPrank();
   }
 
@@ -39,7 +38,7 @@ contract Oracle_OracleCheckerTest is BaseTest {
     uint256 expectedMaxSecondsExpired = 60 * 5;
     oracleChecker.setExpiredToleranceSecond(address(weth), expectedMaxSecondsExpired);
 
-    (uint256 maxSecondsExpired, ) = oracleChecker.oracleTokenConfig(address(weth));
+    uint256 maxSecondsExpired = oracleChecker.oracleTokenConfig(address(weth));
 
     assertEq(maxSecondsExpired, expectedMaxSecondsExpired);
   }
@@ -51,31 +50,6 @@ contract Oracle_OracleCheckerTest is BaseTest {
     } catch Error(string memory reason) {
       assertEq(reason, "Ownable: caller is not the owner", "upgrade not owner");
     }
-  }
-
-  function testCorrectness_WhenOwnerSetPriceToleranceBps_shouldPass() external {
-    vm.prank(DEPLOYER);
-    uint16 expectedToleranceBps = 100;
-    oracleChecker.setPriceToleranceBps(address(weth), expectedToleranceBps);
-
-    (, uint16 toleranceBps) = oracleChecker.oracleTokenConfig(address(weth));
-    assertEq(toleranceBps, expectedToleranceBps);
-  }
-
-  function testRevert_WhenNotOwnerSetPriceToleranceBps_shouldRevertNotOwner() external {
-    uint16 expectedToleranceBps = 100;
-    try oracleChecker.setPriceToleranceBps(address(weth), expectedToleranceBps) {
-      fail();
-    } catch Error(string memory reason) {
-      assertEq(reason, "Ownable: caller is not the owner", "upgrade not owner");
-    }
-  }
-
-  function testRevert_WhenOwnerSetPriceToleranceBpsTooHigh_shouldRevertToleranceTooHigh() external {
-    vm.prank(DEPLOYER);
-    uint16 exceedToleranceBPS = 10001;
-    vm.expectRevert(OracleChecker.OracleChecker_ToleranceTooHigh.selector);
-    oracleChecker.setPriceToleranceBps(address(weth), exceedToleranceBPS);
   }
 
   function testCorrectness_whenUsergetTokenPrice_shouldPass() external {

@@ -36,6 +36,9 @@ contract SimplePriceOracle is OwnableUpgradeable, IPriceOracle {
   address private feeder;
   mapping(address => mapping(address => PriceData)) public store;
 
+  /// ---------------------------------------------------
+  /// Event
+  /// ---------------------------------------------------
   event LogSetFeeder(address indexed _caller, address _feeder);
   event LogSetPrice(address indexed _token0, address indexed _token1, uint256 _price);
 

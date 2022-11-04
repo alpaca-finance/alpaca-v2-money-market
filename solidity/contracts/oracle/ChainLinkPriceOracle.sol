@@ -34,6 +34,9 @@ contract ChainLinkPriceOracle is OwnableUpgradeable, IPriceOracle {
   mapping(address => mapping(address => mapping(uint256 => IAggregatorV3))) public priceFeeds;
   mapping(address => mapping(address => uint256)) public priceFeedCount;
 
+  /// ---------------------------------------------------
+  /// Event
+  /// ---------------------------------------------------
   event LogSetPriceFeed(address indexed token0, address indexed token1, IAggregatorV3[] sources);
 
   function initialize() external initializer {

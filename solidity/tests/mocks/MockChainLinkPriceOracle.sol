@@ -24,8 +24,4 @@ contract MockChainLinkPriceOracle is IPriceOracle {
   function getPrice(address token0, address token1) external view returns (uint256, uint256) {
     return (priceMap[token0][token1].price, priceMap[token0][token1].lastUpdated);
   }
-
-  function isIPriceOracle() external pure returns (bool) {
-    return true;
-  }
 }

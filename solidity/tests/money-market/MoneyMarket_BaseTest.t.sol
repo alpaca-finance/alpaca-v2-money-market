@@ -12,6 +12,10 @@ import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCo
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
+
+// oracle
+import { OracleChecker } from "../../contracts/oracle/OracleChecker.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -27,6 +31,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
   uint256 subAccount0 = 0;
   uint256 subAccount1 = 1;
+
+  MockChainLinkPriceOracle chainLinkOracle;
 
   function setUp() public virtual {
     (moneyMarketDiamond) = deployPoolDiamond();
@@ -99,5 +105,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // open isolate token market
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);
+
+    //set oracleChecker
+    chainLinkOracle = deployMockChainLinkPriceOracle();
+    oracleChecker = deployOracleChecker(address(chainLinkOracle), address(usd));
+    adminFacet.setOracleChecker(oracleChecker);
   }
 }

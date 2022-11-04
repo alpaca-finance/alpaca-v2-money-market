@@ -14,8 +14,7 @@ pragma solidity 0.8.17;
 
 interface IOracleChecker {
   struct OracleCheckerTokenConfigStruct {
-    uint256 maxSecondsExpired;
-    uint16 toleranceBps;
+    uint256 toleranceExpiredSecond;
   }
 
   function getTokenPrice(address _tokenAddress) external view returns (uint256, uint256);
@@ -23,6 +22,4 @@ interface IOracleChecker {
   function setOracle(address _oracle) external;
 
   function setExpiredToleranceSecond(address token, uint256 value) external;
-
-  function setPriceToleranceBps(address token, uint16 value) external;
 }
