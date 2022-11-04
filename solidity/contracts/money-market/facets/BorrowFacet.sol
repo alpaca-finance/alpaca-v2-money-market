@@ -220,7 +220,6 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
 
-    // _borrowedValue > _borrowedValue => repurchase
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert BorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
     }

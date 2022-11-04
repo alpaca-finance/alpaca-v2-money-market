@@ -15,7 +15,8 @@ interface IRepurchaseFacet {
   error RepurchaseFacet_InsufficientAmount();
 
   function repurchase(
-    address _subAccount,
+    address _account,
+    uint256 _subAccountId,
     address _debtToken,
     address _collatToken,
     uint256 _amount

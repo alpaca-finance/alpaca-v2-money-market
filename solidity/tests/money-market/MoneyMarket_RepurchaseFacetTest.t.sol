@@ -25,7 +25,8 @@ struct CacheState {
 
 contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
-  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, 0);
+  uint256 _subAccountId = 0;
+  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
 
   function setUp() public override {
     super.setUp();
@@ -86,7 +87,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // reward = 0.01%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
     vm.prank(BOB);
-    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 15 ether);
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
 
     // repay value = 15 * 1 = 1 USD
     // reward amount = 15 * 1.01 = 15.15 USD
@@ -170,7 +171,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 3.00050765511672
     vm.prank(BOB);
-    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 20 ether);
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 20 ether);
 
     // repay value = 20 * 1 = 1 USD
     // reward amount = 20 * 1.01 = 20.20 USD
@@ -268,7 +269,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 5.001410153102144
     vm.prank(BOB);
-    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 40 ether);
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 40 ether);
 
     // alice just have usdc debt 30.0050765511672 (with interest)
     // repay value = 30.0050765511672 * 1 = 1 USD
@@ -330,7 +331,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     vm.expectRevert(abi.encodeWithSelector(IRepurchaseFacet.RepurchaseFacet_Healthy.selector));
     // bob try repurchase with 2 usdc
-    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 2 ether);
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 2 ether);
     vm.stopPrank();
   }
 
@@ -368,7 +369,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(IRepurchaseFacet.RepurchaseFacet_RepayDebtValueTooHigh.selector));
     // bob try repurchase with 20 usdc but borrowed value is 30.0050765511672 / 2 = 15.0025382755836,
     // so bob can't pay more than 15.0025382755836 followed by condition (!> 50% of borrowed value)
-    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 20 ether);
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 20 ether);
     vm.stopPrank();
   }
 
@@ -410,7 +411,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // converted weth amount = 40.40 / 1 = 40.40
     // should revert because alice has eth collat just 40
     vm.expectRevert(abi.encodeWithSelector(IRepurchaseFacet.RepurchaseFacet_InsufficientAmount.selector));
-    repurchaseFacet.repurchase(_aliceSubAccount0, _debtToken, _collatToken, 40 ether);
+    repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 40 ether);
     vm.stopPrank();
   }
 }
