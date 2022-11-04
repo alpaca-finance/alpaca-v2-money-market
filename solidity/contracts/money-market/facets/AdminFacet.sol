@@ -6,6 +6,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract AdminFacet is IAdminFacet {
   // TODO: validate role

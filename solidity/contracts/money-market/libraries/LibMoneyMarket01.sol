@@ -12,6 +12,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // interfaces
 import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
@@ -164,6 +165,33 @@ library LibMoneyMarket01 {
     }
   }
 
+  function getTotalBorrowedUSDValue(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _totalBorrowedUSDValue)
+  {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_borrowed[_i].token);
+      uint256 _borrowedAmount = LibShareUtil.shareToValue(
+        _borrowed[_i].amount,
+        moneyMarketDs.debtValues[_borrowed[_i].token],
+        moneyMarketDs.debtShares[_borrowed[_i].token]
+      );
+
+      // todo: handle token decimals
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(_borrowedAmount, _tokenPrice, 1e18);
+
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
   // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
   function usedBorrowedPower(
     uint256 _borrowedAmount,
@@ -204,9 +232,24 @@ library LibMoneyMarket01 {
       //   10000
       // );
       // reservePool = reservePool.add(toReserve);
-
       moneyMarketDs.debtValues[_token] += _interest;
       moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
+    }
+  }
+
+  function accureAllSubAccountDebtToken(
+    address _subAccount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      accureInterest(_borrowed[_i].token, moneyMarketDs);
+      unchecked {
+        _i++;
+      }
     }
   }
 
