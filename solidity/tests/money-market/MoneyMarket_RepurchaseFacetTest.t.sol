@@ -33,6 +33,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(btc), address(tripleSlope6));
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
 
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    vm.stopPrank();
+
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
     lendFacet.deposit(address(usdc), 100 ether);
@@ -70,18 +74,22 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    // set price to weth from 1 to 0.8 ether USD
-    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
-    oracle.setPrice(address(weth), 8e17);
-
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
 
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    vm.stopPrank();
+
     // bob try repurchase with 15 usdc
     // eth price = 0.8 USD
     // usdc price = 1 USD
-    // reward = 0.01%
+    // reward = 1%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
     vm.prank(BOB);
     repurchaseFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
@@ -151,20 +159,24 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    // set price to weth from 1 to 0.8 ether USD
-    // then alice borrowing power = 80 * 0.8 * 9000 / 10000 = 57.6 ether USD
-    oracle.setPrice(address(weth), 8e17);
-
     // add time 1 day
     // 0.00016921837224 is interest rate per day of (30% condition slope)
     // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
     // then total debt value of btc should increase by 0.00016921837224 * 3 = 0.00050765511672
     vm.warp(1 days + 1);
 
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    vm.stopPrank();
+
     // bob try repurchase with 20 usdc
     // eth price = 0.8 USD
     // usdc price = 1 USD
-    // reward = 0.01%
+    // reward = 1%
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 3.00050765511672
     vm.prank(BOB);
@@ -250,7 +262,8 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 80 * 0.8 * 9000 / 10000 = 57.6 ether USD
-    oracle.setPrice(address(weth), 8e17);
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
 
     // add time 1 day
     // 0.00016921837224 is interest rate per day of (30% condition slope)
@@ -258,6 +271,14 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
     // then total debt value of btc should increase by 0.0002820306204288 * 5 = 0.001410153102144
     vm.warp(1 days + 1);
+
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    vm.stopPrank();
 
     // bob try repurchase with 40 usdc
     // eth price = 0.8 USD
@@ -361,13 +382,17 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    // set price to weth from 1 to 0.8 ether USD
-    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
-    oracle.setPrice(address(weth), 8e17);
-
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
+
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    vm.stopPrank();
 
     // bob try repurchase with 2 usdc
     // eth price = 0.8 USD
@@ -398,15 +423,19 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    // set price to btc from 1 to 0.1 ether USD
-    // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD
-    // total borrowing power is 36 + 9 = 45 ether USD
-    oracle.setPrice(address(btc), 1e17);
-
     // add time 1 day
     // 0.0004512489926688 is interest rate per day of (80% condition slope)
     // then total debt value of usdc should increase by 0.0004512489926688 * 80 = 0.036099919413504
     vm.warp(1 days + 1);
+
+    // set price to btc from 10 to 0.1 ether USD
+    // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD
+    // total borrowing power is 36 + 9 = 45 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
 
     // bob try repurchase with 40 usdc
     // eth price = 0.2 USD

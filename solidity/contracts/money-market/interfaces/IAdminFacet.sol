@@ -16,6 +16,12 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
+    uint256 maxToleranceExpiredSecond;
+  }
+
+  struct NonCollatBorrowLimitInput {
+    address account;
+    uint256 limit;
   }
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;
@@ -41,4 +47,6 @@ interface IAdminFacet {
     address _token,
     address _model
   ) external;
+
+  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
 }

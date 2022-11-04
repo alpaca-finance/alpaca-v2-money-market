@@ -31,7 +31,8 @@ contract AdminFacet is IAdminFacet {
         collateralFactor: _tokenConfigs[_i].collateralFactor,
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
-        maxBorrow: _tokenConfigs[_i].maxBorrow
+        maxBorrow: _tokenConfigs[_i].maxBorrow,
+        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond
       });
 
       LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
@@ -88,6 +89,18 @@ contract AdminFacet is IAdminFacet {
     uint256 _length = list.length;
     for (uint8 _i; _i < _length; ) {
       moneyMarketDs.repurchasersOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
+  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _nonCollatBorrowLimitInputs.length;
+    for (uint8 _i; _i < _length; ) {
+      NonCollatBorrowLimitInput memory input = _nonCollatBorrowLimitInputs[_i];
+      moneyMarketDs.nonCollatBorrowLimitUSDValues[input.account] = input.limit;
       unchecked {
         _i++;
       }

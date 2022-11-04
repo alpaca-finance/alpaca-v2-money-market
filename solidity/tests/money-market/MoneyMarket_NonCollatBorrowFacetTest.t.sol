@@ -31,6 +31,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     TripleSlopeModel7 tripleSlope7 = new TripleSlopeModel7();
     adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(tripleSlope6));
     adminFacet.setNonCollatInterestModel(BOB, address(weth), address(tripleSlope7));
+
+    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](4);
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
+    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
+    _limitInputs[2] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
+    _limitInputs[3] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
+    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
@@ -216,6 +223,27 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
 
     assertEq(_tokenDebt, 0);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanLimitPower_ShouldRevert() external {
+    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _aliceBorrowLimit = 10 ether;
+
+    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: _aliceBorrowLimit });
+
+    uint256 _expectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
+    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
+    vm.prank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        INonCollatBorrowFacet.NonCollatBorrowFacet_BorrowingValueTooHigh.selector,
+        _aliceBorrowAmount,
+        0,
+        _expectBorrowingPower
+      )
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
   }
 
   function testCorrectness_WhenBobAndAliceBorrowForOneDay_AccureInterestShouldBeCorrected() external {

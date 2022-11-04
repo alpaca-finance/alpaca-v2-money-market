@@ -12,8 +12,9 @@ import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCo
 import { IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
-import { MockPriceOracle } from "../mocks/MockPriceOracle.sol";
+import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -30,6 +31,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
   uint256 subAccount0 = 0;
   uint256 subAccount1 = 1;
+
+  MockChainLinkPriceOracle chainLinkOracle;
 
   function setUp() public virtual {
     (moneyMarketDiamond) = deployPoolDiamond();
@@ -81,7 +84,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -90,7 +94,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -99,7 +104,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     _inputs[3] = IAdminFacet.TokenConfigInput({
@@ -108,7 +114,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -118,11 +125,14 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);
 
-    // set oracle
-    oracle.setPrice(address(weth), 1e18);
-    oracle.setPrice(address(usdc), 1e18);
-    oracle.setPrice(address(btc), 10e18); // 10 USD
-    adminFacet.setOracle(address(oracle));
+    //set oracleChecker
+    chainLinkOracle = deployMockChainLinkPriceOracle();
+    adminFacet.setOracle(address(chainLinkOracle));
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
 
     // set repurchases ok
     address[] memory _repurchasers = new address[](1);
