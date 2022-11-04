@@ -35,4 +35,10 @@ interface IAdminFacet {
   function setOracle(address _oracle) external;
 
   function setRepurchasersOk(address[] memory list, bool _isOk) external;
+
+  function setNonCollatInterestModel(
+    address _account,
+    address _token,
+    address _model
+  ) external;
 }

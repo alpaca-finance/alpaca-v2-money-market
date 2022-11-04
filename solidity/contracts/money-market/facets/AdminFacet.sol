@@ -68,6 +68,16 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
   }
 
+  function setNonCollatInterestModel(
+    address _account,
+    address _token,
+    address _model
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    bytes32 _nonCollatId = LibMoneyMarket01.getNonCollatId(_account, _token);
+    moneyMarketDs.nonCollatInterestModels[_nonCollatId] = IInterestRateModel(_model);
+  }
+
   function setOracle(address _oracle) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IPriceOracle(_oracle);

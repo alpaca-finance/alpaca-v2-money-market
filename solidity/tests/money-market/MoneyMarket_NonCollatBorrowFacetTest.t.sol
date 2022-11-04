@@ -6,6 +6,8 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 // interfaces
 import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -24,6 +26,11 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(usdc), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
+
+    TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
+    TripleSlopeModel7 tripleSlope7 = new TripleSlopeModel7();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(tripleSlope6));
+    adminFacet.setNonCollatInterestModel(BOB, address(weth), address(tripleSlope7));
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
@@ -77,7 +84,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceBorrowAmount2 = 20 ether;
 
     vm.startPrank(ALICE);
-
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
@@ -210,5 +216,41 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
 
     assertEq(_tokenDebt, 0);
+  }
+
+  function testCorrectness_WhenBobAndAliceBorrowForOneDay_AccureInterestShouldBeCorrected() external {
+    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _bobBorrowAmount = 10 ether;
+
+    vm.prank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+
+    vm.prank(BOB);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _bobBorrowAmount);
+
+    uint256 _aliceTokenDebtBefore = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _bobTokenDebtBefore = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _tokenDebtBefore = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+
+    // before accure interest
+    assertEq(_aliceTokenDebtBefore, 10 ether);
+    assertEq(_bobTokenDebtBefore, 10 ether);
+    assertEq(_tokenDebtBefore, 20 ether);
+
+    vm.warp(1 days + 1);
+    // accure interest for alice by 0.001410153102144000 then total debt is 10.001410153102144000
+    nonCollatBorrowFacet.accureNonCollatInterest(ALICE, address(weth));
+    // accure interest for bob by 0.001956947161824 then total debt is 10.001956947161824
+    nonCollatBorrowFacet.accureNonCollatInterest(BOB, address(weth));
+
+    uint256 _aliceTokenDebtAfter = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _bobTokenDebtAfter = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+
+    // total debt should be 10.001410153102144000 + 10.001956947161824 = 20.003367100263968
+    uint256 _tokenDebtAfter = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+
+    assertEq(_aliceTokenDebtAfter, 10.001410153102144 ether);
+    assertEq(_bobTokenDebtAfter, 10.001956947161824 ether);
+    assertEq(_tokenDebtAfter, 20.003367100263968 ether);
   }
 }

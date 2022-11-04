@@ -42,6 +42,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       tokenDebts.init();
     }
 
+    LibMoneyMarket01.accureNonCollatInterest(msg.sender, _token, moneyMarketDs);
     uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;
     uint256 _newGlobalDebt = tokenDebts.getAmount(msg.sender) + _amount;
 
@@ -58,6 +59,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.accureNonCollatInterest(_account, _token, moneyMarketDs);
 
     uint256 _oldDebtValue = _getDebt(_account, _token, moneyMarketDs);
 
@@ -189,5 +191,10 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     // TODO: use the correct state vars
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
+  }
+
+  function accureNonCollatInterest(address _account, address _token) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.accureNonCollatInterest(_account, _token, moneyMarketDs);
   }
 }

@@ -203,13 +203,14 @@ contract BaseTest is DSTest {
   {
     NonCollatBorrowFacet nonCollatBorrow = new NonCollatBorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
     selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
     selectors[2] = NonCollatBorrowFacet.nonCollatGetTotalUsedBorrowedPower.selector;
     selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
     selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
     selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
+    selectors[6] = NonCollatBorrowFacet.accureNonCollatInterest.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(nonCollatBorrow),
@@ -224,7 +225,7 @@ contract BaseTest is DSTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](9);
+    bytes4[] memory selectors = new bytes4[](10);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
@@ -234,6 +235,7 @@ contract BaseTest is DSTest {
     selectors[6] = adminFacet.setInterestModel.selector;
     selectors[7] = adminFacet.setOracle.selector;
     selectors[8] = adminFacet.setRepurchasersOk.selector;
+    selectors[9] = adminFacet.setNonCollatInterestModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

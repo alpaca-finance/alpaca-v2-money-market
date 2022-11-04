@@ -58,6 +58,9 @@ library LibMoneyMarket01 {
     IPriceOracle oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
+    // token => account => interest model
+    mapping(bytes32 => uint256) nonCollatDebtLastAccureTime;
+    mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
     mapping(address => bool) repurchasersOk;
   }
 
@@ -252,6 +255,51 @@ library LibMoneyMarket01 {
     }
   }
 
+  function pendingNonCollatInterestRate(
+    address _account,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _pendingInterestRate) {
+    bytes32 _nonCollatId = getNonCollatId(_account, _token);
+    uint256 _lastAccureTime = moneyMarketDs.nonCollatDebtLastAccureTime[_nonCollatId];
+    if (block.timestamp > _lastAccureTime) {
+      uint256 _timePast = block.timestamp - _lastAccureTime;
+      address _interestModel = address(moneyMarketDs.nonCollatInterestModels[_nonCollatId]);
+      if (_interestModel == address(0)) {
+        return 0;
+      }
+      LibDoublyLinkedList.List storage debtValues = moneyMarketDs.nonCollatAccountDebtValues[_account];
+      uint256 _accountDebtValue = debtValues.getAmount(_token);
+      uint256 _floating = getFloatingBalance(_token, moneyMarketDs);
+      uint256 _interestRatePerSec = IInterestRateModel(_interestModel).getInterestRate(_accountDebtValue, _floating);
+
+      _pendingInterestRate = _interestRatePerSec * _timePast;
+    }
+  }
+
+  function accureNonCollatInterest(
+    address _account,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    bytes32 _nonCollatId = getNonCollatId(_account, _token);
+    if (block.timestamp > moneyMarketDs.nonCollatDebtLastAccureTime[_nonCollatId]) {
+      LibDoublyLinkedList.List storage debtValues = moneyMarketDs.nonCollatAccountDebtValues[_account];
+      LibDoublyLinkedList.List storage tokenDebts = moneyMarketDs.nonCollatTokenDebtValues[_token];
+      uint256 _interestRate = pendingNonCollatInterestRate(_account, _token, moneyMarketDs);
+      uint256 _accountDebtValue = debtValues.getAmount(_token);
+      // TODO: handle token decimals
+      uint256 _interest = (_interestRate * _accountDebtValue) / 1e18;
+
+      uint256 _newAccountDebt = _accountDebtValue + _interest;
+      uint256 _newGlobalDebt = tokenDebts.getAmount(_account) + _interest;
+
+      debtValues.addOrUpdate(_token, _newAccountDebt);
+      tokenDebts.addOrUpdate(_account, _newGlobalDebt);
+      moneyMarketDs.nonCollatDebtLastAccureTime[_nonCollatId] = block.timestamp;
+    }
+  }
+
   // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
   // where borrowed amount consists of over-collat and non-collat borrowing
   function getTotalToken(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -300,5 +348,9 @@ library LibMoneyMarket01 {
       _token,
       address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
     );
+  }
+
+  function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {
+    _id = keccak256(abi.encodePacked(_account, _token));
   }
 }
