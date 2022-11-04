@@ -19,15 +19,18 @@ contract Oracle_OracleCheckerTest is BaseTest {
     oracle.add(address(weth), address(usd), 1 ether, PRICE_STALE_TIMESTAMP);
     oracle.add(address(usdc), address(usd), 1 ether, INITIAL_TIMESTAMP);
 
-    vm.startPrank(DEPLOYER);
     oracleChecker = new OracleChecker();
+    address oldOwner = oracleChecker.owner();
+    vm.prank(oldOwner);
+    oracleChecker.transferOwnership(DEPLOYER);
+
+    vm.startPrank(DEPLOYER);
     oracleChecker.initialize(IPriceOracle(address(oracle)), address(usd));
     oracleChecker.setExpiredToleranceSecond(address(weth), 5);
     oracleChecker.setPriceToleranceBps(address(weth), 100);
 
     oracleChecker.setExpiredToleranceSecond(address(usdc), 5);
     oracleChecker.setPriceToleranceBps(address(usdc), 100);
-
     vm.stopPrank();
   }
 
