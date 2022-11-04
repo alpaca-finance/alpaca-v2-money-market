@@ -31,7 +31,8 @@ contract AdminFacet is IAdminFacet {
         collateralFactor: _tokenConfigs[_i].collateralFactor,
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
-        maxBorrow: _tokenConfigs[_i].maxBorrow
+        maxBorrow: _tokenConfigs[_i].maxBorrow,
+        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond
       });
 
       LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);

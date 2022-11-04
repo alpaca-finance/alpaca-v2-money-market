@@ -16,6 +16,7 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
+    uint256 maxToleranceExpiredSecond;
   }
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;

@@ -24,6 +24,11 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);
@@ -53,6 +58,12 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, _borrowAmount);
 
     vm.warp(block.timestamp + 10);
+
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
     uint256 _expectedDebtAmount = 1e18 + _borrowAmount;
 
     uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
@@ -79,6 +90,10 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(moneyMarketDiamond), _balanceMMDiamondBefore + _aliceCollateralAmount);
 
     vm.warp(block.timestamp + 10);
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
 
     //when someone borrow
     uint256 _bobBorrowAmount = 10 ether;
@@ -96,6 +111,11 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     assertEq(_bobBalanceAfterBorrow - _bobBalanceBeforeBorrow, _bobBorrowAmount);
     vm.warp(block.timestamp + 10);
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
     borrowFacet.accureInterest(address(weth));
     (, uint256 _actualBobDebtAmountAfter) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
 
@@ -140,6 +160,11 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     // time past
     vm.warp(block.timestamp + 10);
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
     // ALICE borrow and bob's interest accure
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = weth.balanceOf(ALICE);
@@ -241,6 +266,9 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     // time past
     uint256 _secondPassed = 1 days;
     vm.warp(block.timestamp + _secondPassed);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+
     // ALICE borrow and bob's interest accure
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = usdc.balanceOf(ALICE);
