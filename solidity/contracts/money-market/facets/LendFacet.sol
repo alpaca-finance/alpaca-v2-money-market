@@ -69,7 +69,8 @@ contract LendFacet is ILendFacet {
         borrowingFactor: 8500,
         maxCollateral: 0,
         // todo: tbd
-        maxBorrow: 100e18
+        maxBorrow: 100e18,
+        maxToleranceExpiredSecond: block.timestamp
       });
 
     LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);

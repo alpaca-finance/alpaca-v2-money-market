@@ -10,7 +10,6 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
-import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -25,6 +24,7 @@ library LibMoneyMarket01 {
   uint256 internal constant MAX_BPS = 10000;
 
   error LibMoneyMarket01_BadSubAccountId();
+  error LibMoneyMarket01_PriceStale(address);
 
   enum AssetTier {
     UNLISTED,
@@ -39,6 +39,7 @@ library LibMoneyMarket01 {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
+    uint256 maxToleranceExpiredSecond;
   }
 
   // Storage
@@ -56,7 +57,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
-    IOracleChecker oracleChecker;
+    IPriceOracle oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
     mapping(address => bool) repurchasersOk;
@@ -101,7 +102,7 @@ library LibMoneyMarket01 {
 
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
 
-      (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_actualToken);
+      (uint256 _tokenPrice, ) = getPriceUSD(_actualToken, moneyMarketDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
@@ -150,7 +151,7 @@ library LibMoneyMarket01 {
         _hasIsolateAsset = true;
       }
 
-      (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_borrowed[_i].token);
+      (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
 
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
@@ -176,7 +177,7 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_borrowed[_i].token);
+      (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.debtValues[_borrowed[_i].token],
@@ -291,5 +292,19 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     moneyMarketDs.tokenConfigs[_token] = _config;
+  }
+
+  function getPriceUSD(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256, uint256)
+  {
+    (uint256 _price, uint256 _lastUpdated) = moneyMarketDs.oracle.getPrice(
+      _token,
+      address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
+    );
+    if (_lastUpdated < block.timestamp - moneyMarketDs.tokenConfigs[_token].maxToleranceExpiredSecond)
+      revert LibMoneyMarket01_PriceStale(_token);
+    return (_price, _lastUpdated);
   }
 }

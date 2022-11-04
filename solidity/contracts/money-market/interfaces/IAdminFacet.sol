@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
-import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 
 interface IAdminFacet {
   struct IbPair {
@@ -17,6 +16,7 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
+    uint256 maxToleranceExpiredSecond;
   }
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;
@@ -33,7 +33,7 @@ interface IAdminFacet {
 
   function setInterestModel(address _token, address model) external;
 
-  function setOracleChecker(IOracleChecker oracle) external;
+  function setOracle(address _oracle) external;
 
   function setRepurchasersOk(address[] memory list, bool _isOk) external;
 }

@@ -28,8 +28,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
 
-    oracleChecker.setExpiredToleranceSecond(address(weth), block.timestamp);
-    oracleChecker.setExpiredToleranceSecond(address(usdc), block.timestamp);
     vm.stopPrank();
 
     vm.startPrank(ALICE);

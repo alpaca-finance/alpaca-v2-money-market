@@ -151,7 +151,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    (uint256 _tokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_token);
+    (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 

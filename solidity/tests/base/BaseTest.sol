@@ -11,8 +11,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
-import { ChainLinkPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
-import { OracleChecker, IOracleChecker, IPriceOracle } from "../../contracts/oracle/OracleChecker.sol";
+import { ChainLinkPriceOracle, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
@@ -46,7 +45,7 @@ contract BaseTest is DSTest {
   MockERC20 internal usdc;
   MockERC20 internal btc;
   MockERC20 internal opm; // open market token
-  MockERC20 internal usd;
+  address internal usd;
   MockERC20 internal isolateToken;
 
   MockERC20 internal ibWeth;
@@ -54,13 +53,13 @@ contract BaseTest is DSTest {
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
 
-  OracleChecker internal oracleChecker;
+  IPriceOracle internal oracle;
 
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
-    usd = deployMockErc20("USD FOR CHAINLINK", "USD", 18);
+    usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
@@ -238,7 +237,7 @@ contract BaseTest is DSTest {
     selectors[4] = adminFacet.tokenConfigs.selector;
     selectors[5] = adminFacet.setNonCollatBorrower.selector;
     selectors[6] = adminFacet.setInterestModel.selector;
-    selectors[7] = adminFacet.setOracleChecker.selector;
+    selectors[7] = adminFacet.setOracle.selector;
     selectors[8] = adminFacet.setRepurchasersOk.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
@@ -273,15 +272,6 @@ contract BaseTest is DSTest {
     uint8 decimals
   ) internal returns (MockERC20) {
     return new MockERC20(name, symbol, decimals);
-  }
-
-  function deployOracleChecker(address _oracle, address _usd) internal returns (OracleChecker) {
-    OracleChecker checker = new OracleChecker();
-    checker.initialize(IPriceOracle(_oracle), _usd);
-    address oldOwner = checker.owner();
-    vm.prank(oldOwner);
-    checker.transferOwnership(DEPLOYER);
-    return checker;
   }
 
   function deployMockChainLinkPriceOracle() internal returns (MockChainLinkPriceOracle) {

@@ -44,7 +44,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     }
 
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
-    (uint256 _repayTokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_repayToken);
+    (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
     // todo: handle token decimals
     uint256 _repayInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
     // todo: tbd
@@ -86,7 +86,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     uint256 _repayInUSD,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
-    (uint256 _collatTokenPrice, ) = moneyMarketDs.oracleChecker.getTokenPrice(_collatToken);
+    (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
     uint256 _rewardInUSD = (_repayInUSD * REPURCHASE_BPS) / 1e4;
     // todo: handle token decimal
     _collatTokenAmountOut = ((_repayInUSD + _rewardInUSD) * 1e18) / _collatTokenPrice;

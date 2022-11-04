@@ -3,22 +3,23 @@ pragma solidity 0.8.17;
 
 import { BaseTest, console, MockERC20 } from "../base/BaseTest.sol";
 
-import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
+import { SimplePriceOracle, IPriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
 import { IAggregatorV3 } from "../../contracts/oracle/interfaces/IAggregatorV3.sol";
 import { MockChainLinkAggregator } from "../mocks/MockChainLinkAggregator.sol";
 
 contract Oracle_SimpleOracleTest is BaseTest {
-  SimplePriceOracle oracle;
   address feeder;
 
   function setUp() public virtual {
     feeder = EVE;
 
-    oracle = new SimplePriceOracle();
-    oracle.initialize(feeder);
-    address oldOwner = oracle.owner();
+    SimplePriceOracle simplePriceOracle = new SimplePriceOracle();
+    simplePriceOracle.initialize(feeder);
+    address oldOwner = simplePriceOracle.owner();
     vm.prank(oldOwner);
-    oracle.transferOwnership(DEPLOYER);
+    simplePriceOracle.transferOwnership(DEPLOYER);
+
+    oracle = IPriceOracle(simplePriceOracle);
   }
 
   function testCorrectness_NotOwner_setPrices_shouldRevertCallerIsNotOwner() external {
@@ -33,7 +34,7 @@ contract Oracle_SimpleOracleTest is BaseTest {
 
     vm.expectRevert(abi.encodeWithSelector(SimplePriceOracle.SimplePriceOracle_UnAuthorized.selector, ALICE));
     vm.prank(ALICE);
-    oracle.setPrices(t0, t1, prices);
+    SimplePriceOracle(address(oracle)).setPrices(t0, t1, prices);
   }
 
   function testCorrectness_setPrices_shouldPass() external {
@@ -50,9 +51,9 @@ contract Oracle_SimpleOracleTest is BaseTest {
     prices[1] = 1 ether;
 
     vm.prank(feeder);
-    oracle.setPrices(t0, t1, prices);
+    SimplePriceOracle(address(oracle)).setPrices(t0, t1, prices);
 
-    (uint192 price, uint64 ts) = oracle.store(address(weth), address(usdc));
+    (uint192 price, uint64 ts) = SimplePriceOracle(address(oracle)).store(address(weth), address(usdc));
     assertEq(price, 1500 ether);
     assertEq(ts, 1);
   }
@@ -61,7 +62,7 @@ contract Oracle_SimpleOracleTest is BaseTest {
     vm.expectRevert(
       abi.encodeWithSelector(SimplePriceOracle.SimplePriceOracle_BadPriceData.selector, address(weth), address(usdc))
     );
-    oracle.getPrice(address(weth), address(usdc));
+    SimplePriceOracle(address(oracle)).getPrice(address(weth), address(usdc));
   }
 
   function testCorrectness_getPrices_shouldPass() external {
@@ -78,7 +79,7 @@ contract Oracle_SimpleOracleTest is BaseTest {
     prices[1] = 1 ether;
 
     vm.prank(feeder);
-    oracle.setPrices(t0, t1, prices);
+    SimplePriceOracle(address(oracle)).setPrices(t0, t1, prices);
 
     (uint256 price, uint256 ts) = oracle.getPrice(address(weth), address(usdc));
     assertEq(price, 1500 ether);

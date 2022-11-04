@@ -16,9 +16,6 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
-// oracle
-import { OracleChecker } from "../../contracts/oracle/OracleChecker.sol";
-
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
@@ -87,7 +84,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -96,7 +94,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -105,7 +104,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     _inputs[3] = IAdminFacet.TokenConfigInput({
@@ -114,7 +114,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -126,8 +127,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     //set oracleChecker
     chainLinkOracle = deployMockChainLinkPriceOracle();
-    oracleChecker = deployOracleChecker(address(chainLinkOracle), address(usd));
-    adminFacet.setOracleChecker(oracleChecker);
+    adminFacet.setOracle(address(chainLinkOracle));
 
     // set repurchases ok
     address[] memory _repurchasers = new address[](1);

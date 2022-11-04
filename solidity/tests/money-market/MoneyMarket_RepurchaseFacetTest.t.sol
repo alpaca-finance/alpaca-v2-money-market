@@ -37,10 +37,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-
-    oracleChecker.setExpiredToleranceSecond(address(weth), block.timestamp);
-    oracleChecker.setExpiredToleranceSecond(address(usdc), block.timestamp);
-    oracleChecker.setExpiredToleranceSecond(address(btc), block.timestamp);
     vm.stopPrank();
 
     // bob deposit 100 usdc and 10 btc

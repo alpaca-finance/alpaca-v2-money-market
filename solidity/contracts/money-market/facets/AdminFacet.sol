@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
-import { IOracleChecker } from "../../oracle/interfaces/IOracleChecker.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
@@ -32,7 +31,8 @@ contract AdminFacet is IAdminFacet {
         collateralFactor: _tokenConfigs[_i].collateralFactor,
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
-        maxBorrow: _tokenConfigs[_i].maxBorrow
+        maxBorrow: _tokenConfigs[_i].maxBorrow,
+        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond
       });
 
       LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
@@ -69,9 +69,9 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
   }
 
-  function setOracleChecker(IOracleChecker _oracleChecker) external {
+  function setOracle(address _oracle) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.oracleChecker = _oracleChecker;
+    moneyMarketDs.oracle = IPriceOracle(_oracle);
   }
 
   function setRepurchasersOk(address[] memory list, bool _isOk) external {
