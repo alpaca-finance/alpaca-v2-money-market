@@ -48,7 +48,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _totalSupply = moneyMarketDs.debtShares[_token];
     uint256 _totalValue = moneyMarketDs.debtValues[_token];
 
-    uint256 _shareToAdd = LibShareUtil.valueToShare(_totalSupply, _amount, _totalValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_totalSupply, _amount, _totalValue);
 
     moneyMarketDs.debtShares[_token] += _shareToAdd;
     moneyMarketDs.debtValues[_token] += _amount;
@@ -271,7 +271,7 @@ contract BorrowFacet is IBorrowFacet {
 
   function pendingInterest(address _token) public view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01.pendingIntest(_token, moneyMarketDs);
+    return LibMoneyMarket01.pendingInterest(_token, moneyMarketDs);
   }
 
   function accureInterest(address _token) external {
