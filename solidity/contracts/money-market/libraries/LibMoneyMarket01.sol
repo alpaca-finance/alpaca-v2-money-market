@@ -162,7 +162,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getTotalBorrowedValue(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+  function getTotalBorrowedUSDValue(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
     returns (uint256 _totalBorrowedUSDValue)
@@ -179,6 +179,7 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
+      // todo: handle token decimals
       // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
       _totalBorrowedUSDValue += LibFullMath.mulDiv(_borrowedAmount, _tokenPrice, 1e18);
 
@@ -294,7 +295,6 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _price)
   {
-    // 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff is USD
     (_price, ) = IPriceOracle(moneyMarketDs.oracle).getPrice(
       _token,
       address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)

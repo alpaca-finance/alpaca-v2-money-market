@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 import { IPriceOracle } from "../../contracts/money-market/interfaces/IPriceOracle.sol";
 
 contract MockPriceOracle is IPriceOracle {
+  // USD address is 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff
   mapping(address => uint256) private _mockPrices;
 
   function getPrice(address _token0, address _token1) external view returns (uint256 _price, uint256 _lastUpdate) {

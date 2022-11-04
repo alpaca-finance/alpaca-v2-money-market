@@ -12,9 +12,6 @@ import { IRepurchaseFacet } from "../../contracts/money-market/facets/Repurchase
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 
-// utils
-import { console } from "../utils/console.sol";
-
 struct CacheState {
   uint256 collat;
   uint256 subAccountCollat;
@@ -66,7 +63,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be = 30
     CacheState memory _stateBefore = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -102,7 +99,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -147,7 +144,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be | usdc: 30 | btc: 3 |
     CacheState memory _stateBefore = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -186,7 +183,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -212,7 +209,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
       collat: collateralFacet.collats(address(btc)),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, address(btc)),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)),
       debtShare: borrowFacet.debtShares(address(btc)),
       debtValue: borrowFacet.debtValues(address(btc)),
       subAccountDebtShare: 0
@@ -244,7 +241,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be | usdc: 30 | btc: 5 |
     CacheState memory _stateBefore = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -285,7 +282,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -311,7 +308,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
       collat: collateralFacet.collats(address(btc)),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, address(btc)),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)),
       debtShare: borrowFacet.debtShares(address(btc)),
       debtValue: borrowFacet.debtValues(address(btc)),
       subAccountDebtShare: 0
@@ -345,7 +342,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be = 30
     CacheState memory _stateBefore = CacheState({
       collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollats(_aliceSubAccount0, _collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: borrowFacet.debtShares(_debtToken),
       debtValue: borrowFacet.debtValues(_debtToken),
       subAccountDebtShare: 0

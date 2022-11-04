@@ -158,7 +158,7 @@ contract BaseTest is DSTest {
     selectors[2] = CollateralFacet.removeCollateral.selector;
     selectors[3] = CollateralFacet.collats.selector;
     selectors[4] = CollateralFacet.transferCollateral.selector;
-    selectors[5] = CollateralFacet.subAccountCollats.selector;
+    selectors[5] = CollateralFacet.subAccountCollatAmount.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(collateralFacet),

@@ -32,7 +32,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-    uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedValue(_subAccount, moneyMarketDs);
+    uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
 
     if (_borrowingPower > _borrowedValue) {
       revert RepurchaseFacet_Healthy();
@@ -46,10 +46,10 @@ contract RepurchaseFacet is IRepurchaseFacet {
     );
 
     uint256 _debtTokenPrice = LibMoneyMarket01.getPrice(_debtToken, moneyMarketDs);
-    // todo: decimals
+    // todo: handle token decimals
     uint256 _repayInUSD = (_actualRepayAmount * _debtTokenPrice) / 1e18;
-    // todo: make it as constant
-    if (_repayInUSD > (_borrowedValue * 50) / 100) {
+    // todo: tbd
+    if (_repayInUSD * 2 > _borrowedValue) {
       revert RepurchaseFacet_RepayDebtValueTooHigh();
     }
 

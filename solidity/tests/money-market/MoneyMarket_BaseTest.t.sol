@@ -106,7 +106,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       token: address(btc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 1000,
+      borrowingFactor: 9000,
       maxBorrow: 30e18,
       maxCollateral: 100e18
     });
