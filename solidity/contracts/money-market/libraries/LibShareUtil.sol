@@ -3,8 +3,6 @@ pragma solidity 0.8.17;
 
 import { LibFullMath } from "./LibFullMath.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 library LibShareUtil {
   function shareToValue(
     uint256 _shareAmount,
