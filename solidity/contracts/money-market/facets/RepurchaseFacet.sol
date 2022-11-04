@@ -45,13 +45,16 @@ contract RepurchaseFacet is IRepurchaseFacet {
       moneyMarketDs
     );
 
+    uint256 _debtTokenPrice = LibMoneyMarket01.getPrice(_debtToken, moneyMarketDs);
+    // todo: decimals
+    uint256 _repayInUSD = (_actualRepayAmount * _debtTokenPrice) / 1e18;
     // todo: make it as constant
-    if (_actualRepayAmount > (_borrowedValue * 50) / 100) {
+    if (_repayInUSD > (_borrowedValue * 50) / 100) {
       revert RepurchaseFacet_RepayDebtValueTooHigh();
     }
 
     // calculate collateral amount that repurchaser will receive
-    _collatAmountOut = _getCollatAmountOut(_subAccount, _debtToken, _collatToken, _actualRepayAmount, moneyMarketDs);
+    _collatAmountOut = _getCollatAmountOut(_subAccount, _collatToken, _repayInUSD, moneyMarketDs);
 
     _updateDebts(_subAccount, _debtToken, _actualRepayAmount, _actualRepayShare, moneyMarketDs);
     _updateCollats(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
@@ -85,16 +88,13 @@ contract RepurchaseFacet is IRepurchaseFacet {
 
   function _getCollatAmountOut(
     address _subAccount,
-    address _debtToken,
     address _collatToken,
-    uint256 _repayAmount,
+    uint256 _repayInUSD,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
-    uint256 _debtTokenPrice = LibMoneyMarket01.getPrice(_debtToken, moneyMarketDs);
     uint256 _collatTokenPrice = LibMoneyMarket01.getPrice(_collatToken, moneyMarketDs);
-    uint256 _repayInUSD = _repayAmount * _debtTokenPrice;
     uint256 _rewardInUSD = (_repayInUSD * REPURCHASE_BPS) / 1e4;
-    _collatTokenAmountOut = (_repayInUSD + _rewardInUSD) / _collatTokenPrice;
+    _collatTokenAmountOut = ((_repayInUSD + _rewardInUSD) * 1e18) / _collatTokenPrice;
 
     uint256 _collatTokenTotalAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 
