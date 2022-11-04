@@ -26,11 +26,11 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](4);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, token: address(weth), limit: 1e30 });
-    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, token: address(usdc), limit: 1e30 });
-    _limitInputs[2] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, token: address(weth), limit: 1e30 });
-    _limitInputs[3] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, token: address(usdc), limit: 1e30 });
-    adminFacet.setNonCollatTokenBorrowLimitUSDValues(_limitInputs);
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
+    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
+    _limitInputs[2] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
+    _limitInputs[3] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
+    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
@@ -224,14 +224,10 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceBorrowLimit = 10 ether;
 
     IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({
-      account: ALICE,
-      token: address(weth),
-      limit: _aliceBorrowLimit
-    });
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: _aliceBorrowLimit });
 
     uint256 _exptectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
-    adminFacet.setNonCollatTokenBorrowLimitUSDValues(_limitInputs);
+    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
     vm.prank(ALICE);
     vm.expectRevert(
       abi.encodeWithSelector(

@@ -152,7 +152,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingPower = moneyMarketDs.nonCollatTokenBorrowLimitUSDValues[msg.sender][_token];
+    uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
@@ -187,8 +187,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
   }
 
-  function nonCollatTokenBorrowLimitUSDValues(address _account, address _token) external view returns (uint256) {
+  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.nonCollatTokenBorrowLimitUSDValues[_account][_token];
+    return moneyMarketDs.nonCollatBorrowLimitUSDValues[_account];
   }
 }

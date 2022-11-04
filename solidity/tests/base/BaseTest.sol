@@ -210,7 +210,7 @@ contract BaseTest is DSTest {
     selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
     selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
     selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
-    selectors[6] = NonCollatBorrowFacet.nonCollatTokenBorrowLimitUSDValues.selector;
+    selectors[6] = NonCollatBorrowFacet.nonCollatBorrowLimitUSDValues.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(nonCollatBorrow),
@@ -235,7 +235,7 @@ contract BaseTest is DSTest {
     selectors[6] = adminFacet.setInterestModel.selector;
     selectors[7] = adminFacet.setOracle.selector;
     selectors[8] = adminFacet.setRepurchasersOk.selector;
-    selectors[9] = adminFacet.setNonCollatTokenBorrowLimitUSDValues.selector;
+    selectors[9] = adminFacet.setNonCollatBorrowLimitUSDValues.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),

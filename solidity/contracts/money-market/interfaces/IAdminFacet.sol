@@ -20,7 +20,6 @@ interface IAdminFacet {
 
   struct NonCollatBorrowLimitInput {
     address account;
-    address token;
     uint256 limit;
   }
 
@@ -42,6 +41,5 @@ interface IAdminFacet {
 
   function setRepurchasersOk(address[] memory list, bool _isOk) external;
 
-  function setNonCollatTokenBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
-    external;
+  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
 }
