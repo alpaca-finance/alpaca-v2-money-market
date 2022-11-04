@@ -53,6 +53,8 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues;
     // token -> debt of each account
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
+    // account -> token -> limit
+    mapping(address => mapping(address => uint256)) nonCollatTokenBorrowLimitUSDValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
     IPriceOracle oracle;
