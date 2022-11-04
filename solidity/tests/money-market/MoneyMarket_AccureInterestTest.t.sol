@@ -154,15 +154,16 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     // assert BOB
     (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     // bob borrow 10 with 0.1 interest rate per sec
-    // 10 seconed passed _bobExpectedDebtAmount = 10 + (10*0.1) = 11
-    uint256 _bobExpectedDebtAmount = 11e18;
+    // precision loss
+    // 10 seconed passed _bobExpectedDebtAmount = 10 + (10*0.1) ~ 11 = 10999999999999999999
+    uint256 _bobExpectedDebtAmount = 10.999999999999999999 ether;
     assertEq(_bobActualDebtAmount, _bobExpectedDebtAmount);
 
     // assert ALICE
     (, uint256 _aliceActualDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
-    // _aliceExpectedDebtAmount should be 10 ether, but precision loss
-    // so _aliceExpectedDebtAmount = 9.999999999999999999 ether
-    uint256 _aliceExpectedDebtAmount = 9.999999999999999999 ether;
+    // _aliceExpectedDebtAmount should be 10 ether
+    // so _aliceExpectedDebtAmount = 10 ether
+    uint256 _aliceExpectedDebtAmount = 10 ether;
     assertEq(_aliceActualDebtAmount, _aliceExpectedDebtAmount, "Alice debtAmount missmatch");
 
     // assert Global
@@ -256,24 +257,24 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     // bob borrow 10 usdc, pool has 20 usdc, utilization = 50%
     // interest rate = 10.2941176456512000% per year
     // 1 day passed _bobExpectedDebtAmount = debtAmount + (debtAmount * seconedPass * ratePerSec)
-    // = 10 + (10 * 1 * 0.102941176456512000/365) = 10.002820306204288
-    uint256 _bobExpectedDebtAmount = 10.002820306204288 ether;
+    // = 10 + (10 * 1 * 0.102941176456512000/365) ~ 10.002820306204288000 = 10.002820306204287999
+    uint256 _bobExpectedDebtAmount = 10.002820306204287999 ether;
     assertEq(_bobActualDebtAmount, _bobExpectedDebtAmount);
 
-    // // assert ALICE
+    // assert ALICE
     (, uint256 _aliceActualDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(usdc));
-    // _aliceExpectedDebtAmount should be 10 ether, but precision loss
-    // so _aliceExpectedDebtAmount = 9.999999999999999999 ether
-    uint256 _aliceExpectedDebtAmount = 9.999999999999999999 ether;
+    // _aliceExpectedDebtAmount should be 10 ether
+    // so _aliceExpectedDebtAmount = 10 ether
+    uint256 _aliceExpectedDebtAmount = 10 ether;
     assertEq(_aliceActualDebtAmount, _aliceExpectedDebtAmount, "Alice debtAmount missmatch");
 
-    // assert Global
+    // // assert Global
     // from BOB 10 + 0.002820306204288 =, Alice 10 = 20.002820306204288
     assertEq(borrowFacet.debtValues(address(usdc)), 20.002820306204288 ether, "Global debtValues missmatch");
 
-    // // assert IB exchange rate change
-    // // alice wthdraw 10 ibUSDC, totalToken = 20.002820306204288, totalSupply = 20
-    // // alice should get = 10 * 20.002820306204288 / 20 = 10.2 eth
+    // assert IB exchange rate change
+    // alice wthdraw 10 ibUSDC, totalToken = 20.002820306204288, totalSupply = 20
+    // alice should get = 10 * 20.002820306204288 / 20 = 10.2 eth
     uint256 _expectdAmount = 10.001410153102144 ether;
     _aliceBalanceBefore = usdc.balanceOf(ALICE);
     vm.prank(ALICE);

@@ -173,7 +173,7 @@ library LibMoneyMarket01 {
     _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 
-  function pendingIntest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+  function pendingInterest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
     returns (uint256 _pendingInterest)
@@ -199,7 +199,7 @@ library LibMoneyMarket01 {
 
   function accureInterest(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs) internal {
     if (block.timestamp > moneyMarketDs.debtLastAccureTime[_token]) {
-      uint256 _interest = pendingIntest(_token, moneyMarketDs);
+      uint256 _interest = pendingInterest(_token, moneyMarketDs);
       // uint256 toReserve = interest.mul(moneyMarketDs.getReservePoolBps()).div(
       //   10000
       // );
