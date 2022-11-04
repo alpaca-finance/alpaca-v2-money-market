@@ -226,7 +226,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
     _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: _aliceBorrowLimit });
 
-    uint256 _exptectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
+    uint256 _expectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
     adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
     vm.prank(ALICE);
     vm.expectRevert(
@@ -234,7 +234,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
         INonCollatBorrowFacet.NonCollatBorrowFacet_BorrowingValueTooHigh.selector,
         _aliceBorrowAmount,
         0,
-        _exptectBorrowingPower
+        _expectBorrowingPower
       )
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
