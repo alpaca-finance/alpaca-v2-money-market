@@ -11,6 +11,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
@@ -54,9 +55,10 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
-    address oracle;
+    IPriceOracle oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
+    mapping(address => bool) repurchasersOk;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -98,8 +100,7 @@ library LibMoneyMarket01 {
 
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
 
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+      uint256 _tokenPrice = getPrice(_actualToken, moneyMarketDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
@@ -147,8 +148,7 @@ library LibMoneyMarket01 {
       if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
       }
-      // TODO: get tokenPrice from oracle
-      uint256 _tokenPrice = 1e18;
+      uint256 _tokenPrice = getPrice(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.debtValues[_borrowed[_i].token],
@@ -156,6 +156,33 @@ library LibMoneyMarket01 {
       );
 
       _totalUsedBorrowedPower = usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
+  function getTotalBorrowedUSDValue(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _totalBorrowedUSDValue)
+  {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      uint256 _tokenPrice = getPrice(_borrowed[_i].token, moneyMarketDs);
+      uint256 _borrowedAmount = LibShareUtil.shareToValue(
+        _borrowed[_i].amount,
+        moneyMarketDs.debtValues[_borrowed[_i].token],
+        moneyMarketDs.debtShares[_borrowed[_i].token]
+      );
+
+      // todo: handle token decimals
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(_borrowedAmount, _tokenPrice, 1e18);
 
       unchecked {
         _i++;
@@ -204,9 +231,24 @@ library LibMoneyMarket01 {
       //   10000
       // );
       // reservePool = reservePool.add(toReserve);
-
       moneyMarketDs.debtValues[_token] += _interest;
       moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
+    }
+  }
+
+  function accureAllSubAccountDebtToken(
+    address _subAccount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      accureInterest(_borrowed[_i].token, moneyMarketDs);
+      unchecked {
+        _i++;
+      }
     }
   }
 
@@ -247,5 +289,16 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     moneyMarketDs.tokenConfigs[_token] = _config;
+  }
+
+  function getPrice(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _price)
+  {
+    (_price, ) = IPriceOracle(moneyMarketDs.oracle).getPrice(
+      _token,
+      address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
+    );
   }
 }

@@ -31,4 +31,8 @@ interface IAdminFacet {
   function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
   function setInterestModel(address _token, address model) external;
+
+  function setOracle(address _oracle) external;
+
+  function setRepurchasersOk(address[] memory list, bool _isOk) external;
 }
