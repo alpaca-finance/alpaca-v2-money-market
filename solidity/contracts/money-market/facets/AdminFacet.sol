@@ -84,4 +84,16 @@ contract AdminFacet is IAdminFacet {
       }
     }
   }
+
+  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _nonCollatBorrowLimitInputs.length;
+    for (uint8 _i; _i < _length; ) {
+      NonCollatBorrowLimitInput memory input = _nonCollatBorrowLimitInputs[_i];
+      moneyMarketDs.nonCollatBorrowLimitUSDValues[input.account] = input.limit;
+      unchecked {
+        _i++;
+      }
+    }
+  }
 }

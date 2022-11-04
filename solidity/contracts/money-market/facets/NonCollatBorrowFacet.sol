@@ -132,12 +132,9 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     // check credit
-    // TODO: use the correct state vars
-    uint256 _totalBorrowingPowerUSDValue = 1e30;
-
     (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
 
-    _checkBorrowingPower(_totalBorrowingPowerUSDValue, _totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
 
     _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
@@ -145,7 +142,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
-    uint256 _borrowingPower,
     uint256 _borrowedValue,
     address _token,
     uint256 _amount,
@@ -155,6 +151,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
+    uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
@@ -186,7 +183,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // TODO: use the correct state vars
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
+  }
+
+  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.nonCollatBorrowLimitUSDValues[_account];
   }
 }
