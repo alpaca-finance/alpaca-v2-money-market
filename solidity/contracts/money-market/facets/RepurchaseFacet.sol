@@ -50,7 +50,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
       revert RepurchaseFacet_RepayDebtValueTooHigh();
     }
 
-    _collatAmountOut = _getCollatAmountOut(moneyMarketDs, _subAccount, _debtToken, _collatToken, _repayAmount);
+    _collatAmountOut = _getCollatAmountOut(moneyMarketDs, _subAccount, _debtToken, _collatToken, _actualRepayAmount);
 
     _updateState(
       moneyMarketDs,
