@@ -23,6 +23,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   function nonCollatBorrow(address _token, uint256 _amount) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
@@ -42,13 +43,17 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       tokenDebts.init();
     }
 
-    LibMoneyMarket01.accureNonCollatInterest(msg.sender, _token, moneyMarketDs);
+    // update account debt
     uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;
-    uint256 _newGlobalDebt = tokenDebts.getAmount(msg.sender) + _amount;
+    uint256 _newTokenDebt = tokenDebts.getAmount(msg.sender) + _amount;
 
     debtValue.addOrUpdate(_token, _newAccountDebt);
 
-    tokenDebts.addOrUpdate(msg.sender, _newGlobalDebt);
+    tokenDebts.addOrUpdate(msg.sender, _newTokenDebt);
+
+    // update global debt
+
+    moneyMarketDs.globalDebts[_token] += _amount;
 
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
@@ -59,7 +64,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureNonCollatInterest(_account, _token, moneyMarketDs);
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     uint256 _oldDebtValue = _getDebt(_account, _token, moneyMarketDs);
 
@@ -111,10 +116,14 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // update user debtShare
     moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _oldAccountDebtValue - _valueToRemove);
 
-    uint256 _oldGlobalDebt = moneyMarketDs.nonCollatTokenDebtValues[_token].getAmount(_account);
+    uint256 _oldTokenDebt = moneyMarketDs.nonCollatTokenDebtValues[_token].getAmount(_account);
+
+    // update token debt
+    moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(_account, _oldTokenDebt - _valueToRemove);
 
     // update global debt
-    moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(_account, _oldGlobalDebt - _valueToRemove);
+
+    moneyMarketDs.globalDebts[_token] -= _valueToRemove;
 
     // emit event
     emit LogNonCollatRemoveDebt(_account, _token, _valueToRemove);
@@ -188,13 +197,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
   }
 
-  function accureNonCollatInterest(address _account, address _token) external {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureNonCollatInterest(_account, _token, moneyMarketDs);
-  }
-
   function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.nonCollatBorrowLimitUSDValues[_account];
+  }
+
+  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _pendingInterest) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _pendingInterest = LibMoneyMarket01.getNonCollatInterestRate(_account, _token, moneyMarketDs);
   }
 }

@@ -208,15 +208,14 @@ contract BaseTest is DSTest {
   {
     NonCollatBorrowFacet nonCollatBorrow = new NonCollatBorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](8);
+    bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
     selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
     selectors[2] = NonCollatBorrowFacet.nonCollatGetTotalUsedBorrowedPower.selector;
     selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
     selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
     selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
-    selectors[6] = NonCollatBorrowFacet.accureNonCollatInterest.selector;
-    selectors[7] = NonCollatBorrowFacet.nonCollatBorrowLimitUSDValues.selector;
+    selectors[6] = NonCollatBorrowFacet.nonCollatBorrowLimitUSDValues.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(nonCollatBorrow),
