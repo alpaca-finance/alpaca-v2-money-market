@@ -14,8 +14,6 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
-import { console } from "../../../tests/utils/console.sol";
-
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -218,13 +216,12 @@ library LibMoneyMarket01 {
     if (block.timestamp > _lastAccureTime) {
       uint256 _timePast = block.timestamp - _lastAccureTime;
 
-      uint256 _interestRatePerSec;
       // over collat interest
       if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
         return 0;
       }
 
-      _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
+      uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
 
       // TODO: handle token decimals
       _pendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18;
