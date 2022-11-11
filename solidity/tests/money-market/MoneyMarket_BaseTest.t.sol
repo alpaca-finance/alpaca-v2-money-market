@@ -121,7 +121,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
-    _inputs[3] = IAdminFacet.TokenConfigInput({
+    _inputs[4] = IAdminFacet.TokenConfigInput({
       token: address(wNative),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,

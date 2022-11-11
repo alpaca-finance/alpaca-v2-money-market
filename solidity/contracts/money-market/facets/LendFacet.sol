@@ -65,7 +65,7 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
-    (address _ibToken, uint256 _shareToMint) = _mintShare(_token, _amount, moneyMarketDs);
+    (address _ibToken, uint256 _shareToMint) = _getShareToMint(_token, _amount, moneyMarketDs);
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
@@ -99,10 +99,9 @@ contract LendFacet is ILendFacet {
     if (_amount == 0) revert LendFacet_InvalidAmount(_amount);
     LibMoneyMarket01.accureInterest(_nativeToken, moneyMarketDs);
 
+    (address _ibToken, uint256 _shareToMint) = _getShareToMint(_nativeToken, _amount, moneyMarketDs);
+
     IWNative(_nativeToken).deposit{ value: _amount }();
-
-    (address _ibToken, uint256 _shareToMint) = _mintShare(_nativeToken, _amount, moneyMarketDs);
-
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
@@ -128,7 +127,7 @@ contract LendFacet is ILendFacet {
   }
 
   // calculate _shareToMint to mint before transfer token to MM
-  function _mintShare(
+  function _getShareToMint(
     address _token,
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
