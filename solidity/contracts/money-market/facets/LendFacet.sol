@@ -24,9 +24,9 @@ contract LendFacet is ILendFacet {
   using LibSafeToken for address;
 
   event LogDeposit(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-
+  event LogDepositETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
+  event LogWithdrawETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
 
   // open isolate token market, able to borrow only
@@ -104,7 +104,7 @@ contract LendFacet is ILendFacet {
     IWNative(_nativeToken).deposit{ value: _amount }();
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
-    emit LogDeposit(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
+    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
   }
 
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external {
@@ -116,9 +116,9 @@ contract LendFacet is ILendFacet {
     uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
 
     IbToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
-    _unwrap(_token, msg.sender, _shareValue);
+    _safeUnwrap(_token, msg.sender, _shareValue);
 
-    emit LogWithdraw(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
+    emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
   }
 
   function getTotalToken(address _token) external view returns (uint256) {
@@ -167,7 +167,7 @@ contract LendFacet is ILendFacet {
     }
   }
 
-  function _unwrap(
+  function _safeUnwrap(
     address _nativeToken,
     address _to,
     uint256 _amount
