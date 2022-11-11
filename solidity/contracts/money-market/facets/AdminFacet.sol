@@ -96,4 +96,9 @@ contract AdminFacet is IAdminFacet {
       }
     }
   }
+
+  function setNativeToken(address _token) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.nativeToken = _token;
+  }
 }

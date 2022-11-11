@@ -43,4 +43,6 @@ interface IAdminFacet {
   function setRepurchasersOk(address[] memory list, bool _isOk) external;
 
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
+
+  function setNativeToken(address _token) external;
 }

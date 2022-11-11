@@ -28,6 +28,7 @@ import { DiamondInit } from "../../contracts/money-market/initializers/DiamondIn
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockWNative } from "../mocks/MockWNative.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
 import { console } from "../utils/console.sol";
@@ -41,6 +42,7 @@ contract BaseTest is DSTest {
 
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
+  MockWNative internal wNative;
   MockERC20 internal weth;
   MockERC20 internal usdc;
   MockERC20 internal btc;
@@ -52,6 +54,7 @@ contract BaseTest is DSTest {
   MockERC20 internal ibBtc;
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
+  MockERC20 internal ibWNative;
 
   IPriceOracle internal oracle;
 
@@ -62,11 +65,13 @@ contract BaseTest is DSTest {
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
+    wNative = deployMockWNative();
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
     ibBtc = deployMockErc20("Inerest Bearing Bitcoin", "IBBTC", 18);
     ibUsdc = deployMockErc20("Inerest USD COIN", "IBUSDC", 18);
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
+    ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -138,11 +143,13 @@ contract BaseTest is DSTest {
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
     LendFacet lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = lendFacet.deposit.selector;
     selectors[1] = lendFacet.withdraw.selector;
     selectors[2] = lendFacet.getTotalToken.selector;
     selectors[3] = lendFacet.openMarket.selector;
+    selectors[4] = lendFacet.depositETH.selector;
+    selectors[5] = lendFacet.withdrawETH.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(lendFacet),
@@ -230,7 +237,7 @@ contract BaseTest is DSTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](10);
+    bytes4[] memory selectors = new bytes4[](11);
     selectors[0] = adminFacet.setTokenToIbTokens.selector;
     selectors[1] = adminFacet.tokenToIbTokens.selector;
     selectors[2] = adminFacet.ibTokenToTokens.selector;
@@ -241,6 +248,7 @@ contract BaseTest is DSTest {
     selectors[7] = adminFacet.setOracle.selector;
     selectors[8] = adminFacet.setRepurchasersOk.selector;
     selectors[9] = adminFacet.setNonCollatBorrowLimitUSDValues.selector;
+    selectors[10] = adminFacet.setNativeToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(adminFacet),
@@ -274,6 +282,10 @@ contract BaseTest is DSTest {
     uint8 decimals
   ) internal returns (MockERC20) {
     return new MockERC20(name, symbol, decimals);
+  }
+
+  function deployMockWNative() internal returns (MockWNative) {
+    return new MockWNative();
   }
 
   function deployMockChainLinkPriceOracle() internal returns (MockChainLinkPriceOracle) {

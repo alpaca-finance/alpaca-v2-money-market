@@ -44,6 +44,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     repurchaseFacet = IRepurchaseFacet(moneyMarketDiamond);
 
+    vm.deal(ALICE, 1000 ether);
+
     weth.mint(ALICE, 1000 ether);
     btc.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
@@ -70,13 +72,14 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](3);
+    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](4);
     _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
     _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
     _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
+    _ibPair[3] = IAdminFacet.IbPair({ token: address(wNative), ibToken: address(ibWNative) });
     adminFacet.setTokenToIbTokens(_ibPair);
 
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -118,6 +121,16 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[3] = IAdminFacet.TokenConfigInput({
+      token: address(wNative),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
     (_inputs);
 
@@ -138,5 +151,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address[] memory _repurchasers = new address[](1);
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, true);
+
+    // adminFacet set native token
+    adminFacet.setNativeToken(address(wNative));
   }
 }

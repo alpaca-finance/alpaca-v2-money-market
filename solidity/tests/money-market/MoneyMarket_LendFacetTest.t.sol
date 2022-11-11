@@ -7,6 +7,8 @@ import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
+import { console } from "../utils/console.sol";
+
 contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
@@ -163,5 +165,38 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(opm), 5 ether);
     assertEq(IERC20(_ibToken).balanceOf(ALICE), 5 ether);
     vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserDepositETH_TokenShouldSafeTransferFromUserToMM() external {
+    vm.prank(ALICE);
+    lendFacet.depositETH{ value: 10 ether }();
+
+    assertEq(wNative.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 990 ether);
+    assertEq(wNative.balanceOf(moneyMarketDiamond), 10 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
+  }
+
+  function testCorrectness_WhenUserWithdrawETH_ShareShouldBurnedAndTransferTokenBackCorrectly() external {
+    // deposit first
+    vm.prank(ALICE);
+    lendFacet.depositETH{ value: 10 ether }();
+
+    assertEq(wNative.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 990 ether);
+    assertEq(wNative.balanceOf(moneyMarketDiamond), 10 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
+
+    // then withdraw 5
+    vm.prank(ALICE);
+    lendFacet.withdrawETH(address(ibWNative), 5 ether);
+
+    assertEq(wNative.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 995 ether);
+    assertEq(wNative.balanceOf(moneyMarketDiamond), 5 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 5 ether);
   }
 }
