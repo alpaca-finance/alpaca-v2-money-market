@@ -209,8 +209,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 4.5 USD
     // maximumBorrowed weth amount = 4.5 * 9000 / 10000 ~ 4.05
     // _borrowedUSDValue = 4.05 * 10000 / 9000 = 4.5
-    vm.prank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), 4.05 ether);
+    vm.startPrank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), 2.025 ether);
+    borrowFacet.borrow(subAccount0, address(usdc), 2.025 ether);
+    vm.stopPrank();
 
     (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 4.5 ether);
