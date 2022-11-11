@@ -162,7 +162,7 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
-      _totalUsedBorrowedPower = usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+      _totalUsedBorrowedPower += usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
 
       unchecked {
         _i++;

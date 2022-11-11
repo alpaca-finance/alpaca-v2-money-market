@@ -59,6 +59,22 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(collats[1].amount, _aliceCollateralAmount * 2, "updated weth");
   }
 
+  function testCorrectness_WhenUserAddMultipleCollaterals_TotalBorrowingPowerShouldBeCorrect() external {
+    uint256 _aliceCollateralAmount = 10 ether;
+    uint256 _aliceCollateralAmount2 = 20 ether;
+
+    vm.startPrank(ALICE);
+
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
+
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
+    vm.stopPrank();
+
+    uint256 _aliceBorrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    assertEq(_aliceBorrowingPower, 27 ether);
+    
+  }
+
   function testRevert_WhenUserAddInvalidCollateral_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_InvalidAssetTier.selector));
@@ -66,7 +82,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenUserAddCollateralThanLimit_ShouldRevert() external {
+  function testRevert_WhenUserAddCollateralMoreThanLimit_ShouldRevert() external {
     //max collat for weth is 100 ether
     uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
