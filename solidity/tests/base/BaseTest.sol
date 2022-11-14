@@ -17,6 +17,9 @@ import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol"
 import { console } from "../utils/console.sol";
 
 contract BaseTest is DSTest {
+  uint256 internal constant subAccount0 = 0;
+  uint256 internal constant subAccount1 = 1;
+
   address internal constant DEPLOYER = address(0x01);
   address internal constant ALICE = address(0x88);
   address internal constant BOB = address(0x168);

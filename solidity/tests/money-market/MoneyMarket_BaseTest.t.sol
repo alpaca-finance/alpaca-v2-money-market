@@ -45,9 +45,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
   IRepurchaseFacet internal repurchaseFacet;
 
-  uint256 subAccount0 = 0;
-  uint256 subAccount1 = 1;
-
   MockChainLinkPriceOracle chainLinkOracle;
 
   function setUp() public virtual {
