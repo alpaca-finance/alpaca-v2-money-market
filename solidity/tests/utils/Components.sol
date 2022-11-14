@@ -6,4 +6,4 @@ import "./console2.sol";
 import "./StdCheats.sol";
 import "./StdStorage.sol";
 import "./StdUtils.sol";
-import "./Vm.sol";
+import "./VM.sol";

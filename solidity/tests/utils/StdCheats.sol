@@ -4,7 +4,6 @@ pragma solidity >=0.6.2 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 import "./StdStorage.sol";
-import "./Vm.sol";
 
 abstract contract StdCheatsSafe {
   VmSafe private constant vm = VmSafe(address(uint160(uint256(keccak256("hevm cheat code")))));
