@@ -14,6 +14,7 @@ import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IWNative } from "../interfaces/IWNative.sol";
+import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
 
 import { IbToken } from "../IbToken.sol";
 
@@ -25,9 +26,9 @@ contract LendFacet is ILendFacet {
 
   event LogDeposit(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
+  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
   event LogDepositETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdrawETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
 
   // open isolate token market, able to borrow only
   function openMarket(address _token) external returns (address _newIbToken) {
@@ -110,13 +111,15 @@ contract LendFacet is ILendFacet {
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
+    address _relayer = moneyMarketDs.nativeRelayer;
     if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
+    if (_relayer == address(0)) revert LendFacet_InvalidAddress(_relayer);
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
     uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
 
     IbToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
-    _safeUnwrap(_token, msg.sender, _shareValue);
+    _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue);
 
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
   }
@@ -169,10 +172,12 @@ contract LendFacet is ILendFacet {
 
   function _safeUnwrap(
     address _nativeToken,
+    address _nativeRelayer,
     address _to,
     uint256 _amount
   ) internal {
-    IWNative(_nativeToken).withdraw(_amount);
+    LibSafeToken.safeTransfer(_nativeToken, _nativeRelayer, _amount);
+    IWNativeRelayer(_nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);
   }
 }

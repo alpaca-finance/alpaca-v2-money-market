@@ -15,6 +15,7 @@ interface ILendFacet {
   function openMarket(address _token) external returns (address);
 
   error LendFacet_InvalidToken(address _token);
+  error LendFacet_InvalidAddress(address _addr);
   error LendFacet_NoTinyShares();
   error LendFacet_InvalidAmount(uint256 _amount);
 }

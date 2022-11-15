@@ -169,9 +169,9 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     lendFacet.depositETH{ value: 10 ether }();
 
-    assertEq(wNative.balanceOf(ALICE), 0 ether);
+    assertEq(nativeToken.balanceOf(ALICE), 0 ether);
     assertEq(ALICE.balance, 990 ether);
-    assertEq(wNative.balanceOf(moneyMarketDiamond), 10 ether);
+    assertEq(nativeToken.balanceOf(moneyMarketDiamond), 10 ether);
 
     assertEq(ibWNative.balanceOf(ALICE), 10 ether);
   }
@@ -181,9 +181,9 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     lendFacet.depositETH{ value: 10 ether }();
 
-    assertEq(wNative.balanceOf(ALICE), 0 ether);
+    assertEq(nativeToken.balanceOf(ALICE), 0 ether);
     assertEq(ALICE.balance, 990 ether);
-    assertEq(wNative.balanceOf(moneyMarketDiamond), 10 ether);
+    assertEq(nativeToken.balanceOf(moneyMarketDiamond), 10 ether);
 
     assertEq(ibWNative.balanceOf(ALICE), 10 ether);
 
@@ -191,9 +191,9 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     lendFacet.withdrawETH(address(ibWNative), 5 ether);
 
-    assertEq(wNative.balanceOf(ALICE), 0 ether);
+    assertEq(nativeToken.balanceOf(ALICE), 0 ether);
     assertEq(ALICE.balance, 995 ether);
-    assertEq(wNative.balanceOf(moneyMarketDiamond), 5 ether);
+    assertEq(nativeToken.balanceOf(moneyMarketDiamond), 5 ether);
 
     assertEq(ibWNative.balanceOf(ALICE), 5 ether);
   }

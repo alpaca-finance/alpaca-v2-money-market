@@ -18,6 +18,7 @@ import { RepurchaseFacet, IRepurchaseFacet } from "../../contracts/money-market/
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
+import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
 
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
@@ -89,7 +90,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
     _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
     _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
-    _ibPair[3] = IAdminFacet.IbPair({ token: address(wNative), ibToken: address(ibWNative) });
+    _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
     adminFacet.setTokenToIbTokens(_ibPair);
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
@@ -135,7 +136,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
 
     _inputs[4] = IAdminFacet.TokenConfigInput({
-      token: address(wNative),
+      token: address(nativeToken),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -164,9 +165,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address[] memory _repurchasers = new address[](1);
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, true);
-
-    // adminFacet set native token
-    adminFacet.setNativeToken(address(wNative));
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -185,6 +183,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     deployRepurchaseFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
+    initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     return (address(_moneyMarketDiamond));
   }
@@ -199,6 +198,19 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       facetCuts,
       address(diamondInitializer),
       abi.encodeWithSelector(bytes4(keccak256("init()")))
+    );
+  }
+
+  function initializeMoneyMarket(DiamondCutFacet diamondCutFacet) internal {
+    // Deploy DiamondInit
+    MoneyMarketInit _initializer = new MoneyMarketInit();
+    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
+
+    // make lib diamond call init
+    diamondCutFacet.diamondCut(
+      facetCuts,
+      address(_initializer),
+      abi.encodeWithSelector(bytes4(keccak256("init(address,address)")), address(nativeToken), address(nativeRelayer))
     );
   }
 
@@ -332,7 +344,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](12);
+    bytes4[] memory selectors = new bytes4[](11);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -344,7 +356,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     selectors[8] = AdminFacet.setRepurchasersOk.selector;
     selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
     selectors[10] = AdminFacet.setNonCollatInterestModel.selector;
-    selectors[11] = AdminFacet.setNativeToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

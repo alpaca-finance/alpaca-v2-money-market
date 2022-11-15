@@ -49,6 +49,4 @@ interface IAdminFacet {
   ) external;
 
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
-
-  function setNativeToken(address _token) external;
 }
