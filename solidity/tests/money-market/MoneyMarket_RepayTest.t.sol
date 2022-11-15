@@ -7,7 +7,7 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
-contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {

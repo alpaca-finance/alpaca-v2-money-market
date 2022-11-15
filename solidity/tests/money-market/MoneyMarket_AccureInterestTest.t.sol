@@ -8,6 +8,7 @@ import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -20,17 +21,34 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     FixedInterestRateModel model = new FixedInterestRateModel();
     TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
+    TripleSlopeModel7 tripleSlope7 = new TripleSlopeModel7();
     adminFacet.setInterestModel(address(weth), address(model));
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
+    // non collat
+    adminFacet.setNonCollatBorrower(ALICE, true);
+    adminFacet.setNonCollatBorrower(BOB, true);
+
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(model));
+    adminFacet.setNonCollatInterestModel(ALICE, address(btc), address(tripleSlope6));
+    adminFacet.setNonCollatInterestModel(BOB, address(weth), address(model));
+    adminFacet.setNonCollatInterestModel(BOB, address(btc), address(tripleSlope7));
+
+    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](2);
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
+    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
+    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
+
     vm.startPrank(DEPLOYER);
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
     vm.stopPrank();
 
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
+    lendFacet.deposit(address(btc), 100 ether);
     lendFacet.deposit(address(usdc), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
@@ -310,5 +328,105 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     _aliceBalanceAfter = usdc.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _expectdAmount, "ALICE weth balance missmatch");
+  }
+
+  function testCorrectness_WhenUserBorrowBothOverCollatAndNonCollat_ShouldAccureInterestCorrectly() external {
+    uint256 _actualInterest = borrowFacet.pendingInterest(address(weth));
+    assertEq(_actualInterest, 0);
+
+    uint256 _borrowAmount = 10 ether;
+    uint256 _nonCollatBorrowAmount = 10 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
+
+    uint256 _bobBalanceBefore = weth.balanceOf(BOB);
+    // bob borrow
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
+    //bob non collat borrow
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _nonCollatBorrowAmount);
+    vm.stopPrank();
+
+    uint256 _bobBalanceAfter = weth.balanceOf(BOB);
+
+    assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount + _nonCollatBorrowAmount);
+
+    uint256 _debtAmount;
+    (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
+    uint256 _nonCollatDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    assertEq(_debtAmount, _borrowAmount);
+    assertEq(_nonCollatDebtAmount, _nonCollatBorrowAmount);
+
+    vm.warp(block.timestamp + 10);
+
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
+    uint256 _expectedDebtAmount = 2e18 + _borrowAmount;
+    uint256 _expectedNonDebtAmount = 2e18 + _nonCollatBorrowAmount;
+
+    uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
+    assertEq(_actualInterestAfter, 4e18);
+    borrowFacet.accureInterest(address(weth));
+    (, uint256 _actualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
+    assertEq(_actualDebtAmount, _expectedDebtAmount);
+    uint256 _bobNonCollatDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _tokenCollatDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
+    assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
+
+    uint256 _actualAccureTime = borrowFacet.debtLastAccureTime(address(weth));
+    assertEq(_actualAccureTime, block.timestamp);
+  }
+
+  function testCorrectness_WhenUsersBorrowSameTokenButDifferentInterestModel_ShouldAccureInterestCorrectly() external {
+    uint256 _aliceBorrowAmount = 15 ether;
+    uint256 _bobBorrowAmount = 15 ether;
+
+    vm.prank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), _aliceBorrowAmount * 2);
+
+    vm.prank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(btc), _bobBorrowAmount * 2);
+
+    uint256 _aliceBalanceBefore = btc.balanceOf(ALICE);
+    uint256 _bobBalanceBefore = btc.balanceOf(BOB);
+
+    vm.prank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(btc), _aliceBorrowAmount);
+
+    assertEq(btc.balanceOf(ALICE) - _aliceBalanceBefore, _aliceBorrowAmount);
+
+    vm.prank(BOB);
+    nonCollatBorrowFacet.nonCollatBorrow(address(btc), _bobBorrowAmount);
+
+    assertEq(btc.balanceOf(BOB) - _bobBalanceBefore, _bobBorrowAmount);
+
+    uint256 _secondPassed = 1 days;
+    vm.warp(block.timestamp + _secondPassed);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+
+    borrowFacet.accureInterest(address(btc));
+
+    // alice and bob both borrowed 15 on each, total is 30, pool has 100 btc, utilization = 30%
+    // for alice has interest rate = 6.1764705867600000% per year
+    // for bob has interest rate = 8.5714285713120000% per year
+    // 1 day passed _bobExpectedDebtAmount = debtAmount + (debtAmount * seconedPass * ratePerSec)
+    // alice = 15 + (15 * 1 * 0.061764705867600000/365) = 15.002538275583600000
+    // bob = 15 + (15 * 1 * 0.085714285713120000/365) = 15.003522504892320000
+    uint256 _aliceDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(btc));
+    assertEq(_aliceDebt, 15.002538275583600000 ether, "Alice debtAmount mismatch");
+    uint256 _bobDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(btc));
+    assertEq(_bobDebt, 15.003522504892320000 ether, "Bob debtAmount mismatch");
+
+    // assert Global
+    // from Alice 15.002538275583600000, Bob 15.003522504892320000 = 15.002538275583600000 + 15.003522504892320000 = 30.006060780475920000
+    assertEq(
+      nonCollatBorrowFacet.nonCollatGetTokenDebt(address(btc)),
+      30.006060780475920000 ether,
+      "Global debtValues missmatch"
+    );
   }
 }

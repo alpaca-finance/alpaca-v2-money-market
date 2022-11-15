@@ -42,5 +42,11 @@ interface IAdminFacet {
 
   function setRepurchasersOk(address[] memory list, bool _isOk) external;
 
+  function setNonCollatInterestModel(
+    address _account,
+    address _token,
+    address _model
+  ) external;
+
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
 }
