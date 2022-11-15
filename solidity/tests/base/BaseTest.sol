@@ -12,6 +12,8 @@ import { ChainLinkPriceOracle, IPriceOracle } from "../../contracts/oracle/Chain
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockWNative } from "../mocks/MockWNative.sol";
+import { MockWNativeRelayer } from "../mocks/MockWNativeRelayer.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
 import { console } from "../utils/console.sol";
@@ -28,6 +30,7 @@ contract BaseTest is DSTest {
 
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
+  MockWNative internal nativeToken;
   MockERC20 internal weth;
   MockERC20 internal usdc;
   MockERC20 internal btc;
@@ -39,8 +42,11 @@ contract BaseTest is DSTest {
   MockERC20 internal ibBtc;
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
+  MockERC20 internal ibWNative;
 
   IPriceOracle internal oracle;
+
+  MockWNativeRelayer nativeRelayer;
 
   constructor() {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
@@ -49,11 +55,15 @@ contract BaseTest is DSTest {
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
+    nativeToken = deployMockWNative();
 
     ibWeth = deployMockErc20("Inerest Bearing Wrapped Ethereum", "IBWETH", 18);
     ibBtc = deployMockErc20("Inerest Bearing Bitcoin", "IBBTC", 18);
     ibUsdc = deployMockErc20("Inerest USD COIN", "IBUSDC", 18);
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
+    ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
+
+    nativeRelayer = deployMockWNativeRelayer();
   }
 
   function deployMockErc20(
@@ -64,7 +74,15 @@ contract BaseTest is DSTest {
     return new MockERC20(name, symbol, decimals);
   }
 
+  function deployMockWNative() internal returns (MockWNative) {
+    return new MockWNative();
+  }
+
   function deployMockChainLinkPriceOracle() internal returns (MockChainLinkPriceOracle) {
     return new MockChainLinkPriceOracle();
+  }
+
+  function deployMockWNativeRelayer() internal returns (MockWNativeRelayer) {
+    return new MockWNativeRelayer(address(nativeToken));
   }
 }

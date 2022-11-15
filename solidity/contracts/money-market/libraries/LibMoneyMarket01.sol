@@ -44,6 +44,8 @@ library LibMoneyMarket01 {
 
   // Storage
   struct MoneyMarketDiamondStorage {
+    address nativeToken;
+    address nativeRelayer;
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) debtValues;

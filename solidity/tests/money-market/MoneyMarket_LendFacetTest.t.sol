@@ -164,4 +164,37 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(IERC20(_ibToken).balanceOf(ALICE), 5 ether);
     vm.stopPrank();
   }
+
+  function testCorrectness_WhenUserDepositETH_TokenShouldSafeTransferFromUserToMM() external {
+    vm.prank(ALICE);
+    lendFacet.depositETH{ value: 10 ether }();
+
+    assertEq(nativeToken.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 990 ether);
+    assertEq(nativeToken.balanceOf(moneyMarketDiamond), 10 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
+  }
+
+  function testCorrectness_WhenUserWithdrawETH_ShareShouldBurnedAndTransferTokenBackCorrectly() external {
+    // deposit first
+    vm.prank(ALICE);
+    lendFacet.depositETH{ value: 10 ether }();
+
+    assertEq(nativeToken.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 990 ether);
+    assertEq(nativeToken.balanceOf(moneyMarketDiamond), 10 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
+
+    // then withdraw 5
+    vm.prank(ALICE);
+    lendFacet.withdrawETH(address(ibWNative), 5 ether);
+
+    assertEq(nativeToken.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 995 ether);
+    assertEq(nativeToken.balanceOf(moneyMarketDiamond), 5 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 5 ether);
+  }
 }
