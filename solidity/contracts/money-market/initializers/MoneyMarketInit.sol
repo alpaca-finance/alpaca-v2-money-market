@@ -9,8 +9,7 @@ contract MoneyMarketInit {
   function init(address _nativeToken, address _nativeRelayer) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage ds = LibMoneyMarket01.moneyMarketDiamondStorage();
     if (_nativeToken == address(0) || _nativeRelayer == address(0)) revert MoneyMarketInit_InvalidAddress();
-    // todo: should we add state here to mark contract is initilized
-    ds.nativeToken = ds.nativeToken == address(0) ? _nativeToken : ds.nativeToken;
-    ds.nativeRelayer = ds.nativeRelayer == address(0) ? _nativeRelayer : ds.nativeRelayer;
+    ds.nativeToken = _nativeToken;
+    ds.nativeRelayer = _nativeRelayer;
   }
 }
