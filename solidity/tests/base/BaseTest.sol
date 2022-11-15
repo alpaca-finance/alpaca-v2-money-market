@@ -6,25 +6,9 @@ import { DSTest } from "./DSTest.sol";
 import { VM } from "../utils/VM.sol";
 import { console } from "../utils/console.sol";
 
-// core
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
-
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
 import { ChainLinkPriceOracle, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
-
-// facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
-import { LendFacet, ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { RepurchaseFacet, IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
-
-// initializers
-import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -33,6 +17,9 @@ import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol"
 import { console } from "../utils/console.sol";
 
 contract BaseTest is DSTest {
+  uint256 internal constant subAccount0 = 0;
+  uint256 internal constant subAccount1 = 1;
+
   address internal constant DEPLOYER = address(0x01);
   address internal constant ALICE = address(0x88);
   address internal constant BOB = address(0x168);
