@@ -6,6 +6,8 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 // interfaces
 import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -84,7 +86,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceBorrowAmount2 = 20 ether;
 
     vm.startPrank(ALICE);
-
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 

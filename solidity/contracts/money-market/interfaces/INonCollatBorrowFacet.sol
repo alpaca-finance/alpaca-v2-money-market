@@ -25,6 +25,8 @@ interface INonCollatBorrowFacet {
 
   function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256);
 
+  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256);
+
   // Errors
   error NonCollatBorrowFacet_InvalidToken(address _token);
   error NonCollatBorrowFacet_NotEnoughToken(uint256 _borrowAmount);

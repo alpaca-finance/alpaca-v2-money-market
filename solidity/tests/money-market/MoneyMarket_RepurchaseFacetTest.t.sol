@@ -20,7 +20,7 @@ struct CacheState {
   uint256 subAccountDebtShare;
 }
 
-contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_RepurchaseFacetTest is MoneyMarket_BaseTest {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);

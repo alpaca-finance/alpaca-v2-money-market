@@ -4,13 +4,13 @@ pragma solidity 0.8.17;
 // interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
-contract TripleSlopeModel6 {
-  uint256 public constant CEIL_SLOPE_1 = 85e18;
+contract TripleSlopeModel7 {
+  uint256 public constant CEIL_SLOPE_1 = 70e18;
   uint256 public constant CEIL_SLOPE_2 = 90e18;
   uint256 public constant CEIL_SLOPE_3 = 100e18;
 
-  uint256 public constant MAX_INTEREST_SLOPE_1 = 175e15;
-  uint256 public constant MAX_INTEREST_SLOPE_2 = 175e15;
+  uint256 public constant MAX_INTEREST_SLOPE_1 = 20e16;
+  uint256 public constant MAX_INTEREST_SLOPE_2 = 20e16;
   uint256 public constant MAX_INTEREST_SLOPE_3 = 150e16;
 
   /// @dev Return the interest rate per second, using 1e18 as denom.
