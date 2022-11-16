@@ -2,9 +2,11 @@
 pragma solidity 0.8.17;
 
 import { BaseTest, console } from "../base/BaseTest.sol";
+import { LYF_PreBaseTest } from "./LYF_PreBaseTest.t.sol";
 
 // core
 import { LYFDiamond } from "../../contracts/lyf/LYFDiamond.sol";
+import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
@@ -27,7 +29,7 @@ import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol"
 // libs
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-abstract contract LYF_BaseTest is BaseTest {
+abstract contract LYF_BaseTest is BaseTest, LYF_PreBaseTest {
   address internal lyfDiamond;
 
   IAdminFacet internal adminFacet;
@@ -36,6 +38,7 @@ abstract contract LYF_BaseTest is BaseTest {
   MockChainLinkPriceOracle chainLinkOracle;
 
   function setUp() public virtual {
+    preSetUp();
     (lyfDiamond) = deployPoolDiamond();
 
     adminFacet = IAdminFacet(lyfDiamond);
@@ -107,17 +110,6 @@ abstract contract LYF_BaseTest is BaseTest {
     );
   }
 
-  function buildFacetCut(
-    address facet,
-    IDiamondCut.FacetCutAction cutAction,
-    bytes4[] memory selectors
-  ) internal pure returns (IDiamondCut.FacetCut[] memory) {
-    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
-    facetCuts[0] = IDiamondCut.FacetCut({ action: cutAction, facetAddress: facet, functionSelectors: selectors });
-
-    return facetCuts;
-  }
-
   function deployDiamondLoupeFacet(DiamondCutFacet diamondCutFacet)
     internal
     returns (DiamondLoupeFacet, bytes4[] memory)
@@ -143,10 +135,11 @@ abstract contract LYF_BaseTest is BaseTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = AdminFacet.setOracle.selector;
     selectors[1] = AdminFacet.oracle.selector;
     selectors[2] = AdminFacet.setTokenConfigs.selector;
+    selectors[3] = AdminFacet.setMoneyMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -179,5 +172,16 @@ abstract contract LYF_BaseTest is BaseTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_collatFacet, _selectors);
+  }
+
+  function buildFacetCut(
+    address facet,
+    IDiamondCut.FacetCutAction cutAction,
+    bytes4[] memory selectors
+  ) internal pure returns (IDiamondCut.FacetCut[] memory) {
+    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
+    facetCuts[0] = IDiamondCut.FacetCut({ action: cutAction, facetAddress: facet, functionSelectors: selectors });
+
+    return facetCuts;
   }
 }
