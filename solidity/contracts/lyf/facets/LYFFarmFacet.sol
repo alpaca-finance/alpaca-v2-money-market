@@ -12,6 +12,7 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 
 // interfaces
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
+import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
@@ -32,7 +33,46 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
     uint256 _minLpReceive
-  ) external {}
+  ) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    address _subaccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
+
+    // 1. check subaccount collat
+    uint256 _token0AmountFromCollat = _removeCollat(_subaccount, _token0, _desireToken0Amount, lyfDs);
+    uint256 _token1AmountFromCollat = _removeCollat(_subaccount, _token1, _desireToken1Amount, lyfDs);
+
+    /* borrow from mm 
+    if (_token0AmountFromCollat < _desireToken0Amount) {
+      _pullFunds();
+    }
+
+    if (_token1AmountFromCollat < _desireToken1Amount) {
+      _pullFunds();
+    }
+    */
+
+    // 4. compose lp
+    // 5. add it to collateral
+    // 6. health check on sub account
+  }
+
+  function _removeCollat(
+    address _subaccount,
+    address _token,
+    uint256 _amount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualAmountRemove) {
+    LibDoublyLinkedList.List storage _subAccountCollatList = lyfDs.subAccountCollats[_subaccount];
+    uint256 _currentAmount = _subAccountCollatList.getAmount(_token);
+    if (_currentAmount > 0) {
+      _actualAmountRemove = _currentAmount > _amount ? _amount : _currentAmount;
+      _subAccountCollatList.updateOrRemove(_token, _currentAmount - _actualAmountRemove);
+    }
+  }
 
   function repay(
     address _account,

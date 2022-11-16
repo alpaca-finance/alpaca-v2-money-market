@@ -24,6 +24,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
 // libs
@@ -35,6 +36,8 @@ abstract contract LYF_BaseTest is BaseTest {
   IAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
   ILYFFarmFacet internal farmFacet;
+
+  MockLPToken internal wethUsdcLPToken;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -81,6 +84,8 @@ abstract contract LYF_BaseTest is BaseTest {
     });
 
     adminFacet.setTokenConfigs(_inputs);
+
+    wethUsdcLPToken = new MockLPToken(address(weth), address(usdc));
   }
 
   function deployPoolDiamond() internal returns (address) {
