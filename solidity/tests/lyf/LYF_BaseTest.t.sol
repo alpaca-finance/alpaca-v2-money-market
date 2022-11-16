@@ -57,7 +57,7 @@ abstract contract LYF_BaseTest is BaseTest, LYF_PreBaseTest {
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -74,6 +74,16 @@ abstract contract LYF_BaseTest is BaseTest, LYF_PreBaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
+      maxBorrow: 1e24,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[2] = IAdminFacet.TokenConfigInput({
+      token: address(ibWeth),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
       maxBorrow: 1e24,
       maxCollateral: 10e24,
       maxToleranceExpiredSecond: block.timestamp
