@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
