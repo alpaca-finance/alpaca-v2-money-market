@@ -43,6 +43,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     adminFacet = IAdminFacet(lyfDiamond);
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
+    farmFacet = ILYFFarmFacet(lyfDiamond);
 
     weth.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
@@ -148,7 +149,7 @@ abstract contract LYF_BaseTest is BaseTest {
     LYFFarmFacet _farmFacet = new LYFFarmFacet();
 
     bytes4[] memory selectors = new bytes4[](12);
-    selectors[0] = _farmFacet.borrow.selector;
+    selectors[0] = _farmFacet.addFarmPosition.selector;
     selectors[1] = _farmFacet.getDebtShares.selector;
     selectors[2] = _farmFacet.getTotalBorrowingPower.selector;
     selectors[3] = _farmFacet.getTotalUsedBorrowedPower.selector;

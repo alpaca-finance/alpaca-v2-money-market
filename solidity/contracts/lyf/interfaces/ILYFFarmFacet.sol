@@ -4,10 +4,12 @@ pragma solidity 0.8.17;
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface ILYFFarmFacet {
-  function borrow(
+  function addFarmPosition(
     uint256 _subAccountId,
-    address _token,
-    uint256 _amount
+    address _lpToken,
+    uint256 _desireToken0Amount,
+    uint256 _desireToken1Amount,
+    uint256 _minLpReceive
   ) external;
 
   function repay(

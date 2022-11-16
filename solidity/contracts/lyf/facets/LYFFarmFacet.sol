@@ -26,45 +26,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
 
-  function borrow(
+  function addFarmPosition(
     uint256 _subAccountId,
-    address _token,
-    uint256 _amount
-  ) external {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
-    // interest must accure first
-    // todo: bring back interest
-    // LibLYF01.accureInterest(_token, lyfDs);
-
-    _validate(_subAccount, _token, _amount, lyfDs);
-
-    LibDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
-
-    if (userDebtShare.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      userDebtShare.init();
-    }
-
-    uint256 _totalSupply = lyfDs.debtShares[_token];
-    uint256 _totalValue = lyfDs.debtValues[_token];
-
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_totalSupply, _amount, _totalValue);
-
-    // update over collat debt
-    lyfDs.debtShares[_token] += _shareToAdd;
-    lyfDs.debtValues[_token] += _amount;
-
-    // update global debt
-    lyfDs.globalDebts[_token] += _amount;
-
-    uint256 _newShareAmount = userDebtShare.getAmount(_token) + _shareToAdd;
-
-    // update user's debtshare
-    userDebtShare.addOrUpdate(_token, _newShareAmount);
-
-    ERC20(_token).safeTransfer(msg.sender, _amount);
-  }
+    address _lpToken,
+    uint256 _desireToken0Amount,
+    uint256 _desireToken1Amount,
+    uint256 _minLpReceive
+  ) external {}
 
   function repay(
     address _account,
