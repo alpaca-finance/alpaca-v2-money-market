@@ -11,6 +11,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/Diamond
 import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
 import { AdminFacet } from "../../contracts/lyf/facets/AdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
+import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
@@ -18,6 +19,7 @@ import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 // interfaces
 import { IAdminFacet } from "../../contracts/lyf/interfaces/IAdminFacet.sol";
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -32,6 +34,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
   IAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
+  ILYFFarmFacet internal farmFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -88,6 +91,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     deployAdminFacet(DiamondCutFacet(address(_lyfDiamond)));
     deployLYFCollateralFacet(DiamondCutFacet(address(_lyfDiamond)));
+    deployLYFFarmFacet(DiamondCutFacet(address(_lyfDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_lyfDiamond)));
 
@@ -138,6 +142,33 @@ abstract contract LYF_BaseTest is BaseTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_diamondLoupeFacet, selectors);
+  }
+
+  function deployLYFFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFFarmFacet, bytes4[] memory) {
+    LYFFarmFacet _farmFacet = new LYFFarmFacet();
+
+    bytes4[] memory selectors = new bytes4[](12);
+    selectors[0] = _farmFacet.borrow.selector;
+    selectors[1] = _farmFacet.getDebtShares.selector;
+    selectors[2] = _farmFacet.getTotalBorrowingPower.selector;
+    selectors[3] = _farmFacet.getTotalUsedBorrowedPower.selector;
+    selectors[4] = _farmFacet.getDebt.selector;
+    selectors[5] = _farmFacet.repay.selector;
+    selectors[6] = _farmFacet.getGlobalDebt.selector;
+    selectors[7] = _farmFacet.debtLastAccureTime.selector;
+    selectors[8] = _farmFacet.pendingInterest.selector;
+    selectors[9] = _farmFacet.accureInterest.selector;
+    selectors[10] = _farmFacet.debtValues.selector;
+    selectors[11] = _farmFacet.debtShares.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_farmFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_farmFacet, selectors);
   }
 
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {

@@ -45,6 +45,11 @@ library LibLYF01 {
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
+    mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
+    mapping(address => uint256) debtShares;
+    mapping(address => uint256) debtValues;
+    mapping(address => uint256) globalDebts;
+    mapping(address => uint256) debtLastAccureTime;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -65,6 +70,14 @@ library LibLYF01 {
   ) internal {
     lyfDs.tokenConfigs[_token] = _config;
   }
+
+  function pendingInterest(address _token, LYFDiamondStorage storage lyfDs)
+    internal
+    view
+    returns (uint256 _pendingInterest)
+  {}
+
+  function accureInterest(address _token, LYFDiamondStorage storage lyfDs) internal {}
 
   // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
