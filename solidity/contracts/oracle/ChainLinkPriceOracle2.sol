@@ -17,7 +17,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IAggregatorV3 } from "./interfaces/IAggregatorV3.sol";
 
-contract ChainLinkPriceOracle is OwnableUpgradeable, IPriceOracle {
+contract ChainLinkPriceOracle2 is OwnableUpgradeable, IPriceOracle {
   /// ---------------------------------------------------
   /// Errors
   /// ---------------------------------------------------
