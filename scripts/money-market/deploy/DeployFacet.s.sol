@@ -35,22 +35,13 @@ contract DeployFacet is Script {
 
   function _deployFacet(address owner) internal {
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
-    console.log("diamondCutFacet", address(diamondCutFacet));
     DiamondLoupeFacet loupeFacet = new DiamondLoupeFacet();
-    console.log("loupeFacet", address(loupeFacet));
     LendFacet lendFacet = new LendFacet();
-    console.log("lendFacet", address(lendFacet));
     CollateralFacet collatFacet = new CollateralFacet();
-    console.log("collatFacet", address(collatFacet));
     BorrowFacet borrowFacet = new BorrowFacet();
-    console.log("borrowFacet", address(borrowFacet));
     NonCollatBorrowFacet nonCollatFacet = new NonCollatBorrowFacet();
-    console.log("nonCollatFacet", address(nonCollatFacet));
     AdminFacet adminFacet = new AdminFacet();
-    console.log("adminFacet", address(adminFacet));
     RepurchaseFacet repurchaseFacet = new RepurchaseFacet();
-    console.log("repurchaseFacet", address(repurchaseFacet));
     DiamondInit diamondInit = new DiamondInit();
-    console.log("diamondInit", address(diamondInit));
   }
 }
