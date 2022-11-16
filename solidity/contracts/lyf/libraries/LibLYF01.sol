@@ -41,6 +41,7 @@ library LibLYF01 {
 
   // Storage
   struct LYFDiamondStorage {
+    address moneyMarket;
     IPriceOracle oracle;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;

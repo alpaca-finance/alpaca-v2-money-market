@@ -37,4 +37,9 @@ contract AdminFacet is IAdminFacet {
       }
     }
   }
+
+  function setMoneyMarket(address _moneyMarket) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.moneyMarket = _moneyMarket;
+  }
 }
