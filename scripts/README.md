@@ -17,4 +17,11 @@ RUN `source .env`
 
 
 
+CONFIG PART
+
+`forge script scripts/money-market/config/SetTokenConfig.s.sol:SetTokenConfig --rpc-url $BSC_RPC_URL --broadcast --unlocked --sender $DEPLOYER`
+`forge script scripts/oracle/config/SetSourceChainLinkOracle.s.sol:SetSourceChainLinkOracle --rpc-url $BSC_RPC_URL --broadcast --unlocked --sender $DEPLOYER`
+
+
+
 EXAMPLE RUN SCRIPT `forge script scripts/oracle/deploy/SimplePriceOracle.s.sol:MyScript -f $BSC_RPC_URL --broadcast --unlocked --sender $DEPLOYER -vvvv`

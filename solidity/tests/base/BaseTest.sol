@@ -11,7 +11,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
-import { ChainLinkPriceOracle, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
+import { ChainLinkPriceOracle2, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";

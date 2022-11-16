@@ -119,7 +119,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
 
     adminFacet.setTokenConfigs(_inputs);
-    (_inputs);
 
     // open isolate token market
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
