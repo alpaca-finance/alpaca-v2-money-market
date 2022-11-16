@@ -27,8 +27,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _borrowAmount * 2);
 
-    uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 0, address(addStrat));
     vm.stopPrank();
 

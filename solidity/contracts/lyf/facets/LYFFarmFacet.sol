@@ -63,7 +63,15 @@ contract LYFFarmFacet is ILYFFarmFacet {
     ERC20(_token1).safeTransfer(_addStrat, _token1AmountFromCollat);
 
     // 4. compose lp
-    IStrat(_addStrat).composeLPToken(_token0, _token1, _lpToken, _token0AmountFromCollat, _token1AmountFromCollat, 0);
+    IStrat(_addStrat).composeLPToken(
+      _token0,
+      _token1,
+      _lpToken,
+      _token0AmountFromCollat,
+      _token1AmountFromCollat,
+      _minLpReceive
+    );
+
     // 5. add it to collateral
     // 6. health check on sub account
   }
