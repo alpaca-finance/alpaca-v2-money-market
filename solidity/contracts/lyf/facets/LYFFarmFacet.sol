@@ -71,6 +71,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (_currentAmount > 0) {
       _actualAmountRemove = _currentAmount > _amount ? _amount : _currentAmount;
       _subAccountCollatList.updateOrRemove(_token, _currentAmount - _actualAmountRemove);
+
+      // update global collat
+      lyfDs.collats[_token] -= _actualAmountRemove;
     }
   }
 

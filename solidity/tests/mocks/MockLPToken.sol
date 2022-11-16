@@ -9,4 +9,8 @@ contract MockLPToken {
     token0 = _token0;
     token1 = _token1;
   }
+
+  function getReserves() external pure returns (uint256, uint256) {
+    return (1e30, 1e30);
+  }
 }

@@ -21,14 +21,19 @@ import { IAdminFacet } from "../../contracts/lyf/interfaces/IAdminFacet.sol";
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
+import { MockRouter } from "../mocks/MockRouter.sol";
 
 // libs
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+
+// peripherals
+import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
 
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
@@ -40,6 +45,9 @@ abstract contract LYF_BaseTest is BaseTest {
   MockLPToken internal wethUsdcLPToken;
 
   MockChainLinkPriceOracle chainLinkOracle;
+
+  MockRouter internal mockRouter;
+  PancakeswapV2StrategyAddTwoSidesOptimal internal addStrat;
 
   function setUp() public virtual {
     (lyfDiamond) = deployPoolDiamond();
@@ -86,6 +94,10 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setTokenConfigs(_inputs);
 
     wethUsdcLPToken = new MockLPToken(address(weth), address(usdc));
+
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
+
+    addStrat = new PancakeswapV2StrategyAddTwoSidesOptimal(IPancakeRouter02(address(mockRouter)));
   }
 
   function deployPoolDiamond() internal returns (address) {
