@@ -11,6 +11,8 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
 library LibLYF01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -82,17 +84,16 @@ library LibLYF01 {
       uint256 _collatAmount = _collats[_i].amount;
       uint256 _actualAmount = _collatAmount;
 
-      // todo: support ibToken?
       // will return address(0) if _collatToken is not ibToken
-      // address _actualToken = lyfDs.ibTokenToTokens[_collatToken];
-      // if (_actualToken == address(0)) {
-      //   _actualToken = _collatToken;
-      // } else {
-      //   uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
-      //   uint256 _totalToken = getTotalToken(_actualToken, lyfDs);
+      address _actualToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
+      if (_actualToken == address(0)) {
+        _actualToken = _collatToken;
+      } else {
+        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
+        uint256 _totalToken = getTotalToken(_actualToken, lyfDs);
 
-      //   _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
-      // }
+        _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
+      }
 
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
 

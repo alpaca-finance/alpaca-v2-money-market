@@ -80,6 +80,8 @@ abstract contract LYF_BaseTest is BaseTest, LYF_PreBaseTest {
     });
 
     adminFacet.setTokenConfigs(_inputs);
+
+    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
   }
 
   function deployPoolDiamond() internal returns (address) {
