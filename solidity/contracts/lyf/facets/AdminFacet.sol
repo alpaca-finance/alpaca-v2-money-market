@@ -16,4 +16,25 @@ contract AdminFacet is IAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     return address(lyfDs.oracle);
   }
+
+  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _inputLength = _tokenConfigs.length;
+    for (uint8 _i; _i < _inputLength; ) {
+      LibLYF01.TokenConfig memory _tokenConfig = LibLYF01.TokenConfig({
+        tier: _tokenConfigs[_i].tier,
+        collateralFactor: _tokenConfigs[_i].collateralFactor,
+        borrowingFactor: _tokenConfigs[_i].borrowingFactor,
+        maxCollateral: _tokenConfigs[_i].maxCollateral,
+        maxBorrow: _tokenConfigs[_i].maxBorrow,
+        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond
+      });
+
+      LibLYF01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, lyfDs);
+
+      unchecked {
+        _i++;
+      }
+    }
+  }
 }

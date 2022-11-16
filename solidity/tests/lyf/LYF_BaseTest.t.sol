@@ -9,13 +9,15 @@ import { LYFDiamond } from "../../contracts/lyf/LYFDiamond.sol";
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
-import { AdminFacet, IAdminFacet } from "../../contracts/lyf/facets/AdminFacet.sol";
+import { AdminFacet } from "../../contracts/lyf/facets/AdminFacet.sol";
+import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 
 // interfaces
-import { IAdminFacet } from "../../contracts/lyf/facets/AdminFacet.sol";
+import { IAdminFacet } from "../../contracts/lyf/interfaces/IAdminFacet.sol";
+import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -29,6 +31,7 @@ abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
 
   IAdminFacet internal adminFacet;
+  ILYFCollateralFacet internal collateralFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -36,6 +39,44 @@ abstract contract LYF_BaseTest is BaseTest {
     (lyfDiamond) = deployPoolDiamond();
 
     adminFacet = IAdminFacet(lyfDiamond);
+    collateralFacet = ILYFCollateralFacet(lyfDiamond);
+
+    weth.mint(ALICE, 1000 ether);
+    usdc.mint(ALICE, 1000 ether);
+    weth.mint(BOB, 1000 ether);
+    usdc.mint(BOB, 1000 ether);
+    vm.startPrank(ALICE);
+    weth.approve(lyfDiamond, type(uint256).max);
+    usdc.approve(lyfDiamond, type(uint256).max);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    weth.approve(lyfDiamond, type(uint256).max);
+    usdc.approve(lyfDiamond, type(uint256).max);
+    vm.stopPrank();
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
+
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[1] = IAdminFacet.TokenConfigInput({
+      token: address(usdc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 1e24,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    adminFacet.setTokenConfigs(_inputs);
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -46,6 +87,7 @@ abstract contract LYF_BaseTest is BaseTest {
     LYFDiamond _lyfDiamond = new LYFDiamond(address(this), address(diamondCutFacet));
 
     deployAdminFacet(DiamondCutFacet(address(_lyfDiamond)));
+    deployLYFCollateralFacet(DiamondCutFacet(address(_lyfDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_lyfDiamond)));
 
@@ -101,9 +143,10 @@ abstract contract LYF_BaseTest is BaseTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = AdminFacet.setOracle.selector;
     selectors[1] = AdminFacet.oracle.selector;
+    selectors[2] = AdminFacet.setTokenConfigs.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -113,5 +156,28 @@ abstract contract LYF_BaseTest is BaseTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_adminFacet, selectors);
+  }
+
+  function deployLYFCollateralFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (LYFCollateralFacet _collatFacet, bytes4[] memory _selectors)
+  {
+    _collatFacet = new LYFCollateralFacet();
+
+    _selectors = new bytes4[](5);
+    _selectors[0] = LYFCollateralFacet.addCollateral.selector;
+    _selectors[1] = LYFCollateralFacet.removeCollateral.selector;
+    _selectors[2] = LYFCollateralFacet.collats.selector;
+    _selectors[3] = LYFCollateralFacet.subAccountCollatAmount.selector;
+    _selectors[4] = LYFCollateralFacet.getCollaterals.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_collatFacet),
+      IDiamondCut.FacetCutAction.Add,
+      _selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_collatFacet, _selectors);
   }
 }
