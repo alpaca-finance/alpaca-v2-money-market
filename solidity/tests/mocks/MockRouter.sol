@@ -132,8 +132,11 @@ contract MockRouter {
     amountA = amountADesired;
     amountB = amountBDesired;
     liquidity = (amountADesired + amountBDesired) / 2;
+
     IERC20Upgradeable(tokenA).safeTransferFrom(msg.sender, address(this), amountADesired);
+
     IERC20Upgradeable(tokenB).safeTransferFrom(msg.sender, address(this), amountBDesired);
+
     IERC20Upgradeable(lpToken).safeTransfer(msg.sender, liquidity);
   }
 }

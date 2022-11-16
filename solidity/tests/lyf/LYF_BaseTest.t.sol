@@ -93,11 +93,13 @@ abstract contract LYF_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
-    wethUsdcLPToken = new MockLPToken(address(weth), address(usdc));
+    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
     addStrat = new PancakeswapV2StrategyAddTwoSidesOptimal(IPancakeRouter02(address(mockRouter)));
+
+    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
   }
 
   function deployPoolDiamond() internal returns (address) {

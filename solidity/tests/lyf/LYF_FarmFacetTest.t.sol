@@ -25,10 +25,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _borrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 0);
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 0, address(addStrat));
     vm.stopPrank();
 
     // asset collat of subaccount
@@ -37,6 +38,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     uint256 _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
 
     assertEq(_subAccountWethCollat, 10 ether);
-    assertEq(_subAccountUsdcCollat, 0);
+    assertEq(_subAccountUsdcCollat, 10 ether);
   }
 }

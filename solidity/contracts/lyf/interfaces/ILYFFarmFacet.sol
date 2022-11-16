@@ -9,7 +9,8 @@ interface ILYFFarmFacet {
     address _lpToken,
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
-    uint256 _minLpReceive
+    uint256 _minLpReceive,
+    address _addStrat
   ) external;
 
   function repay(

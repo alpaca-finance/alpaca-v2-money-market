@@ -13,6 +13,7 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 // interfaces
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
+import { IStrat } from "../interfaces/IStrat.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
@@ -32,7 +33,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _lpToken,
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
-    uint256 _minLpReceive
+    uint256 _minLpReceive,
+    address _addStrat
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
@@ -55,7 +57,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
     */
 
+    // 3. send token to strat
+
+    ERC20(_token0).safeTransfer(_addStrat, _token0AmountFromCollat);
+    ERC20(_token1).safeTransfer(_addStrat, _token1AmountFromCollat);
+
     // 4. compose lp
+    IStrat(_addStrat).composeLPToken(_token0, _token1, _lpToken, _token0AmountFromCollat, _token1AmountFromCollat, 0);
     // 5. add it to collateral
     // 6. health check on sub account
   }

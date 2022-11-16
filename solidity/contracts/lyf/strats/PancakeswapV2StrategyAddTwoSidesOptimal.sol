@@ -18,11 +18,14 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
+import { IStrat } from "../interfaces/IStrat.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 // todo: reentrance
-contract PancakeswapV2StrategyAddTwoSidesOptimal {
+contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
   using SafeERC20 for address;
 
   error PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
@@ -68,7 +71,7 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal {
     uint256 resA,
     uint256 resB
   ) internal pure returns (uint256) {
-    if (amtA * (resB) >= amtB * (resA)) {
+    if (amtA * (resB) < amtB * (resA)) {
       revert PancakeswapV2StrategyAddTwoSidesOptimal_Reverse();
     }
 
@@ -122,10 +125,10 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal {
       address(this),
       block.timestamp
     );
-    if (moreLPAmount >= _minLPAmount) {
+    if (moreLPAmount < _minLPAmount) {
       revert PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
     }
-    if (lpToken.transfer(msg.sender, lpToken.balanceOf(address(this)))) {
+    if (!lpToken.transfer(msg.sender, lpToken.balanceOf(address(this)))) {
       revert PancakeswapV2StrategyAddTwoSidesOptimal_TransferFailed();
     }
     // 7. Reset approve to 0 for safety reason
