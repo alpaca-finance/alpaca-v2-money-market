@@ -47,15 +47,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _token0AmountFromCollat = LibLYF01._removeCollateral(_subaccount, _token0, _desireToken0Amount, lyfDs);
     uint256 _token1AmountFromCollat = LibLYF01._removeCollateral(_subaccount, _token1, _desireToken1Amount, lyfDs);
 
-    /* borrow from mm 
-    if (_token0AmountFromCollat < _desireToken0Amount) {
-      _pullFunds();
-    }
-
-    if (_token1AmountFromCollat < _desireToken1Amount) {
-      _pullFunds();
-    }
-    */
+    // TODO: 2. borrow from mm if collats do not cover the desire amount
 
     // 3. send token to strat
 
@@ -72,10 +64,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
+    // 5. add it to collateral
     LibLYF01.addCollat(_subaccount, _lpToken, _lpReceived, lyfDs);
 
-    // 5. add it to collateral
-    // 6. health check on sub account
+    // TODO: 6. health check on sub account
   }
 
   function repay(
