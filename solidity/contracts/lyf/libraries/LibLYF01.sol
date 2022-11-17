@@ -197,7 +197,7 @@ library LibLYF01 {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       _amountAdded = LibShareUtil.valueToShareRoundingUp(lyfDs.lpShares[_token], _amount, lyfDs.lpValues[_token]);
 
-      // update global state
+      // update lp global state
       lyfDs.lpShares[_token] += _amountAdded;
       lyfDs.lpValues[_token] += _amount;
     }
