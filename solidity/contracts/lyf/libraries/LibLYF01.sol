@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -27,9 +27,8 @@ library LibLYF01 {
 
   enum AssetTier {
     UNLISTED,
-    ISOLATE,
-    CROSS,
-    COLLATERAL
+    COLLATERAL,
+    LP
   }
 
   struct TokenConfig {
@@ -48,6 +47,13 @@ library LibLYF01 {
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
+    mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
+    mapping(address => uint256) debtShares;
+    mapping(address => uint256) debtValues;
+    mapping(address => uint256) globalDebts;
+    mapping(address => uint256) debtLastAccureTime;
+    mapping(address => uint256) lpShares;
+    mapping(address => uint256) lpValues;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -68,6 +74,14 @@ library LibLYF01 {
   ) internal {
     lyfDs.tokenConfigs[_token] = _config;
   }
+
+  function pendingInterest(address _token, LYFDiamondStorage storage lyfDs)
+    internal
+    view
+    returns (uint256 _pendingInterest)
+  {}
+
+  function accureInterest(address _token, LYFDiamondStorage storage lyfDs) internal {}
 
   // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
@@ -163,5 +177,69 @@ library LibLYF01 {
     uint256 _borrowingFactor
   ) internal pure returns (uint256 _usedBorrowedPower) {
     _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
+  }
+
+  function addCollat(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _amountAdded) {
+    // update subaccount state
+    LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subAccount];
+    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      subAccountCollateralList.init();
+    }
+    uint256 _currentAmount = subAccountCollateralList.getAmount(_token);
+
+    _amountAdded = _amount;
+    // If collat is LP take collat as a share, not direct amount
+    if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      _amountAdded = LibShareUtil.valueToShareRoundingUp(lyfDs.lpShares[_token], _amount, lyfDs.lpValues[_token]);
+
+      // update lp global state
+      lyfDs.lpShares[_token] += _amountAdded;
+      lyfDs.lpValues[_token] += _amount;
+    }
+
+    subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
+
+    lyfDs.collats[_token] += _amount;
+  }
+
+  function removeCollateral(
+    address _subAccount,
+    address _token,
+    uint256 _removeAmount,
+    LibLYF01.LYFDiamondStorage storage ds
+  ) internal returns (uint256 _amountRemoved) {
+    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+
+    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
+    if (_collateralAmount > 0) {
+      _amountRemoved = _removeAmount > _collateralAmount ? _collateralAmount : _removeAmount;
+
+      _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
+
+      // If LP token, handle extra step
+      if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
+        _amountRemoved = LibShareUtil.shareToValue(_removeAmount, ds.lpValues[_token], ds.lpShares[_token]);
+
+        ds.lpShares[_token] -= _removeAmount;
+        ds.lpValues[_token] -= _amountRemoved;
+      }
+
+      ds.collats[_token] -= _amountRemoved;
+    }
+  }
+
+  function isSubaccountHealthy(address _subAccount, LibLYF01.LYFDiamondStorage storage ds)
+    internal
+    view
+    returns (bool)
+  {
+    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
+    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
+    return _totalBorrowingPower >= _totalUsedBorrowedPower;
   }
 }

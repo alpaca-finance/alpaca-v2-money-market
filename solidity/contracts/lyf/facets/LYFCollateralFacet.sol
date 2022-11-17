@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -44,15 +44,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
-    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      subAccountCollateralList.init();
-    }
+    LibLYF01.addCollat(_subAccount, _token, _amount, ds);
 
-    uint256 _newAmount = subAccountCollateralList.getAmount(_token) + _amount;
-    subAccountCollateralList.addOrUpdate(_token, _newAmount);
-
-    ds.collats[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
@@ -69,14 +62,16 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     // LibLYF01.accureInterest(_token, ds);
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+    uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, ds);
 
-    _removeCollateral(_subAccount, _token, _amount, ds);
+    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, ds)) {
+      revert LYFCollateralFacet_BorrowingPowerTooLow();
+    }
 
-    ds.collats[_token] -= _amount;
+    ERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
 
-    ERC20(_token).safeTransfer(msg.sender, _amount);
-
-    emit LogRemoveCollateral(_subAccount, _token, _amount);
+    emit LogRemoveCollateral(_subAccount, _token, _actualAmountRemoved);
   }
 
   function transferCollateral(
@@ -92,18 +87,17 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
 
-    _removeCollateral(_fromSubAccount, _token, _amount, ds);
+    uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
+
+    if (!LibLYF01.isSubaccountHealthy(_fromSubAccount, ds)) {
+      revert LYFCollateralFacet_BorrowingPowerTooLow();
+    }
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibDoublyLinkedList.List storage toSubAccountCollateralList = ds.subAccountCollats[_toSubAccount];
-    if (toSubAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      toSubAccountCollateralList.init();
-    }
-    uint256 _newAmount = toSubAccountCollateralList.getAmount(_token) + _amount;
-    toSubAccountCollateralList.addOrUpdate(_token, _newAmount);
+    LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 
-    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
+    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
   }
 
   function getCollaterals(address _account, uint256 _subAccountId)
@@ -138,30 +132,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     if (_collateralAmount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral) {
       revert LYFCollateralFacet_ExceedCollateralLimit();
-    }
-  }
-
-  function _removeCollateral(
-    address _subAccount,
-    address _token,
-    uint256 _removeAmount,
-    LibLYF01.LYFDiamondStorage storage ds
-  ) internal {
-    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
-
-    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
-
-    if (_removeAmount > _collateralAmount) {
-      revert LYFCollateralFacet_TooManyCollateralRemoved();
-    }
-
-    _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _removeAmount);
-    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, ds);
-
-    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
-    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
-      revert LYFCollateralFacet_BorrowingPowerTooLow();
     }
   }
 }

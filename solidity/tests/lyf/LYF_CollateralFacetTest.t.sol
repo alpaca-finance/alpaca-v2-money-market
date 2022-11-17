@@ -106,7 +106,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenUserRemoveLYFCollateralMoreThanExistingAmount_ShouldRevert() external {
+  function testRevert_WhenUserRemoveLYFCollateralMoreThanExistingAmount_ShouldOnlyRemoveTheExisitingAmount() external {
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, 10 ether);
     collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
@@ -116,8 +116,10 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     assertEq(weth.balanceOf(lyfDiamond), 10 ether);
 
     vm.prank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_TooManyCollateralRemoved.selector));
-    collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
+    collateralFacet.removeCollateral(subAccount0, address(weth), 20 ether);
+
+    assertEq(weth.balanceOf(ALICE), 1000 ether);
+    assertEq(weth.balanceOf(lyfDiamond), 0 ether);
   }
 
   // todo: this test should has deebt thing to calculate borrowed used power
@@ -146,7 +148,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserRemoveLYFCollateral_ShouldWork() external {
     uint256 _balanceBefore = weth.balanceOf(ALICE);
-    uint256 _MMbalanceBefore = weth.balanceOf(lyfDiamond);
+    uint256 _lyfBalanceBefore = weth.balanceOf(lyfDiamond);
 
     uint256 _addCollateralAmount = 10 ether;
     uint256 _removeCollateralAmount = _addCollateralAmount;
@@ -156,7 +158,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
-    assertEq(weth.balanceOf(lyfDiamond), _MMbalanceBefore + _addCollateralAmount);
+    assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore + _addCollateralAmount);
     assertEq(collateralFacet.collats(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
@@ -166,7 +168,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     // uint256 _borrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
-    assertEq(weth.balanceOf(lyfDiamond), _MMbalanceBefore);
+    assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore);
     // assertEq(_borrowingPower, 0);
     assertEq(collateralFacet.collats(address(weth)), 0);
   }

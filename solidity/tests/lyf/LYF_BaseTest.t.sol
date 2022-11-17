@@ -12,6 +12,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/Diamond
 import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
 import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
+import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
@@ -19,15 +20,22 @@ import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 // interfaces
 import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
+import { MockRouter } from "../mocks/MockRouter.sol";
 
 // libs
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+
+// peripherals
+import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
 
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
@@ -39,15 +47,23 @@ abstract contract LYF_BaseTest is BaseTest {
 
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
+  ILYFFarmFacet internal farmFacet;
+
+  MockLPToken internal wethUsdcLPToken;
 
   MockChainLinkPriceOracle chainLinkOracle;
+
+  MockRouter internal mockRouter;
+  PancakeswapV2StrategyAddTwoSidesOptimal internal addStrat;
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    setUpMM();
 
     adminFacet = LYFAdminFacet(lyfDiamond);
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
+    farmFacet = ILYFFarmFacet(lyfDiamond);
 
     weth.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
@@ -96,7 +112,26 @@ abstract contract LYF_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
+    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
+
+    addStrat = new PancakeswapV2StrategyAddTwoSidesOptimal(IPancakeRouter02(address(mockRouter)));
+
+    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
+
+    // set oracle for LYF
+
+    chainLinkOracle = deployMockChainLinkPriceOracle();
+    IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
+    vm.stopPrank();
   }
 
   function setUpMM() internal {
