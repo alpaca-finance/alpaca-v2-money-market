@@ -64,6 +64,25 @@ contract BaseTest is DSTest {
     ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
 
     nativeRelayer = deployMockWNativeRelayer();
+
+    vm.deal(ALICE, 1000 ether);
+
+    weth.mint(ALICE, 1000 ether);
+    btc.mint(ALICE, 1000 ether);
+    usdc.mint(ALICE, 1000 ether);
+    opm.mint(ALICE, 1000 ether);
+    isolateToken.mint(ALICE, 1000 ether);
+
+    weth.mint(EVE, 1000 ether);
+    btc.mint(EVE, 1000 ether);
+    usdc.mint(EVE, 1000 ether);
+    opm.mint(EVE, 1000 ether);
+    isolateToken.mint(EVE, 1000 ether);
+
+    weth.mint(BOB, 1000 ether);
+    btc.mint(BOB, 1000 ether);
+    usdc.mint(BOB, 1000 ether);
+    isolateToken.mint(BOB, 1000 ether);
   }
 
   function deployMockErc20(

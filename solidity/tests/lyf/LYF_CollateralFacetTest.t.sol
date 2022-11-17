@@ -16,11 +16,13 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenAddLYFCollateral_TokenShouldTransferFromUserToMM() external {
     vm.startPrank(ALICE);
+    uint256 _aliceBalanceBefore = weth.balanceOf(ALICE);
     weth.approve(lyfDiamond, 10 ether);
     collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
     vm.stopPrank();
+    uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
 
-    assertEq(weth.balanceOf(ALICE), 990 ether);
+    assertEq(_aliceBalanceBefore - _aliceBalanceAfter, 10 ether);
     assertEq(weth.balanceOf(lyfDiamond), 10 ether);
   }
 

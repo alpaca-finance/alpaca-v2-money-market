@@ -24,6 +24,7 @@ import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol"
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -36,6 +37,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // peripherals
 import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
@@ -65,10 +67,6 @@ abstract contract LYF_BaseTest is BaseTest {
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
     farmFacet = ILYFFarmFacet(lyfDiamond);
 
-    weth.mint(ALICE, 1000 ether);
-    usdc.mint(ALICE, 1000 ether);
-    weth.mint(BOB, 1000 ether);
-    usdc.mint(BOB, 1000 ether);
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
@@ -123,15 +121,12 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set oracle for LYF
-
     chainLinkOracle = deployMockChainLinkPriceOracle();
+
+    setUpOracle(chainLinkOracle);
+
+    IAdminFacet(moneyMarketDiamond).setOracle(address(chainLinkOracle));
     IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
-    vm.stopPrank();
   }
 
   function setUpMM() internal {
@@ -141,5 +136,53 @@ abstract contract LYF_BaseTest is BaseTest {
     _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
     _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
     IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
+
+    IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
+
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
+
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[1] = IAdminFacet.TokenConfigInput({
+      token: address(usdc),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 1e24,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
+
+    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: lyfDiamond, limit: 1000 ether });
+
+    IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
+
+    vm.startPrank(EVE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 50 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 20 ether);
+    vm.stopPrank();
+  }
+
+  function setUpOracle(MockChainLinkPriceOracle _oracle) internal {
+    vm.startPrank(DEPLOYER);
+    _oracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
+    vm.stopPrank();
   }
 }

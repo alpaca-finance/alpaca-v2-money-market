@@ -20,8 +20,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserAddFarmPosition_LPShouldBecomeCollateral() external {
-    uint256 _wethToAddLP = 10 ether;
-    uint256 _usdcToAddLP = 10 ether;
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
     uint256 _wethCollatAmount = 20 ether;
     uint256 _usdcCollatAmount = 20 ether;
 
@@ -38,11 +38,19 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     uint256 _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
     uint256 _subAccountLpTokenCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(wethUsdcLPToken));
 
-    assertEq(_subAccountWethCollat, 10 ether);
-    assertEq(_subAccountUsdcCollat, 10 ether);
+    assertEq(_subAccountWethCollat, 0 ether, "eth collat");
+    assertEq(_subAccountUsdcCollat, 0 ether, "usdc collat");
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 10 ether);
-    assertEq(_subAccountLpTokenCollat, 10 ether);
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 30 ether);
+    assertEq(_subAccountLpTokenCollat, 30 ether);
+
+    // assert Debt
+
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc));
+
+    assertEq(_subAccountWethDebtValue, 10 ether);
+    assertEq(_subAccountUsdcDebtValue, 10 ether);
   }
 }
