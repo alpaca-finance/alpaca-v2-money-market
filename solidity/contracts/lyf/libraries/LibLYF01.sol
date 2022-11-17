@@ -232,4 +232,14 @@ library LibLYF01 {
       ds.collats[_token] -= _amountRemoved;
     }
   }
+
+  function isSubaccountHealthy(address _subaccount, LibLYF01.LYFDiamondStorage storage ds)
+    internal
+    view
+    returns (bool)
+  {
+    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subaccount, ds);
+    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subaccount, ds);
+    return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
 }

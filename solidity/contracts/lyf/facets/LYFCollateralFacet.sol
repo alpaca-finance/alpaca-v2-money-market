@@ -64,11 +64,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, ds);
 
-    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, ds);
-
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
-    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, ds)) {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
     }
 
@@ -90,21 +87,17 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
 
-    LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
+    uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
 
-    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_fromSubAccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_fromSubAccount, ds);
-
-    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
-    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+    if (!LibLYF01.isSubaccountHealthy(_fromSubAccount, ds)) {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
     }
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibLYF01.addCollat(_toSubAccount, _token, _amount, ds);
+    LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 
-    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
+    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
   }
 
   function getCollaterals(address _account, uint256 _subAccountId)
