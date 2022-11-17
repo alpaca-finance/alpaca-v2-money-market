@@ -172,7 +172,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
   }
 
   // Add Collat with ibToken
-  function testCorrectness_WhenAddLYFCollateralViaIbToken_ibTokenShouldTransferFromUserToMM() external {
+  function testCorrectness_WhenAddLYFCollateralViaIbToken_ibTokenShouldTransferFromUserToLYF() external {
     // mint ibToken to ALICE
     ibWeth.mint(ALICE, 10 ether);
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
