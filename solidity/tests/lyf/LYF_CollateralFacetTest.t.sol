@@ -148,7 +148,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserRemoveLYFCollateral_ShouldWork() external {
     uint256 _balanceBefore = weth.balanceOf(ALICE);
-    uint256 _MMbalanceBefore = weth.balanceOf(lyfDiamond);
+    uint256 _lyfBalanceBefore = weth.balanceOf(lyfDiamond);
 
     uint256 _addCollateralAmount = 10 ether;
     uint256 _removeCollateralAmount = _addCollateralAmount;
@@ -158,7 +158,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
-    assertEq(weth.balanceOf(lyfDiamond), _MMbalanceBefore + _addCollateralAmount);
+    assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore + _addCollateralAmount);
     assertEq(collateralFacet.collats(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
@@ -168,7 +168,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     // uint256 _borrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
-    assertEq(weth.balanceOf(lyfDiamond), _MMbalanceBefore);
+    assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore);
     // assertEq(_borrowingPower, 0);
     assertEq(collateralFacet.collats(address(weth)), 0);
   }

@@ -19,6 +19,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  error LYFFarmFacet_BorrowingPowerTooLow();
+
   event LogRemoveDebt(
     address indexed _subAccount,
     address indexed _token,
@@ -67,7 +69,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // 5. add it to collateral
     LibLYF01.addCollat(_subaccount, _lpToken, _lpReceived, lyfDs);
 
-    // TODO: 6. health check on sub account
+    // 6. health check on sub account
+    if (!LibLYF01.isSubaccountHealthy(_subaccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
   }
 
   function repay(

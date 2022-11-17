@@ -59,6 +59,7 @@ abstract contract LYF_BaseTest is BaseTest {
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    setUpMM();
 
     adminFacet = LYFAdminFacet(lyfDiamond);
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
@@ -120,6 +121,17 @@ abstract contract LYF_BaseTest is BaseTest {
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
+
+    // set oracle for LYF
+
+    chainLinkOracle = deployMockChainLinkPriceOracle();
+    IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(wethUsdcLPToken), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
   }
 
   function setUpMM() internal {
