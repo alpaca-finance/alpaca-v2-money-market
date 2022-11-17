@@ -53,7 +53,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token1, _desireToken1Amount, lyfDs);
 
     //2. borrow from mm if collats do not cover the desire amount
-
     _borrowFromMoneyMarket(_subAccount, _token0, _desireToken0Amount - _token0AmountFromCollat, lyfDs);
     _borrowFromMoneyMarket(_subAccount, _token1, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
 
@@ -88,6 +87,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _amount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
+    if (_amount == 0) return;
+
     IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
 
     // update subaccount debt
