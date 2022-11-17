@@ -67,10 +67,6 @@ abstract contract LYF_BaseTest is BaseTest {
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
     farmFacet = ILYFFarmFacet(lyfDiamond);
 
-    weth.mint(ALICE, 1000 ether);
-    usdc.mint(ALICE, 1000 ether);
-    weth.mint(BOB, 1000 ether);
-    usdc.mint(BOB, 1000 ether);
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
@@ -172,7 +168,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
 
-    vm.startPrank(ALICE);
+    vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
 

@@ -73,6 +73,12 @@ contract BaseTest is DSTest {
     opm.mint(ALICE, 1000 ether);
     isolateToken.mint(ALICE, 1000 ether);
 
+    weth.mint(EVE, 1000 ether);
+    btc.mint(EVE, 1000 ether);
+    usdc.mint(EVE, 1000 ether);
+    opm.mint(EVE, 1000 ether);
+    isolateToken.mint(EVE, 1000 ether);
+
     weth.mint(BOB, 1000 ether);
     btc.mint(BOB, 1000 ether);
     usdc.mint(BOB, 1000 ether);
