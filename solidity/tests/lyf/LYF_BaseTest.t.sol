@@ -24,6 +24,7 @@ import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol"
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -165,6 +166,19 @@ abstract contract LYF_BaseTest is BaseTest {
     });
 
     IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
+
+    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
+    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: lyfDiamond, limit: 1000 ether });
+
+    IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
+
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 50 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 20 ether);
+    vm.stopPrank();
   }
 
   function setUpOracle(MockChainLinkPriceOracle _oracle) internal {

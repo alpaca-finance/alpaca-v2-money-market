@@ -59,16 +59,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // 3. send token to strat
 
-    ERC20(_token0).safeTransfer(_addStrat, _token0AmountFromCollat);
-    ERC20(_token1).safeTransfer(_addStrat, _token1AmountFromCollat);
+    ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
+    ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
 
     // 4. compose lp
     uint256 _lpReceived = IStrat(_addStrat).composeLPToken(
       _token0,
       _token1,
       _lpToken,
-      _token0AmountFromCollat,
-      _token1AmountFromCollat,
+      _desireToken0Amount,
+      _desireToken1Amount,
       _minLpReceive
     );
 
@@ -175,7 +175,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
     _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_token);
-
     // Note: precision loss 1 wei when convert share back to value
     _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_token], lyfDs.debtShares[_token]);
   }
