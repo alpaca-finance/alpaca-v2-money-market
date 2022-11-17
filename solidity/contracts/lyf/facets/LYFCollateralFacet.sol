@@ -44,15 +44,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
-    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      subAccountCollateralList.init();
-    }
+    LibLYF01.addCollat(_subAccount, _token, _amount, ds);
 
-    uint256 _newAmount = subAccountCollateralList.getAmount(_token) + _amount;
-    subAccountCollateralList.addOrUpdate(_token, _newAmount);
-
-    ds.collats[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogAddCollateral(_subAccount, _token, _amount);

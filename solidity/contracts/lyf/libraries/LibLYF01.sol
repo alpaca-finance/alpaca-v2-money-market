@@ -178,4 +178,32 @@ library LibLYF01 {
   ) internal pure returns (uint256 _usedBorrowedPower) {
     _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
+
+  function addCollat(
+    address _subaccount,
+    address _token,
+    uint256 _amount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _amountAdded) {
+    // update subaccount state
+    LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subaccount];
+    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      subAccountCollateralList.init();
+    }
+    uint256 _currentAmount = subAccountCollateralList.getAmount(_token);
+
+    _amountAdded = _amount;
+    // If collat is LP take collat as a share, not direct amount
+    if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      _amountAdded = LibShareUtil.valueToShareRoundingUp(lyfDs.lpShares[_token], _amount, lyfDs.lpValues[_token]);
+
+      // update global state
+      lyfDs.lpShares[_token] += _amountAdded;
+      lyfDs.lpValues[_token] += _amount;
+    }
+
+    subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
+
+    lyfDs.collats[_token] += _amount;
+  }
 }

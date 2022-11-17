@@ -72,33 +72,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
-    _addLpAsCollat(_subaccount, _lpToken, _lpReceived, lyfDs);
+    LibLYF01.addCollat(_subaccount, _lpToken, _lpReceived, lyfDs);
 
     // 5. add it to collateral
     // 6. health check on sub account
-  }
-
-  function _addLpAsCollat(
-    address _subaccount,
-    address _token,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _lpShare) {
-    _lpShare = LibShareUtil.valueToShareRoundingUp(lyfDs.lpShares[_token], _amount, lyfDs.lpValues[_token]);
-
-    // update subaccount state
-    LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subaccount];
-    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      subAccountCollateralList.init();
-    }
-
-    uint256 _newAmount = subAccountCollateralList.getAmount(_token) + _lpShare;
-    subAccountCollateralList.addOrUpdate(_token, _newAmount);
-
-    // update global state
-    lyfDs.lpShares[_token] += _lpShare;
-    lyfDs.lpValues[_token] += _amount;
-    lyfDs.collats[_token] += _amount;
   }
 
   function _removeCollat(
