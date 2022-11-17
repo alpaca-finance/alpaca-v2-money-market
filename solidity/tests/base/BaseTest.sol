@@ -8,7 +8,7 @@ import { console } from "../utils/console.sol";
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
-import { ChainLinkPriceOracle, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
+import { ChainLinkPriceOracle2, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";

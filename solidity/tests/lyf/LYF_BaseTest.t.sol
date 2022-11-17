@@ -2,9 +2,11 @@
 pragma solidity 0.8.17;
 
 import { BaseTest, console } from "../base/BaseTest.sol";
+import { LYF_PreBaseTest } from "./LYF_PreBaseTest.t.sol";
 
 // core
 import { LYFDiamond } from "../../contracts/lyf/LYFDiamond.sol";
+import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
@@ -35,7 +37,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 // peripherals
 import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
 
-abstract contract LYF_BaseTest is BaseTest {
+abstract contract LYF_BaseTest is BaseTest, LYF_PreBaseTest {
   address internal lyfDiamond;
 
   IAdminFacet internal adminFacet;
@@ -50,6 +52,7 @@ abstract contract LYF_BaseTest is BaseTest {
   PancakeswapV2StrategyAddTwoSidesOptimal internal addStrat;
 
   function setUp() public virtual {
+    preSetUp();
     (lyfDiamond) = deployPoolDiamond();
 
     adminFacet = IAdminFacet(lyfDiamond);
@@ -69,7 +72,7 @@ abstract contract LYF_BaseTest is BaseTest {
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -91,6 +94,16 @@ abstract contract LYF_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[2] = IAdminFacet.TokenConfigInput({
+      token: address(ibWeth),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxBorrow: 1e24,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
@@ -100,6 +113,8 @@ abstract contract LYF_BaseTest is BaseTest {
     addStrat = new PancakeswapV2StrategyAddTwoSidesOptimal(IPancakeRouter02(address(mockRouter)));
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+
+    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
   }
 
   function deployPoolDiamond() internal returns (address) {
@@ -129,17 +144,6 @@ abstract contract LYF_BaseTest is BaseTest {
       address(diamondInitializer),
       abi.encodeWithSelector(bytes4(keccak256("init()")))
     );
-  }
-
-  function buildFacetCut(
-    address facet,
-    IDiamondCut.FacetCutAction cutAction,
-    bytes4[] memory selectors
-  ) internal pure returns (IDiamondCut.FacetCut[] memory) {
-    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
-    facetCuts[0] = IDiamondCut.FacetCut({ action: cutAction, facetAddress: facet, functionSelectors: selectors });
-
-    return facetCuts;
   }
 
   function deployDiamondLoupeFacet(DiamondCutFacet diamondCutFacet)
@@ -194,10 +198,11 @@ abstract contract LYF_BaseTest is BaseTest {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = AdminFacet.setOracle.selector;
     selectors[1] = AdminFacet.oracle.selector;
     selectors[2] = AdminFacet.setTokenConfigs.selector;
+    selectors[3] = AdminFacet.setMoneyMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -230,5 +235,16 @@ abstract contract LYF_BaseTest is BaseTest {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_collatFacet, _selectors);
+  }
+
+  function buildFacetCut(
+    address facet,
+    IDiamondCut.FacetCutAction cutAction,
+    bytes4[] memory selectors
+  ) internal pure returns (IDiamondCut.FacetCut[] memory) {
+    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](1);
+    facetCuts[0] = IDiamondCut.FacetCut({ action: cutAction, facetAddress: facet, functionSelectors: selectors });
+
+    return facetCuts;
   }
 }

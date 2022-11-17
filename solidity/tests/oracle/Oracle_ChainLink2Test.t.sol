@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import { BaseTest, console, MockERC20 } from "../base/BaseTest.sol";
 
-import { ChainLinkPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle.sol";
+import { ChainLinkPriceOracle2 } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 import { IAggregatorV3 } from "../../contracts/oracle/interfaces/IAggregatorV3.sol";
 import { IPriceOracle } from "../../contracts/oracle/interfaces/IPriceOracle.sol";
 import { MockChainLinkAggregator } from "../mocks/MockChainLinkAggregator.sol";
@@ -24,7 +24,7 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     _fakeAggregatorWETHUSDC[0] = new MockChainLinkAggregator(1500e18, 18);
     _fakeAggregatorWETHUSDC[1] = new MockChainLinkAggregator(1e18, 18);
 
-    ChainLinkPriceOracle chainLinkPriceOracle = new ChainLinkPriceOracle();
+    ChainLinkPriceOracle2 chainLinkPriceOracle = new ChainLinkPriceOracle2();
     chainLinkPriceOracle.initialize();
     address oldOwner = chainLinkPriceOracle.owner();
     vm.prank(oldOwner);
@@ -44,7 +44,7 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     sources[0] = _fakeAggregatorWETHUSD;
 
     vm.startPrank(ALICE);
-    try ChainLinkPriceOracle(address(oracle)).setPriceFeeds(t0, t1, sources) {
+    try ChainLinkPriceOracle2(address(oracle)).setPriceFeeds(t0, t1, sources) {
       fail();
     } catch Error(string memory reason) {
       assertEq(reason, "Ownable: caller is not the owner", "upgrade not owner");
@@ -67,10 +67,10 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     sources[1] = _fakeAggregatorUSDCUSD;
 
     vm.prank(DEPLOYER);
-    ChainLinkPriceOracle(address(oracle)).setPriceFeeds(t0, t1, sources);
+    ChainLinkPriceOracle2(address(oracle)).setPriceFeeds(t0, t1, sources);
 
-    uint256 wethCount = ChainLinkPriceOracle(address(oracle)).priceFeedCount(address(weth), address(usd));
-    uint256 usdcCount = ChainLinkPriceOracle(address(oracle)).priceFeedCount(address(usdc), address(usd));
+    uint256 wethCount = ChainLinkPriceOracle2(address(oracle)).priceFeedCount(address(weth), address(usd));
+    uint256 usdcCount = ChainLinkPriceOracle2(address(oracle)).priceFeedCount(address(usdc), address(usd));
     assertEq(wethCount, 1);
     assertEq(usdcCount, 1);
   }
@@ -86,10 +86,10 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     sources[0] = _fakeAggregatorWETHUSD;
 
     vm.prank(DEPLOYER);
-    ChainLinkPriceOracle(address(oracle)).setPriceFeeds(t0, t1, sources);
+    ChainLinkPriceOracle2(address(oracle)).setPriceFeeds(t0, t1, sources);
 
-    vm.expectRevert(ChainLinkPriceOracle.ChainlinkPriceOracle_NoSource.selector);
-    ChainLinkPriceOracle(address(oracle)).getPrice(address(weth), address(usd));
+    vm.expectRevert(ChainLinkPriceOracle2.ChainlinkPriceOracle_NoSource.selector);
+    ChainLinkPriceOracle2(address(oracle)).getPrice(address(weth), address(usd));
   }
 
   function testCorrectness_getPrice_shouldPass() external {
@@ -109,7 +109,7 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     sources[2] = _fakeAggregatorWETHUSDC;
 
     vm.prank(DEPLOYER);
-    ChainLinkPriceOracle(address(oracle)).setPriceFeeds(t0, t1, sources);
+    ChainLinkPriceOracle2(address(oracle)).setPriceFeeds(t0, t1, sources);
 
     (uint256 wethPrice, ) = oracle.getPrice(address(weth), address(usd));
     assertEq(wethPrice, 1500 ether);

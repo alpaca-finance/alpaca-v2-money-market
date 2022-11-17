@@ -72,7 +72,6 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     uint256 _aliceBorrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
     assertEq(_aliceBorrowingPower, 27 ether);
-    
   }
 
   function testRevert_WhenUserAddInvalidCollateral_ShouldRevert() external {

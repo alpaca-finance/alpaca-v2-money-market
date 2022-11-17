@@ -87,7 +87,14 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
   function testRevert_WhenUserAddLYFCollateralMoreThanLimit_ShouldRevert() external {
     //max collat for weth is 100 ether
     uint256 _collateral = 100 ether;
+
+    // mint ibToken to ALICE
+    ibWeth.mint(ALICE, 10 ether);
+
     vm.startPrank(ALICE);
+
+    ibWeth.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
 
     // first time should pass
     collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
@@ -155,11 +162,28 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
 
+    // todo: addd extenal function to check borrowing power
     // uint256 _borrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(lyfDiamond), _MMbalanceBefore);
     // assertEq(_borrowingPower, 0);
     assertEq(collateralFacet.collats(address(weth)), 0);
+  }
+
+  // Add Collat with ibToken
+  function testCorrectness_WhenAddLYFCollateralViaIbToken_ibTokenShouldTransferFromUserToLYF() external {
+    // mint ibToken to ALICE
+    ibWeth.mint(ALICE, 10 ether);
+    assertEq(ibWeth.balanceOf(ALICE), 10 ether);
+
+    // Add collat by ibToken
+    vm.startPrank(ALICE);
+    ibWeth.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+    vm.stopPrank();
+
+    assertEq(ibWeth.balanceOf(ALICE), 0 ether);
+    assertEq(ibWeth.balanceOf(lyfDiamond), 10 ether);
   }
 }
