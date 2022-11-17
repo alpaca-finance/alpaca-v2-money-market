@@ -21,13 +21,16 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserAddFarmPosition_LPShouldBecomeCollateral() external {
-    uint256 _borrowAmount = 10 ether;
+    uint256 _wethToAddLP = 10 ether;
+    uint256 _usdcToAddLP = 10 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
-    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _borrowAmount * 2);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 0, address(addStrat));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0, address(addStrat));
     vm.stopPrank();
 
     // asset collat of subaccount
@@ -37,5 +40,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     assertEq(_subAccountWethCollat, 10 ether);
     assertEq(_subAccountUsdcCollat, 10 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 10 ether);
   }
 }
