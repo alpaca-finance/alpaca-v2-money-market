@@ -19,4 +19,6 @@ interface IAdminFacet {
   function oracle() external view returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
+
+  function setMoneyMarket(address _moneyMarket) external;
 }
