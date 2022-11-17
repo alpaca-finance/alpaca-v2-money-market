@@ -14,6 +14,7 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
@@ -51,7 +52,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _token0AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token0, _desireToken0Amount, lyfDs);
     uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token1, _desireToken1Amount, lyfDs);
 
-    // TODO: 2. borrow from mm if collats do not cover the desire amount
+    //2. borrow from mm if collats do not cover the desire amount
+
+    _borrowFromMoneyMarket(_subAccount, _token0, _desireToken0Amount - _token0AmountFromCollat, lyfDs);
+    _borrowFromMoneyMarket(_subAccount, _token1, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
 
     // 3. send token to strat
 
@@ -76,6 +80,37 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
     emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+  }
+
+  function _borrowFromMoneyMarket(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
+
+    // update subaccount debt
+    // todo: optimize this
+    LibDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
+
+    if (lyfDs.subAccountDebtShares[_subAccount].getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      lyfDs.subAccountDebtShares[_subAccount].init();
+    }
+
+    uint256 _totalSupply = lyfDs.debtShares[_token];
+    uint256 _totalValue = lyfDs.debtValues[_token];
+
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_totalSupply, _amount, _totalValue);
+
+    // update over collat debt
+    lyfDs.debtShares[_token] += _shareToAdd;
+    lyfDs.debtValues[_token] += _amount;
+
+    uint256 _newShareAmount = userDebtShare.getAmount(_token) + _shareToAdd;
+
+    // update user's debtshare
+    userDebtShare.addOrUpdate(_token, _newShareAmount);
   }
 
   function repay(

@@ -36,6 +36,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // peripherals
 import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
@@ -123,15 +124,12 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set oracle for LYF
-
     chainLinkOracle = deployMockChainLinkPriceOracle();
+
+    setUpOracle(chainLinkOracle);
+
+    IAdminFacet(moneyMarketDiamond).setOracle(address(chainLinkOracle));
     IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
-    vm.stopPrank();
   }
 
   function setUpMM() internal {
@@ -141,5 +139,40 @@ abstract contract LYF_BaseTest is BaseTest {
     _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
     _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
     IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
+
+    IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
+
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
+
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[1] = IAdminFacet.TokenConfigInput({
+      token: address(usdc),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 1e24,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
+  }
+
+  function setUpOracle(MockChainLinkPriceOracle _oracle) internal {
+    vm.startPrank(DEPLOYER);
+    _oracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
+    vm.stopPrank();
   }
 }
