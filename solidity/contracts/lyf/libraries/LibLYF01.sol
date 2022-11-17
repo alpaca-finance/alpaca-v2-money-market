@@ -27,9 +27,8 @@ library LibLYF01 {
 
   enum AssetTier {
     UNLISTED,
-    ISOLATE,
-    CROSS,
-    COLLATERAL
+    COLLATERAL,
+    LP
   }
 
   struct TokenConfig {
@@ -53,6 +52,8 @@ library LibLYF01 {
     mapping(address => uint256) debtValues;
     mapping(address => uint256) globalDebts;
     mapping(address => uint256) debtLastAccureTime;
+    mapping(address => uint256) lpShares;
+    mapping(address => uint256) lpValues;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {

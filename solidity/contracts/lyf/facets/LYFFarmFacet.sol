@@ -63,7 +63,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     ERC20(_token1).safeTransfer(_addStrat, _token1AmountFromCollat);
 
     // 4. compose lp
-    IStrat(_addStrat).composeLPToken(
+    uint256 _lpReceived = IStrat(_addStrat).composeLPToken(
       _token0,
       _token1,
       _lpToken,
@@ -72,8 +72,33 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
+    _addLpAsCollat(_subaccount, _lpToken, _lpReceived, lyfDs);
+
     // 5. add it to collateral
     // 6. health check on sub account
+  }
+
+  function _addLpAsCollat(
+    address _subaccount,
+    address _token,
+    uint256 _amount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _lpShare) {
+    _lpShare = LibShareUtil.valueToShareRoundingUp(lyfDs.lpShares[_token], _amount, lyfDs.lpValues[_token]);
+
+    // update subaccount state
+    LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subaccount];
+    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      subAccountCollateralList.init();
+    }
+
+    uint256 _newAmount = subAccountCollateralList.getAmount(_token) + _lpShare;
+    subAccountCollateralList.addOrUpdate(_token, _newAmount);
+
+    // update global state
+    lyfDs.lpShares[_token] += _lpShare;
+    lyfDs.lpValues[_token] += _amount;
+    lyfDs.collats[_token] += _amount;
   }
 
   function _removeCollat(
@@ -204,15 +229,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // check asset tier
     uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
 
-    (uint256 _totalUsedBorrowedPower, bool _hasIsolateAsset) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
-
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.ISOLATE) {
-      if (!lyfDs.subAccountDebtShares[_subAccount].has(_token) && lyfDs.subAccountDebtShares[_subAccount].size > 0) {
-        revert LYFFarmFacet_InvalidAssetTier();
-      }
-    } else if (_hasIsolateAsset) {
-      revert LYFFarmFacet_InvalidAssetTier();
-    }
+    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
 
     _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, lyfDs);
 

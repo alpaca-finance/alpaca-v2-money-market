@@ -9,5 +9,5 @@ interface IStrat {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external;
+  ) external returns (uint256);
 }

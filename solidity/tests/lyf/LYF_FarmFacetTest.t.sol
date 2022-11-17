@@ -36,11 +36,13 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
     uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
     uint256 _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountLpTokenCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(wethUsdcLPToken));
 
     assertEq(_subAccountWethCollat, 10 ether);
     assertEq(_subAccountUsdcCollat, 10 ether);
 
     // assume that every coin is 1 dollar and lp = 2 dollar
     assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 10 ether);
+    assertEq(_subAccountLpTokenCollat, 10 ether);
   }
 }

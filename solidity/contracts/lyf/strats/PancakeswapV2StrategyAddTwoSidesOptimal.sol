@@ -96,7 +96,7 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external {
+  ) external returns (uint256 _lpRecieved) {
     IPancakePair lpToken = IPancakePair(_lpToken);
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
@@ -128,7 +128,10 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
     if (moreLPAmount < _minLPAmount) {
       revert PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
     }
-    if (!lpToken.transfer(msg.sender, lpToken.balanceOf(address(this)))) {
+    // return parameter
+    _lpRecieved = lpToken.balanceOf(address(this));
+
+    if (!lpToken.transfer(msg.sender, _lpRecieved)) {
       revert PancakeswapV2StrategyAddTwoSidesOptimal_TransferFailed();
     }
     // 7. Reset approve to 0 for safety reason
