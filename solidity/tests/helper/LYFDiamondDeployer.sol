@@ -8,6 +8,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/Diamond
 import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
 import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
+import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
@@ -22,6 +23,7 @@ library LYFDiamondDeployer {
 
     deployAdminFacet(DiamondCutFacet(address(_lyfDiamond)));
     deployLYFCollateralFacet(DiamondCutFacet(address(_lyfDiamond)));
+    deployFarmFacet(DiamondCutFacet(address(_lyfDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_lyfDiamond)));
 
@@ -61,6 +63,33 @@ library LYFDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_diamondLoupeFacet, selectors);
+  }
+
+  function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFFarmFacet, bytes4[] memory) {
+    LYFFarmFacet _farmFacet = new LYFFarmFacet();
+
+    bytes4[] memory selectors = new bytes4[](12);
+    selectors[0] = LYFFarmFacet.addFarmPosition.selector;
+    selectors[1] = LYFFarmFacet.getDebtShares.selector;
+    selectors[2] = LYFFarmFacet.getTotalBorrowingPower.selector;
+    selectors[3] = LYFFarmFacet.getTotalUsedBorrowedPower.selector;
+    selectors[4] = LYFFarmFacet.getDebt.selector;
+    selectors[5] = LYFFarmFacet.repay.selector;
+    selectors[6] = LYFFarmFacet.getGlobalDebt.selector;
+    selectors[7] = LYFFarmFacet.debtLastAccureTime.selector;
+    selectors[8] = LYFFarmFacet.pendingInterest.selector;
+    selectors[9] = LYFFarmFacet.accureInterest.selector;
+    selectors[10] = LYFFarmFacet.debtValues.selector;
+    selectors[11] = LYFFarmFacet.debtShares.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_farmFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_farmFacet, selectors);
   }
 
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
