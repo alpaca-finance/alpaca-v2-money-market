@@ -42,14 +42,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    address _subaccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     // 1. check subaccount collat
-    uint256 _token0AmountFromCollat = LibLYF01.removeCollateral(_subaccount, _token0, _desireToken0Amount, lyfDs);
-    uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subaccount, _token1, _desireToken1Amount, lyfDs);
+    uint256 _token0AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token0, _desireToken0Amount, lyfDs);
+    uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token1, _desireToken1Amount, lyfDs);
 
     // TODO: 2. borrow from mm if collats do not cover the desire amount
 
@@ -69,13 +69,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 5. add it to collateral
-    LibLYF01.addCollat(_subaccount, _lpToken, _lpReceived, lyfDs);
+    LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
 
     // 6. health check on sub account
-    if (!LibLYF01.isSubaccountHealthy(_subaccount, lyfDs)) {
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subaccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
   }
 
   function repay(

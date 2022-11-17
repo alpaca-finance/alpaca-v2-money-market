@@ -180,13 +180,13 @@ library LibLYF01 {
   }
 
   function addCollat(
-    address _subaccount,
+    address _subAccount,
     address _token,
     uint256 _amount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _amountAdded) {
     // update subaccount state
-    LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subaccount];
+    LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subAccount];
     if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       subAccountCollateralList.init();
     }
@@ -233,13 +233,13 @@ library LibLYF01 {
     }
   }
 
-  function isSubaccountHealthy(address _subaccount, LibLYF01.LYFDiamondStorage storage ds)
+  function isSubaccountHealthy(address _subAccount, LibLYF01.LYFDiamondStorage storage ds)
     internal
     view
     returns (bool)
   {
-    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subaccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subaccount, ds);
+    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
+    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
   }
 }
