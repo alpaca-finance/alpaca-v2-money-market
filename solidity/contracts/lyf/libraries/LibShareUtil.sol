@@ -10,7 +10,6 @@ library LibShareUtil {
     uint256 _totalShare
   ) internal pure returns (uint256) {
     if (_totalShare == 0) return _shareAmount;
-    LibFullMath.mulDiv(_shareAmount, _totalValue, _totalShare);
     return LibFullMath.mulDiv(_shareAmount, _totalValue, _totalShare);
   }
 
