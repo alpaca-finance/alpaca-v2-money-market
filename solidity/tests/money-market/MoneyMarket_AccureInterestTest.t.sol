@@ -429,4 +429,86 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
       "Global debtValues missmatch"
     );
   }
+
+  function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldAccureInterestForAllBorrowedToken()
+    external
+  {
+    // ALICE add collateral
+    uint256 _borrowAmount = 10 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
+    vm.stopPrank();
+
+    // BOB borrow
+    vm.startPrank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
+    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
+    vm.stopPrank();
+
+    // time past
+    vm.warp(block.timestamp + 10);
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    // remove collateral will trigger accure interest on all borrowed token
+    collateralFacet.removeCollateral(subAccount0, address(weth), 0);
+    vm.stopPrank();
+
+    // assert ALICE
+    (, uint256 _aliceActualWethDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    (, uint256 _aliceActualUSDCDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(usdc));
+
+    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
+    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
+
+    //assert Global
+    assertGt(borrowFacet.debtValues(address(weth)), _borrowAmount);
+    assertGt(borrowFacet.debtValues(address(usdc)), _borrowAmount);
+  }
+
+  function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldAccureInterestForAllBorrowedToken()
+    external
+  {
+    // ALICE add collateral
+    uint256 _borrowAmount = 10 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
+    vm.stopPrank();
+
+    // BOB borrow
+    vm.startPrank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
+    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
+    vm.stopPrank();
+
+    // time past
+    vm.warp(block.timestamp + 10);
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    // transfer collateral will trigger accure interest on all borrowed token
+    collateralFacet.transferCollateral(0, 1, address(weth), 0);
+    vm.stopPrank();
+
+    // assert ALICE
+    (, uint256 _aliceActualWethDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    (, uint256 _aliceActualUSDCDebtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(usdc));
+
+    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
+    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
+
+    //assert Global
+    assertGt(borrowFacet.debtValues(address(weth)), _borrowAmount);
+    assertGt(borrowFacet.debtValues(address(usdc)), _borrowAmount);
+  }
 }
