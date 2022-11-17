@@ -10,4 +10,6 @@ interface IStrat {
     uint256 _token1Amount,
     uint256 _minLPAmount
   ) external returns (uint256);
+
+  function removeLiquidity(address _lpToken) external returns (uint256, uint256);
 }

@@ -53,6 +53,13 @@ interface ILYFFarmFacet {
 
   function debtShares(address _token) external view returns (uint256);
 
+  function liquidateLP(
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _lpShareAmount,
+    address _removeStrat
+  ) external;
+
   // Errors
   error LYFFarmFacet_InvalidToken(address _token);
   error LYFFarmFacet_NotEnoughToken(uint256 _borrowAmount);
