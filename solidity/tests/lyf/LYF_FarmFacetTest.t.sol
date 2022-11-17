@@ -5,7 +5,6 @@ import { LYF_BaseTest, MockERC20, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
 import { ILYFFarmFacet, LibDoublyLinkedList } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
-import { IAdminFacet } from "../../contracts/lyf/facets/AdminFacet.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
   MockERC20 mockToken;
