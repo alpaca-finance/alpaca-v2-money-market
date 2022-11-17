@@ -62,14 +62,19 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     // LibLYF01.accureInterest(_token, ds);
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+    uint256 _actualAmountRemoved = LibLYF01._removeCollateral(_subAccount, _token, _amount, ds);
 
-    _removeCollateral(_subAccount, _token, _amount, ds);
+    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, ds);
+    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, ds);
 
-    ds.collats[_token] -= _amount;
+    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
+    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+      revert LYFCollateralFacet_BorrowingPowerTooLow();
+    }
 
-    ERC20(_token).safeTransfer(msg.sender, _amount);
+    ERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
 
-    emit LogRemoveCollateral(_subAccount, _token, _amount);
+    emit LogRemoveCollateral(_subAccount, _token, _actualAmountRemoved);
   }
 
   function transferCollateral(
@@ -85,16 +90,19 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
 
-    _removeCollateral(_fromSubAccount, _token, _amount, ds);
+    LibLYF01._removeCollateral(_fromSubAccount, _token, _amount, ds);
+
+    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_fromSubAccount, ds);
+    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_fromSubAccount, ds);
+
+    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
+    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+      revert LYFCollateralFacet_BorrowingPowerTooLow();
+    }
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibDoublyLinkedList.List storage toSubAccountCollateralList = ds.subAccountCollats[_toSubAccount];
-    if (toSubAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      toSubAccountCollateralList.init();
-    }
-    uint256 _newAmount = toSubAccountCollateralList.getAmount(_token) + _amount;
-    toSubAccountCollateralList.addOrUpdate(_token, _newAmount);
+    LibLYF01.addCollat(_toSubAccount, _token, _amount, ds);
 
     emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
   }

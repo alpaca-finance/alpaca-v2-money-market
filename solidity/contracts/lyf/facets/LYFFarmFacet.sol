@@ -44,8 +44,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     // 1. check subaccount collat
-    uint256 _token0AmountFromCollat = _removeCollat(_subaccount, _token0, _desireToken0Amount, lyfDs);
-    uint256 _token1AmountFromCollat = _removeCollat(_subaccount, _token1, _desireToken1Amount, lyfDs);
+    uint256 _token0AmountFromCollat = LibLYF01._removeCollateral(_subaccount, _token0, _desireToken0Amount, lyfDs);
+    uint256 _token1AmountFromCollat = LibLYF01._removeCollateral(_subaccount, _token1, _desireToken1Amount, lyfDs);
 
     /* borrow from mm 
     if (_token0AmountFromCollat < _desireToken0Amount) {
@@ -76,23 +76,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // 5. add it to collateral
     // 6. health check on sub account
-  }
-
-  function _removeCollat(
-    address _subaccount,
-    address _token,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _actualAmountRemove) {
-    LibDoublyLinkedList.List storage _subAccountCollatList = lyfDs.subAccountCollats[_subaccount];
-    uint256 _currentAmount = _subAccountCollatList.getAmount(_token);
-    if (_currentAmount > 0) {
-      _actualAmountRemove = _currentAmount > _amount ? _amount : _currentAmount;
-      _subAccountCollatList.updateOrRemove(_token, _currentAmount - _actualAmountRemove);
-
-      // update global collat
-      lyfDs.collats[_token] -= _actualAmountRemove;
-    }
   }
 
   function repay(

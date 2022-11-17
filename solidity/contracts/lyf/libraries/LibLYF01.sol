@@ -206,4 +206,30 @@ library LibLYF01 {
 
     lyfDs.collats[_token] += _amount;
   }
+
+  function _removeCollateral(
+    address _subAccount,
+    address _token,
+    uint256 _removeAmount,
+    LibLYF01.LYFDiamondStorage storage ds
+  ) internal returns (uint256 _amountRemoved) {
+    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+
+    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
+    if (_collateralAmount > 0) {
+      _amountRemoved = _removeAmount > _collateralAmount ? _collateralAmount : _removeAmount;
+
+      _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
+
+      // If LP token, handle extra step
+      if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
+        _amountRemoved = LibShareUtil.shareToValue(_removeAmount, ds.lpValues[_token], ds.lpShares[_token]);
+
+        ds.lpShares[_token] -= _removeAmount;
+        ds.lpValues[_token] -= _amountRemoved;
+      }
+
+      ds.collats[_token] -= _amountRemoved;
+    }
+  }
 }
