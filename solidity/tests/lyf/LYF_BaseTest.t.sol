@@ -130,7 +130,7 @@ abstract contract LYF_BaseTest is BaseTest {
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(wethUsdcLPToken), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
     vm.stopPrank();
   }
 
