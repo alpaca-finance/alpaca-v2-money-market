@@ -44,8 +44,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     // 1. check subaccount collat
-    uint256 _token0AmountFromCollat = LibLYF01._removeCollateral(_subaccount, _token0, _desireToken0Amount, lyfDs);
-    uint256 _token1AmountFromCollat = LibLYF01._removeCollateral(_subaccount, _token1, _desireToken1Amount, lyfDs);
+    uint256 _token0AmountFromCollat = LibLYF01.removeCollateral(_subaccount, _token0, _desireToken0Amount, lyfDs);
+    uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subaccount, _token1, _desireToken1Amount, lyfDs);
 
     // TODO: 2. borrow from mm if collats do not cover the desire amount
 

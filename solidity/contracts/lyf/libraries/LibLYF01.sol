@@ -207,7 +207,7 @@ library LibLYF01 {
     lyfDs.collats[_token] += _amount;
   }
 
-  function _removeCollateral(
+  function removeCollateral(
     address _subAccount,
     address _token,
     uint256 _removeAmount,
