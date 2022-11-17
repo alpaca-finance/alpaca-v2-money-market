@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { LYF_BaseTest, console, LYFDiamond } from "./LYF_BaseTest.t.sol";
 
 // interfaces
-import { IAdminFacet, LibLYF01 } from "../../contracts/lyf/facets/AdminFacet.sol";
+import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_AdminFacetTest is LYF_BaseTest {
   function setUp() public override {

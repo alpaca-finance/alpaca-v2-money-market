@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
-interface IAdminFacet {
+interface ILYFAdminFacet {
   struct TokenConfigInput {
     address token;
     LibLYF01.AssetTier tier;
