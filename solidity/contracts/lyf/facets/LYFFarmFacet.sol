@@ -28,6 +28,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _removeDebtAmount
   );
 
+  event LogAddFarmPosition(address indexed _subAccount, address indexed _lpToken, uint256 _lpAmount);
+
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
 
   function addFarmPosition(
@@ -73,6 +75,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subaccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
+    emit LogAddFarmPosition(_subaccount, _lpToken, _lpReceived);
   }
 
   function repay(
