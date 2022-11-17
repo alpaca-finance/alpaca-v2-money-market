@@ -20,12 +20,13 @@ import { DiamondInit } from "../../../solidity/contracts/money-market/initialize
 
 contract DeployDiamond is Script {
   function run() external {
+    //  put diamondCutFacet here
+    address diamondCutFacet = address(0xB2835ceC6b58E51133090392691Bdccb06B4D188);
+
     uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
     address alpacaDeployer = address(0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51);
     address deployer = vm.addr(deployerPrivateKey);
-    // TODO put diamondCutFacet here
-    address diamondCutFacet = address(0xFD84f29F655cED18f62b03C28c83A0b4B008Db21);
 
     if (alpacaDeployer == deployer) {
       vm.startBroadcast(deployer);

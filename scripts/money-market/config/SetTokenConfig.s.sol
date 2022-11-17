@@ -35,7 +35,7 @@ contract SetTokenConfig is Script {
     }
 
     // change value here
-    AdminFacet adminFacet = AdminFacet(0x6e5bE6902a4Df859B64C4400009EF4039e87Ba98);
+    AdminFacet adminFacet = AdminFacet(0x9BfAb04dD186C058DE6B04083A17181b1f4604Cd);
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
