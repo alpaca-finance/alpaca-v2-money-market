@@ -22,7 +22,6 @@ import { IStrat } from "../interfaces/IStrat.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
 
 // todo: reentrance
 contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
