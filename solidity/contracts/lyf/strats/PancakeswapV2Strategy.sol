@@ -24,13 +24,13 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // todo: reentrance
-contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
+contract PancakeswapV2Strategy is IStrat {
   using SafeERC20 for address;
   using LibSafeToken for address;
 
-  error PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
-  error PancakeswapV2StrategyAddTwoSidesOptimal_TransferFailed();
-  error PancakeswapV2StrategyAddTwoSidesOptimal_Reverse();
+  error PancakeswapV2Strategy_TooLittleReceived();
+  error PancakeswapV2Strategy_TransferFailed();
+  error PancakeswapV2Strategy_Reverse();
 
   IPancakeRouter02 public router;
 
@@ -72,7 +72,7 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
     uint256 resB
   ) internal pure returns (uint256) {
     if (amtA * (resB) < amtB * (resA)) {
-      revert PancakeswapV2StrategyAddTwoSidesOptimal_Reverse();
+      revert PancakeswapV2Strategy_Reverse();
     }
 
     uint256 a = 9975;
@@ -126,13 +126,13 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
       block.timestamp
     );
     if (moreLPAmount < _minLPAmount) {
-      revert PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
+      revert PancakeswapV2Strategy_TooLittleReceived();
     }
     // return parameter
     _lpRecieved = lpToken.balanceOf(address(this));
 
     if (!lpToken.transfer(msg.sender, _lpRecieved)) {
-      revert PancakeswapV2StrategyAddTwoSidesOptimal_TransferFailed();
+      revert PancakeswapV2Strategy_TransferFailed();
     }
     // 7. Reset approve to 0 for safety reason
     ERC20(_token0).approve(address(router), 0);

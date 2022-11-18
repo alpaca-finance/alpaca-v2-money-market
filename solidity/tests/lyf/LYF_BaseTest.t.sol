@@ -36,7 +36,7 @@ import { MockRouter } from "../mocks/MockRouter.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // peripherals
-import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
+import { PancakeswapV2Strategy } from "../../contracts/lyf/strats/PancakeswapV2Strategy.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // helper
@@ -56,7 +56,7 @@ abstract contract LYF_BaseTest is BaseTest {
   MockChainLinkPriceOracle chainLinkOracle;
 
   MockRouter internal mockRouter;
-  PancakeswapV2StrategyAddTwoSidesOptimal internal addStrat;
+  PancakeswapV2Strategy internal addStrat;
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
@@ -114,7 +114,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
-    addStrat = new PancakeswapV2StrategyAddTwoSidesOptimal(IPancakeRouter02(address(mockRouter)));
+    addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
