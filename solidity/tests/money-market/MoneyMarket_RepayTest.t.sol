@@ -163,4 +163,32 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
 
     assertEq(collateralFacet.collats(address(weth)), 95 ether);
   }
+
+  function testCorrectness_WhenUserRepayWithCollatAndDebtIsMoreThanCollatAmount_ShoulRepayOnlyAsCollatAmount()
+    external
+  {
+    uint256 _debtAmount;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    // set up for case collat is less than debt
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), 5 ether);
+    borrowFacet.borrow(subAccount0, address(usdc), 10 ether);
+    vm.stopPrank();
+
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(usdc));
+
+    vm.prank(ALICE);
+    borrowFacet.repayWithCollat(ALICE, subAccount0, address(usdc), 10 ether);
+
+    // due to alice provide only 5 ether for collat on USDC but borrow 10 ehter
+    // alice repay with collat as 10 ether, the result should be repay only 5 ether follow collat amount
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(usdc));
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(usdc));
+    assertEq(_debtAmount, 5 ether);
+    assertEq(_globalDebtShare, 5 ether);
+    assertEq(_globalDebtValue, 5 ether);
+
+    assertEq(collateralFacet.collats(address(usdc)), 0 ether);
+  }
 }
