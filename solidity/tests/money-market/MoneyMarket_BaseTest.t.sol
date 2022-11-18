@@ -61,19 +61,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     repurchaseFacet = IRepurchaseFacet(moneyMarketDiamond);
 
-    vm.deal(ALICE, 1000 ether);
-
-    weth.mint(ALICE, 1000 ether);
-    btc.mint(ALICE, 1000 ether);
-    usdc.mint(ALICE, 1000 ether);
-    opm.mint(ALICE, 1000 ether);
-    isolateToken.mint(ALICE, 1000 ether);
-
-    weth.mint(BOB, 1000 ether);
-    btc.mint(BOB, 1000 ether);
-    usdc.mint(BOB, 1000 ether);
-    isolateToken.mint(BOB, 1000 ether);
-
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     btc.approve(moneyMarketDiamond, type(uint256).max);
