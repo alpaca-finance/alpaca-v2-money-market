@@ -17,6 +17,13 @@ interface IBorrowFacet {
     uint256 _repayAmount
   ) external;
 
+  function repayViaCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external;
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
@@ -60,4 +67,5 @@ interface IBorrowFacet {
   );
   error BorrowFacet_InvalidAssetTier();
   error BorrowFacet_ExceedBorrowLimit();
+  error BorrowFacet_BorrowingPowerTooLow();
 }

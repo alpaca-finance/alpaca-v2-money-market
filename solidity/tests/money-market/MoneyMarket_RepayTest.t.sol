@@ -92,4 +92,75 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5 ether);
   }
+
+  function testCorrectness_WhenUserRepayViaCollatDebt_DebtValueAndCollatShouldDecrease() external {
+    uint256 _debtAmount;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+
+    vm.prank(ALICE);
+    borrowFacet.repayViaCollat(ALICE, subAccount0, address(weth), _debtAmount);
+
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
+    assertEq(_debtAmount, 0);
+    assertEq(_globalDebtShare, 0);
+    assertEq(_globalDebtValue, 0);
+
+    assertEq(collateralFacet.collats(address(weth)), 90 ether);
+  }
+
+  function testCorrectness_WhenUserRepayViaCollatDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount()
+    external
+  {
+    uint256 _debtAmount;
+    uint256 _repayAmount = 20 ether;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+
+    uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
+    uint256 _totalTokenBefore = lendFacet.getTotalToken(address(weth));
+    vm.prank(ALICE);
+    borrowFacet.repayViaCollat(ALICE, subAccount0, address(weth), _repayAmount);
+    uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
+    uint256 _totalTokenAfter = lendFacet.getTotalToken(address(weth));
+
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
+
+    // expect facet should not exchange token with sender
+    assertEq(_wethBalanceBefore - _wethBalanceAfter, 0 ether);
+    assertEq(_totalTokenAfter, _totalTokenBefore);
+    assertEq(_debtAmount, 0);
+    assertEq(_globalDebtShare, 0);
+    assertEq(_globalDebtValue, 0);
+
+    assertEq(collateralFacet.collats(address(weth)), 90 ether);
+  }
+
+  function testCorrectness_WhenUserRepayViaCollatWithTinyAmount_ShouldWork() external {
+    uint256 _debtAmount;
+    uint256 _repayAmount = 5 ether;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+
+    uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
+    vm.prank(ALICE);
+    borrowFacet.repayViaCollat(ALICE, subAccount0, address(weth), _repayAmount);
+    uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
+
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
+
+    // expect facet should not exchange token with sender
+    assertEq(_wethBalanceBefore - _wethBalanceAfter, 0 ether);
+    assertEq(_debtAmount, 5 ether);
+    assertEq(_globalDebtShare, 5 ether);
+    assertEq(_globalDebtValue, 5 ether);
+
+    assertEq(collateralFacet.collats(address(weth)), 95 ether);
+  }
 }

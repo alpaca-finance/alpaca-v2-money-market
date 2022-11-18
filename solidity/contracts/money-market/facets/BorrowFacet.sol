@@ -72,31 +72,34 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _repayAmount
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
-
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
-
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      moneyMarketDs.debtShares[_token],
-      _repayAmount,
-      moneyMarketDs.debtValues[_token]
-    );
-
-    _shareToRemove = _oldSubAccountDebtShare > _shareToRemove ? _shareToRemove : _oldSubAccountDebtShare;
-
-    uint256 _actualRepayAmount = _removeDebt(
-      _subAccount,
-      _token,
-      _oldSubAccountDebtShare,
-      _shareToRemove,
-      moneyMarketDs
-    );
+    uint256 _actualRepayAmount = _repay(_subAccount, _token, _repayAmount, moneyMarketDs);
 
     // transfer only amount to repay
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+
+    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
+  }
+
+  function repayViaCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
+    uint256 _actualRepayAmount = _repay(_subAccount, _token, _repayAmount, moneyMarketDs);
+
+    LibMoneyMarket01.removeCollateral(_subAccount, _token, _actualRepayAmount, moneyMarketDs);
+
+    if (!LibMoneyMarket01.isSubaccountHealthy(_subAccount, moneyMarketDs)) {
+      revert BorrowFacet_BorrowingPowerTooLow();
+    }
 
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
@@ -246,6 +249,25 @@ contract BorrowFacet is IBorrowFacet {
     if (_borrowAmount + moneyMarketDs.debtValues[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert BorrowFacet_ExceedBorrowLimit();
     }
+  }
+
+  function _repay(
+    address _subAccount,
+    address _token,
+    uint256 _repayAmount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _actualRepayAmount) {
+    (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
+
+    uint256 _shareToRemove = LibShareUtil.valueToShare(
+      moneyMarketDs.debtShares[_token],
+      _repayAmount,
+      moneyMarketDs.debtValues[_token]
+    );
+
+    _shareToRemove = _oldSubAccountDebtShare > _shareToRemove ? _shareToRemove : _oldSubAccountDebtShare;
+
+    _actualRepayAmount = _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _shareToRemove, moneyMarketDs);
   }
 
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
