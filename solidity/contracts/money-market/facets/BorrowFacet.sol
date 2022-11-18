@@ -25,6 +25,12 @@ contract BorrowFacet is IBorrowFacet {
   );
 
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
+  event LogRepayViaCollat(
+    address indexed _user,
+    uint256 indexed _subAccountId,
+    address _token,
+    uint256 _actualRepayAmount
+  );
 
   function borrow(
     uint256 _subAccountId,
@@ -101,7 +107,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_BorrowingPowerTooLow();
     }
 
-    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
+    emit LogRepayViaCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
   function getDebtShares(address _account, uint256 _subAccountId)
