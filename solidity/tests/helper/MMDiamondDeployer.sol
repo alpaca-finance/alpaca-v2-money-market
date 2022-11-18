@@ -161,7 +161,7 @@ library MMDiamondDeployer {
     selectors[9] = BorrowFacet.accureInterest.selector;
     selectors[10] = BorrowFacet.debtValues.selector;
     selectors[11] = BorrowFacet.debtShares.selector;
-    selectors[12] = BorrowFacet.repayViaCollat.selector;
+    selectors[12] = BorrowFacet.repayWithCollat.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_brrowFacet),

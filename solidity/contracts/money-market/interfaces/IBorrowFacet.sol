@@ -17,7 +17,7 @@ interface IBorrowFacet {
     uint256 _repayAmount
   ) external;
 
-  function repayViaCollat(
+  function repayWithCollat(
     address _account,
     uint256 _subAccountId,
     address _token,
@@ -68,4 +68,5 @@ interface IBorrowFacet {
   error BorrowFacet_InvalidAssetTier();
   error BorrowFacet_ExceedBorrowLimit();
   error BorrowFacet_BorrowingPowerTooLow();
+  error BorrowFacet_TooManyCollateralRemoved();
 }

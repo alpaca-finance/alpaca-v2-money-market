@@ -396,24 +396,6 @@ library LibMoneyMarket01 {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
 
-  function removeCollateral(
-    address _subAccount,
-    address _token,
-    uint256 _removeAmount,
-    MoneyMarketDiamondStorage storage ds
-  ) internal returns (uint256 _actualRemoveAmount) {
-    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
-
-    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
-    if (_collateralAmount > 0) {
-      _actualRemoveAmount = _removeAmount > _collateralAmount ? _collateralAmount : _removeAmount;
-
-      _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _actualRemoveAmount);
-
-      ds.collats[_token] -= _actualRemoveAmount;
-    }
-  }
-
   function isSubaccountHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
