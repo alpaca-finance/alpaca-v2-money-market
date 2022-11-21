@@ -97,6 +97,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
+    // todo: handle slippage
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
 
     ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);

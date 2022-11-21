@@ -147,15 +147,7 @@ contract PancakeswapV2Strategy is IStrat {
     address _token0 = IPancakePair(_lpToken).token0();
     address _token1 = IPancakePair(_lpToken).token1();
 
-    router.removeLiquidity(
-      IPancakePair(_lpToken).token0(),
-      IPancakePair(_lpToken).token1(),
-      _lpToRemove,
-      0,
-      0,
-      address(this),
-      block.timestamp
-    );
+    router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
 
     _token0Return = ERC20(_token0).balanceOf(address(this));
     _token1Return = ERC20(_token1).balanceOf(address(this));
