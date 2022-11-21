@@ -36,7 +36,7 @@ import { MockRouter } from "../mocks/MockRouter.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // peripherals
-import { PancakeswapV2StrategyAddTwoSidesOptimal } from "../../contracts/lyf/strats/PancakeswapV2StrategyAddTwoSidesOptimal.sol";
+import { PancakeswapV2Strategy } from "../../contracts/lyf/strats/PancakeswapV2Strategy.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // helper
@@ -56,7 +56,7 @@ abstract contract LYF_BaseTest is BaseTest {
   MockChainLinkPriceOracle chainLinkOracle;
 
   MockRouter internal mockRouter;
-  PancakeswapV2StrategyAddTwoSidesOptimal internal addStrat;
+  PancakeswapV2Strategy internal addStrat;
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
@@ -76,7 +76,20 @@ abstract contract LYF_BaseTest is BaseTest {
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](3);
+
+    // mock LP, Router and Stratgy
+    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
+
+    addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
+
+    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+
+    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
+
+    // set token config
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](4);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -108,17 +121,17 @@ abstract contract LYF_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[3] = ILYFAdminFacet.TokenConfigInput({
+      token: address(wethUsdcLPToken),
+      tier: LibLYF01.AssetTier.LP,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxBorrow: 0,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
-
-    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
-
-    mockRouter = new MockRouter(address(wethUsdcLPToken));
-
-    addStrat = new PancakeswapV2StrategyAddTwoSidesOptimal(IPancakeRouter02(address(mockRouter)));
-
-    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
-
-    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set oracle for LYF
     chainLinkOracle = deployMockChainLinkPriceOracle();

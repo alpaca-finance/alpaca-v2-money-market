@@ -81,6 +81,32 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
   }
 
+  function liquidateLP(
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _lpShareAmount,
+    address _removeStrat
+  ) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+
+    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
+      revert LYFFarmFacet_InvalidAssetTier();
+    }
+
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
+
+    // todo: handle slippage
+    uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
+
+    ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
+    (uint256 _token0Return, uint256 _token1Return) = IStrat(_removeStrat).removeLiquidity(_lpToken);
+
+    LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
+    LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
+  }
+
   function _borrowFromMoneyMarket(
     address _subAccount,
     address _token,

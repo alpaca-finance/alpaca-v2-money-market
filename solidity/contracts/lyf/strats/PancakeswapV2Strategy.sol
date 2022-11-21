@@ -21,15 +21,16 @@ import { IPancakePair } from "../interfaces/IPancakePair.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
-
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // todo: reentrance
-contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
+contract PancakeswapV2Strategy is IStrat {
   using SafeERC20 for address;
+  using LibSafeToken for address;
 
-  error PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
-  error PancakeswapV2StrategyAddTwoSidesOptimal_TransferFailed();
-  error PancakeswapV2StrategyAddTwoSidesOptimal_Reverse();
+  error PancakeswapV2Strategy_TooLittleReceived();
+  error PancakeswapV2Strategy_TransferFailed();
+  error PancakeswapV2Strategy_Reverse();
 
   IPancakeRouter02 public router;
 
@@ -71,7 +72,7 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
     uint256 resB
   ) internal pure returns (uint256) {
     if (amtA * (resB) < amtB * (resA)) {
-      revert PancakeswapV2StrategyAddTwoSidesOptimal_Reverse();
+      revert PancakeswapV2Strategy_Reverse();
     }
 
     uint256 a = 9975;
@@ -125,17 +126,36 @@ contract PancakeswapV2StrategyAddTwoSidesOptimal is IStrat {
       block.timestamp
     );
     if (moreLPAmount < _minLPAmount) {
-      revert PancakeswapV2StrategyAddTwoSidesOptimal_TooLittleReceived();
+      revert PancakeswapV2Strategy_TooLittleReceived();
     }
     // return parameter
     _lpRecieved = lpToken.balanceOf(address(this));
 
     if (!lpToken.transfer(msg.sender, _lpRecieved)) {
-      revert PancakeswapV2StrategyAddTwoSidesOptimal_TransferFailed();
+      revert PancakeswapV2Strategy_TransferFailed();
     }
     // 7. Reset approve to 0 for safety reason
     ERC20(_token0).approve(address(router), 0);
     ERC20(_token1).approve(address(router), 0);
+  }
+
+  function removeLiquidity(address _lpToken) external returns (uint256 _token0Return, uint256 _token1Return) {
+    uint256 _lpToRemove = ERC20(_lpToken).balanceOf(address(this));
+
+    ERC20(_lpToken).approve(address(router), type(uint256).max);
+
+    address _token0 = IPancakePair(_lpToken).token0();
+    address _token1 = IPancakePair(_lpToken).token1();
+
+    router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
+
+    _token0Return = ERC20(_token0).balanceOf(address(this));
+    _token1Return = ERC20(_token1).balanceOf(address(this));
+
+    _token0.safeTransfer(msg.sender, _token0Return);
+    _token1.safeTransfer(msg.sender, _token1Return);
+
+    ERC20(_lpToken).approve(address(router), 0);
   }
 
   receive() external payable {}
