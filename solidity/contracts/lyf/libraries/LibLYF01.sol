@@ -5,6 +5,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
+import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -47,13 +48,16 @@ library LibLYF01 {
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
-    mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
-    mapping(address => uint256) debtShares;
-    mapping(address => uint256) debtValues;
-    mapping(address => uint256) globalDebts;
-    mapping(address => uint256) debtLastAccureTime;
+    // token => lp token => debt share id
+    mapping(address => mapping(address => uint256)) debtShareIndex;
+    mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares;
+    mapping(uint256 => uint256) debtShares;
+    mapping(uint256 => uint256) debtValues; // increase
+    mapping(uint256 => uint256) globalDebts; // increase
+    mapping(uint256 => uint256) debtLastAccureTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
+    mapping(uint256 => address) interestModels;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -75,13 +79,13 @@ library LibLYF01 {
     lyfDs.tokenConfigs[_token] = _config;
   }
 
-  function pendingInterest(address _token, LYFDiamondStorage storage lyfDs)
+  function pendingInterest(uint256 _debtShareIndex, LYFDiamondStorage storage lyfDs)
     internal
     view
     returns (uint256 _pendingInterest)
   {}
 
-  function accureInterest(address _token, LYFDiamondStorage storage lyfDs) internal {}
+  function accureInterest(uint256 _debtShareIndex, LYFDiamondStorage storage lyfDs) internal {}
 
   // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
@@ -195,7 +199,7 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      _amountAdded = LibShareUtil.valueToShareRoundingUp(lyfDs.lpShares[_token], _amount, lyfDs.lpValues[_token]);
+      _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpValues[_token]);
 
       // update lp global state
       lyfDs.lpShares[_token] += _amountAdded;

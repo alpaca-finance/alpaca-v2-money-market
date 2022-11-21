@@ -14,8 +14,8 @@ library LibShareUtil {
   }
 
   function valueToShare(
-    uint256 _totalShare,
     uint256 _tokenAmount,
+    uint256 _totalShare,
     uint256 _totalValue
   ) internal pure returns (uint256) {
     if (_totalShare == 0) return _tokenAmount;
@@ -23,11 +23,11 @@ library LibShareUtil {
   }
 
   function valueToShareRoundingUp(
-    uint256 _totalShare,
     uint256 _tokenAmount,
+    uint256 _totalShare,
     uint256 _totalValue
   ) internal pure returns (uint256) {
-    uint256 _shares = valueToShare(_totalShare, _tokenAmount, _totalValue);
+    uint256 _shares = valueToShare(_tokenAmount, _totalShare, _totalValue);
     uint256 _shareValues = shareToValue(_shares, _totalValue, _totalShare);
     if (_shareValues + 1 == _tokenAmount) {
       _shares += 1;

@@ -54,7 +54,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _totalSupply = moneyMarketDs.debtShares[_token];
     uint256 _totalValue = moneyMarketDs.debtValues[_token];
 
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_totalSupply, _amount, _totalValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -84,8 +84,8 @@ contract BorrowFacet is IBorrowFacet {
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
-      moneyMarketDs.debtShares[_token],
       _repayAmount,
+      moneyMarketDs.debtShares[_token],
       moneyMarketDs.debtValues[_token]
     );
 
@@ -125,8 +125,8 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
-      moneyMarketDs.debtShares[_token],
       _amountToRemove,
+      moneyMarketDs.debtShares[_token],
       moneyMarketDs.debtValues[_token]
     );
 

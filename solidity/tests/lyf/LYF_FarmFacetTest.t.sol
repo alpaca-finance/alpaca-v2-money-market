@@ -4,7 +4,10 @@ pragma solidity 0.8.17;
 import { LYF_BaseTest, MockERC20, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
-import { ILYFFarmFacet, LibDoublyLinkedList } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
+
+// libraries
+import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
   MockERC20 mockToken;
@@ -47,8 +50,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     // assert Debt
 
-    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth));
-    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc));
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
 
     assertEq(_subAccountWethDebtValue, 10 ether);
     assertEq(_subAccountUsdcDebtValue, 10 ether);
