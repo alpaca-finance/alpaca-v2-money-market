@@ -90,12 +90,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    address _token0 = ISwapPairLike(_lpToken).token0();
-    address _token1 = ISwapPairLike(_lpToken).token1();
-
     if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
+
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
 
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
 
