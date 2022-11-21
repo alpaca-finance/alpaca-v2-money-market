@@ -140,6 +140,10 @@ abstract contract LYF_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setOracle(address(chainLinkOracle));
     IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
+
+    // set debt share indexes
+    adminFacet.setDebtShareIndex(address(weth), address(wethUsdcLPToken), 1);
+    adminFacet.setDebtShareIndex(address(usdc), address(wethUsdcLPToken), 2);
   }
 
   function setUpMM() internal {
