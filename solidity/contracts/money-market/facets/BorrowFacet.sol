@@ -117,25 +117,17 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
-    uint256 _collateralShare = LibShareUtil.valueToShare(
-      moneyMarketDs.debtShares[_token],
-      _collateralAmount,
-      moneyMarketDs.debtValues[_token]
-    );
+    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
+    uint256 _maximumAmountToRemove = _collateralAmount > _oldDebtAmount ? _oldDebtAmount : _collateralAmount;
 
-    uint256 _maximumShareToRemove = _collateralShare > _oldSubAccountDebtShare
-      ? _oldSubAccountDebtShare
-      : _collateralShare;
+    uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       moneyMarketDs.debtShares[_token],
-      _repayAmount,
+      _amountToRemove,
       moneyMarketDs.debtValues[_token]
     );
-
-    _shareToRemove = _shareToRemove > _maximumShareToRemove ? _maximumShareToRemove : _shareToRemove;
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
