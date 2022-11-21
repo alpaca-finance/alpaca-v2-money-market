@@ -25,6 +25,12 @@ contract BorrowFacet is IBorrowFacet {
   );
 
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
+  event LogRepayWithCollat(
+    address indexed _user,
+    uint256 indexed _subAccountId,
+    address _token,
+    uint256 _actualRepayAmount
+  );
 
   function borrow(
     uint256 _subAccountId,
@@ -72,9 +78,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _repayAmount
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
-
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
@@ -99,6 +103,49 @@ contract BorrowFacet is IBorrowFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
 
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
+  }
+
+  function repayWithCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+
+    // actual repay amount is minimum of collateral amount, debt amount, and repay amount
+    uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
+
+    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
+
+    uint256 _maximumAmountToRemove = _collateralAmount > _oldDebtAmount ? _oldDebtAmount : _collateralAmount;
+
+    uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
+
+    uint256 _shareToRemove = LibShareUtil.valueToShare(
+      moneyMarketDs.debtShares[_token],
+      _amountToRemove,
+      moneyMarketDs.debtValues[_token]
+    );
+
+    uint256 _actualRepayAmount = _removeDebt(
+      _subAccount,
+      _token,
+      _oldSubAccountDebtShare,
+      _shareToRemove,
+      moneyMarketDs
+    );
+
+    if (_actualRepayAmount > _collateralAmount) {
+      revert BorrowFacet_TooManyCollateralRemoved();
+    }
+
+    moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
+    moneyMarketDs.collats[_token] -= _actualRepayAmount;
+
+    emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
   function getDebtShares(address _account, uint256 _subAccountId)
