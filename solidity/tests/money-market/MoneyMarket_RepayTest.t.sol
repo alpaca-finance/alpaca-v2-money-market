@@ -93,7 +93,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtValue, 5 ether);
   }
 
-  function testCorrectness_WhenUserRepayWithCollatDebt_DebtValueAndCollatShouldDecrease() external {
+  function testCorrectness_WhenUserRepayWithCollat_DebtValueAndCollatShouldDecrease() external {
     uint256 _debtAmount;
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
@@ -111,9 +111,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(collateralFacet.collats(address(weth)), 90 ether);
   }
 
-  function testCorrectness_WhenUserRepayWithCollatDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount()
-    external
-  {
+  function testCorrectness_WhenUserRepayWithCollatMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
     uint256 _debtAmount;
     uint256 _repayAmount = 20 ether;
     uint256 _globalDebtShare;

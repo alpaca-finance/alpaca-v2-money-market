@@ -112,9 +112,8 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _repayAmount
   ) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
-
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
