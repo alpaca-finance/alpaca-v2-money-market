@@ -115,6 +115,7 @@ contract BorrowFacet is IBorrowFacet {
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
+    // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
     (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
@@ -143,10 +144,6 @@ contract BorrowFacet is IBorrowFacet {
 
     moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
     moneyMarketDs.collats[_token] -= _actualRepayAmount;
-
-    if (!LibMoneyMarket01.isSubaccountHealthy(_subAccount, moneyMarketDs)) {
-      revert BorrowFacet_BorrowingPowerTooLow();
-    }
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
