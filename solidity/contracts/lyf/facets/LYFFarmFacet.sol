@@ -93,6 +93,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
+    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
+      revert LYFFarmFacet_InvalidAssetTier();
+    }
+
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
 
     ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
@@ -101,7 +105,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
     LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
   }
-  
+
   function _borrowFromMoneyMarket(
     address _subAccount,
     address _token,

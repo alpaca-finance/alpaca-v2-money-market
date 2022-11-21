@@ -76,7 +76,20 @@ abstract contract LYF_BaseTest is BaseTest {
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](3);
+
+    // mock LP, Router and Stratgy
+    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
+
+    addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
+
+    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+
+    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
+
+    // set token config
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](4);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -108,17 +121,17 @@ abstract contract LYF_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[3] = ILYFAdminFacet.TokenConfigInput({
+      token: address(wethUsdcLPToken),
+      tier: LibLYF01.AssetTier.LP,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxBorrow: 0,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
-
-    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
-
-    mockRouter = new MockRouter(address(wethUsdcLPToken));
-
-    addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
-
-    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
-
-    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set oracle for LYF
     chainLinkOracle = deployMockChainLinkPriceOracle();
