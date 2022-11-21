@@ -98,4 +98,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 5 ether);
     assertEq(_subAccountLpTokenCollat, 5 ether);
   }
+
+  function testRevert_WhenUserAddInvalidLYFCollateral_ShouldRevert() external {
+    vm.startPrank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
+    farmFacet.liquidateLP(subAccount0, address(weth), 5 ether, address(addStrat));
+    vm.stopPrank();
+  }
 }
