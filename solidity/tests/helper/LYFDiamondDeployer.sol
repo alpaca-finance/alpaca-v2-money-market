@@ -96,12 +96,13 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.oracle.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
     selectors[3] = LYFAdminFacet.setMoneyMarket.selector;
-    selectors[4] = LYFAdminFacet.setDebtShareIndex.selector;
+    selectors[4] = LYFAdminFacet.setDebtShareId.selector;
+    selectors[5] = LYFAdminFacet.setDebtInterestModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

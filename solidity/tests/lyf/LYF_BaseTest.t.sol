@@ -31,6 +31,7 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 // libs
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
@@ -142,8 +143,12 @@ abstract contract LYF_BaseTest is BaseTest {
     IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
 
     // set debt share indexes
-    adminFacet.setDebtShareIndex(address(weth), address(wethUsdcLPToken), 1);
-    adminFacet.setDebtShareIndex(address(usdc), address(wethUsdcLPToken), 2);
+    adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
+    adminFacet.setDebtShareId(address(usdc), address(wethUsdcLPToken), 2);
+
+    // set interest model
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
   }
 
   function setUpMM() internal {

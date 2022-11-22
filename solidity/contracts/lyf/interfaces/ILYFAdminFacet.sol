@@ -22,9 +22,11 @@ interface ILYFAdminFacet {
 
   function setMoneyMarket(address _moneyMarket) external;
 
-  function setDebtShareIndex(
+  function setDebtShareId(
     address _token,
     address _lpToken,
-    uint256 _debtShareIndex
+    uint256 _debtShareId
   ) external;
+
+  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
 }

@@ -339,6 +339,11 @@ contract BorrowFacet is IBorrowFacet {
     return moneyMarketDs.debtValues[_token];
   }
 
+  function getFloatingBalance(address _token) external view returns (uint256 _floating) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _floating = LibMoneyMarket01.getFloatingBalance(_token, moneyMarketDs);
+  }
+
   function debtShares(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.debtShares[_token];
