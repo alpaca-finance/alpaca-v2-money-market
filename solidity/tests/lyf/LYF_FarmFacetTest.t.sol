@@ -5,6 +5,7 @@ import { LYF_BaseTest, MockERC20, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
 import { ILYFFarmFacet, LibDoublyLinkedList } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
+import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
   MockERC20 mockToken;
@@ -104,5 +105,24 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
     farmFacet.liquidateLP(subAccount0, address(weth), 5 ether, address(addStrat));
     vm.stopPrank();
+  }
+
+  function testCorrectness_GetMMDebt_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0, address(addStrat));
+    vm.stopPrank();
+
+    uint256 debtAmount = farmFacet.getMMDebt(address(weth));
+    uint256 mmDebtAmount = IMoneyMarket(moneyMarketDiamond).nonCollatGetDebt(address(lyfDiamond), address(weth));
+
+    assertEq(debtAmount, mmDebtAmount);
   }
 }
