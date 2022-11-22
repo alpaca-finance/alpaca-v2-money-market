@@ -215,7 +215,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    return IMoneyMarket(lyfDs.moneyMarket).nonCollatGetDebt(address(this), _token);
+    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).nonCollatGetDebt(address(this), _token);
   }
 
   function _removeDebt(
