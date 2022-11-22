@@ -44,8 +44,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    LibLYF01.accureAllSubAccountDebtShares(_subAccount, ds);
-
     LibLYF01.addCollat(_subAccount, _token, _amount, ds);
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);

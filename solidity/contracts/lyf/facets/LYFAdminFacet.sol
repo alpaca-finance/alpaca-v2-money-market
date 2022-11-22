@@ -49,8 +49,10 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _debtShareId
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
-    lyfDs.debtShareTokens[_debtShareId] = LibLYF01.DebtShareTokens({ token: _token, lpToken: _lpToken });
+    if (lyfDs.debtShareIds[_token][_lpToken] == 0) {
+      lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
+      lyfDs.debtShareTokens[_debtShareId] = LibLYF01.DebtShareTokens({ token: _token, lpToken: _lpToken });
+    }
   }
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
