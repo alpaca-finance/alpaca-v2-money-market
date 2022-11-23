@@ -23,14 +23,19 @@ import { IStrat } from "../interfaces/IStrat.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
+import { Ownable } from "../utils/Ownable.sol";
+
 // todo: reentrance
-contract PancakeswapV2Strategy is IStrat {
+contract PancakeswapV2Strategy is IStrat, Ownable {
   using SafeERC20 for address;
   using LibSafeToken for address;
+
+  mapping(address => bool) public whitelistedCallers;
 
   error PancakeswapV2Strategy_TooLittleReceived();
   error PancakeswapV2Strategy_TransferFailed();
   error PancakeswapV2Strategy_Reverse();
+  error PancakeswapV2Strategy_Unauthorized(address _caller);
 
   IPancakeRouter02 public router;
 
@@ -38,6 +43,13 @@ contract PancakeswapV2Strategy is IStrat {
   /// @param _router The PancakeSwap Router smart contract.
   constructor(IPancakeRouter02 _router) {
     router = _router;
+  }
+
+  modifier onlyWhitelisted() {
+    if (!whitelistedCallers[msg.sender]) {
+      revert PancakeswapV2Strategy_Unauthorized(msg.sender);
+    }
+    _;
   }
 
   /// @dev Compute optimal deposit amount
@@ -96,7 +108,7 @@ contract PancakeswapV2Strategy is IStrat {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external returns (uint256 _lpRecieved) {
+  ) external onlyWhitelisted returns (uint256 _lpRecieved) {
     IPancakePair lpToken = IPancakePair(_lpToken);
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
@@ -139,7 +151,11 @@ contract PancakeswapV2Strategy is IStrat {
     ERC20(_token1).approve(address(router), 0);
   }
 
-  function removeLiquidity(address _lpToken) external returns (uint256 _token0Return, uint256 _token1Return) {
+  function removeLiquidity(address _lpToken)
+    external
+    onlyWhitelisted
+    returns (uint256 _token0Return, uint256 _token1Return)
+  {
     uint256 _lpToRemove = ERC20(_lpToken).balanceOf(address(this));
 
     ERC20(_lpToken).approve(address(router), type(uint256).max);
@@ -156,6 +172,16 @@ contract PancakeswapV2Strategy is IStrat {
     _token1.safeTransfer(msg.sender, _token1Return);
 
     ERC20(_lpToken).approve(address(router), 0);
+  }
+
+  function setWhitelistedCallers(address[] calldata callers, bool ok) external onlyOwner {
+    uint256 len = uint256(callers.length);
+    for (uint256 i = 0; i < len; ) {
+      whitelistedCallers[callers[i]] = ok;
+      unchecked {
+        i++;
+      }
+    }
   }
 
   receive() external payable {}
