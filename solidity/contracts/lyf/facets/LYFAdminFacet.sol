@@ -42,4 +42,16 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.moneyMarket = _moneyMarket;
   }
+
+  function setLPStrategies(LPStrategyConfigInput[] calldata _configs) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    uint256 len = uint256(_configs.length);
+    for (uint256 i = 0; i < len; ) {
+      lyfDs.lpStrategies[_configs[i].lpToken] = _configs[i].strategy;
+      unchecked {
+        i++;
+      }
+    }
+  }
 }

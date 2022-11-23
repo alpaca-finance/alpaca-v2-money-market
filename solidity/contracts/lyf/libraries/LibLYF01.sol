@@ -54,6 +54,7 @@ library LibLYF01 {
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
+    mapping(address => address) lpStrategies;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
