@@ -62,6 +62,8 @@ interface ILYFFarmFacet {
     address _removeStrat
   ) external;
 
+  function getMMDebt(address _token) external view returns (uint256);
+
   // Errors
   error LYFFarmFacet_InvalidToken(address _token);
   error LYFFarmFacet_NotEnoughToken(uint256 _borrowAmount);
