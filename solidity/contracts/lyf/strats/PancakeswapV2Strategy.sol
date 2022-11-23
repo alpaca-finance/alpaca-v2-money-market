@@ -15,6 +15,7 @@ pragma solidity 0.8.17;
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
@@ -22,8 +23,6 @@ import { IStrat } from "../interfaces/IStrat.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
-
-import { Ownable } from "../utils/Ownable.sol";
 
 // todo: reentrance
 contract PancakeswapV2Strategy is IStrat, Ownable {
