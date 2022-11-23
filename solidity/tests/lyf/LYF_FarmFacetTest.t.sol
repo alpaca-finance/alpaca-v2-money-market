@@ -30,7 +30,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0, address(addStrat));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
     // asset collat of subaccount
@@ -65,7 +65,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0, address(addStrat));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
     // asset collat of subaccount
@@ -86,7 +86,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(mockRouter), 5 ether);
-    farmFacet.liquidateLP(subAccount0, address(wethUsdcLPToken), 5 ether, address(addStrat));
+    farmFacet.liquidateLP(subAccount0, address(wethUsdcLPToken), 5 ether);
     vm.stopPrank();
 
     _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
@@ -103,7 +103,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
   function testRevert_WhenUserAddInvalidLYFCollateral_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
-    farmFacet.liquidateLP(subAccount0, address(weth), 5 ether, address(addStrat));
+    farmFacet.liquidateLP(subAccount0, address(weth), 5 ether);
     vm.stopPrank();
   }
 
@@ -117,7 +117,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0, address(addStrat));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
     uint256 debtAmount = farmFacet.getMMDebt(address(weth));

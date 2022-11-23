@@ -83,6 +83,9 @@ abstract contract LYF_BaseTest is BaseTest {
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
     addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
+    address[] memory stratWhitelistedCallers = new address[](1);
+    stratWhitelistedCallers[0] = lyfDiamond;
+    addStrat.setWhitelistedCallers(stratWhitelistedCallers, true);
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
@@ -132,6 +135,13 @@ abstract contract LYF_BaseTest is BaseTest {
     });
 
     adminFacet.setTokenConfigs(_inputs);
+
+    ILYFAdminFacet.LPStrategyConfigInput[] memory lpStrategies = new ILYFAdminFacet.LPStrategyConfigInput[](1);
+    lpStrategies[0] = ILYFAdminFacet.LPStrategyConfigInput({
+      lpToken: address(wethUsdcLPToken),
+      strategy: address(addStrat)
+    });
+    adminFacet.setLPStrategies(lpStrategies);
 
     // set oracle for LYF
     chainLinkOracle = deployMockChainLinkPriceOracle();
