@@ -102,7 +102,7 @@ library LYFDiamondDeployer {
     selectors[1] = LYFAdminFacet.oracle.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
     selectors[3] = LYFAdminFacet.setMoneyMarket.selector;
-    selectors[4] = LYFAdminFacet.setLPStrategies.selector;
+    selectors[4] = LYFAdminFacet.setLPConfigs.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

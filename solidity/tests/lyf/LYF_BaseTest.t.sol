@@ -136,12 +136,9 @@ abstract contract LYF_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
-    ILYFAdminFacet.LPStrategyConfigInput[] memory lpStrategies = new ILYFAdminFacet.LPStrategyConfigInput[](1);
-    lpStrategies[0] = ILYFAdminFacet.LPStrategyConfigInput({
-      lpToken: address(wethUsdcLPToken),
-      strategy: address(addStrat)
-    });
-    adminFacet.setLPStrategies(lpStrategies);
+    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
+    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({ lpToken: address(wethUsdcLPToken), strategy: address(addStrat) });
+    adminFacet.setLPConfigs(lpConfigs);
 
     // set oracle for LYF
     chainLinkOracle = deployMockChainLinkPriceOracle();

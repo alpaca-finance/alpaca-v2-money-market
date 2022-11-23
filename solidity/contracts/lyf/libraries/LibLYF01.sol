@@ -40,6 +40,10 @@ library LibLYF01 {
     uint256 maxToleranceExpiredSecond;
   }
 
+  struct LPConfig {
+    address strategy;
+  }
+
   // Storage
   struct LYFDiamondStorage {
     address moneyMarket;
@@ -54,7 +58,7 @@ library LibLYF01 {
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
-    mapping(address => address) lpStrategies;
+    mapping(address => LPConfig) lpConfigs;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {

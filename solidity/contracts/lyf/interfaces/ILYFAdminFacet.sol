@@ -14,7 +14,7 @@ interface ILYFAdminFacet {
     uint256 maxToleranceExpiredSecond;
   }
 
-  struct LPStrategyConfigInput {
+  struct LPConfigInput {
     address lpToken;
     address strategy;
   }
@@ -27,5 +27,5 @@ interface ILYFAdminFacet {
 
   function setMoneyMarket(address _moneyMarket) external;
 
-  function setLPStrategies(LPStrategyConfigInput[] memory _configs) external;
+  function setLPConfigs(LPConfigInput[] calldata _configs) external;
 }

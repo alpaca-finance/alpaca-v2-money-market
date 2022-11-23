@@ -56,7 +56,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _borrowFromMoneyMarket(_subAccount, _token1, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
 
     // 3. send token to strat
-    address _addStrat = lyfDs.lpStrategies[_lpToken];
+    address _addStrat = lyfDs.lpConfigs[_lpToken].strategy;
     ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
     ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
 
@@ -98,7 +98,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // todo: handle slippage
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
 
-    address _removeStrat = lyfDs.lpStrategies[_lpToken];
+    address _removeStrat = lyfDs.lpConfigs[_lpToken].strategy;
     ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
     (uint256 _token0Return, uint256 _token1Return) = IStrat(_removeStrat).removeLiquidity(_lpToken);
 

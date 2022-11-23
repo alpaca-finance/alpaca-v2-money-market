@@ -43,12 +43,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.moneyMarket = _moneyMarket;
   }
 
-  function setLPStrategies(LPStrategyConfigInput[] calldata _configs) external {
+  function setLPConfigs(LPConfigInput[] calldata _configs) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    uint256 len = uint256(_configs.length);
+    uint256 len = _configs.length;
     for (uint256 i = 0; i < len; ) {
-      lyfDs.lpStrategies[_configs[i].lpToken] = _configs[i].strategy;
+      lyfDs.lpConfigs[_configs[i].lpToken] = LibLYF01.LPConfig({ strategy: _configs[i].strategy });
       unchecked {
         i++;
       }
