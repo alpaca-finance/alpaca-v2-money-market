@@ -106,8 +106,8 @@ contract RepurchaseFacet is IRepurchaseFacet {
   ) internal {
     uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
     uint256 _repayShare = LibShareUtil.valueToShare(
-      moneyMarketDs.debtShares[_repayToken],
       _repayAmount,
+      moneyMarketDs.debtShares[_repayToken],
       moneyMarketDs.debtValues[_repayToken]
     );
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _debtShare - _repayShare);

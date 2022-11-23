@@ -145,7 +145,7 @@ contract LendFacet is ILendFacet {
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     // calculate _shareToMint to mint before transfer token to MM
-    _shareToMint = LibShareUtil.valueToShare(_totalSupply, _amount, _totalToken);
+    _shareToMint = LibShareUtil.valueToShare(_amount, _totalSupply, _totalToken);
 
     if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
       revert LendFacet_NoTinyShares();

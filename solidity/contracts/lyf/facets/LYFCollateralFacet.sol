@@ -58,10 +58,10 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
-    // todo: interest model
-    // LibLYF01.accureInterest(_token, ds);
-
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+
+    LibLYF01.accureAllSubAccountDebtShares(_subAccount, ds);
+
     uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, ds);
 
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
@@ -82,10 +82,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
-    // todo
-    // LibMoneyMarket01.accureInterest(_token, ds);
-
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
+
+    LibLYF01.accureAllSubAccountDebtShares(_fromSubAccount, ds);
 
     uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
 
@@ -94,6 +93,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     }
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
+
+    LibLYF01.accureAllSubAccountDebtShares(_toSubAccount, ds);
 
     LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 

@@ -42,4 +42,21 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.moneyMarket = _moneyMarket;
   }
+
+  function setDebtShareId(
+    address _token,
+    address _lpToken,
+    uint256 _debtShareId
+  ) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    if (lyfDs.debtShareIds[_token][_lpToken] == 0) {
+      lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
+      lyfDs.debtShareTokens[_debtShareId] = LibLYF01.DebtShareTokens({ token: _token, lpToken: _lpToken });
+    }
+  }
+
+  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.interestModels[_debtShareId] = _interestModel;
+  }
 }

@@ -21,4 +21,12 @@ interface ILYFAdminFacet {
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
   function setMoneyMarket(address _moneyMarket) external;
+
+  function setDebtShareId(
+    address _token,
+    address _lpToken,
+    uint256 _debtShareId
+  ) external;
+
+  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
 }
