@@ -21,6 +21,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_LPStrategyNotFound(address _lpToken);
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -57,6 +58,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // 3. send token to strat
     address _addStrat = lyfDs.lpConfigs[_lpToken].strategy;
+    if (_addStrat == address(0)) {
+      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
+    }
     ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
     ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
 
@@ -99,6 +103,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
 
     address _removeStrat = lyfDs.lpConfigs[_lpToken].strategy;
+    if (_removeStrat == address(0)) {
+      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
+    }
     ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
     (uint256 _token0Return, uint256 _token1Return) = IStrat(_removeStrat).removeLiquidity(_lpToken);
 
