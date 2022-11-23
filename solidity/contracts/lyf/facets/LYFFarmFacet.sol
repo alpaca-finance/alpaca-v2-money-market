@@ -247,10 +247,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     lyfDs.debtShares[_debtShareId] -= _shareToRemove;
     lyfDs.debtValues[_debtShareId] -= _repayAmount;
 
-    // update global debt
-
-    lyfDs.globalDebts[_debtShareId] -= _repayAmount;
-
     // emit event
     emit LogRemoveDebt(_subAccount, _debtShareId, _shareToRemove, _repayAmount);
   }

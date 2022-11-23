@@ -61,7 +61,6 @@ library LibLYF01 {
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares;
     mapping(uint256 => uint256) debtShares;
     mapping(uint256 => uint256) debtValues;
-    mapping(uint256 => uint256) globalDebts;
     mapping(uint256 => uint256) debtLastAccureTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
@@ -110,8 +109,6 @@ library LibLYF01 {
   function accureInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
     uint256 _pendingInterest = pendingInterest(_debtShareId, lyfDs);
     if (_pendingInterest > 0) {
-      // update global debt
-      lyfDs.globalDebts[_debtShareId] += _pendingInterest;
       // update overcollat debt
       lyfDs.debtValues[_debtShareId] += _pendingInterest;
       // update timestamp
