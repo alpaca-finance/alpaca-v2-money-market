@@ -20,7 +20,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
-import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";

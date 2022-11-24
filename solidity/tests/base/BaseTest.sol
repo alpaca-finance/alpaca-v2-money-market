@@ -40,7 +40,6 @@ contract BaseTest is DSTest {
   MockERC20 internal usdc;
   MockERC20 internal btc;
   MockERC20 internal opm; // open market token
-  MockERC20 internal cake;
   address internal usd;
   MockERC20 internal isolateToken;
 
@@ -64,7 +63,6 @@ contract BaseTest is DSTest {
     usdc = deployMockErc20("USD COIN", "USDC", 18);
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
-    cake = deployMockErc20("CAKE token", "CAKE", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
     nativeToken = deployMockWNative();
 

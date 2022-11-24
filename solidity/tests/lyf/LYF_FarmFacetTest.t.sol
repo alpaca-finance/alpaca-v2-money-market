@@ -36,6 +36,10 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+    //assert pending reward
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+
     // asset collat of subaccount
     address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
     uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
@@ -102,8 +106,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
     vm.stopPrank();
 
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
     // asset collat of subaccount
     address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
     uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
@@ -126,6 +133,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     wethUsdcLPToken.approve(address(mockRouter), 5 ether);
     farmFacet.liquidateLP(subAccount0, address(wethUsdcLPToken), 5 ether);
     vm.stopPrank();
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
 
     _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
     _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
@@ -155,6 +164,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
     vm.stopPrank();
 
     uint256 debtAmount = farmFacet.getMMDebt(address(weth));
