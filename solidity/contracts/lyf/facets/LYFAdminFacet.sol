@@ -49,7 +49,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     uint256 len = _configs.length;
     for (uint256 i = 0; i < len; ) {
-      lyfDs.lpConfigs[_configs[i].lpToken] = LibLYF01.LPConfig({ strategy: _configs[i].strategy });
+      lyfDs.lpConfigs[_configs[i].lpToken] = LibLYF01.LPConfig({
+        strategy: _configs[i].strategy,
+        masterChef: _configs[i].masterChef,
+        poolId: _configs[i].poolId
+      });
       unchecked {
         i++;
       }

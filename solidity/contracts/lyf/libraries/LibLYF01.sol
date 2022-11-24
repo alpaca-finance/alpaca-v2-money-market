@@ -45,6 +45,8 @@ library LibLYF01 {
 
   struct LPConfig {
     address strategy;
+    address masterChef;
+    uint256 poolId;
   }
 
   struct DebtShareTokens {

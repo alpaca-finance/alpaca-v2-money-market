@@ -36,6 +36,10 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+    //assert pending reward
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+
     // asset collat of subaccount
     address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
     uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
@@ -46,7 +50,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcCollat, 0 ether, "usdc collat");
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 30 ether);
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 30 ether);
     assertEq(_subAccountLpTokenCollat, 30 ether);
 
     // assert Debt
@@ -101,8 +106,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
     vm.stopPrank();
 
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
     // asset collat of subaccount
     address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
     uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
@@ -113,7 +121,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcCollat, 10 ether);
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 10 ether);
+
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 10 ether);
     assertEq(_subAccountLpTokenCollat, 10 ether);
 
     // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
@@ -124,6 +134,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.liquidateLP(subAccount0, address(wethUsdcLPToken), 5 ether);
     vm.stopPrank();
 
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
+
     _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
     _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
     _subAccountLpTokenCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(wethUsdcLPToken));
@@ -131,7 +143,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountWethCollat, 12.5 ether);
     assertEq(_subAccountUsdcCollat, 12.5 ether);
 
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 5 ether);
     assertEq(_subAccountLpTokenCollat, 5 ether);
   }
 
@@ -153,6 +164,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
     vm.stopPrank();
 
     uint256 debtAmount = farmFacet.getMMDebt(address(weth));

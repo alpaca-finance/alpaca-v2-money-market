@@ -17,6 +17,8 @@ interface ILYFAdminFacet {
   struct LPConfigInput {
     address lpToken;
     address strategy;
+    address masterChef;
+    uint256 poolId;
   }
 
   function setOracle(address _oracle) external;

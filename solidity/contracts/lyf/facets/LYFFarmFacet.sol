@@ -16,13 +16,13 @@ import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   error LYFFarmFacet_BorrowingPowerTooLow();
-  error LYFFarmFacet_LPStrategyNotFound(address _lpToken);
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -50,10 +50,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    address _addStrat = lyfDs.lpConfigs[_lpToken].strategy;
-    if (_addStrat == address(0)) {
-      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
-    }
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -74,11 +71,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _borrowFromMoneyMarket(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
 
     // 3. send token to strat
-    ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
-    ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
+    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
+    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
     // 4. compose lp
-    uint256 _lpReceived = IStrat(_addStrat).composeLPToken(
+    uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
       _token0,
       _token1,
       _lpToken,
@@ -87,10 +84,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
-    // 5. add it to collateral
+    // 5 deposit to masterChef
+    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
+
+    // 6. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
 
-    // 6. health check on sub account
+    // 7. health check on sub account
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
@@ -109,10 +109,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
-    address _removeStrat = lyfDs.lpConfigs[_lpToken].strategy;
-    if (_removeStrat == address(0)) {
-      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
-    }
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
@@ -122,9 +119,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // todo: handle slippage
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
+    IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
-    ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
-    (uint256 _token0Return, uint256 _token1Return) = IStrat(_removeStrat).removeLiquidity(_lpToken);
+    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
     LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
     LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
@@ -380,5 +378,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     return lyfDs.debtShares[_debtShareId];
+  }
+
+  function _depositToMasterChef(
+    address _lpToken,
+    address _masterChef,
+    uint256 _poolId,
+    uint256 _amount
+  ) internal {
+    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
+    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
+    ERC20(_lpToken).approve(_masterChef, 0);
   }
 }

@@ -32,6 +32,7 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
+import { MockMasterChef } from "../mocks/MockMasterChef.sol";
 import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 // libs
@@ -57,11 +58,13 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFFarmFacet internal farmFacet;
 
   MockLPToken internal wethUsdcLPToken;
+  uint256 internal wethUsdcPoolId;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
   MockRouter internal mockRouter;
   PancakeswapV2Strategy internal addStrat;
+  MockMasterChef internal masterChef;
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
@@ -82,10 +85,18 @@ abstract contract LYF_BaseTest is BaseTest {
     usdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
 
+    // DEPLOY MASTERCHEF
+    masterChef = new MockMasterChef();
+
+    // MASTERCHEF POOLID
+    wethUsdcPoolId = 1;
+
     // mock LP, Router and Stratgy
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
+
+    masterChef.addPool(address(wethUsdcLPToken), wethUsdcPoolId);
 
     addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);
@@ -142,7 +153,12 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setTokenConfigs(_inputs);
 
     ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
-    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({ lpToken: address(wethUsdcLPToken), strategy: address(addStrat) });
+    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(wethUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      poolId: wethUsdcPoolId
+    });
     adminFacet.setLPConfigs(lpConfigs);
 
     // set oracle for LYF
