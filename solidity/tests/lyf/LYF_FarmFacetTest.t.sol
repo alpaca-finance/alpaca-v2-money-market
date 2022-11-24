@@ -160,4 +160,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     assertEq(debtAmount, mmDebtAmount);
   }
+
+  function testCorrectness_WhenReinvestIsCalled_ShouldWork() external {}
 }

@@ -15,6 +15,7 @@ import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
@@ -183,6 +184,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
+
+  function _reinvest(address lp, LibLYF01.LYFDiamondStorage storage lyfDs) internal {}
 
   function getDebtShares(address _account, uint256 _subAccountId)
     external
