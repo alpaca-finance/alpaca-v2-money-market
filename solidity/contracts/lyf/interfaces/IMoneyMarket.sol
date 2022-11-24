@@ -8,5 +8,9 @@ interface IMoneyMarket {
 
   function nonCollatBorrow(address _token, uint256 _amount) external;
 
+  function getGlobalDebt(address _token) external view returns (uint256, uint256);
+
+  function getFloatingBalance(address _token) external view returns (uint256);
+
   function nonCollatGetDebt(address _account, address _token) external view returns (uint256 _debtAmount);
 }

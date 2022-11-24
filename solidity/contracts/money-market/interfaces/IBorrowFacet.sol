@@ -57,6 +57,8 @@ interface IBorrowFacet {
 
   function debtShares(address _token) external view returns (uint256);
 
+  function getFloatingBalance(address _token) external view returns (uint256);
+
   // Errors
   error BorrowFacet_InvalidToken(address _token);
   error BorrowFacet_NotEnoughToken(uint256 _borrowAmount);
