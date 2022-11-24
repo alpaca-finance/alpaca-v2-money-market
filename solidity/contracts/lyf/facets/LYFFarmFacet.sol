@@ -101,7 +101,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
     uint256 _tokenAmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token, _desireTokenAmount, lyfDs);
-    uint256 _ibTokenAmountFromCollat = LibLYF01.removeIbCollateral(
+    uint256 _tokenAmountFromIbCollat = LibLYF01.removeIbCollateral(
       _subAccount,
       _token,
       IMoneyMarket(lyfDs.moneyMarket).tokenToIbTokens(_token),
@@ -112,7 +112,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _subAccount,
       _token,
       _lpToken,
-      _desireTokenAmount - _tokenAmountFromCollat - _ibTokenAmountFromCollat,
+      _desireTokenAmount - _tokenAmountFromCollat - _tokenAmountFromIbCollat,
       lyfDs
     );
   }
