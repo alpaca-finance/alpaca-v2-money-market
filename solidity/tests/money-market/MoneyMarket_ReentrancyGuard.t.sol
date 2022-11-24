@@ -20,7 +20,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenMMGetReentrance_ShouldRevert() external {
-    // wrong error massge since it is expected message inside contract called.
+    // wrong error message since it is expected message inside contract called.
     vm.expectRevert();
     attacker.attack{ value: 2 ether }();
   }
