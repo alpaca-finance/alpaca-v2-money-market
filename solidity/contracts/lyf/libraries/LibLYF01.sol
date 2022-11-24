@@ -161,9 +161,9 @@ library LibLYF01 {
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
       }
 
-      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
+      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_actualToken];
 
-      (uint256 _tokenPrice, ) = getPriceUSD(_collatToken, lyfDs);
+      (uint256 _tokenPrice, ) = getPriceUSD(_actualToken, lyfDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
