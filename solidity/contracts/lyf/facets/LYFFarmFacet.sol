@@ -22,7 +22,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   error LYFFarmFacet_BorrowingPowerTooLow();
-  error LYFFarmFacet_InvalidLPConfig(address _lpToken);
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -45,10 +44,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
-
-    if (lpConfig.strategy == address(0) || lpConfig.masterChef == address(0)) {
-      revert LYFFarmFacet_InvalidLPConfig(_lpToken);
-    }
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -108,10 +103,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
 
     LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
-
-    if (lpConfig.strategy == address(0) || lpConfig.masterChef == address(0)) {
-      revert LYFFarmFacet_InvalidLPConfig(_lpToken);
-    }
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
