@@ -96,23 +96,22 @@ abstract contract LYF_BaseTest is BaseTest {
 
     wethUsdcPoolId = masterChef.poolLength() - 1;
 
-    //cakePerBlock for regular pool = 40e18 * 62847222222/1e12 => 2.513888889E18
-    console.log("cakePerBlock", masterChef.cakePerBlock(true));
-    wethUsdcLPToken.mint(DEPLOYER, 1000 ether);
-    console.log("before warp", block.number);
+    // console.log("cakePerBlock", masterChef.cakePerBlock(true));
+    // wethUsdcLPToken.mint(DEPLOYER, 1000 ether);
+    // console.log("before warp", block.number);
 
-    vm.startPrank(DEPLOYER);
-    wethUsdcLPToken.approve(address(masterChef), 1000 ether);
-    masterChef.deposit(wethUsdcPoolId, 100 ether);
-    uint256 pendingCakeBefore = masterChef.pendingCake(wethUsdcPoolId, DEPLOYER);
-    console.log("pendingCakeBefore", pendingCakeBefore);
+    // vm.startPrank(DEPLOYER);
+    // wethUsdcLPToken.approve(address(masterChef), 1000 ether);
+    // masterChef.deposit(wethUsdcPoolId, 100 ether);
+    // uint256 pendingCakeBefore = masterChef.pendingCake(wethUsdcPoolId, DEPLOYER);
+    // console.log("pendingCakeBefore", pendingCakeBefore);
 
-    vm.roll(block.number + 10);
-    console.log("afterWarp", block.number);
+    // vm.roll(block.number + 10);
+    // console.log("afterWarp", block.number);
 
-    uint256 pendingCakeAfter = masterChef.pendingCake(wethUsdcPoolId, DEPLOYER);
-    console.log("pendingCakeAfter", pendingCakeAfter);
-    vm.stopPrank();
+    // uint256 pendingCakeAfter = masterChef.pendingCake(wethUsdcPoolId, DEPLOYER);
+    // console.log("pendingCakeAfter", pendingCakeAfter);
+    // vm.stopPrank();
 
     addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);

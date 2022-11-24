@@ -43,7 +43,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcCollat, 0 ether, "usdc collat");
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 30 ether);
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 30 ether);
     assertEq(_subAccountLpTokenCollat, 30 ether);
 
     // assert Debt
@@ -78,7 +79,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcCollat, 10 ether);
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 10 ether);
+
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 10 ether);
     assertEq(_subAccountLpTokenCollat, 10 ether);
 
     // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
@@ -96,7 +99,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountWethCollat, 12.5 ether);
     assertEq(_subAccountUsdcCollat, 12.5 ether);
 
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 5 ether);
     assertEq(_subAccountLpTokenCollat, 5 ether);
   }
 

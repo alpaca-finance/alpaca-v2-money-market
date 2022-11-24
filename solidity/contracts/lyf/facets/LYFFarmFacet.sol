@@ -102,8 +102,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
-    address _removeStrat = lyfDs.lpConfigs[_lpToken].strategy;
-    if (_removeStrat == address(0)) {
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+
+    if (lpConfig.strategy == address(0) || lpConfig.masterChef == address(0)) {
       revert LYFFarmFacet_InvalidLPConfig(_lpToken);
     }
 
@@ -112,9 +113,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // todo: handle slippage
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
+    IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
-    ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
-    (uint256 _token0Return, uint256 _token1Return) = IStrat(_removeStrat).removeLiquidity(_lpToken);
+    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
     LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
     LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
