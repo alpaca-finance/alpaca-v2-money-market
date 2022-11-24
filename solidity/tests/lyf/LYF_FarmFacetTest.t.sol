@@ -172,4 +172,140 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     assertEq(debtAmount, mmDebtAmount);
   }
+
+  // mix ib + underlying pair with underlying
+  function testCorrectness_WhenUserAddFarmPositionWithEnoughUnderlyingAndIbCollatCombined_ShouldUseBothAsCollatAndNotBorrow()
+    external
+  {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _wethToIbWeth = 10 ether;
+    uint256 _ibWethCollatAmount = 10 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), _wethToIbWeth);
+    collateralFacet.addCollateral(BOB, subAccount0, address(ibWeth), _ibWethCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+
+    // check collat
+    uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
+    uint256 _subAccountIbWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(ibWeth));
+
+    assertEq(_subAccountWethCollat, 0);
+    assertEq(_subAccountIbWethCollat, 0);
+
+    // check debt
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
+
+    assertEq(_subAccountWethDebtValue, 0);
+    assertEq(_subAccountUsdcDebtValue, 10 ether);
+  }
+
+  // ib pair with underlying
+  function testCorrectness_WhenUserAddFarmPositionUsingIbInsteadOfUnderlying_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _ibWethCollatAmount = 30 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), _ibWethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(ibWeth), _ibWethCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+
+    // check collat
+    uint256 _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountIbWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(ibWeth));
+
+    assertEq(_subAccountUsdcCollat, 0);
+    assertEq(_subAccountIbWethCollat, 0);
+
+    // check debt
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
+
+    assertEq(_subAccountWethDebtValue, 0);
+    assertEq(_subAccountUsdcDebtValue, 10 ether);
+  }
+
+  // pure 1-sided ib
+  function testCorrectness_WhenUserAddFarmPositionWithOnlyIbCollat_ShouldBeAbleToBorrowUsingIbAsCollat() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _ibWethCollatAmount = 60 ether;
+
+    vm.startPrank(EVE);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(usdc), 10 ether);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), _ibWethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(ibWeth), _ibWethCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+
+    // check collat
+    uint256 _subAccountIbWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(ibWeth));
+
+    assertEq(_subAccountIbWethCollat, 30 ether); // redeem 30 ibWeth for weth
+
+    // check debt
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
+
+    assertEq(_subAccountWethDebtValue, 0); // use ib no need to borrow
+    assertEq(_subAccountUsdcDebtValue, 30 ether);
+  }
+
+  // ib pair with ib
+  function testCorrectness_WhenUserAddFarmPositionBothSideIb_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _ibWethCollatAmount = 30 ether;
+    uint256 _ibUsdcCollatAmount = 30 ether;
+
+    vm.startPrank(BOB);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), _ibWethCollatAmount);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(usdc), _ibUsdcCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(ibWeth), _ibWethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(ibUsdc), _ibUsdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+
+    // check collat = 0 because all redeemed
+    uint256 _subAccountIbWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(ibWeth));
+    uint256 _subAccountIbUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(ibUsdc));
+
+    assertEq(_subAccountIbWethCollat, 0);
+    assertEq(_subAccountIbUsdcCollat, 0);
+
+    // check debt = 0 because we redeem all ib to farm no need to borrow
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
+
+    assertEq(_subAccountWethDebtValue, 0);
+    assertEq(_subAccountUsdcDebtValue, 0);
+  }
 }

@@ -82,7 +82,11 @@ abstract contract LYF_BaseTest is BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(lyfDiamond, type(uint256).max);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    ibWeth.approve(lyfDiamond, type(uint256).max);
+    ibUsdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
 
     // DEPLOY MASTERCHEF
@@ -108,7 +112,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](4);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](5);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -146,6 +150,16 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 0,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[4] = ILYFAdminFacet.TokenConfigInput({
+      token: address(ibUsdc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxBorrow: 1e24,
       maxCollateral: 10e24,
       maxToleranceExpiredSecond: block.timestamp
     });
