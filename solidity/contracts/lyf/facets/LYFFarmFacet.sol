@@ -388,7 +388,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _poolId,
     uint256 _amount
   ) internal {
-    ERC20(_lpToken).approve(_masterChef, _amount);
+    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
     IMasterChefLike(_masterChef).deposit(_poolId, _amount);
+    ERC20(_lpToken).approve(_masterChef, 0);
   }
 }
