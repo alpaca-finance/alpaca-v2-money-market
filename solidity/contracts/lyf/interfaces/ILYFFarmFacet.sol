@@ -9,8 +9,7 @@ interface ILYFFarmFacet {
     address _lpToken,
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
-    uint256 _minLpReceive,
-    address _addStrat
+    uint256 _minLpReceive
   ) external;
 
   function repay(
@@ -58,8 +57,7 @@ interface ILYFFarmFacet {
   function liquidateLP(
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpShareAmount,
-    address _removeStrat
+    uint256 _lpShareAmount
   ) external;
 
   function getMMDebt(address _token) external view returns (uint256);

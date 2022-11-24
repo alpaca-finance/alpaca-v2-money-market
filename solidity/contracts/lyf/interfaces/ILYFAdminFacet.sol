@@ -14,6 +14,11 @@ interface ILYFAdminFacet {
     uint256 maxToleranceExpiredSecond;
   }
 
+  struct LPConfigInput {
+    address lpToken;
+    address strategy;
+  }
+
   function setOracle(address _oracle) external;
 
   function oracle() external view returns (address);
@@ -21,6 +26,8 @@ interface ILYFAdminFacet {
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
   function setMoneyMarket(address _moneyMarket) external;
+
+  function setLPConfigs(LPConfigInput[] calldata _configs) external;
 
   function setDebtShareId(
     address _token,

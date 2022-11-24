@@ -43,6 +43,10 @@ library LibLYF01 {
     uint256 maxToleranceExpiredSecond;
   }
 
+  struct LPConfig {
+    address strategy;
+  }
+
   struct DebtShareTokens {
     address token;
     address lpToken;
@@ -64,6 +68,7 @@ library LibLYF01 {
     mapping(uint256 => uint256) debtLastAccureTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
+    mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
   }
 

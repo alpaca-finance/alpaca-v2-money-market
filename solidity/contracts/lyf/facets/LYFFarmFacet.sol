@@ -21,6 +21,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_LPStrategyNotFound(address _lpToken);
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -38,10 +39,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _lpToken,
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
-    uint256 _minLpReceive,
-    address _addStrat
+    uint256 _minLpReceive
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    address _addStrat = lyfDs.lpConfigs[_lpToken].strategy;
+    if (_addStrat == address(0)) {
+      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
+    }
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -62,7 +67,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _borrowFromMoneyMarket(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
 
     // 3. send token to strat
-
     ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
     ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
 
@@ -89,14 +93,18 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function liquidateLP(
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpShareAmount,
-    address _removeStrat
+    uint256 _lpShareAmount
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
     if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
+    }
+
+    address _removeStrat = lyfDs.lpConfigs[_lpToken].strategy;
+    if (_removeStrat == address(0)) {
+      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
     }
 
     address _token0 = ISwapPairLike(_lpToken).token0();
