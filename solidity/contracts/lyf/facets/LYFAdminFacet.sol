@@ -4,12 +4,12 @@ pragma solidity 0.8.17;
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
-import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
   function setOracle(address _oracle) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.oracle = IPriceOracle(_oracle);
+    lyfDs.oracle = IAlpacaV2Oracle(_oracle);
   }
 
   function oracle() external view returns (address) {

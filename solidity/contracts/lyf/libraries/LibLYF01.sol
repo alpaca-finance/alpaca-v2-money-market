@@ -11,7 +11,7 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
-import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -55,7 +55,7 @@ library LibLYF01 {
   // Storage
   struct LYFDiamondStorage {
     address moneyMarket;
-    IPriceOracle oracle;
+    IAlpacaV2Oracle oracle;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -203,10 +203,7 @@ library LibLYF01 {
   }
 
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256, uint256) {
-    (uint256 _price, uint256 _lastUpdated) = lyfDs.oracle.getPrice(
-      _token,
-      address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
-    );
+    (uint256 _price, uint256 _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
     if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibLYF01_PriceStale(_token);
     return (_price, _lastUpdated);
