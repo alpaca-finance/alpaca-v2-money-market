@@ -8,6 +8,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
@@ -30,8 +31,14 @@ contract LendFacet is ILendFacet {
   event LogDepositETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdrawETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   // open isolate token market, able to borrow only
-  function openMarket(address _token) external returns (address _newIbToken) {
+  function openMarket(address _token) external nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
@@ -62,7 +69,7 @@ contract LendFacet is ILendFacet {
     emit LogOpenMarket(msg.sender, _token, _newIbToken);
   }
 
-  function deposit(address _token, uint256 _amount) external {
+  function deposit(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
@@ -74,7 +81,7 @@ contract LendFacet is ILendFacet {
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external {
+  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
@@ -92,7 +99,7 @@ contract LendFacet is ILendFacet {
     emit LogWithdraw(msg.sender, _token, _ibToken, _shareAmount, _shareValue);
   }
 
-  function depositETH() external payable {
+  function depositETH() external payable nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _nativeToken = moneyMarketDs.nativeToken;
     uint256 _amount = msg.value;
@@ -108,7 +115,7 @@ contract LendFacet is ILendFacet {
     emit LogDepositETH(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
   }
 
-  function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external {
+  function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
     address _relayer = moneyMarketDs.nativeRelayer;

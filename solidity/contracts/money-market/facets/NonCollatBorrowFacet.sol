@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { INonCollatBorrowFacet } from "../interfaces/INonCollatBorrowFacet.sol";
@@ -21,7 +22,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   event LogNonCollatRepay(address indexed _user, address indexed _token, uint256 _actualRepayAmount);
 
-  function nonCollatBorrow(address _token, uint256 _amount) external {
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
+  function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
@@ -62,7 +69,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     address _account,
     address _token,
     uint256 _repayAmount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 

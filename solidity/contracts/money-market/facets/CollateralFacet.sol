@@ -8,6 +8,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
@@ -27,12 +28,18 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _amount
   );
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   function addCollateral(
     address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     _validateAddCollateral(_token, _amount, moneyMarketDs);
@@ -57,7 +64,7 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _subAccountId,
     address _token,
     uint256 _removeAmount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
@@ -78,7 +85,7 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _toSubAccountId,
     address _token,
     uint256 _amount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);

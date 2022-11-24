@@ -9,6 +9,7 @@ import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
@@ -34,13 +35,19 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   function addFarmPosition(
     uint256 _subAccountId,
     address _lpToken,
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
     uint256 _minLpReceive
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     address _addStrat = lyfDs.lpConfigs[_lpToken].strategy;
@@ -94,7 +101,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _subAccountId,
     address _lpToken,
     uint256 _lpShareAmount
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -166,7 +173,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token,
     address _lpToken,
     uint256 _repayAmount
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
 

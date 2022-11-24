@@ -8,6 +8,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { IRepurchaseFacet } from "../interfaces/IRepurchaseFacet.sol";
@@ -19,13 +20,19 @@ contract RepurchaseFacet is IRepurchaseFacet {
 
   uint8 constant REPURCHASE_BPS = 100;
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   function repurchase(
     address _account,
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
     uint256 _repayAmount
-  ) external returns (uint256 _collatAmountOut) {
+  ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     if (!moneyMarketDs.repurchasersOk[msg.sender]) {
