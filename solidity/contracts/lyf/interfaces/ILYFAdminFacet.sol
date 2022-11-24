@@ -30,4 +30,12 @@ interface ILYFAdminFacet {
   function setMoneyMarket(address _moneyMarket) external;
 
   function setLPConfigs(LPConfigInput[] calldata _configs) external;
+
+  function setDebtShareId(
+    address _token,
+    address _lpToken,
+    uint256 _debtShareId
+  ) external;
+
+  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
 }

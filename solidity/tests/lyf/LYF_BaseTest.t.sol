@@ -28,6 +28,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
+import { IPriceOracle } from "../../contracts/oracle/interfaces/IPriceOracle.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -35,6 +36,7 @@ import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
 import { MockMasterChefV1 } from "../mocks/MockMasterChefV1.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 // libs
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
@@ -46,6 +48,9 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
+
+// oracle
+import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
@@ -177,12 +182,24 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setLPConfigs(lpConfigs);
 
     // set oracle for LYF
+    oracleMedianizer = deployOracleMedianizer();
+    oracleMedianizer.transferOwnership(DEPLOYER);
+
+    alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer));
     chainLinkOracle = deployMockChainLinkPriceOracle();
 
-    setUpOracle(chainLinkOracle);
+    setUpOracle(oracleMedianizer, chainLinkOracle);
 
     IAdminFacet(moneyMarketDiamond).setOracle(address(chainLinkOracle));
-    IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
+    IAdminFacet(lyfDiamond).setOracle(address(alpacaV2Oracle));
+
+    // set debt share indexes
+    adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
+    adminFacet.setDebtShareId(address(usdc), address(wethUsdcLPToken), 2);
+
+    // set interest model
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
   }
 
   function setUpMM() internal {
@@ -233,12 +250,20 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.stopPrank();
   }
 
-  function setUpOracle(MockChainLinkPriceOracle _oracle) internal {
+  function setUpOracle(OracleMedianizer _medianizer, MockChainLinkPriceOracle _oracle) internal {
     vm.startPrank(DEPLOYER);
     _oracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
+
+    IPriceOracle[] memory inputs = new IPriceOracle[](1);
+    inputs[0] = IPriceOracle(_oracle);
+
+    _medianizer.setPrimarySources(address(weth), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(usdc), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(isolateToken), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(wethUsdcLPToken), address(usd), 1 ether, block.timestamp, inputs);
     vm.stopPrank();
   }
 }
