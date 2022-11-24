@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 
 interface ILYFFarmFacet {
   function addFarmPosition(
@@ -16,13 +16,14 @@ interface ILYFFarmFacet {
     address _account,
     uint256 _subAccountId,
     address _token,
+    address _lpToken,
     uint256 _repayAmount
   ) external;
 
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
-    returns (LibDoublyLinkedList.Node[] memory);
+    returns (LibUIntDoublyLinkedList.Node[] memory);
 
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
     external
@@ -37,20 +38,21 @@ interface ILYFFarmFacet {
   function getDebt(
     address _account,
     uint256 _subAccountId,
-    address _token
+    address _token,
+    address _lpToken
   ) external view returns (uint256, uint256);
 
-  function getGlobalDebt(address _token) external view returns (uint256, uint256);
+  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256);
 
-  function debtLastAccureTime(address _token) external view returns (uint256);
+  function debtLastAccureTime(address _token, address _lpToken) external view returns (uint256);
 
-  function pendingInterest(address _token) external view returns (uint256);
+  function pendingInterest(address _token, address _lpToken) external view returns (uint256);
 
-  function accureInterest(address _token) external;
+  function accureInterest(address _token, address _lpToken) external;
 
-  function debtValues(address _token) external view returns (uint256);
+  function debtValues(address _token, address _lpToken) external view returns (uint256);
 
-  function debtShares(address _token) external view returns (uint256);
+  function debtShares(address _token, address _lpToken) external view returns (uint256);
 
   function liquidateLP(
     uint256 _subAccountId,

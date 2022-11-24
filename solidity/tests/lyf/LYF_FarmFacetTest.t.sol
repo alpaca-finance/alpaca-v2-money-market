@@ -4,8 +4,11 @@ pragma solidity 0.8.17;
 import { LYF_BaseTest, MockERC20, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
-import { ILYFFarmFacet, LibDoublyLinkedList } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
+
+// libraries
+import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
   MockERC20 mockToken;
@@ -48,11 +51,43 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     // assert Debt
 
-    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth));
-    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc));
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
 
     assertEq(_subAccountWethDebtValue, 10 ether);
     assertEq(_subAccountUsdcDebtValue, 10 ether);
+
+    vm.warp(1);
+
+    uint256 _wethDebtInterest = farmFacet.pendingInterest(address(weth), address(wethUsdcLPToken));
+    uint256 _usdcDebtInterest = farmFacet.pendingInterest(address(usdc), address(wethUsdcLPToken));
+
+    // interest model for weth is 0.1 ether per sec
+    // interest model for usdc is 0.05 ether per sec
+    // given time past is 1 and weth debt and usdc debt are 10 ether
+    // then weth pending interest should be 0.1 * 1 * 10 = 1 ether
+    // and usdc pending interest should be 0.05 * 1 * 10 = 0.5 ether
+    assertEq(_wethDebtInterest, 1 ether);
+    assertEq(_usdcDebtInterest, 0.5 ether);
+
+    farmFacet.accureInterest(address(weth), address(wethUsdcLPToken));
+    farmFacet.accureInterest(address(usdc), address(wethUsdcLPToken));
+
+    (, uint256 _subAccountWethDebtValueAfter) = farmFacet.getDebt(
+      BOB,
+      subAccount0,
+      address(weth),
+      address(wethUsdcLPToken)
+    );
+    (, uint256 _subAccountUsdcDebtValueAfter) = farmFacet.getDebt(
+      BOB,
+      subAccount0,
+      address(usdc),
+      address(wethUsdcLPToken)
+    );
+
+    assertEq(_subAccountWethDebtValueAfter, 10 ether + _wethDebtInterest);
+    assertEq(_subAccountUsdcDebtValueAfter, 10 ether + _usdcDebtInterest);
   }
 
   function testCorrectness_WhenUserLiquidateLP_TokensShouldBecomeCollateral() external {
