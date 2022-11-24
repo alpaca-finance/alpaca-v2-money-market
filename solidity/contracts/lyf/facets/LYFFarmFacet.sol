@@ -62,19 +62,15 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
     LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
 
-    // 1. check subaccount collat
-    uint256 _token0AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token0, _desireToken0Amount, lyfDs);
-    uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token1, _desireToken1Amount, lyfDs);
+    // 1. get token from collat (underlying and ib if possible), borrow if not enough
+    _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount, lyfDs);
+    _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
-    //2. borrow from mm if collats do not cover the desire amount
-    _borrowFromMoneyMarket(_subAccount, _token0, _lpToken, _desireToken0Amount - _token0AmountFromCollat, lyfDs);
-    _borrowFromMoneyMarket(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
-
-    // 3. send token to strat
+    // 2. send token to strat
     ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
     ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
-    // 4. compose lp
+    // 3. compose lp
     uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
       _token0,
       _token1,
@@ -95,6 +91,30 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
     emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+  }
+
+  function _removeCollatWithIbAndBorrow(
+    address _subAccount,
+    address _token,
+    address _lpToken,
+    uint256 _desireTokenAmount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    uint256 _tokenAmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token, _desireTokenAmount, lyfDs);
+    uint256 _ibTokenAmountFromCollat = LibLYF01.removeIbCollateral(
+      _subAccount,
+      _token,
+      IMoneyMarket(lyfDs.moneyMarket).tokenToIbTokens(_token),
+      _desireTokenAmount - _tokenAmountFromCollat,
+      lyfDs
+    );
+    _borrowFromMoneyMarket(
+      _subAccount,
+      _token,
+      _lpToken,
+      _desireTokenAmount - _tokenAmountFromCollat - _ibTokenAmountFromCollat,
+      lyfDs
+    );
   }
 
   function liquidateLP(

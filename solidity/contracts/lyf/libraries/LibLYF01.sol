@@ -282,6 +282,35 @@ library LibLYF01 {
     }
   }
 
+  function removeIbCollateral(
+    address _subAccount,
+    address _token,
+    address _ibToken,
+    uint256 _removeAmountUnderlying,
+    LYFDiamondStorage storage ds
+  ) internal returns (uint256 _underlyingRemoved) {
+    if (_ibToken == address(0) || _removeAmountUnderlying == 0) return 0;
+
+    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+
+    uint256 _collateralAmountIb = _subAccountCollatList.getAmount(_ibToken);
+
+    if (_collateralAmountIb > 0) {
+      IMoneyMarket moneyMarket = IMoneyMarket(ds.moneyMarket);
+      uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
+      uint256 _totalToken = moneyMarket.getTotalToken(_token);
+      uint256 _removeAmountIb = LibShareUtil.valueToShare(_totalSupply, _removeAmountUnderlying, _totalToken);
+
+      uint256 _ibRemoved = _removeAmountIb > _collateralAmountIb ? _collateralAmountIb : _removeAmountIb;
+
+      _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);
+
+      _underlyingRemoved = moneyMarket.withdraw(_ibToken, _ibRemoved);
+
+      ds.collats[_ibToken] -= _ibRemoved;
+    }
+  }
+
   function isSubaccountHealthy(address _subAccount, LYFDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);

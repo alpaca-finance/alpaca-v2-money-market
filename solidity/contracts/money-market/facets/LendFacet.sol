@@ -81,7 +81,7 @@ contract LendFacet is ILendFacet {
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant {
+  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256 _shareValue) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
@@ -91,7 +91,7 @@ contract LendFacet is ILendFacet {
       revert LendFacet_InvalidToken(_ibToken);
     }
 
-    uint256 _shareValue = _getShareValue(_token, _ibToken, _shareAmount, moneyMarketDs);
+    _shareValue = _getShareValue(_token, _ibToken, _shareAmount, moneyMarketDs);
 
     IbToken(_ibToken).burn(msg.sender, _shareAmount);
     ERC20(_token).safeTransfer(msg.sender, _shareValue);
