@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
-import { IMasterChef } from "../../contracts/lyf/libraries/masterChef/IMasterChef.sol";
+import { IMasterChefLike } from "../../contracts/lyf/interfaces/IMasterChefLike.sol";
 
-contract MockMasterChefV1 is IMasterChef {
+contract MockMasterChefV1 is IMasterChefLike {
   constructor() {}
 
   uint256 pid = 0;

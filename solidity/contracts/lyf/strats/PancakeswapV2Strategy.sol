@@ -20,7 +20,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
-import { IMasterChef } from "../libraries/masterchef/IMasterChef.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
@@ -182,16 +182,6 @@ contract PancakeswapV2Strategy is IStrat, Ownable {
         i++;
       }
     }
-  }
-
-  function depositMasterChef(
-    address _lpToken,
-    address _masterChef,
-    uint256 _poolId,
-    uint256 _amount
-  ) external onlyWhitelisted {
-    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
-    IMasterChef(_masterChef).deposit(_poolId, _amount);
   }
 
   receive() external payable {}

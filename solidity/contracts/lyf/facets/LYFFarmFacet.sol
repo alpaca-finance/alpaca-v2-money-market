@@ -15,6 +15,7 @@ import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
@@ -76,8 +77,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
-    // 5. deposit to masterChef
-    IStrat(lpConfig.strategy).depositMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
+    // 5 deposit to masterChef
+    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
 
     // 6. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -358,5 +359,15 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function debtShares(address _token) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     return lyfDs.debtShares[_token];
+  }
+
+  function _depositToMasterChef(
+    address _lpToken,
+    address _masterChef,
+    uint256 _poolId,
+    uint256 _amount
+  ) internal {
+    ERC20(_lpToken).approve(_masterChef, _amount);
+    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
   }
 }

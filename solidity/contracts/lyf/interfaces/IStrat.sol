@@ -12,11 +12,4 @@ interface IStrat {
   ) external returns (uint256);
 
   function removeLiquidity(address _lpToken) external returns (uint256, uint256);
-
-  function depositMasterChef(
-    address _lpToken,
-    address _masterChef,
-    uint256 _poolId,
-    uint256 _amount
-  ) external;
 }
