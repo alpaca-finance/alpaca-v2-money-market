@@ -21,7 +21,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   error LYFFarmFacet_BorrowingPowerTooLow();
-  error LYFFarmFacet_LPStrategyNotFound(address _lpToken);
+  error LYFFarmFacet_InvalidLPConfig(address _lpToken);
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -43,9 +43,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    address _addStrat = lyfDs.lpConfigs[_lpToken].strategy;
-    if (_addStrat == address(0)) {
-      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+
+    if (lpConfig.strategy == address(0) || lpConfig.masterChef == address(0)) {
+      revert LYFFarmFacet_InvalidLPConfig(_lpToken);
     }
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
@@ -62,11 +63,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _borrowFromMoneyMarket(_subAccount, _token1, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
 
     // 3. send token to strat
-    ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
-    ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
+    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
+    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
     // 4. compose lp
-    uint256 _lpReceived = IStrat(_addStrat).composeLPToken(
+    uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
       _token0,
       _token1,
       _lpToken,
@@ -75,10 +76,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
-    // 5. add it to collateral
+    // 5. deposit to masterChef
+    IStrat(lpConfig.strategy).depositMasterChef(lpConfig.poolId, lpConfig.masterChef, _lpReceived);
+
+    // 6. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
 
-    // 6. health check on sub account
+    // 7. health check on sub account
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
@@ -99,7 +103,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _removeStrat = lyfDs.lpConfigs[_lpToken].strategy;
     if (_removeStrat == address(0)) {
-      revert LYFFarmFacet_LPStrategyNotFound(_lpToken);
+      revert LYFFarmFacet_InvalidLPConfig(_lpToken);
     }
 
     address _token0 = ISwapPairLike(_lpToken).token0();

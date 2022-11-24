@@ -14,6 +14,9 @@ import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
 import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 
+// MASTERCHEF
+import { MasterChefV2, IMasterChef, IBEP20 } from "../../contracts/lyf/libraries/masterchef/pancake/MasterChefV2.sol";
+
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 
@@ -31,6 +34,7 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
+import { MockMasterChefV1 } from "../mocks/MockMasterChefV1.sol";
 
 // libs
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
@@ -52,11 +56,13 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFFarmFacet internal farmFacet;
 
   MockLPToken internal wethUsdcLPToken;
+  uint256 internal wethUsdcPoolId;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
   MockRouter internal mockRouter;
   PancakeswapV2Strategy internal addStrat;
+  MasterChefV2 internal masterChef;
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
@@ -77,10 +83,36 @@ abstract contract LYF_BaseTest is BaseTest {
     usdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
 
+    //DEPLOY MASTERCHEF V2
+    MockMasterChefV1 mockMasterChef = new MockMasterChefV1();
+    masterChef = new MasterChefV2(IMasterChef(address(mockMasterChef)), IBEP20(address(cake)), 0, DEPLOYER);
+
     // mock LP, Router and Stratgy
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
+
+    masterChef.add(10000, IBEP20(address(wethUsdcLPToken)), true, true);
+
+    wethUsdcPoolId = masterChef.poolLength() - 1;
+
+    //cakePerBlock for regular pool = 40e18 * 62847222222/1e12 => 2.513888889E18
+    console.log("cakePerBlock", masterChef.cakePerBlock(true));
+    wethUsdcLPToken.mint(DEPLOYER, 1000 ether);
+    console.log("before warp", block.number);
+
+    vm.startPrank(DEPLOYER);
+    wethUsdcLPToken.approve(address(masterChef), 1000 ether);
+    masterChef.deposit(wethUsdcPoolId, 100 ether);
+    uint256 pendingCakeBefore = masterChef.pendingCake(wethUsdcPoolId, DEPLOYER);
+    console.log("pendingCakeBefore", pendingCakeBefore);
+
+    vm.roll(block.number + 10);
+    console.log("afterWarp", block.number);
+
+    uint256 pendingCakeAfter = masterChef.pendingCake(wethUsdcPoolId, DEPLOYER);
+    console.log("pendingCakeAfter", pendingCakeAfter);
+    vm.stopPrank();
 
     addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);
@@ -137,7 +169,12 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setTokenConfigs(_inputs);
 
     ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
-    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({ lpToken: address(wethUsdcLPToken), strategy: address(addStrat) });
+    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(wethUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      poolId: wethUsdcPoolId
+    });
     adminFacet.setLPConfigs(lpConfigs);
 
     // set oracle for LYF
