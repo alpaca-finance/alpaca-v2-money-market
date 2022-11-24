@@ -80,13 +80,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
-    // 5 deposit to masterChef
+    // 4. deposit to masterChef
     _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
 
-    // 6. add it to collateral
+    // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
 
-    // 7. health check on sub account
+    // 6. health check on sub account
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
