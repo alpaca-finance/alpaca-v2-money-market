@@ -77,7 +77,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 5. deposit to masterChef
-    IStrat(lpConfig.strategy).depositMasterChef(lpConfig.poolId, lpConfig.masterChef, _lpReceived);
+    IStrat(lpConfig.strategy).depositMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
 
     // 6. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);

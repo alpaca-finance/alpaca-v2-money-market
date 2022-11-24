@@ -185,10 +185,12 @@ contract PancakeswapV2Strategy is IStrat, Ownable {
   }
 
   function depositMasterChef(
-    uint256 _poolId,
+    address _lpToken,
     address _masterChef,
+    uint256 _poolId,
     uint256 _amount
   ) external onlyWhitelisted {
+    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
     IMasterChef(_masterChef).deposit(_poolId, _amount);
   }
 
