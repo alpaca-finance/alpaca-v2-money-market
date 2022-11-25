@@ -113,7 +113,7 @@ library MMDiamondDeployer {
     selectors[3] = LendFacet.openMarket.selector;
     selectors[4] = LendFacet.depositETH.selector;
     selectors[5] = LendFacet.withdrawETH.selector;
-    selectors[6] = LendFacet.calculateUnderlyingAmountToIbShare.selector;
+    selectors[6] = LendFacet.getIbShareFromUnderlyingAmount.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_lendFacet),

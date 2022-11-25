@@ -139,20 +139,14 @@ contract LendFacet is ILendFacet {
   // calculate _shareToMint to mint before transfer token to MM
   function _getShareToMint(
     address _token,
-    uint256 _amount,
+    uint256 _underlyingAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (address _ibToken, uint256 _shareToMint) {
-    _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
-    if (_ibToken == address(0)) {
-      revert LendFacet_InvalidToken(_token);
-    }
-    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
-    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
     // calculate _shareToMint to mint before transfer token to MM
-    _shareToMint = LibShareUtil.valueToShare(_amount, _totalSupply, _totalToken);
+    uint256 _totalSupply;
+    (_ibToken, _totalSupply, _shareToMint) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
+
+    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
 
     if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
       revert LendFacet_NoTinyShares();
@@ -177,17 +171,38 @@ contract LendFacet is ILendFacet {
     }
   }
 
-  function calculateUnderlyingAmountToIbShare(
+  function _getShareAmountFromValue(
     address _token,
-    address _ibToken,
-    uint256 _underlyingAmount
-  ) external view returns (uint256 _shareAmount) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _value,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  )
+    internal
+    view
+    returns (
+      address _ibToken,
+      uint256 _totalSupply,
+      uint256 _ibShareAmount
+    )
+  {
+    _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    if (_ibToken == address(0)) {
+      revert LendFacet_InvalidToken(_token);
+    }
 
-    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
+    _totalSupply = IbToken(_ibToken).totalSupply();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
-    _shareAmount = LibShareUtil.valueToShare(_totalSupply, _underlyingAmount, _totalToken);
+    _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
+  }
+
+  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
+    external
+    view
+    returns (uint256 _ibShareAmount)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    (, , _ibShareAmount) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
   }
 
   function _safeUnwrap(

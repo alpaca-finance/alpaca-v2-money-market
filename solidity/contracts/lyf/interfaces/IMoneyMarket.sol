@@ -18,9 +18,8 @@ interface IMoneyMarket {
 
   function deposit(address _token, uint256 _amount) external;
 
-  function calculateUnderlyingAmountToIbShare(
-    address _token,
-    address _ibToken,
-    uint256 _underlyingAmount
-  ) external view returns (uint256 _shareAmount);
+  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
+    external
+    view
+    returns (uint256 _ibShareAmount);
 }
