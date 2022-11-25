@@ -12,7 +12,7 @@ import { CollateralFacet } from "../../contracts/money-market/facets/CollateralF
 import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { RepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
+import { LiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -32,7 +32,7 @@ library MMDiamondDeployer {
     deployBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployRepurchaseFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -226,19 +226,22 @@ library MMDiamondDeployer {
     return (_adminFacet, selectors);
   }
 
-  function deployRepurchaseFacet(DiamondCutFacet diamondCutFacet) internal returns (RepurchaseFacet, bytes4[] memory) {
-    RepurchaseFacet _repurchaseFacet = new RepurchaseFacet();
+  function deployLiquidationFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (LiquidationFacet, bytes4[] memory)
+  {
+    LiquidationFacet _LiquidationFacet = new LiquidationFacet();
 
     bytes4[] memory selectors = new bytes4[](1);
-    selectors[0] = _repurchaseFacet.repurchase.selector;
+    selectors[0] = _LiquidationFacet.repurchase.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_repurchaseFacet),
+      address(_LiquidationFacet),
       IDiamondCut.FacetCutAction.Add,
       selectors
     );
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_repurchaseFacet, selectors);
+    return (_LiquidationFacet, selectors);
   }
 }

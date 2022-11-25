@@ -13,7 +13,7 @@ import { CollateralFacet, ICollateralFacet } from "../../../solidity/contracts/m
 import { BorrowFacet, IBorrowFacet } from "../../../solidity/contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../../solidity/contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../../solidity/contracts/money-market/facets/AdminFacet.sol";
-import { RepurchaseFacet, IRepurchaseFacet } from "../../../solidity/contracts/money-market/facets/RepurchaseFacet.sol";
+import { LiquidationFacet, ILiquidationFacet } from "../../../solidity/contracts/money-market/facets/LiquidationFacet.sol";
 
 import { LibDiamond } from "../../../solidity/contracts/money-market/libraries/LibDiamond.sol";
 
@@ -53,7 +53,7 @@ contract RegisterFacet is Script {
     registerBorrowFacet(DiamondCutFacet(diamond), borrowF);
     registerNonCollatBorrowFacet(DiamondCutFacet(diamond), nonBorrowF);
     registerAdminFacet(DiamondCutFacet(diamond), adminF);
-    registerRepurchaseFacet(DiamondCutFacet(diamond), repurchaseF);
+    registerLiquidationFacet(DiamondCutFacet(diamond), repurchaseF);
     initializeDiamond(DiamondCutFacet(diamond), initF);
 
     return (diamond);
@@ -169,9 +169,9 @@ contract RegisterFacet is Script {
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
   }
 
-  function registerRepurchaseFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
+  function registerLiquidationFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
     bytes4[] memory selectors = new bytes4[](1);
-    selectors[0] = RepurchaseFacet.repurchase.selector;
+    selectors[0] = LiquidationFacet.repurchase.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
 

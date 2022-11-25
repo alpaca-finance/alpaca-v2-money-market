@@ -14,7 +14,7 @@ import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/
 import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { RepurchaseFacet, IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
+import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -26,7 +26,7 @@ import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
+import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -47,7 +47,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
-  IRepurchaseFacet internal repurchaseFacet;
+  ILiquidationFacet internal LiquidationFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -59,7 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet = IAdminFacet(moneyMarketDiamond);
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
-    repurchaseFacet = IRepurchaseFacet(moneyMarketDiamond);
+    LiquidationFacet = ILiquidationFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);

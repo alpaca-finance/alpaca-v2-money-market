@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-interface IRepurchaseFacet {
+interface ILiquidationFacet {
   event LogRepurchase(
     address indexed repurchaser,
     address _repayToken,
@@ -10,10 +10,10 @@ interface IRepurchaseFacet {
     uint256 _amountOut
   );
 
-  error RepurchaseFacet_Unauthorized();
-  error RepurchaseFacet_Healthy();
-  error RepurchaseFacet_RepayDebtValueTooHigh();
-  error RepurchaseFacet_InsufficientAmount();
+  error LiquidationFacet_Unauthorized();
+  error LiquidationFacet_Healthy();
+  error LiquidationFacet_RepayDebtValueTooHigh();
+  error LiquidationFacet_InsufficientAmount();
 
   function repurchase(
     address _account,

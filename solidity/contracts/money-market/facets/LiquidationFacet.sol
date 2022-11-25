@@ -11,10 +11,10 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
-import { IRepurchaseFacet } from "../interfaces/IRepurchaseFacet.sol";
+import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 
-contract RepurchaseFacet is IRepurchaseFacet {
+contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
 
@@ -36,7 +36,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     if (!moneyMarketDs.repurchasersOk[msg.sender]) {
-      revert RepurchaseFacet_Unauthorized();
+      revert LiquidationFacet_Unauthorized();
     }
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
@@ -47,7 +47,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
 
     if (_borrowingPower > _borrowedValue) {
-      revert RepurchaseFacet_Healthy();
+      revert LiquidationFacet_Healthy();
     }
 
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
@@ -56,7 +56,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     uint256 _repayInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
     // todo: tbd
     if (_repayInUSD * 2 > _borrowedValue) {
-      revert RepurchaseFacet_RepayDebtValueTooHigh();
+      revert LiquidationFacet_RepayDebtValueTooHigh();
     }
 
     // calculate collateral amount that repurchaser will receive
@@ -101,7 +101,7 @@ contract RepurchaseFacet is IRepurchaseFacet {
     uint256 _collatTokenTotalAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 
     if (_collatTokenAmountOut > _collatTokenTotalAmount) {
-      revert RepurchaseFacet_InsufficientAmount();
+      revert LiquidationFacet_InsufficientAmount();
     }
   }
 
