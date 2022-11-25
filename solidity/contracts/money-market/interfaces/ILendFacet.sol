@@ -14,6 +14,12 @@ interface ILendFacet {
 
   function openMarket(address _token) external returns (address);
 
+  function calculateUnderlyingAmountToIbShare(
+    address _token,
+    address _ibToken,
+    uint256 _underlyingAmount
+  ) external view returns (uint256 _shareAmount);
+
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
   error LendFacet_NoTinyShares();

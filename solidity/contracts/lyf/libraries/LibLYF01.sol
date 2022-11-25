@@ -297,10 +297,12 @@ library LibLYF01 {
 
     if (_collateralAmountIb > 0) {
       IMoneyMarket moneyMarket = IMoneyMarket(ds.moneyMarket);
-      uint256 _totalSupply = IIbToken(_ibToken).totalSupply();
-      uint256 _totalToken = moneyMarket.getTotalToken(_token);
-      uint256 _removeAmountIb = LibShareUtil.valueToShare(_totalSupply, _removeAmountUnderlying, _totalToken);
 
+      uint256 _removeAmountIb = moneyMarket.calculateUnderlyingAmountToIbShare(
+        _token,
+        _ibToken,
+        _removeAmountUnderlying
+      );
       uint256 _ibRemoved = _removeAmountIb > _collateralAmountIb ? _collateralAmountIb : _removeAmountIb;
 
       _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);

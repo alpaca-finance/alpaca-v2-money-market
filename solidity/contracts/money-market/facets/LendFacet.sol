@@ -177,6 +177,19 @@ contract LendFacet is ILendFacet {
     }
   }
 
+  function calculateUnderlyingAmountToIbShare(
+    address _token,
+    address _ibToken,
+    uint256 _underlyingAmount
+  ) external view returns (uint256 _shareAmount) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
+    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
+
+    _shareAmount = LibShareUtil.valueToShare(_totalSupply, _underlyingAmount, _totalToken);
+  }
+
   function _safeUnwrap(
     address _nativeToken,
     address _nativeRelayer,

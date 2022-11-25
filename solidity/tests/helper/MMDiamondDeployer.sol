@@ -106,13 +106,14 @@ library MMDiamondDeployer {
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
     LendFacet _lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
     selectors[2] = LendFacet.getTotalToken.selector;
     selectors[3] = LendFacet.openMarket.selector;
     selectors[4] = LendFacet.depositETH.selector;
     selectors[5] = LendFacet.withdrawETH.selector;
+    selectors[6] = LendFacet.calculateUnderlyingAmountToIbShare.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_lendFacet),
