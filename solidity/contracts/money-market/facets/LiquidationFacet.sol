@@ -13,6 +13,7 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 // interfaces
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
+import { ILiquidator } from "../interfaces/ILiquidator.sol";
 
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -69,6 +70,56 @@ contract LiquidationFacet is ILiquidationFacet {
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
     emit LogRepurchase(msg.sender, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
+  }
+
+  function liquidate(
+    address _liquidator,
+    address _account,
+    uint256 _subAccountId,
+    address _repayToken,
+    address _collatToken,
+    uint256 _repayAmount
+  ) external nonReentrant {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    // TODO: validate caller address?
+    if (!moneyMarketDs.liquidatorOk[_liquidator]) {
+      revert LiquidationFacet_Unauthorized();
+    }
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
+    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+
+    uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
+    uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
+
+    // borrowedValue vs usedBorrowingPower ??
+    if (_borrowingPower > _borrowedValue) {
+      revert LiquidationFacet_Healthy();
+    }
+
+    uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
+    (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+    // todo: handle token decimals
+    uint256 _repayInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
+    // todo: tbd
+    if (_repayInUSD * 2 > _borrowedValue) {
+      revert LiquidationFacet_RepayDebtValueTooHigh();
+    }
+
+    // collatAmount = (repayToken + buffer) * repayPrice / collatPrice = (repayInUSD + bufferAndRewardInUSD) / collatPrice
+    uint256 _collatAmountOut = _getCollatAmountOut(_subAccount, _collatToken, _repayInUSD, moneyMarketDs);
+    ERC20(_collatToken).safeTransfer(_liquidator, _collatAmountOut);
+
+    ILiquidator(_liquidator).liquidate(_collatToken, _repayToken, _repayAmount);
+
+    _updateDebts(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
+    _updateCollats(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+
+    ERC20(_repayToken).safeTransferFrom(_liquidator, address(this), _actualRepayAmount);
+
+    emit LogLiquidate(msg.sender, _liquidator, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
   }
 
   function _getActualRepayAmount(
