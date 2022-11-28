@@ -47,7 +47,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
-  ILiquidationFacet internal LiquidationFacet;
+  ILiquidationFacet internal liquidationFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -59,7 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet = IAdminFacet(moneyMarketDiamond);
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
-    LiquidationFacet = ILiquidationFacet(moneyMarketDiamond);
+    liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
