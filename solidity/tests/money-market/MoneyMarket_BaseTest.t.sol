@@ -154,5 +154,34 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address[] memory _repurchasers = new address[](1);
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, true);
+
+    // set reward
+    adminFacet.setRewardConfig(address(rewardToken), 1 ether);
+    // add pools
+    // ibWeth is 20%
+    // ibBtc is 20%
+    // ibUsdc is 40%
+    // ibIsolateToken is 15%
+    // ibWNative is 5%
+    adminFacet.addPool(
+      address(ibWeth),
+      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 20 })
+    );
+    adminFacet.addPool(
+      address(ibBtc),
+      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 20 })
+    );
+    adminFacet.addPool(
+      address(ibUsdc),
+      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 40 })
+    );
+    adminFacet.addPool(
+      address(ibIsolateToken),
+      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 15 })
+    );
+    adminFacet.addPool(
+      address(ibWNative),
+      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 5 })
+    );
   }
 }

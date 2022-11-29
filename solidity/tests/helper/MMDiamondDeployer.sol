@@ -13,6 +13,7 @@ import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol
 import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { RepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
+import { ClaimRewardFacet } from "../../contracts/money-market/facets/ClaimRewardFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -33,6 +34,7 @@ library MMDiamondDeployer {
     deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployRepurchaseFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployClaimRewardFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -203,7 +205,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](11);
+    bytes4[] memory selectors = new bytes4[](13);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -215,6 +217,8 @@ library MMDiamondDeployer {
     selectors[8] = AdminFacet.setRepurchasersOk.selector;
     selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
     selectors[10] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[11] = AdminFacet.addPool.selector;
+    selectors[12] = AdminFacet.setRewardConfig.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -240,5 +244,25 @@ library MMDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_repurchaseFacet, selectors);
+  }
+
+  function deployClaimRewardFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (ClaimRewardFacet, bytes4[] memory)
+  {
+    ClaimRewardFacet _claimRewardFacet = new ClaimRewardFacet();
+
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = _claimRewardFacet.claimReward.selector;
+    selectors[1] = _claimRewardFacet.pendingReward.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_claimRewardFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_claimRewardFacet, selectors);
   }
 }
