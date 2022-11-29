@@ -99,7 +99,7 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setLiquidationStratsOk(address[] calldata list, bool _isOk) external {
+  function setLiquidationStratsOk(address[] calldata list, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = list.length;
     for (uint256 _i; _i < _length; ) {
