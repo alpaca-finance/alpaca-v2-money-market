@@ -22,6 +22,7 @@ library LibMoneyMarket01 {
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
   uint256 internal constant MAX_BPS = 10000;
+  uint256 internal constant ACC_ALPACA_PRECISION = 1e12;
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
@@ -40,6 +41,13 @@ library LibMoneyMarket01 {
     uint256 maxCollateral;
     uint256 maxBorrow;
     uint256 maxToleranceExpiredSecond;
+  }
+
+  // todo: optimize type
+  struct PoolInfo {
+    uint256 accRewardPerShare;
+    uint256 lastRewardTime;
+    uint256 allocPoint;
   }
 
   // Storage
@@ -67,6 +75,16 @@ library LibMoneyMarket01 {
     mapping(address => IInterestRateModel) interestModels;
     mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
     mapping(address => bool) repurchasersOk;
+    // reward stuff
+    address rewardDistributor;
+    mapping(address => LibDoublyLinkedList.List) accountIbTokenCollats; // amount in user info
+    // token => pool info
+    mapping(address => PoolInfo) poolInfos;
+    // account => pool key (token) => amount
+    mapping(address => mapping(address => uint256)) accountRewardDebts;
+    address rewardToken;
+    uint256 rewardPerSecond;
+    uint256 totalAllocPoint;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

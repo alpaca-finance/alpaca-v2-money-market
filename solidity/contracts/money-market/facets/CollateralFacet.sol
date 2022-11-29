@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibFairLaunch } from "../libraries/LibFairLaunch.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
@@ -55,6 +56,13 @@ contract CollateralFacet is ICollateralFacet {
     subAccountCollateralList.addOrUpdate(_token, _newAmount);
 
     moneyMarketDs.collats[_token] += _amount;
+
+    // update ib token collat
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    if (_ibToken != address(0)) {
+      LibFairLaunch.addIbTokenCollat(_ibToken, _amount, moneyMarketDs);
+    }
+
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
@@ -74,6 +82,12 @@ contract CollateralFacet is ICollateralFacet {
     _removeCollateral(_subAccount, _token, _removeAmount, moneyMarketDs);
 
     moneyMarketDs.collats[_token] -= _removeAmount;
+
+    // update ib token collat
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    if (_ibToken != address(0)) {
+      LibFairLaunch.removeIbTokenCollat(_ibToken, _removeAmount, moneyMarketDs);
+    }
 
     ERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
