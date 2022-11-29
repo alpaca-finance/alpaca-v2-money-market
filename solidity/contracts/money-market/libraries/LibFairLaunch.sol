@@ -17,7 +17,7 @@ library LibFairLaunch {
   ) internal {
     LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
     uint256 _oldIbTokenCollat = ibTokenCollats.getAmount(_ibToken);
-    moneyMarketDs.accountIbTokenCollats[msg.sender].updateOrRemove(_ibToken, _oldIbTokenCollat + _amount);
+    moneyMarketDs.accountIbTokenCollats[msg.sender].addOrUpdate(_ibToken, _oldIbTokenCollat + _amount);
     // update reward debt
     LibMoneyMarket01.PoolInfo storage pool = updatePool(_ibToken, moneyMarketDs);
     uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
@@ -49,7 +49,7 @@ library LibFairLaunch {
       uint256 _tokenBalance = ERC20(_token).balanceOf(address(this));
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
-        uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardPerSecond * poolInfo.allocPoint) /
+        uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
           moneyMarketDs.totalAllocPoint;
         _accRewardPerShare += (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
       }
@@ -69,7 +69,7 @@ library LibFairLaunch {
       uint256 _tokenBalance = ERC20(_token).balanceOf(address(this));
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
-        uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardPerSecond * poolInfo.allocPoint) /
+        uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
           moneyMarketDs.totalAllocPoint;
         poolInfo.accRewardPerShare += (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
       }

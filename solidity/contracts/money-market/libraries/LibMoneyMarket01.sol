@@ -43,6 +43,11 @@ library LibMoneyMarket01 {
     uint256 maxToleranceExpiredSecond;
   }
 
+  struct RewardConfig {
+    address token;
+    uint256 rewardPerSecond;
+  }
+
   // todo: optimize type
   struct PoolInfo {
     uint256 accRewardPerShare;
@@ -82,8 +87,7 @@ library LibMoneyMarket01 {
     mapping(address => PoolInfo) poolInfos;
     // account => pool key (token) => amount
     mapping(address => mapping(address => uint256)) accountRewardDebts;
-    address rewardToken;
-    uint256 rewardPerSecond;
+    RewardConfig rewardConfig;
     uint256 totalAllocPoint;
   }
 

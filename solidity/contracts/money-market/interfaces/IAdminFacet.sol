@@ -49,4 +49,8 @@ interface IAdminFacet {
   ) external;
 
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
+
+  function addPool(address _token, LibMoneyMarket01.PoolInfo memory poolInfo) external;
+
+  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external;
 }

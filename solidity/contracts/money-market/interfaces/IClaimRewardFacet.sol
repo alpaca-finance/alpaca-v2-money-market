@@ -5,4 +5,7 @@ interface IClaimRewardFacet {
   function claimReward(address _token) external;
 
   function pendingReward(address _token) external returns (uint256 _pendingReward);
+
+  // errors
+  error ClaimRewardFacet_InvalidAddress();
 }

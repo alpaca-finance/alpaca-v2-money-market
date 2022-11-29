@@ -19,6 +19,10 @@ contract ClaimRewardFacet is IClaimRewardFacet {
   // todo: nonreentrant
   function claimReward(address _token) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    address _rewardToken = moneyMarketDs.rewardConfig.token;
+
+    if (_rewardToken == address(0)) revert ClaimRewardFacet_InvalidAddress();
+
     LibMoneyMarket01.PoolInfo storage poolInfo = LibFairLaunch.updatePool(_token, moneyMarketDs);
     LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
     uint256 _amount = ibTokenCollats.getAmount(_token);
@@ -31,14 +35,10 @@ contract ClaimRewardFacet is IClaimRewardFacet {
     moneyMarketDs.accountRewardDebts[msg.sender][_token] = _accumulatedReward;
 
     if (_pendingReward > 0) {
-      IRewardDistributor(moneyMarketDs.rewardDistributor).safeTransferReward(
-        moneyMarketDs.rewardToken,
-        msg.sender,
-        _pendingReward
-      );
+      IRewardDistributor(moneyMarketDs.rewardDistributor).safeTransferReward(_rewardToken, msg.sender, _pendingReward);
     }
 
-    emit LogClaimReward(msg.sender, moneyMarketDs.rewardToken, _pendingReward);
+    emit LogClaimReward(msg.sender, _rewardToken, _pendingReward);
   }
 
   function pendingReward(address _token) external view returns (uint256) {

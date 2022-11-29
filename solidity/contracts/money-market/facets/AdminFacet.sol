@@ -113,4 +113,17 @@ contract AdminFacet is IAdminFacet {
       }
     }
   }
+
+  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardConfig = LibMoneyMarket01.RewardConfig({
+      token: _rewardToken,
+      rewardPerSecond: _rewardPerSecond
+    });
+  }
+
+  function addPool(address _token, LibMoneyMarket01.PoolInfo memory poolInfo) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.poolInfos[_token] = poolInfo;
+  }
 }
