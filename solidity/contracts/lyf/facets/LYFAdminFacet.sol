@@ -3,12 +3,18 @@ pragma solidity 0.8.17;
 
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
-  function setOracle(address _oracle) external {
+  modifier onlyOwner() {
+    LibDiamond.enforceIsContractOwner();
+    _;
+  }
+
+  function setOracle(address _oracle) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.oracle = IAlpacaV2Oracle(_oracle);
   }
@@ -18,7 +24,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     return address(lyfDs.oracle);
   }
 
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external {
+  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _inputLength = _tokenConfigs.length;
     for (uint8 _i; _i < _inputLength; ) {
@@ -39,12 +45,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
     }
   }
 
-  function setMoneyMarket(address _moneyMarket) external {
+  function setMoneyMarket(address _moneyMarket) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.moneyMarket = _moneyMarket;
   }
 
-  function setLPConfigs(LPConfigInput[] calldata _configs) external {
+  function setLPConfigs(LPConfigInput[] calldata _configs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 len = _configs.length;
@@ -64,7 +70,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     address _token,
     address _lpToken,
     uint256 _debtShareId
-  ) external {
+  ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     if (lyfDs.debtShareIds[_token][_lpToken] == 0) {
       lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;

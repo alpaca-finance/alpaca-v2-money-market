@@ -308,4 +308,52 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountWethDebtValue, 0);
     assertEq(_subAccountUsdcDebtValue, 0);
   }
+
+  function testCorrectness_WhenUserDirectAddFarmPositionNormally_ShouldWork() external {
+    uint256 _desiredWeth = 30 ether;
+    uint256 _desiredUsdc = 30 ether;
+    uint256 _wethAmountDirect = 20 ether;
+    uint256 _usdcAmountDirect = 30 ether;
+
+    vm.startPrank(BOB);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _desiredWeth,
+      _desiredUsdc,
+      0,
+      _wethAmountDirect,
+      _usdcAmountDirect
+    );
+    vm.stopPrank();
+
+    assertEq(weth.balanceOf(BOB), 980 ether);
+    assertEq(usdc.balanceOf(BOB), 970 ether);
+
+    (, uint256 _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    (, uint256 _subAccountUsdcDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(usdc), address(wethUsdcLPToken));
+
+    assertEq(_subAccountWethDebtValue, 10 ether);
+    assertEq(_subAccountUsdcDebtValue, 0 ether);
+  }
+
+  function testCorrectness_WhenUserDirectAddFarmPositionProvidedAmountGreaterThanDesired_ShouldRevert() external {
+    uint256 _desiredWeth = 30 ether;
+    uint256 _desiredUsdc = 30 ether;
+    uint256 _wethAmountDirect = 20 ether;
+    uint256 _usdcAmountDirect = 40 ether;
+
+    vm.startPrank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BadInput.selector));
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _desiredWeth,
+      _desiredUsdc,
+      0,
+      _wethAmountDirect,
+      _usdcAmountDirect
+    );
+    vm.stopPrank();
+  }
 }

@@ -18,4 +18,13 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
 
     assertEq(adminFacet.oracle(), _oracleAddress);
   }
+
+  function testCorrectness_WhenNonAdminSetSomeLYFConfig_ShouldRevert() external {
+    vm.startPrank(ALICE);
+
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setOracle(address(20000));
+
+    vm.stopPrank();
+  }
 }

@@ -48,4 +48,30 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     assertEq(_tokenConfig.collateralFactor, 5000);
     assertEq(_tokenConfig.borrowingFactor, 6000);
   }
+
+  function testCorrectness_WhenNonAdminSetSomeConfig_ShouldRevert() external {
+    vm.startPrank(ALICE);
+
+    // try to setTokenToIbTokens
+    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
+    _ibPair[0] = IAdminFacet.IbPair({ token: address(9998), ibToken: address(9999) });
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setTokenToIbTokens(_ibPair);
+
+    // try to setTokenConfigs
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(9998),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 5000,
+      borrowingFactor: 6000,
+      maxCollateral: 1000e18,
+      maxBorrow: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setTokenConfigs(_inputs);
+
+    vm.stopPrank();
+  }
 }

@@ -2,14 +2,19 @@
 pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract AdminFacet is IAdminFacet {
-  // TODO: validate role
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external {
+  modifier onlyOwner() {
+    LibDiamond.enforceIsContractOwner();
+    _;
+  }
+
+  function setTokenToIbTokens(IbPair[] memory _ibPair) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     uint256 _ibPairLength = _ibPair.length;
@@ -21,8 +26,7 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  // TODO: validate role
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external {
+  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigs.length;
     for (uint8 _i; _i < _inputLength; ) {
@@ -43,7 +47,7 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setNonCollatBorrower(address _borrower, bool _isOk) external {
+  function setNonCollatBorrower(address _borrower, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
   }
@@ -64,7 +68,7 @@ contract AdminFacet is IAdminFacet {
     return moneyMarketDs.tokenConfigs[_token];
   }
 
-  function setInterestModel(address _token, address _model) external {
+  function setInterestModel(address _token, address _model) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
   }
@@ -73,18 +77,18 @@ contract AdminFacet is IAdminFacet {
     address _account,
     address _token,
     address _model
-  ) external {
+  ) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     bytes32 _nonCollatId = LibMoneyMarket01.getNonCollatId(_account, _token);
     moneyMarketDs.nonCollatInterestModels[_nonCollatId] = IInterestRateModel(_model);
   }
 
-  function setOracle(address _oracle) external {
+  function setOracle(address _oracle) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IPriceOracle(_oracle);
   }
 
-  function setRepurchasersOk(address[] memory list, bool _isOk) external {
+  function setRepurchasersOk(address[] memory list, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = list.length;
     for (uint8 _i; _i < _length; ) {
@@ -106,7 +110,10 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external {
+  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
+    external
+    onlyOwner
+  {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _nonCollatBorrowLimitInputs.length;
     for (uint8 _i; _i < _length; ) {
