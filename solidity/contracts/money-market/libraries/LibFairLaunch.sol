@@ -16,6 +16,10 @@ library LibFairLaunch {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
+    if (ibTokenCollats.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      ibTokenCollats.init();
+    }
+
     uint256 _oldIbTokenCollat = ibTokenCollats.getAmount(_ibToken);
     moneyMarketDs.accountIbTokenCollats[msg.sender].addOrUpdate(_ibToken, _oldIbTokenCollat + _amount);
     // update reward debt

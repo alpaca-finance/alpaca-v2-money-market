@@ -212,6 +212,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
+    vm.warp(block.timestamp + 100);
     // Add collat by ibToken
     vm.startPrank(ALICE);
     ibWeth.approve(moneyMarketDiamond, 10 ether);
@@ -223,5 +224,33 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
     assertEq(ibWeth.balanceOf(moneyMarketDiamond), 10 ether);
+
+    // check account ib token collat
+    assertEq(collateralFacet.accountIbTokenCollats(ALICE, address(ibWeth)), 10 ether);
+  }
+
+  // Add and Remove Collat with ibToken
+  function testCorrectness_WhenRemoveCollateralViaIbToken_ibTokenCollatShouldBeCorrect() external {
+    // LEND to get ibToken
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, 10 ether);
+    lendFacet.deposit(address(weth), 10 ether);
+    vm.stopPrank();
+
+    // Add collat by ibToken
+    vm.startPrank(ALICE);
+    ibWeth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+    vm.stopPrank();
+
+    // check account ib token collat
+    assertEq(collateralFacet.accountIbTokenCollats(ALICE, address(ibWeth)), 10 ether);
+
+    vm.startPrank(ALICE);
+    collateralFacet.removeCollateral(0, address(ibWeth), 10 ether);
+    vm.stopPrank();
+
+    // check account ib token collat
+    assertEq(collateralFacet.accountIbTokenCollats(ALICE, address(ibWeth)), 0 ether);
   }
 }

@@ -33,6 +33,8 @@ interface ICollateralFacet {
 
   function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
 
+  function accountIbTokenCollats(address _account, address _ibToken) external view returns (uint256);
+
   // erros
   error CollateralFacet_InvalidAssetTier();
   error CollateralFacet_TooManyCollateralRemoved();

@@ -45,4 +45,9 @@ contract ClaimRewardFacet is IClaimRewardFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return LibFairLaunch.pendingReward(msg.sender, _token, moneyMarketDs);
   }
+
+  function accountRewardDebts(address _account, address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.accountRewardDebts[_account][_token];
+  }
 }

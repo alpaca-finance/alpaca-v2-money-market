@@ -21,12 +21,13 @@ import { DiamondInit } from "../../contracts/money-market/initializers/DiamondIn
 import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
 
 // interfaces
-import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
+import { ICollateralFacet } from "../../contracts/money-market/interfaces/ICollateralFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
+import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
+import { IRepurchaseFacet } from "../../contracts/money-market/interfaces/IRepurchaseFacet.sol";
+import { IClaimRewardFacet } from "../../contracts/money-market/interfaces/IClaimRewardFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -48,6 +49,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
   IRepurchaseFacet internal repurchaseFacet;
+  IClaimRewardFacet internal claimRewardFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -60,6 +62,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     repurchaseFacet = IRepurchaseFacet(moneyMarketDiamond);
+    claimRewardFacet = IClaimRewardFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
