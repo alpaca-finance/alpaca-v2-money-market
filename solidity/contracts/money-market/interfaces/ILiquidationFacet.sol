@@ -22,6 +22,7 @@ interface ILiquidationFacet {
   error LiquidationFacet_Healthy();
   error LiquidationFacet_RepayDebtValueTooHigh();
   error LiquidationFacet_InsufficientAmount();
+  error LiquidationFacet_RepayAmountMismatch();
 
   function repurchase(
     address _account,
@@ -30,4 +31,13 @@ interface ILiquidationFacet {
     address _collatToken,
     uint256 _amount
   ) external returns (uint256);
+
+  function liquidationCall(
+    address _liquidationStrat,
+    address _account,
+    uint256 _subAccountId,
+    address _repayToken,
+    address _collatToken,
+    uint256 _repayAmount
+  ) external;
 }

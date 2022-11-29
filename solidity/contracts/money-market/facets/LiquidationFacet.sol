@@ -13,7 +13,9 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 // interfaces
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
-import { ILiquidator } from "../interfaces/ILiquidator.sol";
+import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
+
+import { console } from "solidity/tests/utils/console.sol";
 
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -72,8 +74,8 @@ contract LiquidationFacet is ILiquidationFacet {
     emit LogRepurchase(msg.sender, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
   }
 
-  function liquidate(
-    address _liquidator,
+  function liquidationCall(
+    address _liquidationStrat,
     address _account,
     uint256 _subAccountId,
     address _repayToken,
@@ -82,8 +84,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // TODO: validate caller address?
-    if (!moneyMarketDs.liquidatorOk[_liquidator]) {
+    if (!moneyMarketDs.liquidationStratOk[_liquidationStrat]) {
       revert LiquidationFacet_Unauthorized();
     }
 
@@ -91,35 +92,49 @@ contract LiquidationFacet is ILiquidationFacet {
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
+    // 1. check if position is underwater and can be liquidated
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-    uint256 _borrowedValue = LibMoneyMarket01.getTotalBorrowedUSDValue(_subAccount, moneyMarketDs);
-
-    // borrowedValue vs usedBorrowingPower ??
-    if (_borrowingPower > _borrowedValue) {
+    (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+    // TODO: this ratio to be in config?
+    if ((_borrowingPower * 10000) / _usedBorrowingPower > 9000) {
       revert LiquidationFacet_Healthy();
     }
 
+    // 2. calculate collat amount to send to liquidator based on _repayAmount
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
     (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
     // todo: handle token decimals
     uint256 _repayInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
+    // TODO: what is this?
     // todo: tbd
-    if (_repayInUSD * 2 > _borrowedValue) {
-      revert LiquidationFacet_RepayDebtValueTooHigh();
-    }
+    // if (_repayInUSD * 2 > _borrowedValue) {
+    //   revert LiquidationFacet_RepayDebtValueTooHigh();
+    // }
 
-    // collatAmount = (repayToken + buffer) * repayPrice / collatPrice = (repayInUSD + bufferAndRewardInUSD) / collatPrice
+    // TODO: reward amount currently tied to REPURCHASE_BPS calculated in _getCollatAmountOut
     uint256 _collatAmountOut = _getCollatAmountOut(_subAccount, _collatToken, _repayInUSD, moneyMarketDs);
-    ERC20(_collatToken).safeTransfer(_liquidator, _collatAmountOut);
 
-    ILiquidator(_liquidator).liquidate(_collatToken, _repayToken, _repayAmount);
-
+    // 3. update states
     _updateDebts(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
     _updateCollats(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+    uint256 _repayAmountBefore = ERC20(_repayToken).balanceOf(address(this));
 
-    ERC20(_repayToken).safeTransferFrom(_liquidator, address(this), _actualRepayAmount);
+    // 4. transfer collat to liquidator and call liquidate
+    ERC20(_collatToken).safeTransfer(_liquidationStrat, _collatAmountOut);
+    ILiquidationStrategy(_liquidationStrat).executeLiquidation(
+      _collatToken,
+      _repayToken,
+      _actualRepayAmount,
+      address(this),
+      msg.sender
+    );
 
-    emit LogLiquidate(msg.sender, _liquidator, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
+    // 5. check if we get expected amount of repayToken back from liquidator
+    if (ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore != _actualRepayAmount) {
+      revert LiquidationFacet_RepayAmountMismatch();
+    }
+
+    emit LogLiquidate(msg.sender, _liquidationStrat, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
   }
 
   function _getActualRepayAmount(
@@ -145,6 +160,7 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
     (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
+    // TODO: reward % to param
     uint256 _rewardInUSD = (_repayInUSD * REPURCHASE_BPS) / 1e4;
     // todo: handle token decimal
     _collatTokenAmountOut = ((_repayInUSD + _rewardInUSD) * 1e18) / _collatTokenPrice;

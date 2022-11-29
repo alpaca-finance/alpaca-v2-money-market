@@ -67,7 +67,7 @@ library LibMoneyMarket01 {
     mapping(address => IInterestRateModel) interestModels;
     mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
     mapping(address => bool) repurchasersOk;
-    mapping(address => bool) liquidatorOk;
+    mapping(address => bool) liquidationStratOk;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
