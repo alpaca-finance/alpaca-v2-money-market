@@ -7,40 +7,14 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { LibMoneyMarket01 } from "./LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 
+// interfaces
+import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
+
 library LibFairLaunch {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  function addIbTokenCollat(
-    address _ibToken,
-    uint256 _amount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
-    if (ibTokenCollats.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      ibTokenCollats.init();
-    }
-
-    uint256 _oldIbTokenCollat = ibTokenCollats.getAmount(_ibToken);
-    moneyMarketDs.accountIbTokenCollats[msg.sender].addOrUpdate(_ibToken, _oldIbTokenCollat + _amount);
-    // update reward debt
-    LibMoneyMarket01.PoolInfo storage pool = updatePool(_ibToken, moneyMarketDs);
-    uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
-    moneyMarketDs.accountRewardDebts[msg.sender][_ibToken] += _addRewardDebt;
-  }
-
-  function removeIbTokenCollat(
-    address _ibToken,
-    uint256 _removeAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
-    uint256 _oldIbTokenCollat = ibTokenCollats.getAmount(_ibToken);
-    moneyMarketDs.accountIbTokenCollats[msg.sender].updateOrRemove(_ibToken, _oldIbTokenCollat - _removeAmount);
-    // update reward debt
-    LibMoneyMarket01.PoolInfo storage pool = updatePool(_ibToken, moneyMarketDs);
-    uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
-    moneyMarketDs.accountRewardDebts[msg.sender][_ibToken] -= _removeRewardDebt;
-  }
+  error LibFairLaunch_InvalidRewardToken();
+  error LibFairLaunch_InvalidRewardDistributor();
 
   function pendingReward(
     address _account,
@@ -59,9 +33,35 @@ library LibFairLaunch {
       }
     }
     LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[_account];
-    uint256 _collat = ibTokenCollats.getAmount(_token);
+    uint256 _amount = ibTokenCollats.getAmount(_token);
     uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
-    _reward = ((_collat * _accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION) - _rewardDebt;
+    _reward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION) - _rewardDebt;
+  }
+
+  function claimReward(
+    address _account,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (address _rewardToken, uint256 _unclaimedReward) {
+    _rewardToken = moneyMarketDs.rewardConfig.token;
+    address _rewardDistributor = moneyMarketDs.rewardDistributor;
+
+    if (_rewardToken == address(0)) revert LibFairLaunch_InvalidRewardToken();
+    if (_rewardDistributor == address(0)) revert LibFairLaunch_InvalidRewardDistributor();
+
+    LibMoneyMarket01.PoolInfo storage poolInfo = updatePool(_token, moneyMarketDs);
+    LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[_account];
+    uint256 _amount = ibTokenCollats.getAmount(_token);
+    uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
+
+    uint256 _accumulatedReward = (_amount * poolInfo.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
+    _unclaimedReward = _accumulatedReward - _rewardDebt;
+
+    moneyMarketDs.accountRewardDebts[_account][_token] = _accumulatedReward;
+
+    if (_unclaimedReward > 0) {
+      IRewardDistributor(_rewardDistributor).safeTransferReward(_rewardToken, _account, _unclaimedReward);
+    }
   }
 
   function updatePool(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)

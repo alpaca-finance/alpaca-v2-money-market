@@ -206,7 +206,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](13);
+    bytes4[] memory selectors = new bytes4[](15);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -218,8 +218,10 @@ library MMDiamondDeployer {
     selectors[8] = AdminFacet.setRepurchasersOk.selector;
     selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
     selectors[10] = AdminFacet.setNonCollatInterestModel.selector;
-    selectors[11] = AdminFacet.addPool.selector;
-    selectors[12] = AdminFacet.setRewardConfig.selector;
+    selectors[11] = AdminFacet.setRewardConfig.selector;
+    selectors[12] = AdminFacet.addPool.selector;
+    selectors[13] = AdminFacet.setPool.selector;
+    selectors[14] = AdminFacet.setRewardDistributor.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -253,9 +255,10 @@ library MMDiamondDeployer {
   {
     ClaimRewardFacet _claimRewardFacet = new ClaimRewardFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = _claimRewardFacet.claimReward.selector;
     selectors[1] = _claimRewardFacet.pendingReward.selector;
+    selectors[2] = _claimRewardFacet.accountRewardDebts.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_claimRewardFacet),

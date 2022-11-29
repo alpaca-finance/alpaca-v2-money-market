@@ -159,6 +159,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setRepurchasersOk(_repurchasers, true);
 
     // set reward
+    adminFacet.setRewardDistributor(address(rewardDistributor));
+
     adminFacet.setRewardConfig(address(rewardToken), 1 ether);
     // add pools
     // ibWeth is 20%

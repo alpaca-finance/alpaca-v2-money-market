@@ -59,7 +59,17 @@ contract CollateralFacet is ICollateralFacet {
 
     // update ib token collat
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibFairLaunch.addIbTokenCollat(_token, _amount, moneyMarketDs);
+      LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
+      if (ibTokenCollats.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+        ibTokenCollats.init();
+      }
+
+      uint256 _oldIbTokenCollat = ibTokenCollats.getAmount(_token);
+      moneyMarketDs.accountIbTokenCollats[msg.sender].addOrUpdate(_token, _oldIbTokenCollat + _amount);
+      // update reward debt
+      LibMoneyMarket01.PoolInfo storage pool = LibFairLaunch.updatePool(_token, moneyMarketDs);
+      uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
+      moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt;
     }
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
@@ -84,7 +94,16 @@ contract CollateralFacet is ICollateralFacet {
 
     // update ib token collat
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibFairLaunch.removeIbTokenCollat(_token, _removeAmount, moneyMarketDs);
+      LibFairLaunch.claimReward(msg.sender, _token, moneyMarketDs);
+
+      LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
+      uint256 _oldAmount = ibTokenCollats.getAmount(_token);
+      moneyMarketDs.accountIbTokenCollats[msg.sender].updateOrRemove(_token, _oldAmount - _removeAmount);
+
+      // update reward debt
+      LibMoneyMarket01.PoolInfo storage pool = LibFairLaunch.updatePool(_token, moneyMarketDs);
+      uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
+      moneyMarketDs.accountRewardDebts[msg.sender][_token] -= _removeRewardDebt;
     }
 
     ERC20(_token).safeTransfer(msg.sender, _removeAmount);

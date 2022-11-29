@@ -122,8 +122,22 @@ contract AdminFacet is IAdminFacet {
     });
   }
 
-  function addPool(address _token, LibMoneyMarket01.PoolInfo memory poolInfo) external {
+  function addPool(address _token, LibMoneyMarket01.PoolInfo memory newPoolInfo) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.poolInfos[_token] = poolInfo;
+    moneyMarketDs.poolInfos[_token] = newPoolInfo;
+    moneyMarketDs.totalAllocPoint += newPoolInfo.allocPoint;
+  }
+
+  function setPool(address _token, uint256 _newAllocPoint) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.poolInfos[_token];
+    uint256 _totalAllocPoint = moneyMarketDs.totalAllocPoint;
+    moneyMarketDs.totalAllocPoint += _totalAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint;
+  }
+
+  function setRewardDistributor(address _addr) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardDistributor = _addr;
   }
 }
