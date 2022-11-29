@@ -58,9 +58,8 @@ contract CollateralFacet is ICollateralFacet {
     moneyMarketDs.collats[_token] += _amount;
 
     // update ib token collat
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-    if (_ibToken != address(0)) {
-      LibFairLaunch.addIbTokenCollat(_ibToken, _amount, moneyMarketDs);
+    if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
+      LibFairLaunch.addIbTokenCollat(_token, _amount, moneyMarketDs);
     }
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
@@ -84,9 +83,8 @@ contract CollateralFacet is ICollateralFacet {
     moneyMarketDs.collats[_token] -= _removeAmount;
 
     // update ib token collat
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-    if (_ibToken != address(0)) {
-      LibFairLaunch.removeIbTokenCollat(_ibToken, _removeAmount, moneyMarketDs);
+    if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
+      LibFairLaunch.removeIbTokenCollat(_token, _removeAmount, moneyMarketDs);
     }
 
     ERC20(_token).safeTransfer(msg.sender, _removeAmount);
