@@ -7,12 +7,8 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/ILiquidationStrategy.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract MockLiquidationStrategy is ILiquidationStrategy {
   using SafeERC20 for ERC20;
-
-  uint256 internal _collatAmountOut;
 
   MockChainLinkPriceOracle internal _mockOracle;
 
