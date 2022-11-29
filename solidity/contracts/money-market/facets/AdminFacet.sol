@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
+// interfaces
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
@@ -36,7 +37,8 @@ contract AdminFacet is IAdminFacet {
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
         maxBorrow: _tokenConfigs[_i].maxBorrow,
-        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond
+        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond,
+        to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigs[_i].token)
       });
 
       LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
