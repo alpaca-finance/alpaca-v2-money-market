@@ -10,33 +10,11 @@ import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 // interfaces
 import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 
-library LibFairLaunch {
+library LibReward {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  error LibFairLaunch_InvalidRewardToken();
-  error LibFairLaunch_InvalidRewardDistributor();
-
-  function pendingReward(
-    address _account,
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _reward) {
-    LibMoneyMarket01.PoolInfo storage poolInfo = moneyMarketDs.poolInfos[_token];
-    uint256 _accRewardPerShare = poolInfo.accRewardPerShare;
-    if (block.timestamp > poolInfo.lastRewardTime) {
-      uint256 _tokenBalance = ERC20(_token).balanceOf(address(this));
-      if (_tokenBalance > 0) {
-        uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
-        uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
-          moneyMarketDs.totalAllocPoint;
-        _accRewardPerShare += (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
-      }
-    }
-    LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
-    uint256 _amount = accountCollatsList.getAmount(_token);
-    uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
-    _reward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION) - _rewardDebt;
-  }
+  error LibReward_InvalidRewardToken();
+  error LibReward_InvalidRewardDistributor();
 
   function claimReward(
     address _account,
@@ -46,10 +24,10 @@ library LibFairLaunch {
     _rewardToken = moneyMarketDs.rewardConfig.rewardToken;
     address _rewardDistributor = moneyMarketDs.rewardDistributor;
 
-    if (_rewardToken == address(0)) revert LibFairLaunch_InvalidRewardToken();
-    if (_rewardDistributor == address(0)) revert LibFairLaunch_InvalidRewardDistributor();
+    if (_rewardToken == address(0)) revert LibReward_InvalidRewardToken();
+    if (_rewardDistributor == address(0)) revert LibReward_InvalidRewardDistributor();
 
-    LibMoneyMarket01.PoolInfo storage poolInfo = updatePool(_token, moneyMarketDs);
+    LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_token, moneyMarketDs);
     LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
     uint256 _amount = accountCollatsList.getAmount(_token);
     uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
@@ -64,20 +42,43 @@ library LibFairLaunch {
     }
   }
 
+  function pendingReward(
+    address _account,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _reward) {
+    LibMoneyMarket01.PoolInfo storage poolInfo = moneyMarketDs.poolInfos[_token];
+    uint256 _accRewardPerShare = poolInfo.accRewardPerShare + _calculateAccRewardPerShare(_token, moneyMarketDs);
+
+    LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
+    uint256 _amount = accountCollatsList.getAmount(_token);
+    uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
+    _reward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION) - _rewardDebt;
+  }
+
   function updatePool(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
-    returns (LibMoneyMarket01.PoolInfo storage poolInfo)
+    view
+    returns (LibMoneyMarket01.PoolInfo memory poolInfo)
   {
     poolInfo = moneyMarketDs.poolInfos[_token];
+    poolInfo.accRewardPerShare += _calculateAccRewardPerShare(_token, moneyMarketDs);
+  }
+
+  function _calculateAccRewardPerShare(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _newAccRewardPerShare)
+  {
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.poolInfos[_token];
     if (block.timestamp > poolInfo.lastRewardTime) {
       uint256 _tokenBalance = ERC20(_token).balanceOf(address(this));
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
         uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
           moneyMarketDs.totalAllocPoint;
-        poolInfo.accRewardPerShare += (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
+        _newAccRewardPerShare = (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
       }
-      poolInfo.lastRewardTime = block.timestamp;
     }
   }
 }

@@ -10,7 +10,7 @@ import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 
 // libraries
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
-import { LibFairLaunch } from "../libraries/LibFairLaunch.sol";
+import { LibReward } from "../libraries/LibReward.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 contract ClaimRewardFacet is IClaimRewardFacet {
@@ -24,14 +24,14 @@ contract ClaimRewardFacet is IClaimRewardFacet {
   function claimReward(address _token) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    (address _rewardToken, uint256 _pendingReward) = LibFairLaunch.claimReward(msg.sender, _token, moneyMarketDs);
+    (address _rewardToken, uint256 _pendingReward) = LibReward.claimReward(msg.sender, _token, moneyMarketDs);
 
     emit LogClaimReward(msg.sender, _rewardToken, _pendingReward);
   }
 
   function pendingReward(address _account, address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibFairLaunch.pendingReward(_account, _token, moneyMarketDs);
+    return LibReward.pendingReward(_account, _token, moneyMarketDs);
   }
 
   function accountRewardDebts(address _account, address _token) external view returns (uint256) {

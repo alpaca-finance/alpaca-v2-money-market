@@ -9,7 +9,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
-import { LibFairLaunch } from "../libraries/LibFairLaunch.sol";
+import { LibReward } from "../libraries/LibReward.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
@@ -67,7 +67,7 @@ contract CollateralFacet is ICollateralFacet {
       uint256 _oldIbTokenCollat = accountCollatsList.getAmount(_token);
       moneyMarketDs.accountCollats[msg.sender].addOrUpdate(_token, _oldIbTokenCollat + _amount);
       // update reward debt
-      LibMoneyMarket01.PoolInfo storage pool = LibFairLaunch.updatePool(_token, moneyMarketDs);
+      LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
       uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
       moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt;
     }
@@ -94,14 +94,14 @@ contract CollateralFacet is ICollateralFacet {
 
     // update ib token collat
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibFairLaunch.claimReward(msg.sender, _token, moneyMarketDs);
+      LibReward.claimReward(msg.sender, _token, moneyMarketDs);
 
       LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
       uint256 _oldAmount = accountCollatsList.getAmount(_token);
       moneyMarketDs.accountCollats[msg.sender].updateOrRemove(_token, _oldAmount - _removeAmount);
 
       // update reward debt
-      LibMoneyMarket01.PoolInfo storage pool = LibFairLaunch.updatePool(_token, moneyMarketDs);
+      LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
       uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
       moneyMarketDs.accountRewardDebts[msg.sender][_token] -= _removeRewardDebt;
     }
