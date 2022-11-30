@@ -17,6 +17,15 @@ interface ILiquidationFacet {
     uint256 _repayAmount,
     uint256 _collatAmountOut
   );
+  event LogLiquidateIb(
+    address indexed caller,
+    address indexed liquidator,
+    address _repayToken,
+    address _collatToken,
+    uint256 _repayAmount,
+    uint256 _ibCollatAmountOut,
+    uint256 _underlyingAmountOut
+  );
 
   error LiquidationFacet_Unauthorized();
   error LiquidationFacet_Healthy();

@@ -422,7 +422,6 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_InvalidToken(_ibToken);
     }
 
-    // _shareValue = _getShareValue(_token, _ibToken, _shareAmount, moneyMarketDs);
     uint256 _totalSupply = ERC20(_ibToken).totalSupply();
     uint256 _tokenDecimals = ERC20(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
@@ -435,7 +434,6 @@ library LibMoneyMarket01 {
     }
 
     IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
-    // TODO: safe ?
     ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
