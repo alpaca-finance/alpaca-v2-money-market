@@ -18,6 +18,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     // mint ib token for users
     ibWeth.mint(ALICE, 10 ether);
     ibWeth.mint(BOB, 20 ether);
+    ibUsdc.mint(ALICE, 5 ether);
   }
 
   function testCorrectness_WhenUserAddCollateralAndClaimReward_UserShouldReceivedRewardCorrectly() external {
@@ -124,6 +125,43 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
       rewardToken.balanceOf(address(rewardDistributor)),
       1000000 ether - (_expectedAliceReward + _expectedBobReward)
     );
+  }
+
+  function testCorrectness_WhenUserAddMultipleCollateralAndClaimReward_UserShouldReceivedRewardCorrectly() external {
+    address _ibToken1 = address(ibWeth);
+    address _ibToken2 = address(ibUsdc);
+    _addIbTokenAsCollateral(ALICE, _ibToken1, 10 ether);
+    _addIbTokenAsCollateral(ALICE, _ibToken2, 5 ether);
+
+    assertEq(collateralFacet.accountCollats(ALICE, _ibToken1), 10 ether);
+    assertEq(collateralFacet.accountCollats(ALICE, _ibToken2), 5 ether);
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
+    vm.warp(block.timestamp + 100);
+
+    // ibWeth pool alloc point is 20
+    // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
+    // then reward = 100 * 1 * 20 / 100 = 20 ether
+    // then acc reward per share = 20 ether / 10 ether (total of collat token) = 2 (precision is 12)
+    // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
+    // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
+    uint256 _expectedReward1 = 20 ether;
+    _claimReward(ALICE, _ibToken1);
+    _assertAccountReward(ALICE, _ibToken1, _expectedReward1, _expectedReward1.toInt256());
+
+    // ibUsdc pool alloc point is 40
+    // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
+    // then reward = 100 * 1 * 40 / 100 = 40 ether
+    // then acc reward per share = 40 ether / 5 ether (total of collat token) = 8 (precision is 12)
+    // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
+    // alice reward debt is 0 now, then unclaimed reward = (5 * 8) - 0 = 40 (precision is 12)
+    uint256 _expectedReward2 = 40 ether;
+    _claimReward(ALICE, _ibToken2);
+
+    // total of claimed reward = 20 + 40 = 60
+    // but reward debt fot ibToken2 should be 40
+    _assertAccountReward(ALICE, _ibToken2, _expectedReward1 + _expectedReward2, _expectedReward2.toInt256());
+
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - (_expectedReward1 + _expectedReward2));
   }
 
   function _addIbTokenAsCollateral(

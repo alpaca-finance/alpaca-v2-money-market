@@ -87,7 +87,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) liquidationStratOk;
     // reward stuff
     address rewardDistributor;
-    mapping(address => uint256) accountCollats; // amount in user info
+    mapping(address => mapping(address => uint256)) accountCollats; // amount in user info
     // token => pool info
     mapping(address => PoolInfo) poolInfos;
     // account => pool key (token) => amount
@@ -450,7 +450,7 @@ library LibMoneyMarket01 {
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
     ds.collats[_token] += _addAmount;
-    ds.accountCollats[msg.sender] += _addAmount;
+    ds.accountCollats[msg.sender][_token] += _addAmount;
   }
 
   function removeCollat(
@@ -462,7 +462,7 @@ library LibMoneyMarket01 {
     removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
 
     ds.collats[_token] -= _removeAmount;
-    ds.accountCollats[msg.sender] -= _removeAmount;
+    ds.accountCollats[msg.sender][_token] -= _removeAmount;
   }
 
   function removeCollatFromSubAccount(
