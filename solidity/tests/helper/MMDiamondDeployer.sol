@@ -137,7 +137,7 @@ library MMDiamondDeployer {
     selectors[3] = CollateralFacet.collats.selector;
     selectors[4] = CollateralFacet.transferCollateral.selector;
     selectors[5] = CollateralFacet.subAccountCollatAmount.selector;
-    selectors[6] = CollateralFacet.accountIbTokenCollats.selector;
+    selectors[6] = CollateralFacet.accountCollats.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_collateralFacet),

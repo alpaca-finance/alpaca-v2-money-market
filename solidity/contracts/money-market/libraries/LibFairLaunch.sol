@@ -32,8 +32,8 @@ library LibFairLaunch {
         _accRewardPerShare += (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
       }
     }
-    LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[_account];
-    uint256 _amount = ibTokenCollats.getAmount(_token);
+    LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
+    uint256 _amount = accountCollatsList.getAmount(_token);
     uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
     _reward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION) - _rewardDebt;
   }
@@ -50,8 +50,8 @@ library LibFairLaunch {
     if (_rewardDistributor == address(0)) revert LibFairLaunch_InvalidRewardDistributor();
 
     LibMoneyMarket01.PoolInfo storage poolInfo = updatePool(_token, moneyMarketDs);
-    LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[_account];
-    uint256 _amount = ibTokenCollats.getAmount(_token);
+    LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
+    uint256 _amount = accountCollatsList.getAmount(_token);
     uint256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
 
     uint256 _accumulatedReward = (_amount * poolInfo.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;

@@ -20,7 +20,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, 0, _ibToken, 10 ether);
     vm.stopPrank();
 
-    assertEq(collateralFacet.accountIbTokenCollats(ALICE, _ibToken), 10 ether);
+    assertEq(collateralFacet.accountCollats(ALICE, _ibToken), 10 ether);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
     vm.warp(block.timestamp + 100);
 
@@ -41,7 +41,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, 0, _ibToken, 10 ether);
     vm.stopPrank();
 
-    assertEq(collateralFacet.accountIbTokenCollats(ALICE, _ibToken), 10 ether);
+    assertEq(collateralFacet.accountCollats(ALICE, _ibToken), 10 ether);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
     vm.warp(block.timestamp + 100);
 

@@ -82,7 +82,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) repurchasersOk;
     // reward stuff
     address rewardDistributor;
-    mapping(address => LibDoublyLinkedList.List) accountIbTokenCollats; // amount in user info
+    mapping(address => LibDoublyLinkedList.List) accountCollats; // amount in user info
     // token => pool info
     mapping(address => PoolInfo) poolInfos;
     // account => pool key (token) => amount

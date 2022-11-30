@@ -59,13 +59,13 @@ contract CollateralFacet is ICollateralFacet {
 
     // update ib token collat
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
-      if (ibTokenCollats.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-        ibTokenCollats.init();
+      LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
+      if (accountCollatsList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+        accountCollatsList.init();
       }
 
-      uint256 _oldIbTokenCollat = ibTokenCollats.getAmount(_token);
-      moneyMarketDs.accountIbTokenCollats[msg.sender].addOrUpdate(_token, _oldIbTokenCollat + _amount);
+      uint256 _oldIbTokenCollat = accountCollatsList.getAmount(_token);
+      moneyMarketDs.accountCollats[msg.sender].addOrUpdate(_token, _oldIbTokenCollat + _amount);
       // update reward debt
       LibMoneyMarket01.PoolInfo storage pool = LibFairLaunch.updatePool(_token, moneyMarketDs);
       uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
@@ -96,9 +96,9 @@ contract CollateralFacet is ICollateralFacet {
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
       LibFairLaunch.claimReward(msg.sender, _token, moneyMarketDs);
 
-      LibDoublyLinkedList.List storage ibTokenCollats = moneyMarketDs.accountIbTokenCollats[msg.sender];
-      uint256 _oldAmount = ibTokenCollats.getAmount(_token);
-      moneyMarketDs.accountIbTokenCollats[msg.sender].updateOrRemove(_token, _oldAmount - _removeAmount);
+      LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
+      uint256 _oldAmount = accountCollatsList.getAmount(_token);
+      moneyMarketDs.accountCollats[msg.sender].updateOrRemove(_token, _oldAmount - _removeAmount);
 
       // update reward debt
       LibMoneyMarket01.PoolInfo storage pool = LibFairLaunch.updatePool(_token, moneyMarketDs);
@@ -161,9 +161,9 @@ contract CollateralFacet is ICollateralFacet {
     return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
   }
 
-  function accountIbTokenCollats(address _account, address _ibToken) external view returns (uint256) {
+  function accountCollats(address _account, address _ibToken) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.accountIbTokenCollats[_account].getAmount(_ibToken);
+    return moneyMarketDs.accountCollats[_account].getAmount(_ibToken);
   }
 
   function _validateAddCollateral(
