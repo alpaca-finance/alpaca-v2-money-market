@@ -100,17 +100,20 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     // 1. check if position is underwater and can be liquidated
-    uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-    (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
-    if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
-      revert LiquidationFacet_Healthy();
+    {
+      uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
+      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+      if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
+        revert LiquidationFacet_Healthy();
+      }
     }
 
     // 2. calculate collat amount to send to liquidator based on _repayAmount
+    LibMoneyMarket01.TokenConfig memory _repayTokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
     (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-    // todo: handle token decimals
-    uint256 _collatValueInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
+
+    uint256 _collatValueInUSD = (_actualRepayAmount * _repayTokenConfig.to18ConversionFactor * _repayTokenPrice) / 1e18;
     uint256 _collatAmountOut = _getCollatAmountOut(
       _subAccount,
       _collatToken,
