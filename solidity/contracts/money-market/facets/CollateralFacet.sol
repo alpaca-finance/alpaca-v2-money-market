@@ -57,14 +57,6 @@ contract CollateralFacet is ICollateralFacet {
 
     // update account collats (support for ibtoken now)
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
-      if (accountCollatsList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-        accountCollatsList.init();
-      }
-
-      uint256 _oldIbTokenCollat = accountCollatsList.getAmount(_token);
-      moneyMarketDs.accountCollats[msg.sender].addOrUpdate(_token, _oldIbTokenCollat + _amount);
-      // update reward debt
       LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
       uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION;
       moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt.toInt256();
@@ -74,6 +66,7 @@ contract CollateralFacet is ICollateralFacet {
     subAccountCollateralList.addOrUpdate(_token, _newAmount);
 
     moneyMarketDs.collats[_token] += _amount;
+    moneyMarketDs.accountCollats[msg.sender] += _amount;
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -93,10 +86,6 @@ contract CollateralFacet is ICollateralFacet {
 
     // update account collats (support for ibtoken now)
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
-      uint256 _oldAmount = accountCollatsList.getAmount(_token);
-      moneyMarketDs.accountCollats[msg.sender].updateOrRemove(_token, _oldAmount - _removeAmount);
-
       // update reward debt
       LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
       uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION;
@@ -106,6 +95,7 @@ contract CollateralFacet is ICollateralFacet {
     _removeCollateral(_subAccount, _token, _removeAmount, moneyMarketDs);
 
     moneyMarketDs.collats[_token] -= _removeAmount;
+    moneyMarketDs.accountCollats[msg.sender] -= _removeAmount;
 
     ERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
@@ -164,7 +154,7 @@ contract CollateralFacet is ICollateralFacet {
 
   function accountCollats(address _account, address _ibToken) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.accountCollats[_account].getAmount(_ibToken);
+    return moneyMarketDs.accountCollats[_account];
   }
 
   function _validateAddCollateral(

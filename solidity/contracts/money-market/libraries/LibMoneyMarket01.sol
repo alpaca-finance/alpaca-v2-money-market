@@ -83,7 +83,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) liquidationStratOk;
     // reward stuff
     address rewardDistributor;
-    mapping(address => LibDoublyLinkedList.List) accountCollats; // amount in user info
+    mapping(address => uint256) accountCollats; // amount in user info
     // token => pool info
     mapping(address => PoolInfo) poolInfos;
     // account => pool key (token) => amount

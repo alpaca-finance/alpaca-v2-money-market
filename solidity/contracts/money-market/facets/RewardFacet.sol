@@ -12,6 +12,7 @@ import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibReward } from "../libraries/LibReward.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 contract RewardFacet is IRewardFacet {
   using SafeERC20 for ERC20;
@@ -20,8 +21,13 @@ contract RewardFacet is IRewardFacet {
   // events
   event LogClaimReward(address indexed _to, address _rewardToken, uint256 _amount);
 
-  // todo: nonreentrant
-  function claimReward(address _token) external {
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
+  function claimReward(address _token) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     (address _rewardToken, uint256 _pendingReward) = LibReward.claimReward(msg.sender, _token, moneyMarketDs);

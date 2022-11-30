@@ -31,8 +31,7 @@ library LibReward {
     if (_rewardDistributor == address(0)) revert LibReward_InvalidRewardDistributor();
 
     LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_token, moneyMarketDs);
-    LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
-    uint256 _amount = accountCollatsList.getAmount(_token);
+    uint256 _amount = moneyMarketDs.accountCollats[_account];
     int256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
 
     int256 _accumulatedReward = ((_amount * poolInfo.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION)
@@ -53,9 +52,7 @@ library LibReward {
   ) internal view returns (uint256 _actualReward) {
     LibMoneyMarket01.PoolInfo storage poolInfo = moneyMarketDs.poolInfos[_token];
     uint256 _accRewardPerShare = poolInfo.accRewardPerShare + _calculateAccRewardPerShare(_token, moneyMarketDs);
-
-    LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[_account];
-    uint256 _amount = accountCollatsList.getAmount(_token);
+    uint256 _amount = moneyMarketDs.accountCollats[_account];
     int256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
     int256 _reward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION).toInt256();
     _actualReward = (_reward - _rewardDebt).toUint256();
