@@ -26,6 +26,10 @@ library LibMoneyMarket01 {
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
+  error LibMoneyMarket01_InvalidAssetTier();
+  error LibMoneyMarket01_ExceedCollateralLimit();
+  error LibMoneyMarket01_TooManyCollateralRemoved();
+  error LibMoneyMarket01_BorrowingPowerTooLow();
 
   enum AssetTier {
     UNLISTED,
@@ -423,5 +427,76 @@ library LibMoneyMarket01 {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
+
+  function addCollat(
+    address _subAccount,
+    address _token,
+    uint256 _addAmount,
+    MoneyMarketDiamondStorage storage ds
+  ) internal {
+    // validation
+    if (ds.tokenConfigs[_token].tier != AssetTier.COLLATERAL) revert LibMoneyMarket01_InvalidAssetTier();
+    if (_addAmount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral)
+      revert LibMoneyMarket01_ExceedCollateralLimit();
+
+    // init list
+    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
+    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      subAccountCollateralList.init();
+    }
+
+    uint256 _currentCollatAmount = subAccountCollateralList.getAmount(_token);
+    // update state
+    subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
+    ds.collats[_token] += _addAmount;
+    ds.accountCollats[msg.sender] += _addAmount;
+  }
+
+  function removeCollat(
+    address _subAccount,
+    address _token,
+    uint256 _removeAmount,
+    MoneyMarketDiamondStorage storage ds
+  ) internal {
+    removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
+
+    ds.collats[_token] -= _removeAmount;
+    ds.accountCollats[msg.sender] -= _removeAmount;
+  }
+
+  function removeCollatFromSubAccount(
+    address _subAccount,
+    address _token,
+    uint256 _removeAmount,
+    MoneyMarketDiamondStorage storage ds
+  ) internal {
+    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+    uint256 _currentCollatAmount = _subAccountCollatList.getAmount(_token);
+    if (_removeAmount > _currentCollatAmount) {
+      revert LibMoneyMarket01_TooManyCollateralRemoved();
+    }
+    _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
+
+    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
+    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
+    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
+    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+      revert LibMoneyMarket01_BorrowingPowerTooLow();
+    }
+  }
+
+  function transferCollat(
+    address _toSubAccount,
+    address _token,
+    uint256 _transferAmount,
+    MoneyMarketDiamondStorage storage ds
+  ) internal {
+    LibDoublyLinkedList.List storage toSubAccountCollateralList = ds.subAccountCollats[_toSubAccount];
+    if (toSubAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      toSubAccountCollateralList.init();
+    }
+    uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
+    toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
   }
 }

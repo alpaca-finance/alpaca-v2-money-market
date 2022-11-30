@@ -3,6 +3,9 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
 
+// libraries
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+
 // interfaces
 import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
 
@@ -76,7 +79,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserAddInvalidCollateral_ShouldRevert() external {
     vm.startPrank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_InvalidAssetTier.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_InvalidAssetTier.selector));
     collateralFacet.addCollateral(ALICE, subAccount0, address(isolateToken), 1 ether);
     vm.stopPrank();
   }
@@ -95,7 +98,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
 
     // the second should revert as it will exceed the limit
-    vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_ExceedCollateralLimit.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_ExceedCollateralLimit.selector));
     collateralFacet.addCollateral(ALICE, 0, address(weth), _collateral);
 
     vm.stopPrank();
@@ -111,7 +114,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
 
     vm.prank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_TooManyCollateralRemoved.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_TooManyCollateralRemoved.selector));
     collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
   }
 
@@ -133,7 +136,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowedPower
     // should revert
-    vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_BorrowingPowerTooLow.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_BorrowingPowerTooLow.selector));
     collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether);
     vm.stopPrank();
   }
