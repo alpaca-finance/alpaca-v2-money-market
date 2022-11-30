@@ -16,8 +16,6 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
@@ -192,16 +190,18 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // 3. update states
-    _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
-    _reduceCollateral(_subAccount, _collatToken, _collatUnderlyingAmountOut, moneyMarketDs);
-
     uint256 _ibAmountOut = ILendFacet(address(this)).getIbShareFromUnderlyingAmount(
       _collatUnderlyingToken,
       _collatUnderlyingAmountOut
     );
+
+    _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
+    _reduceCollateral(_subAccount, _collatToken, _ibAmountOut, moneyMarketDs);
+
     uint256 _repayAmountBefore = ERC20(_repayToken).balanceOf(address(this));
 
     // 4. withdraw underlying and transfer them to liquidator and call liquidate
+    // note that liquidation bonus will be underlying token not ib
     LibMoneyMarket01.withdraw(_collatToken, _ibAmountOut, address(this), moneyMarketDs);
     ERC20(_collatUnderlyingToken).safeTransfer(_liquidationStrat, _collatUnderlyingAmountOut);
     ILiquidationStrategy(_liquidationStrat).executeLiquidation(
