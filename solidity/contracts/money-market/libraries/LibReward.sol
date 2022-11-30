@@ -75,9 +75,9 @@ library LibReward {
       uint256 _tokenBalance = ERC20(_token).balanceOf(address(this));
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
-        uint256 _alpacaReward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
+        uint256 _reward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
           moneyMarketDs.totalAllocPoint;
-        _newAccRewardPerShare = (_alpacaReward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
+        _newAccRewardPerShare = (_reward * LibMoneyMarket01.ACC_ALPACA_PRECISION) / _tokenBalance;
       }
     }
   }
