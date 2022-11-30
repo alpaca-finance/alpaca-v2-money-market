@@ -216,9 +216,3 @@ contract LendFacet is ILendFacet {
     LibSafeToken.safeTransferETH(_to, _amount);
   }
 }
-
-/**
-  rewardDebt = depositAmount * accAlpacaPerShare / 1e12
-  alpaca reward = block past * alpaca per block * pool ratio (pool alloc point / total alloc point)
-  accAlpacaPerShare = 
- */
