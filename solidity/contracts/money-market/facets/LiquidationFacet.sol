@@ -101,7 +101,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // 1. check if position is underwater and can be liquidated
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
-    if ((_borrowingPower * 10000) / _usedBorrowingPower > 9000) {
+    if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
       revert LiquidationFacet_Healthy();
     }
 
@@ -109,11 +109,11 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
     (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
     // todo: handle token decimals
-    uint256 _repayInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
+    uint256 _collatValueInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
     uint256 _collatAmountOut = _getCollatAmountOut(
       _subAccount,
       _collatToken,
-      _repayInUSD,
+      _collatValueInUSD,
       LIQUIDATION_REWARD_BPS,
       moneyMarketDs
     );
@@ -134,11 +134,12 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // 5. check if we get expected amount of repayToken back from liquidator
-    if (ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore < _actualRepayAmount) {
+    uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    if (_amountRepaid < _actualRepayAmount) {
       revert LiquidationFacet_RepayAmountMismatch();
     }
 
-    emit LogLiquidate(msg.sender, _liquidationStrat, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
+    emit LogLiquidate(msg.sender, _liquidationStrat, _repayToken, _collatToken, _amountRepaid, _collatAmountOut);
   }
 
   function _getActualRepayAmount(
@@ -160,15 +161,14 @@ contract LiquidationFacet is ILiquidationFacet {
   function _getCollatAmountOut(
     address _subAccount,
     address _collatToken,
-    uint256 _repayInUSD,
+    uint256 _collatValueInUSD,
     uint256 _rewardBps,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
     (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
-    // TODO: reward % to param
-    uint256 _rewardInUSD = (_repayInUSD * _rewardBps) / 1e4;
+    uint256 _rewardInUSD = (_collatValueInUSD * _rewardBps) / 10000;
     // todo: handle token decimal
-    _collatTokenAmountOut = ((_repayInUSD + _rewardInUSD) * 1e18) / _collatTokenPrice;
+    _collatTokenAmountOut = ((_collatValueInUSD + _rewardInUSD) * 1e18) / _collatTokenPrice;
 
     uint256 _collatTokenTotalAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 
