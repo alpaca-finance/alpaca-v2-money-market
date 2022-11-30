@@ -139,6 +139,7 @@ contract AdminFacet is IAdminFacet {
 
   function addPool(address _token, uint256 _allocPoint) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (moneyMarketDs.poolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
     moneyMarketDs.poolInfos[_token] = LibMoneyMarket01.PoolInfo({
       accRewardPerShare: 0,
       lastRewardTime: block.timestamp.toUint128(),

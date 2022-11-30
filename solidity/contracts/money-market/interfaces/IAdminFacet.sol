@@ -4,6 +4,9 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 interface IAdminFacet {
+  // errors
+  error AdminFacet_PoolIsAlreadyAdded();
+
   struct IbPair {
     address token;
     address ibToken;
