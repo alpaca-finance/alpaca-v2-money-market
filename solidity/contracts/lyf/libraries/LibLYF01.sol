@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
@@ -11,6 +9,7 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
+import { IERC20 } from "../interfaces/IERC20.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
@@ -27,6 +26,7 @@ library LibLYF01 {
 
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
+  error LibLYF01_UnsupportedDecimals();
 
   enum AssetTier {
     UNLISTED,
@@ -41,6 +41,7 @@ library LibLYF01 {
     uint256 maxCollateral;
     uint256 maxBorrow;
     uint256 maxToleranceExpiredSecond;
+    uint8 to18ConversionFactor;
   }
 
   struct LPConfig {
@@ -216,7 +217,7 @@ library LibLYF01 {
   function getTotalToken(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256) {
     // todo: think about debt
     // return (ERC20(_token).balanceOf(address(this)) + lyfDs.globalDebts[_token]) - lyfDs.collats[_token];
-    return ERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
+    return IERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
   }
 
   // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
@@ -313,5 +314,12 @@ library LibLYF01 {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
+
+  function to18ConversionFactor(address _token) internal view returns (uint8) {
+    uint256 _decimals = IERC20(_token).decimals();
+    if (_decimals > 18) revert LibLYF01_UnsupportedDecimals();
+    uint256 _conversionFactor = 10**(18 - _decimals);
+    return uint8(_conversionFactor);
   }
 }
