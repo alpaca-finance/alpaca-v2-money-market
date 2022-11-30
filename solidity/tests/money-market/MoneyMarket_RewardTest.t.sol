@@ -50,8 +50,8 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     collateralFacet.removeCollateral(0, _ibToken, 10 ether);
 
-    // assertEq(claimRewardFacet.accountRewardDebts(ALICE, _ibToken), 0 ether);
-    // assertEq(rewardToken.balanceOf(ALICE), _pendingReward);
-    // assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _pendingReward);
+    assertEq(claimRewardFacet.accountRewardDebts(ALICE, _ibToken), 0 ether);
+    assertEq(rewardToken.balanceOf(ALICE), _pendingReward);
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _pendingReward);
   }
 }
