@@ -27,7 +27,7 @@ import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet
 import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
 import { IRepurchaseFacet } from "../../contracts/money-market/interfaces/IRepurchaseFacet.sol";
-import { IClaimRewardFacet } from "../../contracts/money-market/interfaces/IClaimRewardFacet.sol";
+import { IRewardFacet } from "../../contracts/money-market/interfaces/IRewardFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -49,7 +49,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
   IRepurchaseFacet internal repurchaseFacet;
-  IClaimRewardFacet internal claimRewardFacet;
+  IRewardFacet internal RewardFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -62,7 +62,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     repurchaseFacet = IRepurchaseFacet(moneyMarketDiamond);
-    claimRewardFacet = IClaimRewardFacet(moneyMarketDiamond);
+    RewardFacet = IRewardFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);

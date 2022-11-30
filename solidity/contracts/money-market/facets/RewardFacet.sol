@@ -5,7 +5,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // interfaces
-import { IClaimRewardFacet } from "../interfaces/IClaimRewardFacet.sol";
+import { IRewardFacet } from "../interfaces/IRewardFacet.sol";
 import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 
 // libraries
@@ -13,7 +13,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibReward } from "../libraries/LibReward.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
-contract ClaimRewardFacet is IClaimRewardFacet {
+contract RewardFacet is IRewardFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -34,7 +34,7 @@ contract ClaimRewardFacet is IClaimRewardFacet {
     return LibReward.pendingReward(_account, _token, moneyMarketDs);
   }
 
-  function accountRewardDebts(address _account, address _token) external view returns (uint256) {
+  function accountRewardDebts(address _account, address _token) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.accountRewardDebts[_account][_token];
   }

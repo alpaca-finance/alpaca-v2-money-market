@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
@@ -17,6 +18,8 @@ import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 contract CollateralFacet is ICollateralFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+  using SafeCast for uint256;
+  using SafeCast for int256;
 
   event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
 
@@ -52,12 +55,7 @@ contract CollateralFacet is ICollateralFacet {
       subAccountCollateralList.init();
     }
 
-    uint256 _newAmount = subAccountCollateralList.getAmount(_token) + _amount;
-    subAccountCollateralList.addOrUpdate(_token, _newAmount);
-
-    moneyMarketDs.collats[_token] += _amount;
-
-    // update ib token collat
+    // update account collats (support for ibtoken now)
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
       LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
       if (accountCollatsList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
@@ -69,8 +67,13 @@ contract CollateralFacet is ICollateralFacet {
       // update reward debt
       LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
       uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
-      moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt;
+      moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt.toInt256();
     }
+
+    uint256 _newAmount = subAccountCollateralList.getAmount(_token) + _amount;
+    subAccountCollateralList.addOrUpdate(_token, _newAmount);
+
+    moneyMarketDs.collats[_token] += _amount;
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -88,14 +91,8 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
-    _removeCollateral(_subAccount, _token, _removeAmount, moneyMarketDs);
-
-    moneyMarketDs.collats[_token] -= _removeAmount;
-
-    // update ib token collat
+    // update account collats (support for ibtoken now)
     if (moneyMarketDs.ibTokenToTokens[_token] != address(0)) {
-      LibReward.claimReward(msg.sender, _token, moneyMarketDs);
-
       LibDoublyLinkedList.List storage accountCollatsList = moneyMarketDs.accountCollats[msg.sender];
       uint256 _oldAmount = accountCollatsList.getAmount(_token);
       moneyMarketDs.accountCollats[msg.sender].updateOrRemove(_token, _oldAmount - _removeAmount);
@@ -103,8 +100,12 @@ contract CollateralFacet is ICollateralFacet {
       // update reward debt
       LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
       uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
-      moneyMarketDs.accountRewardDebts[msg.sender][_token] -= _removeRewardDebt;
+      moneyMarketDs.accountRewardDebts[msg.sender][_token] -= _removeRewardDebt.toInt256();
     }
+
+    _removeCollateral(_subAccount, _token, _removeAmount, moneyMarketDs);
+
+    moneyMarketDs.collats[_token] -= _removeAmount;
 
     ERC20(_token).safeTransfer(msg.sender, _removeAmount);
 

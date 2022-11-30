@@ -13,7 +13,7 @@ import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol
 import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { RepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
-import { ClaimRewardFacet } from "../../contracts/money-market/facets/ClaimRewardFacet.sol";
+import { RewardFacet } from "../../contracts/money-market/facets/RewardFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -34,7 +34,7 @@ library MMDiamondDeployer {
     deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployRepurchaseFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployClaimRewardFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployRewardFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -249,24 +249,21 @@ library MMDiamondDeployer {
     return (_repurchaseFacet, selectors);
   }
 
-  function deployClaimRewardFacet(DiamondCutFacet diamondCutFacet)
-    internal
-    returns (ClaimRewardFacet, bytes4[] memory)
-  {
-    ClaimRewardFacet _claimRewardFacet = new ClaimRewardFacet();
+  function deployRewardFacet(DiamondCutFacet diamondCutFacet) internal returns (RewardFacet, bytes4[] memory) {
+    RewardFacet _RewardFacet = new RewardFacet();
 
     bytes4[] memory selectors = new bytes4[](3);
-    selectors[0] = _claimRewardFacet.claimReward.selector;
-    selectors[1] = _claimRewardFacet.pendingReward.selector;
-    selectors[2] = _claimRewardFacet.accountRewardDebts.selector;
+    selectors[0] = _RewardFacet.claimReward.selector;
+    selectors[1] = _RewardFacet.pendingReward.selector;
+    selectors[2] = _RewardFacet.accountRewardDebts.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_claimRewardFacet),
+      address(_RewardFacet),
       IDiamondCut.FacetCutAction.Add,
       selectors
     );
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_claimRewardFacet, selectors);
+    return (_RewardFacet, selectors);
   }
 }
