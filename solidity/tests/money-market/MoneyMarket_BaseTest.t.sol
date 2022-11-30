@@ -159,6 +159,11 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, true);
 
+    // whitelisted for MM
+    address[] memory _callers = new address[](1);
+    _callers[0] = moneyMarketDiamond;
+    rewardDistributor.setCallersOk(_callers, true);
+
     // set reward
     adminFacet.setRewardDistributor(address(rewardDistributor));
 
