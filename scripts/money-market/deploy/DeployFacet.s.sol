@@ -13,7 +13,7 @@ import { CollateralFacet, ICollateralFacet } from "../../../solidity/contracts/m
 import { BorrowFacet, IBorrowFacet } from "../../../solidity/contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../../solidity/contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../../solidity/contracts/money-market/facets/AdminFacet.sol";
-import { RepurchaseFacet, IRepurchaseFacet } from "../../../solidity/contracts/money-market/facets/RepurchaseFacet.sol";
+import { LiquidationFacet, ILiquidationFacet } from "../../../solidity/contracts/money-market/facets/LiquidationFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../../solidity/contracts/money-market/initializers/DiamondInit.sol";
@@ -41,7 +41,7 @@ contract DeployFacet is Script {
     BorrowFacet borrowFacet = new BorrowFacet();
     NonCollatBorrowFacet nonCollatFacet = new NonCollatBorrowFacet();
     AdminFacet adminFacet = new AdminFacet();
-    RepurchaseFacet repurchaseFacet = new RepurchaseFacet();
+    LiquidationFacet LiquidationFacet = new LiquidationFacet();
     DiamondInit diamondInit = new DiamondInit();
   }
 }

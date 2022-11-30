@@ -101,6 +101,17 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  function setLiquidationStratsOk(address[] calldata list, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = list.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.liquidationStratOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
     external
     onlyOwner
