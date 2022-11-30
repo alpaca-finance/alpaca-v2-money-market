@@ -168,25 +168,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // ibUsdc is 40%
     // ibIsolateToken is 15%
     // ibWNative is 5%
-    adminFacet.addPool(
-      address(ibWeth),
-      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 20 })
-    );
-    adminFacet.addPool(
-      address(ibBtc),
-      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 20 })
-    );
-    adminFacet.addPool(
-      address(ibUsdc),
-      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 40 })
-    );
-    adminFacet.addPool(
-      address(ibIsolateToken),
-      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 15 })
-    );
-    adminFacet.addPool(
-      address(ibWNative),
-      LibMoneyMarket01.PoolInfo({ accRewardPerShare: 0, lastRewardTime: block.timestamp, allocPoint: 5 })
-    );
+    adminFacet.addPool(address(ibWeth), 20);
+    adminFacet.addPool(address(ibBtc), 20);
+    adminFacet.addPool(address(ibUsdc), 40);
+    adminFacet.addPool(address(ibIsolateToken), 15);
+    adminFacet.addPool(address(ibWNative), 5);
   }
 }

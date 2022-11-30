@@ -117,15 +117,19 @@ contract AdminFacet is IAdminFacet {
   function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.rewardConfig = LibMoneyMarket01.RewardConfig({
-      token: _rewardToken,
+      rewardToken: _rewardToken,
       rewardPerSecond: _rewardPerSecond
     });
   }
 
-  function addPool(address _token, LibMoneyMarket01.PoolInfo memory newPoolInfo) external {
+  function addPool(address _token, uint256 _allocPoint) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.poolInfos[_token] = newPoolInfo;
-    moneyMarketDs.totalAllocPoint += newPoolInfo.allocPoint;
+    moneyMarketDs.poolInfos[_token] = LibMoneyMarket01.PoolInfo({
+      accRewardPerShare: 0,
+      lastRewardTime: block.timestamp,
+      allocPoint: _allocPoint
+    });
+    moneyMarketDs.totalAllocPoint += _allocPoint;
   }
 
   function setPool(address _token, uint256 _newAllocPoint) external {

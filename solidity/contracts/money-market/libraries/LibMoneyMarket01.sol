@@ -44,7 +44,7 @@ library LibMoneyMarket01 {
   }
 
   struct RewardConfig {
-    address token;
+    address rewardToken;
     uint256 rewardPerSecond;
   }
 

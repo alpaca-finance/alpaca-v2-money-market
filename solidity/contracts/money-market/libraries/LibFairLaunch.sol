@@ -43,7 +43,7 @@ library LibFairLaunch {
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (address _rewardToken, uint256 _unclaimedReward) {
-    _rewardToken = moneyMarketDs.rewardConfig.token;
+    _rewardToken = moneyMarketDs.rewardConfig.rewardToken;
     address _rewardDistributor = moneyMarketDs.rewardDistributor;
 
     if (_rewardToken == address(0)) revert LibFairLaunch_InvalidRewardToken();
