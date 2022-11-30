@@ -369,7 +369,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _checkAvailableToken(_token, _amount, 0, lyfDs);
   }
 
-  // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowingPower,
@@ -382,7 +381,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibLYF01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
+    uint256 _borrowingUSDValue = LibLYF01.usedBorrowedPower(
+      _amount * _tokenConfig.to18ConversionFactor,
+      _tokenPrice,
+      _tokenConfig.borrowingFactor
+    );
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert LYFFarmFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);

@@ -205,8 +205,7 @@ abstract contract LYF_BaseTest is BaseTest {
     IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
-
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),

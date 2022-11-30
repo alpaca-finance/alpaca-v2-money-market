@@ -157,7 +157,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
 
-  // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowedValue,
@@ -170,7 +169,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+      _amount * _tokenConfig.to18ConversionFactor,
+      _tokenPrice,
+      _tokenConfig.borrowingFactor
+    );
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
     }

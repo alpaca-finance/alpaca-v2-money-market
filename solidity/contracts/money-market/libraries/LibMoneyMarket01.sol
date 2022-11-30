@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
-import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
+import { IERC20 } from "../interfaces/IERC20.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -25,6 +23,7 @@ library LibMoneyMarket01 {
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
+  error LibMoneyMarket01_UnsupportedDecimals();
 
   enum AssetTier {
     UNLISTED,
@@ -40,6 +39,7 @@ library LibMoneyMarket01 {
     uint256 maxCollateral;
     uint256 maxBorrow;
     uint256 maxToleranceExpiredSecond;
+    uint8 to18ConversionFactor;
   }
 
   // Storage
@@ -81,7 +81,6 @@ library LibMoneyMarket01 {
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
-  // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
@@ -113,7 +112,7 @@ library LibMoneyMarket01 {
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _actualAmount * _tokenConfig.collateralFactor,
+        _actualAmount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
@@ -191,9 +190,13 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
-      // todo: handle token decimals
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
       // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
-      _totalBorrowedUSDValue += LibFullMath.mulDiv(_borrowedAmount, _tokenPrice, 1e18);
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(
+        _borrowedAmount * _tokenConfig.to18ConversionFactor,
+        _tokenPrice,
+        1e18
+      );
 
       unchecked {
         _i++;
@@ -226,7 +229,6 @@ library LibMoneyMarket01 {
 
       uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
 
-      // TODO: handle token decimals
       _pendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18;
 
       // non collat interest
@@ -238,7 +240,6 @@ library LibMoneyMarket01 {
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
 
-        // TODO: handle token decimals
         _pendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
 
         unchecked {
@@ -283,7 +284,6 @@ library LibMoneyMarket01 {
       uint256 _timePast = block.timestamp - _lastAccureTime;
       //-----------------------------------------------------
       // over collat
-      // TODO: handle token decimals
       uint256 _overCollatInterest = (getOverCollatInterestRate(_token, moneyMarketDs) *
         _timePast *
         moneyMarketDs.debtValues[_token]) / 1e18;
@@ -314,7 +314,6 @@ library LibMoneyMarket01 {
 
       uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
 
-      // TODO: handle token decimals
       uint256 _accountInterest = (_nonCollatInterestRate * _timePast * _oldAccountDebt) / 1e18;
 
       // update non collat debt states
@@ -351,7 +350,8 @@ library LibMoneyMarket01 {
     view
     returns (uint256)
   {
-    return (ERC20(_token).balanceOf(address(this)) + moneyMarketDs.globalDebts[_token]) - moneyMarketDs.collats[_token];
+    return
+      (IERC20(_token).balanceOf(address(this)) + moneyMarketDs.globalDebts[_token]) - moneyMarketDs.collats[_token];
   }
 
   function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -359,7 +359,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _floating)
   {
-    _floating = ERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    _floating = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
   }
 
   function setIbPair(
@@ -401,5 +401,12 @@ library LibMoneyMarket01 {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
+
+  function to18ConversionFactor(address _token) internal view returns (uint8) {
+    uint256 _decimals = IERC20(_token).decimals();
+    if (_decimals > 18) revert LibMoneyMarket01_UnsupportedDecimals();
+    uint256 _conversionFactor = 10**(18 - _decimals);
+    return uint8(_conversionFactor);
   }
 }
