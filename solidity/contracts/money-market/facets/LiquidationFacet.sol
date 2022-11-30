@@ -214,7 +214,8 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // 5. check if we get expected amount of repayToken back from liquidator
-    if (ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore < _actualRepayAmount) {
+    uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    if (_amountRepaid < _actualRepayAmount) {
       revert LiquidationFacet_RepayAmountMismatch();
     }
 
@@ -223,7 +224,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _liquidationStrat,
       _repayToken,
       _collatToken,
-      _repayAmount,
+      _amountRepaid,
       _ibAmountOut,
       _collatUnderlyingAmountOut
     );
