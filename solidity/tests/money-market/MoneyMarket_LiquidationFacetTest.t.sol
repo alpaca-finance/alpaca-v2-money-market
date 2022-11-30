@@ -872,8 +872,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    assertEq(_stateAfter.collat, 3.042527662546341464 ether); // 3.04252766254634146341... repeat 46341
-    assertEq(_stateAfter.subAccountCollat, 3.042527662546341464 ether); // 3.04252766254634146341... repeat 46341
+    assertEq(_stateAfter.collat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
+    assertEq(_stateAfter.subAccountCollat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
     assertEq(_stateAfter.debtValue, 0);
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
