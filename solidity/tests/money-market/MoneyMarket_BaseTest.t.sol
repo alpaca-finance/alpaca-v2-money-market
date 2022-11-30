@@ -14,19 +14,19 @@ import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/
 import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { RepurchaseFacet, IRepurchaseFacet } from "../../contracts/money-market/facets/RepurchaseFacet.sol";
+import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
 import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
 
 // interfaces
-import { ICollateralFacet } from "../../contracts/money-market/interfaces/ICollateralFacet.sol";
-import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
-import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
-import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
-import { IRepurchaseFacet } from "../../contracts/money-market/interfaces/IRepurchaseFacet.sol";
+import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
+import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
+import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { IRewardFacet } from "../../contracts/money-market/interfaces/IRewardFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -48,7 +48,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
-  IRepurchaseFacet internal repurchaseFacet;
+
+  ILiquidationFacet internal liquidationFacet;
   IRewardFacet internal RewardFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
@@ -61,7 +62,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet = IAdminFacet(moneyMarketDiamond);
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
-    repurchaseFacet = IRepurchaseFacet(moneyMarketDiamond);
+    liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
     RewardFacet = IRewardFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);

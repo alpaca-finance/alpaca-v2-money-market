@@ -93,6 +93,66 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
   }
 
+  function directAddFarmPosition(
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _desireToken0Amount,
+    uint256 _desireToken1Amount,
+    uint256 _minLpReceive,
+    uint256 _token0AmountIn,
+    uint256 _token1AmountIn
+  ) external nonReentrant {
+    if (_token0AmountIn > _desireToken0Amount || _token1AmountIn > _desireToken1Amount) {
+      revert LYFFarmFacet_BadInput();
+    }
+
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+
+    LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
+
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
+
+    LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
+    LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+
+    // 1. if desired amount exceeds provided amount, get token from collat (underlying and ib if possible), borrow if not enough
+    _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount - _token0AmountIn, lyfDs);
+    _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountIn, lyfDs);
+
+    // 2. send token to strat
+    ERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
+    ERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
+    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
+    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
+
+    // 3. compose lp
+    uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
+      _token0,
+      _token1,
+      _lpToken,
+      _desireToken0Amount,
+      _desireToken1Amount,
+      _minLpReceive
+    );
+
+    // 4. deposit to masterChef
+    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
+
+    // 5. add it to collateral
+    LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
+
+    // 6. health check on sub account
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
+    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+  }
+
   function _removeCollatWithIbAndBorrow(
     address _subAccount,
     address _token,
