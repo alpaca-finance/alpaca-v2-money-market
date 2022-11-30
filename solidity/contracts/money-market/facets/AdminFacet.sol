@@ -131,6 +131,8 @@ contract AdminFacet is IAdminFacet {
 
   function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (_rewardToken == address(0)) revert AdminFacet_InvalidAddress();
+    if (_rewardPerSecond == 0) revert AdminFacet_InvalidReward();
     moneyMarketDs.rewardConfig = LibMoneyMarket01.RewardConfig({
       rewardToken: _rewardToken,
       rewardPerSecond: _rewardPerSecond
