@@ -66,7 +66,7 @@ contract CollateralFacet is ICollateralFacet {
       moneyMarketDs.accountCollats[msg.sender].addOrUpdate(_token, _oldIbTokenCollat + _amount);
       // update reward debt
       LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
-      uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
+      uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION;
       moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt.toInt256();
     }
 
@@ -99,7 +99,7 @@ contract CollateralFacet is ICollateralFacet {
 
       // update reward debt
       LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
-      uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_ALPACA_PRECISION;
+      uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION;
       moneyMarketDs.accountRewardDebts[msg.sender][_token] -= _removeRewardDebt.toInt256();
     }
 

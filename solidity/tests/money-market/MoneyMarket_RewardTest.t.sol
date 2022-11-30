@@ -42,31 +42,6 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
   }
 
-  function testCorrectness_WhenUserAddCollateralAndRemoveCollat_UserShouldReceivedRewardCorrectly() external {
-    address _ibToken = address(ibWeth);
-    _addIbTokenAsCollateral(ALICE, _ibToken, 10 ether);
-
-    assertEq(collateralFacet.accountCollats(ALICE, _ibToken), 10 ether);
-    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
-    vm.warp(block.timestamp + 100);
-
-    // ibWeth pool alloc point is 20
-    // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
-    // then reward = 100 * 1 * 20 / 100 = 20 ether
-    // then acc reward per share = 20 ether / 10 ether (total of collat token) = 2 (precision is 12)
-    // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
-    // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    uint256 _expectedReward = 20 ether;
-
-    _removeIbTokenCollateral(ALICE, _ibToken, 10 ether);
-    _assertAccountReward(ALICE, _ibToken, 0 ether, -_expectedReward.toInt256());
-    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
-
-    _claimReward(ALICE, _ibToken);
-    _assertAccountReward(ALICE, _ibToken, _expectedReward, 0 ether);
-    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
-  }
-
   function testCorrectness_WhenUserAddCollateralAndClaimRewardAndRemoveCollat_UserShouldReceivedRewardCorrectly()
     external
   {

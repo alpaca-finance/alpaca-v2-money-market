@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
@@ -9,6 +11,8 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract AdminFacet is IAdminFacet {
+  using SafeCast for uint256;
+
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
     _;
@@ -126,8 +130,8 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.poolInfos[_token] = LibMoneyMarket01.PoolInfo({
       accRewardPerShare: 0,
-      lastRewardTime: block.timestamp,
-      allocPoint: _allocPoint
+      lastRewardTime: block.timestamp.toUint128(),
+      allocPoint: _allocPoint.toUint128()
     });
     moneyMarketDs.totalAllocPoint += _allocPoint;
   }
@@ -137,7 +141,7 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.poolInfos[_token];
     uint256 _totalAllocPoint = moneyMarketDs.totalAllocPoint;
     moneyMarketDs.totalAllocPoint += _totalAllocPoint - poolInfo.allocPoint + _newAllocPoint;
-    moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint;
+    moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint.toUint128();
   }
 
   function setRewardDistributor(address _addr) external {
