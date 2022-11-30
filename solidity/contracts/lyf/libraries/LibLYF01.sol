@@ -136,7 +136,6 @@ library LibLYF01 {
     }
   }
 
-  // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
     internal
     view
@@ -168,7 +167,7 @@ library LibLYF01 {
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _actualAmount * _tokenConfig.collateralFactor,
+        _actualAmount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );

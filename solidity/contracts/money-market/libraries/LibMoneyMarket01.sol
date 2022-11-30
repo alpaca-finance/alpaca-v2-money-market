@@ -80,7 +80,6 @@ library LibMoneyMarket01 {
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
-  // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
@@ -112,7 +111,7 @@ library LibMoneyMarket01 {
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _actualAmount * _tokenConfig.collateralFactor,
+        _actualAmount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
@@ -190,9 +189,13 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
-      // todo: handle token decimals
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
       // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
-      _totalBorrowedUSDValue += LibFullMath.mulDiv(_borrowedAmount, _tokenPrice, 1e18);
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(
+        _borrowedAmount * _tokenConfig.to18ConversionFactor,
+        _tokenPrice,
+        1e18
+      );
 
       unchecked {
         _i++;
@@ -225,7 +228,6 @@ library LibMoneyMarket01 {
 
       uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
 
-      // TODO: handle token decimals
       _pendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18;
 
       // non collat interest
@@ -237,7 +239,6 @@ library LibMoneyMarket01 {
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
 
-        // TODO: handle token decimals
         _pendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
 
         unchecked {
@@ -282,7 +283,6 @@ library LibMoneyMarket01 {
       uint256 _timePast = block.timestamp - _lastAccureTime;
       //-----------------------------------------------------
       // over collat
-      // TODO: handle token decimals
       uint256 _overCollatInterest = (getOverCollatInterestRate(_token, moneyMarketDs) *
         _timePast *
         moneyMarketDs.debtValues[_token]) / 1e18;
@@ -313,7 +313,6 @@ library LibMoneyMarket01 {
 
       uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
 
-      // TODO: handle token decimals
       uint256 _accountInterest = (_nonCollatInterestRate * _timePast * _oldAccountDebt) / 1e18;
 
       // update non collat debt states
