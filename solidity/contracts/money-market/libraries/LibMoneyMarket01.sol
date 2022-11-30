@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
@@ -16,6 +17,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+  using SafeERC20 for ERC20;
 
   // keccak256("moneymarket.diamond.storage");
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
@@ -25,6 +27,10 @@ library LibMoneyMarket01 {
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
+  error LibMoneyMarket01_InvalidToken(address _token);
+  error LibMoneyMarket01_NoTinyShares();
+
+  event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
 
   enum AssetTier {
     UNLISTED,
@@ -401,5 +407,37 @@ library LibMoneyMarket01 {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
+
+  function withdraw(
+    address _ibToken,
+    uint256 _shareAmount,
+    address _withdrawFrom,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _shareValue) {
+    address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
+    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+
+    if (_token == address(0)) {
+      revert LibMoneyMarket01_InvalidToken(_ibToken);
+    }
+
+    // _shareValue = _getShareValue(_token, _ibToken, _shareAmount, moneyMarketDs);
+    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
+    uint256 _tokenDecimals = ERC20(_ibToken).decimals();
+    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
+
+    _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
+
+    uint256 _shareLeft = _totalSupply - _shareAmount;
+    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
+      revert LibMoneyMarket01_NoTinyShares();
+    }
+
+    IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
+    // TODO: safe ?
+    ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
+
+    emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }
 }
