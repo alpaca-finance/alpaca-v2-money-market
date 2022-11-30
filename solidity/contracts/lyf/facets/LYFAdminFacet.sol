@@ -34,7 +34,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
         maxBorrow: _tokenConfigs[_i].maxBorrow,
-        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond
+        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond,
+        to18ConversionFactor: LibLYF01.to18ConversionFactor(_tokenConfigs[_i].token)
       });
 
       LibLYF01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, lyfDs);

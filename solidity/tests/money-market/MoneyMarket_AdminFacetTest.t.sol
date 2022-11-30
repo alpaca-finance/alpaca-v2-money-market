@@ -25,12 +25,10 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {
-    address _token = address(9998);
-
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: _token,
+      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
@@ -41,7 +39,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(_token);
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(address(weth));
 
     // assertEq not accept enum
     assertTrue(_tokenConfig.tier == LibMoneyMarket01.AssetTier.COLLATERAL);
