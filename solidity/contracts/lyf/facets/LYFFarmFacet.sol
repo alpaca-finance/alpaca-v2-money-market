@@ -22,6 +22,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
+  struct ReducePositionLocalVars {
+    address subAccount;
+    address token0;
+    address token1;
+    uint256 debtShareId0;
+    uint256 debtShareId1;
+  }
+
   error LYFFarmFacet_BorrowingPowerTooLow();
 
   event LogRemoveDebt(
@@ -186,7 +194,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     // should revinvest here before anything
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+    ReducePositionLocalVars memory _vars;
+
+    _vars.subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
     if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
@@ -194,33 +204,42 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
-    address _token0 = ISwapPairLike(_lpToken).token0();
-    address _token1 = ISwapPairLike(_lpToken).token1();
+    _vars.token0 = ISwapPairLike(_lpToken).token0();
+    _vars.token1 = ISwapPairLike(_lpToken).token1();
 
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+    _vars.debtShareId0 = lyfDs.debtShareIds[_vars.token0][_lpToken];
+    _vars.debtShareId1 = lyfDs.debtShareIds[_vars.token1][_lpToken];
+
+    LibLYF01.accureInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
+    LibLYF01.accureInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
 
     // todo: handle slippage
     // 1. Remove LP collat
-    uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
+
+    uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
 
     // 2. Remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
     ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+
     (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
     // 3. Repay debt
+    // 3.1 if amount return > amount to repay; repay only repay amount
+    // 3.2 if amount return > amount to repay; repay everything returned
     // todo: repay debt
-    // uint256 _actualRepayAmount0 = _repayDebt(msg.sender, _subAccountId, _token0, _lpToken, _amount0Repay, lyfDs);
-    // uint256 _actualRepayAmount1 = _repayDebt(msg.sender, _subAccountId, _token1, _lpToken, _amount1Repay, lyfDs);
+    uint256 _actualRepayAmount0 = _repayDebt(msg.sender, _subAccountId, _vars.token0, _vars.debtShareId0, 0, lyfDs);
+    uint256 _actualRepayAmount1 = _repayDebt(msg.sender, _subAccountId, _vars.token1, _vars.debtShareId1, 0, lyfDs);
 
     // 4. Transfer remaining back to user
+    // if 3.1, transfer amount return - repay amount
+    // if 3.2 skip transfer
     // todo: transfer out
-    LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
-    LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
+    LibLYF01.addCollat(_vars.subAccount, _vars.token0, _token0Return, lyfDs);
+    LibLYF01.addCollat(_vars.subAccount, _vars.token1, _token1Return, lyfDs);
 
-    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
+    if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
   }
