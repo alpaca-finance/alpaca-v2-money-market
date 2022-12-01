@@ -182,6 +182,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _lpToken,
     uint256 _lpShareAmount
   ) external nonReentrant {
+    // should revinvest here before anything
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -198,14 +199,24 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
 
     // todo: handle slippage
+    // 1. Remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
+    
+    // 2. Remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
     ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
     (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
+    // todo: repay debt
+
+    // todo: transfer out
     LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
     LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
+
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
   }
 
   function _borrowFromMoneyMarket(
