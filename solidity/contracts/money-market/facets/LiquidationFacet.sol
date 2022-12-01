@@ -81,6 +81,7 @@ contract LiquidationFacet is ILiquidationFacet {
     emit LogRepurchase(msg.sender, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
   }
 
+  // TODO: whitelist caller
   function liquidationCall(
     address _liquidationStrat,
     address _account,
@@ -109,6 +110,7 @@ contract LiquidationFacet is ILiquidationFacet {
     }
 
     address _collatUnderlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
+    // handle liqudiate ib as collat
     if (_collatUnderlyingToken != address(0)) {
       _ibLiquidationCall(
         _liquidationStrat,
@@ -133,18 +135,23 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // 2. calculate collat amount to send to liquidator based on _repayAmount
-    LibMoneyMarket01.TokenConfig memory _repayTokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
-    (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
-    uint256 _collatValueInUSD = (_actualRepayAmount * _repayTokenConfig.to18ConversionFactor * _repayTokenPrice) / 1e18;
-    uint256 _collatAmountOut = _getCollatAmountOut(
-      _subAccount,
-      _collatToken,
-      _collatValueInUSD,
-      LIQUIDATION_REWARD_BPS,
-      moneyMarketDs
-    );
+    // prevent stack too deep
+    uint256 _collatAmountOut;
+    {
+      (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+      uint256 _collatValueInUSD = (_actualRepayAmount *
+        moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
+        _repayTokenPrice) / 1e18;
+      _collatAmountOut = _getCollatAmountOut(
+        _subAccount,
+        _collatToken,
+        _collatValueInUSD,
+        LIQUIDATION_REWARD_BPS,
+        moneyMarketDs
+      );
+    }
 
     // 3. update states
     _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
@@ -164,6 +171,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // 5. check if we get expected amount of repayToken back from liquidator
     uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
     if (_amountRepaid < _actualRepayAmount) {
+      // TODO: handle accrue bad debt and don't revert
       revert LiquidationFacet_RepayAmountMismatch();
     }
 
@@ -181,18 +189,23 @@ contract LiquidationFacet is ILiquidationFacet {
   ) internal {
     // 2. calculate collat amount to send to liquidator based on _repayAmount
     uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
-    (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-    // todo: handle token decimals
-    uint256 _repayInUSD = (_actualRepayAmount * _repayTokenPrice) / 1e18;
 
-    uint256 _collatUnderlyingAmountOut = _getCollatUnderlyingAmountOut(
-      _subAccount,
-      _collatUnderlyingToken,
-      _collatToken,
-      _repayInUSD,
-      LIQUIDATION_REWARD_BPS,
-      moneyMarketDs
-    );
+    // prevent stack too deep
+    uint256 _collatUnderlyingAmountOut;
+    {
+      (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+      uint256 _repayInUSD = (_actualRepayAmount *
+        moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
+        _repayTokenPrice) / 1e18;
+      _collatUnderlyingAmountOut = _getCollatUnderlyingAmountOut(
+        _subAccount,
+        _collatUnderlyingToken,
+        _collatToken,
+        _repayInUSD,
+        LIQUIDATION_REWARD_BPS,
+        moneyMarketDs
+      );
+    }
 
     // 3. update states
     uint256 _ibAmountOut = ILendFacet(address(this)).getIbShareFromUnderlyingAmount(
@@ -284,8 +297,9 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _underlyingAmountOut) {
     (uint256 _underlyingTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_underlyingToken, moneyMarketDs);
-    // todo: handle token decimal
-    _underlyingAmountOut = ((_repayInUSD * (1e4 + _rewardBps)) * 1e14) / _underlyingTokenPrice;
+    _underlyingAmountOut =
+      ((_repayInUSD * (1e4 + _rewardBps)) * 1e14) /
+      (_underlyingTokenPrice * moneyMarketDs.tokenConfigs[_underlyingToken].to18ConversionFactor);
 
     uint256 _totalIbCollatInUnderlyingAmount = ILendFacet(address(this)).getIbShareFromUnderlyingAmount(
       _underlyingToken,
