@@ -46,13 +46,10 @@ contract CollateralFacet is ICollateralFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    if (moneyMarketDs.poolInfos[_token].allocPoint > 0) {
-      LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
-      uint256 _addRewardDebt = (_amount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION;
-      moneyMarketDs.accountRewardDebts[msg.sender][_token] += _addRewardDebt.toInt256();
-    }
+    LibMoneyMarket01.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -70,11 +67,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
-    if (moneyMarketDs.poolInfos[_token].allocPoint > 0) {
-      LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, moneyMarketDs);
-      uint256 _removeRewardDebt = (_removeAmount * pool.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION;
-      moneyMarketDs.accountRewardDebts[msg.sender][_token] -= _removeRewardDebt.toInt256();
-    }
+    LibMoneyMarket01.updateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 

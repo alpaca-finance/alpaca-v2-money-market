@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibReward } from "./LibReward.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -14,6 +17,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+  using SafeCast for uint256;
 
   // keccak256("moneymarket.diamond.storage");
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
@@ -505,5 +509,19 @@ library LibMoneyMarket01 {
     }
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
+  }
+
+  function updateRewardDebt(
+    address _account,
+    address _token,
+    int256 _amount,
+    MoneyMarketDiamondStorage storage ds
+  ) internal {
+    if (ds.poolInfos[_token].allocPoint > 0) {
+      LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, ds);
+      int256 _rewardDebt = (_amount * pool.accRewardPerShare.toInt256()) /
+        LibMoneyMarket01.ACC_REWARD_PRECISION.toInt256();
+      ds.accountRewardDebts[_account][_token] += _rewardDebt;
+    }
   }
 }
