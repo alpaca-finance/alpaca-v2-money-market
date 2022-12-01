@@ -11,6 +11,8 @@ import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 // interfaces
 import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 
+import { console } from "../../../tests/utils/console.sol";
+
 library LibReward {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
@@ -60,11 +62,11 @@ library LibReward {
 
   function updatePool(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
-    view
     returns (LibMoneyMarket01.PoolInfo memory poolInfo)
   {
-    poolInfo = moneyMarketDs.poolInfos[_token];
-    poolInfo.accRewardPerShare += _calculateAccRewardPerShare(_token, moneyMarketDs);
+    moneyMarketDs.poolInfos[_token].accRewardPerShare += _calculateAccRewardPerShare(_token, moneyMarketDs);
+    moneyMarketDs.poolInfos[_token].lastRewardTime = block.timestamp.toUint128();
+    return moneyMarketDs.poolInfos[_token];
   }
 
   function _calculateAccRewardPerShare(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
