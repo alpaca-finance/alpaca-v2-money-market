@@ -88,9 +88,9 @@ library LibReward {
     internal
     returns (LibMoneyMarket01.PoolInfo memory poolInfo)
   {
-    moneyMarketDs.poolInfos[_token].accRewardPerShare += _calculateBorrowingAccRewardPerShare(_token, moneyMarketDs);
+    moneyMarketDs.poolInfos[_token].accRewardPerShare += _calculateAccRewardPerShare(_token, moneyMarketDs);
     moneyMarketDs.poolInfos[_token].lastRewardTime = block.timestamp.toUint128();
-    return moneyMarketDs.borrowerPoolInfos[_token];
+    return moneyMarketDs.poolInfos[_token];
   }
 
   function _calculateAccRewardPerShare(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
