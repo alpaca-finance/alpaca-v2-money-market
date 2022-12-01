@@ -14,6 +14,13 @@ import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
 
+  event LogSetRewardConfig(address indexed _rewardToken, uint256 _rewardPerSec);
+  event LogSetRewardDistributor(address indexed _address);
+  event LogAddPool(address indexed _token, uint256 _allocPoint);
+  event LogSetPool(address indexed _token, uint256 _allocPoint);
+  event LogAddBorrowerPool(address indexed _token, uint256 _allocPoint);
+  event LogSetBorrowerPool(address indexed _token, uint256 _allocPoint);
+
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
     _;
@@ -140,11 +147,15 @@ contract AdminFacet is IAdminFacet {
       rewardToken: _rewardToken,
       rewardPerSecond: _rewardPerSecond
     });
+
+    emit LogSetRewardConfig(_rewardToken, _rewardPerSecond);
   }
 
   function setRewardDistributor(address _addr) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.rewardDistributor = _addr;
+
+    emit LogSetRewardDistributor(_addr);
   }
 
   function addPool(address _token, uint256 _allocPoint) external onlyOwner {
@@ -159,6 +170,8 @@ contract AdminFacet is IAdminFacet {
       allocPoint: _allocPoint.toUint128()
     });
     moneyMarketDs.totalAllocPoint += _allocPoint;
+
+    emit LogAddPool(_token, _allocPoint);
   }
 
   function setPool(address _token, uint256 _newAllocPoint) external onlyOwner {
@@ -170,6 +183,8 @@ contract AdminFacet is IAdminFacet {
     uint256 _totalAllocPoint = moneyMarketDs.totalAllocPoint;
     moneyMarketDs.totalAllocPoint += _totalAllocPoint - poolInfo.allocPoint + _newAllocPoint;
     moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+
+    emit LogSetPool(_token, _newAllocPoint);
   }
 
   function addBorrowerPool(address _token, uint256 _allocPoint) external onlyOwner {
