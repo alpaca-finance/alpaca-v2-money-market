@@ -235,7 +235,6 @@ library LibMoneyMarket01 {
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
       for (uint256 _i = 0; _i < _accountLength; ) {
-        // todo: modify Node struct
         address _account = _borrowedAccounts[_i].token;
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
@@ -308,7 +307,6 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
     uint256 _accountLength = _borrowedAccounts.length;
     for (uint256 _i = 0; _i < _accountLength; ) {
-      // todo: modify Node struct
       address _account = _borrowedAccounts[_i].token;
       uint256 _oldAccountDebt = _borrowedAccounts[_i].amount;
 

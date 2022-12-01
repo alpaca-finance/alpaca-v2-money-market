@@ -16,6 +16,7 @@ pragma solidity 0.8.17;
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
@@ -24,8 +25,7 @@ import { IStrat } from "../interfaces/IStrat.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// todo: reentrance
-contract PancakeswapV2Strategy is IStrat, Ownable {
+contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   using SafeERC20 for address;
   using LibSafeToken for address;
 
@@ -107,7 +107,7 @@ contract PancakeswapV2Strategy is IStrat, Ownable {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external onlyWhitelisted returns (uint256 _lpRecieved) {
+  ) external onlyWhitelisted nonReentrant returns (uint256 _lpRecieved) {
     IPancakePair lpToken = IPancakePair(_lpToken);
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
@@ -153,6 +153,7 @@ contract PancakeswapV2Strategy is IStrat, Ownable {
   function removeLiquidity(address _lpToken)
     external
     onlyWhitelisted
+    nonReentrant
     returns (uint256 _token0Return, uint256 _token1Return)
   {
     uint256 _lpToRemove = ERC20(_lpToken).balanceOf(address(this));
