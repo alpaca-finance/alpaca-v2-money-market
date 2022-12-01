@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
@@ -10,6 +11,7 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibReward } from "../libraries/LibReward.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
@@ -17,6 +19,7 @@ import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
 contract BorrowFacet is IBorrowFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+  using SafeCast for uint256;
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -62,6 +65,8 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _totalValue = moneyMarketDs.debtValues[_token];
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
+
+    LibReward.updateBorrowingRewardDebt(msg.sender, _token, _shareToAdd.toInt256(), moneyMarketDs);
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -222,6 +227,8 @@ contract BorrowFacet is IBorrowFacet {
   ) internal returns (uint256 _repayAmount) {
     uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
     uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
+
+    LibReward.updateBorrowingRewardDebt(_account, _token, -_shareToRemove.toInt256(), moneyMarketDs);
 
     // update user debtShare
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRemove);

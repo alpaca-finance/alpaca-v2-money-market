@@ -50,7 +50,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
 
   ILiquidationFacet internal liquidationFacet;
-  IRewardFacet internal RewardFacet;
+  IRewardFacet internal rewardFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -63,7 +63,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
-    RewardFacet = IRewardFacet(moneyMarketDiamond);
+    rewardFacet = IRewardFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -162,6 +162,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
     vm.stopPrank();
 
     // set repurchases ok
@@ -189,5 +190,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.addPool(address(ibUsdc), 40);
     adminFacet.addPool(address(ibIsolateToken), 15);
     adminFacet.addPool(address(ibWNative), 5);
+
+    // add borrower pool
+    adminFacet.addBorrowerPool(address(weth), 20);
+    adminFacet.addBorrowerPool(address(btc), 40);
+    adminFacet.addBorrowerPool(address(usdc), 40);
   }
 }

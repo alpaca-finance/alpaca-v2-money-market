@@ -35,6 +35,14 @@ contract RewardFacet is IRewardFacet {
     emit LogClaimReward(msg.sender, _rewardToken, _pendingReward);
   }
 
+  function claimBorrowingRewardFor(address _to, address _token) external nonReentrant {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    (address _rewardToken, uint256 _pendingReward) = LibReward.claimBorrowingReward(_to, _token, moneyMarketDs);
+
+    emit LogClaimReward(_to, _rewardToken, _pendingReward);
+  }
+
   function pendingReward(address _account, address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return LibReward.pendingReward(_account, _token, moneyMarketDs);
@@ -43,5 +51,10 @@ contract RewardFacet is IRewardFacet {
   function accountRewardDebts(address _account, address _token) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.accountRewardDebts[_account][_token];
+  }
+
+  function borrowerRewardDebts(address _account, address _token) external view returns (int256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.borrowerRewardDebts[_account][_token];
   }
 }

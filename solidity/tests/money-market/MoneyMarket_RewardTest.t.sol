@@ -186,7 +186,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
 
   function _claimReward(address _account, address _collatToken) internal {
     vm.prank(_account);
-    RewardFacet.claimReward(_collatToken);
+    rewardFacet.claimReward(_collatToken);
   }
 
   function _assertAccountReward(
@@ -195,7 +195,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     uint256 _claimedReward,
     int256 _rewardDebt
   ) internal {
-    assertEq(RewardFacet.accountRewardDebts(_account, _collatToken), _rewardDebt);
+    assertEq(rewardFacet.accountRewardDebts(_account, _collatToken), _rewardDebt);
     assertEq(rewardToken.balanceOf(_account), _claimedReward);
   }
 }

@@ -49,7 +49,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    LibMoneyMarket01.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
+    LibReward.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -67,7 +67,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
-    LibMoneyMarket01.updateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
+    LibReward.updateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 

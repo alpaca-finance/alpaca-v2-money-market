@@ -258,20 +258,22 @@ library MMDiamondDeployer {
   }
 
   function deployRewardFacet(DiamondCutFacet diamondCutFacet) internal returns (RewardFacet, bytes4[] memory) {
-    RewardFacet _RewardFacet = new RewardFacet();
+    RewardFacet _rewardFacet = new RewardFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
-    selectors[0] = _RewardFacet.claimReward.selector;
-    selectors[1] = _RewardFacet.pendingReward.selector;
-    selectors[2] = _RewardFacet.accountRewardDebts.selector;
+    bytes4[] memory selectors = new bytes4[](5);
+    selectors[0] = _rewardFacet.claimReward.selector;
+    selectors[1] = _rewardFacet.claimBorrowingRewardFor.selector;
+    selectors[2] = _rewardFacet.pendingReward.selector;
+    selectors[3] = _rewardFacet.accountRewardDebts.selector;
+    selectors[4] = _rewardFacet.borrowerRewardDebts.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_RewardFacet),
+      address(_rewardFacet),
       IDiamondCut.FacetCutAction.Add,
       selectors
     );
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_RewardFacet, selectors);
+    return (_rewardFacet, selectors);
   }
 }
