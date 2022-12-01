@@ -76,6 +76,7 @@ library LibMoneyMarket01 {
     mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
     mapping(address => bool) repurchasersOk;
     mapping(address => bool) liquidationStratOk;
+    mapping(address => bool) liquidationCallersOk;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -439,7 +440,7 @@ library LibMoneyMarket01 {
     ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
-   }
+  }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
     uint256 _decimals = IERC20(_token).decimals();

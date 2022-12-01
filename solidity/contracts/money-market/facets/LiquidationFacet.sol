@@ -81,7 +81,6 @@ contract LiquidationFacet is ILiquidationFacet {
     emit LogRepurchase(msg.sender, _repayToken, _collatToken, _repayAmount, _collatAmountOut);
   }
 
-  // TODO: whitelist caller
   function liquidationCall(
     address _liquidationStrat,
     address _account,
@@ -92,7 +91,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    if (!moneyMarketDs.liquidationStratOk[_liquidationStrat]) {
+    if (!moneyMarketDs.liquidationStratOk[_liquidationStrat] || !moneyMarketDs.liquidationCallersOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
 

@@ -51,6 +51,11 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     _liquidationStrats[1] = address(mockBadLiquidationStrategy);
     adminFacet.setLiquidationStratsOk(_liquidationStrats, true);
 
+    address[] memory _liquidationCallers = new address[](2);
+    _liquidationCallers[0] = BOB;
+    _liquidationCallers[1] = address(this);
+    adminFacet.setLiquidationCallersOk(_liquidationCallers, true);
+
     vm.startPrank(DEPLOYER);
     chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
     vm.stopPrank();
