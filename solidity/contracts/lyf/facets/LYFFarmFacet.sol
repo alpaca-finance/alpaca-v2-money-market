@@ -180,7 +180,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpShareAmount
+    uint256 _lpShareAmount,
+    uint256 _amount0Repay,
+    uint256 _amount1Repay
   ) external nonReentrant {
     // should revinvest here before anything
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
@@ -201,15 +203,19 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // todo: handle slippage
     // 1. Remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
-    
+
     // 2. Remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
     ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
     (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
+    // 3. Repay debt
     // todo: repay debt
+    // uint256 _actualRepayAmount0 = _repayDebt(msg.sender, _subAccountId, _token0, _lpToken, _amount0Repay, lyfDs);
+    // uint256 _actualRepayAmount1 = _repayDebt(msg.sender, _subAccountId, _token1, _lpToken, _amount1Repay, lyfDs);
 
+    // 4. Transfer remaining back to user
     // todo: transfer out
     LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
     LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
@@ -256,18 +262,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
     userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
 
-  function repay(
+  function _repayDebt(
     address _account,
     uint256 _subAccountId,
     address _token,
-    address _lpToken,
-    uint256 _repayAmount
-  ) external nonReentrant {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-
-    LibLYF01.accureInterest(_debtShareId, lyfDs);
-
+    uint256 _debtShareId,
+    uint256 _repayAmount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualRepayAmount) {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _debtShareId, lyfDs);
@@ -280,12 +282,29 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     _shareToRemove = _oldSubAccountDebtShare > _shareToRemove ? _shareToRemove : _oldSubAccountDebtShare;
 
-    uint256 _actualRepayAmount = _removeDebt(_subAccount, _debtShareId, _oldSubAccountDebtShare, _shareToRemove, lyfDs);
+    _actualRepayAmount = _removeDebt(_subAccount, _debtShareId, _oldSubAccountDebtShare, _shareToRemove, lyfDs);
+
+    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
+  }
+
+  function repay(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    address _lpToken,
+    uint256 _repayAmount
+  ) external nonReentrant {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+
+    LibLYF01.accureInterest(_debtShareId, lyfDs);
+
+    // remove debt as much as possible
+    uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _repayAmount, lyfDs);
 
     // transfer only amount to repay
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
-
-    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
   function getDebtShares(address _account, uint256 _subAccountId)

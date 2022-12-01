@@ -131,7 +131,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(mockRouter), 5 ether);
-    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether);
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 0, 0);
     vm.stopPrank();
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
@@ -149,7 +149,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
   function testRevert_WhenUserAddInvalidLYFCollateral_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
-    farmFacet.reducePosition(subAccount0, address(weth), 5 ether);
+    farmFacet.reducePosition(subAccount0, address(weth), 5 ether, 0, 0);
     vm.stopPrank();
   }
 

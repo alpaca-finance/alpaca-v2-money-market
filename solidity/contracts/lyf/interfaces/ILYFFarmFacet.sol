@@ -67,7 +67,9 @@ interface ILYFFarmFacet {
   function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpShareAmount
+    uint256 _lpShareAmount,
+    uint256 _amount0Repay,
+    uint256 _amount1Repay
   ) external;
 
   function getMMDebt(address _token) external view returns (uint256);
