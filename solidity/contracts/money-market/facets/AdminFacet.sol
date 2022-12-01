@@ -199,6 +199,8 @@ contract AdminFacet is IAdminFacet {
       allocPoint: _allocPoint.toUint128()
     });
     moneyMarketDs.totalBorrowerPoolAllocPoint += _allocPoint;
+
+    emit LogAddBorrowerPool(_token, _allocPoint);
   }
 
   function setBorrowerPool(address _token, uint256 _newAllocPoint) external onlyOwner {
@@ -210,5 +212,7 @@ contract AdminFacet is IAdminFacet {
     uint256 _totalBorrowerPoolAllocPoint = moneyMarketDs.totalBorrowerPoolAllocPoint;
     moneyMarketDs.totalBorrowerPoolAllocPoint += _totalBorrowerPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
     moneyMarketDs.borrowerPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+
+    emit LogSetBorrowerPool(_token, _newAllocPoint);
   }
 }
