@@ -177,7 +177,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
   }
 
-  function liquidateLP(
+  function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
     uint256 _lpShareAmount

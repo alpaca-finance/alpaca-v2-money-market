@@ -95,7 +95,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcDebtValueAfter, 10 ether + _usdcDebtInterest);
   }
 
-  function testCorrectness_WhenUserLiquidateLP_TokensShouldBecomeCollateral() external {
+  function testCorrectness_WhenUserReducePosition_TokensShouldBecomeCollateral() external {
     uint256 _wethToAddLP = 10 ether;
     uint256 _usdcToAddLP = 10 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -131,7 +131,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(mockRouter), 5 ether);
-    farmFacet.liquidateLP(subAccount0, address(wethUsdcLPToken), 5 ether);
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether);
     vm.stopPrank();
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
@@ -149,7 +149,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
   function testRevert_WhenUserAddInvalidLYFCollateral_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
-    farmFacet.liquidateLP(subAccount0, address(weth), 5 ether);
+    farmFacet.reducePosition(subAccount0, address(weth), 5 ether);
     vm.stopPrank();
   }
 

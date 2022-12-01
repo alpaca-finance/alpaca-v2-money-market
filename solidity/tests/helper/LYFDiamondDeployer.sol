@@ -81,7 +81,7 @@ library LYFDiamondDeployer {
     selectors[9] = LYFFarmFacet.accureInterest.selector;
     selectors[10] = LYFFarmFacet.debtValues.selector;
     selectors[11] = LYFFarmFacet.debtShares.selector;
-    selectors[12] = LYFFarmFacet.liquidateLP.selector;
+    selectors[12] = LYFFarmFacet.reducePosition.selector;
     selectors[13] = LYFFarmFacet.getMMDebt.selector;
     selectors[14] = LYFFarmFacet.directAddFarmPosition.selector;
 

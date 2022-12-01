@@ -64,7 +64,7 @@ interface ILYFFarmFacet {
 
   function debtShares(address _token, address _lpToken) external view returns (uint256);
 
-  function liquidateLP(
+  function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
     uint256 _lpShareAmount
