@@ -131,7 +131,7 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external {
+  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external onlyOwner {
     if (_rewardToken == address(0)) revert AdminFacet_InvalidAddress();
     if (_rewardPerSecond == 0) revert AdminFacet_InvalidReward();
 
@@ -142,7 +142,7 @@ contract AdminFacet is IAdminFacet {
     });
   }
 
-  function addPool(address _token, uint256 _allocPoint) external {
+  function addPool(address _token, uint256 _allocPoint) external onlyOwner {
     if (_token == address(0)) revert AdminFacet_InvalidAddress();
     if (_allocPoint == 0) revert AdminFacet_InvalidAllocPoint();
 
@@ -156,7 +156,7 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.totalAllocPoint += _allocPoint;
   }
 
-  function setPool(address _token, uint256 _newAllocPoint) external {
+  function setPool(address _token, uint256 _newAllocPoint) external onlyOwner {
     if (_token == address(0)) revert AdminFacet_InvalidAddress();
     if (_newAllocPoint == 0) revert AdminFacet_InvalidAllocPoint();
 
@@ -167,7 +167,7 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint.toUint128();
   }
 
-  function setRewardDistributor(address _addr) external {
+  function setRewardDistributor(address _addr) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.rewardDistributor = _addr;
   }
