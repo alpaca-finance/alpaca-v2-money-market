@@ -16,12 +16,15 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
 
   uint256 constant REPURCHASE_REWARD_BPS = 100;
   uint256 constant LIQUIDATION_REWARD_BPS = 100;
+  uint256 constant LIQUIDATION_FEE_BPS = 100;
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -133,48 +136,78 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repayAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    // 2. calculate collat amount to send to liquidator based on _repayAmount
-    uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
-
-    // prevent stack too deep
-    uint256 _collatAmountOut;
-    {
-      (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-      uint256 _collatValueInUSD = (_actualRepayAmount *
-        moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
-        _repayTokenPrice) / 1e18;
-      _collatAmountOut = _getCollatAmountOut(
-        _subAccount,
-        _collatToken,
-        _collatValueInUSD,
-        LIQUIDATION_REWARD_BPS,
-        moneyMarketDs
-      );
-    }
-
-    // 3. update states
-    _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
-    _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+    // 2. send all collats under subaccount to strategy
+    uint256 _collatAmountBefore = ERC20(_collatToken).balanceOf(address(this));
     uint256 _repayAmountBefore = ERC20(_repayToken).balanceOf(address(this));
 
-    // 4. transfer collat to liquidator and call liquidate
-    ERC20(_collatToken).safeTransfer(_liquidationStrat, _collatAmountOut);
+    ERC20(_collatToken).safeTransfer(
+      _liquidationStrat,
+      moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken)
+    );
+
+    // 3. call executeLiquidation on strategy
     ILiquidationStrategy(_liquidationStrat).executeLiquidation(
       _collatToken,
       _repayToken,
-      _actualRepayAmount,
-      address(this),
-      msg.sender
+      _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs),
+      address(this)
     );
 
-    // 5. check if we get expected amount of repayToken back from liquidator
+    // 4. check repaid amount, take fees, and update states
     uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    if (_amountRepaid < _actualRepayAmount) {
-      // TODO: handle accrue bad debt and don't revert
-      revert LiquidationFacet_RepayAmountMismatch();
-    }
+    uint256 _collatSold = _collatAmountBefore - ERC20(_collatToken).balanceOf(address(this));
 
-    emit LogLiquidate(msg.sender, _liquidationStrat, _repayToken, _collatToken, _amountRepaid, _collatAmountOut);
+    // TODO: transfer fee to treasury
+    uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
+
+    _reduceDebt(_subAccount, _repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
+    _reduceCollateral(_subAccount, _collatToken, _collatSold + _collatFeeToTreasury, moneyMarketDs);
+
+    // TODO: change event ?
+    emit LogLiquidate(msg.sender, _liquidationStrat, _repayToken, _collatToken, _amountRepaid, _collatAmountBefore);
+
+    // // 2. calculate collat amount to send to liquidator based on _repayAmount
+    // uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
+
+    // // prevent stack too deep
+    // uint256 _collatAmountOut;
+    // {
+    //   (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+    //   uint256 _collatValueInUSD = (_actualRepayAmount *
+    //     moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
+    //     _repayTokenPrice) / 1e18;
+    //   _collatAmountOut = _getCollatAmountOut(
+    //     _subAccount,
+    //     _collatToken,
+    //     _collatValueInUSD,
+    //     LIQUIDATION_REWARD_BPS,
+    //     moneyMarketDs
+    //   );
+    // }
+
+    // // 3. update states
+    // _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
+    // _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+    // uint256 _repayAmountBefore = ERC20(_repayToken).balanceOf(address(this));
+
+    // // 4. transfer collat to liquidator and call liquidate
+    // ERC20(_collatToken).safeTransfer(_liquidationStrat, _collatAmountOut);
+    // ILiquidationStrategy(_liquidationStrat).executeLiquidation(
+    //   _collatToken,
+    //   _repayToken,
+    //   _actualRepayAmount,
+    //   address(this),
+    //   msg.sender
+    // );
+
+    // // 5. check if we get expected amount of repayToken back from liquidator
+    // uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    // if (_amountRepaid < _actualRepayAmount) {
+    //   // TODO: handle accrue bad debt and don't revert
+    //   revert LiquidationFacet_RepayAmountMismatch();
+    // }
+
+    // emit LogLiquidate(msg.sender, _liquidationStrat, _repayToken, _collatToken, _amountRepaid, _collatAmountOut);
   }
 
   function _ibLiquidationCall(
@@ -221,13 +254,13 @@ contract LiquidationFacet is ILiquidationFacet {
     // note that liquidation bonus will be underlying token not ib
     LibMoneyMarket01.withdraw(_collatToken, _ibAmountOut, address(this), moneyMarketDs);
     ERC20(_collatUnderlyingToken).safeTransfer(_liquidationStrat, _collatUnderlyingAmountOut);
-    ILiquidationStrategy(_liquidationStrat).executeLiquidation(
-      _collatUnderlyingToken,
-      _repayToken,
-      _actualRepayAmount,
-      address(this),
-      msg.sender
-    );
+    // ILiquidationStrategy(_liquidationStrat).executeLiquidation(
+    //   _collatUnderlyingToken,
+    //   _repayToken,
+    //   _actualRepayAmount,
+    //   address(this),
+    //   msg.sender
+    // );
 
     // 5. check if we get expected amount of repayToken back from liquidator
     uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
