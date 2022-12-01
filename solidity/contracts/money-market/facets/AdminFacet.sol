@@ -142,6 +142,11 @@ contract AdminFacet is IAdminFacet {
     });
   }
 
+  function setRewardDistributor(address _addr) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardDistributor = _addr;
+  }
+
   function addPool(address _token, uint256 _allocPoint) external onlyOwner {
     if (_token == address(0)) revert AdminFacet_InvalidAddress();
     if (_allocPoint == 0) revert AdminFacet_InvalidAllocPoint();
@@ -167,8 +172,28 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint.toUint128();
   }
 
-  function setRewardDistributor(address _addr) external onlyOwner {
+  function addBorrowerPool(address _token, uint256 _allocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+    if (_allocPoint == 0) revert AdminFacet_InvalidAllocPoint();
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.rewardDistributor = _addr;
+    if (moneyMarketDs.borrowerPoolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
+    moneyMarketDs.borrowerPoolInfos[_token] = LibMoneyMarket01.PoolInfo({
+      accRewardPerShare: 0,
+      lastRewardTime: block.timestamp.toUint128(),
+      allocPoint: _allocPoint.toUint128()
+    });
+    moneyMarketDs.totalBorrowerPoolAllocPoint += _allocPoint;
+  }
+
+  function setBorrowerPool(address _token, uint256 _newAllocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+    if (_newAllocPoint == 0) revert AdminFacet_InvalidAllocPoint();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.borrowerPoolInfos[_token];
+    uint256 _totalBorrowerPoolAllocPoint = moneyMarketDs.totalBorrowerPoolAllocPoint;
+    moneyMarketDs.totalBorrowerPoolAllocPoint += _totalBorrowerPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    moneyMarketDs.borrowerPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
   }
 }

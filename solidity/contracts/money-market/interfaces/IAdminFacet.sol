@@ -65,4 +65,8 @@ interface IAdminFacet {
   function addPool(address _token, uint256 _allocPoint) external;
 
   function setPool(address _token, uint256 _newAllocPoint) external;
+
+  function addBorrowerPool(address _token, uint256 _allocPoint) external;
+
+  function setBorrowerPool(address _token, uint256 _newAllocPoint) external;
 }
