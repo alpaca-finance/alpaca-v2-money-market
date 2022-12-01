@@ -11,11 +11,12 @@ interface ILiquidationFacet {
   );
   event LogLiquidate(
     address indexed caller,
-    address indexed liquidator,
+    address indexed liquidationStrategy,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount,
-    uint256 _collatAmountOut
+    uint256 _amountDebtRepaid,
+    uint256 _amountCollatLiquidated,
+    uint256 _collatFeeToTreasury
   );
   event LogLiquidateIb(
     address indexed caller,
