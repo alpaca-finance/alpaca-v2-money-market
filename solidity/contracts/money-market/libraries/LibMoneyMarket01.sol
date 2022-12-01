@@ -56,7 +56,6 @@ library LibMoneyMarket01 {
     uint256 rewardPerSecond;
   }
 
-  // todo: optimize type
   struct PoolInfo {
     uint256 accRewardPerShare;
     uint128 lastRewardTime;
