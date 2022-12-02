@@ -167,7 +167,7 @@ contract AdminFacet is IAdminFacet {
       lastRewardTime: block.timestamp.toUint128(),
       allocPoint: _allocPoint.toUint128()
     });
-    moneyMarketDs.totalAllocPoint += _allocPoint;
+    moneyMarketDs.totalLendingPoolAllocPoint += _allocPoint;
 
     emit LogAddLendingPool(_token, _allocPoint);
   }
@@ -177,8 +177,8 @@ contract AdminFacet is IAdminFacet {
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.lendingPoolInfos[_token];
-    uint256 _totalAllocPoint = moneyMarketDs.totalAllocPoint;
-    moneyMarketDs.totalAllocPoint += _totalAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    uint256 _totalLendingPoolAllocPoint = moneyMarketDs.totalLendingPoolAllocPoint;
+    moneyMarketDs.totalLendingPoolAllocPoint += _totalLendingPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
     moneyMarketDs.lendingPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
 
     emit LogSetLendingPool(_token, _newAllocPoint);
@@ -194,7 +194,7 @@ contract AdminFacet is IAdminFacet {
       lastRewardTime: block.timestamp.toUint128(),
       allocPoint: _allocPoint.toUint128()
     });
-    moneyMarketDs.totalBorrowerPoolAllocPoint += _allocPoint;
+    moneyMarketDs.totalBorrowingPoolAllocPoint += _allocPoint;
 
     emit LogAddBorroweringPool(_token, _allocPoint);
   }
@@ -204,8 +204,8 @@ contract AdminFacet is IAdminFacet {
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.borrowingPoolInfos[_token];
-    uint256 _totalBorrowerPoolAllocPoint = moneyMarketDs.totalBorrowerPoolAllocPoint;
-    moneyMarketDs.totalBorrowerPoolAllocPoint += _totalBorrowerPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    uint256 _totalBorrowingPoolAllocPoint = moneyMarketDs.totalBorrowingPoolAllocPoint;
+    moneyMarketDs.totalBorrowingPoolAllocPoint += _totalBorrowingPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
     moneyMarketDs.borrowingPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
 
     emit LogSetBorrowingPool(_token, _newAllocPoint);

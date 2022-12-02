@@ -99,8 +99,8 @@ library LibMoneyMarket01 {
     mapping(address => mapping(address => int256)) borrowerRewardDebts;
     // todo: remove
     RewardConfig rewardConfig;
-    uint256 totalAllocPoint;
-    uint256 totalBorrowerPoolAllocPoint;
+    uint256 totalLendingPoolAllocPoint;
+    uint256 totalBorrowingPoolAllocPoint;
     // multiple reward
     LibDoublyLinkedList.List rewardPerSecList;
     mapping(address => totalLendingPoolAllocPoint);
