@@ -6,7 +6,7 @@ import { IWNative } from "../../contracts/money-market/interfaces/IWNative.sol";
 contract MockWNativeRelayer {
   address private wnative;
 
-  constructor(address _wnative) public {
+  constructor(address _wnative) {
     wnative = _wnative;
   }
 

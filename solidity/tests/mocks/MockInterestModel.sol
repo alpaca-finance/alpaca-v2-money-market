@@ -8,7 +8,10 @@ contract MockInterestModel {
     interestRate = _rate;
   }
 
-  function getInterestRate(uint256 debt, uint256 floating) external returns (uint256 _rate) {
+  function getInterestRate(
+    uint256, /*debt*/
+    uint256 /*floating*/
+  ) external view returns (uint256 _rate) {
     _rate = interestRate;
   }
 
