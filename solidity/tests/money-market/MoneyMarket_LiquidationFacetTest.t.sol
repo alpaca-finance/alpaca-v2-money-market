@@ -714,4 +714,91 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       15 ether
     );
   }
+
+  function testCorrectness_WhenRepurchaseDebtAndTakeIbTokenAsCollateral_ShouldWork() external {
+    // criteria
+    address _debtToken = address(usdc);
+    address _collatToken = address(ibWeth);
+
+    weth.mint(ALICE, 40 ether);
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 40 ether);
+    ibWeth.approve(moneyMarketDiamond, type(uint256).max);
+    collateralFacet.addCollateral(ALICE, _subAccountId, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    vm.stopPrank();
+
+    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+    uint256 _bobibWethBalanceBefore = ibWeth.balanceOf(BOB);
+
+    // collat amount should be = 40
+    // collat debt value should be = 30
+    // collat debt share should be = 30
+    CacheState memory _stateBefore = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    // add time 1 day
+    // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
+    vm.warp(1 days + 1);
+
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    vm.prank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.stopPrank();
+
+    // now 1 weth = 1 ibWeth
+
+    // bob try repurchase with 15 usdc
+    // eth price = 0.8 USD
+    // usdc price = 1 USD
+    // reward = 1%
+    // timestamp increased by 1 day, debt value should increased to 30.0050765511672
+    vm.prank(BOB);
+    liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
+
+    // repay value = 15 * 1 = 1 USD
+    // reward amount = 15 * 1.01 = 15.15 USD
+    // converted weth amount = 15.15 / 0.8 = 18.9375
+
+    uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
+    uint256 _bobWethBalanceAfter = ibWeth.balanceOf(BOB);
+
+    // // check bob balance
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 15 ether); // pay 15 usdc
+    assertEq(_bobWethBalanceAfter - _bobibWethBalanceBefore, 18.9375 ether); // get 18.9375 weth
+
+    CacheState memory _stateAfter = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    // check state
+    // note: before repurchase state should be like these
+    // collat amount should be = 40
+    // collat debt value should be = 30.0050765511672 (0.0050765511672 is fixed interest increased)
+    // collat debt share should be = 30
+    // then after repurchase
+    // collat amount should be = 40 - (_collatAmountOut) = 40 - 18.9375 = 21.0625
+    // collat debt value should be = 30.0050765511672 - (_repayAmount) = 30.0050765511672 - 15 = 15.0050765511672
+    // _repayShare = _repayAmount * totalDebtShare / totalDebtValue = 15 * 30 / 30.0050765511672 = 14.997462153866591690
+    // collat debt share should be = 30 - (_repayShare) = 30 - 14.997462153866591690 = 15.00253784613340831
+    assertEq(_stateAfter.collat, 21.0625 ether);
+    assertEq(_stateAfter.subAccountCollat, 21.0625 ether);
+    assertEq(_stateAfter.debtValue, 15.0050765511672 ether);
+    assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
+    vm.stopPrank();
+  }
 }

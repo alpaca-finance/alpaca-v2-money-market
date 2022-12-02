@@ -391,6 +391,22 @@ library LibMoneyMarket01 {
     return (_price, _lastUpdated);
   }
 
+  function getIbPriceUSD(
+    address _ibToken,
+    address _token,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256, uint256) {
+    (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, moneyMarketDs);
+    uint256 _totalSupply = IERC20(_ibToken).totalSupply();
+    uint256 _one = 10**IERC20(_ibToken).decimals();
+
+    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
+    uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
+
+    uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
+    return (_price, _lastUpdated);
+  }
+
   function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
