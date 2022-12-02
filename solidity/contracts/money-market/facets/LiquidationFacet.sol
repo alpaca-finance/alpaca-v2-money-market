@@ -230,7 +230,12 @@ contract LiquidationFacet is ILiquidationFacet {
         : _collatFeeToTreasury;
     }
 
-    LibMoneyMarket01.withdraw(params.collatToken, _collatSold, address(this), moneyMarketDs);
+    LibMoneyMarket01.withdraw(
+      params.collatToken,
+      _collatSold + _actualCollatFeeToTreasury,
+      address(this),
+      moneyMarketDs
+    );
     _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
 
