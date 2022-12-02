@@ -119,7 +119,6 @@ contract LiquidationFacet is ILiquidationFacet {
       }
     }
 
-    address _collatUnderlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
     InternalLiquidationCallParams memory _params = InternalLiquidationCallParams({
       liquidationStrat: _liquidationStrat,
       subAccount: _subAccount,
@@ -127,42 +126,40 @@ contract LiquidationFacet is ILiquidationFacet {
       collatToken: _collatToken,
       repayAmount: _repayAmount
     });
+
+    address _collatUnderlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
     // handle liqudiate ib as collat
     if (_collatUnderlyingToken != address(0)) {
       _ibLiquidationCall(_params, _collatUnderlyingToken, moneyMarketDs);
     } else {
-      _liquidationCall(_liquidationStrat, _subAccount, _repayToken, _collatToken, _repayAmount, moneyMarketDs);
+      _liquidationCall(_params, moneyMarketDs);
     }
   }
 
   function _liquidationCall(
-    address _liquidationStrat,
-    address _subAccount,
-    address _repayToken,
-    address _collatToken,
-    uint256 _repayAmount,
+    InternalLiquidationCallParams memory params,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // 2. send all collats under subaccount to strategy
-    uint256 _collatAmountBefore = ERC20(_collatToken).balanceOf(address(this));
-    uint256 _repayAmountBefore = ERC20(_repayToken).balanceOf(address(this));
+    uint256 _collatAmountBefore = ERC20(params.collatToken).balanceOf(address(this));
+    uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
 
-    ERC20(_collatToken).safeTransfer(
-      _liquidationStrat,
-      moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken)
+    ERC20(params.collatToken).safeTransfer(
+      params.liquidationStrat,
+      moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken)
     );
 
     // 3. call executeLiquidation on strategy
-    ILiquidationStrategy(_liquidationStrat).executeLiquidation(
-      _collatToken,
-      _repayToken,
-      _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs),
+    ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
+      params.collatToken,
+      params.repayToken,
+      _getActualRepayAmount(params.subAccount, params.repayToken, params.repayAmount, moneyMarketDs),
       address(this)
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _collatAmountAfter = ERC20(_collatToken).balanceOf(address(this));
+    uint256 _amountRepaid = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _collatAmountAfter = ERC20(params.collatToken).balanceOf(address(this));
     uint256 _collatSold = _collatAmountBefore - _collatAmountAfter;
 
     // TODO: transfer fee to treasury
@@ -174,14 +171,14 @@ contract LiquidationFacet is ILiquidationFacet {
       ? _collatAmountAfter
       : _collatFeeToTreasury;
 
-    _reduceDebt(_subAccount, _repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
-    _reduceCollateral(_subAccount, _collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
+    _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
+    _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
 
     emit LogLiquidate(
       msg.sender,
-      _liquidationStrat,
-      _repayToken,
-      _collatToken,
+      params.liquidationStrat,
+      params.repayToken,
+      params.collatToken,
       _amountRepaid,
       _collatSold,
       _collatFeeToTreasury
@@ -194,14 +191,16 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
-    uint256 _collatAmountBefore = moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken);
+    uint256 _subAccountCollatAmountBefore = moneyMarketDs.subAccountCollats[params.subAccount].getAmount(
+      params.collatToken
+    );
     uint256 _underlyingAmountBefore = ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
 
     // if mm has no actual token left, withdraw will fail anyway
     ERC20(_collatUnderlyingToken).safeTransfer(
       params.liquidationStrat,
-      ILendFacet(address(this)).getShareValue(_collatUnderlyingToken, params.collatToken, _collatAmountBefore)
+      _shareToValue(params.collatToken, _subAccountCollatAmountBefore, _underlyingAmountBefore)
     );
 
     // 3. call executeLiquidation on strategy to liquidate underlying token
@@ -214,18 +213,13 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // 4. check repaid amount, take fees, and update states
     uint256 _amountRepaid = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _collatSold = _valueToShare(
-      params.collatToken,
-      _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this)),
-      _underlyingAmountBefore
-    );
+    uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
+    uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
 
+    // avoid stack too deep
     uint256 _actualCollatFeeToTreasury;
     {
-      uint256 _collatAmountAfter = _collatAmountBefore - _collatSold;
-      // console.log(_collatAmountBefore);
-      // console.log(_collatSold);
-      // console.log(_collatAmountAfter);
+      uint256 _collatAmountAfter = _subAccountCollatAmountBefore - _collatSold;
       // TODO: transfer fee to treasury
       uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
       // for case that _collatAmountAfter is not enough for fee
@@ -236,74 +230,20 @@ contract LiquidationFacet is ILiquidationFacet {
         : _collatFeeToTreasury;
     }
 
-    // console.log(_amountRepaid);
-    // console.log(_underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this)));
-    // console.log(_underlyingAmountBefore);
-    // console.log(ERC20(_collatUnderlyingToken).balanceOf(address(this)));
-    // console.log(_actualCollatFeeToTreasury);
-
     LibMoneyMarket01.withdraw(params.collatToken, _collatSold, address(this), moneyMarketDs);
     _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
 
-    // // 2. calculate collat amount to send to liquidator based on _repayAmount
-    // uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
-
-    // // prevent stack too deep
-    // uint256 _collatUnderlyingAmountOut;
-    // {
-    //   (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-    //   uint256 _repayInUSD = (_actualRepayAmount *
-    //     moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
-    //     _repayTokenPrice) / 1e18;
-    //   _collatUnderlyingAmountOut = _getCollatUnderlyingAmountOut(
-    //     _subAccount,
-    //     _collatUnderlyingToken,
-    //     _collatToken,
-    //     _repayInUSD,
-    //     LIQUIDATION_REWARD_BPS,
-    //     moneyMarketDs
-    //   );
-    // }
-
-    // // 3. update states
-    // uint256 _ibAmountOut = ILendFacet(address(this)).getIbShareFromUnderlyingAmount(
-    //   _collatUnderlyingToken,
-    //   _collatUnderlyingAmountOut
-    // );
-
-    // _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
-    // _reduceCollateral(_subAccount, _collatToken, _ibAmountOut, moneyMarketDs);
-
-    // uint256 _repayAmountBefore = ERC20(_repayToken).balanceOf(address(this));
-
-    // // 4. withdraw underlying and transfer them to liquidator and call liquidate
-    // // note that liquidation bonus will be underlying token not ib
-    // LibMoneyMarket01.withdraw(_collatToken, _ibAmountOut, address(this), moneyMarketDs);
-    // ERC20(_collatUnderlyingToken).safeTransfer(_liquidationStrat, _collatUnderlyingAmountOut);
-    // // ILiquidationStrategy(_liquidationStrat).executeLiquidation(
-    // //   _collatUnderlyingToken,
-    // //   _repayToken,
-    // //   _actualRepayAmount,
-    // //   address(this),
-    // //   msg.sender
-    // // );
-
-    // // 5. check if we get expected amount of repayToken back from liquidator
-    // uint256 _amountRepaid = ERC20(_repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    // if (_amountRepaid < _actualRepayAmount) {
-    //   revert LiquidationFacet_RepayAmountMismatch();
-    // }
-
-    // emit LogLiquidateIb(
-    //   msg.sender,
-    //   _liquidationStrat,
-    //   _repayToken,
-    //   _collatToken,
-    //   _amountRepaid,
-    //   _ibAmountOut,
-    //   _collatUnderlyingAmountOut
-    // );
+    emit LogLiquidateIb(
+      msg.sender,
+      params.liquidationStrat,
+      params.repayToken,
+      params.collatToken,
+      _amountRepaid,
+      _collatSold,
+      _underlyingSold,
+      _actualCollatFeeToTreasury
+    );
   }
 
   function _valueToShare(
@@ -314,6 +254,16 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _totalSupply = ERC20(_ibToken).totalSupply();
 
     _shareValue = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
+  }
+
+  function _shareToValue(
+    address _ibToken,
+    uint256 _shareAmount,
+    uint256 _totalToken
+  ) internal view returns (uint256 _underlyingAmount) {
+    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
+
+    _underlyingAmount = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
   }
 
   /// @dev max(repayAmount, debtValue)
@@ -354,29 +304,6 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _collatTokenTotalAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 
     if (_collatTokenAmountOut > _collatTokenTotalAmount) {
-      revert LiquidationFacet_InsufficientAmount();
-    }
-  }
-
-  function _getCollatUnderlyingAmountOut(
-    address _subAccount,
-    address _underlyingToken,
-    address _collatIbToken,
-    uint256 _repayInUSD,
-    uint256 _rewardBps,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _underlyingAmountOut) {
-    (uint256 _underlyingTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_underlyingToken, moneyMarketDs);
-    _underlyingAmountOut =
-      ((_repayInUSD * (1e4 + _rewardBps)) * 1e14) /
-      (_underlyingTokenPrice * moneyMarketDs.tokenConfigs[_underlyingToken].to18ConversionFactor);
-
-    uint256 _totalIbCollatInUnderlyingAmount = ILendFacet(address(this)).getIbShareFromUnderlyingAmount(
-      _underlyingToken,
-      moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatIbToken)
-    );
-
-    if (_underlyingAmountOut > _totalIbCollatInUnderlyingAmount) {
       revert LiquidationFacet_InsufficientAmount();
     }
   }

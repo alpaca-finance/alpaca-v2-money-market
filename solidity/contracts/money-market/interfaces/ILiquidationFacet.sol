@@ -23,9 +23,10 @@ interface ILiquidationFacet {
     address indexed liquidator,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount,
-    uint256 _ibCollatAmountOut,
-    uint256 _underlyingAmountOut
+    uint256 _amountDebtRepaid,
+    uint256 _amountIbCollatLiquidated,
+    uint256 _amountUnderlyingLiquidated,
+    uint256 _ibCollatFeeToTreasury
   );
 
   error LiquidationFacet_Unauthorized();

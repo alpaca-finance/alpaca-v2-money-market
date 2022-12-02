@@ -162,16 +162,6 @@ contract LendFacet is ILendFacet {
     }
   }
 
-  function getShareValue(
-    address _token,
-    address _ibToken,
-    uint256 _ibShareAmount
-  ) external view returns (uint256 _shareValue) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    _shareValue = _getShareValue(_token, _ibToken, _ibShareAmount, moneyMarketDs);
-  }
-
   function _getShareAmountFromValue(
     address _token,
     uint256 _value,
