@@ -29,42 +29,42 @@ contract RewardFacet is IRewardFacet {
     LibReentrancyGuard.unlock();
   }
 
-  function claimReward(address _token, address _rewardToken) external nonReentrant {
+  function claimReward(address _rewardToken, address _token) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    uint256 _pendingReward = LibLendingReward.claim(msg.sender, _token, _rewardToken, moneyMarketDs);
+    uint256 _pendingReward = LibLendingReward.claim(msg.sender, _rewardToken, _token, moneyMarketDs);
 
     emit LogClaimReward(msg.sender, _rewardToken, _pendingReward);
   }
 
   function claimBorrowingRewardFor(
     address _to,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    uint256 _pendingReward = LibBorrowingReward.claim(_to, _token, _rewardToken, moneyMarketDs);
+    uint256 _pendingReward = LibBorrowingReward.claim(_to, _rewardToken, _token, moneyMarketDs);
 
     emit LogClaimBorrowingRewardFor(_to, _rewardToken, _pendingReward);
   }
 
   function pendingLendingReward(
     address _account,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibLendingReward.pendingReward(_account, _token, _rewardToken, moneyMarketDs);
+    return LibLendingReward.pendingReward(_account, _rewardToken, _token, moneyMarketDs);
   }
 
   function pendingBorrowingReward(
     address _account,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibBorrowingReward.pendingReward(_account, _token, _rewardToken, moneyMarketDs);
+    return LibBorrowingReward.pendingReward(_account, _rewardToken, _token, moneyMarketDs);
   }
 
   function lenderRewardDebts(
