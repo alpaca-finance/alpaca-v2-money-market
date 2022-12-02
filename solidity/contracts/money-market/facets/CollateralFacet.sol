@@ -10,7 +10,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
-import { LibReward } from "../libraries/LibReward.sol";
+import { LibLendingReward } from "../libraries/LibLendingReward.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
@@ -47,7 +47,9 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibReward.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
+    LibLendingReward.updatePool(_token, moneyMarketDs);
+
+    LibLendingReward.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
@@ -67,7 +69,9 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
-    LibReward.updateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
+    LibLendingReward.updatePool(_token, moneyMarketDs);
+
+    LibLendingReward.updateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 

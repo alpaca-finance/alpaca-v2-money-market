@@ -11,7 +11,7 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
-import { LibReward } from "../libraries/LibReward.sol";
+import { LibBorrowingReward } from "../libraries/LibBorrowingReward.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
@@ -66,7 +66,9 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
 
-    LibReward.updateBorrowingRewardDebt(msg.sender, _token, _shareToAdd.toInt256(), moneyMarketDs);
+    LibBorrowingReward.updatePool(_token, moneyMarketDs);
+
+    LibBorrowingReward.updateRewardDebt(msg.sender, _token, _shareToAdd.toInt256(), moneyMarketDs);
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -228,7 +230,9 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
     uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
 
-    LibReward.updateBorrowingRewardDebt(_account, _token, -_shareToRemove.toInt256(), moneyMarketDs);
+    LibBorrowingReward.updatePool(_token, moneyMarketDs);
+
+    LibBorrowingReward.updateRewardDebt(_account, _token, -_shareToRemove.toInt256(), moneyMarketDs);
 
     // update user debtShare
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRemove);

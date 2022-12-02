@@ -113,7 +113,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     // reward debt should be update to 20 * 2 = 40
     int256 _bobRewardDebtToUpdate = 40 ether;
     assertEq(collateralFacet.accountCollats(BOB, _collatToken), _bobCollat);
-    assertEq(RewardFacet.accountRewardDebts(BOB, _collatToken), _bobRewardDebtToUpdate);
+    assertEq(rewardFacet.lenderRewardDebts(BOB, _collatToken), _bobRewardDebtToUpdate);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
     vm.warp(_bobAddCollatTimestamp + 100);
 
@@ -211,7 +211,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
 
     assertEq(collateralFacet.accountCollats(ALICE, _ibToken), 20 ether);
     assertEq(
-      rewardFacet.accountRewardDebts(ALICE, _ibToken),
+      rewardFacet.lenderRewardDebts(ALICE, _ibToken),
       _expectRewardDebtToUpdate + _expectedFirstReward.toInt256()
     );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedFirstReward);
@@ -266,7 +266,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     uint256 _claimedReward,
     int256 _rewardDebt
   ) internal {
-    assertEq(rewardFacet.accountRewardDebts(_account, _collatToken), _rewardDebt);
+    assertEq(rewardFacet.lenderRewardDebts(_account, _collatToken), _rewardDebt);
     assertEq(rewardToken.balanceOf(_account), _claimedReward);
   }
 }

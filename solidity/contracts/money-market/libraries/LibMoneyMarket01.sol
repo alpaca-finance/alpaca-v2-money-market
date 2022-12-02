@@ -7,7 +7,6 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
-import { LibReward } from "./LibReward.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
