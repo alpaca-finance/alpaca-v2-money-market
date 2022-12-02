@@ -163,8 +163,8 @@ contract AdminFacet is IAdminFacet {
     if (_allocPoint == 0) revert AdminFacet_InvalidAllocPoint();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (moneyMarketDs.poolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
-    moneyMarketDs.poolInfos[_token] = LibMoneyMarket01.PoolInfo({
+    if (moneyMarketDs.lendingPoolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
+    moneyMarketDs.lendingPoolInfos[_token] = LibMoneyMarket01.PoolInfo({
       accRewardPerShare: 0,
       lastRewardTime: block.timestamp.toUint128(),
       allocPoint: _allocPoint.toUint128()
@@ -179,10 +179,10 @@ contract AdminFacet is IAdminFacet {
     if (_newAllocPoint == 0) revert AdminFacet_InvalidAllocPoint();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.poolInfos[_token];
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.lendingPoolInfos[_token];
     uint256 _totalAllocPoint = moneyMarketDs.totalAllocPoint;
     moneyMarketDs.totalAllocPoint += _totalAllocPoint - poolInfo.allocPoint + _newAllocPoint;
-    moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+    moneyMarketDs.lendingPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
 
     emit LogSetPool(_token, _newAllocPoint);
   }
@@ -192,8 +192,8 @@ contract AdminFacet is IAdminFacet {
     if (_allocPoint == 0) revert AdminFacet_InvalidAllocPoint();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (moneyMarketDs.borrowerPoolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
-    moneyMarketDs.borrowerPoolInfos[_token] = LibMoneyMarket01.PoolInfo({
+    if (moneyMarketDs.borrowingPoolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
+    moneyMarketDs.borrowingPoolInfos[_token] = LibMoneyMarket01.PoolInfo({
       accRewardPerShare: 0,
       lastRewardTime: block.timestamp.toUint128(),
       allocPoint: _allocPoint.toUint128()
@@ -208,10 +208,10 @@ contract AdminFacet is IAdminFacet {
     if (_newAllocPoint == 0) revert AdminFacet_InvalidAllocPoint();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.borrowerPoolInfos[_token];
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.borrowingPoolInfos[_token];
     uint256 _totalBorrowerPoolAllocPoint = moneyMarketDs.totalBorrowerPoolAllocPoint;
     moneyMarketDs.totalBorrowerPoolAllocPoint += _totalBorrowerPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
-    moneyMarketDs.borrowerPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+    moneyMarketDs.borrowingPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
 
     emit LogSetBorrowerPool(_token, _newAllocPoint);
   }

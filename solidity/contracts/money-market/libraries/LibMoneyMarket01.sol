@@ -92,10 +92,10 @@ library LibMoneyMarket01 {
     mapping(address => mapping(address => uint256)) accountCollats;
     mapping(address => mapping(address => uint256)) accountDebtShares;
     // token => pool info
-    mapping(address => PoolInfo) poolInfos;
-    mapping(address => PoolInfo) borrowerPoolInfos;
+    mapping(address => PoolInfo) lendingPoolInfos;
+    mapping(address => PoolInfo) borrowingPoolInfos;
     // account => pool key (token) => amount
-    mapping(address => mapping(address => int256)) accountRewardDebts;
+    mapping(address => mapping(address => int256)) lenderRewardDebts;
     mapping(address => mapping(address => int256)) borrowerRewardDebts;
     RewardConfig rewardConfig;
     uint256 totalAllocPoint;

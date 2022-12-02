@@ -57,7 +57,7 @@ contract RewardFacet is IRewardFacet {
 
   function lenderRewardDebts(address _account, address _token) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.accountRewardDebts[_account][_token];
+    return moneyMarketDs.lenderRewardDebts[_account][_token];
   }
 
   function borrowerRewardDebts(address _account, address _token) external view returns (int256) {
