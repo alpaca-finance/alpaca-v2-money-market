@@ -89,7 +89,7 @@ library LibBorrowingReward {
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
         uint256 _reward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
-          moneyMarketDs.totalLendingPoolAllocPoint;
+          moneyMarketDs.totalBorrowingPoolAllocPoint;
         _rewardPerShare = (_reward * LibMoneyMarket01.ACC_REWARD_PRECISION) / _tokenBalance;
       }
     }
