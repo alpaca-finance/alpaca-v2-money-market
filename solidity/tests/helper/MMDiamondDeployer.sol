@@ -13,6 +13,7 @@ import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol
 import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { LiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
+import { RewardFacet } from "../../contracts/money-market/facets/RewardFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -33,6 +34,7 @@ library MMDiamondDeployer {
     deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployRewardFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -128,13 +130,14 @@ library MMDiamondDeployer {
   function deployCollateralFacet(DiamondCutFacet diamondCutFacet) internal returns (CollateralFacet, bytes4[] memory) {
     CollateralFacet _collateralFacet = new CollateralFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = CollateralFacet.addCollateral.selector;
     selectors[1] = CollateralFacet.getCollaterals.selector;
     selectors[2] = CollateralFacet.removeCollateral.selector;
     selectors[3] = CollateralFacet.collats.selector;
     selectors[4] = CollateralFacet.transferCollateral.selector;
     selectors[5] = CollateralFacet.subAccountCollatAmount.selector;
+    selectors[6] = CollateralFacet.accountCollats.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_collateralFacet),
@@ -203,7 +206,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](12);
+    bytes4[] memory selectors = new bytes4[](16);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -216,6 +219,10 @@ library MMDiamondDeployer {
     selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
     selectors[10] = AdminFacet.setNonCollatInterestModel.selector;
     selectors[11] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[12] = AdminFacet.setRewardConfig.selector;
+    selectors[13] = AdminFacet.addPool.selector;
+    selectors[14] = AdminFacet.setPool.selector;
+    selectors[15] = AdminFacet.setRewardDistributor.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -245,5 +252,23 @@ library MMDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_LiquidationFacet, selectors);
+  }
+
+  function deployRewardFacet(DiamondCutFacet diamondCutFacet) internal returns (RewardFacet, bytes4[] memory) {
+    RewardFacet _RewardFacet = new RewardFacet();
+
+    bytes4[] memory selectors = new bytes4[](3);
+    selectors[0] = _RewardFacet.claimReward.selector;
+    selectors[1] = _RewardFacet.pendingReward.selector;
+    selectors[2] = _RewardFacet.accountRewardDebts.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_RewardFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_RewardFacet, selectors);
   }
 }

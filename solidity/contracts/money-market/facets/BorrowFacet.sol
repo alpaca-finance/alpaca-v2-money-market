@@ -151,6 +151,7 @@ contract BorrowFacet is IBorrowFacet {
 
     moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
     moneyMarketDs.collats[_token] -= _actualRepayAmount;
+    moneyMarketDs.accountCollats[_account][_token] -= _actualRepayAmount;
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
