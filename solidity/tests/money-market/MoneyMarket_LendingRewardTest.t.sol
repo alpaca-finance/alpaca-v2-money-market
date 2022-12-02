@@ -8,7 +8,7 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 
 import { console } from "../utils/console.sol";
 
-contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
+contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
   using SafeCast for uint256;
   using SafeCast for int256;
 

@@ -101,22 +101,39 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenMultipleBorrowTokenInSamePoolAndClaim_AllUsersShouldReceiveRewardCorrectly() external {
     address _borrowedToken = address(weth);
 
-    uint256 _bobBorrowedAmount = 15 ether;
-    uint256 _eveBorrowedAmount = 5 ether;
+    uint256 _bobBorrowedAmount = 10 ether;
+    uint256 _eveBorrowedAmount = 10 ether;
 
     vm.prank(BOB);
     borrowFacet.borrow(0, _borrowedToken, _bobBorrowedAmount);
+    assertEq(borrowFacet.accountDebtShares(BOB, _borrowedToken), _bobBorrowedAmount);
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
+
+    uint256 _eveAddCollatTimestamp = block.timestamp + 100;
+    vm.warp(_eveAddCollatTimestamp);
+
+    vm.startPrank(DEPLOYER);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    vm.stopPrank();
 
     vm.startPrank(EVE);
     btc.approve(moneyMarketDiamond, 50 ether);
     collateralFacet.addCollateral(EVE, 0, address(btc), 10 ether);
     borrowFacet.borrow(0, address(weth), _eveBorrowedAmount);
     vm.stopPrank();
-
-    assertEq(borrowFacet.accountDebtShares(BOB, _borrowedToken), _bobBorrowedAmount);
+    // ibWeth pool alloc point is 20
+    // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
+    // then reward = 100 * 1 * 20 / 100 = 20 ether
+    // then acc reward per share = 20 ether / 10 ether (total of collat token before eve add collats) = 2 (precision is 12)
+    // reward debt should be update to 10 * 2 = 20
+    int256 _eveRewardDebtToUpdate = 20 ether;
     assertEq(borrowFacet.accountDebtShares(EVE, _borrowedToken), _eveBorrowedAmount);
+    assertEq(rewardFacet.borrowerRewardDebts(EVE, _borrowedToken), _eveRewardDebtToUpdate);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
-    vm.warp(block.timestamp + 100);
+    vm.warp(_eveAddCollatTimestamp + 100);
 
     rewardFacet.claimBorrowingRewardFor(BOB, _borrowedToken);
     rewardFacet.claimBorrowingRewardFor(EVE, _borrowedToken);
@@ -125,13 +142,19 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
     // then reward = 100 * 1 * 20 / 100 = 20 ether
     // then acc reward per share = 20 ether / 20 ether (total of borrowed token) = 1 (precision is 12)
+    // then total acc reward per share = 2 (old) + 1 = 3
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
-    // eve reward debt is 0 now, then unclaimed reward = (5 * 1) - 0 = 5 (precision is 12)
-    // bob reward debt is 0 now, then unclaimed reward = (15 * 1) - 0 = 15 (precision is 12)
-    uint256 _expectedEveReward = 5 ether;
-    uint256 _expectedBobReward = 15 ether;
-    _assertAccountReward(EVE, _borrowedToken, _expectedEveReward, _expectedEveReward.toInt256());
+    // bob reward debt is 0 now, then unclaimed reward = (10 * 3) - 0 = 30 (precision is 12)
+    // eve reward debt is 20 now, then unclaimed reward = (10 * 3) - 20 = 10 (precision is 12)
+    uint256 _expectedBobReward = 30 ether;
+    uint256 _expectedEveReward = 10 ether;
     _assertAccountReward(BOB, _borrowedToken, _expectedBobReward, _expectedBobReward.toInt256());
+    _assertAccountReward(
+      EVE,
+      _borrowedToken,
+      _expectedEveReward,
+      _eveRewardDebtToUpdate + _expectedEveReward.toInt256()
+    );
 
     assertEq(
       rewardToken.balanceOf(address(rewardDistributor)),
