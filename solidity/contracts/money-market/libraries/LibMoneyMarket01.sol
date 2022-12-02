@@ -98,8 +98,8 @@ library LibMoneyMarket01 {
     mapping(address => mapping(address => int256)) lenderRewardDebts;
     mapping(address => mapping(address => int256)) borrowerRewardDebts;
     RewardConfig rewardConfig;
-    uint256 totalAllocPoint;
-    uint256 totalBorrowerPoolAllocPoint;
+    uint256 totalLendingPoolAllocPoint;
+    uint256 totalBorrowingPoolAllocPoint;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
