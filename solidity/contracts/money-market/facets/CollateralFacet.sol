@@ -47,9 +47,9 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
-
     LibReward.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
+
+    LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
