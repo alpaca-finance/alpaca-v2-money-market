@@ -222,10 +222,10 @@ library MMDiamondDeployer {
     selectors[11] = AdminFacet.setLiquidationStratsOk.selector;
     selectors[12] = AdminFacet.setRewardConfig.selector;
     selectors[13] = AdminFacet.setRewardDistributor.selector;
-    selectors[14] = AdminFacet.addPool.selector;
-    selectors[15] = AdminFacet.setPool.selector;
-    selectors[16] = AdminFacet.addBorrowerPool.selector;
-    selectors[17] = AdminFacet.setBorrowerPool.selector;
+    selectors[14] = AdminFacet.addLendingPool.selector;
+    selectors[15] = AdminFacet.setLendingPool.selector;
+    selectors[16] = AdminFacet.addBorrowingPool.selector;
+    selectors[17] = AdminFacet.setBorrowingPool.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -260,13 +260,15 @@ library MMDiamondDeployer {
   function deployRewardFacet(DiamondCutFacet diamondCutFacet) internal returns (RewardFacet, bytes4[] memory) {
     RewardFacet _rewardFacet = new RewardFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](8);
     selectors[0] = _rewardFacet.claimReward.selector;
     selectors[1] = _rewardFacet.claimBorrowingRewardFor.selector;
     selectors[2] = _rewardFacet.pendingLendingReward.selector;
     selectors[3] = _rewardFacet.pendingBorrowingReward.selector;
     selectors[4] = _rewardFacet.lenderRewardDebts.selector;
     selectors[5] = _rewardFacet.borrowerRewardDebts.selector;
+    selectors[6] = _rewardFacet.getLendingPool.selector;
+    selectors[7] = _rewardFacet.getBorrowingPool.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_rewardFacet),

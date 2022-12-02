@@ -185,15 +185,15 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // ibUsdc is 40%
     // ibIsolateToken is 15%
     // ibWNative is 5%
-    adminFacet.addPool(address(ibWeth), 20);
-    adminFacet.addPool(address(ibBtc), 20);
-    adminFacet.addPool(address(ibUsdc), 40);
-    adminFacet.addPool(address(ibIsolateToken), 15);
-    adminFacet.addPool(address(ibWNative), 5);
+    adminFacet.addLendingPool(address(ibWeth), 20);
+    adminFacet.addLendingPool(address(ibBtc), 20);
+    adminFacet.addLendingPool(address(ibUsdc), 40);
+    adminFacet.addLendingPool(address(ibIsolateToken), 15);
+    adminFacet.addLendingPool(address(ibWNative), 5);
 
     // add borrower pool
-    adminFacet.addBorrowerPool(address(weth), 20);
-    adminFacet.addBorrowerPool(address(btc), 40);
-    adminFacet.addBorrowerPool(address(usdc), 40);
+    adminFacet.addBorrowingPool(address(weth), 20);
+    adminFacet.addBorrowingPool(address(btc), 40);
+    adminFacet.addBorrowingPool(address(usdc), 40);
   }
 }

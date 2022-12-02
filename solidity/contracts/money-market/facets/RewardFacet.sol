@@ -64,4 +64,14 @@ contract RewardFacet is IRewardFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.borrowerRewardDebts[_account][_token];
   }
+
+  function getLendingPool(address _token) external view returns (LibMoneyMarket01.PoolInfo memory) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.lendingPoolInfos[_token];
+  }
+
+  function getBorrowingPool(address _token) external view returns (LibMoneyMarket01.PoolInfo memory) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.borrowingPoolInfos[_token];
+  }
 }

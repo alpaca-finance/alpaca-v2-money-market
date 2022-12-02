@@ -100,7 +100,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
-    masterChef.addPool(address(wethUsdcLPToken), wethUsdcPoolId);
+    masterChef.addLendingPool(address(wethUsdcLPToken), wethUsdcPoolId);
 
     addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);
