@@ -199,7 +199,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
 
     assertEq(collateralFacet.accountCollats(ALICE, _ibToken), 20 ether);
     assertEq(
-      RewardFacet.accountRewardDebts(ALICE, _ibToken),
+      rewardFacet.accountRewardDebts(ALICE, _ibToken),
       _expectRewardDebtToUpdate + _expectedFirstReward.toInt256()
     );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedFirstReward);
