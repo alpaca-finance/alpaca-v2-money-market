@@ -157,17 +157,10 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // 4. check repaid amount, take fees, and update states
     uint256 _amountRepaid = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _collatAmountAfter = ERC20(params.collatToken).balanceOf(address(this));
-    uint256 _collatSold = _collatAmountBefore - _collatAmountAfter;
+    uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
     // TODO: transfer fee to treasury
-    uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
-    // for case that _collatAmountAfter is not enough for fee
-    // ex. _totalCollatAmount = 10, _collatSold = 9.99, _fee (1%) = 0.0999, _collatAmountAfter = 0.01
-    // actual fee should be 0.01
-    uint256 _actualCollatFeeToTreasury = _collatFeeToTreasury > _collatAmountAfter
-      ? _collatAmountAfter
-      : _collatFeeToTreasury;
+    uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_collatAmountBefore, _collatSold);
 
     _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
@@ -179,7 +172,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.collatToken,
       _amountRepaid,
       _collatSold,
-      _collatFeeToTreasury
+      _actualCollatFeeToTreasury
     );
   }
 
@@ -214,19 +207,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
 
-    // avoid stack too deep
-    uint256 _actualCollatFeeToTreasury;
-    {
-      uint256 _collatAmountAfter = _subAccountCollatAmountBefore - _collatSold;
-      // TODO: transfer fee to treasury
-      uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
-      // for case that _collatAmountAfter is not enough for fee
-      // ex. _totalCollatAmount = 10, _collatSold = 9.99, _fee (1%) = 0.0999, _collatAmountAfter = 0.01
-      // actual fee should be 0.01
-      _actualCollatFeeToTreasury = _collatFeeToTreasury > _collatAmountAfter
-        ? _collatAmountAfter
-        : _collatFeeToTreasury;
-    }
+    // TODO: transfer fee to treasury
+    uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_subAccountCollatAmountBefore, _collatSold);
 
     LibMoneyMarket01.withdraw(
       params.collatToken,
@@ -247,6 +229,19 @@ contract LiquidationFacet is ILiquidationFacet {
       _underlyingSold,
       _actualCollatFeeToTreasury
     );
+  }
+
+  function _getActualCollatFeeToTreasury(uint256 _collatBefore, uint256 _collatSold)
+    internal
+    pure
+    returns (uint256 _actualCollatFeeToTreasury)
+  {
+    uint256 _collatAmountAfter = _collatBefore - _collatSold;
+    uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
+    // for case that _collatAmountAfter is not enough for fee
+    // ex. _totalCollatAmount = 10, _collatSold = 9.99, _fee (1%) = 0.0999, _collatAmountAfter = 0.01
+    // actual fee should be 0.01
+    _actualCollatFeeToTreasury = _collatFeeToTreasury > _collatAmountAfter ? _collatAmountAfter : _collatFeeToTreasury;
   }
 
   function _valueToShare(

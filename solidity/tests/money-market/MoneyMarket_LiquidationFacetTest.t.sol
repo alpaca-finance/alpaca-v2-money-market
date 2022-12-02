@@ -479,6 +479,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
+  // TODO: test fee to treasury
+
   // Liquidation tests
 
   function testCorrectness_WhenPartialLiquidate_ShouldWork() external {
