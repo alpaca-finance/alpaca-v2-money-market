@@ -14,26 +14,26 @@ interface IRewardFacet {
 
   function pendingLendingReward(
     address _account,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external view returns (uint256);
 
   function pendingBorrowingReward(
     address _account,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external view returns (uint256);
 
   function lenderRewardDebts(
     address _account,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external view returns (int256);
 
   function borrowerRewardDebts(
     address _account,
-    address _token,
-    address _rewardToken
+    address _rewardToken,
+    address _token
   ) external view returns (int256);
 
   function getLendingPool(address _rewardToken, address _token)

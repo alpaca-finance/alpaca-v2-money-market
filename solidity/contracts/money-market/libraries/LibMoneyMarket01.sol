@@ -95,7 +95,7 @@ library LibMoneyMarket01 {
     mapping(address => mapping(address => PoolInfo)) lendingPoolInfos;
     mapping(address => mapping(address => PoolInfo)) borrowingPoolInfos;
     // todo: rethink type
-    // account => pool key (token) => reward token amount
+    // account => reward token => pool key (token) => amount
     mapping(address => mapping(address => mapping(address => int256))) lenderRewardDebts;
     mapping(address => mapping(address => mapping(address => int256))) borrowerRewardDebts;
     // multiple reward

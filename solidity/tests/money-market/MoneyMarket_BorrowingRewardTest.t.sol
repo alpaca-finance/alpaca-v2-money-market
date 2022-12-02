@@ -187,7 +187,7 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // reward debt should be update to 10 * 2 = 20
     int256 _eveRewardDebtToUpdate = 20 ether;
     assertEq(borrowFacet.accountDebtShares(EVE, _borrowedToken), _eveBorrowedAmount);
-    assertEq(rewardFacet.borrowerRewardDebts(EVE, _borrowedToken, address(rewardToken)), _eveRewardDebtToUpdate);
+    assertEq(rewardFacet.borrowerRewardDebts(EVE, address(rewardToken), _borrowedToken), _eveRewardDebtToUpdate);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
     vm.warp(_eveAddCollatTimestamp + 100);
 
@@ -315,7 +315,7 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(0, address(weth), 10 ether);
     assertEq(borrowFacet.accountDebtShares(BOB, borrowedToken), 20 ether);
     assertEq(
-      rewardFacet.borrowerRewardDebts(BOB, borrowedToken, address(rewardToken)),
+      rewardFacet.borrowerRewardDebts(BOB, address(rewardToken), borrowedToken),
       _expectedFirstReward.toInt256() + _expectedRewardDebtToUpdate
     );
 
@@ -351,6 +351,6 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     int256 _rewardDebt
   ) internal {
     assertEq(MockERC20(_rewardToken).balanceOf(_account), _claimedReward);
-    assertEq(rewardFacet.borrowerRewardDebts(_account, _borrowedToken, _rewardToken), _rewardDebt);
+    assertEq(rewardFacet.borrowerRewardDebts(_account, _rewardToken, _borrowedToken), _rewardDebt);
   }
 }
