@@ -97,9 +97,14 @@ library LibMoneyMarket01 {
     // account => pool key (token) => amount
     mapping(address => mapping(address => int256)) lenderRewardDebts;
     mapping(address => mapping(address => int256)) borrowerRewardDebts;
+    // todo: remove
     RewardConfig rewardConfig;
     uint256 totalAllocPoint;
     uint256 totalBorrowerPoolAllocPoint;
+    // multiple reward
+    LibDoublyLinkedList.List rewardPerSecList;
+    mapping(address => totalLendingPoolAllocPoint);
+    mapping(address => totalBorrowingPoolAllocPoint);
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

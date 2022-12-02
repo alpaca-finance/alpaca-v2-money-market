@@ -14,8 +14,8 @@ import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
 
-  event LogSetRewardConfig(address indexed _rewardToken, uint256 _rewardPerSec);
   event LogSetRewardDistributor(address indexed _address);
+  event LogSetRewardConfig(address indexed _rewardToken, uint256 _rewardPerSec);
   event LogAddLendingPool(address indexed _token, uint256 _allocPoint);
   event LogSetLendingPool(address indexed _token, uint256 _allocPoint);
   event LogAddBorroweringPool(address indexed _token, uint256 _allocPoint);
@@ -138,9 +138,15 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  function setRewardDistributor(address _addr) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardDistributor = _addr;
+
+    emit LogSetRewardDistributor(_addr);
+  }
+
   function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external onlyOwner {
     if (_rewardToken == address(0)) revert AdminFacet_InvalidAddress();
-    if (_rewardPerSecond == 0) revert AdminFacet_InvalidReward();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.rewardConfig = LibMoneyMarket01.RewardConfig({
@@ -149,13 +155,6 @@ contract AdminFacet is IAdminFacet {
     });
 
     emit LogSetRewardConfig(_rewardToken, _rewardPerSecond);
-  }
-
-  function setRewardDistributor(address _addr) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.rewardDistributor = _addr;
-
-    emit LogSetRewardDistributor(_addr);
   }
 
   function addLendingPool(address _token, uint256 _allocPoint) external onlyOwner {

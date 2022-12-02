@@ -7,7 +7,6 @@ interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
-  error AdminFacet_InvalidReward();
 
   struct IbPair {
     address token;
