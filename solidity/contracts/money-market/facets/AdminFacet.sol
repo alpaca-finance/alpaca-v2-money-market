@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
@@ -10,6 +12,13 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract AdminFacet is IAdminFacet {
+  using SafeCast for uint256;
+
+  event LogSetRewardConfig(address indexed _rewardToken, uint256 _rewardPerSec);
+  event LogSetRewardDistributor(address indexed _address);
+  event LogAddPool(address indexed _token, uint256 _allocPoint);
+  event LogSetPool(address indexed _token, uint256 _allocPoint);
+
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
     _;
@@ -136,5 +145,54 @@ contract AdminFacet is IAdminFacet {
         _i++;
       }
     }
+  }
+
+  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external onlyOwner {
+    if (_rewardToken == address(0)) revert AdminFacet_InvalidAddress();
+    if (_rewardPerSecond == 0) revert AdminFacet_InvalidReward();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardConfig = LibMoneyMarket01.RewardConfig({
+      rewardToken: _rewardToken,
+      rewardPerSecond: _rewardPerSecond
+    });
+
+    emit LogSetRewardConfig(_rewardToken, _rewardPerSecond);
+  }
+
+  function setRewardDistributor(address _addr) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardDistributor = _addr;
+
+    emit LogSetRewardDistributor(_addr);
+  }
+
+  function addPool(address _token, uint256 _allocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+    if (_allocPoint == 0) revert AdminFacet_InvalidAllocPoint();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (moneyMarketDs.poolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
+    moneyMarketDs.poolInfos[_token] = LibMoneyMarket01.PoolInfo({
+      accRewardPerShare: 0,
+      lastRewardTime: block.timestamp.toUint128(),
+      allocPoint: _allocPoint.toUint128()
+    });
+    moneyMarketDs.totalAllocPoint += _allocPoint;
+
+    emit LogAddPool(_token, _allocPoint);
+  }
+
+  function setPool(address _token, uint256 _newAllocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+    if (_newAllocPoint == 0) revert AdminFacet_InvalidAllocPoint();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.poolInfos[_token];
+    uint256 _totalAllocPoint = moneyMarketDs.totalAllocPoint;
+    moneyMarketDs.totalAllocPoint += _totalAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    moneyMarketDs.poolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+
+    emit LogSetPool(_token, _newAllocPoint);
   }
 }

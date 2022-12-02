@@ -72,4 +72,9 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     vm.stopPrank();
   }
+
+  function testRevert_WhenAdminTryAddDuplicatedPool_ShouldRevert() external {
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_PoolIsAlreadyAdded.selector));
+    adminFacet.addPool(address(ibWeth), 20);
+  }
 }

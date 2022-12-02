@@ -190,7 +190,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
-    // TODO: use the correct state vars
     if (_borrowAmount > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }

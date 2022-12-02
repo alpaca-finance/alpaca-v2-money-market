@@ -282,6 +282,7 @@ contract LiquidationFacet is ILiquidationFacet {
     _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
+  /// @notice Return collateral amount after include rewardBps
   function _getCollatAmountOut(
     address _subAccount,
     address _collatToken,
@@ -289,7 +290,17 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _rewardBps,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
-    (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
+    address _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
+
+    uint256 _collatTokenPrice;
+    {
+      // _collatToken is ibToken
+      if (_actualToken != address(0)) {
+        (_collatTokenPrice, ) = LibMoneyMarket01.getIbPriceUSD(_collatToken, _actualToken, moneyMarketDs);
+      } else {
+        (_collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
+      }
+    }
 
     uint256 _rewardInUSD = (_collatValueInUSD * _rewardBps) / 10000;
 
