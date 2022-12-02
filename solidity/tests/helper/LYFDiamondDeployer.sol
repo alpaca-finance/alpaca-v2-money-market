@@ -68,7 +68,7 @@ library LYFDiamondDeployer {
   function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFFarmFacet, bytes4[] memory) {
     LYFFarmFacet _farmFacet = new LYFFarmFacet();
 
-    bytes4[] memory selectors = new bytes4[](14);
+    bytes4[] memory selectors = new bytes4[](15);
     selectors[0] = LYFFarmFacet.addFarmPosition.selector;
     selectors[1] = LYFFarmFacet.getDebtShares.selector;
     selectors[2] = LYFFarmFacet.getTotalBorrowingPower.selector;
@@ -83,6 +83,7 @@ library LYFDiamondDeployer {
     selectors[11] = LYFFarmFacet.debtShares.selector;
     selectors[12] = LYFFarmFacet.liquidateLP.selector;
     selectors[13] = LYFFarmFacet.getMMDebt.selector;
+    selectors[14] = LYFFarmFacet.directAddFarmPosition.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_farmFacet),
@@ -97,13 +98,14 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.oracle.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
     selectors[3] = LYFAdminFacet.setMoneyMarket.selector;
-    selectors[4] = LYFAdminFacet.setDebtShareId.selector;
-    selectors[5] = LYFAdminFacet.setDebtInterestModel.selector;
+    selectors[4] = LYFAdminFacet.setLPConfigs.selector;
+    selectors[5] = LYFAdminFacet.setDebtShareId.selector;
+    selectors[6] = LYFAdminFacet.setDebtInterestModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

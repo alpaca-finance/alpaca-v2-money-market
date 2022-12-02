@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
@@ -32,11 +33,17 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _actualRepayAmount
   );
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   function borrow(
     uint256 _subAccountId,
     address _token,
     uint256 _amount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
@@ -76,7 +83,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _subAccountId,
     address _token,
     uint256 _repayAmount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
@@ -110,7 +117,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _subAccountId,
     address _token,
     uint256 _repayAmount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
@@ -144,6 +151,7 @@ contract BorrowFacet is IBorrowFacet {
 
     moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
     moneyMarketDs.collats[_token] -= _actualRepayAmount;
+    moneyMarketDs.accountCollats[_account][_token] -= _actualRepayAmount;
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
@@ -259,7 +267,6 @@ contract BorrowFacet is IBorrowFacet {
     _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
 
-  // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowingPower,
@@ -272,7 +279,11 @@ contract BorrowFacet is IBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+      _amount * _tokenConfig.to18ConversionFactor,
+      _tokenPrice,
+      _tokenConfig.borrowingFactor
+    );
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert BorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);

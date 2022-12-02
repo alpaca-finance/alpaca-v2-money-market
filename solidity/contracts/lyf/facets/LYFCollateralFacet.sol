@@ -7,6 +7,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../interfaces/ILYFCollateralFacet.sol";
@@ -26,12 +27,18 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     uint256 _amount
   );
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   function addCollateral(
     address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
     if (ds.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
@@ -55,7 +62,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     uint256 _subAccountId,
     address _token,
     uint256 _amount
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
@@ -79,7 +86,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     uint256 _toSubAccountId,
     address _token,
     uint256 _amount
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);

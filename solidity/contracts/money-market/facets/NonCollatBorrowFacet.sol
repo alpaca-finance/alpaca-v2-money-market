@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { INonCollatBorrowFacet } from "../interfaces/INonCollatBorrowFacet.sol";
@@ -21,7 +22,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   event LogNonCollatRepay(address indexed _user, address indexed _token, uint256 _actualRepayAmount);
 
-  function nonCollatBorrow(address _token, uint256 _amount) external {
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
+  function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
@@ -62,7 +69,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     address _account,
     address _token,
     uint256 _repayAmount
-  ) external {
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
 
@@ -150,7 +157,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
 
-  // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowedValue,
@@ -163,7 +169,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+      _amount * _tokenConfig.to18ConversionFactor,
+      _tokenPrice,
+      _tokenConfig.borrowingFactor
+    );
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
     }
@@ -180,7 +190,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
-    // TODO: use the correct state vars
     if (_borrowAmount > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }

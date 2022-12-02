@@ -25,12 +25,10 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {
-    address _token = address(9998);
-
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: _token,
+      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
@@ -41,11 +39,42 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(_token);
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(address(weth));
 
     // assertEq not accept enum
     assertTrue(_tokenConfig.tier == LibMoneyMarket01.AssetTier.COLLATERAL);
     assertEq(_tokenConfig.collateralFactor, 5000);
     assertEq(_tokenConfig.borrowingFactor, 6000);
+  }
+
+  function testCorrectness_WhenNonAdminSetSomeConfig_ShouldRevert() external {
+    vm.startPrank(ALICE);
+
+    // try to setTokenToIbTokens
+    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
+    _ibPair[0] = IAdminFacet.IbPair({ token: address(9998), ibToken: address(9999) });
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setTokenToIbTokens(_ibPair);
+
+    // try to setTokenConfigs
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(9998),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 5000,
+      borrowingFactor: 6000,
+      maxCollateral: 1000e18,
+      maxBorrow: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setTokenConfigs(_inputs);
+
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenAdminTryAddDuplicatedPool_ShouldRevert() external {
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_PoolIsAlreadyAdded.selector));
+    adminFacet.addPool(address(ibWeth), 20);
   }
 }

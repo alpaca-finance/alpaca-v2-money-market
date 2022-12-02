@@ -9,6 +9,7 @@ import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
@@ -34,15 +35,22 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
 
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   function addFarmPosition(
     uint256 _subAccountId,
     address _lpToken,
     uint256 _desireToken0Amount,
     uint256 _desireToken1Amount,
-    uint256 _minLpReceive,
-    address _addStrat
-  ) external {
+    uint256 _minLpReceive
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -54,21 +62,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
     LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
 
-    // 1. check subaccount collat
-    uint256 _token0AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token0, _desireToken0Amount, lyfDs);
-    uint256 _token1AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token1, _desireToken1Amount, lyfDs);
+    // 1. get token from collat (underlying and ib if possible), borrow if not enough
+    _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount, lyfDs);
+    _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
-    //2. borrow from mm if collats do not cover the desire amount
-    _borrowFromMoneyMarket(_subAccount, _token0, _lpToken, _desireToken0Amount - _token0AmountFromCollat, lyfDs);
-    _borrowFromMoneyMarket(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountFromCollat, lyfDs);
+    // 2. send token to strat
+    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
+    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
-    // 3. send token to strat
-
-    ERC20(_token0).safeTransfer(_addStrat, _desireToken0Amount);
-    ERC20(_token1).safeTransfer(_addStrat, _desireToken1Amount);
-
-    // 4. compose lp
-    uint256 _lpReceived = IStrat(_addStrat).composeLPToken(
+    // 3. compose lp
+    uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
       _token0,
       _token1,
       _lpToken,
@@ -76,6 +79,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _desireToken1Amount,
       _minLpReceive
     );
+
+    // 4. deposit to masterChef
+    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -87,18 +93,103 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
   }
 
+  function directAddFarmPosition(
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _desireToken0Amount,
+    uint256 _desireToken1Amount,
+    uint256 _minLpReceive,
+    uint256 _token0AmountIn,
+    uint256 _token1AmountIn
+  ) external nonReentrant {
+    if (_token0AmountIn > _desireToken0Amount || _token1AmountIn > _desireToken1Amount) {
+      revert LYFFarmFacet_BadInput();
+    }
+
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
+
+    LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
+
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
+
+    LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
+    LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+
+    // 1. if desired amount exceeds provided amount, get token from collat (underlying and ib if possible), borrow if not enough
+    _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount - _token0AmountIn, lyfDs);
+    _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountIn, lyfDs);
+
+    // 2. send token to strat
+    ERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
+    ERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
+    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
+    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
+
+    // 3. compose lp
+    uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
+      _token0,
+      _token1,
+      _lpToken,
+      _desireToken0Amount,
+      _desireToken1Amount,
+      _minLpReceive
+    );
+
+    // 4. deposit to masterChef
+    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
+
+    // 5. add it to collateral
+    LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
+
+    // 6. health check on sub account
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
+    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+  }
+
+  function _removeCollatWithIbAndBorrow(
+    address _subAccount,
+    address _token,
+    address _lpToken,
+    uint256 _desireTokenAmount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    uint256 _tokenAmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token, _desireTokenAmount, lyfDs);
+    uint256 _tokenAmountFromIbCollat = LibLYF01.removeIbCollateral(
+      _subAccount,
+      _token,
+      IMoneyMarket(lyfDs.moneyMarket).tokenToIbTokens(_token),
+      _desireTokenAmount - _tokenAmountFromCollat,
+      lyfDs
+    );
+    _borrowFromMoneyMarket(
+      _subAccount,
+      _token,
+      _lpToken,
+      _desireTokenAmount - _tokenAmountFromCollat - _tokenAmountFromIbCollat,
+      lyfDs
+    );
+  }
+
   function liquidateLP(
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpShareAmount,
-    address _removeStrat
-  ) external {
+    uint256 _lpShareAmount
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
     if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
+
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
@@ -108,9 +199,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // todo: handle slippage
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_subAccount, _lpToken, _lpShareAmount, lyfDs);
+    IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
-    ERC20(_lpToken).safeTransfer(_removeStrat, _lpFromCollatRemoval);
-    (uint256 _token0Return, uint256 _token1Return) = IStrat(_removeStrat).removeLiquidity(_lpToken);
+    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
     LibLYF01.addCollat(_subAccount, _token0, _token0Return, lyfDs);
     LibLYF01.addCollat(_subAccount, _token1, _token1Return, lyfDs);
@@ -159,7 +251,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token,
     address _lpToken,
     uint256 _repayAmount
-  ) external {
+  ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
 
@@ -279,7 +371,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _checkAvailableToken(_token, _amount, 0, lyfDs);
   }
 
-  // TODO: handle token decimal when calculate value
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowingPower,
@@ -292,7 +383,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibLYF01.usedBorrowedPower(_amount, _tokenPrice, _tokenConfig.borrowingFactor);
+    uint256 _borrowingUSDValue = LibLYF01.usedBorrowedPower(
+      _amount * _tokenConfig.to18ConversionFactor,
+      _tokenPrice,
+      _tokenConfig.borrowingFactor
+    );
 
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert LYFFarmFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
@@ -368,5 +463,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     return lyfDs.debtShares[_debtShareId];
+  }
+
+  function _depositToMasterChef(
+    address _lpToken,
+    address _masterChef,
+    uint256 _poolId,
+    uint256 _amount
+  ) internal {
+    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
+    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
+    ERC20(_lpToken).approve(_masterChef, 0);
   }
 }

@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: BUSL
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
 interface IMasterChefLike {
-  function deposit(uint256 pid, uint256 amount) external;
+  function deposit(uint256 _pid, uint256 _amount) external;
 
-  function withdraw(uint256 pid, uint256 amount) external;
+  function withdraw(uint256 _pid, uint256 _amount) external;
 }

@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 interface ILendFacet {
   function deposit(address _token, uint256 _amount) external;
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external;
+  function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
 
   function depositETH() external payable;
 
@@ -13,6 +13,11 @@ interface ILendFacet {
   function getTotalToken(address _token) external view returns (uint256);
 
   function openMarket(address _token) external returns (address);
+
+  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
+    external
+    view
+    returns (uint256 _shareAmount);
 
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);

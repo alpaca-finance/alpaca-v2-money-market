@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
@@ -11,7 +9,8 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
-import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -27,6 +26,7 @@ library LibLYF01 {
 
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
+  error LibLYF01_UnsupportedDecimals();
 
   enum AssetTier {
     UNLISTED,
@@ -41,6 +41,13 @@ library LibLYF01 {
     uint256 maxCollateral;
     uint256 maxBorrow;
     uint256 maxToleranceExpiredSecond;
+    uint8 to18ConversionFactor;
+  }
+
+  struct LPConfig {
+    address strategy;
+    address masterChef;
+    uint256 poolId;
   }
 
   struct DebtShareTokens {
@@ -51,7 +58,7 @@ library LibLYF01 {
   // Storage
   struct LYFDiamondStorage {
     address moneyMarket;
-    IPriceOracle oracle;
+    IAlpacaV2Oracle oracle;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -64,6 +71,7 @@ library LibLYF01 {
     mapping(uint256 => uint256) debtLastAccureTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
+    mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
   }
 
@@ -128,7 +136,6 @@ library LibLYF01 {
     }
   }
 
-  // TODO: handle decimal
   function getTotalBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
     internal
     view
@@ -154,13 +161,13 @@ library LibLYF01 {
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
       }
 
-      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
+      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_actualToken];
 
-      (uint256 _tokenPrice, ) = getPriceUSD(_collatToken, lyfDs);
+      (uint256 _tokenPrice, ) = getPriceUSD(_actualToken, lyfDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _actualAmount * _tokenConfig.collateralFactor,
+        _actualAmount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
@@ -198,10 +205,7 @@ library LibLYF01 {
   }
 
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256, uint256) {
-    (uint256 _price, uint256 _lastUpdated) = lyfDs.oracle.getPrice(
-      _token,
-      address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
-    );
+    (uint256 _price, uint256 _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
     if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibLYF01_PriceStale(_token);
     return (_price, _lastUpdated);
@@ -212,7 +216,7 @@ library LibLYF01 {
   function getTotalToken(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256) {
     // todo: think about debt
     // return (ERC20(_token).balanceOf(address(this)) + lyfDs.globalDebts[_token]) - lyfDs.collats[_token];
-    return ERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
+    return IERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
   }
 
   // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
@@ -278,9 +282,43 @@ library LibLYF01 {
     }
   }
 
+  function removeIbCollateral(
+    address _subAccount,
+    address _token,
+    address _ibToken,
+    uint256 _removeAmountUnderlying,
+    LYFDiamondStorage storage ds
+  ) internal returns (uint256 _underlyingRemoved) {
+    if (_ibToken == address(0) || _removeAmountUnderlying == 0) return 0;
+
+    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+
+    uint256 _collateralAmountIb = _subAccountCollatList.getAmount(_ibToken);
+
+    if (_collateralAmountIb > 0) {
+      IMoneyMarket moneyMarket = IMoneyMarket(ds.moneyMarket);
+
+      uint256 _removeAmountIb = moneyMarket.getIbShareFromUnderlyingAmount(_token, _removeAmountUnderlying);
+      uint256 _ibRemoved = _removeAmountIb > _collateralAmountIb ? _collateralAmountIb : _removeAmountIb;
+
+      _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);
+
+      _underlyingRemoved = moneyMarket.withdraw(_ibToken, _ibRemoved);
+
+      ds.collats[_ibToken] -= _ibRemoved;
+    }
+  }
+
   function isSubaccountHealthy(address _subAccount, LYFDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
+
+  function to18ConversionFactor(address _token) internal view returns (uint8) {
+    uint256 _decimals = IERC20(_token).decimals();
+    if (_decimals > 18) revert LibLYF01_UnsupportedDecimals();
+    uint256 _conversionFactor = 10**(18 - _decimals);
+    return uint8(_conversionFactor);
   }
 }

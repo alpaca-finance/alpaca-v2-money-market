@@ -25,12 +25,14 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
+import { IPriceOracle } from "../../contracts/oracle/interfaces/IPriceOracle.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
+import { MockMasterChef } from "../mocks/MockMasterChef.sol";
 import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 // libs
@@ -44,6 +46,9 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
 
+// oracle
+import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
+
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
   address internal moneyMarketDiamond;
@@ -53,11 +58,13 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFFarmFacet internal farmFacet;
 
   MockLPToken internal wethUsdcLPToken;
+  uint256 internal wethUsdcPoolId;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
   MockRouter internal mockRouter;
   PancakeswapV2Strategy internal addStrat;
+  MockMasterChef internal masterChef;
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
@@ -75,22 +82,37 @@ abstract contract LYF_BaseTest is BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(lyfDiamond, type(uint256).max);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    ibWeth.approve(lyfDiamond, type(uint256).max);
+    ibUsdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
+
+    // DEPLOY MASTERCHEF
+    masterChef = new MockMasterChef();
+
+    // MASTERCHEF POOLID
+    wethUsdcPoolId = 1;
 
     // mock LP, Router and Stratgy
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
+    masterChef.addPool(address(wethUsdcLPToken), wethUsdcPoolId);
+
     addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
+    address[] memory stratWhitelistedCallers = new address[](1);
+    stratWhitelistedCallers[0] = lyfDiamond;
+    addStrat.setWhitelistedCallers(stratWhitelistedCallers, true);
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](4);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](5);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -132,15 +154,38 @@ abstract contract LYF_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[4] = ILYFAdminFacet.TokenConfigInput({
+      token: address(ibUsdc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxBorrow: 1e24,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
+    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
+    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(wethUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      poolId: wethUsdcPoolId
+    });
+    adminFacet.setLPConfigs(lpConfigs);
+
     // set oracle for LYF
+    oracleMedianizer = deployOracleMedianizer();
+    oracleMedianizer.transferOwnership(DEPLOYER);
+
+    alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer));
     chainLinkOracle = deployMockChainLinkPriceOracle();
 
-    setUpOracle(chainLinkOracle);
+    setUpOracle(oracleMedianizer, chainLinkOracle);
 
     IAdminFacet(moneyMarketDiamond).setOracle(address(chainLinkOracle));
-    IAdminFacet(lyfDiamond).setOracle(address(chainLinkOracle));
+    IAdminFacet(lyfDiamond).setOracle(address(alpacaV2Oracle));
 
     // set debt share indexes
     adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
@@ -160,8 +205,7 @@ abstract contract LYF_BaseTest is BaseTest {
     IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
-
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -199,12 +243,20 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.stopPrank();
   }
 
-  function setUpOracle(MockChainLinkPriceOracle _oracle) internal {
+  function setUpOracle(OracleMedianizer _medianizer, MockChainLinkPriceOracle _oracle) internal {
     vm.startPrank(DEPLOYER);
     _oracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
+
+    IPriceOracle[] memory inputs = new IPriceOracle[](1);
+    inputs[0] = IPriceOracle(_oracle);
+
+    _medianizer.setPrimarySources(address(weth), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(usdc), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(isolateToken), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(wethUsdcLPToken), address(usd), 1 ether, block.timestamp, inputs);
     vm.stopPrank();
   }
 }

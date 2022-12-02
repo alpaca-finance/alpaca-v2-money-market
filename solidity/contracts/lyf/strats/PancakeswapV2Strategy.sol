@@ -15,6 +15,8 @@ pragma solidity 0.8.17;
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
@@ -23,14 +25,16 @@ import { IStrat } from "../interfaces/IStrat.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// todo: reentrance
-contract PancakeswapV2Strategy is IStrat {
+contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   using SafeERC20 for address;
   using LibSafeToken for address;
+
+  mapping(address => bool) public whitelistedCallers;
 
   error PancakeswapV2Strategy_TooLittleReceived();
   error PancakeswapV2Strategy_TransferFailed();
   error PancakeswapV2Strategy_Reverse();
+  error PancakeswapV2Strategy_Unauthorized(address _caller);
 
   IPancakeRouter02 public router;
 
@@ -38,6 +42,13 @@ contract PancakeswapV2Strategy is IStrat {
   /// @param _router The PancakeSwap Router smart contract.
   constructor(IPancakeRouter02 _router) {
     router = _router;
+  }
+
+  modifier onlyWhitelisted() {
+    if (!whitelistedCallers[msg.sender]) {
+      revert PancakeswapV2Strategy_Unauthorized(msg.sender);
+    }
+    _;
   }
 
   /// @dev Compute optimal deposit amount
@@ -96,7 +107,7 @@ contract PancakeswapV2Strategy is IStrat {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external returns (uint256 _lpRecieved) {
+  ) external onlyWhitelisted nonReentrant returns (uint256 _lpRecieved) {
     IPancakePair lpToken = IPancakePair(_lpToken);
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
@@ -139,7 +150,12 @@ contract PancakeswapV2Strategy is IStrat {
     ERC20(_token1).approve(address(router), 0);
   }
 
-  function removeLiquidity(address _lpToken) external returns (uint256 _token0Return, uint256 _token1Return) {
+  function removeLiquidity(address _lpToken)
+    external
+    onlyWhitelisted
+    nonReentrant
+    returns (uint256 _token0Return, uint256 _token1Return)
+  {
     uint256 _lpToRemove = ERC20(_lpToken).balanceOf(address(this));
 
     ERC20(_lpToken).approve(address(router), type(uint256).max);
@@ -156,6 +172,16 @@ contract PancakeswapV2Strategy is IStrat {
     _token1.safeTransfer(msg.sender, _token1Return);
 
     ERC20(_lpToken).approve(address(router), 0);
+  }
+
+  function setWhitelistedCallers(address[] calldata callers, bool ok) external onlyOwner {
+    uint256 len = uint256(callers.length);
+    for (uint256 i = 0; i < len; ) {
+      whitelistedCallers[callers[i]] = ok;
+      unchecked {
+        i++;
+      }
+    }
   }
 
   receive() external payable {}
