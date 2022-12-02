@@ -21,8 +21,6 @@ import { IbToken } from "../IbToken.sol";
 
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
   using LibSafeToken for address;

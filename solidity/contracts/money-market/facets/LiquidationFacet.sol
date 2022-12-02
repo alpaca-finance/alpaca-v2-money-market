@@ -16,8 +16,6 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
