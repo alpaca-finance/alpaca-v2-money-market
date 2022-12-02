@@ -267,7 +267,6 @@ library LibMoneyMarket01 {
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
       for (uint256 _i = 0; _i < _accountLength; ) {
-        // todo: modify Node struct
         address _account = _borrowedAccounts[_i].token;
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
@@ -340,7 +339,6 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
     uint256 _accountLength = _borrowedAccounts.length;
     for (uint256 _i = 0; _i < _accountLength; ) {
-      // todo: modify Node struct
       address _account = _borrowedAccounts[_i].token;
       uint256 _oldAccountDebt = _borrowedAccounts[_i].amount;
 
@@ -422,6 +420,22 @@ library LibMoneyMarket01 {
     );
     if (_lastUpdated < block.timestamp - moneyMarketDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibMoneyMarket01_PriceStale(_token);
+    return (_price, _lastUpdated);
+  }
+
+  function getIbPriceUSD(
+    address _ibToken,
+    address _token,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256, uint256) {
+    (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, moneyMarketDs);
+    uint256 _totalSupply = IERC20(_ibToken).totalSupply();
+    uint256 _one = 10**IERC20(_ibToken).decimals();
+
+    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
+    uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
+
+    uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
     return (_price, _lastUpdated);
   }
 
