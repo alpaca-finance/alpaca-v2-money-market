@@ -3,9 +3,6 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 
-// libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
 // interfaces
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
@@ -85,7 +82,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserWithdrawInvalidibToken_ShouldRevert() external {
     address _randomToken = address(10);
     vm.startPrank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_InvalidToken.selector, _randomToken));
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
     lendFacet.withdraw(_randomToken, 10 ether);
     vm.stopPrank();
   }
@@ -147,7 +144,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserWithdrawAndLeftWithTinyShares_ShouldRevert() external {
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 1 ether);
-    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NoTinyShares.selector));
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_NoTinyShares.selector));
     lendFacet.withdraw(address(ibWeth), 0.5 ether);
   }
 
