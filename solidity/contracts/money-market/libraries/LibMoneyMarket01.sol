@@ -91,20 +91,18 @@ library LibMoneyMarket01 {
     address rewardDistributor;
     mapping(address => mapping(address => uint256)) accountCollats;
     mapping(address => mapping(address => uint256)) accountDebtShares;
-    // token => pool info
-    mapping(address => PoolInfo) lendingPoolInfos;
-    mapping(address => PoolInfo) borrowingPoolInfos;
-    // account => pool key (token) => amount
-    mapping(address => mapping(address => int256)) lenderRewardDebts;
-    mapping(address => mapping(address => int256)) borrowerRewardDebts;
-    // todo: remove
-    RewardConfig rewardConfig;
-    uint256 totalLendingPoolAllocPoint;
-    uint256 totalBorrowingPoolAllocPoint;
+    // reward token => token => pool info
+    mapping(address => mapping(address => PoolInfo)) lendingPoolInfos;
+    mapping(address => mapping(address => PoolInfo)) borrowingPoolInfos;
+    // todo: rethink type
+    // account => pool key (token) => reward token amount
+    mapping(address => mapping(address => mapping(address => int256))) lenderRewardDebts;
+    mapping(address => mapping(address => mapping(address => int256))) borrowerRewardDebts;
     // multiple reward
     LibDoublyLinkedList.List rewardPerSecList;
-    mapping(address => totalLendingPoolAllocPoint);
-    mapping(address => totalBorrowingPoolAllocPoint);
+    // reward token
+    mapping(address => uint256) totalLendingPoolAllocPoints;
+    mapping(address => uint256) totalBorrowingPoolAllocPoints;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -530,5 +528,9 @@ library LibMoneyMarket01 {
     }
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
+  }
+
+  function getRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds) internal view returns (uint256) {
+    return ds.rewardPerSecList.getAmount(_rewardToken);
   }
 }

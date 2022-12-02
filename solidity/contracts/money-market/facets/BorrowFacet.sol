@@ -66,9 +66,9 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
 
-    LibBorrowingReward.updatePool(_token, moneyMarketDs);
+    LibBorrowingReward.massUpdatePool(_token, moneyMarketDs);
 
-    LibBorrowingReward.updateRewardDebt(msg.sender, _token, _shareToAdd.toInt256(), moneyMarketDs);
+    LibBorrowingReward.massUpdateRewardDebt(msg.sender, _token, _shareToAdd.toInt256(), moneyMarketDs);
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -230,9 +230,9 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
     uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
 
-    LibBorrowingReward.updatePool(_token, moneyMarketDs);
+    LibBorrowingReward.massUpdatePool(_token, moneyMarketDs);
 
-    LibBorrowingReward.updateRewardDebt(_account, _token, -_shareToRemove.toInt256(), moneyMarketDs);
+    LibBorrowingReward.massUpdateRewardDebt(_account, _token, -_shareToRemove.toInt256(), moneyMarketDs);
 
     // update user debtShare
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRemove);

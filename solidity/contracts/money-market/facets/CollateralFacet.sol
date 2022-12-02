@@ -47,9 +47,9 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibLendingReward.updatePool(_token, moneyMarketDs);
+    LibLendingReward.massUpdatePool(_token, moneyMarketDs);
 
-    LibLendingReward.updateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
+    LibLendingReward.massUpdateRewardDebt(msg.sender, _token, _amount.toInt256(), moneyMarketDs);
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
@@ -69,9 +69,9 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
-    LibLendingReward.updatePool(_token, moneyMarketDs);
+    LibLendingReward.massUpdatePool(_token, moneyMarketDs);
 
-    LibLendingReward.updateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
+    LibLendingReward.massUpdateRewardDebt(msg.sender, _token, -_removeAmount.toInt256(), moneyMarketDs);
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 
