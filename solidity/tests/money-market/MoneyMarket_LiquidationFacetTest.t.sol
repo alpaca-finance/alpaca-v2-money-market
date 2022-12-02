@@ -736,26 +736,12 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(ibWeth);
 
-    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-
-    // collat amount should be = 40
-    // collat debt value should be = 30
-    // collat debt share should be = 30
-    CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
-      subAccountDebtShare: 0
-    });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
-
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
 
     // increase shareValue of ibWeth by 2.5%
-    // would need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
+    // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
     weth.mint(address(moneyMarketDiamond), 1 ether);
 
     // set price to weth from 1 to 0.8 ether USD
@@ -770,7 +756,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // usdc price = 1 USD
     // reward = 1%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
-    vm.prank(BOB);
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
@@ -779,10 +764,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _collatToken,
       15 ether
     );
-
-    // reward amount = 15 * 0.01 = 0.15 USD
-    // converted weth amount = 0.15 / 0.8 = 0.1875
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 1875e14); // get 0.1875 weth
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
@@ -793,8 +774,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    assertEq(_stateAfter.collat, 21524390243902439025); // 21.5243902439024 repeating
-    assertEq(_stateAfter.subAccountCollat, 21524390243902439025); // 21.5243902439024 repeating
+    assertEq(_stateAfter.collat, 21524390243902439026); // 21.5243902439024 repeating, last digit precision loss due to reward calculation
+    assertEq(_stateAfter.subAccountCollat, 21524390243902439026); // 21.5243902439024 repeating
     assertEq(_stateAfter.debtValue, 15.0050765511672 ether); // same as other cases
     assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);

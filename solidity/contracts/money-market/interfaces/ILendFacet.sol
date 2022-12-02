@@ -19,6 +19,12 @@ interface ILendFacet {
     view
     returns (uint256 _shareAmount);
 
+  function getShareValue(
+    address _token,
+    address _ibToken,
+    uint256 _ibShareAmount
+  ) external returns (uint256 _shareValue);
+
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
   error LendFacet_NoTinyShares();

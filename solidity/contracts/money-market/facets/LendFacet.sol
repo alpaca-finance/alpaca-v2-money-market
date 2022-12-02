@@ -21,6 +21,8 @@ import { IbToken } from "../IbToken.sol";
 
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
   using LibSafeToken for address;
@@ -158,6 +160,16 @@ contract LendFacet is ILendFacet {
     if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
       revert LendFacet_NoTinyShares();
     }
+  }
+
+  function getShareValue(
+    address _token,
+    address _ibToken,
+    uint256 _ibShareAmount
+  ) external view returns (uint256 _shareValue) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    _shareValue = _getShareValue(_token, _ibToken, _ibShareAmount, moneyMarketDs);
   }
 
   function _getShareAmountFromValue(
