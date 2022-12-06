@@ -30,8 +30,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 debtShareId1;
   }
 
-  error LYFFarmFacet_BorrowingPowerTooLow();
-
   event LogRemoveDebt(
     address indexed _subAccount,
     uint256 indexed _debtShareId,
@@ -415,7 +413,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // check asset tier
     uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
 
-    (uint256 _totalUsedBorrowedPower, ) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
+    uint256 _totalUsedBorrowedPower = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
 
     _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, lyfDs);
 
@@ -478,13 +476,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
+    returns (uint256 _totalBorrowedUSDValue)
   {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
+    _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
   }
 
   function debtLastAccureTime(address _token, address _lpToken) external view returns (uint256) {

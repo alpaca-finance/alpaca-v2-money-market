@@ -43,7 +43,7 @@ interface ILYFFarmFacet {
   function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+    returns (uint256 _totalBorrowedUSDValue);
 
   function getDebt(
     address _account,
@@ -86,4 +86,5 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_ExceedBorrowLimit();
   error LYFFarmFacet_BadInput();
   error LYFFarmFacet_TooLittleReceived();
+  error LYFFarmFacet_BorrowingPowerTooLow();
 }
