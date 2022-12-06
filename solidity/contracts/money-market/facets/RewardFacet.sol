@@ -73,7 +73,8 @@ contract RewardFacet is IRewardFacet {
     address _token
   ) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.lenderRewardDebts[_account][_rewardToken][_token];
+    bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
+    return moneyMarketDs.lenderRewardDebts[_account][_rewardDebtKey];
   }
 
   function borrowerRewardDebts(
@@ -82,7 +83,8 @@ contract RewardFacet is IRewardFacet {
     address _token
   ) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.borrowerRewardDebts[_account][_rewardToken][_token];
+    bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
+    return moneyMarketDs.borrowerRewardDebts[_account][_rewardDebtKey];
   }
 
   function getLendingPool(address _rewardToken, address _token)

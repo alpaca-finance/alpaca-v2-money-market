@@ -6,6 +6,8 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibLendingReward } from "../libraries/LibLendingReward.sol";
+import { LibBorrowingReward } from "../libraries/LibBorrowingReward.sol";
 
 // interfaces
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
@@ -163,12 +165,14 @@ contract AdminFacet is IAdminFacet {
   }
 
   function updateRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
-    LibDoublyLinkedList.List storage rewardPerSecList = LibMoneyMarket01.moneyMarketDiamondStorage().rewardPerSecList;
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibDoublyLinkedList.List storage rewardPerSecList = moneyMarketDs.rewardPerSecList;
     if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       rewardPerSecList.init();
     }
 
-    // todo: update all pool that has this reward
+    LibBorrowingReward.massUpdatePoolInReward(_rewardToken, moneyMarketDs);
+    LibLendingReward.massUpdatePoolInReward(_rewardToken, moneyMarketDs);
 
     rewardPerSecList.updateOrRemove(_rewardToken, _rewardPerSec);
 
@@ -191,6 +195,13 @@ contract AdminFacet is IAdminFacet {
     });
     moneyMarketDs.totalLendingPoolAllocPoints[_rewardToken] += _allocPoint;
 
+    // register pool in reward pool list
+    LibDoublyLinkedList.List storage poolList = moneyMarketDs.rewardLendingPoolList[_rewardToken];
+    if (poolList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      poolList.init();
+    }
+    poolList.addOrUpdate(_token, 1);
+
     emit LogAddLendingPool(_token, _rewardToken, _allocPoint);
   }
 
@@ -209,6 +220,13 @@ contract AdminFacet is IAdminFacet {
       poolInfo.allocPoint +
       _newAllocPoint;
     moneyMarketDs.lendingPoolInfos[_rewardToken][_token].allocPoint = _newAllocPoint.toUint128();
+
+    // update pool in reward pool list
+    LibDoublyLinkedList.List storage poolList = moneyMarketDs.rewardLendingPoolList[_rewardToken];
+    if (poolList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      poolList.init();
+    }
+    poolList.updateOrRemove(_token, _newAllocPoint > 0 ? 1 : 0);
 
     emit LogSetLendingPool(_token, _rewardToken, _newAllocPoint);
   }
@@ -229,6 +247,13 @@ contract AdminFacet is IAdminFacet {
     });
     moneyMarketDs.totalBorrowingPoolAllocPoints[_rewardToken] += _allocPoint;
 
+    // register pool in reward pool list
+    LibDoublyLinkedList.List storage poolList = moneyMarketDs.rewardBorrowingPoolList[_rewardToken];
+    if (poolList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      poolList.init();
+    }
+    poolList.addOrUpdate(_token, 1);
+
     emit LogAddBorroweringPool(_token, _rewardToken, _allocPoint);
   }
 
@@ -247,6 +272,13 @@ contract AdminFacet is IAdminFacet {
       poolInfo.allocPoint +
       _newAllocPoint;
     moneyMarketDs.borrowingPoolInfos[_rewardToken][_token].allocPoint = _newAllocPoint.toUint128();
+
+    // update pool in reward pool list
+    LibDoublyLinkedList.List storage poolList = moneyMarketDs.rewardBorrowingPoolList[_rewardToken];
+    if (poolList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      poolList.init();
+    }
+    poolList.updateOrRemove(_token, _newAllocPoint > 0 ? 1 : 0);
 
     emit LogSetBorrowingPool(_token, _rewardToken, _newAllocPoint);
   }

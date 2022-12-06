@@ -35,13 +35,14 @@ library LibBorrowingReward {
     if (ds.rewardPerSecList.getAmount(_rewardToken) > 0) {
       LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_rewardToken, _token, ds);
       uint256 _amount = ds.accountDebtShares[_account][_token];
-      int256 _rewardDebt = ds.borrowerRewardDebts[_account][_rewardToken][_token];
+      bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
+      int256 _rewardDebt = ds.borrowerRewardDebts[_account][_rewardDebtKey];
 
       int256 _accumulatedReward = ((_amount * poolInfo.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION)
         .toInt256();
       _unclaimedReward = (_accumulatedReward - _rewardDebt).toUint256();
 
-      ds.borrowerRewardDebts[_account][_rewardToken][_token] = _accumulatedReward;
+      ds.borrowerRewardDebts[_account][_rewardDebtKey] = _accumulatedReward;
 
       if (_unclaimedReward > 0) {
         IRewardDistributor(_rewardDistributor).safeTransferReward(_rewardToken, _account, _unclaimedReward);
@@ -56,7 +57,8 @@ library LibBorrowingReward {
     int256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage ds
   ) internal {
-    ds.borrowerRewardDebts[_account][_rewardToken][_token] +=
+    bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
+    ds.borrowerRewardDebts[_account][_rewardDebtKey] +=
       (_amount * ds.borrowingPoolInfos[_rewardToken][_token].accRewardPerShare.toInt256()) /
       LibMoneyMarket01.ACC_REWARD_PRECISION.toInt256();
   }
@@ -70,7 +72,9 @@ library LibBorrowingReward {
     LibMoneyMarket01.PoolInfo storage poolInfo = ds.borrowingPoolInfos[_rewardToken][_token];
     uint256 _accRewardPerShare = poolInfo.accRewardPerShare + _calculateRewardPerShare(_rewardToken, _token, ds);
     uint256 _amount = ds.accountDebtShares[_account][_token];
-    int256 _rewardDebt = ds.borrowerRewardDebts[_account][_rewardToken][_token];
+
+    bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
+    int256 _rewardDebt = ds.borrowerRewardDebts[_account][_rewardDebtKey];
     int256 _accumulatedReward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION).toInt256();
     _actualReward = (_accumulatedReward - _rewardDebt).toUint256();
   }
@@ -98,6 +102,24 @@ library LibBorrowingReward {
         uint256 _reward = (_timePast * LibMoneyMarket01.getRewardPerSec(_rewardToken, ds) * poolInfo.allocPoint) /
           ds.totalBorrowingPoolAllocPoints[_rewardToken];
         _rewardPerShare = (_reward * LibMoneyMarket01.ACC_REWARD_PRECISION) / _tokenBalance;
+      }
+    }
+  }
+
+  function massUpdatePoolInReward(address _rewardToken, LibMoneyMarket01.MoneyMarketDiamondStorage storage ds)
+    internal
+  {
+    LibDoublyLinkedList.Node[] memory poolList = LibMoneyMarket01
+      .moneyMarketDiamondStorage()
+      .rewardBorrowingPoolList[_rewardToken]
+      .getAll();
+
+    uint256 _poolLength = poolList.length;
+
+    for (uint256 _i = 0; _i < _poolLength; ) {
+      updatePool(_rewardToken, poolList[_i].token, ds);
+      unchecked {
+        _i++;
       }
     }
   }

@@ -91,13 +91,14 @@ library LibMoneyMarket01 {
     address rewardDistributor;
     mapping(address => mapping(address => uint256)) accountCollats;
     mapping(address => mapping(address => uint256)) accountDebtShares;
+    mapping(address => LibDoublyLinkedList.List) rewardLendingPoolList;
+    mapping(address => LibDoublyLinkedList.List) rewardBorrowingPoolList;
     // reward token => token => pool info
     mapping(address => mapping(address => PoolInfo)) lendingPoolInfos;
     mapping(address => mapping(address => PoolInfo)) borrowingPoolInfos;
-    // todo: rethink type
-    // account => reward token => pool key (token) => amount
-    mapping(address => mapping(address => mapping(address => int256))) lenderRewardDebts;
-    mapping(address => mapping(address => mapping(address => int256))) borrowerRewardDebts;
+    // account => reward token + pool key (token) => amount
+    mapping(address => mapping(bytes32 => int256)) lenderRewardDebts;
+    mapping(address => mapping(bytes32 => int256)) borrowerRewardDebts;
     // multiple reward
     LibDoublyLinkedList.List rewardPerSecList;
     // reward token
@@ -444,6 +445,10 @@ library LibMoneyMarket01 {
 
   function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {
     _id = keccak256(abi.encodePacked(_account, _token));
+  }
+
+  function getRewardDebtKey(address _rewardToken, address _token) internal pure returns (bytes32 _key) {
+    _key = keccak256(abi.encodePacked(_rewardToken, _token));
   }
 
   function isSubaccountHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view returns (bool) {
