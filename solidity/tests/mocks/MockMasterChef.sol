@@ -15,7 +15,7 @@ contract MockMasterChef is IMasterChefLike {
 
   constructor() {}
 
-  function addPool(address _lpAddress, uint256 _pid) external {
+  function addLendingPool(address _lpAddress, uint256 _pid) external {
     poolInfo[_pid] = PoolInfo({ lpAddress: _lpAddress, poolId: _pid });
   }
 
