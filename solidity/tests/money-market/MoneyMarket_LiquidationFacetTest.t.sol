@@ -81,8 +81,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     treasury = address(this);
   }
 
-  // TODO: calculate fee dynamically from repayAmount and BPS constant in facet
-
   // Repurchase tests
 
   function testCorrectness_ShouldRepurchasePassed_TransferTokenCorrectly() external {
@@ -783,7 +781,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // mm state before
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
     uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
     chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
@@ -807,17 +805,17 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    assertEq(_stateAfter.collat, 21.524390243902439026 ether); // 21.5243902439024 repeating, last digit precision loss due to fee calculation
-    assertEq(_stateAfter.subAccountCollat, 21.524390243902439026 ether); // 21.5243902439024 repeating
+    assertEq(_stateAfter.collat, 21.524390243902439025 ether); // 21.5243902439024 repeating
+    assertEq(_stateAfter.subAccountCollat, 21.524390243902439025 ether); // 21.5243902439024 repeating
     assertEq(_stateAfter.debtValue, 15.0050765511672 ether); // same as other cases
     assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
 
     // check mm state after
-    assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 18.475609756097560974 ether); // ibWeth repaid + liquidation fee
-    assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 18.75 ether); // weth repaid
+    assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 18.475609756097560975 ether); // ibWeth repaid + liquidation fee
+    assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 18.9375 ether); // weth repaid + liquidation fee
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.182926829268292682 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.15 ether); // fee 0.15 usdc = 0.1875 weth
   }
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -835,10 +833,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      * 3. try to liquidate 40 usdc with ibWeth collateral
      *    - entire 30.0050765511672 usdc position should be liquidated
      *
-     * 4. should be able to liquidate with 30.0050765511672 usdc repaid and x ibWeth reduced from collateral
+     * 4. should be able to liquidate with 30.0050765511672 usdc repaid and 36.957472337413258535 ibWeth reduced from collateral
      *    - remaining collateral = 41 - 36.957472337413258535 = 3.042527662586741465 ibWeth
-     *      - 30.0050765511672 usdc = 36.5915567697160975... ibWeth is liquidated
-     *      - 36.5915567697160975... * 1% = 0.365915567697160975 ibWeth is taken to treasury as liquidation fee
+     *      - 30.0050765511672 usdc = 37.506345688959 weth = 36.5915567697160975... ibWeth is liquidated
+     *      - 30.0050765511672 * 1% = 0.300050765511672 usdc is taken to treasury as liquidation fee
      *    - remaining debt value = 0 usdc
      *    - remaining debt share = 0 shares
      */
@@ -863,7 +861,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // mm state before
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
     uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 ether USD
@@ -890,17 +888,17 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    assertEq(_stateAfter.collat, 3.042527662586741465 ether); // 3.04252766258674146341... repeat 46341, last digit precision loss due to fee calculation
-    assertEq(_stateAfter.subAccountCollat, 3.042527662586741465 ether); // 3.04252766258674146341... repeat 46341
+    assertEq(_stateAfter.collat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
+    assertEq(_stateAfter.subAccountCollat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
     assertEq(_stateAfter.debtValue, 0);
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
 
     // check mm state after
-    assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 36.957472337413258535 ether); // ibWeth repaid + liquidation fee
-    assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 37.506345688959 ether); // weth repaid
+    assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 36.957472337413258536 ether); // ibWeth repaid + liquidation fee
+    assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 37.88140914584859 ether); // weth repaid + liquidation fee
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.365915567697160975 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.300050765511672 ether);
   }
 
   function testRevert_WhenLiquidateButMMDoesNotHaveEnoughUnderlyingForLiquidation() external {
