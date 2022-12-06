@@ -73,8 +73,36 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenAdminTryAddDuplicatedPool_ShouldRevert() external {
+  function testRevert_WhenAdminTryAddDuplicatedLendingPool_ShouldRevert() external {
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_PoolIsAlreadyAdded.selector));
-    adminFacet.addPool(address(ibWeth), 20);
+    adminFacet.addLendingPool(address(ibWeth), 20);
+  }
+
+  function testCorrectness_WhenAdminSetLendingPool_AllocPointShouldBeCorrected() external {
+    assertEq(rewardFacet.getLendingPool(address(ibWeth)).allocPoint, 20);
+    adminFacet.setLendingPool(address(ibWeth), 40);
+    assertEq(rewardFacet.getLendingPool(address(ibWeth)).allocPoint, 40);
+  }
+
+  function testRevert_WhenAdminTryAddDuplicatedBorrowingPool_ShouldRevert() external {
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_PoolIsAlreadyAdded.selector));
+    adminFacet.addBorrowingPool(address(weth), 20);
+  }
+
+  function testCorrectness_WhenAdminSetBorrowingPool_AllocPointShouldBeCorrected() external {
+    assertEq(rewardFacet.getBorrowingPool(address(weth)).allocPoint, 20);
+    adminFacet.setBorrowingPool(address(weth), 40);
+    assertEq(rewardFacet.getBorrowingPool(address(weth)).allocPoint, 40);
+  }
+
+  function testRevert_WhenAdminTryAddOrSetInvalidToken_ShouldRevert() external {
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidAddress.selector));
+    adminFacet.addLendingPool(address(0), 20);
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidAddress.selector));
+    adminFacet.setLendingPool(address(0), 20);
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidAddress.selector));
+    adminFacet.addBorrowingPool(address(0), 20);
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidAddress.selector));
+    adminFacet.setBorrowingPool(address(0), 20);
   }
 }

@@ -11,15 +11,15 @@ import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 // interfaces
 import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 
-library LibReward {
+library LibLendingReward {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
   using SafeCast for int256;
 
-  error LibReward_InvalidRewardToken();
-  error LibReward_InvalidRewardDistributor();
+  error LibLendingReward_InvalidRewardToken();
+  error LibLendingReward_InvalidRewardDistributor();
 
-  function claimReward(
+  function claim(
     address _account,
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
@@ -27,22 +27,30 @@ library LibReward {
     _rewardToken = moneyMarketDs.rewardConfig.rewardToken;
     address _rewardDistributor = moneyMarketDs.rewardDistributor;
 
-    if (_rewardToken == address(0)) revert LibReward_InvalidRewardToken();
-    if (_rewardDistributor == address(0)) revert LibReward_InvalidRewardDistributor();
-
     LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_token, moneyMarketDs);
     uint256 _amount = moneyMarketDs.accountCollats[_account][_token];
-    int256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
+    int256 _rewardDebt = moneyMarketDs.lenderRewardDebts[_account][_token];
 
     int256 _accumulatedReward = ((_amount * poolInfo.accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION)
       .toInt256();
     _unclaimedReward = (_accumulatedReward - _rewardDebt).toUint256();
 
-    moneyMarketDs.accountRewardDebts[_account][_token] = _accumulatedReward;
+    moneyMarketDs.lenderRewardDebts[_account][_token] = _accumulatedReward;
 
     if (_unclaimedReward > 0) {
       IRewardDistributor(_rewardDistributor).safeTransferReward(_rewardToken, _account, _unclaimedReward);
     }
+  }
+
+  function updateRewardDebt(
+    address _account,
+    address _token,
+    int256 _amount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage ds
+  ) internal {
+    ds.lenderRewardDebts[_account][_token] +=
+      (_amount * ds.lendingPoolInfos[_token].accRewardPerShare.toInt256()) /
+      LibMoneyMarket01.ACC_REWARD_PRECISION.toInt256();
   }
 
   function pendingReward(
@@ -50,10 +58,10 @@ library LibReward {
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _actualReward) {
-    LibMoneyMarket01.PoolInfo storage poolInfo = moneyMarketDs.poolInfos[_token];
-    uint256 _accRewardPerShare = poolInfo.accRewardPerShare + _calculateAccRewardPerShare(_token, moneyMarketDs);
+    LibMoneyMarket01.PoolInfo storage poolInfo = moneyMarketDs.lendingPoolInfos[_token];
+    uint256 _accRewardPerShare = poolInfo.accRewardPerShare + _calculateRewardPerShare(_token, moneyMarketDs);
     uint256 _amount = moneyMarketDs.accountCollats[_account][_token];
-    int256 _rewardDebt = moneyMarketDs.accountRewardDebts[_account][_token];
+    int256 _rewardDebt = moneyMarketDs.lenderRewardDebts[_account][_token];
     int256 _reward = ((_amount * _accRewardPerShare) / LibMoneyMarket01.ACC_REWARD_PRECISION).toInt256();
     _actualReward = (_reward - _rewardDebt).toUint256();
   }
@@ -62,24 +70,24 @@ library LibReward {
     internal
     returns (LibMoneyMarket01.PoolInfo memory poolInfo)
   {
-    moneyMarketDs.poolInfos[_token].accRewardPerShare += _calculateAccRewardPerShare(_token, moneyMarketDs);
-    moneyMarketDs.poolInfos[_token].lastRewardTime = block.timestamp.toUint128();
-    return moneyMarketDs.poolInfos[_token];
+    moneyMarketDs.lendingPoolInfos[_token].accRewardPerShare += _calculateRewardPerShare(_token, moneyMarketDs);
+    moneyMarketDs.lendingPoolInfos[_token].lastRewardTime = block.timestamp.toUint128();
+    return moneyMarketDs.lendingPoolInfos[_token];
   }
 
-  function _calculateAccRewardPerShare(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
+  function _calculateRewardPerShare(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _newAccRewardPerShare)
+    returns (uint256 _rewardPerShare)
   {
-    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.poolInfos[_token];
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.lendingPoolInfos[_token];
     if (block.timestamp > poolInfo.lastRewardTime) {
       uint256 _tokenBalance = moneyMarketDs.collats[_token];
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
         uint256 _reward = (_timePast * moneyMarketDs.rewardConfig.rewardPerSecond * poolInfo.allocPoint) /
-          moneyMarketDs.totalAllocPoint;
-        _newAccRewardPerShare = (_reward * LibMoneyMarket01.ACC_REWARD_PRECISION) / _tokenBalance;
+          moneyMarketDs.totalLendingPoolAllocPoint;
+        _rewardPerShare = (_reward * LibMoneyMarket01.ACC_REWARD_PRECISION) / _tokenBalance;
       }
     }
   }

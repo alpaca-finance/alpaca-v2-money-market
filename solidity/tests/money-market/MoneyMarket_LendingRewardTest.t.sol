@@ -8,7 +8,7 @@ import { MockERC20 } from "../mocks/MockERC20.sol";
 
 import { console } from "../utils/console.sol";
 
-contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
+contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
   using SafeCast for uint256;
   using SafeCast for int256;
 
@@ -113,7 +113,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     // reward debt should be update to 20 * 2 = 40
     int256 _bobRewardDebtToUpdate = 40 ether;
     assertEq(collateralFacet.accountCollats(BOB, _collatToken), _bobCollat);
-    assertEq(RewardFacet.accountRewardDebts(BOB, _collatToken), _bobRewardDebtToUpdate);
+    assertEq(rewardFacet.lenderRewardDebts(BOB, _collatToken), _bobRewardDebtToUpdate);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
     vm.warp(_bobAddCollatTimestamp + 100);
 
@@ -211,7 +211,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
 
     assertEq(collateralFacet.accountCollats(ALICE, _ibToken), 20 ether);
     assertEq(
-      RewardFacet.accountRewardDebts(ALICE, _ibToken),
+      rewardFacet.lenderRewardDebts(ALICE, _ibToken),
       _expectRewardDebtToUpdate + _expectedFirstReward.toInt256()
     );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedFirstReward);
@@ -257,7 +257,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
 
   function _claimReward(address _account, address _collatToken) internal {
     vm.prank(_account);
-    RewardFacet.claimReward(_collatToken);
+    rewardFacet.claimReward(_collatToken);
   }
 
   function _assertAccountReward(
@@ -266,7 +266,7 @@ contract MoneyMarket_RewardTest is MoneyMarket_BaseTest {
     uint256 _claimedReward,
     int256 _rewardDebt
   ) internal {
-    assertEq(RewardFacet.accountRewardDebts(_account, _collatToken), _rewardDebt);
+    assertEq(rewardFacet.lenderRewardDebts(_account, _collatToken), _rewardDebt);
     assertEq(rewardToken.balanceOf(_account), _claimedReward);
   }
 }

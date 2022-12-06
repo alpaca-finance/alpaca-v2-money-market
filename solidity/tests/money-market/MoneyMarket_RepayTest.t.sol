@@ -45,6 +45,8 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
+
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 0);
   }
 
   function testCorrectness_WhenUserRepayDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
@@ -70,6 +72,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 0);
   }
 
   function testCorrectness_WhenUserRepayWithTinyAmount_ShouldWork() external {
@@ -91,6 +94,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 5 ether);
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5 ether);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 5 ether);
   }
 
   function testCorrectness_WhenUserRepayWithCollat_DebtValueAndCollatShouldDecrease() external {
@@ -107,6 +111,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 0);
 
     assertEq(collateralFacet.collats(address(weth)), 90 ether);
   }
@@ -134,6 +139,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 0);
 
     assertEq(collateralFacet.collats(address(weth)), 90 ether);
   }
@@ -158,6 +164,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 5 ether);
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5 ether);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 5 ether);
 
     assertEq(collateralFacet.collats(address(weth)), 95 ether);
   }
@@ -186,6 +193,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 5 ether);
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5 ether);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(usdc)), 5 ether);
 
     assertEq(collateralFacet.collats(address(usdc)), 0 ether);
   }

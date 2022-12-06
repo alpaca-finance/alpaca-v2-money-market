@@ -8,7 +8,6 @@ interface IAdminFacet {
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
   error AdminFacet_InvalidReward();
-  error AdminFacet_InvalidAllocPoint();
 
   struct IbPair {
     address token;
@@ -62,7 +61,11 @@ interface IAdminFacet {
 
   function setRewardDistributor(address _addr) external;
 
-  function addPool(address _token, uint256 _allocPoint) external;
+  function addLendingPool(address _token, uint256 _allocPoint) external;
 
-  function setPool(address _token, uint256 _newAllocPoint) external;
+  function setLendingPool(address _token, uint256 _newAllocPoint) external;
+
+  function addBorrowingPool(address _token, uint256 _allocPoint) external;
+
+  function setBorrowingPool(address _token, uint256 _newAllocPoint) external;
 }
