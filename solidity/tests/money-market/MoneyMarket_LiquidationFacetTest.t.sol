@@ -12,6 +12,7 @@ import { ILiquidationFacet } from "../../contracts/money-market/facets/Liquidati
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 
+// mocks
 import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
 import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
@@ -50,6 +51,11 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     _liquidationStrats[0] = address(mockLiquidationStrategy);
     _liquidationStrats[1] = address(mockBadLiquidationStrategy);
     adminFacet.setLiquidationStratsOk(_liquidationStrats, true);
+
+    address[] memory _liquidationCallers = new address[](2);
+    _liquidationCallers[0] = BOB;
+    _liquidationCallers[1] = address(this);
+    adminFacet.setLiquidationCallersOk(_liquidationCallers, true);
 
     vm.startPrank(DEPLOYER);
     chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
@@ -473,44 +479,43 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
+  // TODO: test fee to treasury
+
   // Liquidation tests
 
   function testCorrectness_WhenPartialLiquidate_ShouldWork() external {
-    // criteria
+    /**
+     * scenario:
+     *
+     * 1. 1 usdc/weth, 10 usdc/btc, ALICE post 40 weth as collateral, borrow 30 usdc
+     *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
+     *
+     * 2. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, position become liquidatable
+     *    - usdc debt has increased to 30.0050765511672 usdc
+     *    - ALICE borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd
+     *
+     * 3. try to liquidate 15 usdc with weth collateral
+     *
+     * 4. should be able to liquidate with 15 usdc repaid and 18.9375 weth reduced from collateral
+     *    - remaining collateral = 40 - 18.9375 = 21.0625 weth
+     *      - 15 usdc = 18.75 weth is liquidated
+     *      - 18.75 * 1% = 0.1875 weth is taken to treasury as liquidation fee
+     *    - remaining debt value = 30.0050765511672 - 15 = 15.0050765511672 usdc
+     *    - remaining debt share = 30 - 14.997462153866591690 = 15.00253784613340831 shares
+     *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 15 * 30 / 30.0050765511672 = 14.997462153866591690
+     */
+
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-
-    // collat amount should be = 40
-    // collat debt value should be = 30
-    // collat debt share should be = 30
-    CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
-      subAccountDebtShare: 0
-    });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
-
-    // add time 1 day
-    // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
 
-    // set price to weth from 1 to 0.8 ether USD
-    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    // LiquidationFacet need these to function
     chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    // MockLiquidationStrategy need these to function
+    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
 
-    // bob try to liquidate 15 usdc (1/2 of position)
-    // eth price = 0.8 USD
-    // usdc price = 1 USD
-    // reward = 1%
-    // timestamp increased by 1 day, debt value should increased to 30.0050765511672
-    vm.prank(BOB);
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
@@ -519,10 +524,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _collatToken,
       15 ether
     );
-
-    // reward amount = 15 * 0.01 = 0.15 USD
-    // converted weth amount = 0.15 / 0.8 = 0.1875
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 1875e14); // get 0.1875 weth
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
@@ -533,16 +534,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    // check state
-    // note: before repurchase state should be like these
-    // collat amount should be = 40
-    // collat debt value should be = 30.0050765511672 (0.0050765511672 is fixed interest increased)
-    // collat debt share should be = 30
-    // then after repurchase
-    // collat amount should be = 40 - (_collatAmountOut) = 40 - 18.9375 = 21.0625
-    // collat debt value should be = 30.0050765511672 - (_repayAmount) = 30.0050765511672 - 15 = 15.0050765511672
-    // _repayShare = _repayAmount * totalDebtShare / totalDebtValue = 15 * 30 / 30.0050765511672 = 14.997462153866591690
-    // collat debt share should be = 30 - (_repayShare) = 30 - 14.997462153866591690 = 15.00253784613340831
     assertEq(_stateAfter.collat, 21.0625 ether);
     assertEq(_stateAfter.subAccountCollat, 21.0625 ether);
     assertEq(_stateAfter.debtValue, 15.0050765511672 ether);
@@ -550,7 +541,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
   }
 
-  function testCorrectness_WhenLiquidateMoreThanDebtTokenAmount_ShouldLiquidateAllDebtOnThatToken() external {
+  function testCorrectness_WhenLiquidateMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
     /**
      * scenario:
      *  ALICE deposit 40 weth as collat and borrow 30 usdc (borrowing power = 40 * 1 * 9000 / 10000 = 36 usd)
@@ -578,29 +569,14 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _collatToken = address(weth);
     uint256 _repayAmount = 40 ether;
 
-    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-
-    CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken), // 40 weth
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken), // 40 weth
-      debtShare: borrowFacet.debtShares(_debtToken), // 30 shares
-      debtValue: borrowFacet.debtValues(_debtToken), // 30 usdc
-      subAccountDebtShare: 0
-    });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
-
-    // add time 1 day
-    // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
 
-    // set price to weth from 1 to 0.8 ether USD
-    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    // LiquidationFacet need these to function
     chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    // MockLiquidationStrategy need these to function
+    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
 
-    vm.prank(BOB);
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
@@ -609,9 +585,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _collatToken,
       _repayAmount
     );
-
-    // bob get 0.37506345688959 weth as liquidation reward
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 37506345688959e4);
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
@@ -628,6 +601,111 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtValue, 0);
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
+  }
+
+  function testCorrectness_WhenLiquidateAllCollateral_ShouldWorkButTreasuryReceiveNoFee() external {
+    /**
+     * scenario:
+     *
+     * 1. 1 usdc/weth, 10 usdc/btc, ALICE post 40 weth and 100 btc as collateral, borrow 80 usdc
+     *    - borrowing power = 40 * 1 * 9000 / 10000 + 100 * 10 * 9000 / 10000 = 936 usd
+     *
+     * 2. 1 day passed, debt accrued, btc price drops to 0.1 usd/btc, position become liquidatable
+     *    - usdc debt has increased to 80.036099919413504 usdc
+     *      - 0.0004512489926688 is interest rate per day of (80% condition slope)
+     *      - total debt value of usdc should increase by 0.0004512489926688 * 80 = 0.036099919413504
+     *    - borrowing power = 40 * 1 * 9000 / 10000 + 100 * 0.1 * 9000 / 10000 = 45 usd
+     *
+     * 3. try to liquidate usdc debt with 40 weth
+     *
+     * 4. should be able to liquidate with 40 usdc repaid and 40 weth sold but treasury receive no fee
+     *    because all weth collateral were sold
+     *    - remaining collateral = 0 weth
+     *      - 40 usdc = 40 weth is liquidated
+     *      - no weth taken to treasury as liquidation fee as all weth had been liquidated
+     *    - remaining debt value = 80.036099919413504 - 40 = 40.036099919413504 usdc
+     *    - remaining debt share = 80 - 39.981958181645606 ~= 40.018041818354393667 shares
+     *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 40 * 80 / 80.036099919413504 = 39.981958181645606
+     */
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, 0, address(btc), 100 ether);
+    borrowFacet.borrow(0, address(usdc), 50 ether);
+    vm.stopPrank();
+
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+
+    vm.warp(1 days + 1);
+
+    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usdc), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      40 ether
+    );
+
+    CacheState memory _stateAfter = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    assertEq(_stateAfter.collat, 0);
+    assertEq(_stateAfter.subAccountCollat, 0);
+    assertEq(_stateAfter.debtValue, 40.036099919413504 ether);
+    assertEq(_stateAfter.debtShare, 40.018041818354393667 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 40.018041818354393667 ether);
+  }
+
+  function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
+    external
+  {
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+
+    vm.warp(1 days + 1);
+
+    // LiquidationFacet need these to function
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    // MockLiquidationStrategy need these to function
+    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
+
+    liquidationFacet.liquidationCall(
+      address(mockBadLiquidationStrategy), // this strategy return repayToken repayAmount - 1 and doesn't return collateral
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      30 ether
+    );
+
+    CacheState memory _stateAfter = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    assertEq(_stateAfter.collat, 0);
+    assertEq(_stateAfter.subAccountCollat, 0);
+    // bad debt (0 collat with remaining debt)
+    assertEq(_stateAfter.debtValue, 0.005076551167200001 ether); // 30.0050765511672 ether - (30 ether - 1 wei)
+    assertEq(_stateAfter.debtShare, 0.005075692266816620 ether); // wolfram: 30-(30-0.000000000000000001)*Divide[30,30.0050765511672]
+    assertEq(_stateAfter.subAccountDebtShare, 0.005075692266816620 ether);
   }
 
   function testRevert_WhenLiquidateWhileSubAccountIsHealthy() external {
@@ -647,71 +725,206 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether);
   }
 
-  function testRevert_WhenInsufficientCollateralAmount() external {
+  function testRevert_WhenLiquidationCallerIsNotOk() external {
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
+    vm.prank(EVE);
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether);
+  }
+
+  // ib liquidation tests
+
+  function testCorrectness_WhenPartialLiquidateIbCollateral_ShouldRedeemUnderlyingToPayDebtCorrectly() external {
+    // add ib as collat
     vm.startPrank(ALICE);
-    // alice has 36 ether USD power from eth
-    // alice add more collateral in other assets
-    // then borrowing power will be increased by 100 * 10 * 9000 / 10000 = 900 ether USD
-    // total borrowing power is 936 ether USD
-    collateralFacet.addCollateral(ALICE, 0, address(btc), 100 ether);
-    // alice borrow more usdc token more 50% of vault = 50 usdc
-    // alice used borrowed value is ~80
-    borrowFacet.borrow(0, address(usdc), 50 ether);
+    lendFacet.deposit(address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
     vm.stopPrank();
 
     // criteria
     address _debtToken = address(usdc);
-    address _collatToken = address(weth);
+    address _collatToken = address(ibWeth);
 
     // add time 1 day
-    // 0.0004512489926688 is interest rate per day of (80% condition slope)
-    // then total debt value of usdc should increase by 0.0004512489926688 * 80 = 0.036099919413504
+    // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
 
-    // set price to btc from 10 to 0.1 ether USD
-    // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD
-    // total borrowing power is 36 + 9 = 45 ether USD
-    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    // increase shareValue of ibWeth by 2.5%
+    // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
+    weth.mint(address(moneyMarketDiamond), 1 ether);
+
+    // mm state before
+    uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
+    uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
+
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
 
-    // bob try liquidate with 40 usdc
-    // eth price = 0.2 USD
-    // usdc price = 1 USD
-    // reward = 0.01%
-    // timestamp increased by 1 day, usdc debt value should increased to 80.036099919413504
-    vm.startPrank(BOB);
-
-    // repay value = 40 * 1 = 40 USD
-    // reward amount = 40 * 1.01 = 40.40 USD
-    // converted weth amount = 40.40 / 1 = 40.40
-    // should revert because alice has eth collat just 40
-    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_InsufficientAmount.selector));
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
       _subAccountId,
       _debtToken,
       _collatToken,
-      40 ether
+      15 ether
     );
-    vm.stopPrank();
+
+    CacheState memory _stateAfter = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    assertEq(_stateAfter.collat, 21.524390243902439026 ether); // 21.5243902439024 repeating, last digit precision loss due to fee calculation
+    assertEq(_stateAfter.subAccountCollat, 21.524390243902439026 ether); // 21.5243902439024 repeating
+    assertEq(_stateAfter.debtValue, 15.0050765511672 ether); // same as other cases
+    assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
+
+    // check mm state after
+    assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 18.475609756097560974 ether); // ibWeth repaid + liquidation fee
+    assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 18.75 ether); // weth repaid
   }
 
-  function testRevert_WhenLiquidationStrategyReturnRepayTokenLessThanExpected() external {
+  function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
+    /**
+     * scenario
+     * 1. ALICE post 40 ibWeth (value=40weth) as collateral and borrow 30 usdc.
+     * 2. 1 day passed, usdc debt increase to 30.0050765511672 usdc.
+     * 3. weth price drop to 0.8 usdc/weth. position is now liquidatable.
+     * 4. BOB call liquidate for 40 usdc in exchange for ibWeth collateral.
+     *    - 40 usdc exceeds current usdc debt value so we liquidate entire position
+     *    - for 30.0050765511672 usdc, 3.042527662586741463414634... ibWeth is seized from ALICE collateral
+     * 6. liquidationFacet withdraw ibWeth for weth and send them to liquidationStrategy
+     * 7. liquidationStrategy sell weth for 30 usdc, send them back to liquidationFacet and send remaining weth to BOB as reward
+     *
+     * calculation references
+     * (1) (usdc debt value + 1% liquidation reward) / weth-usdc price / ibWeth-weth price = 30.0050765511672 / 0.8 / 1.025 * 1.01
+     */
+
+    // add ib as collat
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    vm.stopPrank();
+
+    address _debtToken = address(usdc);
+    address _collatToken = address(ibWeth);
+    uint256 _repayAmount = 40 ether;
+
+    vm.warp(1 days + 1);
+
+    // increase shareValue of ibWeth by 2.5%
+    // would need 36.5915567697161341463414634... ibWeth to redeem 37.506345688959 weth to repay debt
+    weth.mint(address(moneyMarketDiamond), 1 ether);
+
+    // mm state before
+    uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
+    uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
+
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 ether USD
     chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
     chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
 
-    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountMismatch.selector));
     liquidationFacet.liquidationCall(
-      address(mockBadLiquidationStrategy), // this strategy return repayAmount - 1 so it should revert
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      _repayAmount
+    );
+
+    CacheState memory _stateAfter = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+
+    assertEq(_stateAfter.collat, 3.042527662586741465 ether); // 3.04252766258674146341... repeat 46341, last digit precision loss due to fee calculation
+    assertEq(_stateAfter.subAccountCollat, 3.042527662586741465 ether); // 3.04252766258674146341... repeat 46341
+    assertEq(_stateAfter.debtValue, 0);
+    assertEq(_stateAfter.debtShare, 0);
+    assertEq(_stateAfter.subAccountDebtShare, 0);
+
+    // check mm state after
+    assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 36.957472337413258535 ether); // ibWeth repaid + liquidation fee
+    assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 37.506345688959 ether); // weth repaid
+  }
+
+  function testRevert_WhenLiquidateButMMDoesNotHaveEnoughUnderlyingForLiquidation() external {
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    vm.stopPrank();
+
+    vm.warp(1 days + 1);
+
+    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, 0, address(usdc), 100 ether);
+    borrowFacet.borrow(0, address(weth), 30 ether);
+    vm.stopPrank();
+
+    weth.mint(address(moneyMarketDiamond), 1 ether);
+
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
+
+    // should fail because 11 weth left in mm not enough to liquidate 15 usdc debt
+    // but it will fail during withdraw after executeLiquidation
+    // because we will try to send all underlying of subAccount to liquidate anyway
+    vm.expectRevert("ERC20: transfer amount exceeds balance");
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
       ALICE,
       _subAccountId,
       address(usdc),
-      address(weth),
+      address(ibWeth),
       15 ether
+    );
+  }
+
+  function testRevert_WhenLiquidateIbWhileSubAccountIsHealthy() external {
+    // add ib as collat
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    vm.stopPrank();
+
+    // increase shareValue of ibWeth by 2.5%
+    // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
+    weth.mint(address(moneyMarketDiamond), 4 ether);
+
+    // set price to weth from 1 to 0.8 ether USD
+    // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
+    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
+    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      address(usdc),
+      address(ibWeth),
+      1 ether
     );
   }
 

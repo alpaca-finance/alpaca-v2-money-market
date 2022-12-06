@@ -71,6 +71,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
+    ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
