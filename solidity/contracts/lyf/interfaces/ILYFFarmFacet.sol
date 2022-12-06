@@ -85,4 +85,5 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_InvalidAssetTier();
   error LYFFarmFacet_ExceedBorrowLimit();
   error LYFFarmFacet_BadInput();
+  error LYFFarmFacet_TooLittleReceived();
 }

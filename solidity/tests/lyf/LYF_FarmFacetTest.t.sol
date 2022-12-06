@@ -165,6 +165,53 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcDebtValue, 18 ether);
   }
 
+  function testRecert_WhenUserReducePosition_IfSlippedShouldRevert() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
+    vm.stopPrank();
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+    // asset collat of subaccount
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+    uint256 _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
+    uint256 _subAccountUsdcCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountLpTokenCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(wethUsdcLPToken));
+
+    assertEq(_subAccountWethCollat, 0 ether);
+    assertEq(_subAccountUsdcCollat, 0 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 40 ether);
+    assertEq(_subAccountLpTokenCollat, 40 ether);
+
+    // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
+    mockRouter.setRemoveLiquidityAmountsOut(2.5 ether, 2.5 ether);
+
+    vm.startPrank(BOB);
+    wethUsdcLPToken.approve(address(mockRouter), 5 ether);
+    // remove 5 lp,
+    // repay 2 eth, 2 usdc
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_TooLittleReceived.selector));
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 3 ether, 3 ether);
+    vm.stopPrank();
+  }
+
   function testRevert_WhenUserAddInvalidLYFCollateral_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));

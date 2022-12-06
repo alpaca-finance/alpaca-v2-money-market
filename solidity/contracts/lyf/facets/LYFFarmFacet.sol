@@ -31,7 +31,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   }
 
   error LYFFarmFacet_BorrowingPowerTooLow();
-  error LYFFarmFacet_TooLittleReceived();
 
   event LogRemoveDebt(
     address indexed _subAccount,
