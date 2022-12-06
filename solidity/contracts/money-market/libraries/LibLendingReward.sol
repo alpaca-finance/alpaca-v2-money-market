@@ -27,9 +27,6 @@ library LibLendingReward {
   ) internal returns (uint256 _unclaimedReward) {
     address _rewardDistributor = ds.rewardDistributor;
 
-    if (_rewardToken == address(0)) revert LibLendingReward_InvalidRewardToken();
-    if (_rewardDistributor == address(0)) revert LibLendingReward_InvalidRewardDistributor();
-
     if (ds.lendingRewardPerSecList.getAmount(_rewardToken) > 0) {
       LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_rewardToken, _token, ds);
       uint256 _amount = ds.accountCollats[_account][_token];
