@@ -31,6 +31,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   }
 
   error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_TooLittleReceived();
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -189,10 +190,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _subAccountId,
     address _lpToken,
     uint256 _lpShareAmount,
-    uint256 _amount0Repay,
-    uint256 _amount1Repay
+    uint256 _amount0Out,
+    uint256 _amount1Out
   ) external nonReentrant {
-    // should revinvest here before anything
+    // todo: should revinvest here before anything
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     ReducePositionLocalVars memory _vars;
 
@@ -213,9 +214,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accureInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
     LibLYF01.accureInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
 
-    // todo: handle slippage
     // 1. Remove LP collat
-
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
 
     // 2. Remove from masterchef staking
@@ -225,19 +224,24 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
+    // slipage check
+
+    if (_token0Return < _amount0Out || _token1Return < _amount1Out) {
+      revert LYFFarmFacet_TooLittleReceived();
+    }
+
     // 3. Repay debt
-    // 3.1 if amount return > amount to repay; repay only repay amount
-    // 3.2 if amount return > amount to repay; repay everything returned
-    // todo: repay debt
-    uint256 _actualRepayAmount0 = _repayDebt(msg.sender, _subAccountId, _vars.token0, _vars.debtShareId0, 0, lyfDs);
-    uint256 _actualRepayAmount1 = _repayDebt(msg.sender, _subAccountId, _vars.token1, _vars.debtShareId1, 0, lyfDs);
+
+    _repayDebt(msg.sender, _subAccountId, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
+    _repayDebt(msg.sender, _subAccountId, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
     // 4. Transfer remaining back to user
-    // if 3.1, transfer amount return - repay amount
-    // if 3.2 skip transfer
-    // todo: transfer out
-    LibLYF01.addCollat(_vars.subAccount, _vars.token0, _token0Return, lyfDs);
-    LibLYF01.addCollat(_vars.subAccount, _vars.token1, _token1Return, lyfDs);
+    if (_amount0Out > 0) {
+      ERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
+    }
+    if (_amount1Out > 0) {
+      ERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
+    }
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
@@ -383,20 +387,22 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _shareToRemove,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _repayAmount) {
-    uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
-    uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
+    if (lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId) > 0) {
+      uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
+      uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
 
-    // update user debtShare
-    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _oldSubAccountDebtShare - _shareToRemove);
+      // update user debtShare
+      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _oldSubAccountDebtShare - _shareToRemove);
 
-    // update over collat debtShare
-    _repayAmount = LibShareUtil.shareToValue(_shareToRemove, _oldDebtValue, _oldDebtShare);
+      // update over collat debtShare
+      _repayAmount = LibShareUtil.shareToValue(_shareToRemove, _oldDebtValue, _oldDebtShare);
 
-    lyfDs.debtShares[_debtShareId] -= _shareToRemove;
-    lyfDs.debtValues[_debtShareId] -= _repayAmount;
+      lyfDs.debtShares[_debtShareId] -= _shareToRemove;
+      lyfDs.debtValues[_debtShareId] -= _repayAmount;
 
-    // emit event
-    emit LogRemoveDebt(_subAccount, _debtShareId, _shareToRemove, _repayAmount);
+      // emit event
+      emit LogRemoveDebt(_subAccount, _debtShareId, _shareToRemove, _repayAmount);
+    }
   }
 
   function _validate(

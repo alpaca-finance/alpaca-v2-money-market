@@ -68,8 +68,8 @@ interface ILYFFarmFacet {
     uint256 _subAccountId,
     address _lpToken,
     uint256 _lpShareAmount,
-    uint256 _amount0Repay,
-    uint256 _amount1Repay
+    uint256 _amount0Out,
+    uint256 _amount1Out
   ) external;
 
   function getMMDebt(address _token) external view returns (uint256);
