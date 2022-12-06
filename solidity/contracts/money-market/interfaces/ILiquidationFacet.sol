@@ -27,7 +27,7 @@ interface ILiquidationFacet {
     uint256 _amountDebtRepaid,
     uint256 _amountIbCollatLiquidated,
     uint256 _amountUnderlyingLiquidated,
-    uint256 _ibCollatFeeToTreasury
+    uint256 _underlyingFeeToTreasury
   );
 
   error LiquidationFacet_Unauthorized();

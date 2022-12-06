@@ -81,6 +81,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     treasury = address(this);
   }
 
+  // TODO: calculate fee dynamically from repayAmount and BPS constant in facet
+
   // Repurchase tests
 
   function testCorrectness_ShouldRepurchasePassed_TransferTokenCorrectly() external {
@@ -500,7 +502,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     /**
      * scenario:
      *
-     * 1. 1 usdc/weth, 10 usdc/btc, ALICE post 40 weth as collateral, borrow 30 usdc
+     * 1. 1 usdc/weth, ALICE post 40 weth as collateral, borrow 30 usdc
      *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
      *
      * 2. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, position become liquidatable
@@ -529,7 +531,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // MockLiquidationStrategy need these to function
     chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
 
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -555,27 +557,29 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.1875 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.15 ether);
   }
 
   function testCorrectness_WhenLiquidateMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
     /**
      * scenario:
-     *  1. ALICE deposit 40 weth as collat and borrow 30 usdc (borrowing power = 40 * 1 * 9000 / 10000 = 36 usd)
      *
-     *  2. debt accrue for 1 day
-     *  weth price move 1 -> 0.8 weth / usd
-     *  ALICE's usdc debt position is now underwater (borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd)
+     * 1. 1 usdc/weth, ALICE post 40 weth as collateral, borrow 30 usdc
+     *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
      *
-     *  3. liquidate ALICE's usdc debt position for 40 usdc in exchange for weth collateral
-     *  if all goes well, the entire debt position (1) should be liquidated
-     *  and weth collateral 37.88140914584859 weth (2) should be seized and sold off by liquidationStrategy
-     *  and treasury should receive liquidation bonus of 0.37506345688959 weth (3)
+     * 2. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, position become liquidatable
+     *    - usdc debt has increased to 30.0050765511672 usdc
+     *    - ALICE borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd
      *
-     * calculation references:
-     *  (1) usdc debt postion value = principal + 1 day interest = 30 + 0.0050765511672 = 30.0050765511672 usdc
-     *  (2) weth collateral to be seized by protocol = usdcDebtValue / wethUsdPrice + liquidation bonus = 30.0050765511672 / 0.8 + 0.37506345688959
-     *  (3) liquidation bonus paid in weth = usdcDebtValue * rewardBps / wethUsdPrice = 30.0050765511672 * 100 / 10000 / 0.8
+     * 3. try to liquidate 40 usdc with weth collateral
+     *
+     * 4. should be able to liquidate with 30.0050765511672 usdc repaid, 37.88140914584859 weth reduced from collateral and 0.300050765511672 usdc to treasury
+     *    - remaining collateral = 40 - 37.88140914584859 = 2.11859085415141 weth
+     *      - @0.8 usdc/weth 30.0050765511672 usdc = 37.506345688959 weth is liquidated
+     *      - 30.0050765511672 * 1% = 0.300050765511672 usdc is taken to treasury as liquidation fee
+     *      - total weth liquidated = 37.506345688959 + 0.300050765511672 = 37.88140914584859
+     *    - remaining debt value = 0
+     *    - remaining debt share = 0
      */
 
     address _debtToken = address(usdc);
@@ -590,7 +594,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // MockLiquidationStrategy need these to function
     chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
 
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -617,7 +621,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.37506345688959 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.300050765511672 ether);
   }
 
   function testCorrectness_WhenLiquidateAllCollateral_ShouldWorkButTreasuryReceiveNoFee() external {
@@ -635,14 +639,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *
      * 3. try to liquidate usdc debt with 40 weth
      *
-     * 4. should be able to liquidate with 40 usdc repaid and 40 weth sold but treasury receive no fee
-     *    because all weth collateral were sold
+     * 4. should be able to liquidate with 39.6 usdc repaid and 40 weth liquidated
      *    - remaining collateral = 0 weth
-     *      - 40 usdc = 40 weth is liquidated
-     *      - no weth taken to treasury as liquidation fee as all weth had been liquidated
-     *    - remaining debt value = 80.036099919413504 - 40 = 40.036099919413504 usdc
-     *    - remaining debt share = 80 - 39.981958181645606 ~= 40.018041818354393667 shares
-     *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 40 * 80 / 80.036099919413504 = 39.981958181645606
+     *      - @1 usdc/weth 39.6 usdc = 39.6 weth is liquidated
+     *      - 40 * 1% = 0.4 weth fee to treasury
+     *    - remaining debt value = 80.036099919413504 - 39.6 = 40.436099919413504 usdc
+     *    - remaining debt share = 80 - 39.981958181645606 ~= 40.41786140017084973 shares
+     *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 39.6 * 80 / 80.036099919413504 = 39.582138599829150270272757155067956377008065689156955144328424412...
      */
 
     vm.startPrank(ALICE);
@@ -680,9 +683,11 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_stateAfter.collat, 0);
     assertEq(_stateAfter.subAccountCollat, 0);
-    assertEq(_stateAfter.debtValue, 40.036099919413504 ether);
-    assertEq(_stateAfter.debtShare, 40.018041818354393667 ether);
-    assertEq(_stateAfter.subAccountDebtShare, 40.018041818354393667 ether);
+    assertEq(_stateAfter.debtValue, 40.436099919413504 ether);
+    assertEq(_stateAfter.debtShare, 40.41786140017084973 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 40.41786140017084973 ether);
+
+    assertEq(MockERC20(_debtToken).balanceOf(treasury), 0.4 ether);
   }
 
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
@@ -699,7 +704,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // MockLiquidationStrategy need these to function
     chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
 
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     liquidationFacet.liquidationCall(
       address(mockBadLiquidationStrategy), // this strategy return repayToken repayAmount - 1 and doesn't return collateral
@@ -719,14 +724,15 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
+    // strategy doesn't return collat
     assertEq(_stateAfter.collat, 0);
     assertEq(_stateAfter.subAccountCollat, 0);
     // bad debt (0 collat with remaining debt)
-    assertEq(_stateAfter.debtValue, 0.005076551167200001 ether); // 30.0050765511672 ether - (30 ether - 1 wei)
+    assertEq(_stateAfter.debtValue, 0.005076551167200001 ether); // 30.0050765511672 ether - (30 ether - 1 wei) because collat is enough to cover both debt and fee
     assertEq(_stateAfter.debtShare, 0.005075692266816620 ether); // wolfram: 30-(30-0.000000000000000001)*Divide[30,30.0050765511672]
     assertEq(_stateAfter.subAccountDebtShare, 0.005075692266816620 ether);
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0); // no fee to treasury because no collat left after liquidate
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.3 ether);
   }
 
   function testRevert_WhenLiquidateWhileSubAccountIsHealthy() external {

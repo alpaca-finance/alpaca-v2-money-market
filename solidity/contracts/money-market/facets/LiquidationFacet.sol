@@ -16,6 +16,8 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
@@ -159,31 +161,44 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // 3. call executeLiquidation on strategy
+    uint256 _actualRepayAmount = _getActualRepayAmount(
+      params.subAccount,
+      params.repayToken,
+      params.repayAmount,
+      moneyMarketDs
+    );
+    uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
+
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
-      _getActualRepayAmount(params.subAccount, params.repayToken, params.repayAmount, moneyMarketDs),
+      _actualRepayAmount + _feeToTreasury,
       address(this)
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _amountRepaid = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
-    uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_collatAmountBefore, _collatSold);
-    ERC20(params.collatToken).safeTransfer(moneyMarketDs.treasury, _actualCollatFeeToTreasury);
+    ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
-    _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
-    _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
+    console.log(_actualRepayAmount);
+    console.log(_repayAmountFromLiquidation);
+    console.log(_feeToTreasury);
+    console.log(_collatSold);
+
+    // give priority to fee
+    _reduceDebt(params.subAccount, params.repayToken, _repayAmountFromLiquidation - _feeToTreasury, moneyMarketDs);
+    _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
 
     emit LogLiquidate(
       msg.sender,
       params.liquidationStrat,
       params.repayToken,
       params.collatToken,
-      _amountRepaid,
+      _repayAmountFromLiquidation - _feeToTreasury,
       _collatSold,
-      _actualCollatFeeToTreasury
+      _feeToTreasury
     );
   }
 
@@ -218,17 +233,14 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
 
-    uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_subAccountCollatAmountBefore, _collatSold);
-    ERC20(params.collatToken).safeTransfer(moneyMarketDs.treasury, _actualCollatFeeToTreasury);
+    // uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_subAccountCollatAmountBefore, _collatSold);
+    // ERC20(params.collatToken).safeTransfer(moneyMarketDs.treasury, _actualCollatFeeToTreasury);
+    uint256 _feeToTreasury = (_amountRepaid * LIQUIDATION_FEE_BPS) / 10000;
+    ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
-    LibMoneyMarket01.withdraw(
-      params.collatToken,
-      _collatSold + _actualCollatFeeToTreasury,
-      address(this),
-      moneyMarketDs
-    );
-    _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
-    _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
+    LibMoneyMarket01.withdraw(params.collatToken, _collatSold, address(this), moneyMarketDs);
+    _reduceDebt(params.subAccount, params.repayToken, _amountRepaid - _feeToTreasury, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
+    _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
 
     emit LogLiquidateIb(
       msg.sender,
@@ -238,22 +250,22 @@ contract LiquidationFacet is ILiquidationFacet {
       _amountRepaid,
       _collatSold,
       _underlyingSold,
-      _actualCollatFeeToTreasury
+      _feeToTreasury
     );
   }
 
-  function _getActualCollatFeeToTreasury(uint256 _collatBefore, uint256 _collatSold)
-    internal
-    pure
-    returns (uint256 _actualCollatFeeToTreasury)
-  {
-    uint256 _collatAmountAfter = _collatBefore - _collatSold;
-    uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
-    // for case that _collatAmountAfter is not enough for fee
-    // ex. _totalCollatAmount = 10, _collatSold = 9.99, _fee (1%) = 0.0999, _collatAmountAfter = 0.01
-    // actual fee should be 0.01
-    _actualCollatFeeToTreasury = _collatFeeToTreasury > _collatAmountAfter ? _collatAmountAfter : _collatFeeToTreasury;
-  }
+  // function _getActualCollatFeeToTreasury(uint256 _collatBefore, uint256 _collatSold)
+  //   internal
+  //   pure
+  //   returns (uint256 _actualCollatFeeToTreasury)
+  // {
+  //   uint256 _collatAmountAfter = _collatBefore - _collatSold;
+  //   uint256 _collatFeeToTreasury = (_collatSold * LIQUIDATION_FEE_BPS) / 10000;
+  //   // for case that _collatAmountAfter is not enough for fee
+  //   // ex. _totalCollatAmount = 10, _collatSold = 9.99, _fee (1%) = 0.0999, _collatAmountAfter = 0.01
+  //   // actual fee should be 0.01
+  //   _actualCollatFeeToTreasury = _collatFeeToTreasury > _collatAmountAfter ? _collatAmountAfter : _collatFeeToTreasury;
+  // }
 
   function _valueToShare(
     address _ibToken,
@@ -275,7 +287,7 @@ contract LiquidationFacet is ILiquidationFacet {
     _underlyingAmount = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
   }
 
-  /// @dev max(repayAmount, debtValue)
+  /// @dev min(repayAmount, debtValue)
   function _getActualRepayAmount(
     address _subAccount,
     address _repayToken,
