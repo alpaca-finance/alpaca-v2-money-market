@@ -461,7 +461,7 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _shareValue) {
     address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    accureInterest(_token, moneyMarketDs);
 
     if (_token == address(0)) {
       revert LibMoneyMarket01_InvalidToken(_ibToken);
@@ -469,7 +469,7 @@ library LibMoneyMarket01 {
 
     uint256 _totalSupply = ERC20(_ibToken).totalSupply();
     uint256 _tokenDecimals = ERC20(_ibToken).decimals();
-    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
+    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
 
     _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
 
