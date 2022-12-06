@@ -165,7 +165,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcDebtValue, 18 ether);
   }
 
-  function testRecert_WhenUserReducePosition_IfSlippedShouldRevert() external {
+  function testRevert_WhenUserReducePosition_IfSlippedShouldRevert() external {
     // remove interest for convienice of test
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
