@@ -27,9 +27,6 @@ library LibBorrowingReward {
     _rewardToken = moneyMarketDs.rewardConfig.rewardToken;
     address _rewardDistributor = moneyMarketDs.rewardDistributor;
 
-    if (_rewardToken == address(0)) revert LibBorrowingReward_InvalidRewardToken();
-    if (_rewardDistributor == address(0)) revert LibBorrowingReward_InvalidRewardDistributor();
-
     LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_token, moneyMarketDs);
     uint256 _amount = moneyMarketDs.accountDebtShares[_account][_token];
     int256 _rewardDebt = moneyMarketDs.borrowerRewardDebts[_account][_token];
