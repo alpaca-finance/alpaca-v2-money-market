@@ -58,11 +58,17 @@ interface IAdminFacet {
 
   function setRewardDistributor(address _addr) external;
 
-  function getRewardPerSec(address _rewardToken) external view returns (uint256);
+  function getLendingRewardPerSec(address _rewardToken) external view returns (uint256);
 
-  function addRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+  function addLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
 
-  function updateRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+  function updateLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+
+  function getBorrowingRewardPerSec(address _rewardToken) external view returns (uint256);
+
+  function addBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+
+  function updateBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
 
   function addLendingPool(
     address _rewardToken,

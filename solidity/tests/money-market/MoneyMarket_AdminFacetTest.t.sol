@@ -106,18 +106,33 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     adminFacet.setBorrowingPool(address(rewardToken), address(0), 20);
   }
 
-  function testCorrectness_WhenAdminManageRewardPerSec_ShouldWork() external {
-    adminFacet.addRewardPerSec(address(rewardToken), 1 ether);
-    assertEq(adminFacet.getRewardPerSec(address(rewardToken)), 1 ether);
+  function testCorrectness_WhenAdminManageLendingRewardPerSec_ShouldWork() external {
+    adminFacet.addLendingRewardPerSec(address(rewardToken), 1 ether);
+    assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken)), 1 ether);
 
-    adminFacet.addRewardPerSec(address(rewardToken2), 2 ether);
-    assertEq(adminFacet.getRewardPerSec(address(rewardToken2)), 2 ether);
+    adminFacet.addLendingRewardPerSec(address(rewardToken2), 2 ether);
+    assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken2)), 2 ether);
     // reward 1 should be not affected
-    assertEq(adminFacet.getRewardPerSec(address(rewardToken)), 1 ether);
+    assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken)), 1 ether);
 
-    adminFacet.updateRewardPerSec(address(rewardToken), 3 ether);
-    assertEq(adminFacet.getRewardPerSec(address(rewardToken)), 3 ether);
+    adminFacet.updateLendingRewardPerSec(address(rewardToken), 3 ether);
+    assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken)), 3 ether);
     // reward 2 should be not affected
-    assertEq(adminFacet.getRewardPerSec(address(rewardToken2)), 2 ether);
+    assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken2)), 2 ether);
+  }
+
+  function testCorrectness_WhenAdminManageBorrowingRewardPerSec_ShouldWork() external {
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken), 1 ether);
+    assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken)), 1 ether);
+
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken2), 2 ether);
+    assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken2)), 2 ether);
+    // reward 1 should be not affected
+    assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken)), 1 ether);
+
+    adminFacet.updateBorrowingRewardPerSec(address(rewardToken), 3 ether);
+    assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken)), 3 ether);
+    // reward 2 should be not affected
+    assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken2)), 2 ether);
   }
 }

@@ -100,7 +100,8 @@ library LibMoneyMarket01 {
     mapping(address => mapping(bytes32 => int256)) lenderRewardDebts;
     mapping(address => mapping(bytes32 => int256)) borrowerRewardDebts;
     // multiple reward
-    LibDoublyLinkedList.List rewardPerSecList;
+    LibDoublyLinkedList.List lendingRewardPerSecList;
+    LibDoublyLinkedList.List borrowingRewardPerSecList;
     // reward token
     mapping(address => uint256) totalLendingPoolAllocPoints;
     mapping(address => uint256) totalBorrowingPoolAllocPoints;
@@ -535,7 +536,19 @@ library LibMoneyMarket01 {
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
   }
 
-  function getRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds) internal view returns (uint256) {
-    return ds.rewardPerSecList.getAmount(_rewardToken);
+  function getLendingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
+    internal
+    view
+    returns (uint256)
+  {
+    return ds.lendingRewardPerSecList.getAmount(_rewardToken);
+  }
+
+  function getBorrowingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
+    internal
+    view
+    returns (uint256)
+  {
+    return ds.borrowingRewardPerSecList.getAmount(_rewardToken);
   }
 }

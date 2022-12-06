@@ -72,7 +72,7 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
 
     // add new reward for this token
-    adminFacet.addRewardPerSec(address(rewardToken2), 0.5 ether);
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken2), 0.5 ether);
     adminFacet.addBorrowingPool(address(rewardToken2), address(weth), 20);
     adminFacet.addBorrowingPool(address(rewardToken2), address(btc), 80);
     vm.warp(block.timestamp + 100);

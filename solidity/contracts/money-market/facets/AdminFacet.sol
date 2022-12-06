@@ -150,12 +150,18 @@ contract AdminFacet is IAdminFacet {
     emit LogSetRewardDistributor(_addr);
   }
 
-  function getRewardPerSec(address _rewardToken) external view onlyOwner returns (uint256 _rewardPerSec) {
-    _rewardPerSec = LibMoneyMarket01.moneyMarketDiamondStorage().rewardPerSecList.getAmount(_rewardToken);
+  function getLendingRewardPerSec(address _rewardToken) external view onlyOwner returns (uint256 _rewardPerSec) {
+    _rewardPerSec = LibMoneyMarket01.moneyMarketDiamondStorage().lendingRewardPerSecList.getAmount(_rewardToken);
   }
 
-  function addRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
-    LibDoublyLinkedList.List storage rewardPerSecList = LibMoneyMarket01.moneyMarketDiamondStorage().rewardPerSecList;
+  function getBorrowingRewardPerSec(address _rewardToken) external view onlyOwner returns (uint256 _rewardPerSec) {
+    _rewardPerSec = LibMoneyMarket01.moneyMarketDiamondStorage().borrowingRewardPerSecList.getAmount(_rewardToken);
+  }
+
+  function addLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
+    LibDoublyLinkedList.List storage rewardPerSecList = LibMoneyMarket01
+      .moneyMarketDiamondStorage()
+      .lendingRewardPerSecList;
     if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       rewardPerSecList.init();
     }
@@ -164,15 +170,40 @@ contract AdminFacet is IAdminFacet {
     emit LogAddRewardPerSec(_rewardToken, _rewardPerSec);
   }
 
-  function updateRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
+  function updateLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibDoublyLinkedList.List storage rewardPerSecList = moneyMarketDs.rewardPerSecList;
+    LibDoublyLinkedList.List storage rewardPerSecList = moneyMarketDs.lendingRewardPerSecList;
+    if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      rewardPerSecList.init();
+    }
+
+    LibLendingReward.massUpdatePoolInReward(_rewardToken, moneyMarketDs);
+
+    rewardPerSecList.updateOrRemove(_rewardToken, _rewardPerSec);
+
+    emit LogUpdateRewardPerSec(_rewardToken, _rewardPerSec);
+  }
+
+  function addBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
+    LibDoublyLinkedList.List storage rewardPerSecList = LibMoneyMarket01
+      .moneyMarketDiamondStorage()
+      .borrowingRewardPerSecList;
+    if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      rewardPerSecList.init();
+    }
+    rewardPerSecList.addOrUpdate(_rewardToken, _rewardPerSec);
+
+    emit LogAddRewardPerSec(_rewardToken, _rewardPerSec);
+  }
+
+  function updateBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibDoublyLinkedList.List storage rewardPerSecList = moneyMarketDs.borrowingRewardPerSecList;
     if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       rewardPerSecList.init();
     }
 
     LibBorrowingReward.massUpdatePoolInReward(_rewardToken, moneyMarketDs);
-    LibLendingReward.massUpdatePoolInReward(_rewardToken, moneyMarketDs);
 
     rewardPerSecList.updateOrRemove(_rewardToken, _rewardPerSec);
 

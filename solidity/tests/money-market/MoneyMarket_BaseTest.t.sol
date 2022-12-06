@@ -178,7 +178,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // set reward
     adminFacet.setRewardDistributor(address(rewardDistributor));
 
-    adminFacet.addRewardPerSec(address(rewardToken), 1 ether);
+    adminFacet.addLendingRewardPerSec(address(rewardToken), 1 ether);
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken), 1 ether);
     // add pools
     // ibWeth is 20%
     // ibBtc is 20%

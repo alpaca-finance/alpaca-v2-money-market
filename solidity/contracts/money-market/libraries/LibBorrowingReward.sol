@@ -32,7 +32,7 @@ library LibBorrowingReward {
     if (_rewardToken == address(0)) revert LibBorrowingReward_InvalidRewardToken();
     if (_rewardDistributor == address(0)) revert LibBorrowingReward_InvalidRewardDistributor();
 
-    if (ds.rewardPerSecList.getAmount(_rewardToken) > 0) {
+    if (ds.borrowingRewardPerSecList.getAmount(_rewardToken) > 0) {
       LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_rewardToken, _token, ds);
       uint256 _amount = ds.accountDebtShares[_account][_token];
       bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
@@ -99,8 +99,9 @@ library LibBorrowingReward {
       uint256 _tokenBalance = ds.debtShares[_token];
       if (_tokenBalance > 0) {
         uint256 _timePast = block.timestamp - poolInfo.lastRewardTime;
-        uint256 _reward = (_timePast * LibMoneyMarket01.getRewardPerSec(_rewardToken, ds) * poolInfo.allocPoint) /
-          ds.totalBorrowingPoolAllocPoints[_rewardToken];
+        uint256 _reward = (_timePast *
+          LibMoneyMarket01.getBorrowingRewardPerSec(_rewardToken, ds) *
+          poolInfo.allocPoint) / ds.totalBorrowingPoolAllocPoints[_rewardToken];
         _rewardPerShare = (_reward * LibMoneyMarket01.ACC_REWARD_PRECISION) / _tokenBalance;
       }
     }
@@ -125,7 +126,7 @@ library LibBorrowingReward {
   }
 
   function massUpdatePool(address _token, LibMoneyMarket01.MoneyMarketDiamondStorage storage ds) internal {
-    LibDoublyLinkedList.Node[] memory rewardsPerSec = ds.rewardPerSecList.getAll();
+    LibDoublyLinkedList.Node[] memory rewardsPerSec = ds.borrowingRewardPerSecList.getAll();
     uint256 _debtShareLength = rewardsPerSec.length;
 
     for (uint256 _i = 0; _i < _debtShareLength; ) {
@@ -142,7 +143,7 @@ library LibBorrowingReward {
     int256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage ds
   ) internal {
-    LibDoublyLinkedList.Node[] memory rewardsPerSec = ds.rewardPerSecList.getAll();
+    LibDoublyLinkedList.Node[] memory rewardsPerSec = ds.borrowingRewardPerSecList.getAll();
     uint256 _rewardsPerSecLength = rewardsPerSec.length;
 
     for (uint256 _i = 0; _i < _rewardsPerSecLength; ) {

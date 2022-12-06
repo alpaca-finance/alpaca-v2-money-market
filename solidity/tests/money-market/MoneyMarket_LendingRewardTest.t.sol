@@ -65,7 +65,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
 
     // add new reward for this token
-    adminFacet.addRewardPerSec(address(rewardToken2), 0.5 ether);
+    adminFacet.addLendingRewardPerSec(address(rewardToken2), 0.5 ether);
     adminFacet.addLendingPool(address(rewardToken2), address(ibWeth), 20);
     adminFacet.addLendingPool(address(rewardToken2), address(ibBtc), 80);
     vm.warp(block.timestamp + 100);

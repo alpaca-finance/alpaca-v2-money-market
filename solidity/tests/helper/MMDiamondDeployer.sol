@@ -207,7 +207,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](20);
+    bytes4[] memory selectors = new bytes4[](23);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -225,9 +225,12 @@ library MMDiamondDeployer {
     selectors[14] = AdminFacet.setLendingPool.selector;
     selectors[15] = AdminFacet.addBorrowingPool.selector;
     selectors[16] = AdminFacet.setBorrowingPool.selector;
-    selectors[17] = AdminFacet.getRewardPerSec.selector;
-    selectors[18] = AdminFacet.addRewardPerSec.selector;
-    selectors[19] = AdminFacet.updateRewardPerSec.selector;
+    selectors[17] = AdminFacet.getLendingRewardPerSec.selector;
+    selectors[18] = AdminFacet.addLendingRewardPerSec.selector;
+    selectors[19] = AdminFacet.updateLendingRewardPerSec.selector;
+    selectors[20] = AdminFacet.getBorrowingRewardPerSec.selector;
+    selectors[21] = AdminFacet.addBorrowingRewardPerSec.selector;
+    selectors[22] = AdminFacet.updateBorrowingRewardPerSec.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
