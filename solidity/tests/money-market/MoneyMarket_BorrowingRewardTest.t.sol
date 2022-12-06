@@ -26,6 +26,15 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(BOB, 0, address(btc), 80 ether);
   }
 
+  function testCorrectness_WhenAdminSetBorrowingRewardPerSec_PoolAccRewardPerShareShouldBeUpdatedCorrectly() external {
+    vm.prank(BOB);
+    borrowFacet.borrow(0, address(weth), 10 ether);
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken), 1 ether);
+    vm.warp(block.timestamp + 100);
+    adminFacet.updateBorrowingRewardPerSec(address(rewardToken), 3 ether);
+    assertEq(rewardFacet.getBorrowingPool(address(rewardToken), address(weth)).accRewardPerShare, 2e12);
+  }
+
   function testCorrectness_WhenUserBorrowTokenAndClaimReward_UserShouldReceivedRewardCorrectly() external {
     address borrowedToken = address(weth);
     vm.prank(BOB);

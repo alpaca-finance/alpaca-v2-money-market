@@ -11,8 +11,6 @@ import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 // interfaces
 import { IRewardDistributor } from "../interfaces/IRewardDistributor.sol";
 
-import { console } from "../../../tests/utils/console.sol";
-
 library LibBorrowingReward {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;

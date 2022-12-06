@@ -21,6 +21,14 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     ibUsdc.mint(ALICE, 5 ether);
   }
 
+  function testCorrectness_WhenAdminSetLendingRewardPerSec_PoolAccRewardPerShareShouldBeUpdatedCorrectly() external {
+    _addIbTokenAsCollateral(ALICE, address(ibWeth), 10 ether);
+    adminFacet.addLendingRewardPerSec(address(rewardToken), 1 ether);
+    vm.warp(block.timestamp + 100);
+    adminFacet.updateLendingRewardPerSec(address(rewardToken), 3 ether);
+    assertEq(rewardFacet.getLendingPool(address(rewardToken), address(ibWeth)).accRewardPerShare, 2e12);
+  }
+
   function testCorrectness_WhenUserAddCollateralAndClaimReward_UserShouldReceivedRewardCorrectly() external {
     address _ibToken = address(ibWeth);
     _addIbTokenAsCollateral(ALICE, _ibToken, 10 ether);
