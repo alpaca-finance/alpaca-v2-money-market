@@ -159,8 +159,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _amountRepaid = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
-    // TODO: transfer fee to treasury
     uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_collatAmountBefore, _collatSold);
+    ERC20(params.collatToken).safeTransfer(moneyMarketDs.treasury, _actualCollatFeeToTreasury);
 
     _reduceDebt(params.subAccount, params.repayToken, _amountRepaid, moneyMarketDs); // use _amountRepaid so that bad debt will be reflected directly on subaccount
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold + _actualCollatFeeToTreasury, moneyMarketDs);
@@ -207,8 +207,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
 
-    // TODO: transfer fee to treasury
     uint256 _actualCollatFeeToTreasury = _getActualCollatFeeToTreasury(_subAccountCollatAmountBefore, _collatSold);
+    ERC20(params.collatToken).safeTransfer(moneyMarketDs.treasury, _actualCollatFeeToTreasury);
 
     LibMoneyMarket01.withdraw(
       params.collatToken,

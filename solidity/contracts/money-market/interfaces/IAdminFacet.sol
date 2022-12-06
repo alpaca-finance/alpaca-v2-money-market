@@ -52,6 +52,8 @@ interface IAdminFacet {
 
   function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
 
+  function setTreasury(address newTreasury) external;
+
   function setNonCollatInterestModel(
     address _account,
     address _token,

@@ -190,5 +190,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.addPool(address(ibUsdc), 40);
     adminFacet.addPool(address(ibIsolateToken), 15);
     adminFacet.addPool(address(ibWNative), 5);
+
+    adminFacet.setTreasury(address(this));
   }
 }

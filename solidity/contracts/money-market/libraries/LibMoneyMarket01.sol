@@ -96,6 +96,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) repurchasersOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
+    address treasury;
     // reward stuff
     address rewardDistributor;
     mapping(address => mapping(address => uint256)) accountCollats; // amount in user info

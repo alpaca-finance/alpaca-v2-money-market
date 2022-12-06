@@ -132,6 +132,11 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  function setTreasury(address newTreasury) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.treasury = newTreasury;
+  }
+
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
     external
     onlyOwner
