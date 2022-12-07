@@ -71,6 +71,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
+    ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -196,5 +197,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.addBorrowingPool(address(rewardToken), address(weth), 20);
     adminFacet.addBorrowingPool(address(rewardToken), address(btc), 40);
     adminFacet.addBorrowingPool(address(rewardToken), address(usdc), 40);
+
+    adminFacet.setTreasury(address(this));
   }
 }
