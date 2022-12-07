@@ -537,7 +537,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      15 ether
+      15 ether,
+      abi.encode()
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -600,7 +601,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      _repayAmount
+      _repayAmount,
+      abi.encode()
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -667,7 +669,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      40 ether
+      40 ether,
+      abi.encode()
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -710,7 +713,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      30 ether
+      30 ether,
+      abi.encode()
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -741,19 +745,36 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(weth),
-      1 ether
+      1 ether,
+      abi.encode()
     );
   }
 
   function testRevert_WhenLiquidationStrategyIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
-    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether);
+    liquidationFacet.liquidationCall(
+      address(0),
+      ALICE,
+      _subAccountId,
+      address(usdc),
+      address(weth),
+      1 ether,
+      abi.encode()
+    );
   }
 
   function testRevert_WhenLiquidationCallerIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     vm.prank(EVE);
-    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether);
+    liquidationFacet.liquidationCall(
+      address(0),
+      ALICE,
+      _subAccountId,
+      address(usdc),
+      address(weth),
+      1 ether,
+      abi.encode()
+    );
   }
 
   // ib liquidation tests
@@ -793,7 +814,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      15 ether
+      15 ether,
+      abi.encode()
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -876,7 +898,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      _repayAmount
+      _repayAmount,
+      abi.encode()
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -932,7 +955,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(ibWeth),
-      15 ether
+      15 ether,
+      abi.encode()
     );
   }
 
@@ -962,7 +986,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(ibWeth),
-      1 ether
+      1 ether,
+      abi.encode()
     );
   }
 
