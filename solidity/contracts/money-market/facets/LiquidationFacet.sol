@@ -80,8 +80,9 @@ contract LiquidationFacet is ILiquidationFacet {
         revert LiquidationFacet_RepayDebtValueTooHigh();
       }
 
+      // TODO: pay fee in repayToken instead of collatToken
       // calculate collateral amount that repurchaser will receive
-      (_collatAmountOut, _collatFeeToTreasury) = _getCollatAmountOut(
+      (_collatAmountOut, _collatFeeToTreasury) = _getCollatAmountOutAndFee(
         _subAccount,
         _collatToken,
         _repayInUSD,
@@ -176,12 +177,13 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // 4. check repaid amount, take fees, and update states
     uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
     ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
     // give priority to fee
-    _reduceDebt(params.subAccount, params.repayToken, _repayAmountFromLiquidation - _feeToTreasury, moneyMarketDs);
+    _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
 
     emit LogLiquidate(
@@ -189,7 +191,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.liquidationStrat,
       params.repayToken,
       params.collatToken,
-      _repayAmountFromLiquidation - _feeToTreasury,
+      _repaidAmount,
       _collatSold,
       _feeToTreasury
     );
@@ -232,6 +234,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // 4. check repaid amount, take fees, and update states
     uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
 
@@ -240,7 +243,7 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.withdraw(params.collatToken, _collatSold, address(this), moneyMarketDs);
 
     // give priority to fee
-    _reduceDebt(params.subAccount, params.repayToken, _repayAmountFromLiquidation - _feeToTreasury, moneyMarketDs);
+    _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
 
     emit LogLiquidateIb(
@@ -248,7 +251,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.liquidationStrat,
       params.repayToken,
       params.collatToken,
-      _repayAmountFromLiquidation - _feeToTreasury,
+      _repaidAmount,
       _collatSold,
       _underlyingSold,
       _feeToTreasury
@@ -293,8 +296,10 @@ contract LiquidationFacet is ILiquidationFacet {
     _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
-  /// @notice Return collateral amount after include rewardBps
-  function _getCollatAmountOut(
+  // TODO: pay fee in repayToken instead of collatToken
+  /// @return _collatTokenAmountOut collateral amount after include rewardBps
+  /// @return _feeToTreasury fee amount in collat token
+  function _getCollatAmountOutAndFee(
     address _subAccount,
     address _collatToken,
     uint256 _collatValueInUSD,
