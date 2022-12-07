@@ -82,7 +82,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
       // TODO: pay fee in repayToken instead of collatToken
       // calculate collateral amount that repurchaser will receive
-      _collatAmountOut = _getCollatAmountOutAndFee(
+      _collatAmountOut = _getCollatAmountOut(
         _subAccount,
         _collatToken,
         _repayInUSD,
@@ -317,9 +317,8 @@ contract LiquidationFacet is ILiquidationFacet {
     _actualRepayAmount = _repayAmount > _debtValueWithFee ? _debtValueWithFee : _repayAmount;
   }
 
-  // TODO: pay fee in repayToken instead of collatToken
   /// @return _collatTokenAmountOut collateral amount after include rewardBps
-  function _getCollatAmountOutAndFee(
+  function _getCollatAmountOut(
     address _subAccount,
     address _collatToken,
     uint256 _collatValueInUSD,
