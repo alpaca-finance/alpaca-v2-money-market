@@ -20,8 +20,8 @@ contract RewardFacet is IRewardFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   // events
-  event LogClaimReward(address indexed _to, address _rewardToken, uint256 _amount);
-  event LogClaimBorrowingRewardFor(address indexed _to, address _rewardToken, uint256 _amount);
+  event LogLendingClaimRewardFor(address indexed _claimFor, address _rewardToken, uint256 _amount);
+  event LogClaimBorrowingRewardFor(address indexed _claimFor, address _rewardToken, uint256 _amount);
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -29,12 +29,38 @@ contract RewardFacet is IRewardFacet {
     LibReentrancyGuard.unlock();
   }
 
-  function claimReward(address _rewardToken, address _token) external nonReentrant {
+  function claimLendingRewardFor(
+    address _claimFor,
+    address _rewardToken,
+    address _token
+  ) external nonReentrant {
+    _claimLendingRewardFor(_claimFor, _rewardToken, _token);
+  }
+
+  function claimMultipleLendingRewardsFor(
+    address _claimFor,
+    address[] calldata _rewardTokens,
+    address _token
+  ) external nonReentrant {
+    uint256 _length = _rewardTokens.length;
+    for (uint256 _i; _i < _length; ) {
+      _claimLendingRewardFor(_claimFor, _rewardTokens[_i], _token);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  function _claimLendingRewardFor(
+    address _claimFor,
+    address _rewardToken,
+    address _token
+  ) internal {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    uint256 _pendingReward = LibLendingReward.claim(msg.sender, _rewardToken, _token, moneyMarketDs);
+    uint256 _claimedReward = LibLendingReward.claimFor(_claimFor, _rewardToken, _token, moneyMarketDs);
 
-    emit LogClaimReward(msg.sender, _rewardToken, _pendingReward);
+    emit LogLendingClaimRewardFor(_claimFor, _rewardToken, _claimedReward);
   }
 
   function claimBorrowingRewardFor(
@@ -42,11 +68,33 @@ contract RewardFacet is IRewardFacet {
     address _rewardToken,
     address _token
   ) external nonReentrant {
+    _claimBorrowingRewardFor(_claimFor, _rewardToken, _token);
+  }
+
+  function claimMultipleBorrowingRewardsFor(
+    address _claimFor,
+    address[] calldata _rewardTokens,
+    address _token
+  ) external nonReentrant {
+    uint256 _length = _rewardTokens.length;
+    for (uint256 _i; _i < _length; ) {
+      _claimBorrowingRewardFor(_claimFor, _rewardTokens[_i], _token);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  function _claimBorrowingRewardFor(
+    address _claimFor,
+    address _rewardToken,
+    address _token
+  ) internal {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    uint256 _pendingReward = LibBorrowingReward.claim(_claimFor, _rewardToken, _token, moneyMarketDs);
+    uint256 _claimedReward = LibBorrowingReward.claimFor(_claimFor, _rewardToken, _token, moneyMarketDs);
 
-    emit LogClaimBorrowingRewardFor(_claimFor, _rewardToken, _pendingReward);
+    emit LogClaimBorrowingRewardFor(_claimFor, _rewardToken, _claimedReward);
   }
 
   function pendingLendingReward(

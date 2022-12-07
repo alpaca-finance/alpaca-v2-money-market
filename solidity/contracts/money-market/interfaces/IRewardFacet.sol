@@ -4,12 +4,28 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 interface IRewardFacet {
-  function claimReward(address _token, address _rewardToken) external;
-
-  function claimBorrowingRewardFor(
-    address _to,
+  function claimLendingRewardFor(
+    address _claimFor,
     address _token,
     address _rewardToken
+  ) external;
+
+  function claimMultipleLendingRewardsFor(
+    address _claimFor,
+    address[] calldata _rewardTokens,
+    address _token
+  ) external;
+
+  function claimBorrowingRewardFor(
+    address _claimFor,
+    address _token,
+    address _rewardToken
+  ) external;
+
+  function claimMultipleBorrowingRewardsFor(
+    address _claimFor,
+    address[] calldata _rewardTokens,
+    address _token
   ) external;
 
   function pendingLendingReward(

@@ -341,8 +341,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     address _rewardToken,
     address _collatToken
   ) internal {
-    vm.prank(_account);
-    rewardFacet.claimReward(_rewardToken, _collatToken);
+    rewardFacet.claimLendingRewardFor(_account, _rewardToken, _collatToken);
   }
 
   function _assertAccountReward(

@@ -19,14 +19,12 @@ library LibLendingReward {
   error LibLendingReward_InvalidRewardToken();
   error LibLendingReward_InvalidRewardDistributor();
 
-  function claim(
+  function claimFor(
     address _account,
     address _rewardToken,
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage ds
   ) internal returns (uint256 _unclaimedReward) {
-    address _rewardDistributor = ds.rewardDistributor;
-
     if (ds.lendingRewardPerSecList.getAmount(_rewardToken) > 0) {
       LibMoneyMarket01.PoolInfo memory poolInfo = updatePool(_rewardToken, _token, ds);
       uint256 _amount = ds.accountCollats[_account][_token];
@@ -41,7 +39,7 @@ library LibLendingReward {
       ds.lenderRewardDebts[_account][_rewardDebtKey] = _accumulatedReward;
 
       if (_unclaimedReward > 0) {
-        IRewardDistributor(_rewardDistributor).safeTransferReward(_rewardToken, _account, _unclaimedReward);
+        IRewardDistributor(ds.rewardDistributor).safeTransferReward(_rewardToken, _account, _unclaimedReward);
       }
     }
   }
