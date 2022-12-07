@@ -121,8 +121,8 @@ contract RewardFacet is IRewardFacet {
     address _token
   ) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
-    return moneyMarketDs.lenderRewardDebts[_account][_rewardDebtKey];
+    bytes32 _poolKey = LibMoneyMarket01.getPoolKey(_rewardToken, _token);
+    return moneyMarketDs.lenderRewardDebts[_account][_poolKey];
   }
 
   function borrowerRewardDebts(
@@ -131,8 +131,8 @@ contract RewardFacet is IRewardFacet {
     address _token
   ) external view returns (int256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    bytes32 _rewardDebtKey = LibMoneyMarket01.getRewardDebtKey(_rewardToken, _token);
-    return moneyMarketDs.borrowerRewardDebts[_account][_rewardDebtKey];
+    bytes32 _poolKey = LibMoneyMarket01.getPoolKey(_rewardToken, _token);
+    return moneyMarketDs.borrowerRewardDebts[_account][_poolKey];
   }
 
   function getLendingPool(address _rewardToken, address _token)
@@ -141,7 +141,7 @@ contract RewardFacet is IRewardFacet {
     returns (LibMoneyMarket01.PoolInfo memory)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.lendingPoolInfos[_rewardToken][_token];
+    return moneyMarketDs.lendingPoolInfos[LibMoneyMarket01.getPoolKey(_rewardToken, _token)];
   }
 
   function getBorrowingPool(address _rewardToken, address _token)
@@ -150,6 +150,6 @@ contract RewardFacet is IRewardFacet {
     returns (LibMoneyMarket01.PoolInfo memory)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.borrowingPoolInfos[_rewardToken][_token];
+    return moneyMarketDs.borrowingPoolInfos[LibMoneyMarket01.getPoolKey(_rewardToken, _token)];
   }
 }

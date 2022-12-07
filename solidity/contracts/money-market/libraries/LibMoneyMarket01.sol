@@ -94,8 +94,8 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) rewardLendingPoolList;
     mapping(address => LibDoublyLinkedList.List) rewardBorrowingPoolList;
     // reward token => token => pool info
-    mapping(address => mapping(address => PoolInfo)) lendingPoolInfos;
-    mapping(address => mapping(address => PoolInfo)) borrowingPoolInfos;
+    mapping(bytes32 => PoolInfo) lendingPoolInfos;
+    mapping(bytes32 => PoolInfo) borrowingPoolInfos;
     // account => reward token + pool key (token) => amount
     mapping(address => mapping(bytes32 => int256)) lenderRewardDebts;
     mapping(address => mapping(bytes32 => int256)) borrowerRewardDebts;
@@ -448,7 +448,7 @@ library LibMoneyMarket01 {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
 
-  function getRewardDebtKey(address _rewardToken, address _token) internal pure returns (bytes32 _key) {
+  function getPoolKey(address _rewardToken, address _token) internal pure returns (bytes32 _key) {
     _key = keccak256(abi.encodePacked(_rewardToken, _token));
   }
 
