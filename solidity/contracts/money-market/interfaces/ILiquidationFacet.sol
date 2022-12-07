@@ -7,8 +7,7 @@ interface ILiquidationFacet {
     address _repayToken,
     address _collatToken,
     uint256 _amountIn,
-    uint256 _amountOut,
-    uint256 _feeToTreasury
+    uint256 _amountOut
   );
   event LogLiquidate(
     address indexed caller,
