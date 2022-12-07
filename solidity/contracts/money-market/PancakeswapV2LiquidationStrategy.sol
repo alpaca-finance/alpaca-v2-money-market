@@ -28,7 +28,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
     address _repayTo,
     bytes calldata _data
   ) external {
-    address[] memory path = abi.decode(_data, (address[]));
+    (address[] memory path, uint256 _minReceive) = abi.decode(_data, (address[], uint256));
     // validate path[0] == _collatToken ??
     if (path[path.length - 1] != _repayToken) {
       revert PancakeswapV2LiquidationStrategy_InvalidPath();
@@ -38,7 +38,13 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
 
     ERC20(_collatToken).increaseAllowance(address(router), _collatAmountBefore);
 
-    router.swapTokensForExactTokens(_repayAmount, _collatAmountBefore, path, _repayTo, block.timestamp);
+    uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, path);
+    if (_amountsIn[0] <= _collatAmountBefore) {
+      // swapTokensForExactTokens will fail if _collatAmountBefore is not enough to swap for _repayAmount during low liquidity period
+      router.swapTokensForExactTokens(_repayAmount, _collatAmountBefore, path, _repayTo, block.timestamp);
+    } else {
+      router.swapExactTokensForTokens(_collatAmountBefore, _minReceive, path, _repayTo, block.timestamp);
+    }
 
     ERC20(_collatToken).safeTransfer(_repayTo, ERC20(_collatToken).balanceOf(address(this)));
   }
