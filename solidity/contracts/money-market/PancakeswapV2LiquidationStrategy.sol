@@ -34,17 +34,21 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
       revert PancakeswapV2LiquidationStrategy_InvalidPath();
     }
 
-    uint256 _collatAmountBefore = ERC20(_collatToken).balanceOf(address(this));
+    uint256 _collatBalance = ERC20(_collatToken).balanceOf(address(this));
 
-    ERC20(_collatToken).increaseAllowance(address(router), _collatAmountBefore);
+    ERC20(_collatToken).approve(address(router), _collatBalance);
 
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, path);
-    if (_amountsIn[0] <= _collatAmountBefore) {
-      // swapTokensForExactTokens will fail if _collatAmountBefore is not enough to swap for _repayAmount during low liquidity period
-      router.swapTokensForExactTokens(_repayAmount, _collatAmountBefore, path, _repayTo, block.timestamp);
+    // _amountsIn[0] = collat that is required to swap for _repayAmount
+    // check that _collatBalance is enough for _repayAmount in case of swapTokensForExactTokens
+    if (_collatBalance >= _amountsIn[0]) {
+      // swapTokensForExactTokens will fail if _collatBalance is not enough to swap for _repayAmount during low liquidity period
+      router.swapTokensForExactTokens(_repayAmount, _collatBalance, path, _repayTo, block.timestamp);
     } else {
-      router.swapExactTokensForTokens(_collatAmountBefore, _minReceive, path, _repayTo, block.timestamp);
+      router.swapExactTokensForTokens(_collatBalance, _minReceive, path, _repayTo, block.timestamp);
     }
+
+    ERC20(_collatToken).approve(address(router), 0);
 
     ERC20(_collatToken).safeTransfer(_repayTo, ERC20(_collatToken).balanceOf(address(this)));
   }

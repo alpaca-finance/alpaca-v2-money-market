@@ -42,7 +42,7 @@ contract PancakeswapV2LiquidationStrategy_Test is MoneyMarket_BaseTest {
       _collatToken,
       _debtToken,
       1 ether,
-      address(liquidationFacet),
+      address(moneyMarketDiamond),
       abi.encode(_path)
     );
 
@@ -50,7 +50,7 @@ contract PancakeswapV2LiquidationStrategy_Test is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(address(liquidationStrat)), 0);
     assertEq(usdc.balanceOf(address(liquidationStrat)), 0);
 
-    assertEq(usdc.balanceOf(address(liquidationFacet)), 1 ether);
+    assertEq(usdc.balanceOf(address(moneyMarketDiamond)), 1 ether);
     assertEq(usdc.balanceOf(address(router)), 0);
   }
 
