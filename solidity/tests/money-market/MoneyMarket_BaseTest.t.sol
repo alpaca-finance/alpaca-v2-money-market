@@ -196,5 +196,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.addBorrowingPool(address(weth), 20);
     adminFacet.addBorrowingPool(address(btc), 40);
     adminFacet.addBorrowingPool(address(usdc), 40);
+
+    adminFacet.setTreasury(address(this));
   }
 }
