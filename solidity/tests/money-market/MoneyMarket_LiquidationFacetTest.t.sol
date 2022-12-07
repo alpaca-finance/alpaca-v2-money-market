@@ -103,8 +103,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
-
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
     vm.warp(1 days + 1);
@@ -161,8 +159,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
     vm.stopPrank();
-
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.1875 ether);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
@@ -191,8 +187,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
-
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
 
     // add time 1 day
     // 0.00016921837224 is interest rate per day of (30% condition slope)
@@ -266,8 +260,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_btcState.subAccountCollat, 0 ether);
     assertEq(_btcState.debtValue, 3.00050765511672 ether);
     assertEq(_btcState.debtShare, 3 ether);
-
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.25 ether);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThanDebtTokenAmount_TransferTokenCorrectly() external {
@@ -296,8 +288,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
-
-    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 80 * 0.8 * 9000 / 10000 = 57.6 ether USD
@@ -378,8 +368,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_btcState.subAccountCollat, 0 ether);
     assertEq(_btcState.debtValue, 5.001410153102144 ether);
     assertEq(_btcState.debtShare, 5 ether);
-
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.37506345688959 ether);
   }
 
   function testRevert_ShouldRevertIfSubAccountIsHealthy() external {
