@@ -85,15 +85,16 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     adminFacet.addBorrowingPool(address(rewardToken2), address(btc), 80);
     vm.warp(block.timestamp + 100);
 
-    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
-
     // ibWeth pool alloc point is 20
     // given time past 100 sec, reward per sec = 0.5 ether,  total alloc point is 100
     // then reward = 100 * 0.5 * 20 / 100 = 10 ether
     // then acc reward per share = 10 ether / 10 ether (total of collat token) = 1 (precision is 12)
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 1) - 0 = 10 (precision is 12)
-    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken2), borrowedToken);
+    address[] memory _toClaimRewards = new address[](2);
+    _toClaimRewards[0] = address(rewardToken);
+    _toClaimRewards[1] = address(rewardToken2);
+    rewardFacet.claimMultipleBorrowingRewardsFor(BOB, _toClaimRewards, borrowedToken);
 
     _assertAccountReward(BOB, address(rewardToken), borrowedToken, 40 ether, 40 ether);
     _assertAccountReward(BOB, address(rewardToken2), borrowedToken, 10 ether, 10 ether);

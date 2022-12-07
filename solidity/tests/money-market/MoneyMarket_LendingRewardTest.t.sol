@@ -42,7 +42,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of collat token) = 2 (precision is 12)
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    _claimReward(ALICE, address(rewardToken), _ibToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken);
 
     uint256 _expectedReward = 20 ether;
 
@@ -64,7 +64,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of collat token) = 2 (precision is 12)
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    _claimReward(ALICE, address(rewardToken), _ibToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken);
 
     uint256 _expectedReward = 20 ether;
 
@@ -77,15 +77,16 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     adminFacet.addLendingPool(address(rewardToken2), address(ibBtc), 80);
     vm.warp(block.timestamp + 100);
 
-    _claimReward(ALICE, address(rewardToken), _ibToken);
-
     // ibWeth pool alloc point is 20
     // given time past 100 sec, reward per sec = 0.5 ether,  total alloc point is 100
     // then reward = 100 * 0.5 * 20 / 100 = 10 ether
     // then acc reward per share = 10 ether / 10 ether (total of collat token) = 1 (precision is 12)
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 1) - 0 = 10 (precision is 12)
-    _claimReward(ALICE, address(rewardToken2), _ibToken);
+    address[] memory _toClaimRewards = new address[](2);
+    _toClaimRewards[0] = address(rewardToken);
+    _toClaimRewards[1] = address(rewardToken2);
+    rewardFacet.claimMultipleLendingRewardsFor(ALICE, _toClaimRewards, _ibToken);
 
     _assertAccountReward(ALICE, address(rewardToken), _ibToken, 40 ether, 40 ether);
     _assertAccountReward(ALICE, address(rewardToken2), _ibToken, 10 ether, 10 ether);
@@ -110,7 +111,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of collat token) = 2 (precision is 12)
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    _claimReward(ALICE, address(rewardToken), _ibToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken);
 
     uint256 _expectedReward = 20 ether;
 
@@ -138,7 +139,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
 
-    _claimReward(ALICE, address(rewardToken), _ibToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken);
     _assertAccountReward(ALICE, address(rewardToken), _ibToken, _expectedReward + _expectedRewardAfterRemove, 0 ether);
     assertEq(
       rewardToken.balanceOf(address(rewardDistributor)),
@@ -181,8 +182,8 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 2.666666666666) - 0 = 26.666666666660 (precision is 12)
     // bob reward debt is 40 now, then unclaimed reward = (20 * 2.666666666666 = 53.333333333320) - 40 = 13.333333333320 (precision is 12)
-    _claimReward(ALICE, address(rewardToken), _collatToken);
-    _claimReward(BOB, address(rewardToken), _collatToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _collatToken);
+    rewardFacet.claimLendingRewardFor(BOB, address(rewardToken), _collatToken);
 
     uint256 _expectedAliceReward = 26.66666666666 ether;
     uint256 _expectedBobReward = 13.33333333332 ether;
@@ -225,7 +226,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
     uint256 _expectedReward1 = 20 ether;
-    _claimReward(ALICE, address(rewardToken), _ibToken1);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken1);
     _assertAccountReward(ALICE, address(rewardToken), _ibToken1, _expectedReward1, _expectedReward1.toInt256());
 
     // ibUsdc pool alloc point is 40
@@ -235,7 +236,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (5 * 8) - 0 = 40 (precision is 12)
     uint256 _expectedReward2 = 40 ether;
-    _claimReward(ALICE, address(rewardToken), _ibToken2);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken2);
 
     // total of claimed reward = 20 + 40 = 60
     // but reward debt fot ibToken2 should be 40
@@ -265,7 +266,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of collat token) = 2 (precision is 12)
     // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
     // alice reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    _claimReward(ALICE, address(rewardToken), _ibToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken);
 
     uint256 _expectedFirstReward = 20 ether;
 
@@ -303,7 +304,7 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
     // alice reward debt is 60 now, then unclaimed reward = (10 * 5) - 60 = 40 (precision is 12)
     uint256 _expectedSecondReward = 40 ether;
     uint256 _totalReward = _expectedFirstReward + _expectedSecondReward;
-    _claimReward(ALICE, address(rewardToken), _ibToken);
+    rewardFacet.claimLendingRewardFor(ALICE, address(rewardToken), _ibToken);
 
     _assertAccountReward(
       ALICE,
@@ -333,14 +334,6 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
   ) internal {
     vm.prank(_account);
     collateralFacet.removeCollateral(0, _collatToken, _amount);
-  }
-
-  function _claimReward(
-    address _account,
-    address _rewardToken,
-    address _collatToken
-  ) internal {
-    rewardFacet.claimLendingRewardFor(_account, _rewardToken, _collatToken);
   }
 
   function _assertAccountReward(
