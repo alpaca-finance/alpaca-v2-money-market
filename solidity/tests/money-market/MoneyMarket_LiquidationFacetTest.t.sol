@@ -121,7 +121,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // eth price = 0.8 USD
     // usdc price = 1 USD
     // reward = 1%
+    // repurchase fee = 1%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
+    // fee amount = 15 * 0.01 = 0.15
+    uint256 _expectedFee = 0.15 ether;
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
 
@@ -133,7 +136,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     uint256 _bobWethBalanceAfter = weth.balanceOf(BOB);
 
     // check bob balance
-    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 15 ether); // pay 15 usdc
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 15 ether + _expectedFee); // pay 15 usdc (with 0.15 fee amount)
     assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 18.9375 ether); // get 18.9375 weth
 
     CacheState memory _stateAfter = CacheState({
@@ -162,7 +165,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
     vm.stopPrank();
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.1875 ether);
+    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
@@ -212,20 +215,24 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // eth price = 0.8 USD
     // usdc price = 1 USD
     // reward = 1%
+    // repurchase fee = 1%
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 3.00050765511672
+    // fee amount = 20 * 0.01 = 0.2
+    uint256 _expectedFee = 0.2 ether;
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 20 ether);
 
     // repay value = 20 * 1 = 1 USD
     // reward amount = 20 * 1.01 = 20.20 USD
     // converted weth amount = 20.20 / 0.8 = 25.25
+    // fee amount = 20 * 0.01 = 0.2 ether
 
     uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceAfter = weth.balanceOf(BOB);
 
     // check bob balance
-    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 20 ether); // pay 20 usdc
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 20 ether + _expectedFee); // pay 20 usdc and 0.2 usd for tresury
     assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 25.25 ether); // get 25.25 weth
 
     CacheState memory _stateAfter = CacheState({
@@ -267,7 +274,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_btcState.debtValue, 3.00050765511672 ether);
     assertEq(_btcState.debtShare, 3 ether);
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.25 ether);
+    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThanDebtTokenAmount_TransferTokenCorrectly() external {
@@ -323,6 +330,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // eth price = 0.8 USD
     // usdc price = 1 USD
     // reward = 0.01%
+    // repurchase fee = 1%
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 5.001410153102144
     vm.prank(BOB);
@@ -332,12 +340,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // repay value = 30.0050765511672 * 1 = 1 USD
     // reward amount = 30.0050765511672 * 1.01 = 30.305127316678872 USD
     // converted weth amount = 30.305127316678872 / 0.8 = 37.88140914584859
-
+    // fee amount = 30.0050765511672 * 0.01 = 0.300050765511672
+    uint256 _expectedFee = 0.300050765511672 ether;
     uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceAfter = weth.balanceOf(BOB);
 
     // check bob balance
-    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 30.0050765511672 ether); // pay 30.0050765511672 usdc
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 30.0050765511672 ether + _expectedFee); // pay 30.0050765511672 usdc (fee: 0.300050765511672)
     assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 37.88140914584859 ether); // get 37.88140914584859 weth
 
     CacheState memory _stateAfter = CacheState({
@@ -379,7 +388,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_btcState.debtValue, 5.001410153102144 ether);
     assertEq(_btcState.debtShare, 5 ether);
 
-    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, 0.37506345688959 ether);
+    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
   }
 
   function testRevert_ShouldRevertIfSubAccountIsHealthy() external {
@@ -1002,6 +1011,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    uint256 _treasuryFeeBefore = MockERC20(_collatToken).balanceOf(treasury);
 
     // add time 1 day
     // then total debt value should increase by 0.0033843674448 * 60 = 0.20306204668800000
@@ -1019,7 +1029,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // eth price = 0.8 USD, ibWeth price = 1.6 USD
     // usdc price = 1 USD
     // reward = 1%
+    // repurchase fee = 1%
     // timestamp increased by 1 day, debt value should increased to 60.20306204668800000
+    // feeAmount = 15 * 0.01 = 0.15
+    uint256 _expectedFee = 0.15 ether;
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
 
@@ -1031,7 +1044,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     uint256 _bobIbWethBalanceAfter = ibWeth.balanceOf(BOB);
 
     // // check bob balance
-    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 15 ether); // pay 15 usdc
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 15 ether + _expectedFee); // pay 15 usdc (with fee)
     assertEq(_bobIbWethBalanceAfter - _bobIbWethBalanceBefore, 9.46875 ether); // get 9.46875 weth
 
     CacheState memory _stateAfter = CacheState({
@@ -1059,5 +1072,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 45.005074833657018342 ether);
     assertEq(_stateAfter.subAccountDebtShare, 45.005074833657018342 ether);
     vm.stopPrank();
+    assertEq(MockERC20(_collatToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
   }
 }
