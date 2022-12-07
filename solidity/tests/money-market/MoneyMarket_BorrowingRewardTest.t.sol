@@ -29,7 +29,6 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenAdminSetBorrowingRewardPerSec_PoolAccRewardPerShareShouldBeUpdatedCorrectly() external {
     vm.prank(BOB);
     borrowFacet.borrow(0, address(weth), 10 ether);
-    adminFacet.addBorrowingRewardPerSec(address(rewardToken), 1 ether);
     vm.warp(block.timestamp + 100);
     adminFacet.updateBorrowingRewardPerSec(address(rewardToken), 3 ether);
     assertEq(rewardFacet.getBorrowingPool(address(rewardToken), address(weth)).accRewardPerShare, 2e12);

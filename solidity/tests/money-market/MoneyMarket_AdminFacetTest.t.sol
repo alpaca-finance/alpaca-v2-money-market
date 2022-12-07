@@ -107,9 +107,6 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenAdminManageLendingRewardPerSec_ShouldWork() external {
-    adminFacet.addLendingRewardPerSec(address(rewardToken), 1 ether);
-    assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken)), 1 ether);
-
     adminFacet.addLendingRewardPerSec(address(rewardToken2), 2 ether);
     assertEq(adminFacet.getLendingRewardPerSec(address(rewardToken2)), 2 ether);
     // reward 1 should be not affected
@@ -122,9 +119,6 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenAdminManageBorrowingRewardPerSec_ShouldWork() external {
-    adminFacet.addBorrowingRewardPerSec(address(rewardToken), 1 ether);
-    assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken)), 1 ether);
-
     adminFacet.addBorrowingRewardPerSec(address(rewardToken2), 2 ether);
     assertEq(adminFacet.getBorrowingRewardPerSec(address(rewardToken2)), 2 ether);
     // reward 1 should be not affected

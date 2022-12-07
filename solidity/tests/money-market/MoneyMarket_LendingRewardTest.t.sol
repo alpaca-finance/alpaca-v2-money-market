@@ -23,7 +23,6 @@ contract MoneyMarket_LendingRewardTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenAdminSetLendingRewardPerSec_PoolAccRewardPerShareShouldBeUpdatedCorrectly() external {
     _addIbTokenAsCollateral(ALICE, address(ibWeth), 10 ether);
-    adminFacet.addLendingRewardPerSec(address(rewardToken), 1 ether);
     vm.warp(block.timestamp + 100);
     adminFacet.updateLendingRewardPerSec(address(rewardToken), 3 ether);
     assertEq(rewardFacet.getLendingPool(address(rewardToken), address(ibWeth)).accRewardPerShare, 2e12);
