@@ -165,7 +165,7 @@ contract AdminFacet is IAdminFacet {
     if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       rewardPerSecList.init();
     }
-    rewardPerSecList.addOrUpdate(_rewardToken, _rewardPerSec);
+    rewardPerSecList.add(_rewardToken, _rewardPerSec);
 
     emit LogAddRewardPerSec(_rewardToken, _rewardPerSec);
   }
@@ -191,7 +191,7 @@ contract AdminFacet is IAdminFacet {
     if (rewardPerSecList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       rewardPerSecList.init();
     }
-    rewardPerSecList.addOrUpdate(_rewardToken, _rewardPerSec);
+    rewardPerSecList.add(_rewardToken, _rewardPerSec);
 
     emit LogAddRewardPerSec(_rewardToken, _rewardPerSec);
   }
@@ -231,7 +231,7 @@ contract AdminFacet is IAdminFacet {
     if (poolList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       poolList.init();
     }
-    poolList.addOrUpdate(_token, 1);
+    poolList.add(_token, 1);
 
     emit LogAddLendingPool(_token, _rewardToken, _allocPoint);
   }
@@ -283,7 +283,7 @@ contract AdminFacet is IAdminFacet {
     if (poolList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       poolList.init();
     }
-    poolList.addOrUpdate(_token, 1);
+    poolList.add(_token, 1);
 
     emit LogAddBorroweringPool(_token, _rewardToken, _allocPoint);
   }
