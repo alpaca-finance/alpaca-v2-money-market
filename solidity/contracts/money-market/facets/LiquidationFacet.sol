@@ -66,7 +66,7 @@ contract LiquidationFacet is ILiquidationFacet {
       }
     }
 
-    uint256 _actualRepayAmount = _getActualRepayAmount(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
+    uint256 _actualRepayAmount = _getActualRepayAmountWithFee(_subAccount, _repayToken, _repayAmount, moneyMarketDs);
     uint256 _feeToTreasury = (_actualRepayAmount * REPURCHASE_FEE_BPS) / 10000;
 
     // avoid stack too deep
@@ -293,6 +293,28 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
+  }
+
+  /// @dev min(repayAmount, debtValue + fee)
+  /// get actual repay amount for repurchase
+  function _getActualRepayAmountWithFee(
+    address _subAccount,
+    address _repayToken,
+    uint256 _repayAmount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _actualRepayAmount) {
+    uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
+    // for ib debtValue is in ib shares not in underlying
+    uint256 _debtValue = LibShareUtil.shareToValue(
+      _debtShare,
+      moneyMarketDs.debtValues[_repayToken],
+      moneyMarketDs.debtShares[_repayToken]
+    );
+
+    uint256 _repurchaseFee = (_debtValue * REPURCHASE_FEE_BPS) / (LibMoneyMarket01.MAX_BPS - REPURCHASE_FEE_BPS);
+    uint256 _debtValueWithFee = _debtValue + _repurchaseFee;
+
+    _actualRepayAmount = _repayAmount > _debtValueWithFee ? _debtValueWithFee : _repayAmount;
   }
 
   // TODO: pay fee in repayToken instead of collatToken
