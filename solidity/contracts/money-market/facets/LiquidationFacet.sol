@@ -91,12 +91,12 @@ contract LiquidationFacet is ILiquidationFacet {
       );
     }
 
-    _reduceDebt(_subAccount, _repayToken, _actualRepayAmount, moneyMarketDs);
+    _reduceDebt(_subAccount, _repayToken, _actualRepayAmount - _feeToTreasury, moneyMarketDs);
     _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
 
-    ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmount + _feeToTreasury);
+    ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-    ERC20(_collatToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
+    ERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
     emit LogRepurchase(msg.sender, _repayToken, _collatToken, _actualRepayAmount, _collatAmountOut, _feeToTreasury);
   }
