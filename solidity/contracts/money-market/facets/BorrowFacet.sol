@@ -121,6 +121,67 @@ contract BorrowFacet is IBorrowFacet {
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
+  function repayWithIbCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external nonReentrant {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+    // ib token as collat
+    address _repayToken = moneyMarketDs.ibTokenToTokens[_token];
+    if (_repayToken == address(0)) {
+      revert BorrowFacet_InvalidToken(_token);
+    }
+
+    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+
+    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
+
+    // actual repay amount is minimum of collateral amount, debt amount, and repay amount
+    uint256 _availableAmount = LibShareUtil.shareToValue(
+      moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token),
+      LibMoneyMarket01.getTotalToken(_repayToken, moneyMarketDs),
+      ERC20(_token).totalSupply()
+    );
+
+    uint256 _maximumAmountToRemove = _availableAmount > _oldDebtAmount ? _oldDebtAmount : _availableAmount;
+
+    uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
+
+    uint256 _shareToRemove = LibShareUtil.valueToShare(
+      _amountToRemove,
+      moneyMarketDs.debtShares[_token],
+      moneyMarketDs.debtValues[_token]
+    );
+
+    uint256 _actualRepayAmount = _removeDebt(
+      _account,
+      _subAccount,
+      _token,
+      _oldSubAccountDebtShare,
+      _shareToRemove,
+      moneyMarketDs
+    );
+
+    if (_actualRepayAmount > _availableAmount) {
+      revert BorrowFacet_TooManyCollateralRemoved();
+    }
+
+    uint256 _ibToRemove = LibShareUtil.valueToShare(
+      _actualRepayAmount,
+      ERC20(_token).totalSupply(),
+      LibMoneyMarket01.getTotalToken(_repayToken, moneyMarketDs)
+    );
+
+    LibMoneyMarket01.removeCollat(_subAccount, _token, _ibToRemove, moneyMarketDs);
+    // burn ib
+    LibMoneyMarket01.withdraw(_token, _ibToRemove, address(this), moneyMarketDs);
+
+    emit LogRepayWithCollat(_account, _subAccountId, _token, _ibToRemove);
+  }
+
   function repayWithCollat(
     address _account,
     uint256 _subAccountId,
@@ -159,9 +220,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_TooManyCollateralRemoved();
     }
 
-    moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
-    moneyMarketDs.collats[_token] -= _actualRepayAmount;
-    moneyMarketDs.accountCollats[_account][_token] -= _actualRepayAmount;
+    LibMoneyMarket01.removeCollat(_subAccount, _token, _actualRepayAmount, moneyMarketDs);
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
