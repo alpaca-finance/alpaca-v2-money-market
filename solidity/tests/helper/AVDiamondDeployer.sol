@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { AutomatedVaultDiamond } from "../../contracts/automated-vault/AutomatedVaultDiamond.sol";
+import { AVDiamond } from "../../contracts/automated-vault/AVDiamond.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
@@ -16,7 +16,7 @@ library AVDiamondDeployer {
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
     // Deploy LYF
-    AutomatedVaultDiamond _avDiamond = new AutomatedVaultDiamond(address(this), address(diamondCutFacet));
+    AVDiamond _avDiamond = new AVDiamond(address(this), address(diamondCutFacet));
 
     initializeDiamond(DiamondCutFacet(address(_avDiamond)));
 

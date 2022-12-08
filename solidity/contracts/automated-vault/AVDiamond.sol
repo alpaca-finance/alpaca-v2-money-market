@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { LibDiamond } from "./libraries/LibDiamond.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 
-contract AutomatedVaultDiamond {
+contract AVDiamond {
   constructor(address _contractOwner, address _diamondCutFacet) {
     LibDiamond.setContractOwner(_contractOwner);
 
