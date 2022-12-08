@@ -40,11 +40,17 @@ contract RewardFacet is IRewardFacet {
   function claimMultipleLendingRewardsFor(
     address _claimFor,
     address[] calldata _rewardTokens,
-    address _token
+    address[] calldata _tokens
   ) external nonReentrant {
-    uint256 _length = _rewardTokens.length;
-    for (uint256 _i; _i < _length; ) {
-      _claimLendingRewardFor(_claimFor, _rewardTokens[_i], _token);
+    uint256 _rewardLength = _rewardTokens.length;
+    uint256 _tokenLength = _tokens.length;
+    for (uint256 _i; _i < _rewardLength; ) {
+      for (uint256 _j; _j < _tokenLength; ) {
+        _claimLendingRewardFor(_claimFor, _rewardTokens[_i], _tokens[_j]);
+        unchecked {
+          ++_j;
+        }
+      }
       unchecked {
         ++_i;
       }
@@ -74,11 +80,17 @@ contract RewardFacet is IRewardFacet {
   function claimMultipleBorrowingRewardsFor(
     address _claimFor,
     address[] calldata _rewardTokens,
-    address _token
+    address[] calldata _tokens
   ) external nonReentrant {
-    uint256 _length = _rewardTokens.length;
-    for (uint256 _i; _i < _length; ) {
-      _claimBorrowingRewardFor(_claimFor, _rewardTokens[_i], _token);
+    uint256 _rewardLength = _rewardTokens.length;
+    uint256 _tokenLength = _tokens.length;
+    for (uint256 _i; _i < _rewardLength; ) {
+      for (uint256 _j; _j < _tokenLength; ) {
+        _claimBorrowingRewardFor(_claimFor, _rewardTokens[_i], _tokens[_j]);
+        unchecked {
+          ++_j;
+        }
+      }
       unchecked {
         ++_i;
       }

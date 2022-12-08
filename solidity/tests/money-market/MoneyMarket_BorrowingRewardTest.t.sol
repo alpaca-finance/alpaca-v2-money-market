@@ -94,7 +94,9 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     address[] memory _toClaimRewards = new address[](2);
     _toClaimRewards[0] = address(rewardToken);
     _toClaimRewards[1] = address(rewardToken2);
-    rewardFacet.claimMultipleBorrowingRewardsFor(BOB, _toClaimRewards, borrowedToken);
+    address[] memory _claimTokens = new address[](1);
+    _claimTokens[0] = borrowedToken;
+    rewardFacet.claimMultipleBorrowingRewardsFor(BOB, _toClaimRewards, _claimTokens);
 
     _assertAccountReward(BOB, address(rewardToken), borrowedToken, 40 ether, 40 ether);
     _assertAccountReward(BOB, address(rewardToken2), borrowedToken, 10 ether, 10 ether);
@@ -248,8 +250,6 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
     uint256 _expectedReward1 = 20 ether;
-    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), _borrowedToken1);
-    _assertAccountReward(BOB, address(rewardToken), _borrowedToken1, _expectedReward1, _expectedReward1.toInt256());
 
     // ibUsdc pool alloc point is 40
     // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
@@ -258,19 +258,23 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (5 * 8) - 0 = 40 (precision is 12)
     uint256 _expectedReward2 = 40 ether;
-    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), _borrowedToken2);
+
+    address[] memory _toClaimRewards = new address[](1);
+    _toClaimRewards[0] = address(rewardToken);
+    address[] memory _claimTokens = new address[](2);
+    _claimTokens[0] = _borrowedToken1;
+    _claimTokens[1] = _borrowedToken2;
+    rewardFacet.claimMultipleBorrowingRewardsFor(BOB, _toClaimRewards, _claimTokens);
+
+    uint256 _totalClaimedReward = _expectedReward1 + _expectedReward2;
+
+    _assertAccountReward(BOB, address(rewardToken), _borrowedToken1, _totalClaimedReward, _expectedReward1.toInt256());
 
     // total of claimed reward = 20 + 40 = 60
     // but reward debt fot ibToken2 should be 40
-    _assertAccountReward(
-      BOB,
-      address(rewardToken),
-      _borrowedToken2,
-      _expectedReward1 + _expectedReward2,
-      _expectedReward2.toInt256()
-    );
+    _assertAccountReward(BOB, address(rewardToken), _borrowedToken2, _totalClaimedReward, _expectedReward2.toInt256());
 
-    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - (_expectedReward1 + _expectedReward2));
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _totalClaimedReward);
   }
 
   function testCorrectness_WhenUserBorrowTokenAndClaimRewardTwice_UserShouldReceivedRewardCorrectly() external {

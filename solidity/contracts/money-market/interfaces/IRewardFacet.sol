@@ -13,7 +13,7 @@ interface IRewardFacet {
   function claimMultipleLendingRewardsFor(
     address _claimFor,
     address[] calldata _rewardTokens,
-    address _token
+    address[] calldata _tokens
   ) external;
 
   function claimBorrowingRewardFor(
@@ -25,7 +25,7 @@ interface IRewardFacet {
   function claimMultipleBorrowingRewardsFor(
     address _claimFor,
     address[] calldata _rewardTokens,
-    address _token
+    address[] calldata _tokens
   ) external;
 
   function pendingLendingReward(
