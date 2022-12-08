@@ -304,7 +304,7 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _actualRepayAmount) {
     uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
-    // for ib debtValue is in ib shares not in underlying
+
     uint256 _debtValue = LibShareUtil.shareToValue(
       _debtShare,
       moneyMarketDs.debtValues[_repayToken],
