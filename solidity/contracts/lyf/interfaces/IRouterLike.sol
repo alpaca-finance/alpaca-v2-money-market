@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-interface IPancakeRouter02 {
+interface IRouterLike {
   function factory() external pure returns (address);
 
   function WETH() external pure returns (address);

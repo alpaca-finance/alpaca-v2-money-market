@@ -47,7 +47,11 @@ library LibLYF01 {
   struct LPConfig {
     address strategy;
     address masterChef;
+    address router;
+    address rewardToken;
     uint256 poolId;
+    address[] reinvestPath;
+    uint256 reinvestThreshold;
   }
 
   struct DebtShareTokens {
@@ -73,6 +77,9 @@ library LibLYF01 {
     mapping(address => uint256) lpValues;
     mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
+    //
+    mapping(address => uint256) pendingRewards;
+    mapping(address => bool) reinvestorsOk;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {

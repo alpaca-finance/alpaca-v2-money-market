@@ -356,4 +356,28 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     );
     vm.stopPrank();
   }
+
+  function testCorrectness_WhenReinvestisCalled_ShouldConvertRewardTokenToLP() external {
+    uint256 _desiredWeth = 30 ether;
+    uint256 _desiredUsdc = 30 ether;
+    uint256 _wethAmountDirect = 20 ether;
+    uint256 _usdcAmountDirect = 30 ether;
+
+    vm.startPrank(BOB);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _desiredWeth,
+      _desiredUsdc,
+      0,
+      _wethAmountDirect,
+      _usdcAmountDirect
+    );
+    vm.stopPrank();
+
+    // farm at master chef
+    // time pass
+    // call reinvest
+    // lp should increase
+  }
 }

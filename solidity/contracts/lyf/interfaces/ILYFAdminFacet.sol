@@ -18,6 +18,10 @@ interface ILYFAdminFacet {
     address lpToken;
     address strategy;
     address masterChef;
+    address router;
+    address rewardToken;
+    address[] reinvestPath;
+    uint256 reinvestThreshold;
     uint256 poolId;
   }
 
