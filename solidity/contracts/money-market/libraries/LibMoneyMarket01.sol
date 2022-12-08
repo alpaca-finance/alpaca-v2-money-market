@@ -100,15 +100,20 @@ library LibMoneyMarket01 {
     address rewardDistributor;
     mapping(address => mapping(address => uint256)) accountCollats;
     mapping(address => mapping(address => uint256)) accountDebtShares;
-    // token => pool info
-    mapping(address => PoolInfo) lendingPoolInfos;
-    mapping(address => PoolInfo) borrowingPoolInfos;
-    // account => pool key (token) => amount
-    mapping(address => mapping(address => int256)) lenderRewardDebts;
-    mapping(address => mapping(address => int256)) borrowerRewardDebts;
-    RewardConfig rewardConfig;
-    uint256 totalLendingPoolAllocPoint;
-    uint256 totalBorrowingPoolAllocPoint;
+    mapping(address => LibDoublyLinkedList.List) rewardLendingPoolList;
+    mapping(address => LibDoublyLinkedList.List) rewardBorrowingPoolList;
+    // reward token => token => pool info
+    mapping(bytes32 => PoolInfo) lendingPoolInfos;
+    mapping(bytes32 => PoolInfo) borrowingPoolInfos;
+    // account => reward token + pool key (token) => amount
+    mapping(address => mapping(bytes32 => int256)) lenderRewardDebts;
+    mapping(address => mapping(bytes32 => int256)) borrowerRewardDebts;
+    // multiple reward
+    LibDoublyLinkedList.List lendingRewardPerSecList;
+    LibDoublyLinkedList.List borrowingRewardPerSecList;
+    // reward token
+    mapping(address => uint256) totalLendingPoolAllocPoints;
+    mapping(address => uint256) totalBorrowingPoolAllocPoints;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -452,6 +457,10 @@ library LibMoneyMarket01 {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
 
+  function getPoolKey(address _rewardToken, address _token) internal pure returns (bytes32 _key) {
+    _key = keccak256(abi.encodePacked(_rewardToken, _token));
+  }
+
   function isSubaccountHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
@@ -564,5 +573,21 @@ library LibMoneyMarket01 {
     }
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
+  }
+
+  function getLendingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
+    internal
+    view
+    returns (uint256)
+  {
+    return ds.lendingRewardPerSecList.getAmount(_rewardToken);
+  }
+
+  function getBorrowingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
+    internal
+    view
+    returns (uint256)
+  {
+    return ds.borrowingRewardPerSecList.getAmount(_rewardToken);
   }
 }

@@ -70,7 +70,7 @@ library LYFDiamondDeployer {
   function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFFarmFacet, bytes4[] memory) {
     LYFFarmFacet _farmFacet = new LYFFarmFacet();
 
-    bytes4[] memory selectors = new bytes4[](15);
+    bytes4[] memory selectors = new bytes4[](16);
     selectors[0] = LYFFarmFacet.addFarmPosition.selector;
     selectors[1] = LYFFarmFacet.getDebtShares.selector;
     selectors[2] = LYFFarmFacet.getTotalBorrowingPower.selector;
@@ -83,9 +83,10 @@ library LYFDiamondDeployer {
     selectors[9] = LYFFarmFacet.accureInterest.selector;
     selectors[10] = LYFFarmFacet.debtValues.selector;
     selectors[11] = LYFFarmFacet.debtShares.selector;
-    selectors[12] = LYFFarmFacet.liquidateLP.selector;
+    selectors[12] = LYFFarmFacet.reducePosition.selector;
     selectors[13] = LYFFarmFacet.getMMDebt.selector;
     selectors[14] = LYFFarmFacet.directAddFarmPosition.selector;
+    selectors[15] = LYFFarmFacet.repayWithCollat.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_farmFacet),

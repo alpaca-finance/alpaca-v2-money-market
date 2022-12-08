@@ -181,27 +181,24 @@ library LibLYF01 {
   function getTotalUsedBorrowedPower(address _subAccount, LYFDiamondStorage storage lyfDs)
     internal
     view
-    returns (uint256 _totalUsedBorrowedPower, bool _hasIsolateAsset)
+    returns (uint256 _totalUsedBorrowedPower)
   {
-    // todo: debt thing
-    // LibDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
-    // uint256 _borrowedLength = _borrowed.length;
-    // for (uint256 _i = 0; _i < _borrowedLength; ) {
-    //   TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_borrowed[_i].token];
-    //   if (_tokenConfig.tier == AssetTier.ISOLATE) {
-    //     _hasIsolateAsset = true;
-    //   }
-    //   (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, lyfDs);
-    //   uint256 _borrowedAmount = LibShareUtil.shareToValue(
-    //     _borrowed[_i].amount,
-    //     lyfDs.debtValues[_borrowed[_i].token],
-    //     lyfDs.debtShares[_borrowed[_i].token]
-    //   );
-    //   _totalUsedBorrowedPower += usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
-    //   unchecked {
-    //     _i++;
-    //   }
-    // }
+    LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
+    uint256 _borrowedLength = _borrowed.length;
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index].token;
+      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
+      (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
+      uint256 _borrowedAmount = LibShareUtil.shareToValue(
+        _borrowed[_i].amount,
+        lyfDs.debtValues[_borrowed[_i].index],
+        lyfDs.debtShares[_borrowed[_i].index]
+      );
+      _totalUsedBorrowedPower += usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+      unchecked {
+        _i++;
+      }
+    }
   }
 
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256, uint256) {
@@ -311,7 +308,7 @@ library LibLYF01 {
 
   function isSubaccountHealthy(address _subAccount, LYFDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
+    uint256 _totalUsedBorrowedPower = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
   }
 

@@ -4,21 +4,63 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 interface IRewardFacet {
-  function claimReward(address _token) external;
+  function claimLendingRewardFor(
+    address _claimFor,
+    address _token,
+    address _rewardToken
+  ) external;
 
-  function claimBorrowingRewardFor(address _to, address _token) external;
+  function claimMultipleLendingRewardsFor(
+    address _claimFor,
+    address[] calldata _rewardTokens,
+    address[] calldata _tokens
+  ) external;
 
-  function pendingLendingReward(address _account, address _token) external view returns (uint256);
+  function claimBorrowingRewardFor(
+    address _claimFor,
+    address _token,
+    address _rewardToken
+  ) external;
 
-  function pendingBorrowingReward(address _account, address _token) external view returns (uint256);
+  function claimMultipleBorrowingRewardsFor(
+    address _claimFor,
+    address[] calldata _rewardTokens,
+    address[] calldata _tokens
+  ) external;
 
-  function lenderRewardDebts(address _account, address _token) external view returns (int256);
+  function pendingLendingReward(
+    address _account,
+    address _rewardToken,
+    address _token
+  ) external view returns (uint256);
 
-  function borrowerRewardDebts(address _account, address _token) external view returns (int256);
+  function pendingBorrowingReward(
+    address _account,
+    address _rewardToken,
+    address _token
+  ) external view returns (uint256);
 
-  function getLendingPool(address _token) external view returns (LibMoneyMarket01.PoolInfo memory);
+  function lenderRewardDebts(
+    address _account,
+    address _rewardToken,
+    address _token
+  ) external view returns (int256);
 
-  function getBorrowingPool(address _token) external view returns (LibMoneyMarket01.PoolInfo memory);
+  function borrowerRewardDebts(
+    address _account,
+    address _rewardToken,
+    address _token
+  ) external view returns (int256);
+
+  function getLendingPool(address _rewardToken, address _token)
+    external
+    view
+    returns (LibMoneyMarket01.PoolInfo memory);
+
+  function getBorrowingPool(address _rewardToken, address _token)
+    external
+    view
+    returns (LibMoneyMarket01.PoolInfo memory);
 
   // errors
   error RewardFacet_InvalidAddress();

@@ -30,6 +30,14 @@ interface ILYFFarmFacet {
     uint256 _repayAmount
   ) external;
 
+  function repayWithCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    address _lpToken,
+    uint256 _repayAmount
+  ) external;
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
@@ -43,7 +51,7 @@ interface ILYFFarmFacet {
   function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+    returns (uint256 _totalBorrowedUSDValue);
 
   function getDebt(
     address _account,
@@ -64,10 +72,12 @@ interface ILYFFarmFacet {
 
   function debtShares(address _token, address _lpToken) external view returns (uint256);
 
-  function liquidateLP(
+  function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpShareAmount
+    uint256 _lpShareAmount,
+    uint256 _amount0Out,
+    uint256 _amount1Out
   ) external;
 
   function getMMDebt(address _token) external view returns (uint256);
@@ -83,4 +93,7 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_InvalidAssetTier();
   error LYFFarmFacet_ExceedBorrowLimit();
   error LYFFarmFacet_BadInput();
+  error LYFFarmFacet_TooLittleReceived();
+  error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_CollatNotEnough();
 }
