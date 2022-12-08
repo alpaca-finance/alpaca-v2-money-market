@@ -30,6 +30,14 @@ interface ILYFFarmFacet {
     uint256 _repayAmount
   ) external;
 
+  function repayWithCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    address _lpToken,
+    uint256 _repayAmount
+  ) external;
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
@@ -87,4 +95,5 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_BadInput();
   error LYFFarmFacet_TooLittleReceived();
   error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_CollatNotEnough();
 }

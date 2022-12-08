@@ -439,4 +439,95 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     );
     vm.stopPrank();
   }
+
+  function testCorrectness_WhenUserRepay_SubaccountShouldDecreased() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
+    vm.stopPrank();
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+    uint256 _subAccountWethDebtValue;
+    vm.startPrank(BOB);
+    // 1. repay < debt
+    farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 5 ether);
+    (, _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    // start at 20, repay , remain 15
+    assertEq(_subAccountWethDebtValue, 15 ether);
+
+    // 1. repay > debt
+    farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
+    (, _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    // start at 20, repay , remain 15
+    assertEq(_subAccountWethDebtValue, 0 ether);
+
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserRepayWithCollat_SubaccountShouldDecreased() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
+    vm.stopPrank();
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+    uint256 _subAccountWethDebtValue;
+
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+    uint256 _subAccountWethCollat;
+
+    // check collat
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 30 ether);
+    // 1. repay < debt
+    farmFacet.repayWithCollat(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 5 ether);
+    (, _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
+    // start at 20, repay , remain 15, collat left 25
+    assertEq(_subAccountWethDebtValue, 15 ether);
+    assertEq(_subAccountWethCollat, 25 ether);
+
+    // 1. repay > debt
+    farmFacet.repayWithCollat(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
+    (, _subAccountWethDebtValue) = farmFacet.getDebt(BOB, subAccount0, address(weth), address(wethUsdcLPToken));
+    _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
+    // start at 15, trying to repay 20 (more than debt) , remain 0, collat left 10
+
+    _subAccountWethCollat = collateralFacet.subAccountCollatAmount(_bobSubaccount, address(weth));
+    assertEq(_subAccountWethDebtValue, 0 ether);
+    assertEq(_subAccountWethCollat, 10 ether);
+
+    vm.stopPrank();
+  }
 }
