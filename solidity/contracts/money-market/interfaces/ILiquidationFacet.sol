@@ -50,6 +50,7 @@ interface ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount
+    uint256 _repayAmount,
+    bytes calldata _paramsForStrategy
   ) external;
 }

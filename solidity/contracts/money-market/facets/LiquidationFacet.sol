@@ -26,6 +26,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address repayToken;
     address collatToken;
     uint256 repayAmount;
+    bytes paramsForStrategy;
   }
 
   uint256 constant REPURCHASE_REWARD_BPS = 100;
@@ -117,7 +118,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount
+    uint256 _repayAmount,
+    bytes calldata _paramsForStrategy
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -143,7 +145,8 @@ contract LiquidationFacet is ILiquidationFacet {
       subAccount: _subAccount,
       repayToken: _repayToken,
       collatToken: _collatToken,
-      repayAmount: _repayAmount
+      repayAmount: _repayAmount,
+      paramsForStrategy: _paramsForStrategy
     });
 
     address _collatUnderlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
@@ -181,7 +184,8 @@ contract LiquidationFacet is ILiquidationFacet {
       params.collatToken,
       params.repayToken,
       _actualRepayAmount + _feeToTreasury,
-      address(this)
+      address(this),
+      params.paramsForStrategy
     );
 
     // 4. check repaid amount, take fees, and update states
@@ -238,7 +242,8 @@ contract LiquidationFacet is ILiquidationFacet {
       _collatUnderlyingToken,
       params.repayToken,
       _actualRepayAmount + _feeToTreasury,
-      address(this)
+      address(this),
+      params.paramsForStrategy
     );
 
     // 4. check repaid amount, take fees, and update states
