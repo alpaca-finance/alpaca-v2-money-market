@@ -26,6 +26,14 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(BOB, 0, address(btc), 80 ether);
   }
 
+  function testCorrectness_WhenAdminSetBorrowingRewardPerSec_PoolAccRewardPerShareShouldBeUpdatedCorrectly() external {
+    vm.prank(BOB);
+    borrowFacet.borrow(0, address(weth), 10 ether);
+    vm.warp(block.timestamp + 100);
+    adminFacet.updateBorrowingRewardPerSec(address(rewardToken), 3 ether);
+    assertEq(rewardFacet.getBorrowingPool(address(rewardToken), address(weth)).accRewardPerShare, 2e12);
+  }
+
   function testCorrectness_WhenUserBorrowTokenAndClaimReward_UserShouldReceivedRewardCorrectly() external {
     address borrowedToken = address(weth);
     vm.prank(BOB);
@@ -41,12 +49,59 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of borrowed token) = 2 (precision is 12)
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    rewardFacet.claimBorrowingRewardFor(BOB, borrowedToken);
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
 
     uint256 _expectedReward = 20 ether;
 
-    _assertAccountReward(BOB, borrowedToken, _expectedReward, _expectedReward.toInt256());
+    _assertAccountReward(BOB, address(rewardToken), borrowedToken, _expectedReward, _expectedReward.toInt256());
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
+  }
+
+  function testCorrectness_WhenUserBorrowTokenAndClaimMultipleReward_UserShouldReceivedRewardCorrectly() external {
+    address borrowedToken = address(weth);
+    vm.prank(BOB);
+    borrowFacet.borrow(0, address(weth), 10 ether);
+
+    assertEq(borrowFacet.accountDebtShares(BOB, borrowedToken), 10 ether);
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
+    vm.warp(block.timestamp + 100);
+
+    // weth pool alloc point is 20
+    // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
+    // then reward = 100 * 1 * 20 / 100 = 20 ether
+    // then acc reward per share = 20 ether / 10 ether (total of borrowed token) = 2 (precision is 12)
+    // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
+    // bob reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
+
+    uint256 _expectedReward = 20 ether;
+
+    _assertAccountReward(BOB, address(rewardToken), borrowedToken, _expectedReward, _expectedReward.toInt256());
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
+
+    // add new reward for this token
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken2), 0.5 ether);
+    adminFacet.addBorrowingPool(address(rewardToken2), address(weth), 20);
+    adminFacet.addBorrowingPool(address(rewardToken2), address(btc), 80);
+    vm.warp(block.timestamp + 100);
+
+    // ibWeth pool alloc point is 20
+    // given time past 100 sec, reward per sec = 0.5 ether,  total alloc point is 100
+    // then reward = 100 * 0.5 * 20 / 100 = 10 ether
+    // then acc reward per share = 10 ether / 10 ether (total of collat token) = 1 (precision is 12)
+    // formula of unclaimed reward = (collat amount * acc reward per share) - reward debt
+    // alice reward debt is 0 now, then unclaimed reward = (10 * 1) - 0 = 10 (precision is 12)
+    address[] memory _toClaimRewards = new address[](2);
+    _toClaimRewards[0] = address(rewardToken);
+    _toClaimRewards[1] = address(rewardToken2);
+    address[] memory _claimTokens = new address[](1);
+    _claimTokens[0] = borrowedToken;
+    rewardFacet.claimMultipleBorrowingRewardsFor(BOB, _toClaimRewards, _claimTokens);
+
+    _assertAccountReward(BOB, address(rewardToken), borrowedToken, 40 ether, 40 ether);
+    _assertAccountReward(BOB, address(rewardToken2), borrowedToken, 10 ether, 10 ether);
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - 40 ether);
+    assertEq(rewardToken2.balanceOf(address(rewardDistributor)), 1000000 ether - 10 ether);
   }
 
   function testCorrectness_WhenUserBorrowTokenAndClaimRewardThenRepayDebtAndClaimAgain_UserShouldReceivedRewardCorrectly()
@@ -67,11 +122,11 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of borrowed token) = 2 (precision is 12)
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    rewardFacet.claimBorrowingRewardFor(BOB, borrowedToken);
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
 
     uint256 _expectedReward = 20 ether;
 
-    _assertAccountReward(BOB, borrowedToken, _expectedReward, _expectedReward.toInt256());
+    _assertAccountReward(BOB, address(rewardToken), borrowedToken, _expectedReward, _expectedReward.toInt256());
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
 
     uint256 _repayTimestamp = _claimTimestamp + 100;
@@ -87,11 +142,23 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
 
     vm.prank(BOB);
     borrowFacet.repay(BOB, 0, borrowedToken, 10 ether);
-    _assertAccountReward(BOB, borrowedToken, _expectedReward, -_expectedRewardAfterRemove.toInt256());
+    _assertAccountReward(
+      BOB,
+      address(rewardToken),
+      borrowedToken,
+      _expectedReward,
+      -_expectedRewardAfterRemove.toInt256()
+    );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedReward);
 
-    rewardFacet.claimBorrowingRewardFor(BOB, borrowedToken);
-    _assertAccountReward(BOB, borrowedToken, _expectedReward + _expectedRewardAfterRemove, 0 ether);
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
+    _assertAccountReward(
+      BOB,
+      address(rewardToken),
+      borrowedToken,
+      _expectedReward + _expectedRewardAfterRemove,
+      0 ether
+    );
     assertEq(
       rewardToken.balanceOf(address(rewardDistributor)),
       1000000 ether - (_expectedReward + _expectedRewardAfterRemove)
@@ -131,12 +198,12 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // reward debt should be update to 10 * 2 = 20
     int256 _eveRewardDebtToUpdate = 20 ether;
     assertEq(borrowFacet.accountDebtShares(EVE, _borrowedToken), _eveBorrowedAmount);
-    assertEq(rewardFacet.borrowerRewardDebts(EVE, _borrowedToken), _eveRewardDebtToUpdate);
+    assertEq(rewardFacet.borrowerRewardDebts(EVE, address(rewardToken), _borrowedToken), _eveRewardDebtToUpdate);
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether);
     vm.warp(_eveAddCollatTimestamp + 100);
 
-    rewardFacet.claimBorrowingRewardFor(BOB, _borrowedToken);
-    rewardFacet.claimBorrowingRewardFor(EVE, _borrowedToken);
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), _borrowedToken);
+    rewardFacet.claimBorrowingRewardFor(EVE, address(rewardToken), _borrowedToken);
 
     // ibWeth pool alloc point is 20
     // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
@@ -148,9 +215,10 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // eve reward debt is 20 now, then unclaimed reward = (10 * 3) - 20 = 10 (precision is 12)
     uint256 _expectedBobReward = 30 ether;
     uint256 _expectedEveReward = 10 ether;
-    _assertAccountReward(BOB, _borrowedToken, _expectedBobReward, _expectedBobReward.toInt256());
+    _assertAccountReward(BOB, address(rewardToken), _borrowedToken, _expectedBobReward, _expectedBobReward.toInt256());
     _assertAccountReward(
       EVE,
+      address(rewardToken),
       _borrowedToken,
       _expectedEveReward,
       _eveRewardDebtToUpdate + _expectedEveReward.toInt256()
@@ -182,8 +250,6 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
     uint256 _expectedReward1 = 20 ether;
-    rewardFacet.claimBorrowingRewardFor(BOB, _borrowedToken1);
-    _assertAccountReward(BOB, _borrowedToken1, _expectedReward1, _expectedReward1.toInt256());
 
     // ibUsdc pool alloc point is 40
     // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100
@@ -192,13 +258,23 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (5 * 8) - 0 = 40 (precision is 12)
     uint256 _expectedReward2 = 40 ether;
-    rewardFacet.claimBorrowingRewardFor(BOB, _borrowedToken2);
+
+    address[] memory _toClaimRewards = new address[](1);
+    _toClaimRewards[0] = address(rewardToken);
+    address[] memory _claimTokens = new address[](2);
+    _claimTokens[0] = _borrowedToken1;
+    _claimTokens[1] = _borrowedToken2;
+    rewardFacet.claimMultipleBorrowingRewardsFor(BOB, _toClaimRewards, _claimTokens);
+
+    uint256 _totalClaimedReward = _expectedReward1 + _expectedReward2;
+
+    _assertAccountReward(BOB, address(rewardToken), _borrowedToken1, _totalClaimedReward, _expectedReward1.toInt256());
 
     // total of claimed reward = 20 + 40 = 60
     // but reward debt fot ibToken2 should be 40
-    _assertAccountReward(BOB, _borrowedToken2, _expectedReward1 + _expectedReward2, _expectedReward2.toInt256());
+    _assertAccountReward(BOB, address(rewardToken), _borrowedToken2, _totalClaimedReward, _expectedReward2.toInt256());
 
-    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - (_expectedReward1 + _expectedReward2));
+    assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _totalClaimedReward);
   }
 
   function testCorrectness_WhenUserBorrowTokenAndClaimRewardTwice_UserShouldReceivedRewardCorrectly() external {
@@ -217,11 +293,17 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // then acc reward per share = 20 ether / 10 ether (total of borrowed token) = 2 (precision is 12)
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (10 * 2) - 0 = 20 (precision is 12)
-    rewardFacet.claimBorrowingRewardFor(BOB, borrowedToken);
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
 
     uint256 _expectedFirstReward = 20 ether;
 
-    _assertAccountReward(BOB, borrowedToken, _expectedFirstReward, _expectedFirstReward.toInt256());
+    _assertAccountReward(
+      BOB,
+      address(rewardToken),
+      borrowedToken,
+      _expectedFirstReward,
+      _expectedFirstReward.toInt256()
+    );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _expectedFirstReward);
 
     uint256 _secondClaimTimestamp = _firstClaimTimestamp + 100;
@@ -246,7 +328,7 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(0, address(weth), 10 ether);
     assertEq(borrowFacet.accountDebtShares(BOB, borrowedToken), 20 ether);
     assertEq(
-      rewardFacet.borrowerRewardDebts(BOB, borrowedToken),
+      rewardFacet.borrowerRewardDebts(BOB, address(rewardToken), borrowedToken),
       _expectedFirstReward.toInt256() + _expectedRewardDebtToUpdate
     );
 
@@ -259,22 +341,29 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     // total acc reward per share = 4 (old) + 1 = 5 (precision is 12)
     // formula of unclaimed reward = (borrowed amount * acc reward per share) - reward debt
     // bob reward debt is 0 now, then unclaimed reward = (20 * 5) - 60 = 40 (precision is 12)
-    rewardFacet.claimBorrowingRewardFor(BOB, borrowedToken);
+    rewardFacet.claimBorrowingRewardFor(BOB, address(rewardToken), borrowedToken);
 
     uint256 _expectedSecondReward = 40 ether;
 
     uint256 _totalReward = _expectedFirstReward + _expectedSecondReward;
-    _assertAccountReward(BOB, borrowedToken, _totalReward, _totalReward.toInt256() + _expectedRewardDebtToUpdate);
+    _assertAccountReward(
+      BOB,
+      address(rewardToken),
+      borrowedToken,
+      _totalReward,
+      _totalReward.toInt256() + _expectedRewardDebtToUpdate
+    );
     assertEq(rewardToken.balanceOf(address(rewardDistributor)), 1000000 ether - _totalReward);
   }
 
   function _assertAccountReward(
     address _account,
+    address _rewardToken,
     address _borrowedToken,
     uint256 _claimedReward,
     int256 _rewardDebt
   ) internal {
-    assertEq(rewardToken.balanceOf(_account), _claimedReward);
-    assertEq(rewardFacet.borrowerRewardDebts(_account, _borrowedToken), _rewardDebt);
+    assertEq(MockERC20(_rewardToken).balanceOf(_account), _claimedReward);
+    assertEq(rewardFacet.borrowerRewardDebts(_account, _rewardToken, _borrowedToken), _rewardDebt);
   }
 }

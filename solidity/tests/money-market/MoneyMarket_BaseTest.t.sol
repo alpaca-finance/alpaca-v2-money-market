@@ -179,23 +179,24 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // set reward
     adminFacet.setRewardDistributor(address(rewardDistributor));
 
-    adminFacet.setRewardConfig(address(rewardToken), 1 ether);
+    adminFacet.addLendingRewardPerSec(address(rewardToken), 1 ether);
+    adminFacet.addBorrowingRewardPerSec(address(rewardToken), 1 ether);
     // add pools
     // ibWeth is 20%
     // ibBtc is 20%
     // ibUsdc is 40%
     // ibIsolateToken is 15%
     // ibWNative is 5%
-    adminFacet.addLendingPool(address(ibWeth), 20);
-    adminFacet.addLendingPool(address(ibBtc), 20);
-    adminFacet.addLendingPool(address(ibUsdc), 40);
-    adminFacet.addLendingPool(address(ibIsolateToken), 15);
-    adminFacet.addLendingPool(address(ibWNative), 5);
+    adminFacet.addLendingPool(address(rewardToken), address(ibWeth), 20);
+    adminFacet.addLendingPool(address(rewardToken), address(ibBtc), 20);
+    adminFacet.addLendingPool(address(rewardToken), address(ibUsdc), 40);
+    adminFacet.addLendingPool(address(rewardToken), address(ibIsolateToken), 15);
+    adminFacet.addLendingPool(address(rewardToken), address(ibWNative), 5);
 
     // add borrower pool
-    adminFacet.addBorrowingPool(address(weth), 20);
-    adminFacet.addBorrowingPool(address(btc), 40);
-    adminFacet.addBorrowingPool(address(usdc), 40);
+    adminFacet.addBorrowingPool(address(rewardToken), address(weth), 20);
+    adminFacet.addBorrowingPool(address(rewardToken), address(btc), 40);
+    adminFacet.addBorrowingPool(address(rewardToken), address(usdc), 40);
 
     adminFacet.setTreasury(address(this));
   }
