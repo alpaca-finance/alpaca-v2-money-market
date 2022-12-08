@@ -313,25 +313,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
   }
 
-  function _validate(
-    address _subAccount,
-    address _token,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view {
-    // todo: check if can borrow
-
-    // check asset tier
-    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-
-    uint256 _totalUsedBorrowedPower = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
-
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, lyfDs);
-
-    // todo: support debt share index
-    _checkAvailableToken(_token, _amount, 0, lyfDs);
-  }
-
   // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowingPower,
