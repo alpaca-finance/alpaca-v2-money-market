@@ -15,7 +15,6 @@ import { LibBorrowingReward } from "../libraries/LibBorrowingReward.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
-import { console } from "solidity/tests/utils/console.sol";
 
 contract BorrowFacet is IBorrowFacet {
   using SafeERC20 for ERC20;
