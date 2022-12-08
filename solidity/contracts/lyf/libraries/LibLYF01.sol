@@ -119,9 +119,9 @@ library LibLYF01 {
     if (_pendingInterest > 0) {
       // update overcollat debt
       lyfDs.debtValues[_debtShareId] += _pendingInterest;
-      // update timestamp
-      lyfDs.debtLastAccureTime[_debtShareId] = block.timestamp;
     }
+    // update timestamp
+    lyfDs.debtLastAccureTime[_debtShareId] = block.timestamp;
   }
 
   function accureAllSubAccountDebtShares(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
