@@ -116,6 +116,32 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(collateralFacet.collats(address(weth)), 90 ether);
   }
 
+  function testCorrectness_WhenUserRepayWithIbCollat_DebtValueAndCollatShouldDecrease() external {
+    uint256 _debtAmount;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    vm.startPrank(ALICE);
+
+    weth.approve(moneyMarketDiamond, 10 ether);
+    lendFacet.deposit(address(weth), 10 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 10 ether);
+    assertEq(collateralFacet.collats(address(ibWeth)), 10 ether);
+
+    borrowFacet.repayWithIbCollat(ALICE, subAccount0, address(ibWeth), 5 ether);
+    vm.stopPrank();
+
+    (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
+    (_globalDebtShare, _globalDebtValue) = borrowFacet.getGlobalDebt(address(weth));
+    assertEq(_debtAmount, 5 ether);
+    assertEq(_globalDebtShare, 5 ether);
+    assertEq(_globalDebtValue, 5 ether);
+    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), 5 ether);
+
+    assertEq(collateralFacet.collats(address(weth)), 100 ether);
+    assertEq(collateralFacet.collats(address(ibWeth)), 5 ether);
+  }
+
   function testCorrectness_WhenUserRepayWithCollatMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
     uint256 _debtAmount;
     uint256 _repayAmount = 20 ether;

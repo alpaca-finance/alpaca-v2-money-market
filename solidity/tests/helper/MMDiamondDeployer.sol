@@ -152,7 +152,7 @@ library MMDiamondDeployer {
   function deployBorrowFacet(DiamondCutFacet diamondCutFacet) internal returns (BorrowFacet, bytes4[] memory) {
     BorrowFacet _brrowFacet = new BorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](15);
+    bytes4[] memory selectors = new bytes4[](16);
     selectors[0] = BorrowFacet.borrow.selector;
     selectors[1] = BorrowFacet.getDebtShares.selector;
     selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
@@ -168,6 +168,7 @@ library MMDiamondDeployer {
     selectors[12] = BorrowFacet.repayWithCollat.selector;
     selectors[13] = BorrowFacet.getFloatingBalance.selector;
     selectors[14] = BorrowFacet.accountDebtShares.selector;
+    selectors[15] = BorrowFacet.repayWithIbCollat.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_brrowFacet),

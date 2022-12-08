@@ -15,11 +15,27 @@ import { LibBorrowingReward } from "../libraries/LibBorrowingReward.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
+import { console } from "solidity/tests/utils/console.sol";
 
 contract BorrowFacet is IBorrowFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
+
+  struct RepayLocalVars {
+    address repayToken;
+    address subAccount;
+    uint256 oldSubAccountDebtShare;
+    uint256 oldDebtAmount;
+    uint256 ibTotalSupply;
+    uint256 totalToken;
+    uint256 availableAmount;
+    uint256 maximumAmountToRemove;
+    uint256 amountToRemove;
+    uint256 shareToRemove;
+    uint256 actualRepayAmount;
+    uint256 ibToRemove;
+  }
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -128,58 +144,58 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _repayAmount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+    RepayLocalVars memory _vars;
+    _vars.subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
     // ib token as collat
-    address _repayToken = moneyMarketDs.ibTokenToTokens[_token];
-    if (_repayToken == address(0)) {
+    _vars.repayToken = moneyMarketDs.ibTokenToTokens[_token];
+    if (_vars.repayToken == address(0)) {
       revert BorrowFacet_InvalidToken(_token);
     }
 
-    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accureAllSubAccountDebtToken(_vars.subAccount, moneyMarketDs);
 
-    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
+    (_vars.oldSubAccountDebtShare, _vars.oldDebtAmount) = _getDebt(_vars.subAccount, _vars.repayToken, moneyMarketDs);
 
+    _vars.ibTotalSupply = ERC20(_token).totalSupply();
+    _vars.totalToken = LibMoneyMarket01.getTotalToken(_vars.repayToken, moneyMarketDs);
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
-    uint256 _availableAmount = LibShareUtil.shareToValue(
-      moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token),
-      LibMoneyMarket01.getTotalToken(_repayToken, moneyMarketDs),
-      ERC20(_token).totalSupply()
+    _vars.availableAmount = LibShareUtil.shareToValue(
+      moneyMarketDs.subAccountCollats[_vars.subAccount].getAmount(_token),
+      _vars.totalToken,
+      _vars.ibTotalSupply
     );
 
-    uint256 _maximumAmountToRemove = _availableAmount > _oldDebtAmount ? _oldDebtAmount : _availableAmount;
+    _vars.maximumAmountToRemove = _vars.availableAmount > _vars.oldDebtAmount
+      ? _vars.oldDebtAmount
+      : _vars.availableAmount;
 
-    uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
+    _vars.amountToRemove = _repayAmount > _vars.maximumAmountToRemove ? _vars.maximumAmountToRemove : _repayAmount;
 
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      _amountToRemove,
-      moneyMarketDs.debtShares[_token],
-      moneyMarketDs.debtValues[_token]
-    );
+    if (_vars.amountToRemove > 0) {
+      _vars.shareToRemove = LibShareUtil.valueToShare(
+        _vars.amountToRemove,
+        moneyMarketDs.debtShares[_vars.repayToken],
+        moneyMarketDs.debtValues[_vars.repayToken]
+      );
 
-    uint256 _actualRepayAmount = _removeDebt(
-      _account,
-      _subAccount,
-      _token,
-      _oldSubAccountDebtShare,
-      _shareToRemove,
-      moneyMarketDs
-    );
+      _vars.actualRepayAmount = _removeDebt(
+        _account,
+        _vars.subAccount,
+        _vars.repayToken,
+        _vars.oldSubAccountDebtShare,
+        _vars.shareToRemove,
+        moneyMarketDs
+      );
 
-    if (_actualRepayAmount > _availableAmount) {
-      revert BorrowFacet_TooManyCollateralRemoved();
+      _vars.ibToRemove = LibShareUtil.valueToShare(_vars.actualRepayAmount, _vars.ibTotalSupply, _vars.totalToken);
+
+      LibMoneyMarket01.removeCollat(_vars.subAccount, _token, _vars.ibToRemove, moneyMarketDs);
+      // burn ib
+      LibMoneyMarket01.withdraw(_token, _vars.ibToRemove, address(this), moneyMarketDs);
+
+      emit LogRepayWithCollat(_account, _subAccountId, _token, _vars.ibToRemove);
     }
-
-    uint256 _ibToRemove = LibShareUtil.valueToShare(
-      _actualRepayAmount,
-      ERC20(_token).totalSupply(),
-      LibMoneyMarket01.getTotalToken(_repayToken, moneyMarketDs)
-    );
-
-    LibMoneyMarket01.removeCollat(_subAccount, _token, _ibToRemove, moneyMarketDs);
-    // burn ib
-    LibMoneyMarket01.withdraw(_token, _ibToRemove, address(this), moneyMarketDs);
-
-    emit LogRepayWithCollat(_account, _subAccountId, _token, _ibToRemove);
   }
 
   function repayWithCollat(

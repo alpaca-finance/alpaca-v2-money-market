@@ -24,6 +24,13 @@ interface IBorrowFacet {
     uint256 _repayAmount
   ) external;
 
+  function repayWithIbCollat(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount
+  ) external;
+
   function getDebtShares(address _account, uint256 _subAccountId)
     external
     view
