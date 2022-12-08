@@ -21,6 +21,7 @@ import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
+import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
@@ -56,6 +57,7 @@ abstract contract LYF_BaseTest is BaseTest {
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
   ILYFFarmFacet internal farmFacet;
+  ILYFLiquidationFacet internal liquidationFacet;
 
   MockLPToken internal wethUsdcLPToken;
   uint256 internal wethUsdcPoolId;
@@ -74,6 +76,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet = LYFAdminFacet(lyfDiamond);
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
     farmFacet = ILYFFarmFacet(lyfDiamond);
+    liquidationFacet = ILYFLiquidationFacet(lyfDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, type(uint256).max);
@@ -238,8 +241,8 @@ abstract contract LYF_BaseTest is BaseTest {
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 50 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 20 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
     vm.stopPrank();
   }
 

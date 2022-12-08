@@ -9,6 +9,7 @@ import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.
 import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
 import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
+import { LYFLiquidationFacet } from "../../contracts/lyf/facets/LYFLiquidationFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
@@ -24,6 +25,7 @@ library LYFDiamondDeployer {
     deployAdminFacet(DiamondCutFacet(address(_lyfDiamond)));
     deployLYFCollateralFacet(DiamondCutFacet(address(_lyfDiamond)));
     deployFarmFacet(DiamondCutFacet(address(_lyfDiamond)));
+    deployLYFLiquidationFacet(DiamondCutFacet(address(_lyfDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_lyfDiamond)));
 
@@ -138,6 +140,25 @@ library LYFDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_collatFacet, _selectors);
+  }
+
+  function deployLYFLiquidationFacet(DiamondCutFacet diamondCutFacet)
+    internal
+    returns (LYFLiquidationFacet _liquidationFacet, bytes4[] memory _selectors)
+  {
+    _liquidationFacet = new LYFLiquidationFacet();
+
+    _selectors = new bytes4[](1);
+    _selectors[0] = LYFLiquidationFacet.repurchase.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_liquidationFacet),
+      IDiamondCut.FacetCutAction.Add,
+      _selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_liquidationFacet, _selectors);
   }
 
   function buildFacetCut(

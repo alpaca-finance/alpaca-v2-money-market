@@ -14,6 +14,8 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 // interfaces
 import { ILYFLiquidationFacet } from "../interfaces/ILYFLiquidationFacet.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -107,20 +109,20 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _collatValueInUSD,
     uint256 _rewardBps,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _collatTokenAmountOut) {
+  ) internal view returns (uint256 _collatAmountOut) {
     // TODO: handle ib token
 
     (uint256 _collatTokenPrice, ) = LibLYF01.getPriceUSD(_collatToken, lyfDs);
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
 
-    // _collatTokenAmountOut = _collatValueInUSD + _rewardInUSD
-    _collatTokenAmountOut =
+    // _collatAmountOut = _collatValueInUSD + _rewardInUSD
+    _collatAmountOut =
       (_collatValueInUSD * (10000 + _rewardBps) * 1e14) /
       (_collatTokenPrice * _tokenConfig.to18ConversionFactor);
 
-    uint256 _collatTokenTotalAmount = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
+    uint256 _totalSubAccountCollat = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 
-    if (_collatTokenAmountOut > _collatTokenTotalAmount) {
+    if (_collatAmountOut > _totalSubAccountCollat) {
       revert LYFLiquidationFacet_InsufficientAmount();
     }
   }
