@@ -4,23 +4,28 @@ pragma solidity 0.8.17;
 import { AVDiamond } from "../../contracts/automated-vault/AVDiamond.sol";
 
 // facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
+import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/facets/DiamondCutFacet.sol";
+import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
+import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
 
 // initializers
-import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
+import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
 
 library AVDiamondDeployer {
-  function deployPoolDiamond() internal returns (address) {
+  function deployPoolDiamond() internal returns (address _avDiamondAddr) {
     // Deploy DimondCutFacet
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
-    // Deploy LYF
+    // Deploy Diamond
     AVDiamond _avDiamond = new AVDiamond(address(this), address(diamondCutFacet));
+    _avDiamondAddr = address(_avDiamond);
+    DiamondCutFacet _avDiamondCutFacet = DiamondCutFacet(_avDiamondAddr);
 
-    initializeDiamond(DiamondCutFacet(address(_avDiamond)));
+    // Initialize Diamond
+    initializeDiamond(_avDiamondCutFacet);
 
-    return (address(_avDiamond));
+    // Deploy Facets
+    deployAdminFacet(_avDiamondCutFacet);
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
@@ -56,6 +61,23 @@ library AVDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_diamondLoupeFacet, selectors);
+  }
+
+  function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
+    AVAdminFacet _adminFacet = new AVAdminFacet();
+
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = AVAdminFacet.setId.selector;
+    selectors[1] = AVAdminFacet.getId.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_adminFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_adminFacet, selectors);
   }
 
   function buildFacetCut(
