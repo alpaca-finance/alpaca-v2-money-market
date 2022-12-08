@@ -4,6 +4,11 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
 interface IAdminFacet {
+  // errors
+  error AdminFacet_PoolIsAlreadyAdded();
+  error AdminFacet_InvalidAddress();
+  error AdminFacet_InvalidReward();
+
   struct IbPair {
     address token;
     address ibToken;
@@ -44,6 +49,10 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
+  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+
+  function setTreasury(address newTreasury) external;
+
   function setNonCollatInterestModel(
     address _account,
     address _token,
@@ -51,4 +60,16 @@ interface IAdminFacet {
   ) external;
 
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
+
+  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external;
+
+  function setRewardDistributor(address _addr) external;
+
+  function addLendingPool(address _token, uint256 _allocPoint) external;
+
+  function setLendingPool(address _token, uint256 _newAllocPoint) external;
+
+  function addBorrowingPool(address _token, uint256 _allocPoint) external;
+
+  function setBorrowingPool(address _token, uint256 _newAllocPoint) external;
 }

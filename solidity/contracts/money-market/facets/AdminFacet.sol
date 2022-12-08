@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
@@ -10,6 +12,15 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract AdminFacet is IAdminFacet {
+  using SafeCast for uint256;
+
+  event LogSetRewardConfig(address indexed _rewardToken, uint256 _rewardPerSec);
+  event LogSetRewardDistributor(address indexed _address);
+  event LogAddLendingPool(address indexed _token, uint256 _allocPoint);
+  event LogSetLendingPool(address indexed _token, uint256 _allocPoint);
+  event LogAddBorroweringPool(address indexed _token, uint256 _allocPoint);
+  event LogSetBorrowingPool(address indexed _token, uint256 _allocPoint);
+
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
     _;
@@ -112,6 +123,22 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = list.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.liquidationCallersOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
+  function setTreasury(address newTreasury) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.treasury = newTreasury;
+  }
+
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
     external
     onlyOwner
@@ -125,5 +152,79 @@ contract AdminFacet is IAdminFacet {
         _i++;
       }
     }
+  }
+
+  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external onlyOwner {
+    if (_rewardToken == address(0)) revert AdminFacet_InvalidAddress();
+    if (_rewardPerSecond == 0) revert AdminFacet_InvalidReward();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardConfig = LibMoneyMarket01.RewardConfig({
+      rewardToken: _rewardToken,
+      rewardPerSecond: _rewardPerSecond
+    });
+
+    emit LogSetRewardConfig(_rewardToken, _rewardPerSecond);
+  }
+
+  function setRewardDistributor(address _addr) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.rewardDistributor = _addr;
+
+    emit LogSetRewardDistributor(_addr);
+  }
+
+  function addLendingPool(address _token, uint256 _allocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (moneyMarketDs.lendingPoolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
+    moneyMarketDs.lendingPoolInfos[_token] = LibMoneyMarket01.PoolInfo({
+      accRewardPerShare: 0,
+      lastRewardTime: block.timestamp.toUint128(),
+      allocPoint: _allocPoint.toUint128()
+    });
+    moneyMarketDs.totalLendingPoolAllocPoint += _allocPoint;
+
+    emit LogAddLendingPool(_token, _allocPoint);
+  }
+
+  function setLendingPool(address _token, uint256 _newAllocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.lendingPoolInfos[_token];
+    uint256 _totalLendingPoolAllocPoint = moneyMarketDs.totalLendingPoolAllocPoint;
+    moneyMarketDs.totalLendingPoolAllocPoint += _totalLendingPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    moneyMarketDs.lendingPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+
+    emit LogSetLendingPool(_token, _newAllocPoint);
+  }
+
+  function addBorrowingPool(address _token, uint256 _allocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (moneyMarketDs.borrowingPoolInfos[_token].allocPoint > 0) revert AdminFacet_PoolIsAlreadyAdded();
+    moneyMarketDs.borrowingPoolInfos[_token] = LibMoneyMarket01.PoolInfo({
+      accRewardPerShare: 0,
+      lastRewardTime: block.timestamp.toUint128(),
+      allocPoint: _allocPoint.toUint128()
+    });
+    moneyMarketDs.totalBorrowingPoolAllocPoint += _allocPoint;
+
+    emit LogAddBorroweringPool(_token, _allocPoint);
+  }
+
+  function setBorrowingPool(address _token, uint256 _newAllocPoint) external onlyOwner {
+    if (_token == address(0)) revert AdminFacet_InvalidAddress();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    LibMoneyMarket01.PoolInfo memory poolInfo = moneyMarketDs.borrowingPoolInfos[_token];
+    uint256 _totalBorrowingPoolAllocPoint = moneyMarketDs.totalBorrowingPoolAllocPoint;
+    moneyMarketDs.totalBorrowingPoolAllocPoint += _totalBorrowingPoolAllocPoint - poolInfo.allocPoint + _newAllocPoint;
+    moneyMarketDs.borrowingPoolInfos[_token].allocPoint = _newAllocPoint.toUint128();
+
+    emit LogSetBorrowingPool(_token, _newAllocPoint);
   }
 }

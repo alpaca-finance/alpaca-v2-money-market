@@ -27,6 +27,7 @@ import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol"
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IRewardFacet } from "../../contracts/money-market/interfaces/IRewardFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -47,7 +48,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
+
   ILiquidationFacet internal liquidationFacet;
+  IRewardFacet internal rewardFacet;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -60,6 +63,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
+    rewardFacet = IRewardFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -67,6 +71,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
+    ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -83,7 +88,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
     adminFacet.setTokenToIbTokens(_ibPair);
 
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](5);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](6);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -135,6 +140,16 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[5] = IAdminFacet.TokenConfigInput({
+      token: address(ibUsdc),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
     // open isolate token market
@@ -148,11 +163,40 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
     chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
+    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
     vm.stopPrank();
 
     // set repurchases ok
     address[] memory _repurchasers = new address[](1);
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, true);
+
+    // whitelisted for MM
+    address[] memory _callers = new address[](1);
+    _callers[0] = moneyMarketDiamond;
+    rewardDistributor.setCallersOk(_callers, true);
+
+    // set reward
+    adminFacet.setRewardDistributor(address(rewardDistributor));
+
+    adminFacet.setRewardConfig(address(rewardToken), 1 ether);
+    // add pools
+    // ibWeth is 20%
+    // ibBtc is 20%
+    // ibUsdc is 40%
+    // ibIsolateToken is 15%
+    // ibWNative is 5%
+    adminFacet.addLendingPool(address(ibWeth), 20);
+    adminFacet.addLendingPool(address(ibBtc), 20);
+    adminFacet.addLendingPool(address(ibUsdc), 40);
+    adminFacet.addLendingPool(address(ibIsolateToken), 15);
+    adminFacet.addLendingPool(address(ibWNative), 5);
+
+    // add borrower pool
+    adminFacet.addBorrowingPool(address(weth), 20);
+    adminFacet.addBorrowingPool(address(btc), 40);
+    adminFacet.addBorrowingPool(address(usdc), 40);
+
+    adminFacet.setTreasury(address(this));
   }
 }
