@@ -7,6 +7,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
+import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
@@ -21,6 +22,7 @@ import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
+  using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   struct ReducePositionLocalVars {
     address subAccount;
@@ -261,13 +263,19 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    (, uint256 _debtAmount) = _getDebt(_subAccount, _debtShareId, lyfDs);
 
-    // remove collat as much as possible
-    uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
-    // remove debt as much as possible
-    uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _collatRemoved, lyfDs);
+    // repay maxmimum debt
+    _repayAmount = _repayAmount > _debtAmount ? _debtAmount : _repayAmount;
 
-    emit LogRepayWithCollat(_account, _subAccountId, _token, _debtShareId, _actualRepayAmount);
+    if (_repayAmount > 0) {
+      // remove collat as much as possible
+      uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
+      // remove debt as much as possible
+      uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _collatRemoved, lyfDs);
+
+      emit LogRepayWithCollat(_account, _subAccountId, _token, _debtShareId, _actualRepayAmount);
+    }
   }
 
   function _getDebt(
