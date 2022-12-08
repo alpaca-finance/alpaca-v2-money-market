@@ -38,7 +38,8 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
 
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, path);
     // _amountsIn[0] = collat that is required to swap for _repayAmount
-    // check that _collatBalance is enough for _repayAmount in case of swapTokensForExactTokens
+    // check that _collatBalance is enough to swap for exactly _repayAmount in case of swapTokensForExactTokens
+    // if not enough should use swapExactTokensForTokens instead because swapTokensForExactTokens will fail
     if (_collatBalance >= _amountsIn[0]) {
       // swapTokensForExactTokens will fail if _collatBalance is not enough to swap for _repayAmount during low liquidity period
       router.swapTokensForExactTokens(_repayAmount, _collatBalance, path, _repayTo, block.timestamp);
