@@ -160,11 +160,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenUserHaveNotBorrow_ShouldAbleToBorrowIsolateAsset() external {
     vm.warp(86401);
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     uint256 _bobIsolateBorrowAmount = 5 ether;
     uint256 _bobCollateralAmount = 10 ether;
@@ -177,12 +172,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserAlreadyBorrowIsloateToken_ShouldRevertIfTryToBorrowDifferentToken() external {
-    vm.startPrank(DEPLOYER);
     vm.warp(86401);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     uint256 _bobIsloateBorrowAmount = 5 ether;
     uint256 _bobCollateralAmount = 20 ether;

@@ -13,7 +13,7 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
-import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
@@ -72,6 +72,7 @@ library LibMoneyMarket01 {
   struct MoneyMarketDiamondStorage {
     address nativeToken;
     address nativeRelayer;
+    IAlpacaV2Oracle oracle;
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) debtValues;
@@ -88,7 +89,6 @@ library LibMoneyMarket01 {
     mapping(address => uint256) nonCollatBorrowLimitUSDValues;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
-    IPriceOracle oracle;
     mapping(address => uint256) debtLastAccureTime;
     mapping(address => IInterestRateModel) interestModels;
     mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
@@ -428,10 +428,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256, uint256)
   {
-    (uint256 _price, uint256 _lastUpdated) = moneyMarketDs.oracle.getPrice(
-      _token,
-      address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff)
-    );
+    (uint256 _price, uint256 _lastUpdated) = moneyMarketDs.oracle.getTokenPrice(_token);
     if (_lastUpdated < block.timestamp - moneyMarketDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibMoneyMarket01_PriceStale(_token);
     return (_price, _lastUpdated);

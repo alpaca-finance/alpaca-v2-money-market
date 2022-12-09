@@ -12,7 +12,7 @@ import { LibBorrowingReward } from "../libraries/LibBorrowingReward.sol";
 // interfaces
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
-import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
@@ -103,7 +103,7 @@ contract AdminFacet is IAdminFacet {
 
   function setOracle(address _oracle) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.oracle = IPriceOracle(_oracle);
+    moneyMarketDs.oracle = IAlpacaV2Oracle(_oracle);
   }
 
   function setRepurchasersOk(address[] memory list, bool _isOk) external onlyOwner {

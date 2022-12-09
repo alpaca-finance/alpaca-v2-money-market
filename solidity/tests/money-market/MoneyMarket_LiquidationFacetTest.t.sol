@@ -43,7 +43,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
 
     // setup liquidationStrategy
-    mockLiquidationStrategy = new MockLiquidationStrategy(address(chainLinkOracle));
+    mockLiquidationStrategy = new MockLiquidationStrategy(address(mockOracle));
     usdc.mint(address(mockLiquidationStrategy), 1000 ether);
     mockBadLiquidationStrategy = new MockBadLiquidationStrategy();
     usdc.mint(address(mockBadLiquidationStrategy), 1000 ether);
@@ -59,7 +59,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     adminFacet.setLiquidationCallersOk(_liquidationCallers, true);
 
     vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(btc), 10 ether);
     vm.stopPrank();
 
     // bob deposit 100 usdc and 10 btc
@@ -111,11 +111,9 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(btc), 10 ether);
 
     // bob try repurchase with 15 usdc
     // eth price = 0.8 USD
@@ -207,9 +205,9 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
     vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+    mockOracle.setTokenPrice(address(btc), 10e18);
     vm.stopPrank();
 
     // bob try repurchase with 20 usdc
@@ -310,8 +308,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 80 * 0.8 * 9000 / 10000 = 57.6 ether USD
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
+
+    mockOracle.setTokenPrice(address(weth), 8e17);
 
     // add time 1 day
     // 0.00016921837224 is interest rate per day of (30% condition slope)
@@ -322,11 +320,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
+
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+    mockOracle.setTokenPrice(address(btc), 10e18);
 
     // bob try repurchase with 40 usdc
     // eth price = 0.8 USD
@@ -443,11 +440,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
+
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+    mockOracle.setTokenPrice(address(btc), 10e18);
 
     // bob try repurchase with 2 usdc
     // eth price = 0.8 USD
@@ -486,11 +482,9 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // set price to btc from 10 to 0.1 ether USD
     // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD
     // total borrowing power is 36 + 9 = 45 ether USD
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
+    mockOracle.setTokenPrice(address(btc), 1e17);
+    mockOracle.setTokenPrice(address(weth), 1e18);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
 
     // bob try repurchase with 40 usdc
     // eth price = 0.2 USD
@@ -538,10 +532,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.warp(1 days + 1);
 
     // LiquidationFacet need these to function
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    // MockLiquidationStrategy need these to function
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
@@ -602,10 +594,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.warp(1 days + 1);
 
     // LiquidationFacet need these to function
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
     // MockLiquidationStrategy need these to function
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
@@ -672,10 +664,9 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     vm.warp(1 days + 1);
 
-    chainLinkOracle.add(address(btc), address(usd), 1e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(btc), 1e17);
+    mockOracle.setTokenPrice(address(weth), 1 ether);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
 
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -714,10 +705,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.warp(1 days + 1);
 
     // LiquidationFacet need these to function
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    // MockLiquidationStrategy need these to function
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
@@ -818,9 +807,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
 
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -901,10 +889,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 ether USD
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
 
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -947,8 +933,9 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     vm.warp(1 days + 1);
 
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 1 ether);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, 0, address(usdc), 100 ether);
     borrowFacet.borrow(0, address(weth), 30 ether);
@@ -956,8 +943,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     weth.mint(address(moneyMarketDiamond), 1 ether);
 
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    // todo: check this
 
     // should fail because 11 weth left in mm not enough to liquidate 15 usdc debt
     // but it will fail during withdraw after executeLiquidation
@@ -988,10 +975,9 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // set price to weth from 1 to 0.8 ether USD
     // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(weth), address(usdc), 8e17, block.timestamp); // MockLiquidationStrategy need this to function
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+    mockOracle.setTokenPrice(address(btc), 10 ether);
 
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
@@ -1050,10 +1036,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // set price to weth from 1 to 0.8 ether USD
     // 1 ibwETH = 2 weth, ibWeth prie = 1.6 USD
     // then alice borrowing power = 40 * 0.8 * 2 * 9000 / 10000 = 57.6 ether USD
-    vm.prank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 8e17, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
 
     // bob try repurchase with 15 usdc
     // eth price = 0.8 USD, ibWeth price = 1.6 USD

@@ -5,17 +5,17 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/ILiquidationStrategy.sol";
-import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
+import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 import { console } from "solidity/tests/utils/console.sol";
 
 contract MockLiquidationStrategy is ILiquidationStrategy {
   using SafeERC20 for ERC20;
 
-  MockChainLinkPriceOracle internal _mockOracle;
+  MockAlpacaV2Oracle internal _mockOracle;
 
   constructor(address _oracle) {
-    _mockOracle = MockChainLinkPriceOracle(_oracle);
+    _mockOracle = MockAlpacaV2Oracle(_oracle);
   }
 
   /// @dev swap collat for exact repay amount and send remaining collat to caller
@@ -26,7 +26,10 @@ contract MockLiquidationStrategy is ILiquidationStrategy {
     address _repayTo,
     bytes calldata /* _data */
   ) external {
-    (uint256 _priceCollatPerRepayToken, ) = _mockOracle.getPrice(_collatToken, _repayToken);
+    (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
+    (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
+
+    uint256 _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
 
     uint256 _collatAmountBefore = ERC20(_collatToken).balanceOf(address(this));
     uint256 _collatSold = (_repayAmount * 10**ERC20(_repayToken).decimals()) / _priceCollatPerRepayToken;
