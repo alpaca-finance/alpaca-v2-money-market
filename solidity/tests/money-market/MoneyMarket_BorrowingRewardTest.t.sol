@@ -179,13 +179,6 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     uint256 _eveAddCollatTimestamp = block.timestamp + 100;
     vm.warp(_eveAddCollatTimestamp);
 
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
-
     vm.startPrank(EVE);
     btc.approve(moneyMarketDiamond, 50 ether);
     collateralFacet.addCollateral(EVE, 0, address(btc), 10 ether);
@@ -310,12 +303,6 @@ contract MoneyMarket_BorrowingRewardTest is MoneyMarket_BaseTest {
     vm.warp(_secondClaimTimestamp);
 
     // borrow second time
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
 
     // weth pool alloc point is 20
     // given time past 100 sec, reward per sec = 1 ether,  total alloc point is 100

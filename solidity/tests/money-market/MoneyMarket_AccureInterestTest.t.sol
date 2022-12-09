@@ -40,12 +40,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
     adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
 
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
-
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(btc), 100 ether);
@@ -77,11 +71,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     vm.warp(block.timestamp + 10);
 
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
-
     uint256 _expectedDebtAmount = 1e18 + _borrowAmount;
 
     uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
@@ -108,10 +97,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(moneyMarketDiamond), _balanceMMDiamondBefore + _aliceCollateralAmount);
 
     vm.warp(block.timestamp + 10);
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     //when someone borrow
     uint256 _bobBorrowAmount = 10 ether;
@@ -129,10 +114,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     assertEq(_bobBalanceAfterBorrow - _bobBalanceBeforeBorrow, _bobBorrowAmount);
     vm.warp(block.timestamp + 10);
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     borrowFacet.accureInterest(address(weth));
     (, uint256 _actualBobDebtAmountAfter) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
@@ -178,10 +159,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     // time past
     vm.warp(block.timestamp + 10);
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     // ALICE borrow and bob's interest accure
     vm.startPrank(ALICE);
@@ -284,8 +261,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     // time past
     uint256 _secondPassed = 1 days;
     vm.warp(block.timestamp + _secondPassed);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
 
     // ALICE borrow and bob's interest accure
     vm.startPrank(ALICE);
@@ -359,11 +334,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     vm.warp(block.timestamp + 10);
 
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
-
     uint256 _expectedDebtAmount = 2e18 + _borrowAmount;
     uint256 _expectedNonDebtAmount = 2e18 + _nonCollatBorrowAmount;
 
@@ -406,7 +376,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     uint256 _secondPassed = 1 days;
     vm.warp(block.timestamp + _secondPassed);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
 
     borrowFacet.accureInterest(address(btc));
 
@@ -449,10 +418,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     // time past
     vm.warp(block.timestamp + 10);
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     vm.startPrank(ALICE);
     // remove collateral will trigger accure interest on all borrowed token
@@ -490,10 +455,6 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     // time past
     vm.warp(block.timestamp + 10);
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    vm.stopPrank();
 
     vm.startPrank(ALICE);
     // transfer collateral will trigger accure interest on all borrowed token
