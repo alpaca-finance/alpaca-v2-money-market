@@ -202,7 +202,13 @@ library LibLYF01 {
   }
 
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256, uint256) {
-    (uint256 _price, uint256 _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
+    uint256 _price;
+    uint256 _lastUpdated;
+    if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      (_price, _lastUpdated) = lyfDs.oracle.lpToDollar(1e18, _token);
+    } else {
+      (_price, _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
+    }
     if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibLYF01_PriceStale(_token);
     return (_price, _lastUpdated);

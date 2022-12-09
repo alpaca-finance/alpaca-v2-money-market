@@ -15,7 +15,7 @@ contract MockAlpacaV2Oracle {
 
   /// @dev Return amount of LP for the given USD.
   function dollarToLp(uint256 _dollarAmount, address _lpToken) external view returns (uint256, uint256) {
-    return (mockTokenPrices[_lpToken], block.timestamp);
+    return ((_dollarAmount * 1e18) / mockTokenPrices[_lpToken], block.timestamp);
   }
 
   /// @dev Return value of given token in USD.
