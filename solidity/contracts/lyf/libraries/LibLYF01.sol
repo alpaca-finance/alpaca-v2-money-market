@@ -338,7 +338,7 @@ library LibLYF01 {
     return uint8(_conversionFactor);
   }
 
-  function _depositToMasterChef(
+  function depositToMasterChef(
     address _lpToken,
     LibLYF01.LPConfig memory _lpconfig,
     uint256 _amount
@@ -416,7 +416,7 @@ library LibLYF01 {
 
     // deposit lp back to masterChef
     lyfDs.lpValues[_lpToken] += _lpReceived;
-    _depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
+    depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;

@@ -97,7 +97,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 4. deposit to masterChef
-    _depositToMasterChef(_lpToken, lpConfig, _lpReceived);
+    LibLYF01.depositToMasterChef(_lpToken, lpConfig, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -157,7 +157,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 4. deposit to masterChef
-    _depositToMasterChef(_lpToken, lpConfig, _lpReceived);
+    LibLYF01.depositToMasterChef(_lpToken, lpConfig, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -473,17 +473,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
-  function _depositToMasterChef(
-    address _lpToken,
-    address _masterChef,
-    uint256 _poolId,
-    uint256 _amount
-  ) internal {
-    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
-    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
-    ERC20(_lpToken).approve(_masterChef, 0);
-  }
-
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
@@ -556,16 +545,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function pendingRewards(address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     return lyfDs.pendingRewards[_lpToken];
-  }
-
-  function _depositToMasterChef(
-    address _lpToken,
-    LibLYF01.LPConfig memory _lpconfig,
-    uint256 _amount
-  ) internal {
-    ERC20(_lpToken).safeApprove(_lpconfig.masterChef, type(uint256).max);
-    IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
-    ERC20(_lpToken).safeApprove(_lpconfig.masterChef, 0);
   }
 
   function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256) {
