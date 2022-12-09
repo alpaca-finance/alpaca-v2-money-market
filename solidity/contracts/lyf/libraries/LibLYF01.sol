@@ -240,6 +240,22 @@ library LibLYF01 {
     return (_price, _lastUpdated);
   }
 
+  function getIbPriceUSD(
+    address _ibToken,
+    address _token,
+    LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256, uint256) {
+    (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, lyfDs);
+    uint256 _totalSupply = IERC20(_ibToken).totalSupply();
+    uint256 _one = 10**IERC20(_ibToken).decimals();
+
+    uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalToken(_token);
+    uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
+
+    uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
+    return (_price, _lastUpdated);
+  }
+
   // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
   // where borrowed amount consists of over-collat and non-collat borrowing
   function getTotalToken(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256) {

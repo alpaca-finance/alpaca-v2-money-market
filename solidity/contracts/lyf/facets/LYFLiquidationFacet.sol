@@ -13,6 +13,7 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILYFLiquidationFacet } from "../interfaces/ILYFLiquidationFacet.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using SafeERC20 for ERC20;
@@ -112,8 +113,16 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
     // TODO: handle ib token
+    address _actualToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
 
-    (uint256 _collatTokenPrice, ) = LibLYF01.getPriceUSD(_collatToken, lyfDs);
+    uint256 _collatTokenPrice;
+    // _collatToken is ibToken
+    if (_actualToken != address(0)) {
+      (_collatTokenPrice, ) = LibLYF01.getIbPriceUSD(_collatToken, _actualToken, lyfDs);
+    } else {
+      (_collatTokenPrice, ) = LibLYF01.getPriceUSD(_collatToken, lyfDs);
+    }
+
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
 
     // _collatAmountOut = _collatValueInUSD + _rewardInUSD

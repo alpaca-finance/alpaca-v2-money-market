@@ -5,6 +5,7 @@ import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
 import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
+import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -28,8 +29,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     pure
     returns (uint256 result)
   {
-    uint256 collatToRepurchase = (debtToRepurchase * 1e18) / collatUSDPrice;
-    result = (collatToRepurchase * (10000 + REPURCHASE_REWARD_BPS)) / 10000;
+    result = (debtToRepurchase * (10000 + REPURCHASE_FEE_BPS) * 1e14) / collatUSDPrice;
   }
 
   function testCorrectness_WhenPartialRepurchase_ShouldWork() external {
@@ -136,6 +136,66 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 0);
     (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 30 ether);
+  }
+
+  function testCorrectness_WhenPartialRepurchaseIb_ShouldWork() external {
+    /**
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth, 1.2 weth/ibWeth: alice add collateral 40 ibWeth, open farm with 30 weth, 30 usdc
+     *      - 30 / 1.2 = 25 ibWeth collateral is redeemed for 30 weth to open position -> 15 ibWeth left as collateral
+     *      - alice need to borrow 30 usdc
+     *      - alice total borrowing power = (15 * 1.2 * 0.9) + (30 * 2 * 0.9) = 70.2 usd
+     *
+     * 2. lp price drops to 0.5 usdc/lp -> position become repurchaseable
+     *      - alice total borrowing power = (15 * 1.2 * 0.9) + (30 * 0.5 * 0.9) = 29.7 usd
+     *
+     * 3. bob repurchase ibWeth collateral with 5 usdc, bob will receive 4.20833.. weth
+     *      - 5 / 1.2 = 4.166.. weth will be repurchased by bob
+     *      - 4.166.. * 1% = 0.04166.. weth as repurchase reward for bob
+     *
+     * 4. alice position after repurchase
+     *      - alice subaccount 0: weth collateral = 10 - 4.20833.. = 10.79166.. weth
+     *      - alice subaccount 0: usdc debt = 30 - 5 = 25 usdc
+     */
+    address _collatToken = address(ibWeth);
+    address _debtToken = address(usdc);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _amountToRepurchase = 5 ether;
+
+    vm.prank(ALICE);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 40 ether);
+
+    // increase ibWeth price to 1.2 weth/ibWeth
+    vm.prank(BOB);
+    weth.transfer(moneyMarketDiamond, 28 ether);
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    uint256 _bobIbWethBalanceBefore = ibWeth.balanceOf(BOB);
+    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+
+    chainLinkOracle.add(_lpToken, address(usd), 0.5 ether, block.timestamp);
+
+    vm.prank(BOB);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+
+    // check bob balance
+    uint256 _ibWethReceivedFromRepurchase = _calcCollatRepurchaserShouldReceive(_amountToRepurchase, 1.2 ether);
+    assertEq(ibWeth.balanceOf(BOB) - _bobIbWethBalanceBefore, _ibWethReceivedFromRepurchase, "bob ibWeth diff");
+    assertEq(_bobUsdcBalanceBefore - usdc.balanceOf(BOB), _amountToRepurchase, "bob usdc diff");
+
+    // check alice position
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      15 ether - _ibWethReceivedFromRepurchase, // TODO: account for repurchase fee
+      "alice remaining ibWeth collat"
+    );
+    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    assertEq(_aliceUsdcDebtValue, 25 ether, "alice remaining usdc debt");
   }
 
   function testRevert_WhenRepurchaseHealthySubAccount() external {
