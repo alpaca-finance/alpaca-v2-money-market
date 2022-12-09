@@ -14,8 +14,6 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 // interfaces
 import { ILYFLiquidationFacet } from "../interfaces/ILYFLiquidationFacet.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -63,10 +61,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     {
       (uint256 _debtTokenPrice, ) = LibLYF01.getPriceUSD(_debtToken, lyfDs);
       LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
-
       uint256 _debtInUSD = (_actualDebtToRepurchase * _debtTokenConfig.to18ConversionFactor * _debtTokenPrice) / 1e18;
-      console.log(_debtInUSD);
-      console.log(_borrowedValue);
       if (_debtInUSD * 2 > _borrowedValue) {
         revert LYFLiquidationFacet_RepayDebtValueTooHigh();
       }
