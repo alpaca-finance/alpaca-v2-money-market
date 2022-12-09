@@ -152,7 +152,7 @@ library MMDiamondDeployer {
   function deployBorrowFacet(DiamondCutFacet diamondCutFacet) internal returns (BorrowFacet, bytes4[] memory) {
     BorrowFacet _brrowFacet = new BorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](14);
+    bytes4[] memory selectors = new bytes4[](15);
     selectors[0] = BorrowFacet.borrow.selector;
     selectors[1] = BorrowFacet.getDebtShares.selector;
     selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
@@ -167,6 +167,7 @@ library MMDiamondDeployer {
     selectors[11] = BorrowFacet.debtShares.selector;
     selectors[12] = BorrowFacet.repayWithCollat.selector;
     selectors[13] = BorrowFacet.getFloatingBalance.selector;
+    selectors[14] = BorrowFacet.accountDebtShares.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_brrowFacet),
@@ -206,7 +207,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](16);
+    bytes4[] memory selectors = new bytes4[](25);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -219,10 +220,19 @@ library MMDiamondDeployer {
     selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
     selectors[10] = AdminFacet.setNonCollatInterestModel.selector;
     selectors[11] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[12] = AdminFacet.setRewardConfig.selector;
-    selectors[13] = AdminFacet.addPool.selector;
-    selectors[14] = AdminFacet.setPool.selector;
-    selectors[15] = AdminFacet.setRewardDistributor.selector;
+    selectors[12] = AdminFacet.setLiquidationCallersOk.selector;
+    selectors[13] = AdminFacet.setTreasury.selector;
+    selectors[14] = AdminFacet.setRewardDistributor.selector;
+    selectors[15] = AdminFacet.addLendingPool.selector;
+    selectors[16] = AdminFacet.setLendingPool.selector;
+    selectors[17] = AdminFacet.addBorrowingPool.selector;
+    selectors[18] = AdminFacet.setBorrowingPool.selector;
+    selectors[19] = AdminFacet.getLendingRewardPerSec.selector;
+    selectors[20] = AdminFacet.addLendingRewardPerSec.selector;
+    selectors[21] = AdminFacet.updateLendingRewardPerSec.selector;
+    selectors[22] = AdminFacet.getBorrowingRewardPerSec.selector;
+    selectors[23] = AdminFacet.addBorrowingRewardPerSec.selector;
+    selectors[24] = AdminFacet.updateBorrowingRewardPerSec.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -255,20 +265,27 @@ library MMDiamondDeployer {
   }
 
   function deployRewardFacet(DiamondCutFacet diamondCutFacet) internal returns (RewardFacet, bytes4[] memory) {
-    RewardFacet _RewardFacet = new RewardFacet();
+    RewardFacet _rewardFacet = new RewardFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
-    selectors[0] = _RewardFacet.claimReward.selector;
-    selectors[1] = _RewardFacet.pendingReward.selector;
-    selectors[2] = _RewardFacet.accountRewardDebts.selector;
+    bytes4[] memory selectors = new bytes4[](10);
+    selectors[0] = _rewardFacet.claimLendingRewardFor.selector;
+    selectors[1] = _rewardFacet.claimMultipleLendingRewardsFor.selector;
+    selectors[2] = _rewardFacet.claimBorrowingRewardFor.selector;
+    selectors[3] = _rewardFacet.claimMultipleBorrowingRewardsFor.selector;
+    selectors[4] = _rewardFacet.pendingLendingReward.selector;
+    selectors[5] = _rewardFacet.pendingBorrowingReward.selector;
+    selectors[6] = _rewardFacet.lenderRewardDebts.selector;
+    selectors[7] = _rewardFacet.borrowerRewardDebts.selector;
+    selectors[8] = _rewardFacet.getLendingPool.selector;
+    selectors[9] = _rewardFacet.getBorrowingPool.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_RewardFacet),
+      address(_rewardFacet),
       IDiamondCut.FacetCutAction.Add,
       selectors
     );
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_RewardFacet, selectors);
+    return (_rewardFacet, selectors);
   }
 }

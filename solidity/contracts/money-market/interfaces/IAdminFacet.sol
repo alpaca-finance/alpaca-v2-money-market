@@ -7,8 +7,6 @@ interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
-  error AdminFacet_InvalidReward();
-  error AdminFacet_InvalidAllocPoint();
 
   struct IbPair {
     address token;
@@ -50,6 +48,10 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
+  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+
+  function setTreasury(address newTreasury) external;
+
   function setNonCollatInterestModel(
     address _account,
     address _token,
@@ -58,11 +60,41 @@ interface IAdminFacet {
 
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
 
-  function setRewardConfig(address _rewardToken, uint256 _rewardPerSecond) external;
-
   function setRewardDistributor(address _addr) external;
 
-  function addPool(address _token, uint256 _allocPoint) external;
+  function getLendingRewardPerSec(address _rewardToken) external view returns (uint256);
 
-  function setPool(address _token, uint256 _newAllocPoint) external;
+  function addLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+
+  function updateLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+
+  function getBorrowingRewardPerSec(address _rewardToken) external view returns (uint256);
+
+  function addBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+
+  function updateBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
+
+  function addLendingPool(
+    address _rewardToken,
+    address _token,
+    uint256 _allocPoint
+  ) external;
+
+  function setLendingPool(
+    address _rewardToken,
+    address _token,
+    uint256 _newAllocPoint
+  ) external;
+
+  function addBorrowingPool(
+    address _rewardToken,
+    address _token,
+    uint256 _allocPoint
+  ) external;
+
+  function setBorrowingPool(
+    address _rewardToken,
+    address _token,
+    uint256 _newAllocPoint
+  ) external;
 }

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
-import { LibReward } from "./LibReward.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -17,6 +18,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+  using SafeERC20 for ERC20;
   using SafeCast for uint256;
 
   // keccak256("moneymarket.diamond.storage");
@@ -28,11 +30,15 @@ library LibMoneyMarket01 {
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
+  error LibMoneyMarket01_InvalidToken(address _token);
+  error LibMoneyMarket01_NoTinyShares();
   error LibMoneyMarket01_UnsupportedDecimals();
   error LibMoneyMarket01_InvalidAssetTier();
   error LibMoneyMarket01_ExceedCollateralLimit();
   error LibMoneyMarket01_TooManyCollateralRemoved();
   error LibMoneyMarket01_BorrowingPowerTooLow();
+
+  event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
 
   enum AssetTier {
     UNLISTED,
@@ -88,15 +94,26 @@ library LibMoneyMarket01 {
     mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
     mapping(address => bool) repurchasersOk;
     mapping(address => bool) liquidationStratOk;
+    mapping(address => bool) liquidationCallersOk;
+    address treasury;
     // reward stuff
     address rewardDistributor;
-    mapping(address => mapping(address => uint256)) accountCollats; // amount in user info
-    // token => pool info
-    mapping(address => PoolInfo) poolInfos;
-    // account => pool key (token) => amount
-    mapping(address => mapping(address => int256)) accountRewardDebts;
-    RewardConfig rewardConfig;
-    uint256 totalAllocPoint;
+    mapping(address => mapping(address => uint256)) accountCollats;
+    mapping(address => mapping(address => uint256)) accountDebtShares;
+    mapping(address => LibDoublyLinkedList.List) rewardLendingPoolList;
+    mapping(address => LibDoublyLinkedList.List) rewardBorrowingPoolList;
+    // reward token => token => pool info
+    mapping(bytes32 => PoolInfo) lendingPoolInfos;
+    mapping(bytes32 => PoolInfo) borrowingPoolInfos;
+    // account => reward token + pool key (token) => amount
+    mapping(address => mapping(bytes32 => int256)) lenderRewardDebts;
+    mapping(address => mapping(bytes32 => int256)) borrowerRewardDebts;
+    // multiple reward
+    LibDoublyLinkedList.List lendingRewardPerSecList;
+    LibDoublyLinkedList.List borrowingRewardPerSecList;
+    // reward token
+    mapping(address => uint256) totalLendingPoolAllocPoints;
+    mapping(address => uint256) totalBorrowingPoolAllocPoints;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -440,10 +457,44 @@ library LibMoneyMarket01 {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
 
+  function getPoolKey(address _rewardToken, address _token) internal pure returns (bytes32 _key) {
+    _key = keccak256(abi.encodePacked(_rewardToken, _token));
+  }
+
   function isSubaccountHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
     return _totalBorrowingPower >= _totalUsedBorrowedPower;
+  }
+
+  function withdraw(
+    address _ibToken,
+    uint256 _shareAmount,
+    address _withdrawFrom,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _shareValue) {
+    address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
+    accureInterest(_token, moneyMarketDs);
+
+    if (_token == address(0)) {
+      revert LibMoneyMarket01_InvalidToken(_ibToken);
+    }
+
+    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
+    uint256 _tokenDecimals = ERC20(_ibToken).decimals();
+    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
+
+    _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
+
+    uint256 _shareLeft = _totalSupply - _shareAmount;
+    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
+      revert LibMoneyMarket01_NoTinyShares();
+    }
+
+    IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
+    ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
+
+    emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
@@ -524,17 +575,19 @@ library LibMoneyMarket01 {
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
   }
 
-  function updateRewardDebt(
-    address _account,
-    address _token,
-    int256 _amount,
-    MoneyMarketDiamondStorage storage ds
-  ) internal {
-    if (ds.poolInfos[_token].allocPoint > 0) {
-      LibMoneyMarket01.PoolInfo memory pool = LibReward.updatePool(_token, ds);
-      int256 _rewardDebt = (_amount * pool.accRewardPerShare.toInt256()) /
-        LibMoneyMarket01.ACC_REWARD_PRECISION.toInt256();
-      ds.accountRewardDebts[_account][_token] += _rewardDebt;
-    }
+  function getLendingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
+    internal
+    view
+    returns (uint256)
+  {
+    return ds.lendingRewardPerSecList.getAmount(_rewardToken);
+  }
+
+  function getBorrowingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
+    internal
+    view
+    returns (uint256)
+  {
+    return ds.borrowingRewardPerSecList.getAmount(_rewardToken);
   }
 }

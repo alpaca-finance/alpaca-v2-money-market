@@ -52,6 +52,7 @@ contract BaseTest is DSTest {
   MockERC20 internal ibWNative;
 
   MockERC20 internal rewardToken;
+  MockERC20 internal rewardToken2;
 
   IPriceOracle internal oracle;
   IAlpacaV2Oracle internal alpacaV2Oracle;
@@ -81,6 +82,7 @@ contract BaseTest is DSTest {
     ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
 
     rewardToken = deployMockErc20("Reward Token", "REWARD", 18);
+    rewardToken2 = deployMockErc20("Reward Token 2", "REWARD2", 18);
 
     nativeRelayer = deployMockWNativeRelayer();
     rewardDistributor = deployRewardDistributor();
@@ -106,6 +108,7 @@ contract BaseTest is DSTest {
     isolateToken.mint(BOB, 1000 ether);
 
     rewardToken.mint(address(rewardDistributor), 1000000 ether);
+    rewardToken2.mint(address(rewardDistributor), 1000000 ether);
 
     _setupProxyAdmin();
   }
