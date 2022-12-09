@@ -66,6 +66,8 @@ abstract contract LYF_BaseTest is BaseTest {
   PancakeswapV2Strategy internal addStrat;
   MockMasterChef internal masterChef;
 
+  uint256 constant reinvestThreshold = 1e18;
+
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
@@ -90,7 +92,7 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.stopPrank();
 
     // DEPLOY MASTERCHEF
-    masterChef = new MockMasterChef();
+    masterChef = new MockMasterChef(address(cake));
 
     // MASTERCHEF POOLID
     wethUsdcPoolId = 1;
@@ -177,7 +179,7 @@ abstract contract LYF_BaseTest is BaseTest {
       masterChef: address(masterChef),
       router: address(mockRouter),
       reinvestPath: _reinvestPath,
-      reinvestThreshold: 1e18,
+      reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
       poolId: wethUsdcPoolId
     });

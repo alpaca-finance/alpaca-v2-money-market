@@ -9,11 +9,21 @@ contract MockMasterChef is IMasterChefLike {
     uint256 poolId;
   }
 
-  mapping(uint256 => PoolInfo) poolInfo;
-  mapping(uint256 => mapping(address => uint256)) userPosition;
-  mapping(uint256 => mapping(address => uint256)) reward;
+  struct UserInfo {
+    uint256 amount; // How many LP tokens the user has provided.
+    uint256 rewardDebt; // Reward debt. See explanation below.
+  }
 
-  constructor() {}
+  mapping(uint256 => PoolInfo) poolInfo;
+
+  // Info of each user that stakes LP tokens.
+  mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+  mapping(uint256 => mapping(address => uint256)) reward;
+  address rewardToken;
+
+  constructor(address _rewardToken) {
+    rewardToken = _rewardToken;
+  }
 
   function addPool(address _lpAddress, uint256 _pid) external {
     poolInfo[_pid] = PoolInfo({ lpAddress: _lpAddress, poolId: _pid });
@@ -21,13 +31,18 @@ contract MockMasterChef is IMasterChefLike {
 
   function deposit(uint256 _pid, uint256 _amount) external {
     ERC20(poolInfo[_pid].lpAddress).transferFrom(msg.sender, address(this), _amount);
-    userPosition[_pid][msg.sender] += _amount;
+    userInfo[_pid][msg.sender].amount += _amount;
   }
 
   function withdraw(uint256 _pid, uint256 _amount) external {
     ERC20(poolInfo[_pid].lpAddress).transfer(msg.sender, _amount);
-    userPosition[_pid][msg.sender] -= _amount;
+
+    uint256 _rewardAmount = reward[_pid][msg.sender];
+
+    userInfo[_pid][msg.sender].amount -= _amount;
     reward[_pid][msg.sender] = 0;
+
+    ERC20(rewardToken).transfer(msg.sender, _rewardAmount);
   }
 
   function pendingReward(uint256 _pid, address _who) external view returns (uint256) {
@@ -39,6 +54,7 @@ contract MockMasterChef is IMasterChefLike {
     address _who,
     uint256 _rewardAmount
   ) external {
+    ERC20(rewardToken).transferFrom(msg.sender, address(this), _rewardAmount);
     reward[_pid][_who] = _rewardAmount;
   }
 }

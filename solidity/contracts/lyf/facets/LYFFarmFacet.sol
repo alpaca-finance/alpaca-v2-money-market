@@ -17,15 +17,10 @@ import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
-import { IRouterLike } from "../interfaces/IRouterLike.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
   using SafeERC20 for ERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
-
-  error LYFFarmFacet_BorrowingPowerTooLow();
-  error LYFFarmFacet_InvalidLP();
-  error LYFFarmFacet_Unauthorized();
 
   event LogRemoveDebt(
     address indexed _subAccount,
@@ -37,7 +32,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   event LogAddFarmPosition(address indexed _subAccount, address indexed _lpToken, uint256 _lpAmount);
 
   event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
-  event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -57,8 +51,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
-
-    _reinvest(_lpToken, lpConfig.reinvestThreshold, lpConfig, lyfDs);
 
     LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
 
@@ -117,8 +109,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
-
-    _reinvest(_lpToken, lpConfig.reinvestThreshold, lpConfig, lyfDs);
 
     LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
 
@@ -198,8 +188,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
 
     LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
-
-    _reinvest(_lpToken, lpConfig.reinvestThreshold, lpConfig, lyfDs);
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
@@ -299,7 +287,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_InvalidLP();
     }
 
-    _reinvest(_lpToken, 0, lyfDs.lpConfigs[_lpToken], lyfDs);
+    LibLYF01.reinvest(_lpToken, 0, lyfDs.lpConfigs[_lpToken], lyfDs);
   }
 
   function getDebtShares(address _account, uint256 _subAccountId)
@@ -482,10 +470,30 @@ contract LYFFarmFacet is ILYFFarmFacet {
     return lyfDs.debtValues[_debtShareId];
   }
 
+  function lpValues(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpValues[_lpToken];
+  }
+
+  function lpShares(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpShares[_lpToken];
+  }
+
+  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpConfigs[_lpToken];
+  }
+
   function debtShares(address _token, address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     return lyfDs.debtShares[_debtShareId];
+  }
+
+  function pendingRewards(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.pendingRewards[_lpToken];
   }
 
   function _depositToMasterChef(
@@ -496,79 +504,5 @@ contract LYFFarmFacet is ILYFFarmFacet {
     ERC20(_lpToken).safeApprove(_lpconfig.masterChef, type(uint256).max);
     IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
     ERC20(_lpToken).safeApprove(_lpconfig.masterChef, 0);
-  }
-
-  function _harvest(
-    address _lpToken,
-    LibLYF01.LPConfig memory _lpConfig,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    uint256 _rewardBefore = ERC20(_lpConfig.rewardToken).balanceOf(address(this));
-
-    IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, 0);
-
-    // accumulate harvested reward for LP
-    lyfDs.pendingRewards[_lpToken] += ERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
-  }
-
-  function _reinvest(
-    address _lpToken,
-    uint256 _reinvestThreshold,
-    LibLYF01.LPConfig memory _lpConfig,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    _harvest(_lpToken, _lpConfig, lyfDs);
-
-    uint256 _rewardAmount = lyfDs.pendingRewards[_lpToken];
-    if (_rewardAmount < _reinvestThreshold) return;
-
-    // TODO: extract fee
-
-    address _reinvestToken = _lpConfig.reinvestPath[_lpConfig.reinvestPath.length - 1];
-
-    address _token0 = ISwapPairLike(_lpToken).token0();
-    address _token1 = ISwapPairLike(_lpToken).token1();
-
-    // convert rewardToken to either token0 or token1
-    uint256 _reinvestAmount = 0;
-    if (_reinvestToken == _token0 || _reinvestToken == _token1) {
-      _reinvestAmount = _rewardAmount;
-    } else {
-      ERC20(_lpConfig.rewardToken).safeApprove(_lpConfig.router, _rewardAmount);
-      uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
-        _rewardAmount,
-        0,
-        _lpConfig.reinvestPath,
-        address(this),
-        block.timestamp
-      );
-      _reinvestAmount = _amounts[_amounts.length - 1];
-    }
-
-    uint256 _token0Amount;
-    uint256 _token1Amount;
-    if (_reinvestToken == _token0) {
-      _token0Amount = _reinvestAmount;
-    } else {
-      _token1Amount = _reinvestAmount;
-    }
-
-    uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
-      _token0,
-      _token1,
-      _lpToken,
-      _token0Amount,
-      _token1Amount,
-      0
-    );
-
-    // put lp back to masterChef
-    _depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
-
-    // reset pending reward
-    lyfDs.pendingRewards[_lpToken] = 0;
-
-    // TODO: assign param properly
-    emit LogReinvest(msg.sender, 0, 0);
   }
 }

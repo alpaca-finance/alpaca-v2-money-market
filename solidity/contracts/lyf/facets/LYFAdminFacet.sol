@@ -54,18 +54,15 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setLPConfigs(LPConfigInput[] calldata _configs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    //TODO: assign reinvestPath properly
-    address[] memory reinvestPath;
-
     uint256 len = _configs.length;
     for (uint256 i = 0; i < len; ) {
       lyfDs.lpConfigs[_configs[i].lpToken] = LibLYF01.LPConfig({
         strategy: _configs[i].strategy,
         masterChef: _configs[i].masterChef,
-        router: address(0), // TODO;
+        router: _configs[i].router,
         rewardToken: _configs[i].rewardToken,
-        reinvestPath: reinvestPath,
-        reinvestThreshold: 1e18, // TODO:
+        reinvestPath: _configs[i].reinvestPath,
+        reinvestThreshold: _configs[i].reinvestThreshold,
         poolId: _configs[i].poolId
       });
       unchecked {
@@ -91,7 +88,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.interestModels[_debtShareId] = _interestModel;
   }
 
-  function reinvestorsOk(address[] memory list, bool _isOk) external onlyOwner {
+  function setReinvestorsOk(address[] memory list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
     for (uint8 _i; _i < _length; ) {

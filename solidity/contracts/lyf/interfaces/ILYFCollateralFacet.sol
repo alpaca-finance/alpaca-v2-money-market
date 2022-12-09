@@ -33,7 +33,6 @@ interface ILYFCollateralFacet {
 
   function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
 
-  error LYFCollateralFacet_InvalidAssetTier();
   error LYFCollateralFacet_TooManyCollateralRemoved();
   error LYFCollateralFacet_BorrowingPowerTooLow();
   error LYFCollateralFacet_ExceedCollateralLimit();

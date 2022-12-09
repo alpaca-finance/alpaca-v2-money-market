@@ -9,6 +9,7 @@ import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
+import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
   MockERC20 mockToken;
@@ -18,9 +19,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
-
-    vm.startPrank(ALICE);
-    vm.stopPrank();
   }
 
   function testCorrectness_WhenUserAddFarmPosition_LPShouldBecomeCollateral() external {
@@ -355,29 +353,5 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
       _usdcAmountDirect
     );
     vm.stopPrank();
-  }
-
-  function testCorrectness_WhenReinvestisCalled_ShouldConvertRewardTokenToLP() external {
-    uint256 _desiredWeth = 30 ether;
-    uint256 _desiredUsdc = 30 ether;
-    uint256 _wethAmountDirect = 20 ether;
-    uint256 _usdcAmountDirect = 30 ether;
-
-    vm.startPrank(BOB);
-    farmFacet.directAddFarmPosition(
-      subAccount0,
-      address(wethUsdcLPToken),
-      _desiredWeth,
-      _desiredUsdc,
-      0,
-      _wethAmountDirect,
-      _usdcAmountDirect
-    );
-    vm.stopPrank();
-
-    // farm at master chef
-    // time pass
-    // call reinvest
-    // lp should increase
   }
 }

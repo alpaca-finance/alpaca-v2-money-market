@@ -42,4 +42,6 @@ interface ILYFAdminFacet {
   ) external;
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
+
+  function setReinvestorsOk(address[] memory list, bool _isOk) external;
 }
