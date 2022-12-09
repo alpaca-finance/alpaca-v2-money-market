@@ -22,6 +22,10 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
+
+    // mint and approve for setting reward in mockMasterChef
+    cake.mint(address(this), 100000 ether);
+    cake.approve(address(masterChef), type(uint256).max);
   }
 
   function testCorrectness_WhenUserAddFarmPosition_LPShouldBecomeCollateral() external {
@@ -111,9 +115,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
 
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
-
     vm.stopPrank();
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
     // asset collat of subaccount
@@ -178,9 +182,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
 
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
-
     vm.stopPrank();
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
 
     // assume that every coin is 1 dollar and lp = 2 dollar
     // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
@@ -209,8 +213,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
-
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
 
     vm.stopPrank();
 
@@ -453,9 +455,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
 
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
-
     vm.stopPrank();
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
 
@@ -492,9 +494,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
 
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
-
     vm.stopPrank();
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
 
