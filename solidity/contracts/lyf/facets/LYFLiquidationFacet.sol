@@ -154,7 +154,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
     lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _currentDebtShare - _shareToReduce);
 
-    // update global debt
+    // update debt
     lyfDs.debtShares[_debtShareId] -= _shareToReduce;
     lyfDs.debtValues[_debtShareId] -= _amountToReduce;
   }
