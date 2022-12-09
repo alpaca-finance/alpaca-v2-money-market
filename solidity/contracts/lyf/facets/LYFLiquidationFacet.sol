@@ -45,10 +45,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
 
     // 1. check borrowing power
-    // TODO: use method from new pr
-    // if (LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
-    //   revert LiquidationFacet_Healthy();
-    // }
+    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+    uint256 _borrowedValue = LibLYF01.getTotalBorrowedUSDValue(_subAccount, lyfDs);
+    if (_borrowingPower > _borrowedValue) {
+      revert LYFLiquidationFacet_Healthy();
+    }
 
     // 2. calculate actual debt to repurchase, collat repurchaser will receive
     uint256 _actualDebtToRepurchase = _getActualDebtToRepurchase(
@@ -57,25 +58,30 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _amountDebtToRepurchase,
       lyfDs
     );
-    (uint256 _debtTokenPrice, ) = LibLYF01.getPriceUSD(_debtToken, lyfDs);
-    LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
 
-    uint256 _debtInUSD = (_actualDebtToRepurchase * _debtTokenConfig.to18ConversionFactor * _debtTokenPrice) / 1e18;
-    // TODO: use method from new pr
-    // if (_repayInUSD * 2 > _borrowedValue) {
-    //   revert LiquidationFacet_RepayDebtValueTooHigh();
-    // }
+    // avoid stack too deep
+    {
+      (uint256 _debtTokenPrice, ) = LibLYF01.getPriceUSD(_debtToken, lyfDs);
+      LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
 
-    _collatAmountOut = _calcCollatAmountRepurchaserReceive(
-      _subAccount,
-      _collatToken,
-      _debtInUSD,
-      REPURCHASE_REWARD_BPS,
-      lyfDs
-    );
+      uint256 _debtInUSD = (_actualDebtToRepurchase * _debtTokenConfig.to18ConversionFactor * _debtTokenPrice) / 1e18;
+      console.log(_debtInUSD);
+      console.log(_borrowedValue);
+      if (_debtInUSD * 2 > _borrowedValue) {
+        revert LYFLiquidationFacet_RepayDebtValueTooHigh();
+      }
+
+      _collatAmountOut = _calcCollatAmountRepurchaserReceive(
+        _subAccount,
+        _collatToken,
+        _debtInUSD,
+        REPURCHASE_REWARD_BPS,
+        lyfDs
+      );
+    }
 
     // 3. reduce debt
-    _reduceDebt(_subAccount, _debtShareId, _amountDebtToRepurchase, lyfDs);
+    _reduceDebt(_subAccount, _debtShareId, _actualDebtToRepurchase, lyfDs);
     _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
     // 4. transfer

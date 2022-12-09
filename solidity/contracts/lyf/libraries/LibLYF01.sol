@@ -201,6 +201,38 @@ library LibLYF01 {
     }
   }
 
+  function getTotalBorrowedUSDValue(address _subAccount, LYFDiamondStorage storage lyfDs)
+    internal
+    view
+    returns (uint256 _totalBorrowedUSDValue)
+  {
+    LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index].token;
+      (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
+      uint256 _borrowedAmount = LibShareUtil.shareToValue(
+        _borrowed[_i].amount,
+        lyfDs.debtValues[_borrowed[_i].index],
+        lyfDs.debtShares[_borrowed[_i].index]
+      );
+
+      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(
+        _borrowedAmount * _tokenConfig.to18ConversionFactor,
+        _tokenPrice,
+        1e18
+      );
+
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256, uint256) {
     (uint256 _price, uint256 _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
     if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)

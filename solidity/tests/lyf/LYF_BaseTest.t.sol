@@ -81,6 +81,7 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
+    btc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -111,11 +112,13 @@ abstract contract LYF_BaseTest is BaseTest {
     addStrat.setWhitelistedCallers(stratWhitelistedCallers, true);
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+    usdc.mint(address(mockRouter), 1000000 ether);
+    weth.mint(address(mockRouter), 1000000 ether);
 
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](5);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](6);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -167,6 +170,16 @@ abstract contract LYF_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[5] = ILYFAdminFacet.TokenConfigInput({
+      token: address(btc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
     ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
@@ -208,7 +221,7 @@ abstract contract LYF_BaseTest is BaseTest {
     IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -227,6 +240,16 @@ abstract contract LYF_BaseTest is BaseTest {
       borrowingFactor: 9000,
       maxBorrow: 1e24,
       maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[2] = IAdminFacet.TokenConfigInput({
+      token: address(btc),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
 
@@ -250,6 +273,7 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.startPrank(DEPLOYER);
     _oracle.add(address(weth), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
+    _oracle.add(address(btc), address(usd), 10 ether, block.timestamp);
     _oracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
     _oracle.add(address(wethUsdcLPToken), address(usd), 2 ether, block.timestamp);
 
@@ -258,6 +282,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _medianizer.setPrimarySources(address(weth), address(usd), 1 ether, block.timestamp, inputs);
     _medianizer.setPrimarySources(address(usdc), address(usd), 1 ether, block.timestamp, inputs);
+    _medianizer.setPrimarySources(address(btc), address(usd), 1 ether, block.timestamp, inputs);
     _medianizer.setPrimarySources(address(isolateToken), address(usd), 1 ether, block.timestamp, inputs);
     _medianizer.setPrimarySources(address(wethUsdcLPToken), address(usd), 1 ether, block.timestamp, inputs);
     vm.stopPrank();
