@@ -65,7 +65,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountWethDebtValue, 10 ether);
     assertEq(_subAccountUsdcDebtValue, 10 ether);
 
-    vm.warp(1);
+    vm.warp(block.timestamp + 1);
 
     uint256 _wethDebtInterest = farmFacet.pendingInterest(address(weth), address(wethUsdcLPToken));
     uint256 _usdcDebtInterest = farmFacet.pendingInterest(address(usdc), address(wethUsdcLPToken));
