@@ -33,6 +33,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
+import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -52,7 +53,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ILiquidationFacet internal liquidationFacet;
   IRewardFacet internal rewardFacet;
 
-  MockChainLinkPriceOracle chainLinkOracle;
+  MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
@@ -156,15 +157,15 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);
 
-    //set oracleChecker
-    chainLinkOracle = deployMockChainLinkPriceOracle();
-    adminFacet.setOracle(address(chainLinkOracle));
-    vm.startPrank(DEPLOYER);
-    chainLinkOracle.add(address(weth), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(usdc), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(isolateToken), address(usd), 1 ether, block.timestamp);
-    chainLinkOracle.add(address(btc), address(usd), 10 ether, block.timestamp);
-    vm.stopPrank();
+    //set oracle
+
+    mockOracle = new MockAlpacaV2Oracle();
+    mockOracle.setTokenPrice(address(weth), 1e18);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+    mockOracle.setTokenPrice(address(isolateToken), 1e18);
+    mockOracle.setTokenPrice(address(btc), 10e18);
+
+    adminFacet.setOracle(address(mockOracle));
 
     // set repurchases ok
     address[] memory _repurchasers = new address[](1);
