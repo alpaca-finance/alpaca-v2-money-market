@@ -24,4 +24,6 @@ interface IMoneyMarket {
     returns (uint256 _ibShareAmount);
 
   function getTotalToken(address _token) external view returns (uint256);
+
+  function pendingInterest(address _token) external view returns (uint256);
 }
