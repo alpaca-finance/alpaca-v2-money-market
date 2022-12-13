@@ -22,7 +22,7 @@ import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.so
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IPancakeRouter02 } from "../../contracts/lyf/interfaces/IPancakeRouter02.sol";
+import { IRouterLike } from "../../contracts/lyf/interfaces/IRouterLike.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 import { IPriceOracle } from "../../contracts/oracle/interfaces/IPriceOracle.sol";
@@ -67,6 +67,8 @@ abstract contract LYF_BaseTest is BaseTest {
   PancakeswapV2Strategy internal addStrat;
   MockMasterChef internal masterChef;
 
+  uint256 constant reinvestThreshold = 1e18;
+
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
@@ -91,7 +93,7 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.stopPrank();
 
     // DEPLOY MASTERCHEF
-    masterChef = new MockMasterChef();
+    masterChef = new MockMasterChef(address(cake));
 
     // MASTERCHEF POOLID
     wethUsdcPoolId = 1;
@@ -103,7 +105,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     masterChef.addLendingPool(address(wethUsdcLPToken), wethUsdcPoolId);
 
-    addStrat = new PancakeswapV2Strategy(IPancakeRouter02(address(mockRouter)));
+    addStrat = new PancakeswapV2Strategy(IRouterLike(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);
     stratWhitelistedCallers[0] = lyfDiamond;
     addStrat.setWhitelistedCallers(stratWhitelistedCallers, true);
@@ -167,11 +169,19 @@ abstract contract LYF_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
+    address[] memory _reinvestPath = new address[](2);
+    _reinvestPath[0] = address(cake);
+    _reinvestPath[1] = address(usdc);
+
     ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
     lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
       lpToken: address(wethUsdcLPToken),
       strategy: address(addStrat),
       masterChef: address(masterChef),
+      router: address(mockRouter),
+      reinvestPath: _reinvestPath,
+      reinvestThreshold: reinvestThreshold,
+      rewardToken: address(cake),
       poolId: wethUsdcPoolId
     });
     adminFacet.setLPConfigs(lpConfigs);

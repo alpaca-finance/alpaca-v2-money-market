@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
+import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
 interface ILYFFarmFacet {
   function addFarmPosition(
@@ -29,6 +30,8 @@ interface ILYFFarmFacet {
     address _lpToken,
     uint256 _repayAmount
   ) external;
+
+  function reinvest(address _lpToken) external;
 
   function repayWithCollat(
     address _account,
@@ -72,6 +75,8 @@ interface ILYFFarmFacet {
 
   function debtShares(address _token, address _lpToken) external view returns (uint256);
 
+  function pendingRewards(address _lpToken) external view returns (uint256);
+
   function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
@@ -81,6 +86,12 @@ interface ILYFFarmFacet {
   ) external;
 
   function getMMDebt(address _token) external view returns (uint256);
+
+  function lpValues(address _lpToken) external view returns (uint256);
+
+  function lpShares(address _lpToken) external view returns (uint256);
+
+  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory);
 
   // Errors
   error LYFFarmFacet_InvalidToken(address _token);
@@ -93,7 +104,9 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_InvalidAssetTier();
   error LYFFarmFacet_ExceedBorrowLimit();
   error LYFFarmFacet_BadInput();
-  error LYFFarmFacet_TooLittleReceived();
+  error LYFFarmFacet_Unauthorized();
+  error LYFFarmFacet_InvalidLP();
   error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_TooLittleReceived();
   error LYFFarmFacet_CollatNotEnough();
 }

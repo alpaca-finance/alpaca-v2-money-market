@@ -18,6 +18,10 @@ interface ILYFAdminFacet {
     address lpToken;
     address strategy;
     address masterChef;
+    address router;
+    address rewardToken;
+    address[] reinvestPath;
+    uint256 reinvestThreshold;
     uint256 poolId;
   }
 
@@ -38,4 +42,6 @@ interface ILYFAdminFacet {
   ) external;
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
+
+  function setReinvestorsOk(address[] memory list, bool _isOk) external;
 }

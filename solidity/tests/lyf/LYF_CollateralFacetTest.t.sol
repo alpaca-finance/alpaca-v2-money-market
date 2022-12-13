@@ -79,13 +79,6 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     // assertEq(_aliceBorrowingPower, 27 ether);
   }
 
-  function testRevert_WhenUserAddInvalidLYFCollateral_ShouldRevert() external {
-    vm.startPrank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_InvalidAssetTier.selector));
-    collateralFacet.addCollateral(ALICE, subAccount0, address(isolateToken), 1 ether);
-    vm.stopPrank();
-  }
-
   function testRevert_WhenUserAddLYFCollateralMoreThanLimit_ShouldRevert() external {
     //max collat for weth is 100 ether
     uint256 _collateral = 100 ether;

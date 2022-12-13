@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
@@ -9,20 +12,26 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
-import { IERC20 } from "../interfaces/IERC20.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
+import { IRouterLike } from "../interfaces/IRouterLike.sol";
+import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
+import { IStrat } from "../interfaces/IStrat.sol";
 
 library LibLYF01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
+  using SafeERC20 for ERC20;
 
   // keccak256("lyf.diamond.storage");
   bytes32 internal constant LYF_STORAGE_POSITION = 0x23ec0f04376c11672050f8fa65aa7cdd1b6edcb0149eaae973a7060e7ef8f3f4;
 
   uint256 internal constant MAX_BPS = 10000;
+
+  event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
 
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
@@ -47,7 +56,11 @@ library LibLYF01 {
   struct LPConfig {
     address strategy;
     address masterChef;
+    address router;
+    address rewardToken;
+    address[] reinvestPath;
     uint256 poolId;
+    uint256 reinvestThreshold;
   }
 
   struct DebtShareTokens {
@@ -73,6 +86,8 @@ library LibLYF01 {
     mapping(address => uint256) lpValues;
     mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
+    mapping(address => uint256) pendingRewards;
+    mapping(address => bool) reinvestorsOk;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -220,7 +235,7 @@ library LibLYF01 {
   function getTotalToken(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256) {
     // todo: think about debt
     // return (ERC20(_token).balanceOf(address(this)) + lyfDs.globalDebts[_token]) - lyfDs.collats[_token];
-    return IERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
+    return ERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
   }
 
   // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
@@ -248,6 +263,8 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
+
       _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpValues[_token]);
 
       // update lp global state
@@ -276,6 +293,8 @@ library LibLYF01 {
 
       // If LP token, handle extra step
       if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
+        reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
+
         _amountRemoved = LibShareUtil.shareToValue(_removeAmount, ds.lpValues[_token], ds.lpShares[_token]);
 
         ds.lpShares[_token] -= _removeAmount;
@@ -320,9 +339,96 @@ library LibLYF01 {
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
-    uint256 _decimals = IERC20(_token).decimals();
+    uint256 _decimals = ERC20(_token).decimals();
     if (_decimals > 18) revert LibLYF01_UnsupportedDecimals();
     uint256 _conversionFactor = 10**(18 - _decimals);
     return uint8(_conversionFactor);
+  }
+
+  function depositToMasterChef(
+    address _lpToken,
+    LibLYF01.LPConfig memory _lpconfig,
+    uint256 _amount
+  ) internal {
+    ERC20(_lpToken).safeApprove(_lpconfig.masterChef, type(uint256).max);
+    IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
+    ERC20(_lpToken).safeApprove(_lpconfig.masterChef, 0);
+  }
+
+  function harvest(
+    address _lpToken,
+    LibLYF01.LPConfig memory _lpConfig,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    uint256 _rewardBefore = ERC20(_lpConfig.rewardToken).balanceOf(address(this));
+
+    IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, 0);
+
+    // accumulate harvested reward for LP
+    lyfDs.pendingRewards[_lpToken] += ERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
+  }
+
+  function reinvest(
+    address _lpToken,
+    uint256 _reinvestThreshold,
+    LibLYF01.LPConfig memory _lpConfig,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    harvest(_lpToken, _lpConfig, lyfDs);
+
+    uint256 _rewardAmount = lyfDs.pendingRewards[_lpToken];
+    if (_rewardAmount < _reinvestThreshold) return;
+
+    // TODO: extract fee
+
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
+
+    // convert rewardToken to either token0 or token1
+    uint256 _reinvestAmount = 0;
+    if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
+      _reinvestAmount = _rewardAmount;
+    } else {
+      ERC20(_lpConfig.rewardToken).safeApprove(_lpConfig.router, _rewardAmount);
+      uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
+        _rewardAmount,
+        0,
+        _lpConfig.reinvestPath,
+        address(this),
+        block.timestamp
+      );
+      _reinvestAmount = _amounts[_amounts.length - 1];
+    }
+
+    uint256 _token0Amount;
+    uint256 _token1Amount;
+    address _reinvestToken = _lpConfig.reinvestPath[_lpConfig.reinvestPath.length - 1];
+
+    if (_reinvestToken == _token0) {
+      _token0Amount = _reinvestAmount;
+    } else {
+      _token1Amount = _reinvestAmount;
+    }
+
+    ERC20(_token0).safeTransfer(_lpConfig.strategy, _token0Amount);
+    ERC20(_token1).safeTransfer(_lpConfig.strategy, _token1Amount);
+    uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
+      _token0,
+      _token1,
+      _lpToken,
+      _token0Amount,
+      _token1Amount,
+      0
+    );
+
+    // deposit lp back to masterChef
+    lyfDs.lpValues[_lpToken] += _lpReceived;
+    depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
+
+    // reset pending reward
+    lyfDs.pendingRewards[_lpToken] = 0;
+
+    // TODO: assign param properly
+    emit LogReinvest(msg.sender, 0, 0);
   }
 }

@@ -41,10 +41,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
-    if (ds.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
-      revert LYFCollateralFacet_InvalidAssetTier();
-    }
-
     if (_amount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral) {
       revert LYFCollateralFacet_ExceedCollateralLimit();
     }
@@ -127,19 +123,5 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
     return ds.subAccountCollats[_subAccount].getAmount(_token);
-  }
-
-  function _validateAddCollateral(
-    address _token,
-    uint256 _collateralAmount,
-    LibLYF01.LYFDiamondStorage storage ds
-  ) internal view {
-    if (ds.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
-      revert LYFCollateralFacet_InvalidAssetTier();
-    }
-
-    if (_collateralAmount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral) {
-      revert LYFCollateralFacet_ExceedCollateralLimit();
-    }
   }
 }
