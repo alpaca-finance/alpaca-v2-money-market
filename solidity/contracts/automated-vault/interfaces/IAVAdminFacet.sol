@@ -2,9 +2,15 @@
 pragma solidity 0.8.17;
 
 interface IAVAdminFacet {
-  // todo: remove
-  function setId(uint8 _id) external;
+  struct ShareTokenPairs {
+    address token;
+    address shareToken;
+  }
 
-  // todo: remove
-  function getId() external view returns (uint8);
+  struct ShareTokenConfigInput {
+    address shareToken;
+    uint256 someConfig; // TODO: replace with real config
+  }
+
+  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external;
 }

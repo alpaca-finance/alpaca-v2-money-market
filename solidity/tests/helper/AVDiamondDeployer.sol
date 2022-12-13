@@ -67,8 +67,8 @@ library AVDiamondDeployer {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
     bytes4[] memory selectors = new bytes4[](2);
-    selectors[0] = AVAdminFacet.setId.selector;
-    selectors[1] = AVAdminFacet.getId.selector;
+    selectors[0] = AVAdminFacet.setShareTokenConfigs.selector;
+    selectors[1] = AVAdminFacet.setTokensToShareTokens.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
