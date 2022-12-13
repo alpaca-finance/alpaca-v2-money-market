@@ -256,8 +256,7 @@ library LibLYF01 {
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
     uint256 _one = 10**IERC20(_ibToken).decimals();
 
-    IMoneyMarket mm = IMoneyMarket(lyfDs.moneyMarket);
-    uint256 _totalToken = mm.getTotalToken(_token) + mm.pendingInterest(_token);
+    uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_token);
     uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
 
     uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
