@@ -68,7 +68,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
 
     // check bob balance
     uint256 _wethReceivedFromRepurchase = _calcCollatRepurchaserShouldReceive(_amountToRepurchase, 1 ether);
@@ -119,7 +119,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
 
     // check bob balance
     uint256 _actualRepurchase = 30 ether;
@@ -181,7 +181,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
 
     // check bob balance
     uint256 _ibWethReceivedFromRepurchase = _calcCollatRepurchaserShouldReceive(_amountToRepurchase, 1.2 ether);
@@ -211,7 +211,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_Healthy.selector));
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
   }
 
   function testRevert_WhenRepurchaseMoreThanHalfOfDebt_WhileThereIs2DebtPosition() external {
@@ -231,7 +231,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     // bob try to liquidate 40 usdc, get capped at 31 usdc, should fail because it is more than half of total debt
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_RepayDebtValueTooHigh.selector));
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
   }
 
   function testRevert_WhenNotEnoughCollatToPayForDebtAmount() external {
@@ -252,6 +252,32 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     // bob try to liquidate 30 usdc, should fail because btc collat value is less than 30 usd
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_InsufficientAmount.selector));
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase);
+    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
+  }
+
+  function testRevert_WhenCollatOutIsLessThanExpected() external {
+    address _collatToken = address(weth);
+    address _debtToken = address(usdc);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _amountToRepurchase = 5 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+
+    vm.prank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_TooLittleReceived.selector));
+    liquidationFacet.repurchase(
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      _amountToRepurchase,
+      5.06 ether
+    );
   }
 }

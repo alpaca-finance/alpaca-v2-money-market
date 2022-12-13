@@ -34,7 +34,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _debtToken,
     address _collatToken,
     address _lpToken,
-    uint256 _amountDebtToRepurchase
+    uint256 _amountDebtToRepurchase,
+    uint256 _minCollatOut
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
@@ -74,11 +75,14 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
         REPURCHASE_REWARD_BPS,
         lyfDs
       );
+      if (_minCollatOut > _collatAmountOut) {
+        revert LYFLiquidationFacet_TooLittleReceived();
+      }
     }
 
     // 3. reduce debt
     _reduceDebt(_subAccount, _debtShareId, _actualDebtToRepurchase, lyfDs);
-    _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
+    LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
     // 4. transfer
     ERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _actualDebtToRepurchase);
@@ -157,16 +161,5 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // update debt
     lyfDs.debtShares[_debtShareId] -= _shareToReduce;
     lyfDs.debtValues[_debtShareId] -= _amountToReduce;
-  }
-
-  function _reduceCollateral(
-    address _subAccount,
-    address _collatToken,
-    uint256 _amountToReduce,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    uint256 _collatTokenAmount = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
-    lyfDs.subAccountCollats[_subAccount].updateOrRemove(_collatToken, _collatTokenAmount - _amountToReduce);
-    lyfDs.collats[_collatToken] -= _amountToReduce;
   }
 }

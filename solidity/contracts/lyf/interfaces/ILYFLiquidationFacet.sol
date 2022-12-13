@@ -14,6 +14,7 @@ interface ILYFLiquidationFacet {
   error LYFLiquidationFacet_Healthy();
   error LYFLiquidationFacet_RepayDebtValueTooHigh();
   error LYFLiquidationFacet_InsufficientAmount();
+  error LYFLiquidationFacet_TooLittleReceived();
 
   function repurchase(
     address _account,
@@ -21,6 +22,7 @@ interface ILYFLiquidationFacet {
     address _repayToken,
     address _collatToken,
     address _lpToken,
-    uint256 _amount
+    uint256 _amountDebtToRepurchase,
+    uint256 _minCollatOut
   ) external returns (uint256);
 }
