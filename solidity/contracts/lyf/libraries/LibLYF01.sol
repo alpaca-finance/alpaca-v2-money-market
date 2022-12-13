@@ -58,8 +58,8 @@ library LibLYF01 {
     address masterChef;
     address router;
     address rewardToken;
-    uint256 poolId;
     address[] reinvestPath;
+    uint256 poolId;
     uint256 reinvestThreshold;
   }
 
