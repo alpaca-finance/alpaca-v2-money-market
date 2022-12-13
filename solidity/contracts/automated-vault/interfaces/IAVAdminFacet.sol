@@ -13,4 +13,6 @@ interface IAVAdminFacet {
   }
 
   function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external;
+
+  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
 }
