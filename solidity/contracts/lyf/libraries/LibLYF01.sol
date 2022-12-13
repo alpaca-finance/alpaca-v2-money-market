@@ -63,11 +63,6 @@ library LibLYF01 {
     uint256 reinvestThreshold;
   }
 
-  struct DebtShareTokens {
-    address token;
-    address lpToken;
-  }
-
   // Storage
   struct LYFDiamondStorage {
     address moneyMarket;
@@ -77,7 +72,7 @@ library LibLYF01 {
     mapping(address => TokenConfig) tokenConfigs;
     // token => lp token => debt share id
     mapping(address => mapping(address => uint256)) debtShareIds;
-    mapping(uint256 => DebtShareTokens) debtShareTokens;
+    mapping(uint256 => address) debtShareTokens;
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares;
     mapping(uint256 => uint256) debtShares;
     mapping(uint256 => uint256) debtValues;
@@ -119,7 +114,7 @@ library LibLYF01 {
       uint256 _timePast = block.timestamp - _lastAccureTime;
       address _interestModel = address(lyfDs.interestModels[_debtShareId]);
       if (_interestModel != address(0)) {
-        address _token = lyfDs.debtShareTokens[_debtShareId].token;
+        address _token = lyfDs.debtShareTokens[_debtShareId];
         (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getGlobalDebt(_token);
         uint256 _floating = IMoneyMarket(lyfDs.moneyMarket).getFloatingBalance(_token);
         uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
@@ -201,7 +196,7 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _borrowedLength = _borrowed.length;
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index].token;
+      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
