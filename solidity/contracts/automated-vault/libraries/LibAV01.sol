@@ -10,6 +10,8 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // interfaces
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 library LibAV01 {
   using SafeERC20 for ERC20;
 
@@ -61,6 +63,24 @@ library LibAV01 {
 
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amountIn);
     IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
+  }
+
+  function withdraw(
+    address _shareToken,
+    uint256 _shareAmountIn,
+    uint256 _minTokenOut,
+    AVDiamondStorage storage avDs
+  ) internal {
+    address _token = avDs.shareTokenToToken[_shareToken];
+    if (_token == address(0)) {
+      revert LibAV01_InvalidToken(_shareToken);
+    }
+
+    // TODO: calculate amountOut with equity value
+    // TODO: handle slippage
+
+    IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
+    ERC20(_token).safeTransferFrom(msg.sender, address(this), _minTokenOut);
   }
 
   function setShareTokenPair(

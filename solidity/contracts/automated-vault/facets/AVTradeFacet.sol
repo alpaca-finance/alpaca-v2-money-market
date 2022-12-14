@@ -12,11 +12,18 @@ import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 contract AVTradeFacet is IAVTradeFacet {
   using SafeERC20 for ERC20;
 
-  function openVault(address _token) external returns (address _newShareToken) {
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
+  function openVault(address _token) external nonReentrant returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     if (avDs.tokenToShareToken[_token] != address(0)) {
@@ -44,8 +51,17 @@ contract AVTradeFacet is IAVTradeFacet {
     address _token,
     uint256 _amountIn,
     uint256 _minShareOut
-  ) external {
+  ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     LibAV01.deposit(_token, _amountIn, _minShareOut, avDs);
+  }
+
+  function withdraw(
+    address _shareToken,
+    uint256 _shareAmountIn,
+    uint256 _minTokenOut
+  ) external nonReentrant {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.withdraw(_shareToken, _shareAmountIn, _minTokenOut, avDs);
   }
 }

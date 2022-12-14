@@ -12,4 +12,11 @@ contract AV_TradeFacetTest is AV_BaseTest {
     vm.prank(ALICE);
     tradeFacet.deposit(address(weth), 1 ether, 0);
   }
+
+  function testCorrectness_WhenWithdrawToken_ShouldWork() external {
+    vm.startPrank(ALICE);
+    tradeFacet.deposit(address(weth), 1 ether, 0);
+    tradeFacet.withdraw(address(avShareToken), 1 ether, 0);
+    vm.stopPrank();
+  }
 }
