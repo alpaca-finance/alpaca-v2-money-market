@@ -21,9 +21,12 @@ library LibAV01 {
   }
 
   struct AVDiamondStorage {
+    address moneyMarket;
     mapping(address => address) tokenToShareToken;
     mapping(address => address) shareTokenToToken;
     mapping(address => ShareTokenConfig) shareTokenConfig;
+    mapping(address => uint256) vaultDebtShares;
+    mapping(address => uint256) vaultDebtValues;
   }
 
   error LibAV01_InvalidToken(address _token);

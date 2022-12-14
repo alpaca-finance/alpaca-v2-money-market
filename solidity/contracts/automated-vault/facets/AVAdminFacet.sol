@@ -67,4 +67,9 @@ contract AVAdminFacet is IAVAdminFacet {
       }
     }
   }
+
+  function setMoneyMarket(address _newMoneyMarket) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    avDs.moneyMarket = _newMoneyMarket;
+  }
 }
