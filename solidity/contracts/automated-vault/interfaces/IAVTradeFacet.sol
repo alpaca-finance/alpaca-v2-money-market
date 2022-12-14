@@ -2,6 +2,8 @@
 pragma solidity 0.8.17;
 
 interface IAVTradeFacet {
+  event LogRemoveDebt(address indexed shareToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
+
   function deposit(
     address _token,
     uint256 _amountIn,
