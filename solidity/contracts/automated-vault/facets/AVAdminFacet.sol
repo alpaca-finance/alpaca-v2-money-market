@@ -6,15 +6,38 @@ import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract AVAdminFacet is IAVAdminFacet {
-  // todo: remove
-  function setId(uint8 _id) external {
-    LibAV01.getStorage().id = _id;
+  modifier onlyOwner() {
+    LibDiamond.enforceIsContractOwner();
+    _;
   }
 
-  // todo: remove
-  function getId() external view returns (uint8 _id) {
-    _id = LibAV01.getStorage().id;
+  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    uint256 length = pairs.length;
+    for (uint256 i; i < length; ) {
+      ShareTokenPairs calldata pair = pairs[i];
+      avDs.tokenToShareToken[pair.token] = pair.shareToken;
+      avDs.shareTokenToToken[pair.shareToken] = pair.token;
+      unchecked {
+        i++;
+      }
+    }
+  }
+
+  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    uint256 length = configs.length;
+    for (uint256 i; i < length; ) {
+      ShareTokenConfigInput calldata config = configs[i];
+      avDs.shareTokenConfig[config.shareToken] = LibAV01.ShareTokenConfig({ someConfig: config.someConfig });
+      unchecked {
+        i++;
+      }
+    }
   }
 }

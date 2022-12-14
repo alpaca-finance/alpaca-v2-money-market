@@ -7,6 +7,7 @@ import { AVDiamond } from "../../contracts/automated-vault/AVDiamond.sol";
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
 import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
+import { AVFarmFacet } from "../../contracts/automated-vault/facets/AVFarmFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
@@ -26,6 +27,7 @@ library AVDiamondDeployer {
 
     // Deploy Facets
     deployAdminFacet(_avDiamondCutFacet);
+    deployFarmFacet(_avDiamondCutFacet);
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
@@ -67,8 +69,8 @@ library AVDiamondDeployer {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
     bytes4[] memory selectors = new bytes4[](2);
-    selectors[0] = AVAdminFacet.setId.selector;
-    selectors[1] = AVAdminFacet.getId.selector;
+    selectors[0] = AVAdminFacet.setShareTokenConfigs.selector;
+    selectors[1] = AVAdminFacet.setTokensToShareTokens.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -78,6 +80,22 @@ library AVDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_adminFacet, selectors);
+  }
+
+  function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVFarmFacet, bytes4[] memory) {
+    AVFarmFacet _farmFacet = new AVFarmFacet();
+
+    bytes4[] memory selectors = new bytes4[](1);
+    selectors[0] = AVFarmFacet.deposit.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_farmFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_farmFacet, selectors);
   }
 
   function buildFacetCut(
