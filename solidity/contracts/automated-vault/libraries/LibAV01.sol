@@ -10,8 +10,6 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // interfaces
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 library LibAV01 {
   using SafeERC20 for ERC20;
 

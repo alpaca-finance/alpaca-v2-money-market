@@ -68,9 +68,10 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = AVAdminFacet.setShareTokenConfigs.selector;
     selectors[1] = AVAdminFacet.setTokensToShareTokens.selector;
+    selectors[2] = AVAdminFacet.openVault.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -85,10 +86,9 @@ library AVDiamondDeployer {
   function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
     AVTradeFacet _farmFacet = new AVTradeFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = AVTradeFacet.deposit.selector;
-    selectors[1] = AVTradeFacet.openVault.selector;
-    selectors[2] = AVTradeFacet.withdraw.selector;
+    selectors[1] = AVTradeFacet.withdraw.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_farmFacet),
