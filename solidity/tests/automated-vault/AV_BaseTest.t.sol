@@ -6,6 +6,9 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 // helper
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
 
+// contracts
+import { AVHandler } from "../../contracts/automated-vault/handler/AVHandler.sol";
+
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVFarmFacet } from "../../contracts/automated-vault/interfaces/IAVFarmFacet.sol";
@@ -33,5 +36,9 @@ abstract contract AV_BaseTest is BaseTest {
     IAVAdminFacet.ShareTokenPairs[] memory shareTokenPairs = new IAVAdminFacet.ShareTokenPairs[](1);
     shareTokenPairs[0] = IAVAdminFacet.ShareTokenPairs({ token: address(weth), shareToken: address(avShareToken) });
     adminFacet.setTokensToShareTokens(shareTokenPairs);
+
+    // setup handler
+    AVHandler handler = new AVHandler();
+    adminFacet.setAVHandler(address(_handler));
   }
 }

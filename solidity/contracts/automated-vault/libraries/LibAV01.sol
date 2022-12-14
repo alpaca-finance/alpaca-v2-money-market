@@ -9,6 +9,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 
 library LibAV01 {
   using SafeERC20 for ERC20;
@@ -20,15 +21,22 @@ library LibAV01 {
     uint256 someConfig; // TODO: replace with real config
   }
 
+  struct Position {
+    address owner;
+    uint256 debtShare;
+  }
+
   struct AVDiamondStorage {
     mapping(address => address) tokenToShareToken;
     mapping(address => address) shareTokenToToken;
     mapping(address => ShareTokenConfig) shareTokenConfig;
+    address handler;
   }
 
   error LibAV01_InvalidToken(address _token);
   error LibAV01_NoTinyShares();
   error LibAV01_TooLittleReceived();
+  error LibAV01_InvalidHandler();
 
   function getStorage() internal pure returns (AVDiamondStorage storage ds) {
     assembly {
@@ -47,19 +55,25 @@ library LibAV01 {
       revert LibAV01_InvalidToken(_token);
     }
 
+    if (avDs.handler == address(0)) {
+      revert LibAV01_InvalidHandler();
+    }
+
+    uint256 _equityChanged = IAVHandler(avDs.handler).onDeposit(msg.sender, _token, _amountIn);
+
     uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
     // TODO: replace _amountIn getTotalToken by equity
-    uint256 _totalToken = _amountIn;
+    uint256 _totalToken = _equityChanged;
 
-    uint256 _shareToMint = LibShareUtil.valueToShare(_amountIn, _totalShareTokenSupply, _totalToken);
+    uint256 _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _totalToken);
     if (_minShareOut > _shareToMint) {
       revert LibAV01_TooLittleReceived();
     }
+
     if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals()) - 1) {
       revert LibAV01_NoTinyShares();
     }
 
-    ERC20(_token).safeTransferFrom(msg.sender, address(this), _amountIn);
     IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
   }
 }

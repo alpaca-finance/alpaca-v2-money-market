@@ -68,9 +68,10 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = AVAdminFacet.setShareTokenConfigs.selector;
     selectors[1] = AVAdminFacet.setTokensToShareTokens.selector;
+    selectors[2] = AVAdminFacet.setAVHandler.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

@@ -40,4 +40,9 @@ contract AVAdminFacet is IAVAdminFacet {
       }
     }
   }
+
+  function setAVHandler(address _handler) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    avDs.handler = _handler;
+  }
 }
