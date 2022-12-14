@@ -9,6 +9,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 library LibAV01 {
   using SafeERC20 for ERC20;
@@ -16,27 +17,57 @@ library LibAV01 {
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
+  enum AssetTier {
+    UNLISTED,
+    COLLATERAL,
+    LP
+  }
+
   struct ShareTokenConfig {
     uint256 someConfig; // TODO: replace with real config
   }
 
   struct AVDiamondStorage {
     address moneyMarket;
+    IAlpacaV2Oracle oracle;
     mapping(address => address) tokenToShareToken;
     mapping(address => address) shareTokenToToken;
-    mapping(address => ShareTokenConfig) shareTokenConfig;
+    mapping(address => ShareTokenConfig) shareTokenConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;
+    mapping(address => TokenConfig) tokenConfigs;
+  }
+
+  struct TokenConfig {
+    AssetTier tier;
+    uint8 to18ConversionFactor;
+    uint256 maxToleranceExpiredSecond;
   }
 
   error LibAV01_InvalidToken(address _token);
   error LibAV01_NoTinyShares();
   error LibAV01_TooLittleReceived();
+  error LibAV01_PriceStale(address _token);
+  error LibAV01_UnsupportedDecimals();
 
   function getStorage() internal pure returns (AVDiamondStorage storage ds) {
     assembly {
       ds.slot := AV_STORAGE_POSITION
     }
+  }
+
+  function getPriceUSD(address _token, AVDiamondStorage storage avDs)
+    internal
+    view
+    returns (uint256 _price, uint256 _lastUpdated)
+  {
+    if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      (_price, _lastUpdated) = avDs.oracle.lpToDollar(1e18, _token);
+    } else {
+      (_price, _lastUpdated) = avDs.oracle.getTokenPrice(_token);
+    }
+    if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
+      revert LibAV01_PriceStale(_token);
   }
 
   function deposit(
@@ -82,6 +113,13 @@ library LibAV01 {
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _minTokenOut);
+  }
+
+  function to18ConversionFactor(address _token) internal view returns (uint8) {
+    uint256 _decimals = ERC20(_token).decimals();
+    if (_decimals > 18) revert LibAV01_UnsupportedDecimals();
+    uint256 _conversionFactor = 10**(18 - _decimals);
+    return uint8(_conversionFactor);
   }
 
   function setShareTokenPair(
