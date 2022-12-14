@@ -30,6 +30,8 @@ interface IAVAdminFacet {
 
   function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
 
+  function setTokenConfigs(TokenConfigInput[] calldata configs) external;
+
   function setMoneyMarket(address _newMoneyMarket) external;
 
   function setOracle(address _oracle) external;
