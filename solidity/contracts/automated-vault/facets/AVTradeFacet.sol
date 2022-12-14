@@ -58,7 +58,7 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   /// @notice only do accounting of av debt but doesn't actually repay to money market
-  function _removeebt(
+  function _removeDebt(
     address _shareToken,
     uint256 _amountToRemove,
     LibAV01.AVDiamondStorage storage avDs
