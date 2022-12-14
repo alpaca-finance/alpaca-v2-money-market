@@ -47,14 +47,14 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _amountToBorrow,
     LibAV01.AVDiamondStorage storage avDs
   ) internal {
-    IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amountToBorrow);
-
     avDs.vaultDebtShares[_shareToken] += LibShareUtil.valueToShareRoundingUp(
       _amountToBorrow,
       avDs.vaultDebtShares[_shareToken],
       avDs.vaultDebtValues[_shareToken]
     );
     avDs.vaultDebtValues[_shareToken] += _amountToBorrow;
+
+    IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amountToBorrow);
   }
 
   /// @notice only do accounting of av debt but doesn't actually repay to money market
