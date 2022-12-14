@@ -7,7 +7,7 @@ import { AVDiamond } from "../../contracts/automated-vault/AVDiamond.sol";
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
 import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
-import { AVFarmFacet } from "../../contracts/automated-vault/facets/AVFarmFacet.sol";
+import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
@@ -82,11 +82,11 @@ library AVDiamondDeployer {
     return (_adminFacet, selectors);
   }
 
-  function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVFarmFacet, bytes4[] memory) {
-    AVFarmFacet _farmFacet = new AVFarmFacet();
+  function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
+    AVTradeFacet _farmFacet = new AVTradeFacet();
 
     bytes4[] memory selectors = new bytes4[](1);
-    selectors[0] = AVFarmFacet.deposit.selector;
+    selectors[0] = AVTradeFacet.deposit.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_farmFacet),

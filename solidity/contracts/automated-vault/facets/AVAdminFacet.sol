@@ -20,8 +20,7 @@ contract AVAdminFacet is IAVAdminFacet {
     uint256 length = pairs.length;
     for (uint256 i; i < length; ) {
       ShareTokenPairs calldata pair = pairs[i];
-      avDs.tokenToShareToken[pair.token] = pair.shareToken;
-      avDs.shareTokenToToken[pair.shareToken] = pair.token;
+      LibAV01.setShareTokenPair(pair.token, pair.shareToken, avDs);
       unchecked {
         i++;
       }

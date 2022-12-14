@@ -62,4 +62,13 @@ library LibAV01 {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amountIn);
     IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
   }
+
+  function setShareTokenPair(
+    address _token,
+    address _shareToken,
+    AVDiamondStorage storage avDs
+  ) internal {
+    avDs.tokenToShareToken[_token] = _shareToken;
+    avDs.shareTokenToToken[_shareToken] = _token;
+  }
 }
