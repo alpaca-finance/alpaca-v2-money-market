@@ -7,7 +7,7 @@ import { AVDiamond } from "../../contracts/automated-vault/AVDiamond.sol";
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
 import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
-import { AVFarmFacet } from "../../contracts/automated-vault/facets/AVFarmFacet.sol";
+import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
@@ -68,10 +68,11 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](3);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = AVAdminFacet.setShareTokenConfigs.selector;
     selectors[1] = AVAdminFacet.setTokensToShareTokens.selector;
-    selectors[2] = AVAdminFacet.setAVHandler.selector;
+    selectors[2] = AVAdminFacet.openVault.selector;
+    selectors[3] = AVAdminFacet.setAVHandler.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -83,11 +84,12 @@ library AVDiamondDeployer {
     return (_adminFacet, selectors);
   }
 
-  function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVFarmFacet, bytes4[] memory) {
-    AVFarmFacet _farmFacet = new AVFarmFacet();
+  function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
+    AVTradeFacet _farmFacet = new AVTradeFacet();
 
-    bytes4[] memory selectors = new bytes4[](1);
-    selectors[0] = AVFarmFacet.deposit.selector;
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = AVTradeFacet.deposit.selector;
+    selectors[1] = AVTradeFacet.withdraw.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_farmFacet),

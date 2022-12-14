@@ -76,4 +76,31 @@ library LibAV01 {
 
     IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
   }
+
+  function withdraw(
+    address _shareToken,
+    uint256 _shareAmountIn,
+    uint256 _minTokenOut,
+    AVDiamondStorage storage avDs
+  ) internal {
+    address _token = avDs.shareTokenToToken[_shareToken];
+    if (_token == address(0)) {
+      revert LibAV01_InvalidToken(_shareToken);
+    }
+
+    // TODO: calculate amountOut with equity value
+    // TODO: handle slippage
+
+    IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
+    ERC20(_token).safeTransferFrom(msg.sender, address(this), _minTokenOut);
+  }
+
+  function setShareTokenPair(
+    address _token,
+    address _shareToken,
+    AVDiamondStorage storage avDs
+  ) internal {
+    avDs.tokenToShareToken[_token] = _shareToken;
+    avDs.shareTokenToToken[_shareToken] = _token;
+  }
 }

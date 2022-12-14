@@ -11,21 +11,21 @@ import { AVHandler } from "../../contracts/automated-vault/handler/AVHandler.sol
 
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
-import { IAVFarmFacet } from "../../contracts/automated-vault/interfaces/IAVFarmFacet.sol";
+import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 
 abstract contract AV_BaseTest is BaseTest {
   address internal avDiamond;
 
   // av facets
   IAVAdminFacet internal adminFacet;
-  IAVFarmFacet internal farmFacet;
+  IAVTradeFacet internal tradeFacet;
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
 
     // set av facets
     adminFacet = IAVAdminFacet(avDiamond);
-    farmFacet = IAVFarmFacet(avDiamond);
+    tradeFacet = IAVTradeFacet(avDiamond);
 
     // approve
     vm.startPrank(ALICE);

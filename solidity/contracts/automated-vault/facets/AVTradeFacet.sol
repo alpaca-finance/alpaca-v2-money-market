@@ -5,21 +5,37 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // interfaces
-import { IAVFarmFacet } from "../interfaces/IAVFarmFacet.sol";
+import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
-contract AVFarmFacet is IAVFarmFacet {
+contract AVTradeFacet is IAVTradeFacet {
   using SafeERC20 for ERC20;
+
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
 
   function deposit(
     address _token,
     uint256 _amountIn,
     uint256 _minShareOut
-  ) external {
+  ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     LibAV01.deposit(_token, _amountIn, _minShareOut, avDs);
+  }
+
+  function withdraw(
+    address _shareToken,
+    uint256 _shareAmountIn,
+    uint256 _minTokenOut
+  ) external nonReentrant {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.withdraw(_shareToken, _shareAmountIn, _minTokenOut, avDs);
   }
 }

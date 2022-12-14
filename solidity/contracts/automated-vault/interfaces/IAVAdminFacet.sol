@@ -12,6 +12,12 @@ interface IAVAdminFacet {
     uint256 someConfig; // TODO: replace with real config
   }
 
+  error AVTradeFacet_InvalidToken(address _token);
+
+  event LogOpenMarket(address indexed _caller, address indexed _token, address _shareToken);
+
+  function openVault(address _token) external returns (address _newShareToken);
+
   function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external;
 
   function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
