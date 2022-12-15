@@ -7,7 +7,7 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
 
 // contracts
-import { AVHandler } from "../../contracts/automated-vault/handler/AVHandler.sol";
+import { AVHandler } from "../../contracts/automated-vault/handlers/AVHandler.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
@@ -38,7 +38,7 @@ abstract contract AV_BaseTest is BaseTest {
     adminFacet.setTokensToShareTokens(shareTokenPairs);
 
     // setup handler
-    AVHandler handler = new AVHandler();
-    adminFacet.setAVHandler(address(_handler));
+    // AVHandler handler = new AVHandler();
+    // adminFacet.setAVHandler(address(_handler));
   }
 }

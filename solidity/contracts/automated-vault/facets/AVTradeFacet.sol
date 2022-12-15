@@ -22,12 +22,13 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function deposit(
-    address _token,
+    address _token0,
+    address _token1,
     uint256 _amountIn,
     uint256 _minShareOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-    LibAV01.deposit(_token, _amountIn, _minShareOut, avDs);
+    LibAV01.deposit(_token0, _token1, _amountIn, _minShareOut, avDs);
   }
 
   function withdraw(

@@ -13,6 +13,7 @@ interface IAVAdminFacet {
   }
 
   error AVTradeFacet_InvalidToken(address _token);
+  error AVAdminFacet_InvalidShareToken(address _token);
 
   event LogOpenMarket(address indexed _caller, address indexed _token, address _shareToken);
 
@@ -22,5 +23,5 @@ interface IAVAdminFacet {
 
   function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
 
-  function setAVHandler(address _handler) external;
+  function setAVHandler(address _shareToken, address avHandler) external;
 }
