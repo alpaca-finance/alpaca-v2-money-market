@@ -23,7 +23,8 @@ contract AVAdminFacet is IAVAdminFacet {
     address _lpToken,
     address _stableToken,
     address _assetToken,
-    uint8 _leverageLevel
+    uint8 _leverageLevel,
+    uint16 _managementFeePerSec
   ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
@@ -42,10 +43,11 @@ contract AVAdminFacet is IAVAdminFacet {
       lpToken: _lpToken,
       stableToken: _stableToken,
       assetToken: _assetToken,
-      leverageLevel: _leverageLevel
+      leverageLevel: _leverageLevel,
+      managementFeePerSec: _managementFeePerSec
     });
 
-    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken, _leverageLevel);
+    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);
   }
 
   function setVaultConfigs(VaultConfigInput[] calldata configs) external onlyOwner {
@@ -59,7 +61,8 @@ contract AVAdminFacet is IAVAdminFacet {
         lpToken: config.lpToken,
         stableToken: config.stableToken,
         assetToken: config.assetToken,
-        leverageLevel: config.leverageLevel
+        leverageLevel: config.leverageLevel,
+        managementFeePerSec: config.managementFeePerSec
       });
       unchecked {
         i++;
@@ -92,5 +95,10 @@ contract AVAdminFacet is IAVAdminFacet {
   function setOracle(address _oracle) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     avDs.oracle = IAlpacaV2Oracle(_oracle);
+  }
+
+  function setTreasury(address _treasury) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    avDs.treasury = _treasury;
   }
 }
