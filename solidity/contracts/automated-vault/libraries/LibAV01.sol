@@ -35,6 +35,8 @@ library LibAV01 {
     mapping(address => address) tokenToShareToken;
     mapping(address => address) shareTokenToToken;
     mapping(address => ShareTokenConfig) shareTokenConfig;
+    mapping(address => uint256) vaultDebtShares;
+    mapping(address => uint256) vaultDebtValues;
     // todo: multiple handler
     address avHandler;
     // share token => handler

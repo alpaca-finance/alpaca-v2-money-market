@@ -458,12 +458,6 @@ library LibMoneyMarket01 {
     _key = keccak256(abi.encodePacked(_rewardToken, _token));
   }
 
-  function isSubaccountHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view returns (bool) {
-    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
-    return _totalBorrowingPower >= _totalUsedBorrowedPower;
-  }
-
   function withdraw(
     address _ibToken,
     uint256 _shareAmount,

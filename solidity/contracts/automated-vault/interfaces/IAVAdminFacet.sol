@@ -23,5 +23,7 @@ interface IAVAdminFacet {
 
   function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
 
+  function setMoneyMarket(address _newMoneyMarket) external;
+
   function setAVHandler(address _shareToken, address avHandler) external;
 }

@@ -125,6 +125,13 @@ contract LendFacet is ILendFacet {
     return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
   }
 
+  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _totalToken =
+      LibMoneyMarket01.getTotalToken(_token, moneyMarketDs) +
+      LibMoneyMarket01.pendingInterest(_token, moneyMarketDs);
+  }
+
   // calculate _shareToMint to mint before transfer token to MM
   function _getShareToMint(
     address _token,

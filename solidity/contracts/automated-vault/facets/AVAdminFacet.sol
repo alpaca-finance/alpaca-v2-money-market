@@ -68,6 +68,11 @@ contract AVAdminFacet is IAVAdminFacet {
     }
   }
 
+  function setMoneyMarket(address _newMoneyMarket) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    avDs.moneyMarket = _newMoneyMarket;
+  }
+
   function setAVHandler(address _shareToken, address avHandler) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     if (avDs.shareTokenToToken[_shareToken] == address(0)) revert AVAdminFacet_InvalidShareToken(_shareToken);
