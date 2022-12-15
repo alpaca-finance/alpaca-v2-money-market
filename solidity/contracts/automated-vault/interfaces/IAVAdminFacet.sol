@@ -24,9 +24,19 @@ interface IAVAdminFacet {
 
   error AVTradeFacet_InvalidToken(address _token);
 
-  event LogOpenMarket(address indexed _caller, address indexed _token, address _shareToken);
+  event LogOpenVault(
+    address indexed _caller,
+    address indexed _lpToken,
+    address _stableToken,
+    address _assetToken,
+    address _shareToken
+  );
 
-  function openVault(address _token) external returns (address _newShareToken);
+  function openVault(
+    address _lpToken,
+    address _stableToken,
+    address _assetToken
+  ) external returns (address _newShareToken);
 
   function setVaultConfigs(VaultConfigInput[] calldata configs) external;
 

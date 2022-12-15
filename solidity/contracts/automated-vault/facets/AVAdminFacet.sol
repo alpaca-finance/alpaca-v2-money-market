@@ -19,15 +19,15 @@ contract AVAdminFacet is IAVAdminFacet {
     _;
   }
 
-  function openVault(address _token) external onlyOwner returns (address _newShareToken) {
+  function openVault(
+    address _lpToken,
+    address _stableToken,
+    address _assetToken
+  ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
-    if (avDs.tokenToShareToken[_token] != address(0)) {
-      revert AVTradeFacet_InvalidToken(_token);
-    }
-
-    string memory _tokenSymbol = ERC20(_token).symbol();
-    uint8 _tokenDecimals = ERC20(_token).decimals();
+    string memory _tokenSymbol = ERC20(_lpToken).symbol();
+    uint8 _tokenDecimals = ERC20(_lpToken).decimals();
     _newShareToken = address(
       new AVShareToken(
         string.concat("Share Token ", _tokenSymbol),
@@ -36,11 +36,14 @@ contract AVAdminFacet is IAVAdminFacet {
       )
     );
 
-    LibAV01.setShareTokenPair(_token, _newShareToken, avDs);
+    avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
+      shareToken: _newShareToken,
+      lpToken: _lpToken,
+      stableToken: _stableToken,
+      assetToken: _assetToken
+    });
 
-    // TODO: set config
-
-    emit LogOpenMarket(msg.sender, _token, _newShareToken);
+    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);
   }
 
   function setVaultConfigs(VaultConfigInput[] calldata configs) external onlyOwner {

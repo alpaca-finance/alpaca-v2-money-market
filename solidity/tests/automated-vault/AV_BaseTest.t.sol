@@ -10,6 +10,7 @@ import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
+import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
 // libraries
@@ -17,6 +18,7 @@ import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 
 // mocks
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
+import { MockLPToken } from "../mocks/MockLPToken.sol";
 
 abstract contract AV_BaseTest is BaseTest {
   address internal avDiamond;
@@ -26,6 +28,9 @@ abstract contract AV_BaseTest is BaseTest {
   IAVAdminFacet internal adminFacet;
   IAVTradeFacet internal tradeFacet;
 
+  IAVShareToken internal avShareToken;
+
+  MockLPToken internal wethUsdcLPToken;
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
@@ -42,9 +47,8 @@ abstract contract AV_BaseTest is BaseTest {
     vm.stopPrank();
 
     // setup share tokens
-    IAVAdminFacet.ShareTokenPairs[] memory shareTokenPairs = new IAVAdminFacet.ShareTokenPairs[](1);
-    shareTokenPairs[0] = IAVAdminFacet.ShareTokenPairs({ token: address(weth), shareToken: address(avShareToken) });
-    adminFacet.setTokensToShareTokens(shareTokenPairs);
+    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth)));
 
     // setup token configs
     IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](1);
