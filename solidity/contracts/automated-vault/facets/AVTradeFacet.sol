@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -66,14 +66,14 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _amountToBorrow,
     LibAV01.AVDiamondStorage storage avDs
   ) internal {
-    IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amountToBorrow);
-
     avDs.vaultDebtShares[_shareToken] += LibShareUtil.valueToShareRoundingUp(
       _amountToBorrow,
       avDs.vaultDebtShares[_shareToken],
       avDs.vaultDebtValues[_shareToken]
     );
     avDs.vaultDebtValues[_shareToken] += _amountToBorrow;
+
+    IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amountToBorrow);
   }
 
   function _calcBorrowAmount(

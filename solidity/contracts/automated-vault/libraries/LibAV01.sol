@@ -18,8 +18,7 @@ library LibAV01 {
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
   enum AssetTier {
-    UNLISTED,
-    COLLATERAL,
+    TOKEN,
     LP
   }
 

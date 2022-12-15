@@ -18,7 +18,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
+import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 
@@ -36,11 +36,11 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   error PancakeswapV2Strategy_Reverse();
   error PancakeswapV2Strategy_Unauthorized(address _caller);
 
-  IPancakeRouter02 public router;
+  IRouterLike public router;
 
   /// @dev Create a new add two-side optimal strategy instance.
   /// @param _router The PancakeSwap Router smart contract.
-  constructor(IPancakeRouter02 _router) {
+  constructor(IRouterLike _router) {
     router = _router;
   }
 

@@ -37,6 +37,7 @@ contract BaseTest is DSTest {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
   MockWNative internal nativeToken;
+  MockERC20 internal cake;
   MockERC20 internal weth;
   MockERC20 internal usdc;
   MockERC20 internal btc;
@@ -65,6 +66,7 @@ contract BaseTest is DSTest {
 
   constructor() {
     // deploy
+    cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);

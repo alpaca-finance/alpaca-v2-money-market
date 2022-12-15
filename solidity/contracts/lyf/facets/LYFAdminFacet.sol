@@ -59,6 +59,10 @@ contract LYFAdminFacet is ILYFAdminFacet {
       lyfDs.lpConfigs[_configs[i].lpToken] = LibLYF01.LPConfig({
         strategy: _configs[i].strategy,
         masterChef: _configs[i].masterChef,
+        router: _configs[i].router,
+        rewardToken: _configs[i].rewardToken,
+        reinvestPath: _configs[i].reinvestPath,
+        reinvestThreshold: _configs[i].reinvestThreshold,
         poolId: _configs[i].poolId
       });
       unchecked {
@@ -73,14 +77,30 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _debtShareId
   ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    if (lyfDs.debtShareIds[_token][_lpToken] == 0) {
-      lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
-      lyfDs.debtShareTokens[_debtShareId] = LibLYF01.DebtShareTokens({ token: _token, lpToken: _lpToken });
+
+    if (
+      lyfDs.debtShareIds[_token][_lpToken] != 0 ||
+      (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token)
+    ) {
+      revert LYFAdminFacet_BadDebtShareId();
     }
+    lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
+    lyfDs.debtShareTokens[_debtShareId] = _token;
   }
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.interestModels[_debtShareId] = _interestModel;
+  }
+
+  function setReinvestorsOk(address[] memory list, bool _isOk) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _length = list.length;
+    for (uint8 _i; _i < _length; ) {
+      lyfDs.reinvestorsOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
   }
 }

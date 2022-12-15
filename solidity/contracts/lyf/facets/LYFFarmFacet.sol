@@ -97,7 +97,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 4. deposit to masterChef
-    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
+    LibLYF01.depositToMasterChef(_lpToken, lpConfig, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -157,7 +157,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 4. deposit to masterChef
-    _depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
+    LibLYF01.depositToMasterChef(_lpToken, lpConfig, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -251,6 +251,21 @@ contract LYFFarmFacet is ILYFFarmFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
   }
 
+  function reinvest(address _lpToken) external nonReentrant {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    if (!lyfDs.reinvestorsOk[msg.sender]) {
+      revert LYFFarmFacet_Unauthorized();
+    }
+
+    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
+    if (_lpConfig.rewardToken == address(0)) {
+      revert LYFFarmFacet_InvalidLP();
+    }
+
+    LibLYF01.reinvest(_lpToken, 0, lyfDs.lpConfigs[_lpToken], lyfDs);
+  }
+
   function repayWithCollat(
     address _account,
     uint256 _subAccountId,
@@ -311,25 +326,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
       // emit event
       emit LogRemoveDebt(_subAccount, _debtShareId, _shareToRemove, _repayAmount);
     }
-  }
-
-  function _validate(
-    address _subAccount,
-    address _token,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view {
-    // todo: check if can borrow
-
-    // check asset tier
-    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-
-    uint256 _totalUsedBorrowedPower = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
-
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, lyfDs);
-
-    // todo: support debt share index
-    _checkAvailableToken(_token, _amount, 0, lyfDs);
   }
 
   // TODO: gas optimize on oracle call
@@ -458,17 +454,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
-  function _depositToMasterChef(
-    address _lpToken,
-    address _masterChef,
-    uint256 _poolId,
-    uint256 _amount
-  ) internal {
-    ERC20(_lpToken).approve(_masterChef, type(uint256).max);
-    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
-    ERC20(_lpToken).approve(_masterChef, 0);
-  }
-
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
@@ -517,10 +502,30 @@ contract LYFFarmFacet is ILYFFarmFacet {
     return lyfDs.debtValues[_debtShareId];
   }
 
+  function lpValues(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpValues[_lpToken];
+  }
+
+  function lpShares(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpShares[_lpToken];
+  }
+
+  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpConfigs[_lpToken];
+  }
+
   function debtShares(address _token, address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     return lyfDs.debtShares[_debtShareId];
+  }
+
+  function pendingRewards(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.pendingRewards[_lpToken];
   }
 
   function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256) {

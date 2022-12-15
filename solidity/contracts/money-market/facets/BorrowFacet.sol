@@ -357,7 +357,7 @@ contract BorrowFacet is IBorrowFacet {
     return moneyMarketDs.debtLastAccureTime[_token];
   }
 
-  function pendingInterest(address _token) public view returns (uint256) {
+  function pendingInterest(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return LibMoneyMarket01.pendingInterest(_token, moneyMarketDs);
   }
