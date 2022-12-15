@@ -6,8 +6,8 @@ library LibUIntDoublyLinkedList {
   error LibUIntDoublyLinkedList_NotExisted();
   error LibUIntDoublyLinkedList_NotInitialized();
 
-  uint256 internal constant START = 1;
-  uint256 internal constant END = 1;
+  uint256 internal constant START = type(uint256).max;
+  uint256 internal constant END = type(uint256).max;
   uint256 internal constant EMPTY = 0;
 
   struct List {

@@ -18,8 +18,7 @@ library LibAV01 {
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
   enum AssetTier {
-    UNLISTED,
-    COLLATERAL,
+    TOKEN,
     LP
   }
 
@@ -106,28 +105,11 @@ library LibAV01 {
     VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
 
     // TODO: calculate amountOut with equity value
+    // TODO: get token back from handler
     // TODO: handle slippage
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(vaultConfig.stableToken).safeTransferFrom(msg.sender, address(this), _minTokenOut);
-  }
-
-  function calcBorrowAmount(
-    address _stableToken,
-    address _assetToken,
-    uint256 _stableDepositedAmount,
-    uint8 _leverageLevel,
-    AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
-    (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
-
-    uint256 _stableDepositedValue = (_stableDepositedAmount * _stablePrice) / 1e18;
-    uint256 _stableTargetValue = _stableDepositedValue * _leverageLevel;
-    uint256 _stableBorrowValue = _stableTargetValue - _stableDepositedValue;
-    _stableBorrowAmount = (_stableBorrowValue * 1e18) / _stablePrice;
-
-    _assetBorrowAmount = (_stableTargetValue * 1e18) / _assetPrice;
+    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {

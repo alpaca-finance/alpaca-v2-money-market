@@ -189,8 +189,12 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     if (_mmTokenBalnce < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
+    // in order to find total non-collat borrow
+    // we can use globalDebt - over-collat debt
 
-    if (_borrowAmount > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+    uint256 _nonCollatDebt = moneyMarketDs.globalDebts[_token] - moneyMarketDs.debtValues[_token];
+
+    if (_borrowAmount + _nonCollatDebt > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }
   }

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -48,26 +48,6 @@ contract AVAdminFacet is IAVAdminFacet {
     });
 
     emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);
-  }
-
-  function setVaultConfigs(VaultConfigInput[] calldata configs) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-
-    uint256 length = configs.length;
-    for (uint256 i; i < length; ) {
-      VaultConfigInput calldata config = configs[i];
-      avDs.vaultConfigs[config.shareToken] = LibAV01.VaultConfig({
-        shareToken: config.shareToken,
-        lpToken: config.lpToken,
-        stableToken: config.stableToken,
-        assetToken: config.assetToken,
-        leverageLevel: config.leverageLevel,
-        managementFeePerSec: config.managementFeePerSec
-      });
-      unchecked {
-        i++;
-      }
-    }
   }
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external onlyOwner {

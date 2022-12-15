@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -41,8 +41,6 @@ interface IAVAdminFacet {
     uint8 _leverageLevel,
     uint16 _managementFeePerSec
   ) external returns (address _newShareToken);
-
-  function setVaultConfigs(VaultConfigInput[] calldata configs) external;
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external;
 
