@@ -166,11 +166,15 @@ contract AdminFacet is IAdminFacet {
     emit LogSetRewardDistributor(_addr);
   }
 
-  function getLendingRewardPerSec(address _rewardToken) external view onlyOwner returns (uint256 _rewardPerSec) {
+  function getReservePool(address _token) external view returns (uint256 _reserve) {
+    return LibMoneyMarket01.moneyMarketDiamondStorage().reservePools[_token];
+  }
+
+  function getLendingRewardPerSec(address _rewardToken) external view returns (uint256 _rewardPerSec) {
     _rewardPerSec = LibMoneyMarket01.moneyMarketDiamondStorage().lendingRewardPerSecList.getAmount(_rewardToken);
   }
 
-  function getBorrowingRewardPerSec(address _rewardToken) external view onlyOwner returns (uint256 _rewardPerSec) {
+  function getBorrowingRewardPerSec(address _rewardToken) external view returns (uint256 _rewardPerSec) {
     _rewardPerSec = LibMoneyMarket01.moneyMarketDiamondStorage().borrowingRewardPerSecList.getAmount(_rewardToken);
   }
 
