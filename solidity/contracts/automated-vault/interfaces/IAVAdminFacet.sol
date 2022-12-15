@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
+
+import { LibAV01 } from "../libraries/LibAV01.sol";
 
 interface IAVAdminFacet {
   struct ShareTokenPairs {
@@ -12,6 +14,12 @@ interface IAVAdminFacet {
     uint256 someConfig; // TODO: replace with real config
   }
 
+  struct TokenConfigInput {
+    LibAV01.AssetTier tier;
+    address token;
+    uint256 maxToleranceExpiredSecond;
+  }
+
   error AVTradeFacet_InvalidToken(address _token);
 
   event LogOpenMarket(address indexed _caller, address indexed _token, address _shareToken);
@@ -22,5 +30,9 @@ interface IAVAdminFacet {
 
   function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
 
+  function setTokenConfigs(TokenConfigInput[] calldata configs) external;
+
   function setMoneyMarket(address _newMoneyMarket) external;
+
+  function setOracle(address _oracle) external;
 }

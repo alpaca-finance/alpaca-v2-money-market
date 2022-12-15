@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -7,6 +7,7 @@ import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -61,7 +62,24 @@ contract AVAdminFacet is IAVAdminFacet {
     uint256 length = configs.length;
     for (uint256 i; i < length; ) {
       ShareTokenConfigInput calldata config = configs[i];
-      avDs.shareTokenConfig[config.shareToken] = LibAV01.ShareTokenConfig({ someConfig: config.someConfig });
+      avDs.shareTokenConfigs[config.shareToken] = LibAV01.ShareTokenConfig({ someConfig: config.someConfig });
+      unchecked {
+        i++;
+      }
+    }
+  }
+
+  function setTokenConfigs(TokenConfigInput[] calldata configs) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    uint256 length = configs.length;
+    for (uint256 i; i < length; ) {
+      TokenConfigInput calldata config = configs[i];
+      avDs.tokenConfigs[config.token] = LibAV01.TokenConfig({
+        tier: config.tier,
+        maxToleranceExpiredSecond: config.maxToleranceExpiredSecond,
+        to18ConversionFactor: LibAV01.to18ConversionFactor(config.token)
+      });
       unchecked {
         i++;
       }
@@ -71,5 +89,10 @@ contract AVAdminFacet is IAVAdminFacet {
   function setMoneyMarket(address _newMoneyMarket) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     avDs.moneyMarket = _newMoneyMarket;
+  }
+
+  function setOracle(address _oracle) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    avDs.oracle = IAlpacaV2Oracle(_oracle);
   }
 }
