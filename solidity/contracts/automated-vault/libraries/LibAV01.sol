@@ -83,30 +83,19 @@ library LibAV01 {
       revert LibAV01_PriceStale(_token);
   }
 
-  function depositV2(
+  function deposit(
     address _shareToken,
     address _token0,
     address _token1,
-    uint256 _amountIn,
+    uint256 _desiredAmount0,
+    uint256 _desiredAmount1,
     uint256 _minShareOut,
     AVDiamondStorage storage avDs
-  ) internal {
+  ) internal returns (uint256 _shareToMint) {
     address _handler = avDs.avHandlers[_shareToken];
 
     if (_handler == address(0)) revert LibAV01_InvalidHandler();
 
-    // todo: calculate borrowed amount
-    uint256 _borrowedAmount0 = _amountIn;
-    uint256 _borrowedAmount1 = _amountIn * 2;
-
-    _borrowMoneyMarket(_shareToken, _token0, _borrowedAmount0, avDs);
-    _borrowMoneyMarket(_shareToken, _token1, _borrowedAmount1, avDs);
-
-    uint256 _desiredAmount0 = _amountIn + _borrowedAmount0;
-    uint256 _desiredAmount1 = _borrowedAmount1;
-
-    // todo: refactor?
-    ERC20(_token0).safeTransferFrom(msg.sender, address(this), _amountIn);
     ERC20(_token0).safeTransfer(_handler, _desiredAmount0);
     ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
 
@@ -125,32 +114,11 @@ library LibAV01 {
 
     uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
 
-    uint256 _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
+    _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
 
     if (_minShareOut > _shareToMint) revert LibAV01_TooLittleReceived();
 
     if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals()) - 1) revert LibAV01_NoTinyShares();
-
-    IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
-  }
-
-  function deposit(
-    address _shareToken,
-    address _token,
-    uint256 _amountIn,
-    uint256 _minShareOut
-  ) internal {
-    uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
-    // TODO: replace _amountIn getTotalToken by equity
-    uint256 _totalToken = _amountIn;
-
-    uint256 _shareToMint = LibShareUtil.valueToShare(_amountIn, _totalShareTokenSupply, _totalToken);
-
-    if (_minShareOut > _shareToMint) revert LibAV01_TooLittleReceived();
-
-    if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals()) - 1) revert LibAV01_NoTinyShares();
-
-    IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
   }
 
   function withdraw(
@@ -167,6 +135,37 @@ library LibAV01 {
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
     ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
+  }
+
+  function borrowMoneyMarket(
+    address _shareToken,
+    address _token,
+    uint256 _amount,
+    AVDiamondStorage storage avDs
+  ) internal {
+    IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
+
+    avDs.totalDebtValues[_shareToken][_token] += _amount;
+  }
+
+  function calculateBorrowAmount(
+    address _stableToken,
+    address _assetToken,
+    uint256 _stableDepositedAmount,
+    uint8 _leverageLevel,
+    LibAV01.AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
+    (uint256 _assetPrice, ) = LibAV01.getPriceUSD(_assetToken, avDs);
+    (uint256 _stablePrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
+
+    uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
+
+    uint256 _stableDepositedValue = (_stableDepositedAmount * _stableTokenTo18ConversionFactor * _stablePrice) / 1e18;
+    uint256 _stableTargetValue = _stableDepositedValue * _leverageLevel;
+    uint256 _stableBorrowValue = _stableTargetValue - _stableDepositedValue;
+
+    _stableBorrowAmount = (_stableBorrowValue * 1e18) / (_stablePrice * _stableTokenTo18ConversionFactor);
+    _assetBorrowAmount = (_stableTargetValue * 1e18) / (_assetPrice * _stableTokenTo18ConversionFactor);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
@@ -191,18 +190,6 @@ library LibAV01 {
       uint256 _totalDebtValue = avDs.totalDebtValues[_shareToken][_token0] + avDs.totalDebtValues[_shareToken][_token1];
       _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
     }
-  }
-
-  function _borrowMoneyMarket(
-    address _shareToken,
-    address _token,
-    uint256 _amount,
-    AVDiamondStorage storage avDs
-  ) internal {
-    IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
-
-    // update debt
-    avDs.totalDebtValues[_shareToken][_token] += _amount;
   }
 
   /// @notice Return value of given lp amount.
