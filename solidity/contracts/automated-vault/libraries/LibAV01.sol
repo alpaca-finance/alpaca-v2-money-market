@@ -36,7 +36,7 @@ library LibAV01 {
     address moneyMarket;
     address treasury;
     IAlpacaV2Oracle oracle;
-    uint256 lastFeeCollectionTimestamp;
+    mapping(address => uint256) lastFeeCollectionTimestamps;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;

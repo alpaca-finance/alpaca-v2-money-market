@@ -99,13 +99,13 @@ contract AVTradeFacet is IAVTradeFacet {
   function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {
     IAVShareToken(_shareToken).mint(avDs.treasury, pendingManagementFee(_shareToken));
 
-    avDs.lastFeeCollectionTimestamp = block.timestamp;
+    avDs.lastFeeCollectionTimestamps[_shareToken] = block.timestamp;
   }
 
   function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
-    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamp;
+    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
     _pendingManagementFee =
       (ERC20(_shareToken).totalSupply() *
         avDs.vaultConfigs[_shareToken].managementFeePerSec *
