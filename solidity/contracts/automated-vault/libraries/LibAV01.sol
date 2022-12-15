@@ -23,7 +23,7 @@ library LibAV01 {
     LP
   }
 
-  struct ShareTokenConfig {
+  struct VaultConfig {
     uint256 someConfig; // TODO: replace with real config
   }
 
@@ -32,7 +32,7 @@ library LibAV01 {
     IAlpacaV2Oracle oracle;
     mapping(address => address) tokenToShareToken;
     mapping(address => address) shareTokenToToken;
-    mapping(address => ShareTokenConfig) shareTokenConfigs;
+    mapping(address => VaultConfig) vaultConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;
     mapping(address => TokenConfig) tokenConfigs;

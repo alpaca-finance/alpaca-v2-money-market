@@ -9,7 +9,7 @@ interface IAVAdminFacet {
     address shareToken;
   }
 
-  struct ShareTokenConfigInput {
+  struct VaultConfigInput {
     address shareToken;
     uint256 someConfig; // TODO: replace with real config
   }
@@ -28,7 +28,7 @@ interface IAVAdminFacet {
 
   function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external;
 
-  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
+  function setVaultConfigs(VaultConfigInput[] calldata configs) external;
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external;
 

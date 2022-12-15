@@ -56,13 +56,13 @@ contract AVAdminFacet is IAVAdminFacet {
     }
   }
 
-  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external onlyOwner {
+  function setVaultConfigs(VaultConfigInput[] calldata configs) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     uint256 length = configs.length;
     for (uint256 i; i < length; ) {
-      ShareTokenConfigInput calldata config = configs[i];
-      avDs.shareTokenConfigs[config.shareToken] = LibAV01.ShareTokenConfig({ someConfig: config.someConfig });
+      VaultConfigInput calldata config = configs[i];
+      avDs.vaultConfigs[config.shareToken] = LibAV01.VaultConfig({ someConfig: config.someConfig });
       unchecked {
         i++;
       }

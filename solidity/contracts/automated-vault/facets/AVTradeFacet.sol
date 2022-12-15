@@ -24,6 +24,7 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function deposit(
+    address _shareToken,
     address _token,
     uint256 _amountIn,
     uint256 _minShareOut
