@@ -65,7 +65,7 @@ abstract contract AV_BaseTest is BaseTest {
     });
     tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({
       token: address(usdc),
-      tier: LibAV01.AssetTier.UNLISTED,
+      tier: LibAV01.AssetTier.TOKEN,
       maxToleranceExpiredSecond: block.timestamp
     });
     adminFacet.setTokenConfigs(tokenConfigs);
