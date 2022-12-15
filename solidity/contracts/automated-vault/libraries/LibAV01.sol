@@ -103,10 +103,11 @@ library LibAV01 {
     VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
 
     // TODO: calculate amountOut with equity value
+    // TODO: get token back from handler
     // TODO: handle slippage
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(vaultConfig.stableToken).safeTransferFrom(msg.sender, address(this), _minTokenOut);
+    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
   }
 
   function calcBorrowAmount(
