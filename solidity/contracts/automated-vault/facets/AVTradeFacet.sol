@@ -31,23 +31,24 @@ contract AVTradeFacet is IAVTradeFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
     address _stableToken = vaultConfig.stableToken;
+    address _assetToken = vaultConfig.assetToken;
 
     LibAV01.deposit(_shareToken, _stableToken, _stableAmountIn, _minShareOut);
 
     (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = LibAV01.calcBorrowAmount(
       _stableToken,
-      vaultConfig.assetToken,
+      _assetToken,
       _stableAmountIn,
       vaultConfig.leverageLevel,
       avDs
     );
 
     _borrowFromMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
-    _borrowFromMoneyMarket(_shareToken, _stableToken, _assetBorrowAmount, avDs);
+    _borrowFromMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
 
     // TODO: send tokens to handler to compose LP and farm
 
-    emit LogDeposit(msg.sender, _shareToken, _stableAmountIn);
+    emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
   }
 
   function withdraw(
