@@ -68,11 +68,12 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](5);
     selectors[0] = AVAdminFacet.setVaultConfigs.selector;
     selectors[1] = AVAdminFacet.openVault.selector;
     selectors[2] = AVAdminFacet.setTokenConfigs.selector;
     selectors[3] = AVAdminFacet.setOracle.selector;
+    selectors[4] = AVAdminFacet.setMoneyMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
