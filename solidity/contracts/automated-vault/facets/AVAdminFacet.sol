@@ -22,7 +22,8 @@ contract AVAdminFacet is IAVAdminFacet {
   function openVault(
     address _lpToken,
     address _stableToken,
-    address _assetToken
+    address _assetToken,
+    uint8 _leverageLevel
   ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
@@ -40,10 +41,11 @@ contract AVAdminFacet is IAVAdminFacet {
       shareToken: _newShareToken,
       lpToken: _lpToken,
       stableToken: _stableToken,
-      assetToken: _assetToken
+      assetToken: _assetToken,
+      leverageLevel: _leverageLevel
     });
 
-    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);
+    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken, _leverageLevel);
   }
 
   function setVaultConfigs(VaultConfigInput[] calldata configs) external onlyOwner {
@@ -56,7 +58,8 @@ contract AVAdminFacet is IAVAdminFacet {
         shareToken: config.shareToken,
         lpToken: config.lpToken,
         stableToken: config.stableToken,
-        assetToken: config.assetToken
+        assetToken: config.assetToken,
+        leverageLevel: config.leverageLevel
       });
       unchecked {
         i++;

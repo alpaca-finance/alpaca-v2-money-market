@@ -14,6 +14,7 @@ interface IAVAdminFacet {
     address lpToken;
     address stableToken;
     address assetToken;
+    uint8 leverageLevel;
   }
 
   struct TokenConfigInput {
@@ -29,13 +30,15 @@ interface IAVAdminFacet {
     address indexed _lpToken,
     address _stableToken,
     address _assetToken,
-    address _shareToken
+    address _shareToken,
+    uint8 _leverageLevel
   );
 
   function openVault(
     address _lpToken,
     address _stableToken,
-    address _assetToken
+    address _assetToken,
+    uint8 _leverageLevel
   ) external returns (address _newShareToken);
 
   function setVaultConfigs(VaultConfigInput[] calldata configs) external;
