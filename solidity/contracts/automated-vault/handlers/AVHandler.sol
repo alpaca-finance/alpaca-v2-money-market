@@ -12,6 +12,7 @@ import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 
+// todo: upgradable
 contract AVHandler is IAVHandler {
   using SafeERC20 for ERC20;
 
@@ -20,9 +21,9 @@ contract AVHandler is IAVHandler {
 
   uint256 public totalLpBalance;
 
-  constructor(address _router, address _lpToken) {
+  constructor(address _router) {
     router = IRouterLike(_router);
-    lpToken = ISwapPairLike(_lpToken);
+    lpToken = ISwapPairLike(IRouterLike(_router).lpToken());
   }
 
   function onDeposit(
@@ -35,8 +36,8 @@ contract AVHandler is IAVHandler {
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
     ERC20(_token1).approve(address(router), type(uint256).max);
-    // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
 
+    // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
     uint256 swapAmt;
     bool isReversed;
     {
@@ -63,9 +64,6 @@ contract AVHandler is IAVHandler {
       revert AVHandler_TooLittleReceived();
     }
 
-    if (!lpToken.transfer(msg.sender, mintLpAmount)) {
-      revert AVHandler_TransferFailed();
-    }
     // 7. Reset approve to 0 for safety reason
     ERC20(_token0).approve(address(router), 0);
     ERC20(_token1).approve(address(router), 0);

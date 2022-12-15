@@ -25,5 +25,7 @@ interface IAVAdminFacet {
 
   function setMoneyMarket(address _newMoneyMarket) external;
 
+  function setOracle(address _oracle) external;
+
   function setAVHandler(address _shareToken, address avHandler) external;
 }

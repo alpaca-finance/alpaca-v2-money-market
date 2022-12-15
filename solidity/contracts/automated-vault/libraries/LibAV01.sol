@@ -14,6 +14,8 @@ import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
+import { console } from "../../../tests/utils/console.sol";
+
 library LibAV01 {
   using SafeERC20 for ERC20;
 
@@ -87,7 +89,6 @@ library LibAV01 {
     ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
 
     uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
-
     IAVHandler(_handler).onDeposit(
       _token0,
       _token1,
@@ -95,7 +96,6 @@ library LibAV01 {
       _desiredAmount1,
       0 // min lp amount
     );
-
     // _equityAfter should be latest equity
     uint256 _equityAfter = _getEquity(_shareToken, _handler, avDs);
     // equity after should more than before
@@ -148,9 +148,11 @@ library LibAV01 {
     address _token0 = _lpToken.token0();
     address _token1 = _lpToken.token1();
     uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
-    // get price USD
-    uint256 _totalDebtValue = avDs.totalDebtValues[_shareToken][_token0] + avDs.totalDebtValues[_shareToken][_token1];
-    _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
+    if (_lpAmount > 0) {
+      // get price USD
+      uint256 _totalDebtValue = avDs.totalDebtValues[_shareToken][_token0] + avDs.totalDebtValues[_shareToken][_token1];
+      _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
+    }
   }
 
   function _borrowMoneyMarket(

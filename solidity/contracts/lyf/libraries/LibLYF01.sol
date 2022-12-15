@@ -221,7 +221,7 @@ library LibLYF01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index].token;
+      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
@@ -263,8 +263,8 @@ library LibLYF01 {
     LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256, uint256) {
     (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, lyfDs);
-    uint256 _totalSupply = IERC20(_ibToken).totalSupply();
-    uint256 _one = 10**IERC20(_ibToken).decimals();
+    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
+    uint256 _one = 10**ERC20(_ibToken).decimals();
 
     uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_token);
     uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);

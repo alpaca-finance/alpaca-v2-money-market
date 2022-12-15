@@ -2,6 +2,8 @@
 pragma solidity 0.8.17;
 
 interface IRouterLike {
+  function lpToken() external view returns (address);
+
   function factory() external pure returns (address);
 
   function WETH() external pure returns (address);
