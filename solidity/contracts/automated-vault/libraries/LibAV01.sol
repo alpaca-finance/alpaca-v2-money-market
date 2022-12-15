@@ -44,14 +44,10 @@ library LibAV01 {
   struct AVDiamondStorage {
     address moneyMarket;
     IAlpacaV2Oracle oracle;
-    mapping(address => address) tokenToShareToken;
-    mapping(address => address) shareTokenToToken;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;
-    // todo: multiple handler
-    address avHandler;
     // share token => handler
     mapping(address => address) avHandlers;
     // share token => debt token => debt value
@@ -88,16 +84,15 @@ library LibAV01 {
   }
 
   function depositV2(
+    address _shareToken,
     address _token0,
     address _token1,
     uint256 _amountIn,
     uint256 _minShareOut,
     AVDiamondStorage storage avDs
   ) internal {
-    address _shareToken = avDs.tokenToShareToken[_token0];
     address _handler = avDs.avHandlers[_shareToken];
 
-    if (_shareToken == address(0)) revert LibAV01_InvalidToken(_token0);
     if (_handler == address(0)) revert LibAV01_InvalidHandler();
 
     // todo: calculate borrowed amount

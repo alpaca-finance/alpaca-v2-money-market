@@ -48,8 +48,11 @@ abstract contract AV_BaseTest is BaseTest {
     adminFacet = IAVAdminFacet(avDiamond);
     tradeFacet = IAVTradeFacet(avDiamond);
 
-    // set MM, todo: should initialize ?
-    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
+    adminFacet.setMoneyMarket(moneyMarketDiamond);
+
+    // setup share tokens
+    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), 3));
 
     // approve
     vm.startPrank(ALICE);
@@ -57,11 +60,8 @@ abstract contract AV_BaseTest is BaseTest {
     usdc.approve(avDiamond, type(uint256).max);
     vm.stopPrank();
 
-    // setup handler
-    MockLPToken wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+    // setup router
     MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
-
-    // mint for router
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // setup token configs
@@ -78,6 +78,7 @@ abstract contract AV_BaseTest is BaseTest {
     });
     adminFacet.setTokenConfigs(tokenConfigs);
 
+    // setup handler
     AVHandler _handler = new AVHandler(address(mockRouter));
     adminFacet.setAVHandler(address(avShareToken), address(_handler));
 
