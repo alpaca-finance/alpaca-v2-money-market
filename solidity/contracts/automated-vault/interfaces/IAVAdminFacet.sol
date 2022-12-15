@@ -41,8 +41,6 @@ interface IAVAdminFacet {
     uint8 _leverageLevel
   ) external returns (address _newShareToken);
 
-  function setVaultConfigs(VaultConfigInput[] calldata configs) external;
-
   function setTokenConfigs(TokenConfigInput[] calldata configs) external;
 
   function setMoneyMarket(address _newMoneyMarket) external;

@@ -110,24 +110,6 @@ library LibAV01 {
     ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
   }
 
-  function calcBorrowAmount(
-    address _stableToken,
-    address _assetToken,
-    uint256 _stableDepositedAmount,
-    uint8 _leverageLevel,
-    AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
-    (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
-
-    uint256 _stableDepositedValue = (_stableDepositedAmount * _stablePrice) / 1e18;
-    uint256 _stableTargetValue = _stableDepositedValue * _leverageLevel;
-    uint256 _stableBorrowValue = _stableTargetValue - _stableDepositedValue;
-    _stableBorrowAmount = (_stableBorrowValue * 1e18) / _stablePrice;
-
-    _assetBorrowAmount = (_stableTargetValue * 1e18) / _assetPrice;
-  }
-
   function to18ConversionFactor(address _token) internal view returns (uint8) {
     uint256 _decimals = ERC20(_token).decimals();
     if (_decimals > 18) revert LibAV01_UnsupportedDecimals();

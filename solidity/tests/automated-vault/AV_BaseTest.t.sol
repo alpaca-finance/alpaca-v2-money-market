@@ -57,9 +57,14 @@ abstract contract AV_BaseTest is BaseTest {
     vm.stopPrank();
 
     // setup token configs
-    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](1);
+    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](2);
     tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({
       token: address(weth),
+      tier: LibAV01.AssetTier.UNLISTED,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({
+      token: address(usdc),
       tier: LibAV01.AssetTier.UNLISTED,
       maxToleranceExpiredSecond: block.timestamp
     });

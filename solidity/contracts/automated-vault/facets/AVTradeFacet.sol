@@ -35,7 +35,7 @@ contract AVTradeFacet is IAVTradeFacet {
 
     LibAV01.deposit(_shareToken, _stableToken, _stableAmountIn, _minShareOut);
 
-    (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = LibAV01.calcBorrowAmount(
+    (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = _calcBorrowAmount(
       _stableToken,
       _assetToken,
       _stableAmountIn,
@@ -74,6 +74,26 @@ contract AVTradeFacet is IAVTradeFacet {
       avDs.vaultDebtValues[_shareToken]
     );
     avDs.vaultDebtValues[_shareToken] += _amountToBorrow;
+  }
+
+  function _calcBorrowAmount(
+    address _stableToken,
+    address _assetToken,
+    uint256 _stableDepositedAmount,
+    uint8 _leverageLevel,
+    LibAV01.AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
+    (uint256 _assetPrice, ) = LibAV01.getPriceUSD(_assetToken, avDs);
+    (uint256 _stablePrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
+
+    uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
+
+    uint256 _stableDepositedValue = (_stableDepositedAmount * _stableTokenTo18ConversionFactor * _stablePrice) / 1e18;
+    uint256 _stableTargetValue = _stableDepositedValue * _leverageLevel;
+    uint256 _stableBorrowValue = _stableTargetValue - _stableDepositedValue;
+    _stableBorrowAmount = (_stableBorrowValue * 1e18) / (_stablePrice * _stableTokenTo18ConversionFactor);
+
+    _assetBorrowAmount = (_stableTargetValue * 1e18) / (_assetPrice * _stableTokenTo18ConversionFactor);
   }
 
   /// @notice only do accounting of av debt but doesn't actually repay to money market
