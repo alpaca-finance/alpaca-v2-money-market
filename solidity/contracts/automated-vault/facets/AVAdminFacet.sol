@@ -43,26 +43,18 @@ contract AVAdminFacet is IAVAdminFacet {
     emit LogOpenMarket(msg.sender, _token, _newShareToken);
   }
 
-  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-
-    uint256 length = pairs.length;
-    for (uint256 i; i < length; ) {
-      ShareTokenPairs calldata pair = pairs[i];
-      LibAV01.setShareTokenPair(pair.token, pair.shareToken, avDs);
-      unchecked {
-        i++;
-      }
-    }
-  }
-
   function setVaultConfigs(VaultConfigInput[] calldata configs) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     uint256 length = configs.length;
     for (uint256 i; i < length; ) {
       VaultConfigInput calldata config = configs[i];
-      avDs.vaultConfigs[config.shareToken] = LibAV01.VaultConfig({ someConfig: config.someConfig });
+      avDs.vaultConfigs[config.shareToken] = LibAV01.VaultConfig({
+        shareToken: config.shareToken,
+        lpToken: config.lpToken,
+        stableToken: config.stableToken,
+        assetToken: config.assetToken
+      });
       unchecked {
         i++;
       }

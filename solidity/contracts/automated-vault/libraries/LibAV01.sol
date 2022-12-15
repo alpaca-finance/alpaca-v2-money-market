@@ -24,14 +24,15 @@ library LibAV01 {
   }
 
   struct VaultConfig {
-    uint256 someConfig; // TODO: replace with real config
+    address shareToken;
+    address lpToken;
+    address stableToken;
+    address assetToken;
   }
 
   struct AVDiamondStorage {
     address moneyMarket;
     IAlpacaV2Oracle oracle;
-    mapping(address => address) tokenToShareToken;
-    mapping(address => address) shareTokenToToken;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;
@@ -44,7 +45,6 @@ library LibAV01 {
     uint256 maxToleranceExpiredSecond;
   }
 
-  error LibAV01_InvalidToken(address _token);
   error LibAV01_NoTinyShares();
   error LibAV01_TooLittleReceived();
   error LibAV01_PriceStale(address _token);
@@ -71,16 +71,11 @@ library LibAV01 {
   }
 
   function deposit(
+    address _shareToken,
     address _token,
     uint256 _amountIn,
-    uint256 _minShareOut,
-    AVDiamondStorage storage avDs
+    uint256 _minShareOut
   ) internal {
-    address _shareToken = avDs.tokenToShareToken[_token];
-    if (_shareToken == address(0)) {
-      revert LibAV01_InvalidToken(_token);
-    }
-
     uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
     // TODO: replace _amountIn getTotalToken by equity
     uint256 _totalToken = _amountIn;
@@ -103,16 +98,13 @@ library LibAV01 {
     uint256 _minTokenOut,
     AVDiamondStorage storage avDs
   ) internal {
-    address _token = avDs.shareTokenToToken[_shareToken];
-    if (_token == address(0)) {
-      revert LibAV01_InvalidToken(_shareToken);
-    }
+    VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
 
     // TODO: calculate amountOut with equity value
     // TODO: handle slippage
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(_token).safeTransferFrom(msg.sender, address(this), _minTokenOut);
+    ERC20(vaultConfig.stableToken).safeTransferFrom(msg.sender, address(this), _minTokenOut);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
@@ -120,14 +112,5 @@ library LibAV01 {
     if (_decimals > 18) revert LibAV01_UnsupportedDecimals();
     uint256 _conversionFactor = 10**(18 - _decimals);
     return uint8(_conversionFactor);
-  }
-
-  function setShareTokenPair(
-    address _token,
-    address _shareToken,
-    AVDiamondStorage storage avDs
-  ) internal {
-    avDs.tokenToShareToken[_token] = _shareToken;
-    avDs.shareTokenToToken[_shareToken] = _token;
   }
 }

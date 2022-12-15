@@ -11,7 +11,9 @@ interface IAVAdminFacet {
 
   struct VaultConfigInput {
     address shareToken;
-    uint256 someConfig; // TODO: replace with real config
+    address lpToken;
+    address stableToken;
+    address assetToken;
   }
 
   struct TokenConfigInput {
@@ -25,8 +27,6 @@ interface IAVAdminFacet {
   event LogOpenMarket(address indexed _caller, address indexed _token, address _shareToken);
 
   function openVault(address _token) external returns (address _newShareToken);
-
-  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external;
 
   function setVaultConfigs(VaultConfigInput[] calldata configs) external;
 
