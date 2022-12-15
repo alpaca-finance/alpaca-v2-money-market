@@ -24,12 +24,31 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function deposit(
-    address _token,
-    uint256 _amountIn,
+    address _shareToken,
+    uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-    LibAV01.deposit(_token, _amountIn, _minShareOut, avDs);
+    LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
+    address _stableToken = vaultConfig.stableToken;
+    address _assetToken = vaultConfig.assetToken;
+
+    LibAV01.deposit(_shareToken, _stableToken, _stableAmountIn, _minShareOut);
+
+    (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = _calcBorrowAmount(
+      _stableToken,
+      _assetToken,
+      _stableAmountIn,
+      vaultConfig.leverageLevel,
+      avDs
+    );
+
+    _borrowFromMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
+    _borrowFromMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
+
+    // TODO: send tokens to handler to compose LP and farm
+
+    emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
   }
 
   function withdraw(
@@ -55,6 +74,26 @@ contract AVTradeFacet is IAVTradeFacet {
     avDs.vaultDebtValues[_shareToken] += _amountToBorrow;
 
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amountToBorrow);
+  }
+
+  function _calcBorrowAmount(
+    address _stableToken,
+    address _assetToken,
+    uint256 _stableDepositedAmount,
+    uint8 _leverageLevel,
+    LibAV01.AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
+    (uint256 _assetPrice, ) = LibAV01.getPriceUSD(_assetToken, avDs);
+    (uint256 _stablePrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
+
+    uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
+
+    uint256 _stableDepositedValue = (_stableDepositedAmount * _stableTokenTo18ConversionFactor * _stablePrice) / 1e18;
+    uint256 _stableTargetValue = _stableDepositedValue * _leverageLevel;
+    uint256 _stableBorrowValue = _stableTargetValue - _stableDepositedValue;
+    _stableBorrowAmount = (_stableBorrowValue * 1e18) / (_stablePrice * _stableTokenTo18ConversionFactor);
+
+    _assetBorrowAmount = (_stableTargetValue * 1e18) / (_assetPrice * _stableTokenTo18ConversionFactor);
   }
 
   /// @notice only do accounting of av debt but doesn't actually repay to money market

@@ -19,15 +19,16 @@ contract AVAdminFacet is IAVAdminFacet {
     _;
   }
 
-  function openVault(address _token) external onlyOwner returns (address _newShareToken) {
+  function openVault(
+    address _lpToken,
+    address _stableToken,
+    address _assetToken,
+    uint8 _leverageLevel
+  ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
-    if (avDs.tokenToShareToken[_token] != address(0)) {
-      revert AVTradeFacet_InvalidToken(_token);
-    }
-
-    string memory _tokenSymbol = ERC20(_token).symbol();
-    uint8 _tokenDecimals = ERC20(_token).decimals();
+    string memory _tokenSymbol = ERC20(_lpToken).symbol();
+    uint8 _tokenDecimals = ERC20(_lpToken).decimals();
     _newShareToken = address(
       new AVShareToken(
         string.concat("Share Token ", _tokenSymbol),
@@ -36,37 +37,15 @@ contract AVAdminFacet is IAVAdminFacet {
       )
     );
 
-    LibAV01.setShareTokenPair(_token, _newShareToken, avDs);
+    avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
+      shareToken: _newShareToken,
+      lpToken: _lpToken,
+      stableToken: _stableToken,
+      assetToken: _assetToken,
+      leverageLevel: _leverageLevel
+    });
 
-    // TODO: set config
-
-    emit LogOpenMarket(msg.sender, _token, _newShareToken);
-  }
-
-  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-
-    uint256 length = pairs.length;
-    for (uint256 i; i < length; ) {
-      ShareTokenPairs calldata pair = pairs[i];
-      LibAV01.setShareTokenPair(pair.token, pair.shareToken, avDs);
-      unchecked {
-        i++;
-      }
-    }
-  }
-
-  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-
-    uint256 length = configs.length;
-    for (uint256 i; i < length; ) {
-      ShareTokenConfigInput calldata config = configs[i];
-      avDs.shareTokenConfigs[config.shareToken] = LibAV01.ShareTokenConfig({ someConfig: config.someConfig });
-      unchecked {
-        i++;
-      }
-    }
+    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken, _leverageLevel);
   }
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external onlyOwner {

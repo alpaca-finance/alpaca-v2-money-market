@@ -9,9 +9,12 @@ interface IAVAdminFacet {
     address shareToken;
   }
 
-  struct ShareTokenConfigInput {
+  struct VaultConfigInput {
     address shareToken;
-    uint256 someConfig; // TODO: replace with real config
+    address lpToken;
+    address stableToken;
+    address assetToken;
+    uint8 leverageLevel;
   }
 
   struct TokenConfigInput {
@@ -22,13 +25,21 @@ interface IAVAdminFacet {
 
   error AVTradeFacet_InvalidToken(address _token);
 
-  event LogOpenMarket(address indexed _caller, address indexed _token, address _shareToken);
+  event LogOpenVault(
+    address indexed _caller,
+    address indexed _lpToken,
+    address _stableToken,
+    address _assetToken,
+    address _shareToken,
+    uint8 _leverageLevel
+  );
 
-  function openVault(address _token) external returns (address _newShareToken);
-
-  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external;
-
-  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external;
+  function openVault(
+    address _lpToken,
+    address _stableToken,
+    address _assetToken,
+    uint8 _leverageLevel
+  ) external returns (address _newShareToken);
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external;
 
