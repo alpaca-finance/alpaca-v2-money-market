@@ -333,4 +333,25 @@ contract AdminFacet is IAdminFacet {
 
     emit LogSetBorrowingPool(_token, _rewardToken, _newAllocPoint);
   }
+
+  function setFees(
+    uint256 _newLendingFeeBps,
+    uint256 _newRepurchaseRewardBps,
+    uint256 _newRepurchaseFeeBps,
+    uint256 _newLiquidationFeeBps
+  ) external onlyOwner {
+    if (
+      _newLendingFeeBps > 10000 ||
+      _newRepurchaseRewardBps > 10000 ||
+      _newRepurchaseFeeBps > 10000 ||
+      _newLiquidationFeeBps > 10000
+    ) revert AdminFacet_BadBps();
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    moneyMarketDs.lendingFeeBps = _newLendingFeeBps;
+    moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
+    moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
+    moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+  }
 }

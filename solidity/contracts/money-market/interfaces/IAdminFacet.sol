@@ -7,6 +7,7 @@ interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
+  error AdminFacet_BadBps();
 
   struct IbPair {
     address token;
@@ -96,5 +97,12 @@ interface IAdminFacet {
     address _rewardToken,
     address _token,
     uint256 _newAllocPoint
+  ) external;
+
+  function setFees(
+    uint256 _newLendingFeeBps,
+    uint256 _newRepurchaseRewardBps,
+    uint256 _newRepurchaseFeeBps,
+    uint256 _newLiquidationFeeBps
   ) external;
 }

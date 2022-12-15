@@ -114,6 +114,11 @@ library LibMoneyMarket01 {
     // reward token
     mapping(address => uint256) totalLendingPoolAllocPoints;
     mapping(address => uint256) totalBorrowingPoolAllocPoints;
+    // fees
+    uint256 lendingFeeBps;
+    uint256 repurchaseRewardBps;
+    uint256 repurchaseFeeBps;
+    uint256 liquidationFeeBps;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
