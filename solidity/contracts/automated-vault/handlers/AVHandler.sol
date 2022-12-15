@@ -32,7 +32,7 @@ contract AVHandler is IAVHandler {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external {
+  ) external returns (uint256 _mintLpAmount) {
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
     ERC20(_token1).approve(address(router), type(uint256).max);
@@ -50,7 +50,7 @@ contract AVHandler is IAVHandler {
     // 4. Swap according to path
     if (swapAmt > 0) router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
     // 5. Mint more LP tokens and return all LP tokens to the sender.
-    (, , uint256 mintLpAmount) = router.addLiquidity(
+    (, , _mintLpAmount) = router.addLiquidity(
       _token0,
       _token1,
       ERC20(_token0).balanceOf(address(this)),
@@ -60,7 +60,7 @@ contract AVHandler is IAVHandler {
       address(this),
       block.timestamp
     );
-    if (mintLpAmount < _minLPAmount) {
+    if (_mintLpAmount < _minLPAmount) {
       revert AVHandler_TooLittleReceived();
     }
 
@@ -68,7 +68,7 @@ contract AVHandler is IAVHandler {
     ERC20(_token0).approve(address(router), 0);
     ERC20(_token1).approve(address(router), 0);
 
-    totalLpBalance += mintLpAmount;
+    totalLpBalance += _mintLpAmount;
   }
 
   /// @dev Compute optimal deposit amount

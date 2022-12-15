@@ -9,7 +9,7 @@ interface IAVAdminFacet {
 
   struct ShareTokenConfigInput {
     address shareToken;
-    uint256 someConfig; // TODO: replace with real config
+    address lpToken;
   }
 
   error AVTradeFacet_InvalidToken(address _token);

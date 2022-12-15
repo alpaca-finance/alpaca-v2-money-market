@@ -61,7 +61,7 @@ contract AVAdminFacet is IAVAdminFacet {
     uint256 length = configs.length;
     for (uint256 i; i < length; ) {
       ShareTokenConfigInput calldata config = configs[i];
-      avDs.shareTokenConfig[config.shareToken] = LibAV01.ShareTokenConfig({ someConfig: config.someConfig });
+      avDs.shareTokenConfig[config.shareToken] = LibAV01.ShareTokenConfig({ lpToken: config.lpToken });
       unchecked {
         i++;
       }

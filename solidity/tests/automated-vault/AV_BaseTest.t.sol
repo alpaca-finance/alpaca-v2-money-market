@@ -60,6 +60,14 @@ abstract contract AV_BaseTest is BaseTest {
     // mint for router
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
+    // set share token config
+    IAVAdminFacet.ShareTokenConfigInput[] memory configs = new IAVAdminFacet.ShareTokenConfigInput[](1);
+    configs[0] = IAVAdminFacet.ShareTokenConfigInput({
+      shareToken: address(avShareToken),
+      lpToken: address(wethUsdcLPToken)
+    });
+    adminFacet.setShareTokenConfigs(configs);
+
     AVHandler _handler = new AVHandler(address(mockRouter));
     adminFacet.setAVHandler(address(avShareToken), address(_handler));
 

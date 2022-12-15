@@ -23,7 +23,7 @@ library LibAV01 {
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
   struct ShareTokenConfig {
-    uint256 someConfig; // TODO: replace with real config
+    address lpToken;
   }
 
   struct Position {
@@ -43,8 +43,7 @@ library LibAV01 {
     address avHandler;
     // share token => handler
     mapping(address => address) avHandlers;
-    // share token => debt token => debt share
-    mapping(address => mapping(address => uint256)) totalDebtShares;
+    // share token => debt token => debt value
     mapping(address => mapping(address => uint256)) totalDebtValues;
   }
 
@@ -144,7 +143,8 @@ library LibAV01 {
     address _handler,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _equity) {
-    ISwapPairLike _lpToken = IAVHandler(_handler).lpToken();
+    ShareTokenConfig memory _shareTokenConfig = avDs.shareTokenConfig[_shareToken];
+    ISwapPairLike _lpToken = ISwapPairLike(_shareTokenConfig.lpToken);
     address _token0 = _lpToken.token0();
     address _token1 = _lpToken.token1();
     uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
@@ -161,15 +161,9 @@ library LibAV01 {
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal {
-    uint256 _totalSupply = ERC20(_shareToken).totalSupply();
-    uint256 _totalValue = avDs.totalDebtValues[_shareToken][_token];
-
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
 
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
-
     // update debt
-    avDs.totalDebtShares[_shareToken][_token] += _shareToAdd;
     avDs.totalDebtValues[_shareToken][_token] += _amount;
   }
 
