@@ -341,10 +341,10 @@ contract AdminFacet is IAdminFacet {
     uint256 _newLiquidationFeeBps
   ) external onlyOwner {
     if (
-      _newLendingFeeBps > 10000 ||
-      _newRepurchaseRewardBps > 10000 ||
-      _newRepurchaseFeeBps > 10000 ||
-      _newLiquidationFeeBps > 10000
+      _newLendingFeeBps > LibMoneyMarket01.MAX_BPS ||
+      _newRepurchaseRewardBps > LibMoneyMarket01.MAX_BPS ||
+      _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
+      _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS
     ) revert AdminFacet_BadBps();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
