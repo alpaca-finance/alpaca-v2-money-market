@@ -19,6 +19,8 @@ interface ILendFacet {
     view
     returns (uint256 _shareAmount);
 
+  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
+
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
   error LendFacet_NoTinyShares();
