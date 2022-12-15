@@ -10,6 +10,8 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // interfaces
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 library LibAV01 {
   using SafeERC20 for ERC20;
@@ -29,6 +31,8 @@ library LibAV01 {
     address lpToken;
     address stableToken;
     address assetToken;
+    address stableTokenInterestModel;
+    address assetTokenInterestModel;
   }
 
   struct AVDiamondStorage {
@@ -39,6 +43,7 @@ library LibAV01 {
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;
+    mapping(address => uint256) lastAccrueInterestTimestamp;
     mapping(address => TokenConfig) tokenConfigs;
   }
 
@@ -72,6 +77,44 @@ library LibAV01 {
     }
     if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibAV01_PriceStale(_token);
+  }
+
+  function getPendingInterest(
+    address _vaultToken,
+    bool _isStableToken,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _pendingInterest) {
+    uint256 _lastAccrueTime = avDs.lastAccrueInterestTimestamp[_vaultToken];
+
+    if (block.timestamp > _lastAccrueTime) {
+      VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
+      uint256 _timePast = block.timestamp - _lastAccrueTime;
+      address _interestModel = address(
+        _isStableToken ? vaultConfig.stableTokenInterestModel : vaultConfig.assetTokenInterestModel
+      );
+
+      if (_interestModel != address(0)) {
+        address _token = _isStableToken ? vaultConfig.stableToken : vaultConfig.assetToken;
+        (uint256 _debtValue, ) = IMoneyMarket(avDs.moneyMarket).getGlobalDebt(_token);
+        uint256 _floating = IMoneyMarket(avDs.moneyMarket).getFloatingBalance(_token);
+        uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
+
+        // TODO: replace lyfDs.debtValues[_debtShareId] with avDs stuff
+        // _pendingInterest = (_interestRate * _timePast * lyfDs.debtValues[_debtShareId]) / 1e18;
+        _pendingInterest = 0;
+      }
+    }
+  }
+
+  function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs) internal {
+    uint256 _stablePendingInterest = getPendingInterest(_vaultToken, true, avDs);
+    uint256 _assetPendingInterest = getPendingInterest(_vaultToken, false, avDs);
+
+    // TODO: update debt for both
+    // lyfDs.debtValues[_debtShareId] += _pendingInterest;
+
+    // update timestamp
+    avDs.lastAccrueInterestTimestamp[_vaultToken] = block.timestamp;
   }
 
   function deposit(

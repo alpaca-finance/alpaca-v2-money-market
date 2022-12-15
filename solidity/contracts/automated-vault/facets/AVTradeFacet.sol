@@ -33,6 +33,8 @@ contract AVTradeFacet is IAVTradeFacet {
     address _stableToken = vaultConfig.stableToken;
     address _assetToken = vaultConfig.assetToken;
 
+    LibAV01.accrueVaultInterest(_shareToken, avDs);
+
     LibAV01.deposit(_shareToken, _stableToken, _stableAmountIn, _minShareOut);
 
     (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = _calcBorrowAmount(
@@ -59,6 +61,9 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _minTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    LibAV01.accrueVaultInterest(_shareToken, avDs);
+
     LibAV01.withdraw(_shareToken, _shareAmountIn, _minTokenOut, avDs);
 
     _mintManagementFeeToTreasury(_shareToken, avDs);

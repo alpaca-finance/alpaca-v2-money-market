@@ -14,6 +14,8 @@ interface IAVAdminFacet {
     address lpToken;
     address stableToken;
     address assetToken;
+    address stableTokenInterestModel;
+    address assetTokenInterestModel;
     uint8 leverageLevel;
     uint16 managementFeePerSec;
   }
@@ -39,7 +41,9 @@ interface IAVAdminFacet {
     address _stableToken,
     address _assetToken,
     uint8 _leverageLevel,
-    uint16 _managementFeePerSec
+    uint16 _managementFeePerSec,
+    address _stableTokenInterestModel,
+    address _assetTokenInterestModel
   ) external returns (address _newShareToken);
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external;

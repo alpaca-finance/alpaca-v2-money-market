@@ -24,7 +24,9 @@ contract AVAdminFacet is IAVAdminFacet {
     address _stableToken,
     address _assetToken,
     uint8 _leverageLevel,
-    uint16 _managementFeePerSec
+    uint16 _managementFeePerSec,
+    address _stableTokenInterestModel,
+    address _assetTokenInterestModel
   ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
@@ -44,7 +46,9 @@ contract AVAdminFacet is IAVAdminFacet {
       stableToken: _stableToken,
       assetToken: _assetToken,
       leverageLevel: _leverageLevel,
-      managementFeePerSec: _managementFeePerSec
+      managementFeePerSec: _managementFeePerSec,
+      stableTokenInterestModel: _stableTokenInterestModel,
+      assetTokenInterestModel: _assetTokenInterestModel
     });
 
     emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);

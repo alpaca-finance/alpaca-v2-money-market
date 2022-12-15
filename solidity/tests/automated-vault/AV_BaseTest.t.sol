@@ -21,6 +21,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // mocks
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 abstract contract AV_BaseTest is BaseTest {
   address internal avDiamond;
@@ -48,9 +49,23 @@ abstract contract AV_BaseTest is BaseTest {
 
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 
+    // setup interest rate models
+    MockInterestModel mockInterestModel1 = new MockInterestModel(0.1 ether);
+    MockInterestModel mockInterestModel2 = new MockInterestModel(0.05 ether);
+
     // setup share tokens
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
-    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), 3, 0));
+    avShareToken = IAVShareToken(
+      adminFacet.openVault(
+        address(wethUsdcLPToken),
+        address(usdc),
+        address(weth),
+        3,
+        0,
+        address(mockInterestModel1),
+        address(mockInterestModel2)
+      )
+    );
 
     // approve
     vm.startPrank(ALICE);
