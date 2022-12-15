@@ -21,6 +21,8 @@ import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 library LibLYF01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
@@ -66,6 +68,7 @@ library LibLYF01 {
   // Storage
   struct LYFDiamondStorage {
     address moneyMarket;
+    address treasury;
     IAlpacaV2Oracle oracle;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
@@ -83,6 +86,8 @@ library LibLYF01 {
     mapping(uint256 => address) interestModels;
     mapping(address => uint256) pendingRewards;
     mapping(address => bool) reinvestorsOk;
+    mapping(address => bool) liquidationStratOk;
+    mapping(address => bool) liquidationCallersOk;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -194,6 +199,8 @@ library LibLYF01 {
     returns (uint256 _totalUsedBorrowedPower)
   {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
+
+    console.log("[C]getTotalUsedBorrowedPower:_borrowed.length", _borrowed.length);
     uint256 _borrowedLength = _borrowed.length;
     for (uint256 _i = 0; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];

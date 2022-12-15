@@ -54,6 +54,7 @@ import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
   address internal moneyMarketDiamond;
+  address internal treasury = address(888);
 
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
@@ -225,6 +226,8 @@ abstract contract LYF_BaseTest is BaseTest {
     // set interest model
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
+
+    adminFacet.setTreasury(treasury);
   }
 
   function setUpMM() internal {
