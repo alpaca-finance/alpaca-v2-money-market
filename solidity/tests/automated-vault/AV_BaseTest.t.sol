@@ -7,21 +7,24 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
-// mocks
-import { MockLPToken } from "../mocks/MockLPToken.sol";
-import { MockRouter } from "../mocks/MockRouter.sol";
-import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
-
 // contracts
 import { AVHandler } from "../../contracts/automated-vault/handlers/AVHandler.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
+import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
 // libraries
+import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+
+// mocks
+import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
+import { MockLPToken } from "../mocks/MockLPToken.sol";
+import { MockRouter } from "../mocks/MockRouter.sol";
 
 abstract contract AV_BaseTest is BaseTest {
   address internal avDiamond;
@@ -30,6 +33,11 @@ abstract contract AV_BaseTest is BaseTest {
   // av facets
   IAVAdminFacet internal adminFacet;
   IAVTradeFacet internal tradeFacet;
+
+  IAVShareToken internal avShareToken;
+
+  MockLPToken internal wethUsdcLPToken;
+  MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
@@ -46,12 +54,8 @@ abstract contract AV_BaseTest is BaseTest {
     // approve
     vm.startPrank(ALICE);
     weth.approve(avDiamond, type(uint256).max);
+    usdc.approve(avDiamond, type(uint256).max);
     vm.stopPrank();
-
-    // setup share tokens
-    IAVAdminFacet.ShareTokenPairs[] memory shareTokenPairs = new IAVAdminFacet.ShareTokenPairs[](1);
-    shareTokenPairs[0] = IAVAdminFacet.ShareTokenPairs({ token: address(weth), shareToken: address(avShareToken) });
-    adminFacet.setTokensToShareTokens(shareTokenPairs);
 
     // setup handler
     MockLPToken wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
@@ -60,24 +64,34 @@ abstract contract AV_BaseTest is BaseTest {
     // mint for router
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
-    // set share token config
-    IAVAdminFacet.ShareTokenConfigInput[] memory configs = new IAVAdminFacet.ShareTokenConfigInput[](1);
-    configs[0] = IAVAdminFacet.ShareTokenConfigInput({
-      shareToken: address(avShareToken),
-      lpToken: address(wethUsdcLPToken)
+    // setup token configs
+    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](2);
+    tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibAV01.AssetTier.TOKEN,
+      maxToleranceExpiredSecond: block.timestamp
     });
-    adminFacet.setShareTokenConfigs(configs);
+    tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({
+      token: address(usdc),
+      tier: LibAV01.AssetTier.TOKEN,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(tokenConfigs);
 
     AVHandler _handler = new AVHandler(address(mockRouter));
     adminFacet.setAVHandler(address(avShareToken), address(_handler));
 
-    // set mock oracle
-    MockAlpacaV2Oracle _oracle = new MockAlpacaV2Oracle();
-    IAdminFacet(moneyMarketDiamond).setOracle(address(_oracle));
-    IAdminFacet(avDiamond).setOracle(address(_oracle));
+    // setup oracle
+    mockOracle = new MockAlpacaV2Oracle();
+    mockOracle.setTokenPrice(address(weth), 1e18);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
 
-    // set lp price
-    _oracle.setTokenPrice(address(wethUsdcLPToken), 10 ether);
+    adminFacet.setOracle(address(mockOracle));
+    IAdminFacet(moneyMarketDiamond).setOracle(address(mockOracle));
+
+    mockOracle.setTokenPrice(address(weth), 1e18);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+    mockOracle.setTokenPrice(address(wethUsdcLPToken), 2e18);
   }
 
   function setUpMM() internal {

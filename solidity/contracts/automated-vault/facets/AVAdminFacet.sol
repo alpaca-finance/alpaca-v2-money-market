@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -7,6 +7,7 @@ import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -18,15 +19,16 @@ contract AVAdminFacet is IAVAdminFacet {
     _;
   }
 
-  function openVault(address _token) external onlyOwner returns (address _newShareToken) {
+  function openVault(
+    address _lpToken,
+    address _stableToken,
+    address _assetToken,
+    uint8 _leverageLevel
+  ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
-    if (avDs.tokenToShareToken[_token] != address(0)) {
-      revert AVTradeFacet_InvalidToken(_token);
-    }
-
-    string memory _tokenSymbol = ERC20(_token).symbol();
-    uint8 _tokenDecimals = ERC20(_token).decimals();
+    string memory _tokenSymbol = ERC20(_lpToken).symbol();
+    uint8 _tokenDecimals = ERC20(_lpToken).decimals();
     _newShareToken = address(
       new AVShareToken(
         string.concat("Share Token ", _tokenSymbol),
@@ -35,33 +37,28 @@ contract AVAdminFacet is IAVAdminFacet {
       )
     );
 
-    LibAV01.setShareTokenPair(_token, _newShareToken, avDs);
+    avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
+      shareToken: _newShareToken,
+      lpToken: _lpToken,
+      stableToken: _stableToken,
+      assetToken: _assetToken,
+      leverageLevel: _leverageLevel
+    });
 
-    // TODO: set config
-
-    emit LogOpenMarket(msg.sender, _token, _newShareToken);
+    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken, _leverageLevel);
   }
 
-  function setTokensToShareTokens(ShareTokenPairs[] calldata pairs) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-
-    uint256 length = pairs.length;
-    for (uint256 i; i < length; ) {
-      ShareTokenPairs calldata pair = pairs[i];
-      LibAV01.setShareTokenPair(pair.token, pair.shareToken, avDs);
-      unchecked {
-        i++;
-      }
-    }
-  }
-
-  function setShareTokenConfigs(ShareTokenConfigInput[] calldata configs) external onlyOwner {
+  function setTokenConfigs(TokenConfigInput[] calldata configs) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     uint256 length = configs.length;
     for (uint256 i; i < length; ) {
-      ShareTokenConfigInput calldata config = configs[i];
-      avDs.shareTokenConfig[config.shareToken] = LibAV01.ShareTokenConfig({ lpToken: config.lpToken });
+      TokenConfigInput calldata config = configs[i];
+      avDs.tokenConfigs[config.token] = LibAV01.TokenConfig({
+        tier: config.tier,
+        maxToleranceExpiredSecond: config.maxToleranceExpiredSecond,
+        to18ConversionFactor: LibAV01.to18ConversionFactor(config.token)
+      });
       unchecked {
         i++;
       }
@@ -75,7 +72,7 @@ contract AVAdminFacet is IAVAdminFacet {
 
   function setOracle(address _oracle) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-    avDs.oracle = _oracle;
+    avDs.oracle = IAlpacaV2Oracle(_oracle);
   }
 
   function setAVHandler(address _shareToken, address avHandler) external onlyOwner {
