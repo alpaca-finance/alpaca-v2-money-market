@@ -79,36 +79,46 @@ library LibAV01 {
       revert LibAV01_PriceStale(_token);
   }
 
-  function getPendingInterest(
-    address _vaultToken,
-    bool _isStableToken,
-    AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _pendingInterest) {
-    uint256 _lastAccrueTime = avDs.lastAccrueInterestTimestamp[_vaultToken];
+  function getVaultPendingInterest(address _vaultToken, AVDiamondStorage storage avDs)
+    internal
+    view
+    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
+  {
+    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamp[_vaultToken];
 
-    if (block.timestamp > _lastAccrueTime) {
+    if (_timeSinceLastAccrual > 0) {
       VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
-      uint256 _timePast = block.timestamp - _lastAccrueTime;
-      address _interestModel = address(
-        _isStableToken ? vaultConfig.stableTokenInterestModel : vaultConfig.assetTokenInterestModel
+      address _moneyMarket = avDs.moneyMarket;
+
+      uint256 _stableInterestRate = calcInterestRate(
+        vaultConfig.stableToken,
+        vaultConfig.stableTokenInterestModel,
+        _moneyMarket
+      );
+      uint256 _assetInterestRate = calcInterestRate(
+        vaultConfig.assetToken,
+        vaultConfig.assetTokenInterestModel,
+        _moneyMarket
       );
 
-      if (_interestModel != address(0)) {
-        address _token = _isStableToken ? vaultConfig.stableToken : vaultConfig.assetToken;
-        (uint256 _debtValue, ) = IMoneyMarket(avDs.moneyMarket).getGlobalDebt(_token);
-        uint256 _floating = IMoneyMarket(avDs.moneyMarket).getFloatingBalance(_token);
-        uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
-
-        // TODO: replace lyfDs.debtValues[_debtShareId] with avDs stuff
-        // _pendingInterest = (_interestRate * _timePast * lyfDs.debtValues[_debtShareId]) / 1e18;
-        _pendingInterest = 0;
-      }
+      // TODO: replace lyfDs.debtValues[_debtShareId] with avDs stuff
+      // _stablePendingInterest = (_stableInterestRate * _timeSinceLastAccrual * lyfDs.debtValues[_debtShareId]) / 1e18;
+      // _assetPendingInterest = (_assetInterestRate * _timeSinceLastAccrual * lyfDs.debtValues[_debtShareId]) / 1e18;
     }
   }
 
+  function calcInterestRate(
+    address _token,
+    address _interestModel,
+    address _moneyMarket
+  ) internal view returns (uint256 _interestRate) {
+    (uint256 _debtValue, ) = IMoneyMarket(_moneyMarket).getGlobalDebt(_token);
+    uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
+    _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
+  }
+
   function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs) internal {
-    uint256 _stablePendingInterest = getPendingInterest(_vaultToken, true, avDs);
-    uint256 _assetPendingInterest = getPendingInterest(_vaultToken, false, avDs);
+    (uint256 _stablePendingInterest, uint256 _assetPendingInterest) = getVaultPendingInterest(_vaultToken, avDs);
 
     // TODO: update debt for both
     // lyfDs.debtValues[_debtShareId] += _pendingInterest;

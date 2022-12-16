@@ -34,11 +34,16 @@ contract AVAdminFacet is IAVAdminFacet {
     uint8 _tokenDecimals = ERC20(_lpToken).decimals();
     _newShareToken = address(
       new AVShareToken(
-        string.concat("Share Token ", _tokenSymbol),
-        string.concat("Share ", _tokenSymbol),
+        string.concat("Automated Vault Share Token ", _tokenSymbol),
+        string.concat("avShare", _tokenSymbol),
         _tokenDecimals
       )
     );
+
+    // sanity check
+    address _moneyMarket = avDs.moneyMarket;
+    LibAV01.calcInterestRate(_stableToken, _stableTokenInterestModel, _moneyMarket);
+    LibAV01.calcInterestRate(_assetToken, _assetTokenInterestModel, _moneyMarket);
 
     avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
       shareToken: _newShareToken,
