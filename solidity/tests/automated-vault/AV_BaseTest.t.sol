@@ -14,6 +14,7 @@ import { AVHandler } from "../../contracts/automated-vault/handlers/AVHandler.so
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
+import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
@@ -36,6 +37,7 @@ abstract contract AV_BaseTest is BaseTest {
 
   address internal treasury;
 
+  IAVHandler internal avHandler;
   IAVShareToken internal avShareToken;
 
   MockLPToken internal wethUsdcLPToken;
@@ -81,8 +83,8 @@ abstract contract AV_BaseTest is BaseTest {
     adminFacet.setTokenConfigs(tokenConfigs);
 
     // setup handler
-    AVHandler _handler = deployAVHandler(address(mockRouter));
-    adminFacet.setAVHandler(address(avShareToken), address(_handler));
+    avHandler = IAVHandler(deployAVHandler(address(mockRouter)));
+    adminFacet.setAVHandler(address(avShareToken), address(avHandler));
 
     // setup oracle
     mockOracle = new MockAlpacaV2Oracle();
