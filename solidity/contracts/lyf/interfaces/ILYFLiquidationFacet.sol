@@ -15,6 +15,7 @@ interface ILYFLiquidationFacet {
   error LYFLiquidationFacet_RepayDebtValueTooHigh();
   error LYFLiquidationFacet_InsufficientAmount();
   error LYFLiquidationFacet_TooLittleReceived();
+  error LYFLiquidationFacet_InvalidAssetTier();
 
   function repurchase(
     address _account,
@@ -25,4 +26,13 @@ interface ILYFLiquidationFacet {
     uint256 _amountDebtToRepurchase,
     uint256 _minCollatOut
   ) external returns (uint256);
+
+  function liquidateLP(
+    address _account,
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _lpAmountToLiquidate,
+    uint256 _amount0ToRepay,
+    uint256 _amount1ToRepay
+  ) external;
 }

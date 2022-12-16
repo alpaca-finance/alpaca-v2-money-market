@@ -14,6 +14,11 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 // interfaces
 import { ILYFLiquidationFacet } from "../interfaces/ILYFLiquidationFacet.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
+import { IStrat } from "../interfaces/IStrat.sol";
+
+import { console } from "solidity/tests/utils/console.sol";
 
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using SafeERC20 for ERC20;
@@ -21,6 +26,20 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   uint256 constant REPURCHASE_REWARD_BPS = 100;
+
+  struct LiquidateLPLocalVars {
+    address subAccount;
+    address token0;
+    address token1;
+    uint256 debtShareId0;
+    uint256 debtShareId1;
+    uint256 token0Return;
+    uint256 token1Return;
+    uint256 actualAmount0ToRepay;
+    uint256 actualAmount1ToRepay;
+    uint256 remainingAmount0AfterRepay;
+    uint256 remainingAmount1AfterRepay;
+  }
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -89,6 +108,78 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
     emit LogRepurchase(msg.sender, _debtToken, _collatToken, _actualDebtToRepurchase, _collatAmountOut);
+  }
+
+  function liquidateLP(
+    address _account,
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _lpAmountToLiquidate,
+    uint256 _amount0ToRepay,
+    uint256 _amount1ToRepay
+  ) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
+      revert LYFLiquidationFacet_InvalidAssetTier();
+    }
+
+    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+
+    LiquidateLPLocalVars memory vars;
+
+    vars.subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+
+    vars.token0 = ISwapPairLike(_lpToken).token0();
+    vars.token1 = ISwapPairLike(_lpToken).token1();
+
+    vars.debtShareId0 = lyfDs.debtShareIds[vars.token0][_lpToken];
+    vars.debtShareId1 = lyfDs.debtShareIds[vars.token1][_lpToken];
+
+    LibLYF01.accureInterest(vars.debtShareId0, lyfDs);
+    LibLYF01.accureInterest(vars.debtShareId1, lyfDs);
+
+    // 0. check borrowing power
+    {
+      uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
+      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowedPower(vars.subAccount, lyfDs);
+      if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
+        revert LYFLiquidationFacet_Healthy();
+      }
+    }
+
+    // 1. remove LP collat
+    uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(vars.subAccount, _lpToken, _lpAmountToLiquidate, lyfDs);
+
+    // 2. remove from masterchef staking
+    IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
+
+    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+
+    (vars.token0Return, vars.token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
+
+    // 3. repay what we can
+    vars.actualAmount0ToRepay = _getActualDebtToRepurchase(vars.subAccount, vars.debtShareId0, _amount0ToRepay, lyfDs);
+    vars.actualAmount0ToRepay = vars.actualAmount0ToRepay > vars.token0Return
+      ? vars.token0Return
+      : vars.actualAmount0ToRepay;
+
+    vars.actualAmount1ToRepay = _getActualDebtToRepurchase(vars.subAccount, vars.debtShareId1, _amount1ToRepay, lyfDs);
+    vars.actualAmount1ToRepay = vars.actualAmount1ToRepay > vars.token1Return
+      ? vars.token1Return
+      : vars.actualAmount1ToRepay;
+
+    _reduceDebt(vars.subAccount, vars.debtShareId0, vars.actualAmount0ToRepay, lyfDs);
+    _reduceDebt(vars.subAccount, vars.debtShareId1, vars.actualAmount1ToRepay, lyfDs);
+
+    // 4. add remaining as subAccount collateral
+    vars.remainingAmount0AfterRepay = vars.token0Return - vars.actualAmount0ToRepay;
+    if (vars.remainingAmount0AfterRepay > 0)
+      LibLYF01.addCollat(vars.subAccount, vars.token0, vars.remainingAmount0AfterRepay, lyfDs);
+
+    vars.remainingAmount1AfterRepay = vars.token1Return - vars.actualAmount1ToRepay;
+    if (vars.remainingAmount1AfterRepay > 0)
+      LibLYF01.addCollat(vars.subAccount, vars.token1, vars.remainingAmount1AfterRepay, lyfDs);
   }
 
   /// @dev min(amountToRepurchase, debtValue)
