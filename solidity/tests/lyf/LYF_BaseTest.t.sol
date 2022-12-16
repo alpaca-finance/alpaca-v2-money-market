@@ -125,7 +125,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](6);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](7);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -184,6 +184,16 @@ abstract contract LYF_BaseTest is BaseTest {
       borrowingFactor: 9000,
       maxBorrow: 30e18,
       maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
+    _inputs[6] = ILYFAdminFacet.TokenConfigInput({
+      token: address(ibBtc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 10e24,
       maxToleranceExpiredSecond: block.timestamp
     });
 

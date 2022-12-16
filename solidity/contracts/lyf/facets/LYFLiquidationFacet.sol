@@ -16,8 +16,6 @@ import { ILYFLiquidationFacet } from "../interfaces/ILYFLiquidationFacet.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -140,8 +138,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       paramsForStrategy: _paramsForStrategy
     });
 
-    console.log("[C]:liquidationCall:before _liquidationCall");
-    _liquidationCall(_params, lyfDs);
+    address _collatUnderlyingToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
+    if (_collatUnderlyingToken != address(0)) {
+      _ibLiquidationCall(_params, _collatUnderlyingToken, lyfDs);
+    } else {
+      _liquidationCall(_params, lyfDs);
+    }
   }
 
   function _liquidationCall(InternalLiquidationCallParams memory params, LibLYF01.LYFDiamondStorage storage lyfDs)
@@ -151,11 +153,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _collatAmountBefore = ERC20(params.collatToken).balanceOf(address(this));
     uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
 
-    console.log("[C]:_liquidationCall:before transfer to strat");
-    console.log(
-      "[C]:_liquidationCall:before transfer amount",
-      lyfDs.subAccountCollats[params.subAccount].getAmount(params.collatToken)
-    );
     ERC20(params.collatToken).safeTransfer(
       params.liquidationStrat,
       lyfDs.subAccountCollats[params.subAccount].getAmount(params.collatToken)
@@ -170,8 +167,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
     uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
 
-    console.log("[C]:_liquidationCall:before executeLiquidation");
-
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
@@ -179,26 +174,16 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       address(this),
       params.paramsForStrategy
     );
-    console.log("[C]:_liquidationCall:after executeLiquidation");
 
     // 4. check repaid amount, take fees, and update states
     uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    console.log("[C]:_liquidationCall:_repayAmountFromLiquidation", _repayAmountFromLiquidation);
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
-    console.log("[C]:_liquidationCall:_repaidAmount", _repaidAmount);
-    console.log("[C]:_liquidationCall:_collatAmountBefore", _collatAmountBefore);
-    console.log(
-      "[C]:_liquidationCall:ERC20(params.collatToken).balanceOf(address(this))",
-      ERC20(params.collatToken).balanceOf(address(this))
-    );
+
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
-    console.log("[C]:_liquidationCall:_collatSold", _collatSold);
-    console.log("[C]:_liquidationCall:before transfer to treasury");
     ERC20(params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
 
     // give priority to fee
-    console.log("[C]:_liquidationCall:before _reduceDebt");
     _reduceDebt(params.subAccount, params.debtShareId, _repaidAmount, lyfDs);
     LibLYF01.removeCollateral(params.subAccount, params.collatToken, _collatSold, lyfDs);
 
@@ -209,6 +194,65 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       params.collatToken,
       _repaidAmount,
       _collatSold,
+      _feeToTreasury
+    );
+  }
+
+  function _ibLiquidationCall(
+    InternalLiquidationCallParams memory params,
+    address _collatUnderlyingToken,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    uint256 _collatAmount = lyfDs.subAccountCollats[params.subAccount].getAmount(params.collatToken);
+
+    // withdraw underlyingToken from MM
+    uint256 _returnedUnderlyingAmount = IMoneyMarket(lyfDs.moneyMarket).withdraw(params.collatToken, _collatAmount);
+
+    // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
+    uint256 _underlyingAmountBefore = ERC20(_collatUnderlyingToken).balanceOf(address(this));
+    uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
+
+    // transfer _underlyingToken to strat
+    ERC20(_collatUnderlyingToken).safeTransfer(params.liquidationStrat, _returnedUnderlyingAmount);
+
+    // 3. call executeLiquidation on strategy to liquidate underlying token
+    uint256 _actualRepayAmount = _getActualRepayAmount(
+      params.subAccount,
+      params.debtShareId,
+      params.repayAmount,
+      lyfDs
+    );
+    uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
+
+    ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
+      _collatUnderlyingToken,
+      params.repayToken,
+      _actualRepayAmount + _feeToTreasury,
+      address(this),
+      params.paramsForStrategy
+    );
+
+    // 4. check repaid amount, take fees, and update states
+    uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+    uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
+
+    ERC20(params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
+
+    // give priority to fee
+    _reduceDebt(params.subAccount, params.debtShareId, _repaidAmount, lyfDs);
+    // withdraw all ib
+    LibLYF01.removeCollateral(params.subAccount, params.collatToken, _collatAmount, lyfDs);
+    // deposit leftover underlyingToken as collat
+    LibLYF01.addCollat(params.subAccount, _collatUnderlyingToken, _returnedUnderlyingAmount - _underlyingSold, lyfDs);
+
+    emit LogLiquidateIb(
+      msg.sender,
+      params.liquidationStrat,
+      params.repayToken,
+      params.collatToken,
+      _repaidAmount,
+      _underlyingSold,
       _feeToTreasury
     );
   }

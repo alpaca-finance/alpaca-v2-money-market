@@ -394,4 +394,79 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     // treasury get fee
     assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.1 ether);
   }
+
+  function testCorrectness_WhenSubAccountWentUnderWaterWithIbCollat_ShouldBeAbleToLiquidateIbCollat() external {
+    /*
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth: alice add collateral 4 ibBtc, open farm with 30 weth, 30 usdc
+     *      - alice need to borrow 30 weth and 30 usdc
+     *      - alice total borrowing power = (4 * 10 * 0.9) + (30 * 2 * 0.9) = 90 usd
+     *      - alice used borrowing power = (30 * 1)/0.9 + (30 * 1)/0.9 = 66.666666666666666666 usd
+     *
+     * 2. lp price drops to 0.5 usdc/lp -> position become repurchaseable
+     *      - alice total borrowing power = (4 * 10 * 0.9) + (30 * 0.5 * 0.9) = 49.5 usd
+     *
+     * 3. liquidator liquidate alice position
+     *      - repay 5 USDC
+     *      - treasury get 1% of repaid debt = 5 * 1/100 = 0.05
+     *      - actual repay = 5 + 0.05 = 5.05
+     *      - BTC price = 10, need to swap 5.05/10 = 0.505 BTC for 5.05 USDC
+     *      - actual repay = 5 USDC
+     *
+     * 4. alice position after liquidate
+     *      - alice subaccount 0: ibBtcb collateral = 0
+     *      - alice subaccount 0: btc collateral = 4 - 0.505 = 3.495
+     *      - alice subaccount 0: usdc debt = 30 - 5 = 25 usdc
+     */
+
+    address _collatToken = address(ibBtc);
+    address _debtToken = address(usdc);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _repayAmount = 5 ether;
+
+    vm.startPrank(ALICE);
+    btc.approve(moneyMarketDiamond, type(uint256).max);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(btc), 4 ether);
+
+    ibBtc.approve(lyfDiamond, type(uint256).max);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken), 4 ether);
+    assertEq(farmFacet.getTotalBorrowingPower(ALICE, subAccount0), 90 ether);
+    assertEq(farmFacet.getTotalUsedBorrowedPower(ALICE, subAccount0), 66.666666666666666666 ether);
+
+    usdc.mint(liquidator, 10000 ether);
+
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+
+    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    vm.startPrank(liquidator);
+
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      _repayAmount,
+      abi.encode()
+    );
+    vm.stopPrank();
+
+    // collateral is sold to repay
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(ibBtc)), 0);
+    // leftover underlying token is add to collateral
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)), 3.495 ether);
+
+    // debt reduce
+    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    assertEq(_aliceUsdcDebtValue, 25.0 ether);
+
+    // // treasury get fee
+    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.05 ether);
+  }
 }

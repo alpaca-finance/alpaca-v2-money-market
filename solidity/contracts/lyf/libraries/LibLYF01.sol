@@ -21,8 +21,6 @@ import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 library LibLYF01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
@@ -171,7 +169,7 @@ library LibLYF01 {
         _actualToken = _collatToken;
       } else {
         uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
-        uint256 _totalToken = getTotalToken(_actualToken, lyfDs);
+        uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_actualToken);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
       }
@@ -200,7 +198,6 @@ library LibLYF01 {
   {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
-    console.log("[C]getTotalUsedBorrowedPower:_borrowed.length", _borrowed.length);
     uint256 _borrowedLength = _borrowed.length;
     for (uint256 _i = 0; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
@@ -278,14 +275,6 @@ library LibLYF01 {
 
     uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
     return (_price, _lastUpdated);
-  }
-
-  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
-  // where borrowed amount consists of over-collat and non-collat borrowing
-  function getTotalToken(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256) {
-    // todo: think about debt
-    // return (ERC20(_token).balanceOf(address(this)) + lyfDs.globalDebts[_token]) - lyfDs.collats[_token];
-    return ERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
   }
 
   // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)

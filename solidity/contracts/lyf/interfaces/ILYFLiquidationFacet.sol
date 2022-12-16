@@ -10,6 +10,16 @@ interface ILYFLiquidationFacet {
     uint256 _amountOut
   );
 
+  event LogLiquidateIb(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
   event LogLiquidate(
     address indexed liquidator,
     address _strat,
