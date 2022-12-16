@@ -38,7 +38,7 @@ contract AV_TradeFacetTest is AV_BaseTest {
     assertEq(avShareToken.balanceOf(ALICE), 10 ether);
 
     // check liquidty in handler, 30 + 30 / 2 = 30
-    assertEq(avHandler.totalLpBalance(), 30 ether);
+    assertEq(handler.totalLpBalance(), 30 ether);
   }
 
   function testCorrectness_WhenWithdrawToken_ShouldWork() external {

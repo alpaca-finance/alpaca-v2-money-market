@@ -12,26 +12,26 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
   }
 
   function testCorrectness_WhenDeposit_ShouldGetLiquidityCorreclty() external {
-    weth.mint(address(avHandler), 10 ether);
-    usdc.mint(address(avHandler), 10 ether);
+    weth.mint(address(handler), 10 ether);
+    usdc.mint(address(handler), 10 ether);
 
-    avHandler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 0);
+    handler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 0);
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
-    assertEq(wethUsdcLPToken.balanceOf(address(avHandler)), 10 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
-    assertEq(avHandler.totalLpBalance(), 10 ether);
+    assertEq(handler.totalLpBalance(), 10 ether);
   }
 
   function testRevert_WhenDepositAndGetTooLessLiquidity_ShouldRevert() external {
-    weth.mint(address(avHandler), 10 ether);
-    usdc.mint(address(avHandler), 10 ether);
+    weth.mint(address(handler), 10 ether);
+    usdc.mint(address(handler), 10 ether);
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
     vm.expectRevert(abi.encodeWithSelector(IAVPancakeSwapHandler.AVPancakeSwapHandler_TooLittleReceived.selector));
-    avHandler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 1000 ether);
+    handler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 1000 ether);
 
     // check no liquidity come to handler
-    assertEq(wethUsdcLPToken.balanceOf(address(avHandler)), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 0 ether);
   }
 }

@@ -22,11 +22,11 @@ contract AVAdminFacet is IAVAdminFacet {
     address _lpToken,
     address _stableToken,
     address _assetToken,
-    address _avHandler,
+    address _handler,
     uint8 _leverageLevel,
     uint16 _managementFeePerSec
   ) external onlyOwner returns (address _newShareToken) {
-    if (_avHandler == address(0)) revert AVAdminFacet_InvalidHandler();
+    if (_handler == address(0)) revert AVAdminFacet_InvalidHandler();
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     string memory _tokenSymbol = ERC20(_lpToken).symbol();
@@ -44,7 +44,7 @@ contract AVAdminFacet is IAVAdminFacet {
       lpToken: _lpToken,
       stableToken: _stableToken,
       assetToken: _assetToken,
-      handler: _avHandler,
+      handler: _handler,
       leverageLevel: _leverageLevel,
       managementFeePerSec: _managementFeePerSec
     });

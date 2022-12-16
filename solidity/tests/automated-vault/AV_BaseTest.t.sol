@@ -37,7 +37,7 @@ abstract contract AV_BaseTest is BaseTest {
 
   address internal treasury;
 
-  IAVPancakeSwapHandler internal avHandler;
+  IAVPancakeSwapHandler internal handler;
   IAVShareToken internal avShareToken;
 
   MockLPToken internal wethUsdcLPToken;
@@ -62,11 +62,11 @@ abstract contract AV_BaseTest is BaseTest {
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    avHandler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter)));
+    handler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter)));
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     avShareToken = IAVShareToken(
-      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(avHandler), 3, 0)
+      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(handler), 3, 0)
     );
 
     // approve
