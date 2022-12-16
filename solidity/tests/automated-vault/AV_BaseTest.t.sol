@@ -34,6 +34,8 @@ abstract contract AV_BaseTest is BaseTest {
   IAVAdminFacet internal adminFacet;
   IAVTradeFacet internal tradeFacet;
 
+  address internal treasury;
+
   IAVShareToken internal avShareToken;
 
   MockLPToken internal wethUsdcLPToken;
@@ -52,7 +54,7 @@ abstract contract AV_BaseTest is BaseTest {
 
     // setup share tokens
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
-    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), 3));
+    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), 3, 0));
 
     // approve
     vm.startPrank(ALICE);
@@ -93,6 +95,10 @@ abstract contract AV_BaseTest is BaseTest {
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
     mockOracle.setTokenPrice(address(wethUsdcLPToken), 2e18);
+
+    // set treasury
+    treasury = address(this);
+    adminFacet.setTreasury(treasury);
   }
 
   function setUpMM() internal {

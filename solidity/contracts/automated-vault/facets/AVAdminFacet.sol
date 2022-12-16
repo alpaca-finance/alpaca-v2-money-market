@@ -22,7 +22,8 @@ contract AVAdminFacet is IAVAdminFacet {
     address _lpToken,
     address _stableToken,
     address _assetToken,
-    uint8 _leverageLevel
+    uint8 _leverageLevel,
+    uint16 _managementFeePerSec
   ) external onlyOwner returns (address _newShareToken) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
@@ -41,11 +42,13 @@ contract AVAdminFacet is IAVAdminFacet {
       lpToken: _lpToken,
       stableToken: _stableToken,
       assetToken: _assetToken,
-      leverageLevel: _leverageLevel
+      leverageLevel: _leverageLevel,
+      managementFeePerSec: _managementFeePerSec
     });
 
     // todo: register lpToken to tokenConfig
-    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken, _leverageLevel);
+
+    emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);
   }
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external onlyOwner {
@@ -79,5 +82,10 @@ contract AVAdminFacet is IAVAdminFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
     if (avDs.vaultConfigs[_shareToken].shareToken == address(0)) revert AVAdminFacet_InvalidShareToken(_shareToken);
     avDs.avHandlers[_shareToken] = avHandler;
+  }
+
+  function setTreasury(address _treasury) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    avDs.treasury = _treasury;
   }
 }

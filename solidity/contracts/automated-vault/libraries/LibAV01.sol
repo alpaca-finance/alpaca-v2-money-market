@@ -29,6 +29,7 @@ library LibAV01 {
 
   struct VaultConfig {
     uint8 leverageLevel;
+    uint16 managementFeePerSec;
     address shareToken;
     address lpToken;
     address stableToken;
@@ -44,8 +45,10 @@ library LibAV01 {
   struct AVDiamondStorage {
     address moneyMarket;
     address oracle;
+    address treasury;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
+    mapping(address => uint256) lastFeeCollectionTimestamps;
     // share token => handler
     mapping(address => address) avHandlers;
     // share token => debt token => debt value
