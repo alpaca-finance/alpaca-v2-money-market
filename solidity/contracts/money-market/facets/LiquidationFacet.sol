@@ -29,10 +29,6 @@ contract LiquidationFacet is ILiquidationFacet {
     bytes paramsForStrategy;
   }
 
-  uint256 constant REPURCHASE_REWARD_BPS = 100;
-  uint256 constant REPURCHASE_FEE_BPS = 100;
-  uint256 constant LIQUIDATION_FEE_BPS = 100;
-
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
     _;
@@ -73,7 +69,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _repayAmount,
       moneyMarketDs
     );
-    uint256 _repurchaseFee = (_actualRepayAmountWithFee * REPURCHASE_FEE_BPS) / 10000;
+    uint256 _repurchaseFee = (_actualRepayAmountWithFee * moneyMarketDs.repurchaseFeeBps) / 10000;
 
     (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
     LibMoneyMarket01.TokenConfig memory _repayTokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
@@ -91,7 +87,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _subAccount,
       _collatToken,
       _repayInUSDWithFee,
-      REPURCHASE_REWARD_BPS,
+      moneyMarketDs.repurchaseRewardBps,
       moneyMarketDs
     );
 
@@ -178,7 +174,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
+    uint256 _feeToTreasury = (_actualRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
 
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
@@ -236,7 +232,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
+    uint256 _feeToTreasury = (_actualRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
 
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       _collatUnderlyingToken,
@@ -327,7 +323,8 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // let _debtValue is value after reduced repurchse fee
-    uint256 _estimatedFee = (_debtValue * REPURCHASE_FEE_BPS) / (LibMoneyMarket01.MAX_BPS - REPURCHASE_FEE_BPS);
+    uint256 _estimatedFee = (_debtValue * moneyMarketDs.repurchaseFeeBps) /
+      (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps);
     uint256 _debtValueWithFee = _debtValue + _estimatedFee;
 
     _actualRepayAmount = _repayAmount > _debtValueWithFee ? _debtValueWithFee : _repayAmount;

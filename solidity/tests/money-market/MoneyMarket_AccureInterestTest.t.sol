@@ -351,6 +351,72 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_actualAccureTime, block.timestamp);
   }
 
+  function testCorrectness_WhenAccrueInterestAndThereIsLendingFee_ProtocolShouldGetRevenue() external {
+    // set lending fee to 100 bps
+    adminFacet.setFees(100, 0, 0, 0);
+    uint256 _actualInterest = borrowFacet.pendingInterest(address(weth));
+    assertEq(_actualInterest, 0);
+
+    uint256 _borrowAmount = 10 ether;
+    uint256 _nonCollatBorrowAmount = 10 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
+
+    uint256 _bobBalanceBefore = weth.balanceOf(BOB);
+    // bob borrow
+    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
+    //bob non collat borrow
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _nonCollatBorrowAmount);
+    vm.stopPrank();
+
+    uint256 _bobBalanceAfter = weth.balanceOf(BOB);
+
+    assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount + _nonCollatBorrowAmount);
+
+    uint256 _debtAmount;
+    (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
+    uint256 _nonCollatDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    assertEq(_debtAmount, _borrowAmount);
+    assertEq(_nonCollatDebtAmount, _nonCollatBorrowAmount);
+
+    vm.warp(block.timestamp + 10);
+
+    uint256 _expectedDebtAmount = 2e18 + _borrowAmount;
+    uint256 _expectedNonDebtAmount = 2e18 + _nonCollatBorrowAmount;
+
+    uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
+    assertEq(_actualInterestAfter, 4e18);
+    borrowFacet.accureInterest(address(weth));
+    (, uint256 _actualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
+    assertEq(_actualDebtAmount, _expectedDebtAmount);
+    uint256 _bobNonCollatDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _tokenCollatDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
+    assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
+
+    uint256 _actualAccureTime = borrowFacet.debtLastAccureTime(address(weth));
+    assertEq(_actualAccureTime, block.timestamp);
+
+    // total token without lending fee = 54000000000000000000
+    // 100 bps for lending fee on interest = (4e18 * 100 / 10000) = 4 e16
+    // total token =  54 e18 - 4e16 = 5396e16
+    assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
+    assertEq(adminFacet.getReservePool(address(weth)), 4e16);
+
+    // test withdrawing reserve
+    vm.expectRevert(IAdminFacet.AdminFacet_ReserveTooLow.selector);
+    adminFacet.withdrawReserve(address(weth), address(this), 5e16);
+
+    vm.prank(ALICE);
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.withdrawReserve(address(weth), address(this), 4e16);
+
+    adminFacet.withdrawReserve(address(weth), address(this), 4e16);
+    assertEq(adminFacet.getReservePool(address(weth)), 0);
+    assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
+  }
+
   function testCorrectness_WhenUsersBorrowSameTokenButDifferentInterestModel_ShouldAccureInterestCorrectly() external {
     uint256 _aliceBorrowAmount = 15 ether;
     uint256 _bobBorrowAmount = 15 ether;
