@@ -282,7 +282,122 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
   }
 
   // LP liquidation test
-  function testCorrectness_WhenLiquidateLP_ShouldWork() external {
+
+  function testCorrectness_WhenPartialLiquidateLP_ShouldWork() external {
+    /**
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth: alice add collateral 40 weth, open farm with 30 weth, 30 usdc
+     *      - 30 weth collateral is used to open position -> 10 weth left as collateral
+     *      - alice need to borrow 30 usdc
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 2 * 0.9) = 63 usd
+     *
+     * 2. lp price drops to 0.5 usdc/lp -> position become repurchaseable
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
+     *
+     * 3. we try to liquidate 5 lp to repay 4 usdc and 4 weth
+     *      - 5 weth can be redeemed but no weth debt, so 5 weth is added as collateral
+     *      - 5 usdc can be redeemed so 4 usdc is repaid, 1 usdc is added as collateral
+     *
+     * 4. alice position after repurchase
+     *      - alice subaccount 0: lp collateral = 30 - 5 = 25 lp
+     *      - alice subaccount 0: weth collateral = 10 + 5 = 15 weth
+     *      - alice subaccount 0: usdc collateral = 0 + 1 = 1 usdc
+     *      - alice subaccount 0: weth debt = 0
+     *      - alice subaccount 0: usdc debt = 30 - 4 = 26 usdc
+     */
+    address _collatToken = address(weth);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _lpAmountToLiquidate = 5 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
+
+    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+
+    // check alice position
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken),
+      25 ether,
+      "alice remaining lp collat"
+    );
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      15 ether,
+      "alice remaining weth collat"
+    );
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      1 ether,
+      "alice remaining usdc collat"
+    );
+    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
+    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    assertEq(_aliceUsdcDebtValue, 26 ether, "alice remaining usdc debt");
+  }
+
+  function testCorrectness_WhenLiquidateLPMoreThanCollateral_ShouldLiquidateAllLP() external {
+    /**
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth: alice add collateral 40 weth, open farm with 30 weth, 30 usdc
+     *      - 30 weth collateral is used to open position -> 10 weth left as collateral
+     *      - alice need to borrow 30 usdc
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 2 * 0.9) = 63 usd
+     *
+     * 2. lp price drops to 0.5 usdc/lp -> position become repurchaseable
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
+     *
+     * 3. we try to liquidate 40 lp (capped to 30) to repay 5 usdc and 5 weth
+     *      - 30 weth can be redeemed but no weth debt, so 30 weth is added as collateral
+     *      - 30 usdc can be redeemed so 5 usdc is repaid, 25 usdc is added as collateral
+     *
+     * 4. alice position after repurchase
+     *      - alice subaccount 0: lp collateral = 30 - 30 = 0 lp
+     *      - alice subaccount 0: weth collateral = 10 + 30 = 40 weth
+     *      - alice subaccount 0: usdc collateral = 0 + 25 = 25 usdc
+     *      - alice subaccount 0: weth debt = 0
+     *      - alice subaccount 0: usdc debt = 30 - 5 = 25 usdc
+     */
+    address _collatToken = address(weth);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _lpAmountToLiquidate = 40 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
+
+    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
+
+    // check alice position
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      40 ether,
+      "alice remaining weth collat"
+    );
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      25 ether,
+      "alice remaining usdc collat"
+    );
+    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
+    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    assertEq(_aliceUsdcDebtValue, 25 ether, "alice remaining usdc debt");
+  }
+
+  function testCorrectness_WhenPartialLiquidateLPThatAlsoUsedAsCollat_ShouldWork() external {
     /**
      * scenario:
      *
@@ -290,7 +405,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
      *      - alice need to borrow 30 weth, 30 usdc
      *      - alice total borrowing power = (20 * 2 * 0.9) + (30 * 2 * 0.9) = 90 usd
      *
-     * 2. lp price drops to 0.5 usdc/lp -> position become liquidatable
+     * 2. lp price drops to 0.5 usd/lp -> position become liquidatable
      *      - alice total borrowing power = (20 * 0.5 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
      *
      * 3. we try to liquidate 5 lp collateral and repay debt of 4 usdc, 4 weth
@@ -299,8 +414,10 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
      *
      * 4. alice position after repurchase
      *      - alice subaccount 0: lp collateral = 50 - 5 = 45 lp
-     *      - alice subaccount 0: weth debt = 30 - 5 = 25 weth
-     *      - alice subaccount 0: usdc debt = 30 - 5 = 25 usdc
+     *      - alice subaccount 0: weth collateral = 1 weth
+     *      - alice subaccount 0: usdc collateral = 1 usdc
+     *      - alice subaccount 0: weth debt = 30 - 4 = 26 weth
+     *      - alice subaccount 0: usdc debt = 30 - 4 = 26 usdc
      */
     address _lpToken = address(wethUsdcLPToken);
     uint256 _lpAmountToLiquidate = 5 ether;
@@ -337,5 +454,135 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     assertEq(_aliceWethDebtValue, 26 ether, "alice remaining weth debt");
     (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 26 ether, "alice remaining usdc debt");
+  }
+
+  function testCorrectness_WhenLiquidateLPButReceiveTokensLessThanRepayAmount_ShouldWork() external {
+    /**
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth: alice add collateral 40 weth, open farm with 30 weth, 30 usdc
+     *      - 30 weth collateral is used to open position -> 10 weth left as collateral
+     *      - alice need to borrow 30 usdc
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 2 * 0.9) = 63 usd
+     *
+     * 2. lp price drops to 0.5 usdc/lp -> position become repurchaseable
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
+     *
+     * 3. we try to liquidate 5 lp to repay 4 usdc and 4 weth
+     *      - 2 weth can be redeemed but no weth debt, so 2 weth is added as collateral
+     *      - 2 usdc can be redeemed so 2 usdc is repaid
+     *
+     * 4. alice position after repurchase
+     *      - alice subaccount 0: lp collateral = 30 - 5 = 25 lp
+     *      - alice subaccount 0: weth collateral = 10 + 2 = 12 weth
+     *      - alice subaccount 0: usdc collateral = 0
+     *      - alice subaccount 0: weth debt = 0
+     *      - alice subaccount 0: usdc debt = 30 - 2 = 28 usdc
+     */
+    address _collatToken = address(weth);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _lpAmountToLiquidate = 5 ether;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(2 ether, 2 ether);
+
+    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+
+    // check alice position
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken),
+      25 ether,
+      "alice remaining lp collat"
+    );
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      12 ether,
+      "alice remaining weth collat"
+    );
+    assertEq(
+      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      0,
+      "alice remaining usdc collat"
+    );
+    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
+    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    assertEq(_aliceUsdcDebtValue, 28 ether, "alice remaining usdc debt");
+  }
+
+  // TODO: case LP collat and farm same LP still fail because we didn't deposit LP into masterchef when add collat
+  // function testCorrectness_WhenLiquidateLPMoreThanCollateral_AndThatLPAlsoUsedAsCollat_ShouldLiquidateAllLPCollateral() external {
+  //   /**
+  //    * scenario:
+  //    *
+  //    * 1. @ 2 usd/lp, alice add collateral 20 lp, open farm with 30 weth, 30 usdc
+  //    *      - alice need to borrow 30 weth, 30 usdc
+  //    *      - alice total borrowing power = (20 * 2 * 0.9) + (30 * 2 * 0.9) = 90 usd
+  //    *
+  //    * 2. lp price drops to 0.5 usd/lp -> position become liquidatable
+  //    *      - alice total borrowing power = (20 * 0.5 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
+  //    *
+  //    * 3. we try to liquidate 60 lp collateral (cap to 50) and repay debt of 30 usdc, 30 weth
+  //    *      - 60 weth can be redeemed so 30 weth is repaid, 30 weth is add as collateral
+  //    *      - 60 usdc can be redeemed so 30 usdc is repaid, 30 usdc is add as collateral
+  //    *
+  //    * 4. alice position after repurchase
+  //    *      - alice subaccount 0: lp collateral = 50 - 50 = 0 lp
+  //    *      - alice subaccount 0: weth collateral = 30 weth
+  //    *      - alice subaccount 0: usdc collateral = 30 usdc
+  //    *      - alice subaccount 0: weth debt = 30 - 30 = 0 weth
+  //    *      - alice subaccount 0: usdc debt = 30 - 30 = 0 usdc
+  //    */
+  //   address _lpToken = address(wethUsdcLPToken);
+  //   uint256 _lpAmountToLiquidate = 60 ether;
+
+  //   wethUsdcLPToken.mint(ALICE, 20 ether);
+  //   vm.startPrank(ALICE);
+  //   wethUsdcLPToken.approve(lyfDiamond, type(uint256).max);
+  //   collateralFacet.addCollateral(ALICE, subAccount0, _lpToken, 20 ether);
+  //   farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+  //   vm.stopPrank();
+
+  //   mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+  //   mockRouter.setRemoveLiquidityAmountsOut(60 ether, 60 ether);
+
+  //   liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+
+  //   // check alice position
+  //   assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
+  //   assertEq(
+  //     collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+  //     30 ether,
+  //     "alice remaining weth collat"
+  //   );
+  //   assertEq(
+  //     collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+  //     30 ether,
+  //     "alice remaining usdc collat"
+  //   );
+  //   (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+  //   assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
+  //   (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+  //   assertEq(_aliceUsdcDebtValue, 0, "alice remaining usdc debt");
+  // }
+
+  function testRevert_WhenLiquidateLPOnHealthySubAccount() external {
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _lpAmountToLiquidate = 5 ether;
+
+    wethUsdcLPToken.mint(ALICE, 20 ether);
+    vm.startPrank(ALICE);
+    wethUsdcLPToken.approve(lyfDiamond, type(uint256).max);
+    collateralFacet.addCollateral(ALICE, subAccount0, _lpToken, 20 ether);
+    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    vm.stopPrank();
+
+    vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_Healthy.selector));
+    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
   }
 }

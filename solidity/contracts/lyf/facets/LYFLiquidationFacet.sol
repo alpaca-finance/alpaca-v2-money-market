@@ -18,8 +18,6 @@ import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using SafeERC20 for ERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -114,7 +112,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _account,
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpAmountToLiquidate,
+    uint256 _lpSharesToLiquidate,
     uint256 _amount0ToRepay,
     uint256 _amount1ToRepay
   ) external {
@@ -149,7 +147,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     }
 
     // 1. remove LP collat
-    uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(vars.subAccount, _lpToken, _lpAmountToLiquidate, lyfDs);
+    uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(vars.subAccount, _lpToken, _lpSharesToLiquidate, lyfDs);
 
     // 2. remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
@@ -169,8 +167,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       ? vars.token1Return
       : vars.actualAmount1ToRepay;
 
-    _reduceDebt(vars.subAccount, vars.debtShareId0, vars.actualAmount0ToRepay, lyfDs);
-    _reduceDebt(vars.subAccount, vars.debtShareId1, vars.actualAmount1ToRepay, lyfDs);
+    if (vars.actualAmount0ToRepay > 0)
+      _reduceDebt(vars.subAccount, vars.debtShareId0, vars.actualAmount0ToRepay, lyfDs);
+    if (vars.actualAmount1ToRepay > 0)
+      _reduceDebt(vars.subAccount, vars.debtShareId1, vars.actualAmount1ToRepay, lyfDs);
 
     // 4. add remaining as subAccount collateral
     vars.remainingAmount0AfterRepay = vars.token0Return - vars.actualAmount0ToRepay;
