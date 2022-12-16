@@ -79,7 +79,7 @@ abstract contract AV_BaseTest is BaseTest {
     adminFacet.setTokenConfigs(tokenConfigs);
 
     // setup handler
-    AVHandler _handler = new AVHandler(address(mockRouter));
+    AVHandler _handler = deployAVHandler(address(mockRouter));
     adminFacet.setAVHandler(address(avShareToken), address(_handler));
 
     // setup oracle
@@ -134,5 +134,12 @@ abstract contract AV_BaseTest is BaseTest {
     // prepare for borrow
     weth.mint(moneyMarketDiamond, 1000 ether);
     usdc.mint(moneyMarketDiamond, 1000 ether);
+  }
+
+  function deployAVHandler(address _router) internal returns (AVHandler) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/AVHandler.sol/AVHandler.json"));
+    bytes memory _initializer = abi.encodeWithSelector(bytes4(keccak256("initialize(address)")), _router);
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return AVHandler(_proxy);
   }
 }

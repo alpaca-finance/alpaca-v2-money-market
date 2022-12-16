@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -12,8 +13,7 @@ import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 
-// todo: upgradable
-contract AVHandler is IAVHandler {
+contract AVHandler is IAVHandler, Initializable {
   using SafeERC20 for ERC20;
 
   IRouterLike public router;
@@ -21,7 +21,7 @@ contract AVHandler is IAVHandler {
 
   uint256 public totalLpBalance;
 
-  constructor(address _router) {
+  function initialize(address _router) public initializer {
     router = IRouterLike(_router);
     lpToken = ISwapPairLike(IRouterLike(_router).lpToken());
   }
