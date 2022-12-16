@@ -338,10 +338,13 @@ library LibLYF01 {
       if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
         reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
 
-        _amountRemoved = LibShareUtil.shareToValue(_removeAmount, ds.lpValues[_token], ds.lpShares[_token]);
+        uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpValues[_token], ds.lpShares[_token]);
 
-        ds.lpShares[_token] -= _removeAmount;
-        ds.lpValues[_token] -= _amountRemoved;
+        ds.lpShares[_token] -= _amountRemoved;
+        ds.lpValues[_token] -= _lpValueRemoved;
+
+        // _amountRemoved used to represent lpShare, we need to return lpValue so re-assign it here
+        _amountRemoved = _lpValueRemoved;
       }
 
       ds.collats[_token] -= _amountRemoved;
