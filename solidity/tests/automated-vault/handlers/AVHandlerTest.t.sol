@@ -19,6 +19,8 @@ contract AVHandlerTest is AV_BaseTest {
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
     assertEq(wethUsdcLPToken.balanceOf(address(avHandler)), 10 ether);
+    // total lp balance should same with balance of LPToken
+    assertEq(avHandler.totalLpBalance(), 10 ether);
   }
 
   function testRevert_WhenDepositAndGetTooLessLiquidity_ShouldRevert() external {

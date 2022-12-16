@@ -150,8 +150,8 @@ library LibAV01 {
     uint8 _leverageLevel,
     LibAV01.AVDiamondStorage storage avDs
   ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _assetPrice, ) = LibAV01.getPriceUSD(_assetToken, avDs);
-    (uint256 _stablePrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
+    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
+    (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
 
     uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
 
@@ -182,9 +182,21 @@ library LibAV01 {
     uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
     if (_lpAmount > 0) {
       // get price USD
-      uint256 _totalDebtValue = avDs.vaultDebtValues[_shareToken][_token0] + avDs.vaultDebtValues[_shareToken][_token1];
+      uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
+      uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
+      uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
       _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
     }
+  }
+
+  function _getDebtValueInUSD(
+    address _token,
+    uint256 _amount,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _debtValue) {
+    TokenConfig memory _config = avDs.tokenConfigs[_token];
+    (uint256 tokenPrice, ) = getPriceUSD(_token, avDs);
+    _debtValue = (_amount * _config.to18ConversionFactor * tokenPrice) / 1e18;
   }
 
   /// @notice Return value of given lp amount.

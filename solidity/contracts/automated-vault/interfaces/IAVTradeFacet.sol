@@ -21,4 +21,6 @@ interface IAVTradeFacet {
     uint256 _shareAmountIn,
     uint256 _minTokenOut
   ) external;
+
+  function getDebtValues(address _shareToken) external view returns (uint256, uint256);
 }
