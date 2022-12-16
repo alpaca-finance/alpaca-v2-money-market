@@ -9,8 +9,6 @@ interface IAVHandler {
   error AVHandler_TransferFailed();
   error AVHandler_Reverse();
 
-  function lpToken() external view returns (ISwapPairLike);
-
   function totalLpBalance() external view returns (uint256);
 
   function onDeposit(

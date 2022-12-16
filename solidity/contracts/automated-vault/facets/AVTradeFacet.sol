@@ -41,11 +41,13 @@ contract AVTradeFacet is IAVTradeFacet {
       avDs
     );
 
+    // get fund from user
     ERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
+    // borrow from MM
     LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
     LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
 
-    uint256 _shareToMint = LibAV01.deposit(
+    uint256 _shareToMint = LibAV01.depositToHandler(
       _shareToken,
       _stableToken,
       _assetToken,

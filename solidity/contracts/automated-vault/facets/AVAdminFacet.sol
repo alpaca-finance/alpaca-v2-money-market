@@ -45,6 +45,7 @@ contract AVAdminFacet is IAVAdminFacet {
       leverageLevel: _leverageLevel
     });
 
+    // todo: register lpToken to tokenConfig
     emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken, _leverageLevel);
   }
 

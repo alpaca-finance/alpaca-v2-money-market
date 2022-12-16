@@ -46,19 +46,16 @@ library LibAV01 {
     IAlpacaV2Oracle oracle;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
-    mapping(address => uint256) vaultDebtShares;
-    mapping(address => uint256) vaultDebtValues;
     // share token => handler
     mapping(address => address) avHandlers;
     // share token => debt token => debt value
-    mapping(address => mapping(address => uint256)) totalDebtValues;
+    mapping(address => mapping(address => uint256)) vaultDebtValues;
   }
 
   error LibAV01_NoTinyShares();
   error LibAV01_TooLittleReceived();
   error LibAV01_InvalidToken(address _token);
   error LibAV01_InvalidHandler();
-  error LibAV01_UnTrustedPrice();
   error LibAV01_PriceStale(address _token);
   error LibAV01_UnsupportedDecimals();
 
@@ -83,7 +80,7 @@ library LibAV01 {
       revert LibAV01_PriceStale(_token);
   }
 
-  function deposit(
+  function depositToHandler(
     address _shareToken,
     address _token0,
     address _token1,
@@ -107,9 +104,8 @@ library LibAV01 {
       _desiredAmount1,
       0 // min lp amount
     );
-    // _equityAfter should be latest equity
+
     uint256 _equityAfter = _getEquity(_shareToken, _handler, avDs);
-    // equity after should more than before
     uint256 _equityChanged = _equityAfter - _equityBefore;
 
     uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
@@ -144,8 +140,7 @@ library LibAV01 {
     AVDiamondStorage storage avDs
   ) internal {
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
-
-    avDs.totalDebtValues[_shareToken][_token] += _amount;
+    avDs.vaultDebtValues[_shareToken][_token] += _amount;
   }
 
   function calculateBorrowAmount(
@@ -187,7 +182,7 @@ library LibAV01 {
     uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
     if (_lpAmount > 0) {
       // get price USD
-      uint256 _totalDebtValue = avDs.totalDebtValues[_shareToken][_token0] + avDs.totalDebtValues[_shareToken][_token1];
+      uint256 _totalDebtValue = avDs.vaultDebtValues[_shareToken][_token0] + avDs.vaultDebtValues[_shareToken][_token1];
       _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
     }
   }
@@ -200,7 +195,7 @@ library LibAV01 {
     AVDiamondStorage storage avDs
   ) internal view returns (uint256) {
     (uint256 _lpValue, uint256 _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(_lpAmount, _lpToken);
-    if (block.timestamp - _lastUpdated > 86400) revert LibAV01_UnTrustedPrice();
+    if (block.timestamp - _lastUpdated > 86400) revert LibAV01_PriceStale(_lpToken);
     return _lpValue;
   }
 }
