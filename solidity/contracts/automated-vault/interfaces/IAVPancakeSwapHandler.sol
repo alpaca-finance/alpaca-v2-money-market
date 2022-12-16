@@ -4,10 +4,10 @@ pragma solidity 0.8.17;
 // interfaces
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
-interface IAVHandler {
-  error AVHandler_TooLittleReceived();
-  error AVHandler_TransferFailed();
-  error AVHandler_Reverse();
+interface IAVPancakeSwapHandler {
+  error AVPancakeSwapHandler_TooLittleReceived();
+  error AVPancakeSwapHandler_TransferFailed();
+  error AVPancakeSwapHandler_Reverse();
 
   function totalLpBalance() external view returns (uint256);
 

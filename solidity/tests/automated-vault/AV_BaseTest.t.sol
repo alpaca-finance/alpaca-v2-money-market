@@ -8,13 +8,13 @@ import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
 // contracts
-import { AVHandler } from "../../contracts/automated-vault/handlers/AVHandler.sol";
+import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
-import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
+import { IAVPancakeSwapHandler } from "../../contracts/automated-vault/interfaces/IAVPancakeSwapHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
@@ -37,7 +37,7 @@ abstract contract AV_BaseTest is BaseTest {
 
   address internal treasury;
 
-  IAVHandler internal avHandler;
+  IAVPancakeSwapHandler internal avHandler;
   IAVShareToken internal avShareToken;
 
   MockLPToken internal wethUsdcLPToken;
@@ -62,7 +62,7 @@ abstract contract AV_BaseTest is BaseTest {
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    avHandler = IAVHandler(deployAVHandler(address(mockRouter)));
+    avHandler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter)));
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     avShareToken = IAVShareToken(
@@ -147,10 +147,12 @@ abstract contract AV_BaseTest is BaseTest {
     usdc.mint(moneyMarketDiamond, 1000 ether);
   }
 
-  function deployAVHandler(address _router) internal returns (AVHandler) {
-    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/AVHandler.sol/AVHandler.json"));
+  function deployAVPancakeSwapHandler(address _router) internal returns (AVPancakeSwapHandler) {
+    bytes memory _logicBytecode = abi.encodePacked(
+      vm.getCode("./out/AVPancakeSwapHandler.sol/AVPancakeSwapHandler.json")
+    );
     bytes memory _initializer = abi.encodeWithSelector(bytes4(keccak256("initialize(address)")), _router);
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
-    return AVHandler(_proxy);
+    return AVPancakeSwapHandler(_proxy);
   }
 }

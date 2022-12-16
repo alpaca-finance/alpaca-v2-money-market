@@ -10,7 +10,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
-import { IAVHandler } from "../interfaces/IAVHandler.sol";
+import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
@@ -96,7 +96,7 @@ library LibAV01 {
 
     uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
 
-    IAVHandler(_handler).onDeposit(
+    IAVPancakeSwapHandler(_handler).onDeposit(
       _token0,
       _token1,
       _desiredAmount0,
@@ -176,14 +176,16 @@ library LibAV01 {
     ISwapPairLike _lpToken = ISwapPairLike(_shareTokenConfig.lpToken);
     address _token0 = _lpToken.token0();
     address _token1 = _lpToken.token1();
-    uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
+    uint256 _lpAmount = IAVPancakeSwapHandler(_handler).totalLpBalance();
     if (_lpAmount > 0) {
       // get price USD
       uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
       uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
       uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
+      uint256 _lpValue = _lpToValue(_lpAmount, address(_lpToken), avDs);
 
-      _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
+      // todo: tbd
+      _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
     }
   }
 

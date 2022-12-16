@@ -4,9 +4,9 @@ pragma solidity 0.8.17;
 import { AV_BaseTest } from "../AV_BaseTest.t.sol";
 
 // interfaces
-import { IAVHandler } from "../../../contracts/automated-vault/interfaces/IAVHandler.sol";
+import { IAVPancakeSwapHandler } from "../../../contracts/automated-vault/interfaces/IAVPancakeSwapHandler.sol";
 
-contract AVHandlerTest is AV_BaseTest {
+contract AVPancakeSwapHandlerTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
   }
@@ -28,7 +28,7 @@ contract AVHandlerTest is AV_BaseTest {
     usdc.mint(address(avHandler), 10 ether);
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
-    vm.expectRevert(abi.encodeWithSelector(IAVHandler.AVHandler_TooLittleReceived.selector));
+    vm.expectRevert(abi.encodeWithSelector(IAVPancakeSwapHandler.AVPancakeSwapHandler_TooLittleReceived.selector));
     avHandler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 1000 ether);
 
     // check no liquidity come to handler

@@ -6,14 +6,14 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // interfaces
-import { IAVHandler } from "../interfaces/IAVHandler.sol";
+import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
 import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 
-contract AVHandler is IAVHandler, Initializable {
+contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
   using SafeERC20 for ERC20;
 
   IRouterLike public router;
@@ -33,6 +33,17 @@ contract AVHandler is IAVHandler, Initializable {
     uint256 _token1Amount,
     uint256 _minLPAmount
   ) external returns (uint256 _mintLpAmount) {
+    _mintLpAmount = composeLP(_token0, _token1, _token0Amount, _token1Amount, _minLPAmount);
+    totalLpBalance += _mintLpAmount;
+  }
+
+  function composeLP(
+    address _token0,
+    address _token1,
+    uint256 _token0Amount,
+    uint256 _token1Amount,
+    uint256 _minLPAmount
+  ) internal returns (uint256 _mintLpAmount) {
     // 1. Approve router to do their stuffs
     ERC20(_token0).approve(address(router), type(uint256).max);
     ERC20(_token1).approve(address(router), type(uint256).max);
@@ -61,14 +72,12 @@ contract AVHandler is IAVHandler, Initializable {
       block.timestamp
     );
     if (_mintLpAmount < _minLPAmount) {
-      revert AVHandler_TooLittleReceived();
+      revert AVPancakeSwapHandler_TooLittleReceived();
     }
 
     // 7. Reset approve to 0 for safety reason
     ERC20(_token0).approve(address(router), 0);
     ERC20(_token1).approve(address(router), 0);
-
-    totalLpBalance += _mintLpAmount;
   }
 
   /// @dev Compute optimal deposit amount
@@ -103,7 +112,7 @@ contract AVHandler is IAVHandler, Initializable {
     uint256 resB
   ) internal pure returns (uint256) {
     if (amtA * (resB) < amtB * (resA)) {
-      revert AVHandler_Reverse();
+      revert AVPancakeSwapHandler_Reverse();
     }
 
     uint256 a = 9975;
