@@ -8,6 +8,7 @@ interface IAdminFacet {
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
   error AdminFacet_BadBps();
+  error AdminFacet_ReserveTooLow();
 
   struct IbPair {
     address token;
@@ -107,4 +108,10 @@ interface IAdminFacet {
   ) external;
 
   function getReservePool(address _token) external view returns (uint256 _reserve);
+
+  function withdrawReserve(
+    address _token,
+    address _to,
+    uint256 _amount
+  ) external;
 }

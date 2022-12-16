@@ -403,6 +403,18 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     // total token =  54 e18 - 4e16 = 5396e16
     assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
     assertEq(adminFacet.getReservePool(address(weth)), 4e16);
+
+    // test withdrawing reserve
+    vm.expectRevert(IAdminFacet.AdminFacet_ReserveTooLow.selector);
+    adminFacet.withdrawReserve(address(weth), address(this), 5e16);
+
+    vm.prank(ALICE);
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.withdrawReserve(address(weth), address(this), 4e16);
+
+    adminFacet.withdrawReserve(address(weth), address(this), 4e16);
+    assertEq(adminFacet.getReservePool(address(weth)), 0);
+    assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
   }
 
   function testCorrectness_WhenUsersBorrowSameTokenButDifferentInterestModel_ShouldAccureInterestCorrectly() external {

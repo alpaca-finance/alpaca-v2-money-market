@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
@@ -15,6 +17,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 contract AdminFacet is IAdminFacet {
+  using SafeERC20 for ERC20;
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -25,6 +28,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetLendingPool(address indexed _token, address indexed _rewardToken, uint256 _allocPoint);
   event LogAddBorroweringPool(address indexed _token, address indexed _rewardToken, uint256 _allocPoint);
   event LogSetBorrowingPool(address indexed _token, address indexed _rewardToken, uint256 _allocPoint);
+  event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -168,6 +172,23 @@ contract AdminFacet is IAdminFacet {
 
   function getReservePool(address _token) external view returns (uint256 _reserve) {
     return LibMoneyMarket01.moneyMarketDiamondStorage().reservePools[_token];
+  }
+
+  function withdrawReserve(
+    address _token,
+    address _to,
+    uint256 _amount
+  ) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (_amount > moneyMarketDs.reservePools[_token]) {
+      revert AdminFacet_ReserveTooLow();
+    }
+
+    moneyMarketDs.reservePools[_token] -= _amount;
+
+    ERC20(_token).safeTransfer(_to, _amount);
+
+    emit LogWitdrawReserve(_token, _to, _amount);
   }
 
   function getLendingRewardPerSec(address _rewardToken) external view returns (uint256 _rewardPerSec) {
