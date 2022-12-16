@@ -10,6 +10,8 @@ interface IAVTradeFacet {
     uint256 amountStableDeposited
   );
 
+  error AVTradeFacet_TooLittleReceived();
+
   function deposit(
     address _shareToken,
     uint256 _amountIn,

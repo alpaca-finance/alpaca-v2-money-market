@@ -85,7 +85,6 @@ library LibAV01 {
     address _token1,
     uint256 _desiredAmount0,
     uint256 _desiredAmount1,
-    uint256 _minShareOut,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _shareToMint) {
     address _handler = avDs.vaultConfigs[_shareToken].handler;
@@ -111,8 +110,6 @@ library LibAV01 {
     uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
 
     _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
-
-    if (_minShareOut > _shareToMint) revert LibAV01_TooLittleReceived();
 
     if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals()) - 1) revert LibAV01_NoTinyShares();
   }

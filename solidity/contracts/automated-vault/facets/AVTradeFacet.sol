@@ -56,9 +56,10 @@ contract AVTradeFacet is IAVTradeFacet {
       _assetToken,
       _stableAmountIn + _stableBorrowAmount,
       _assetBorrowAmount,
-      _minShareOut,
       avDs
     );
+
+    if (_minShareOut > _shareToMint) revert AVTradeFacet_TooLittleReceived();
 
     IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
 
