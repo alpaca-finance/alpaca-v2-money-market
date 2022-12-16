@@ -29,6 +29,9 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _minShareOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    _mintManagementFeeToTreasury(_shareToken, avDs);
+
     LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
     address _stableToken = vaultConfig.stableToken;
     address _assetToken = vaultConfig.assetToken;
@@ -57,6 +60,9 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _minTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    _mintManagementFeeToTreasury(_shareToken, avDs);
+
     LibAV01.withdraw(_shareToken, _shareAmountIn, _minTokenOut, avDs);
   }
 
@@ -111,5 +117,22 @@ contract AVTradeFacet is IAVTradeFacet {
     avDs.vaultDebtValues[_shareToken] -= _amountToRemove;
 
     emit LogRemoveDebt(_shareToken, _shareToRemove, _amountToRemove);
+  }
+
+  function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {
+    IAVShareToken(_shareToken).mint(avDs.treasury, pendingManagementFee(_shareToken));
+
+    avDs.lastFeeCollectionTimestamps[_shareToken] = block.timestamp;
+  }
+
+  function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
+    _pendingManagementFee =
+      (ERC20(_shareToken).totalSupply() *
+        avDs.vaultConfigs[_shareToken].managementFeePerSec *
+        _secondsFromLastCollection) /
+      1e18;
   }
 }

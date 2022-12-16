@@ -24,6 +24,7 @@ library LibAV01 {
 
   struct VaultConfig {
     uint8 leverageLevel;
+    uint16 managementFeePerSec;
     address shareToken;
     address lpToken;
     address stableToken;
@@ -32,7 +33,9 @@ library LibAV01 {
 
   struct AVDiamondStorage {
     address moneyMarket;
+    address treasury;
     IAlpacaV2Oracle oracle;
+    mapping(address => uint256) lastFeeCollectionTimestamps;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => uint256) vaultDebtShares;
     mapping(address => uint256) vaultDebtValues;
