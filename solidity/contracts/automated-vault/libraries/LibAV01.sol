@@ -14,8 +14,6 @@ import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
-import { console } from "../../../tests/utils/console.sol";
-
 library LibAV01 {
   using SafeERC20 for ERC20;
 
@@ -57,7 +55,6 @@ library LibAV01 {
 
   error LibAV01_NoTinyShares();
   error LibAV01_TooLittleReceived();
-  error LibAV01_InvalidToken(address _token);
   error LibAV01_InvalidHandler();
   error LibAV01_PriceStale(address _token);
   error LibAV01_UnsupportedDecimals();
