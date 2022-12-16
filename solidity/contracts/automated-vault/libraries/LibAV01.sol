@@ -32,6 +32,7 @@ library LibAV01 {
     address lpToken;
     address stableToken;
     address assetToken;
+    address handler;
   }
 
   struct TokenConfig {
@@ -47,8 +48,6 @@ library LibAV01 {
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) lastFeeCollectionTimestamps;
-    // share token => handler
-    mapping(address => address) avHandlers;
     // share token => debt token => debt value
     mapping(address => mapping(address => uint256)) vaultDebtValues;
   }
@@ -89,7 +88,7 @@ library LibAV01 {
     uint256 _minShareOut,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _shareToMint) {
-    address _handler = avDs.avHandlers[_shareToken];
+    address _handler = avDs.vaultConfigs[_shareToken].handler;
 
     if (_handler == address(0)) revert LibAV01_InvalidHandler();
 

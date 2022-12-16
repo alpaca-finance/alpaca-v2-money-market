@@ -26,6 +26,7 @@ interface IAVAdminFacet {
 
   error AVTradeFacet_InvalidToken(address _token);
   error AVAdminFacet_InvalidShareToken(address _token);
+  error AVAdminFacet_InvalidHandler();
 
   event LogOpenVault(
     address indexed _caller,
@@ -39,6 +40,7 @@ interface IAVAdminFacet {
     address _lpToken,
     address _stableToken,
     address _assetToken,
+    address _avHandler,
     uint8 _leverageLevel,
     uint16 _managementFeePerSec
   ) external returns (address _newShareToken);
@@ -48,8 +50,6 @@ interface IAVAdminFacet {
   function setMoneyMarket(address _newMoneyMarket) external;
 
   function setOracle(address _oracle) external;
-
-  function setAVHandler(address _shareToken, address avHandler) external;
 
   function setTreasury(address _treasury) external;
 }

@@ -54,20 +54,26 @@ abstract contract AV_BaseTest is BaseTest {
 
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 
-    // setup share tokens
+    // deploy lp tokens
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+
+    // setup router
+    MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
+    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+
+    // deploy handler
+    avHandler = IAVHandler(deployAVHandler(address(mockRouter)));
+
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
-    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), 3, 0));
+    avShareToken = IAVShareToken(
+      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(avHandler), 3, 0)
+    );
 
     // approve
     vm.startPrank(ALICE);
     weth.approve(avDiamond, type(uint256).max);
     usdc.approve(avDiamond, type(uint256).max);
     vm.stopPrank();
-
-    // setup router
-    MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
-    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // setup token configs
     IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](2);
@@ -82,10 +88,6 @@ abstract contract AV_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
     adminFacet.setTokenConfigs(tokenConfigs);
-
-    // setup handler
-    avHandler = IAVHandler(deployAVHandler(address(mockRouter)));
-    adminFacet.setAVHandler(address(avShareToken), address(avHandler));
 
     // setup oracle
     mockOracle = new MockAlpacaV2Oracle();
