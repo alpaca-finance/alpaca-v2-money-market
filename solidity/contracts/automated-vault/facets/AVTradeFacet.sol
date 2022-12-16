@@ -29,6 +29,9 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _minShareOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+
+    _mintManagementFeeToTreasury(_shareToken, avDs);
+
     LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
     address _stableToken = vaultConfig.stableToken;
     address _assetToken = vaultConfig.assetToken;
@@ -48,8 +51,6 @@ contract AVTradeFacet is IAVTradeFacet {
 
     // TODO: send tokens to handler to compose LP and farm
 
-    _mintManagementFeeToTreasury(_shareToken, avDs);
-
     emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
   }
 
@@ -59,9 +60,10 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _minTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-    LibAV01.withdraw(_shareToken, _shareAmountIn, _minTokenOut, avDs);
 
     _mintManagementFeeToTreasury(_shareToken, avDs);
+
+    LibAV01.withdraw(_shareToken, _shareAmountIn, _minTokenOut, avDs);
   }
 
   function _borrowFromMoneyMarket(
