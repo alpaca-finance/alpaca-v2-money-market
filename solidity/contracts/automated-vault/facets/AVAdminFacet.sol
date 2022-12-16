@@ -7,7 +7,6 @@ import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
-import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -73,7 +72,7 @@ contract AVAdminFacet is IAVAdminFacet {
 
   function setOracle(address _oracle) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-    avDs.oracle = IAlpacaV2Oracle(_oracle);
+    avDs.oracle = _oracle;
   }
 
   function setAVHandler(address _shareToken, address avHandler) external onlyOwner {

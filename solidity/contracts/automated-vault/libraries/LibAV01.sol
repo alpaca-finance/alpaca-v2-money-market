@@ -43,7 +43,7 @@ library LibAV01 {
 
   struct AVDiamondStorage {
     address moneyMarket;
-    IAlpacaV2Oracle oracle;
+    address oracle;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     // share token => handler
@@ -72,9 +72,9 @@ library LibAV01 {
     returns (uint256 _price, uint256 _lastUpdated)
   {
     if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = avDs.oracle.lpToDollar(1e18, _token);
+      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = avDs.oracle.getTokenPrice(_token);
+      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
     }
     if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibAV01_PriceStale(_token);
