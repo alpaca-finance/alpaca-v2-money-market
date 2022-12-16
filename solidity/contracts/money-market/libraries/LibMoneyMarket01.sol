@@ -155,7 +155,7 @@ library LibMoneyMarket01 {
         _actualToken = _collatToken;
       } else {
         uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
-        uint256 _totalToken = getTotalToken(_actualToken, moneyMarketDs);
+        uint256 _totalToken = getTotalTokenWithPendingInterest(_actualToken, moneyMarketDs);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
       }
@@ -412,6 +412,16 @@ library LibMoneyMarket01 {
       (moneyMarketDs.collats[_token] + moneyMarketDs.reservePools[_token]);
   }
 
+  function getTotalTokenWithPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256)
+  {
+    return
+      getTotalToken(_token, moneyMarketDs) +
+      ((pendingInterest(_token, moneyMarketDs) * moneyMarketDs.lendingFeeBps) / LibMoneyMarket01.MAX_BPS);
+  }
+
   function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
@@ -457,7 +467,7 @@ library LibMoneyMarket01 {
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
     uint256 _one = 10**IERC20(_ibToken).decimals();
 
-    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
+    uint256 _totalToken = getTotalTokenWithPendingInterest(_token, moneyMarketDs);
     uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
 
     uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
