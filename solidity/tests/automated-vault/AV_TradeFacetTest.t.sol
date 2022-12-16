@@ -10,7 +10,7 @@ contract AV_TradeFacetTest is AV_BaseTest {
 
   function testCorrectness_WhenDepositToken_ShouldWork() external {
     vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 10 ether, 0);
+    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
 
     // leverage level is 3
     // price of weth and usdc are 1 USD
@@ -21,6 +21,21 @@ contract AV_TradeFacetTest is AV_BaseTest {
     (uint256 _stableDebtValue, uint256 _assetDebtValue) = tradeFacet.getDebtValues(address(avShareToken));
     assertEq(_stableDebtValue, 20 ether);
     assertEq(_assetDebtValue, 30 ether);
+
+    // equity change
+    // before deposit
+    // lpAmountPrice = 2, wethPrice = 1, usdcPrice = 1
+    // lpAmount = 0, wethDebtAmount = 0, usdcDebtAmount = 0
+    // equityBefore = (0 * 2) - ((0 * 1) + (0 * 1)) = 0
+    // after deposit
+    // lpAmount = 30, wethDebtAmount = 20, usdcDebtAmount = 30
+    // equityAfter = (30 * 2) - ((20 * 1) + (30 * 1)) = 60 - 50 = 10
+    // equity change = 10
+    // avToken totalSupply = 0
+    // given shareToMint = equityChange * totalSupply (avToken) / totalEquity
+    // in this case is first mint, so shareToMint will be equityChange
+    // shareToMint = 10
+    assertEq(avShareToken.balanceOf(ALICE), 10 ether);
 
     // check liquidty in handler, 30 + 30 / 2 = 30
     assertEq(avHandler.totalLpBalance(), 30 ether);

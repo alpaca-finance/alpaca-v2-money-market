@@ -97,6 +97,7 @@ library LibAV01 {
     ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
 
     uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
+
     IAVHandler(_handler).onDeposit(
       _token0,
       _token1,
@@ -185,6 +186,7 @@ library LibAV01 {
       uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
       uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
       uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
+
       _equity = _lpToValue(_lpAmount, address(_lpToken), avDs) - _totalDebtValue;
     }
   }
