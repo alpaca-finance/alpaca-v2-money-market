@@ -10,7 +10,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
-import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
@@ -79,7 +79,7 @@ library LibAV01 {
 
     uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
 
-    IAVPancakeSwapHandler(_handler).onDeposit(
+    IAVHandler(_handler).onDeposit(
       _token0,
       _token1,
       _desiredAmount0,
@@ -97,20 +97,34 @@ library LibAV01 {
     if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
   }
 
-  function withdraw(
+  function withdrawFromHandler(
     address _shareToken,
-    uint256 _shareAmountIn,
-    uint256 _minTokenOut,
+    uint256 _valueToWithdraw,
     AVDiamondStorage storage avDs
-  ) internal {
-    VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
+  ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
+    address _handler = avDs.vaultConfigs[_shareToken].handler;
+    address _lpToken = avDs.vaultConfigs[_shareToken].lpToken;
 
-    // TODO: calculate amountOut with equity value
-    // TODO: get token back from handler
-    // TODO: handle slippage
+    uint256 _currentEquity = _getEquity(_shareToken, _handler, avDs);
+    (uint256 _lpTokenPrice, ) = getPriceUSD(_lpToken, avDs);
+    uint256 _totalLPValue = (IAVHandler(_handler).totalLpBalance() * _lpTokenPrice) / 1e18;
+    uint256 _equityRatio = (_currentEquity * 1e18) / _totalLPValue;
 
-    IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
+    uint256 _lpValueToRemove = (_valueToWithdraw * 1e18) / _equityRatio;
+    uint256 _lpToRemove = (_lpValueToRemove * 1e18) / _lpTokenPrice;
+    _lpToRemove = (_lpToRemove * 9995) / 10000;
+
+    (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToRemove);
+  }
+
+  function getShareValue(
+    address _shareToken,
+    uint256 _amount,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _shareValue) {
+    uint256 _currentEquity = _getEquity(_shareToken, avDs.vaultConfigs[_shareToken].handler, avDs);
+    uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
+    _shareValue = LibShareUtil.shareToValue(_amount, _currentEquity, _totalShareTokenSupply);
   }
 
   /// @dev return price in 1e18
@@ -136,6 +150,21 @@ library LibAV01 {
   ) internal {
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
     avDs.vaultDebtValues[_shareToken][_token] += _amount;
+  }
+
+  function repayMoneyMarket(
+    address _shareToken,
+    address _token,
+    uint256 _repayAmount,
+    AVDiamondStorage storage avDs
+  ) internal {
+    ERC20(_token).safeApprove(avDs.moneyMarket, _repayAmount);
+
+    IMoneyMarket(avDs.moneyMarket).nonCollatRepay(address(this), _token, _repayAmount);
+
+    ERC20(_token).safeApprove(avDs.moneyMarket, 0);
+
+    avDs.vaultDebtValues[_shareToken][_token] -= _repayAmount;
   }
 
   function calculateBorrowAmount(
@@ -176,16 +205,17 @@ library LibAV01 {
     address _handler,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _equity) {
-    VaultConfig memory _shareTokenConfig = avDs.vaultConfigs[_shareToken];
-    ISwapPairLike _lpToken = ISwapPairLike(_shareTokenConfig.lpToken);
+    VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
+    ISwapPairLike _lpToken = ISwapPairLike(_vaultConfig.lpToken);
     address _token0 = _lpToken.token0();
     address _token1 = _lpToken.token1();
-    uint256 _lpAmount = IAVPancakeSwapHandler(_handler).totalLpBalance();
+    uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
 
     uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
     uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
     uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
-    (uint256 _lpTokenPrice, ) = getPriceUSD(address(_lpToken), avDs);
+
+    (uint256 _lpTokenPrice, ) = getPriceUSD(_vaultConfig.lpToken, avDs);
     uint256 _lpValue = (_lpAmount * _lpTokenPrice) / 1e18;
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;

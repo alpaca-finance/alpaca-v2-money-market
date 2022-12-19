@@ -9,8 +9,11 @@ interface IAVTradeFacet {
     address stableToken,
     uint256 amountStableDeposited
   );
+  // todo: add fields
+  event LogWithdraw();
 
   error AVTradeFacet_TooLittleReceived();
+  error AVTradeFacet_InsufficientAmount();
 
   function deposit(
     address _shareToken,
