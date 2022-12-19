@@ -88,9 +88,10 @@ library AVDiamondDeployer {
   function deployFarmFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
     AVTradeFacet _farmFacet = new AVTradeFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = AVTradeFacet.deposit.selector;
     selectors[1] = AVTradeFacet.withdraw.selector;
+    selectors[2] = AVTradeFacet.getDebtValues.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_farmFacet),

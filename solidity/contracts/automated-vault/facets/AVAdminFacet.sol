@@ -7,7 +7,7 @@ import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
-import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -23,9 +23,12 @@ contract AVAdminFacet is IAVAdminFacet {
     address _lpToken,
     address _stableToken,
     address _assetToken,
+    address _handler,
     uint8 _leverageLevel,
     uint16 _managementFeePerSec
   ) external onlyOwner returns (address _newShareToken) {
+    // sanity call
+    IAVHandler(_handler).totalLpBalance();
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     string memory _tokenSymbol = ERC20(_lpToken).symbol();
@@ -43,9 +46,12 @@ contract AVAdminFacet is IAVAdminFacet {
       lpToken: _lpToken,
       stableToken: _stableToken,
       assetToken: _assetToken,
+      handler: _handler,
       leverageLevel: _leverageLevel,
       managementFeePerSec: _managementFeePerSec
     });
+
+    // todo: register lpToken to tokenConfig
 
     emit LogOpenVault(msg.sender, _lpToken, _stableToken, _assetToken, _newShareToken);
   }
@@ -74,7 +80,7 @@ contract AVAdminFacet is IAVAdminFacet {
 
   function setOracle(address _oracle) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
-    avDs.oracle = IAlpacaV2Oracle(_oracle);
+    avDs.oracle = _oracle;
   }
 
   function setTreasury(address _treasury) external onlyOwner {

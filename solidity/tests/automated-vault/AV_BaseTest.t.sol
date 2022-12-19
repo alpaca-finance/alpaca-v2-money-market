@@ -7,10 +7,14 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
+// contracts
+import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
+
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
+import { IAVPancakeSwapHandler } from "../../contracts/automated-vault/interfaces/IAVPancakeSwapHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
@@ -21,6 +25,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // mocks
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
+import { MockRouter } from "../mocks/MockRouter.sol";
 
 abstract contract AV_BaseTest is BaseTest {
   address internal avDiamond;
@@ -32,6 +37,7 @@ abstract contract AV_BaseTest is BaseTest {
 
   address internal treasury;
 
+  IAVPancakeSwapHandler internal handler;
   IAVShareToken internal avShareToken;
 
   MockLPToken internal wethUsdcLPToken;
@@ -48,9 +54,20 @@ abstract contract AV_BaseTest is BaseTest {
 
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 
-    // setup share tokens
+    // deploy lp tokens
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
-    avShareToken = IAVShareToken(adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), 3, 0));
+
+    // setup router
+    MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
+    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+
+    // deploy handler
+    handler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
+
+    // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
+    avShareToken = IAVShareToken(
+      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(handler), 3, 0)
+    );
 
     // approve
     vm.startPrank(ALICE);
@@ -59,7 +76,7 @@ abstract contract AV_BaseTest is BaseTest {
     vm.stopPrank();
 
     // setup token configs
-    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](2);
+    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](3);
     tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({
       token: address(weth),
       tier: LibAV01.AssetTier.TOKEN,
@@ -68,6 +85,12 @@ abstract contract AV_BaseTest is BaseTest {
     tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({
       token: address(usdc),
       tier: LibAV01.AssetTier.TOKEN,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    // todo: should we set this in openVault
+    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({
+      token: address(wethUsdcLPToken),
+      tier: LibAV01.AssetTier.LP,
       maxToleranceExpiredSecond: block.timestamp
     });
     adminFacet.setTokenConfigs(tokenConfigs);
@@ -82,7 +105,7 @@ abstract contract AV_BaseTest is BaseTest {
 
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
-    mockOracle.setTokenPrice(address(wethUsdcLPToken), 2e18);
+    mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2e18);
 
     // set treasury
     treasury = address(this);
@@ -90,11 +113,9 @@ abstract contract AV_BaseTest is BaseTest {
   }
 
   function setUpMM() internal {
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](4);
+    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](2);
     _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
     _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
-    _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
-    _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
     IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(avDiamond, true);
@@ -127,12 +148,21 @@ abstract contract AV_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
 
-    vm.startPrank(EVE);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
-    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    // prepare for borrow
+    weth.mint(moneyMarketDiamond, 1000 ether);
+    usdc.mint(moneyMarketDiamond, 1000 ether);
+  }
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 50 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 20 ether);
-    vm.stopPrank();
+  function deployAVPancakeSwapHandler(address _router, address _lpToken) internal returns (AVPancakeSwapHandler) {
+    bytes memory _logicBytecode = abi.encodePacked(
+      vm.getCode("./out/AVPancakeSwapHandler.sol/AVPancakeSwapHandler.json")
+    );
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,address)")),
+      _router,
+      _lpToken
+    );
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return AVPancakeSwapHandler(_proxy);
   }
 }
