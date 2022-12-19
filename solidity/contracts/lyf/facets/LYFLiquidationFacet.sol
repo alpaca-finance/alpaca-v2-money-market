@@ -325,30 +325,23 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     (vars.token0Return, vars.token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
-    // 3. repay what we can
-    vars.actualAmount0ToRepay = _getActualRepayAmount(vars.subAccount, vars.debtShareId0, _amount0ToRepay, lyfDs);
-    vars.actualAmount0ToRepay = vars.actualAmount0ToRepay > vars.token0Return
-      ? vars.token0Return
-      : vars.actualAmount0ToRepay;
-
-    vars.actualAmount1ToRepay = _getActualRepayAmount(vars.subAccount, vars.debtShareId1, _amount1ToRepay, lyfDs);
-    vars.actualAmount1ToRepay = vars.actualAmount1ToRepay > vars.token1Return
-      ? vars.token1Return
-      : vars.actualAmount1ToRepay;
-
-    if (vars.actualAmount0ToRepay > 0)
-      _reduceDebt(vars.subAccount, vars.debtShareId0, vars.actualAmount0ToRepay, lyfDs);
-    if (vars.actualAmount1ToRepay > 0)
-      _reduceDebt(vars.subAccount, vars.debtShareId1, vars.actualAmount1ToRepay, lyfDs);
-
-    // 4. add remaining as subAccount collateral
-    vars.remainingAmount0AfterRepay = vars.token0Return - vars.actualAmount0ToRepay;
-    if (vars.remainingAmount0AfterRepay > 0)
-      LibLYF01.addCollat(vars.subAccount, vars.token0, vars.remainingAmount0AfterRepay, lyfDs);
-
-    vars.remainingAmount1AfterRepay = vars.token1Return - vars.actualAmount1ToRepay;
-    if (vars.remainingAmount1AfterRepay > 0)
-      LibLYF01.addCollat(vars.subAccount, vars.token1, vars.remainingAmount1AfterRepay, lyfDs);
+    // 3. repay what we can and add remaining to collat
+    (vars.actualAmount0ToRepay, vars.remainingAmount0AfterRepay) = _repayAndAddRemainingToCollat(
+      vars.subAccount,
+      vars.debtShareId0,
+      vars.token0,
+      _amount0ToRepay,
+      vars.token0Return,
+      lyfDs
+    );
+    (vars.actualAmount1ToRepay, vars.remainingAmount1AfterRepay) = _repayAndAddRemainingToCollat(
+      vars.subAccount,
+      vars.debtShareId1,
+      vars.token1,
+      _amount1ToRepay,
+      vars.token1Return,
+      lyfDs
+    );
 
     emit LogLiquidateLP(
       msg.sender,
@@ -361,6 +354,29 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       vars.remainingAmount0AfterRepay,
       vars.remainingAmount1AfterRepay
     );
+  }
+
+  function _repayAndAddRemainingToCollat(
+    address _subAccount,
+    uint256 _debtShareId,
+    address _token,
+    uint256 _amountToRepay,
+    uint256 _amountAvailable,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualAmountToRepay, uint256 _remainingAmountAfterRepay) {
+    // repay what we can
+    _actualAmountToRepay = _getActualRepayAmount(_subAccount, _debtShareId, _amountToRepay, lyfDs);
+    _actualAmountToRepay = _actualAmountToRepay > _amountAvailable ? _amountAvailable : _actualAmountToRepay;
+
+    if (_actualAmountToRepay > 0) {
+      uint256 _feeToTreasury = (_actualAmountToRepay * LIQUIDATION_FEE_BPS) / 10000;
+      _reduceDebt(_subAccount, _debtShareId, _actualAmountToRepay - _feeToTreasury, lyfDs);
+      ERC20(_token).safeTransfer(lyfDs.treasury, _feeToTreasury);
+    }
+
+    // add remaining as subAccount collateral
+    _remainingAmountAfterRepay = _amountAvailable - _actualAmountToRepay;
+    if (_remainingAmountAfterRepay > 0) LibLYF01.addCollat(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
   }
 
   /// @dev min(amountToRepurchase, debtValue)
