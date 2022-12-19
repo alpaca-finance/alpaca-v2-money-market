@@ -35,7 +35,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     assertEq(wethUsdcLPToken.balanceOf(address(handler)), 0 ether);
   }
 
-  function testCorrectness_WhenWithdraw_ShouldGetTokensCorrectly() external {
+  function testCorrectness_WhenWithdraw_CallerShouldGetFundsCorrectly() external {
     weth.mint(address(handler), 10 ether);
     usdc.mint(address(handler), 10 ether);
 
@@ -49,10 +49,14 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
     (uint256 _token0Out, uint256 _token1Out) = handler.onWithdraw(5 ether);
-    // note: the calculate is just from mock
+    // note: the amounts out is from mock
     assertEq(_token0Out, 5 ether);
     assertEq(_token1Out, 5 ether);
     assertEq(wethUsdcLPToken.balanceOf(address(handler)), 5 ether);
     assertEq(handler.totalLpBalance(), 5 ether);
+
+    // caller should got funds
+    assertEq(weth.balanceOf(address(this)), 5 ether);
+    assertEq(usdc.balanceOf(address(this)), 5 ether);
   }
 }
