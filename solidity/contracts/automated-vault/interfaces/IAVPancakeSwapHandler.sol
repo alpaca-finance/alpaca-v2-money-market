@@ -8,6 +8,7 @@ interface IAVPancakeSwapHandler {
   error AVPancakeSwapHandler_TooLittleReceived();
   error AVPancakeSwapHandler_TransferFailed();
   error AVPancakeSwapHandler_Reverse();
+  error AVPancakeSwapHandler_Unauthorized(address);
 
   function totalLpBalance() external view returns (uint256);
 
@@ -20,4 +21,6 @@ interface IAVPancakeSwapHandler {
   ) external returns (uint256);
 
   function onWithdraw(uint256 _lpToRemove) external returns (uint256, uint256);
+
+  function setWhitelistedCallers(address[] calldata _callers, bool isOk) external;
 }

@@ -111,6 +111,12 @@ abstract contract AV_BaseTest is BaseTest {
     // set treasury
     treasury = address(this);
     adminFacet.setTreasury(treasury);
+
+    // set avHandler whitelist
+    address[] memory _callersOk = new address[](2);
+    _callersOk[0] = address(this);
+    _callersOk[1] = address(avDiamond);
+    handler.setWhitelistedCallers(_callersOk, true);
   }
 
   function setUpMM() internal {
