@@ -7,8 +7,8 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 // interfaces
 import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
-import { IRouterLike } from "../interfaces/IRouterLike.sol";
-import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
+import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
+import { IPancakePair } from "../interfaces/IPancakePair.sol";
 
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
@@ -16,14 +16,14 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
   using SafeERC20 for ERC20;
 
-  IRouterLike public router;
-  ISwapPairLike public lpToken;
+  IPancakeRouter02 public router;
+  IPancakePair public lpToken;
 
   uint256 public totalLpBalance;
 
   function initialize(address _router, address _lpToken) public initializer {
-    router = IRouterLike(_router);
-    lpToken = ISwapPairLike(_lpToken);
+    router = IPancakeRouter02(_router);
+    lpToken = IPancakePair(_lpToken);
   }
 
   function onDeposit(
@@ -42,11 +42,11 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     address _token1,
     uint256 _token0Amount,
     uint256 _token1Amount,
-    uint256 _minLPAmount
-  ) internal returns (uint256 _mintLpAmount) {
+    uint256 _minLpAmountToMint
+  ) internal returns (uint256 _mintedLpAmount) {
     // 1. Approve router to do their stuffs
-    ERC20(_token0).approve(address(router), type(uint256).max);
-    ERC20(_token1).approve(address(router), type(uint256).max);
+    ERC20(_token0).safeApprove(address(router), type(uint256).max);
+    ERC20(_token1).safeApprove(address(router), type(uint256).max);
 
     // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
     uint256 swapAmt;
@@ -61,7 +61,7 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     // 4. Swap according to path
     if (swapAmt > 0) router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
     // 5. Mint more LP tokens and return all LP tokens to the sender.
-    (, , _mintLpAmount) = router.addLiquidity(
+    (, , _mintedLpAmount) = router.addLiquidity(
       _token0,
       _token1,
       ERC20(_token0).balanceOf(address(this)),
@@ -71,13 +71,13 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
       address(this),
       block.timestamp
     );
-    if (_mintLpAmount < _minLPAmount) {
+    if (_mintedLpAmount < _minLpAmountToMint) {
       revert AVPancakeSwapHandler_TooLittleReceived();
     }
 
     // 7. Reset approve to 0 for safety reason
-    ERC20(_token0).approve(address(router), 0);
-    ERC20(_token1).approve(address(router), 0);
+    ERC20(_token0).safeApprove(address(router), 0);
+    ERC20(_token1).safeApprove(address(router), 0);
   }
 
   /// @dev Compute optimal deposit amount
