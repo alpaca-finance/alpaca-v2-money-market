@@ -62,7 +62,7 @@ abstract contract AV_BaseTest is BaseTest {
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    handler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter)));
+    handler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     avShareToken = IAVShareToken(
@@ -147,11 +147,15 @@ abstract contract AV_BaseTest is BaseTest {
     usdc.mint(moneyMarketDiamond, 1000 ether);
   }
 
-  function deployAVPancakeSwapHandler(address _router) internal returns (AVPancakeSwapHandler) {
+  function deployAVPancakeSwapHandler(address _router, address _lpToken) internal returns (AVPancakeSwapHandler) {
     bytes memory _logicBytecode = abi.encodePacked(
       vm.getCode("./out/AVPancakeSwapHandler.sol/AVPancakeSwapHandler.json")
     );
-    bytes memory _initializer = abi.encodeWithSelector(bytes4(keccak256("initialize(address)")), _router);
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,address)")),
+      _router,
+      _lpToken
+    );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return AVPancakeSwapHandler(_proxy);
   }

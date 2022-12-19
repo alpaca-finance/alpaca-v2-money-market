@@ -21,9 +21,9 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
 
   uint256 public totalLpBalance;
 
-  function initialize(address _router) public initializer {
+  function initialize(address _router, address _lpToken) public initializer {
     router = IRouterLike(_router);
-    lpToken = ISwapPairLike(IRouterLike(_router).lpToken());
+    lpToken = ISwapPairLike(_lpToken);
   }
 
   function onDeposit(
