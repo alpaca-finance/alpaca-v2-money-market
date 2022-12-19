@@ -76,7 +76,7 @@ abstract contract AV_BaseTest is BaseTest {
     vm.stopPrank();
 
     // setup token configs
-    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](2);
+    IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](3);
     tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({
       token: address(weth),
       tier: LibAV01.AssetTier.TOKEN,
@@ -85,6 +85,12 @@ abstract contract AV_BaseTest is BaseTest {
     tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({
       token: address(usdc),
       tier: LibAV01.AssetTier.TOKEN,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    // todo: should we set this in openVault
+    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({
+      token: address(wethUsdcLPToken),
+      tier: LibAV01.AssetTier.LP,
       maxToleranceExpiredSecond: block.timestamp
     });
     adminFacet.setTokenConfigs(tokenConfigs);
@@ -99,7 +105,7 @@ abstract contract AV_BaseTest is BaseTest {
 
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
-    mockOracle.setTokenPrice(address(wethUsdcLPToken), 2e18);
+    mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2e18);
 
     // set treasury
     treasury = address(this);
