@@ -163,7 +163,7 @@ library MMDiamondDeployer {
     selectors[6] = BorrowFacet.getGlobalDebt.selector;
     selectors[7] = BorrowFacet.debtLastAccureTime.selector;
     selectors[8] = BorrowFacet.pendingInterest.selector;
-    selectors[9] = BorrowFacet.accureInterest.selector;
+    selectors[9] = BorrowFacet.accrueInterest.selector;
     selectors[10] = BorrowFacet.debtValues.selector;
     selectors[11] = BorrowFacet.debtShares.selector;
     selectors[12] = BorrowFacet.repayWithCollat.selector;
