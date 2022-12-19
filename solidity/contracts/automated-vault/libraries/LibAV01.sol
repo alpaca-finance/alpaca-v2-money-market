@@ -64,21 +64,6 @@ library LibAV01 {
     }
   }
 
-  /// @dev return price in 1e18
-  function getPriceUSD(address _token, AVDiamondStorage storage avDs)
-    internal
-    view
-    returns (uint256 _price, uint256 _lastUpdated)
-  {
-    if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
-    } else {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
-    }
-    if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibAV01_PriceStale(_token);
-  }
-
   function depositToHandler(
     address _shareToken,
     address _token0,
@@ -128,6 +113,21 @@ library LibAV01 {
     ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
   }
 
+  /// @dev return price in 1e18
+  function getPriceUSD(address _token, AVDiamondStorage storage avDs)
+    internal
+    view
+    returns (uint256 _price, uint256 _lastUpdated)
+  {
+    if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
+    } else {
+      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
+    }
+    if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
+      revert LibAV01_PriceStale(_token);
+  }
+
   function borrowMoneyMarket(
     address _shareToken,
     address _token,
@@ -145,17 +145,23 @@ library LibAV01 {
     uint8 _leverageLevel,
     LibAV01.AVDiamondStorage storage avDs
   ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
     (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
+    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
 
     uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
 
     uint256 _stableDepositedValue = (_stableDepositedAmount * _stableTokenTo18ConversionFactor * _stablePrice) / 1e18;
-    uint256 _stableTargetValue = _stableDepositedValue * _leverageLevel;
-    uint256 _stableBorrowValue = _stableTargetValue - _stableDepositedValue;
+    uint256 _targetBorrowValue = _stableDepositedValue * _leverageLevel;
 
-    _stableBorrowAmount = (_stableBorrowValue * 1e18) / (_stablePrice * _stableTokenTo18ConversionFactor);
-    _assetBorrowAmount = (_stableTargetValue * 1e18) / (_assetPrice * _stableTokenTo18ConversionFactor);
+    uint256 _stableBorrowValue = _targetBorrowValue / 2;
+    uint256 _assetBorrowValue = _targetBorrowValue - _stableBorrowValue;
+
+    _stableBorrowAmount =
+      ((_stableBorrowValue - _stableDepositedValue) * 1e18) /
+      (_stablePrice * _stableTokenTo18ConversionFactor);
+    _assetBorrowAmount =
+      (_assetBorrowValue * 1e18) /
+      (_assetPrice * avDs.tokenConfigs[_assetToken].to18ConversionFactor);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
@@ -179,7 +185,8 @@ library LibAV01 {
     uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
     uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
     uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
-    uint256 _lpValue = _lpToValue(_lpAmount, address(_lpToken), avDs);
+    (uint256 _lpTokenPrice, ) = getPriceUSD(address(_lpToken), avDs);
+    uint256 _lpValue = (_lpAmount * _lpTokenPrice) / 1e18;
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }
@@ -192,17 +199,5 @@ library LibAV01 {
     TokenConfig memory _config = avDs.tokenConfigs[_token];
     (uint256 tokenPrice, ) = getPriceUSD(_token, avDs);
     _debtValue = (_amount * _config.to18ConversionFactor * tokenPrice) / 1e18;
-  }
-
-  /// @notice Return value of given lp amount.
-  /// @param _lpAmount Amount of lp.
-  function _lpToValue(
-    uint256 _lpAmount,
-    address _lpToken,
-    AVDiamondStorage storage avDs
-  ) internal view returns (uint256) {
-    (uint256 _lpValue, uint256 _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(_lpAmount, _lpToken);
-    if (block.timestamp - _lastUpdated > 86400) revert LibAV01_PriceStale(_lpToken);
-    return _lpValue;
   }
 }
