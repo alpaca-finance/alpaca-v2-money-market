@@ -103,4 +103,31 @@ contract LYFAdminFacet is ILYFAdminFacet {
       }
     }
   }
+
+  function setLiquidationStratsOk(address[] calldata list, bool _isOk) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _length = list.length;
+    for (uint256 _i; _i < _length; ) {
+      lyfDs.liquidationStratOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
+  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _length = list.length;
+    for (uint256 _i; _i < _length; ) {
+      lyfDs.liquidationCallersOk[list[_i]] = _isOk;
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
+  function setTreasury(address _newTreasury) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.treasury = _newTreasury;
+  }
 }

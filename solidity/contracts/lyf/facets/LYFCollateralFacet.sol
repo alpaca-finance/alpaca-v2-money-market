@@ -33,6 +33,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     LibReentrancyGuard.unlock();
   }
 
+  // TODO: if token is LP we should deposit to masterchef
   function addCollateral(
     address _account,
     uint256 _subAccountId,
