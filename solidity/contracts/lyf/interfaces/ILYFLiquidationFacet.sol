@@ -10,6 +10,26 @@ interface ILYFLiquidationFacet {
     uint256 _amountOut
   );
 
+  event LogLiquidateIb(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
+  event LogLiquidate(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
   error LYFLiquidationFacet_Unauthorized();
   error LYFLiquidationFacet_Healthy();
   error LYFLiquidationFacet_RepayDebtValueTooHigh();
@@ -34,5 +54,16 @@ interface ILYFLiquidationFacet {
     uint256 _lpAmountToLiquidate,
     uint256 _amount0ToRepay,
     uint256 _amount1ToRepay
+  ) external;
+
+  function liquidationCall(
+    address _liquidationStrat,
+    address _account,
+    uint256 _subAccountId,
+    address _repayToken,
+    address _lpToken,
+    address _collatToken,
+    uint256 _repayAmount,
+    bytes calldata _paramsForStrategy
   ) external;
 }
