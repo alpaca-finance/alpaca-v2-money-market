@@ -40,6 +40,7 @@ abstract contract AV_BaseTest is BaseTest {
   IAVPancakeSwapHandler internal handler;
   IAVShareToken internal avShareToken;
 
+  MockRouter internal mockRouter;
   MockLPToken internal wethUsdcLPToken;
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -58,7 +59,7 @@ abstract contract AV_BaseTest is BaseTest {
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     // setup router
-    MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler

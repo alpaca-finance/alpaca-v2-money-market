@@ -37,6 +37,11 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     totalLpBalance += _mintedLpAmount;
   }
 
+  function onWithdraw(uint256 _lpAmountToWithdraw) external returns (uint256 _token0Amount, uint256 _token1Amount) {
+    (_token0Amount, _token1Amount) = removeLiquidity(_lpAmountToWithdraw);
+    totalLpBalance -= _lpAmountToWithdraw;
+  }
+
   function composeLpToken(
     address _token0,
     address _token1,
@@ -78,6 +83,23 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     // 7. Reset approve to 0 for safety reason
     ERC20(_token0).safeApprove(address(router), 0);
     ERC20(_token1).safeApprove(address(router), 0);
+  }
+
+  function removeLiquidity(uint256 _lpToRemove) internal returns (uint256 _token0Return, uint256 _token1Return) {
+    ERC20(address(lpToken)).safeApprove(address(router), type(uint256).max);
+
+    address _token1 = lpToken.token1();
+    address _token0 = lpToken.token0();
+
+    router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
+
+    _token0Return = ERC20(_token0).balanceOf(address(this));
+    _token1Return = ERC20(_token1).balanceOf(address(this));
+
+    ERC20(_token0).safeTransfer(msg.sender, _token0Return);
+    ERC20(_token1).safeTransfer(msg.sender, _token1Return);
+
+    ERC20(address(lpToken)).safeApprove(address(router), 0);
   }
 
   /// @dev Compute optimal deposit amount

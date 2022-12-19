@@ -18,4 +18,6 @@ interface IAVPancakeSwapHandler {
     uint256 _token1Amount,
     uint256 _minLPAmount
   ) external returns (uint256);
+
+  function onWithdraw(uint256 _lpToRemove) external returns (uint256, uint256);
 }
