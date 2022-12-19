@@ -274,7 +274,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
   }
 
-  function liquidateLP(
+  function lpLiquidationCall(
     address _account,
     uint256 _subAccountId,
     address _lpToken,
@@ -283,6 +283,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _amount1ToRepay
   ) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    if (!lyfDs.liquidationCallersOk[msg.sender]) {
+      revert LYFLiquidationFacet_Unauthorized();
+    }
 
     if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
       revert LYFLiquidationFacet_InvalidAssetTier();
@@ -300,8 +304,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     vars.debtShareId0 = lyfDs.debtShareIds[vars.token0][_lpToken];
     vars.debtShareId1 = lyfDs.debtShareIds[vars.token1][_lpToken];
 
-    LibLYF01.accureInterest(vars.debtShareId0, lyfDs);
-    LibLYF01.accureInterest(vars.debtShareId1, lyfDs);
+    LibLYF01.accureAllSubAccountDebtShares(vars.subAccount, lyfDs);
 
     // 0. check borrowing power
     {
@@ -323,12 +326,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     (vars.token0Return, vars.token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
     // 3. repay what we can
-    vars.actualAmount0ToRepay = _getActualDebtToRepurchase(vars.subAccount, vars.debtShareId0, _amount0ToRepay, lyfDs);
+    vars.actualAmount0ToRepay = _getActualRepayAmount(vars.subAccount, vars.debtShareId0, _amount0ToRepay, lyfDs);
     vars.actualAmount0ToRepay = vars.actualAmount0ToRepay > vars.token0Return
       ? vars.token0Return
       : vars.actualAmount0ToRepay;
 
-    vars.actualAmount1ToRepay = _getActualDebtToRepurchase(vars.subAccount, vars.debtShareId1, _amount1ToRepay, lyfDs);
+    vars.actualAmount1ToRepay = _getActualRepayAmount(vars.subAccount, vars.debtShareId1, _amount1ToRepay, lyfDs);
     vars.actualAmount1ToRepay = vars.actualAmount1ToRepay > vars.token1Return
       ? vars.token1Return
       : vars.actualAmount1ToRepay;
@@ -346,6 +349,18 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     vars.remainingAmount1AfterRepay = vars.token1Return - vars.actualAmount1ToRepay;
     if (vars.remainingAmount1AfterRepay > 0)
       LibLYF01.addCollat(vars.subAccount, vars.token1, vars.remainingAmount1AfterRepay, lyfDs);
+
+    emit LogLiquidateLP(
+      msg.sender,
+      _account,
+      _subAccountId,
+      _lpToken,
+      _lpSharesToLiquidate,
+      vars.actualAmount0ToRepay,
+      vars.actualAmount1ToRepay,
+      vars.remainingAmount0AfterRepay,
+      vars.remainingAmount1AfterRepay
+    );
   }
 
   /// @dev min(amountToRepurchase, debtValue)

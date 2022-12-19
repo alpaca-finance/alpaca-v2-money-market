@@ -161,7 +161,7 @@ library LYFDiamondDeployer {
 
     _selectors = new bytes4[](3);
     _selectors[0] = LYFLiquidationFacet.repurchase.selector;
-    _selectors[1] = LYFLiquidationFacet.liquidateLP.selector;
+    _selectors[1] = LYFLiquidationFacet.lpLiquidationCall.selector;
     _selectors[2] = LYFLiquidationFacet.liquidationCall.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(

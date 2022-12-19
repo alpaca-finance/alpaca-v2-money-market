@@ -507,7 +507,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
-    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
 
     // check alice position
     assertEq(
@@ -566,7 +566,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
 
-    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
 
     // check alice position
     assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
@@ -621,7 +621,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
-    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
 
     // check alice position
     assertEq(
@@ -680,7 +680,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(2 ether, 2 ether);
 
-    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
 
     // check alice position
     assertEq(
@@ -740,7 +740,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
   //   mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
   //   mockRouter.setRemoveLiquidityAmountsOut(60 ether, 60 ether);
 
-  //   liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+  //   liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
 
   //   // check alice position
   //   assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
@@ -772,6 +772,6 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_Healthy.selector));
-    liquidationFacet.liquidateLP(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
   }
 }
