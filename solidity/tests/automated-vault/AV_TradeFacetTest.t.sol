@@ -3,6 +3,8 @@ pragma solidity 0.8.17;
 
 import { AV_BaseTest, console } from "./AV_BaseTest.t.sol";
 
+import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
+
 contract AV_TradeFacetTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
@@ -39,6 +41,13 @@ contract AV_TradeFacetTest is AV_BaseTest {
 
     // check liquidty in handler, 30 + 30 / 2 = 30
     assertEq(handler.totalLpBalance(), 30 ether);
+  }
+
+  function testRevert_WhenDepositTokenAndGetTonyShares_ShouldRevert() external {
+    vm.startPrank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(LibAV01.LibAV01_NoTinyShares.selector));
+    tradeFacet.deposit(address(avShareToken), 0.05 ether, 0.05 ether);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenWithdrawToken_ShouldWork() external {

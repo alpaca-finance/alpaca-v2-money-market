@@ -109,7 +109,7 @@ library LibAV01 {
 
     _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
 
-    if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals()) - 1) revert LibAV01_NoTinyShares();
+    if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
   }
 
   function withdraw(
