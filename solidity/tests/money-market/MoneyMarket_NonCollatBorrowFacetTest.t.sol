@@ -3,6 +3,9 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
 
+// libs
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+
 // interfaces
 import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
@@ -121,7 +124,21 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(_totalwethDebtAmount, _aliceBorrowAmount * 2);
   }
 
-  function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
+  function testRevert_WhenProtocolBorrowMoreThanAvailable_ShouldRevert() external {
+    // make sure that token limit will not hit
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 1e30,
+      maxAccountBorrow: 1e30,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
     uint256 _aliceBorrowAmount = 30 ether;
 
     vm.startPrank(ALICE);
@@ -226,9 +243,22 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
     _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: _aliceBorrowLimit });
+    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
+
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 1e30,
+      maxAccountBorrow: 1e30,
+      maxCollateral: 100e18,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
 
     uint256 _expectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
-    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
     vm.prank(ALICE);
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -237,6 +267,50 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
         0,
         _expectBorrowingPower
       )
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanTokenGlobalLimit_ShouldRevert() external {
+    uint256 _wethGlobalLimit = 10 ether;
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: _wethGlobalLimit,
+      maxAccountBorrow: 5 ether,
+      maxCollateral: 100 ether,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
+    uint256 _aliceBorrowAmount = _wethGlobalLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanTokenAccountLimit_ShouldRevert() external {
+    uint256 _wethAccountLimit = 5 ether;
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 10 ether,
+      maxAccountBorrow: _wethAccountLimit,
+      maxCollateral: 100 ether,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
+    uint256 _aliceBorrowAmount = _wethAccountLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
   }

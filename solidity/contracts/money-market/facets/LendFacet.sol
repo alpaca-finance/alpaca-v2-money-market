@@ -60,6 +60,7 @@ contract LendFacet is ILendFacet {
       borrowingFactor: 8500,
       maxCollateral: 0,
       maxBorrow: 100e18,
+      maxAccountBorrow: 100e18,
       maxToleranceExpiredSecond: 86400,
       to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
     });

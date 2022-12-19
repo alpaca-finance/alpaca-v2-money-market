@@ -152,9 +152,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // check credit
     (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
 
+    // if(moneyMarketDs.globalDebt[_token] + _amount > limit)
+
     _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
 
-    _checkAvailableToken(_token, _amount, moneyMarketDs);
+    _checkAvailableAndTokenLimit(_token, _amount, moneyMarketDs);
   }
 
   // TODO: gas optimize on oracle call
@@ -179,7 +181,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
   }
 
-  function _checkAvailableToken(
+  function _checkAvailableAndTokenLimit(
     address _token,
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
@@ -189,13 +191,18 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     if (_mmTokenBalnce < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
-    // in order to find total non-collat borrow
-    // we can use globalDebt - over-collat debt
 
-    uint256 _nonCollatDebt = moneyMarketDs.globalDebts[_token] - moneyMarketDs.debtValues[_token];
-
-    if (_borrowAmount + _nonCollatDebt > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+    // check if accumulated borrowAmount exceed global limit
+    if (_borrowAmount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
+    }
+
+    // if check accumulated borrowAmount exceed account limit
+    if (
+      _borrowAmount + moneyMarketDs.nonCollatAccountDebtValues[msg.sender].getAmount(_token) >
+      moneyMarketDs.tokenConfigs[_token].maxAccountBorrow
+    ) {
+      revert NonCollatBorrowFacet_ExceedAccountBorrowLimit();
     }
   }
 

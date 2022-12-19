@@ -97,6 +97,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
+      maxAccountBorrow: 20e18,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -107,6 +108,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
+      maxAccountBorrow: 1e24,
       maxCollateral: 10e24,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -116,7 +118,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 0,
+      maxAccountBorrow: 0,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -127,6 +130,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
+      maxAccountBorrow: 30e18,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -137,6 +141,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
+      maxAccountBorrow: 30e18,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -146,7 +151,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 0,
+      maxAccountBorrow: 0,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });

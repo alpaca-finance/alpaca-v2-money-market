@@ -286,7 +286,7 @@ contract BorrowFacet is IBorrowFacet {
 
     _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, moneyMarketDs);
 
-    _checkAvailableToken(_token, _amount, moneyMarketDs);
+    _checkAvailableAndTokenLimit(_token, _amount, moneyMarketDs);
   }
 
   // TODO: gas optimize on oracle call
@@ -312,7 +312,7 @@ contract BorrowFacet is IBorrowFacet {
     }
   }
 
-  function _checkAvailableToken(
+  function _checkAvailableAndTokenLimit(
     address _token,
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
@@ -323,7 +323,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
-    if (_borrowAmount + moneyMarketDs.debtValues[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+    if (_borrowAmount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert BorrowFacet_ExceedBorrowLimit();
     }
   }
