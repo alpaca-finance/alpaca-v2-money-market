@@ -32,18 +32,18 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLPAmount
-  ) external returns (uint256 _mintLpAmount) {
-    _mintLpAmount = composeLP(_token0, _token1, _token0Amount, _token1Amount, _minLPAmount);
-    totalLpBalance += _mintLpAmount;
+  ) external returns (uint256 _mintedLiquidity) {
+    _mintedLiquidity = composeLiquidity(_token0, _token1, _token0Amount, _token1Amount, _minLPAmount);
+    totalLpBalance += _mintedLiquidity;
   }
 
-  function composeLP(
+  function composeLiquidity(
     address _token0,
     address _token1,
     uint256 _token0Amount,
     uint256 _token1Amount,
-    uint256 _minLpAmountToMint
-  ) internal returns (uint256 _mintedLpAmount) {
+    uint256 _minLiquidityToMint
+  ) internal returns (uint256 _mintedLiquidity) {
     // 1. Approve router to do their stuffs
     ERC20(_token0).safeApprove(address(router), type(uint256).max);
     ERC20(_token1).safeApprove(address(router), type(uint256).max);
@@ -61,7 +61,7 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     // 4. Swap according to path
     if (swapAmt > 0) router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
     // 5. Mint more LP tokens and return all LP tokens to the sender.
-    (, , _mintedLpAmount) = router.addLiquidity(
+    (, , _mintedLiquidity) = router.addLiquidity(
       _token0,
       _token1,
       ERC20(_token0).balanceOf(address(this)),
@@ -71,7 +71,7 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
       address(this),
       block.timestamp
     );
-    if (_mintedLpAmount < _minLpAmountToMint) {
+    if (_mintedLiquidity < _minLiquidityToMint) {
       revert AVPancakeSwapHandler_TooLittleReceived();
     }
 
