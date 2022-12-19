@@ -65,7 +65,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
@@ -116,7 +116,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     uint256 _bobBtcBalanceBefore = btc.balanceOf(BOB);
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
@@ -178,7 +178,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     uint256 _bobIbWethBalanceBefore = ibWeth.balanceOf(BOB);
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
@@ -226,7 +226,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 29 ether, 31 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
     // bob try to liquidate 40 usdc, get capped at 31 usdc, should fail because it is more than half of total debt
     vm.prank(BOB);
@@ -246,7 +246,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockOracle.setTokenPrice(address(btc), 0.5 ether);
 
     // bob try to liquidate 30 usdc, should fail because btc collat value is less than 30 usd
@@ -266,7 +266,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_TooLittleReceived.selector));

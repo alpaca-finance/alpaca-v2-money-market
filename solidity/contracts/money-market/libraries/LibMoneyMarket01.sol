@@ -114,6 +114,14 @@ library LibMoneyMarket01 {
     // reward token
     mapping(address => uint256) totalLendingPoolAllocPoints;
     mapping(address => uint256) totalBorrowingPoolAllocPoints;
+    // fees
+    uint256 lendingFeeBps;
+    uint256 repurchaseRewardBps;
+    uint256 repurchaseFeeBps;
+    uint256 liquidationFeeBps;
+    // reserve pool
+
+    mapping(address => uint256) reservePools;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -147,7 +155,7 @@ library LibMoneyMarket01 {
         _actualToken = _collatToken;
       } else {
         uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
-        uint256 _totalToken = getTotalToken(_actualToken, moneyMarketDs);
+        uint256 _totalToken = getTotalTokenWithPendingInterest(_actualToken, moneyMarketDs);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
       }
@@ -337,11 +345,15 @@ library LibMoneyMarket01 {
       uint256 _totalNonCollatInterest = accrueNonCollatDebt(_token, _timePast, moneyMarketDs);
 
       // update global debt
-      moneyMarketDs.globalDebts[_token] += (_overCollatInterest + _totalNonCollatInterest);
+      uint256 _totalInterest = (_overCollatInterest + _totalNonCollatInterest);
+      moneyMarketDs.globalDebts[_token] += _totalInterest;
       // update overcollat debt
       moneyMarketDs.debtValues[_token] += _overCollatInterest;
       // update timestamp
       moneyMarketDs.debtLastAccureTime[_token] = block.timestamp;
+
+      // book protocol's revenue
+      moneyMarketDs.reservePools[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
     }
   }
 
@@ -387,7 +399,8 @@ library LibMoneyMarket01 {
     }
   }
 
-  // totalToken is the amount of token remains in MM + borrowed amount - collateral from user
+  // totalToken is the amount of token remains in ((MM + borrowed amount)
+  // - (collateral from user + protocol's reserve pool)
   // where borrowed amount consists of over-collat and non-collat borrowing
   function getTotalToken(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
@@ -395,7 +408,18 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     return
-      (IERC20(_token).balanceOf(address(this)) + moneyMarketDs.globalDebts[_token]) - moneyMarketDs.collats[_token];
+      (IERC20(_token).balanceOf(address(this)) + moneyMarketDs.globalDebts[_token]) -
+      (moneyMarketDs.collats[_token] + moneyMarketDs.reservePools[_token]);
+  }
+
+  function getTotalTokenWithPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256)
+  {
+    return
+      getTotalToken(_token, moneyMarketDs) +
+      ((pendingInterest(_token, moneyMarketDs) * moneyMarketDs.lendingFeeBps) / LibMoneyMarket01.MAX_BPS);
   }
 
   function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -443,7 +467,7 @@ library LibMoneyMarket01 {
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
     uint256 _one = 10**IERC20(_ibToken).decimals();
 
-    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
+    uint256 _totalToken = getTotalTokenWithPendingInterest(_token, moneyMarketDs);
     uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
 
     uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;

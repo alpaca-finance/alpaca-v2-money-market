@@ -200,5 +200,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.addBorrowingPool(address(rewardToken), address(usdc), 40);
 
     adminFacet.setTreasury(address(this));
+
+    // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
+    adminFacet.setFees(0, 100, 100, 100);
   }
 }

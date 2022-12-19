@@ -7,6 +7,7 @@ import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -26,7 +27,8 @@ contract AVAdminFacet is IAVAdminFacet {
     uint8 _leverageLevel,
     uint16 _managementFeePerSec
   ) external onlyOwner returns (address _newShareToken) {
-    if (_handler == address(0)) revert AVAdminFacet_InvalidHandler();
+    // sanity call
+    IAVHandler(_handler).totalLpBalance();
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     string memory _tokenSymbol = ERC20(_lpToken).symbol();

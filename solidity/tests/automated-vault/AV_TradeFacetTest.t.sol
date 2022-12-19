@@ -45,7 +45,7 @@ contract AV_TradeFacetTest is AV_BaseTest {
     assertEq(handler.totalLpBalance(), 15 ether);
   }
 
-  function testRevert_WhenDepositTokenAndGetTonyShares_ShouldRevert() external {
+  function testRevert_WhenDepositTokenAndGetTinyShares_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(LibAV01.LibAV01_NoTinyShares.selector));
     tradeFacet.deposit(address(avShareToken), 0.05 ether, 0.05 ether);

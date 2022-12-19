@@ -211,7 +211,7 @@ abstract contract LYF_BaseTest is BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     mockOracle.setTokenPrice(address(btc), 10e18);
     mockOracle.setTokenPrice(address(isolateToken), 1e18);
-    mockOracle.setTokenPrice(address(wethUsdcLPToken), 2e18);
+    mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2e18);
 
     chainLinkOracle = deployMockChainLinkPriceOracle();
 
