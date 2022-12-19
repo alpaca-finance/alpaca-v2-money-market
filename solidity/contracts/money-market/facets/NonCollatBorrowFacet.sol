@@ -30,7 +30,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
@@ -71,7 +71,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     uint256 _oldDebtValue = _getDebt(_account, _token, moneyMarketDs);
 

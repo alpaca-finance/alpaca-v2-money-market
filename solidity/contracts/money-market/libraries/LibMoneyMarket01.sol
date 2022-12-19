@@ -331,7 +331,7 @@ library LibMoneyMarket01 {
     return IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
   }
 
-  function accureInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
+  function accrueInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
     uint256 _lastAccureTime = moneyMarketDs.debtLastAccureTime[_token];
     if (block.timestamp > _lastAccureTime) {
       uint256 _timePast = block.timestamp - _lastAccureTime;
@@ -392,7 +392,7 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
-      accureInterest(_borrowed[_i].token, moneyMarketDs);
+      accrueInterest(_borrowed[_i].token, moneyMarketDs);
       unchecked {
         _i++;
       }
@@ -489,7 +489,7 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _shareValue) {
     address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
-    accureInterest(_token, moneyMarketDs);
+    accrueInterest(_token, moneyMarketDs);
 
     if (_token == address(0)) {
       revert LibMoneyMarket01_InvalidToken(_ibToken);

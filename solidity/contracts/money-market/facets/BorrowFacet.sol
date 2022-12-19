@@ -50,8 +50,8 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
-    // interest must accure first
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    // interest must accrue first
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     _validate(_subAccount, _token, _amount, moneyMarketDs);
 
@@ -93,7 +93,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _repayAmount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
@@ -362,9 +362,9 @@ contract BorrowFacet is IBorrowFacet {
     return LibMoneyMarket01.pendingInterest(_token, moneyMarketDs);
   }
 
-  function accureInterest(address _token) external {
+  function accrueInterest(address _token) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
   }
 
   function debtValues(address _token) external view returns (uint256) {
