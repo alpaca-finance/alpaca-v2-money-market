@@ -152,8 +152,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // check credit
     (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
 
-    // if(moneyMarketDs.globalDebt[_token] + _amount > limit)
-
     _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
 
     _checkAvailableAndTokenLimit(_token, _amount, moneyMarketDs);
