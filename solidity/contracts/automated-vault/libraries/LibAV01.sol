@@ -89,8 +89,6 @@ library LibAV01 {
   ) internal returns (uint256 _shareToMint) {
     address _handler = avDs.vaultConfigs[_shareToken].handler;
 
-    if (_handler == address(0)) revert LibAV01_InvalidHandler();
-
     ERC20(_token0).safeTransfer(_handler, _desiredAmount0);
     ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
 
@@ -177,16 +175,13 @@ library LibAV01 {
     address _token0 = _lpToken.token0();
     address _token1 = _lpToken.token1();
     uint256 _lpAmount = IAVPancakeSwapHandler(_handler).totalLpBalance();
-    if (_lpAmount > 0) {
-      // get price USD
-      uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
-      uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
-      uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
-      uint256 _lpValue = _lpToValue(_lpAmount, address(_lpToken), avDs);
 
-      // todo: tbd
-      _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
-    }
+    uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
+    uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
+    uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
+    uint256 _lpValue = _lpToValue(_lpAmount, address(_lpToken), avDs);
+
+    _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }
 
   function _getDebtValueInUSD(
