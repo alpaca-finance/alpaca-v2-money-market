@@ -11,6 +11,7 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { Math } from "../libraries/Math.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
@@ -123,9 +124,7 @@ contract BorrowFacet is IBorrowFacet {
 
     (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _maximumAmountToRemove = _collateralAmount > _oldDebtAmount ? _oldDebtAmount : _collateralAmount;
-
-    uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
+    uint256 _amountToRemove = Math.min(_repayAmount, Math.min(_oldDebtAmount, _collateralAmount));
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _amountToRemove,
