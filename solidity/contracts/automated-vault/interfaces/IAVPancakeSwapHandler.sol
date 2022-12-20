@@ -9,4 +9,5 @@ interface IAVPancakeSwapHandler is IAVHandler {
   error AVPancakeSwapHandler_TooLittleReceived();
   error AVPancakeSwapHandler_TransferFailed();
   error AVPancakeSwapHandler_Reverse();
+  error AVPancakeSwapHandler_Unauthorized(address);
 }
