@@ -16,6 +16,8 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
@@ -382,7 +384,7 @@ library LibMoneyMarket01 {
   }
 
   // totalToken is the amount of token remains in ((MM + borrowed amount)
-  // - (collateral from user + protocol's reserve pool)
+  // - (protocol's reserve pool)
   // where borrowed amount consists of over-collat and non-collat borrowing
   function getTotalToken(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
@@ -390,8 +392,7 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     return
-      (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) -
-      (moneyMarketDs.collats[_token] + moneyMarketDs.protocolReserves[_token]);
+      (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) - (moneyMarketDs.protocolReserves[_token]);
   }
 
   function getTotalTokenWithPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -409,7 +410,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _floating)
   {
-    _floating = moneyMarketDs.reserves[_token] - moneyMarketDs.collats[_token];
+    _floating = moneyMarketDs.reserves[_token];
   }
 
   function setIbPair(
@@ -484,6 +485,10 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NoTinyShares();
     }
 
+    console.log("reserve", moneyMarketDs.reserves[_token]);
+    console.log("balanceof", ERC20(_token).balanceOf(address(this)));
+    console.log("_shareValue", _shareValue);
+
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _shareValue;
 
@@ -521,7 +526,6 @@ library LibMoneyMarket01 {
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
     ds.collats[_token] += _addAmount;
-    ds.reserves[_token] += _addAmount;
   }
 
   function removeCollat(
@@ -533,8 +537,6 @@ library LibMoneyMarket01 {
     removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
 
     ds.collats[_token] -= _removeAmount;
-    if (_removeAmount > ds.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
-    ds.reserves[_token] -= _removeAmount;
   }
 
   function removeCollatFromSubAccount(

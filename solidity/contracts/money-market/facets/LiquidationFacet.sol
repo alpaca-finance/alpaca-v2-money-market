@@ -94,8 +94,8 @@ contract LiquidationFacet is ILiquidationFacet {
     _reduceDebt(_subAccount, _repayToken, _actualRepayAmountWithFee - _repurchaseFee, moneyMarketDs);
     _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
 
-    moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithFee - _repurchaseFee;
-    moneyMarketDs.reserves[_collatToken] -= _collatAmountOut;
+    moneyMarketDs.reserves[_repayToken] += (_actualRepayAmountWithFee - _repurchaseFee);
+
     ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmountWithFee);
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
     ERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, _repurchaseFee);
@@ -191,7 +191,6 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
-    moneyMarketDs.reserves[params.collatToken] -= _collatSold;
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
     ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
@@ -250,7 +249,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
-    moneyMarketDs.reserves[_collatUnderlyingToken] -= _underlyingSold;
+
     uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
 
     ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);

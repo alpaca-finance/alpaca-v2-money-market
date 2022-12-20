@@ -888,6 +888,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
     uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    console.log("_totalSupplyIbWethBefore", _totalSupplyIbWethBefore);
+    console.log("_totalWethInMMBefore", _totalWethInMMBefore);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 ether USD

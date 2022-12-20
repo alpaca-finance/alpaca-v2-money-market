@@ -298,8 +298,17 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     // alice should get = 10 * 20.002820306204288 / 20 = 10.2 eth
     uint256 _expectdAmount = 10.001410153102144 ether;
     _aliceBalanceBefore = usdc.balanceOf(ALICE);
+    //can't withdraw because there's no reserve
+    vm.expectRevert(abi.encodeWithSignature("LibMoneyMarket01_NotEnoughToken()"));
     vm.prank(ALICE);
     lendFacet.withdraw(address(ibUsdc), _borrowAmount);
+
+    // once there's lender, alice can now withdraw
+    vm.prank(BOB);
+    lendFacet.deposit(address(usdc), _expectdAmount);
+    vm.prank(ALICE);
+    lendFacet.withdraw(address(ibUsdc), _borrowAmount);
+
     _aliceBalanceAfter = usdc.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _expectdAmount, "ALICE weth balance missmatch");
