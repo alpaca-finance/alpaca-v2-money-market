@@ -81,11 +81,10 @@ contract AVTradeFacet is IAVTradeFacet {
 
     (uint256 _stableTokenAmount, uint256 _assetTokenAmount) = LibAV01.withdrawFromHandler(
       _shareToken,
-      _shareToWithdraw,
+      _shareValueToWithdraw,
       avDs
     );
 
-    // repay
     (uint256 _tokenPrice, ) = LibAV01.getPriceUSD(vaultConfig.stableToken, avDs);
     uint256 _amountToReturn = (_shareValueToWithdraw * 1e18) /
       (_tokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
@@ -93,13 +92,14 @@ contract AVTradeFacet is IAVTradeFacet {
     if (_amountToReturn < _minTokenOut) revert AVTradeFacet_TooLittleReceived();
     if (_amountToReturn > _stableTokenAmount) revert AVTradeFacet_InsufficientAmount();
 
+    // repay to MM
     LibAV01.repayMoneyMarket(_shareToken, vaultConfig.stableToken, _stableTokenAmount - _amountToReturn, avDs);
     LibAV01.repayMoneyMarket(_shareToken, vaultConfig.assetToken, _assetTokenAmount, avDs);
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareToWithdraw);
     ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _amountToReturn);
 
-    emit LogWithdraw();
+    emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _amountToReturn);
   }
 
   function getDebtValues(address _shareToken) external view returns (uint256, uint256) {

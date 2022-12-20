@@ -10,7 +10,13 @@ interface IAVTradeFacet {
     uint256 amountStableDeposited
   );
   // todo: add fields
-  event LogWithdraw();
+  event LogWithdraw(
+    address indexed user,
+    address indexed shareToken,
+    uint256 burnedAmount,
+    address stableToken,
+    uint256 returnedAmount
+  );
 
   error AVTradeFacet_TooLittleReceived();
   error AVTradeFacet_InsufficientAmount();

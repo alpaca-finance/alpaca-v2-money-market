@@ -4,12 +4,22 @@ pragma solidity 0.8.17;
 import { AV_BaseTest, console } from "./AV_BaseTest.t.sol";
 
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
+import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 
+/** 
+  Test cases
+  deposit passed case - testCorrectness_WhenDepositToken_ShouldWork
+  deposit revert case: tiny amount - testRevert_WhenDepositTokenAndGetTinyShares_ShouldRevert
+  withdraw passed case: testCorrectness_WhenWithdrawToken_ShouldWork
+  withdraw revert case: too much returned amount - testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert
+  withdraw revert case: get too low amount after remove liquidity - testRevert_WhenWithdrawAndGetTokenLessThanExpectation_ShouldRevert
+**/
 contract AV_TradeFacetTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
   }
 
+  // todo: test with management fee
   function testCorrectness_WhenDepositToken_ShouldWork() external {
     uint256 aliceUsdcBefore = usdc.balanceOf(ALICE);
     vm.prank(ALICE);
@@ -56,11 +66,10 @@ contract AV_TradeFacetTest is AV_BaseTest {
     vm.stopPrank();
   }
 
+  // todo: test with management fee
   function testCorrectness_WhenWithdrawToken_ShouldWork() external {
     vm.prank(ALICE);
     tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
-
-    assertEq(avShareToken.balanceOf(ALICE), 10 ether);
 
     (uint256 _stableDebtValueBefore, uint256 _assetDebtValueBefore) = tradeFacet.getDebtValues(address(avShareToken));
 
@@ -88,7 +97,7 @@ contract AV_TradeFacetTest is AV_BaseTest {
     // repay debt amount (token0): 7.5
     uint256 aliceUsdcBefore = usdc.balanceOf(ALICE);
     vm.prank(ALICE);
-    tradeFacet.withdraw(address(avShareToken), 5 ether, 0);
+    tradeFacet.withdraw(address(avShareToken), 5 ether, 5 ether);
 
     assertEq(avShareToken.balanceOf(ALICE), 5 ether);
     // alice should get correct token return amount
@@ -103,5 +112,25 @@ contract AV_TradeFacetTest is AV_BaseTest {
     assertEq(handler.totalLpBalance(), 7.503749999999999994 ether);
   }
 
-  // TODO: test management fee to treasury
+  function testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert() external {
+    vm.startPrank(ALICE);
+    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
+
+    vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_TooLittleReceived.selector));
+    tradeFacet.withdraw(address(avShareToken), 5 ether, type(uint256).max);
+
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenWithdrawAndGetTokenLessThanExpectation_ShouldRevert() external {
+    vm.startPrank(ALICE);
+    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
+
+    mockRouter.setRemoveLiquidityAmountsOut(1 ether, 7.5 ether);
+
+    vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_InsufficientAmount.selector));
+    tradeFacet.withdraw(address(avShareToken), 5 ether, 5 ether);
+
+    vm.stopPrank();
+  }
 }
