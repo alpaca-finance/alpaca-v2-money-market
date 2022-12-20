@@ -13,13 +13,14 @@ import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTra
   withdraw passed case: testCorrectness_WhenWithdrawToken_ShouldWork
   withdraw revert case: too much returned amount - testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert
   withdraw revert case: get too low amount after remove liquidity - testRevert_WhenWithdrawAndGetTokenLessThanExpectation_ShouldRevert
+  management fee passed case: get pending correctly - testCorrectness_GetPendingManagementFee
+  management fee passed case: fee is corrected when withdraw - testCorrectness_WhenDepositAndWithdraw_ShouldMintPendingManagementFeeToTreasury
 **/
 contract AV_TradeFacetTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
   }
 
-  // todo: test with management fee
   function testCorrectness_WhenDepositToken_ShouldWork() external {
     uint256 aliceUsdcBefore = usdc.balanceOf(ALICE);
     vm.prank(ALICE);
@@ -66,7 +67,6 @@ contract AV_TradeFacetTest is AV_BaseTest {
     vm.stopPrank();
   }
 
-  // todo: test with management fee
   function testCorrectness_WhenWithdrawToken_ShouldWork() external {
     vm.prank(ALICE);
     tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
@@ -135,7 +135,6 @@ contract AV_TradeFacetTest is AV_BaseTest {
   }
 
   // managment fee tests
-
   function testCorrectness_GetPendingManagementFee() external {
     // managementFeePerSec = 1, set in AV_BaseTest
 
@@ -155,18 +154,27 @@ contract AV_TradeFacetTest is AV_BaseTest {
     assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0);
 
     vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 1 ether, 1 ether);
+    tradeFacet.deposit(address(avShareToken), 5 ether, 5 ether);
 
     assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0); // fee was collected during deposit, so no more pending fee in the same block
     assertEq(avShareToken.balanceOf(treasury), 0);
 
     vm.warp(2);
-    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 1);
-
     vm.prank(ALICE);
-    tradeFacet.withdraw(address(avShareToken), 1 ether, 0);
+    tradeFacet.deposit(address(avShareToken), 5 ether, 5 ether); // fee should distribute if deposit again
 
     assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0);
-    assertEq(avShareToken.balanceOf(treasury), 1);
+    assertEq(avShareToken.balanceOf(treasury), 5);
+
+    vm.warp(3);
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 10);
+
+    mockRouter.setRemoveLiquidityAmountsOut(7.5 ether, 7.5 ether);
+
+    vm.prank(ALICE);
+    tradeFacet.withdraw(address(avShareToken), 5 ether, 0);
+
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0);
+    assertEq(avShareToken.balanceOf(treasury), 15);
   }
 }
