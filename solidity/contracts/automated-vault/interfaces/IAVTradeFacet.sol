@@ -34,4 +34,6 @@ interface IAVTradeFacet {
   ) external;
 
   function getDebtValues(address _shareToken) external view returns (uint256, uint256);
+
+  function pendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee);
 }

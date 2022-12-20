@@ -75,7 +75,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterestAfter, 1e18);
-    borrowFacet.accureInterest(address(weth));
+    borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
 
@@ -115,7 +115,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfterBorrow - _bobBalanceBeforeBorrow, _bobBorrowAmount);
     vm.warp(block.timestamp + 10);
 
-    borrowFacet.accureInterest(address(weth));
+    borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualBobDebtAmountAfter) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
 
     assertEq(_actualBobDebtAmountAfter - _actualBobDebtAmountBeforeWarp, 1 ether);
@@ -339,7 +339,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterestAfter, 4e18);
-    borrowFacet.accureInterest(address(weth));
+    borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
     uint256 _bobNonCollatDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
@@ -387,7 +387,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
 
     uint256 _actualInterestAfter = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterestAfter, 4e18);
-    borrowFacet.accureInterest(address(weth));
+    borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
     uint256 _bobNonCollatDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
@@ -443,7 +443,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     uint256 _secondPassed = 1 days;
     vm.warp(block.timestamp + _secondPassed);
 
-    borrowFacet.accureInterest(address(btc));
+    borrowFacet.accrueInterest(address(btc));
 
     // alice and bob both borrowed 15 on each, total is 30, pool has 100 btc, utilization = 30%
     // for alice has interest rate = 6.1764705867600000% per year
