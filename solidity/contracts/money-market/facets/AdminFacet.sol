@@ -19,8 +19,6 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogSetRewardDistributor(address indexed _address);
-
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
