@@ -31,7 +31,7 @@ library LibLYF01 {
 
   uint256 internal constant MAX_BPS = 10000;
 
-  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToprotocolReserve);
+  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
   event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
 
   error LibLYF01_BadSubAccountId();

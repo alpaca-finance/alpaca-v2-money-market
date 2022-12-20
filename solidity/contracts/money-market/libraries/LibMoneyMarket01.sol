@@ -38,7 +38,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_BorrowingPowerTooLow();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToprotocolReserve);
+  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
 
   enum AssetTier {
     UNLISTED,
