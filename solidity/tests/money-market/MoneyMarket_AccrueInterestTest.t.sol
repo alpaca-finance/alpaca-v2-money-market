@@ -10,7 +10,7 @@ import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/mone
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
-contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
+contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -79,8 +79,8 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     (, uint256 _actualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
 
-    uint256 _actualAccureTime = borrowFacet.debtLastAccureTime(address(weth));
-    assertEq(_actualAccureTime, block.timestamp);
+    uint256 _actualAccrueTime = borrowFacet.debtLastAccrueTime(address(weth));
+    assertEq(_actualAccrueTime, block.timestamp);
   }
 
   function testCorrectness_WhenAddCollateralAndUserBorrow_ShouldNotGetInterest() external {
@@ -133,7 +133,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     alice deposit
     bob borrow
   */
-  function testCorrectness_WhenMultipleUserBorrow_ShouldAccureInterestCorrectly() external {
+  function testCorrectness_WhenMultipleUserBorrow_ShouldaccrueInterestCorrectly() external {
     // BOB add ALICE add collateral
     uint256 _actualInterest = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterest, 0);
@@ -160,7 +160,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     // time past
     vm.warp(block.timestamp + 10);
 
-    // ALICE borrow and bob's interest accure
+    // ALICE borrow and bob's interest accrue
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = weth.balanceOf(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
@@ -169,7 +169,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
-    assertEq(borrowFacet.debtLastAccureTime(address(weth)), block.timestamp);
+    assertEq(borrowFacet.debtLastAccrueTime(address(weth)), block.timestamp);
 
     // assert BOB
     (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
@@ -205,7 +205,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenUserCallDeposit_InterestShouldAccrue() external {
     uint256 _timeStampBefore = block.timestamp;
     uint256 _secondPassed = 10;
-    assertEq(borrowFacet.debtLastAccureTime(address(weth)), _timeStampBefore);
+    assertEq(borrowFacet.debtLastAccrueTime(address(weth)), _timeStampBefore);
 
     vm.warp(block.timestamp + _secondPassed);
 
@@ -214,7 +214,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
-    assertEq(borrowFacet.debtLastAccureTime(address(weth)), _timeStampBefore + _secondPassed);
+    assertEq(borrowFacet.debtLastAccrueTime(address(weth)), _timeStampBefore + _secondPassed);
   }
 
   function testCorrectness_WhenUserCallWithdraw_InterestShouldAccrue() external {
@@ -224,17 +224,17 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     lendFacet.deposit(address(weth), 10 ether);
 
-    assertEq(borrowFacet.debtLastAccureTime(address(weth)), _timeStampBefore);
+    assertEq(borrowFacet.debtLastAccrueTime(address(weth)), _timeStampBefore);
 
     vm.warp(block.timestamp + _secondPassed);
 
     vm.prank(ALICE);
     lendFacet.withdraw(address(ibWeth), 10 ether);
 
-    assertEq(borrowFacet.debtLastAccureTime(address(weth)), _timeStampBefore + _secondPassed);
+    assertEq(borrowFacet.debtLastAccrueTime(address(weth)), _timeStampBefore + _secondPassed);
   }
 
-  function testCorrectness_WhenMMUseTripleSlopeInterestModel_InterestShouldAccureCorrectly() external {
+  function testCorrectness_WhenMMUseTripleSlopeInterestModel_InterestShouldAccrueCorrectly() external {
     // BOB add ALICE add collateral
     uint256 _actualInterest = borrowFacet.pendingInterest(address(usdc));
     assertEq(_actualInterest, 0);
@@ -262,7 +262,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     uint256 _secondPassed = 1 days;
     vm.warp(block.timestamp + _secondPassed);
 
-    // ALICE borrow and bob's interest accure
+    // ALICE borrow and bob's interest accrue
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = usdc.balanceOf(ALICE);
     borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
@@ -271,7 +271,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     uint256 _aliceBalanceAfter = usdc.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
-    assertEq(borrowFacet.debtLastAccureTime(address(usdc)), block.timestamp);
+    assertEq(borrowFacet.debtLastAccrueTime(address(usdc)), block.timestamp);
 
     // assert BOB
     (, uint256 _bobActualDebtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(usdc));
@@ -305,7 +305,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _expectdAmount, "ALICE weth balance missmatch");
   }
 
-  function testCorrectness_WhenUserBorrowBothOverCollatAndNonCollat_ShouldAccureInterestCorrectly() external {
+  function testCorrectness_WhenUserBorrowBothOverCollatAndNonCollat_ShouldaccrueInterestCorrectly() external {
     uint256 _actualInterest = borrowFacet.pendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
@@ -347,8 +347,8 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
     assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
 
-    uint256 _actualAccureTime = borrowFacet.debtLastAccureTime(address(weth));
-    assertEq(_actualAccureTime, block.timestamp);
+    uint256 _actualAccrueTime = borrowFacet.debtLastAccrueTime(address(weth));
+    assertEq(_actualAccrueTime, block.timestamp);
   }
 
   function testCorrectness_WhenAccrueInterestAndThereIsLendingFee_ProtocolShouldGetRevenue() external {
@@ -395,8 +395,8 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
     assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
 
-    uint256 _actualAccureTime = borrowFacet.debtLastAccureTime(address(weth));
-    assertEq(_actualAccureTime, block.timestamp);
+    uint256 _actualAccrueTime = borrowFacet.debtLastAccrueTime(address(weth));
+    assertEq(_actualAccrueTime, block.timestamp);
 
     // total token without lending fee = 54000000000000000000
     // 100 bps for lending fee on interest = (4e18 * 100 / 10000) = 4 e16
@@ -417,7 +417,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
   }
 
-  function testCorrectness_WhenUsersBorrowSameTokenButDifferentInterestModel_ShouldAccureInterestCorrectly() external {
+  function testCorrectness_WhenUsersBorrowSameTokenButDifferentInterestModel_ShouldaccrueInterestCorrectly() external {
     uint256 _aliceBorrowAmount = 15 ether;
     uint256 _bobBorrowAmount = 15 ether;
 
@@ -465,7 +465,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldAccureInterestForAllBorrowedToken()
+  function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldaccrueInterestForAllBorrowedToken()
     external
   {
     // ALICE add collateral
@@ -486,7 +486,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     vm.warp(block.timestamp + 10);
 
     vm.startPrank(ALICE);
-    // remove collateral will trigger accure interest on all borrowed token
+    // remove collateral will trigger accrue interest on all borrowed token
     collateralFacet.removeCollateral(subAccount0, address(weth), 0);
     vm.stopPrank();
 
@@ -502,7 +502,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     assertGt(borrowFacet.debtValues(address(usdc)), _borrowAmount);
   }
 
-  function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldAccureInterestForAllBorrowedToken()
+  function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldaccrueInterestForAllBorrowedToken()
     external
   {
     // ALICE add collateral
@@ -523,7 +523,7 @@ contract MoneyMarket_AccureInterestTest is MoneyMarket_BaseTest {
     vm.warp(block.timestamp + 10);
 
     vm.startPrank(ALICE);
-    // transfer collateral will trigger accure interest on all borrowed token
+    // transfer collateral will trigger accrue interest on all borrowed token
     collateralFacet.transferCollateral(0, 1, address(weth), 0);
     vm.stopPrank();
 

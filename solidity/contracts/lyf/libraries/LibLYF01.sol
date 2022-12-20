@@ -31,6 +31,7 @@ library LibLYF01 {
 
   uint256 internal constant MAX_BPS = 10000;
 
+  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToReservePool);
   event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
 
   error LibLYF01_BadSubAccountId();
@@ -77,7 +78,7 @@ library LibLYF01 {
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares;
     mapping(uint256 => uint256) debtShares;
     mapping(uint256 => uint256) debtValues;
-    mapping(uint256 => uint256) debtLastAccureTime;
+    mapping(uint256 => uint256) debtLastAccrueTime;
     mapping(address => uint256) lpShares;
     mapping(address => uint256) lpValues;
     mapping(address => LPConfig) lpConfigs;
@@ -112,9 +113,9 @@ library LibLYF01 {
     view
     returns (uint256 _pendingInterest)
   {
-    uint256 _lastAccureTime = lyfDs.debtLastAccureTime[_debtShareId];
-    if (block.timestamp > _lastAccureTime) {
-      uint256 _timePast = block.timestamp - _lastAccureTime;
+    uint256 _lastAccrueTime = lyfDs.debtLastAccrueTime[_debtShareId];
+    if (block.timestamp > _lastAccrueTime) {
+      uint256 _timePast = block.timestamp - _lastAccrueTime;
       address _interestModel = address(lyfDs.interestModels[_debtShareId]);
       if (_interestModel != address(0)) {
         address _token = lyfDs.debtShareTokens[_debtShareId];
@@ -127,22 +128,24 @@ library LibLYF01 {
     }
   }
 
-  function accureInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
+  function accrueInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
     uint256 _pendingInterest = pendingInterest(_debtShareId, lyfDs);
     if (_pendingInterest > 0) {
       // update overcollat debt
       lyfDs.debtValues[_debtShareId] += _pendingInterest;
     }
     // update timestamp
-    lyfDs.debtLastAccureTime[_debtShareId] = block.timestamp;
+    lyfDs.debtLastAccrueTime[_debtShareId] = block.timestamp;
+
+    emit LogAccrueInterest(lyfDs.debtShareTokens[_debtShareId], _pendingInterest, _pendingInterest);
   }
 
-  function accureAllSubAccountDebtShares(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
+  function accrueAllSubAccountDebtShares(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
     LibUIntDoublyLinkedList.Node[] memory _debtShares = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _debtShareLength = _debtShares.length;
 
     for (uint256 _i = 0; _i < _debtShareLength; ) {
-      accureInterest(_debtShares[_i].index, lyfDs);
+      accrueInterest(_debtShares[_i].index, lyfDs);
       unchecked {
         _i++;
       }

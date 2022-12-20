@@ -79,9 +79,9 @@ library LYFDiamondDeployer {
     selectors[4] = LYFFarmFacet.getDebt.selector;
     selectors[5] = LYFFarmFacet.repay.selector;
     selectors[6] = LYFFarmFacet.getGlobalDebt.selector;
-    selectors[7] = LYFFarmFacet.debtLastAccureTime.selector;
+    selectors[7] = LYFFarmFacet.debtLastAccrueTime.selector;
     selectors[8] = LYFFarmFacet.pendingInterest.selector;
-    selectors[9] = LYFFarmFacet.accureInterest.selector;
+    selectors[9] = LYFFarmFacet.accrueInterest.selector;
     selectors[10] = LYFFarmFacet.debtValues.selector;
     selectors[11] = LYFFarmFacet.debtShares.selector;
     selectors[12] = LYFFarmFacet.reducePosition.selector;
