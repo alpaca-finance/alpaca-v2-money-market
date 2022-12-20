@@ -76,6 +76,7 @@ contract LendFacet is ILendFacet {
 
     (address _ibToken, uint256 _shareToMint) = _getShareToMint(_token, _amount, moneyMarketDs);
 
+    moneyMarketDs.reserves[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
@@ -98,6 +99,7 @@ contract LendFacet is ILendFacet {
 
     (address _ibToken, uint256 _shareToMint) = _getShareToMint(_nativeToken, _amount, moneyMarketDs);
 
+    moneyMarketDs.reserves[_nativeToken] += _amount;
     IWNative(_nativeToken).deposit{ value: _amount }();
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
@@ -115,7 +117,7 @@ contract LendFacet is ILendFacet {
     uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
 
     IbToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
-    _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue);
+    _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
 
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
   }
@@ -204,8 +206,11 @@ contract LendFacet is ILendFacet {
     address _nativeToken,
     address _nativeRelayer,
     address _to,
-    uint256 _amount
+    uint256 _amount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
+    if (_amount > moneyMarketDs.reserves[_nativeToken]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    moneyMarketDs.reserves[_nativeToken] -= _amount;
     LibSafeToken.safeTransfer(_nativeToken, _nativeRelayer, _amount);
     IWNativeRelayer(_nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);

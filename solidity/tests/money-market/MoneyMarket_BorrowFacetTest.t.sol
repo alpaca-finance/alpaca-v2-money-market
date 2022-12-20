@@ -264,8 +264,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), _ibTokenCollatAmount);
     vm.stopPrank();
 
-    vm.prank(ALICE);
-    weth.transfer(moneyMarketDiamond, 50 ether);
+    // manipulate ib price
+    vm.prank(BOB);
+    lendFacet.deposit(address(weth), 50 ether);
+    ibWeth.burn(BOB, 50 ether);
 
     uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
