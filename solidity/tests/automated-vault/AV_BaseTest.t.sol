@@ -67,7 +67,7 @@ abstract contract AV_BaseTest is BaseTest {
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     avShareToken = IAVShareToken(
-      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(handler), 3, 0)
+      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(handler), 3, 1)
     );
 
     // approve

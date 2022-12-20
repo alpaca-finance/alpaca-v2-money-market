@@ -72,7 +72,7 @@ contract LendFacet is ILendFacet {
 
   function deposit(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     (address _ibToken, uint256 _shareToMint) = _getShareToMint(_token, _amount, moneyMarketDs);
 
@@ -94,7 +94,7 @@ contract LendFacet is ILendFacet {
     uint256 _amount = msg.value;
     if (_nativeToken == address(0)) revert LendFacet_InvalidToken(_nativeToken);
     if (_amount == 0) revert LendFacet_InvalidAmount(_amount);
-    LibMoneyMarket01.accureInterest(_nativeToken, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_nativeToken, moneyMarketDs);
 
     (address _ibToken, uint256 _shareToMint) = _getShareToMint(_nativeToken, _amount, moneyMarketDs);
 
@@ -110,7 +110,7 @@ contract LendFacet is ILendFacet {
     address _relayer = moneyMarketDs.nativeRelayer;
     if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
     if (_relayer == address(0)) revert LendFacet_InvalidAddress(_relayer);
-    LibMoneyMarket01.accureInterest(_token, moneyMarketDs);
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
 
