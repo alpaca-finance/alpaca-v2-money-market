@@ -90,11 +90,14 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs.repurchaseRewardBps,
       moneyMarketDs
     );
+    {
+      uint256 _amountAfterFee = _actualRepayAmountWithFee - _repurchaseFee;
 
-    _reduceDebt(_subAccount, _repayToken, _actualRepayAmountWithFee - _repurchaseFee, moneyMarketDs);
-    _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+      _reduceDebt(_subAccount, _repayToken, _amountAfterFee, moneyMarketDs);
+      _reduceCollateral(_subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
 
-    moneyMarketDs.reserves[_repayToken] += (_actualRepayAmountWithFee - _repurchaseFee);
+      moneyMarketDs.reserves[_repayToken] += _amountAfterFee;
+    }
 
     ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmountWithFee);
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
