@@ -84,7 +84,7 @@ contract BorrowFacet is IBorrowFacet {
     address _account,
     uint256 _subAccountId,
     address _token,
-    uint256 _repayAmount
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
@@ -92,19 +92,13 @@ contract BorrowFacet is IBorrowFacet {
 
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      _repayAmount,
-      moneyMarketDs.debtShares[_token],
-      moneyMarketDs.debtValues[_token]
-    );
-
-    _shareToRemove = _oldSubAccountDebtShare > _shareToRemove ? _shareToRemove : _oldSubAccountDebtShare;
+    uint256 _actualShareToRepay = Math.min(_oldSubAccountDebtShare, _debtShareToRepay);
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
       _token,
       _oldSubAccountDebtShare,
-      _shareToRemove,
+      _actualShareToRepay,
       moneyMarketDs
     );
 
