@@ -229,7 +229,8 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(moneyMarketDiamond), 10 ether);
 
     // check account ib token collat
-    assertEq(collateralFacet.accountCollats(ALICE, address(ibWeth)), 10 ether);
+    address _aliceSubaccount0 = address(uint160(ALICE) ^ uint160(0));
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
   }
 
   // Add and Remove Collat with ibToken
@@ -247,13 +248,15 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     // check account ib token collat
-    assertEq(collateralFacet.accountCollats(ALICE, address(ibWeth)), 10 ether);
+    address _aliceSubaccount0 = address(uint160(ALICE) ^ uint160(0));
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
 
     vm.startPrank(ALICE);
     collateralFacet.removeCollateral(0, address(ibWeth), 10 ether);
     vm.stopPrank();
 
     // check account ib token collat
-    assertEq(collateralFacet.accountCollats(ALICE, address(ibWeth)), 0 ether);
+
+    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 0 ether);
   }
 }

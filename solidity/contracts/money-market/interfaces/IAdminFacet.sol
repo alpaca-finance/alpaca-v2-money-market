@@ -62,44 +62,6 @@ interface IAdminFacet {
 
   function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
 
-  function setRewardDistributor(address _addr) external;
-
-  function getLendingRewardPerSec(address _rewardToken) external view returns (uint256);
-
-  function addLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function updateLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function getBorrowingRewardPerSec(address _rewardToken) external view returns (uint256);
-
-  function addBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function updateBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function addLendingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _allocPoint
-  ) external;
-
-  function setLendingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _newAllocPoint
-  ) external;
-
-  function addBorrowingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _allocPoint
-  ) external;
-
-  function setBorrowingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _newAllocPoint
-  ) external;
-
   function setFees(
     uint256 _newLendingFeeBps,
     uint256 _newRepurchaseRewardBps,
