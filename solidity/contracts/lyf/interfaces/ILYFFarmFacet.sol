@@ -65,11 +65,11 @@ interface ILYFFarmFacet {
 
   function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256);
 
-  function debtLastAccureTime(address _token, address _lpToken) external view returns (uint256);
+  function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256);
 
   function pendingInterest(address _token, address _lpToken) external view returns (uint256);
 
-  function accureInterest(address _token, address _lpToken) external;
+  function accrueInterest(address _token, address _lpToken) external;
 
   function debtValues(address _token, address _lpToken) external view returns (uint256);
 
