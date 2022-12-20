@@ -345,11 +345,8 @@ library LibMoneyMarket01 {
     uint256 _lastAccureTime = moneyMarketDs.debtLastAccureTime[_token];
     if (block.timestamp > _lastAccureTime) {
       uint256 _timePast = block.timestamp - _lastAccureTime;
-      //-----------------------------------------------------
-      // over collat
-      uint256 _overCollatInterest = accrueOverCollateralizedInterestRate(_token, _timePast, moneyMarketDs);
 
-      // non collat
+      uint256 _overCollatInterest = accrueOverCollateralizedInterestRate(_token, _timePast, moneyMarketDs);
       uint256 _totalNonCollatInterest = accrueNonCollateralizedInterestRate(_token, _timePast, moneyMarketDs);
 
       // update global debt
