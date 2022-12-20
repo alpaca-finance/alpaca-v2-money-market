@@ -369,7 +369,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     vm.startPrank(liquidator);
 
     liquidationFacet.liquidationCall(
@@ -442,7 +442,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     vm.startPrank(liquidator);
 
     liquidationFacet.liquidationCall(
@@ -504,7 +504,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
@@ -569,7 +569,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
@@ -630,7 +630,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
@@ -695,7 +695,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(2 ether, 2 ether);
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
@@ -761,7 +761,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
   //   farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
   //   vm.stopPrank();
 
-  //   mockOracle.setTokenPrice(address(_lpToken), 0.5 ether);
+  //   mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
   //   mockRouter.setRemoveLiquidityAmountsOut(60 ether, 60 ether);
 
   //   vm.prank(liquidator);
