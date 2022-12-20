@@ -156,7 +156,7 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     // should pass when register new token
     address _ibToken = lendFacet.openMarket(address(opm));
     assertEq(IERC20(_ibToken).name(), "Interest Bearing OPM");
-    assertEq(IERC20(_ibToken).symbol(), "IBOPM");
+    assertEq(IERC20(_ibToken).symbol(), "ibOPM");
     assertEq(IERC20(_ibToken).decimals(), 9);
 
     vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, address(opm)));
