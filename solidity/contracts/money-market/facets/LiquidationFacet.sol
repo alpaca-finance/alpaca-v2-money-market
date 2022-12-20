@@ -217,14 +217,14 @@ contract LiquidationFacet is ILiquidationFacet {
     // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
     uint256 _underlyingAmountBefore = ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
-
+    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
     // if mm has no actual token left, withdraw will fail anyway
     ERC20(_collatUnderlyingToken).safeTransfer(
       params.liquidationStrat,
       _shareToValue(
         params.collatToken,
         moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
-        _underlyingAmountBefore
+        _totalToken
       )
     );
 
@@ -250,7 +250,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
 
-    uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _underlyingAmountBefore);
+    uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _totalToken);
 
     ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 

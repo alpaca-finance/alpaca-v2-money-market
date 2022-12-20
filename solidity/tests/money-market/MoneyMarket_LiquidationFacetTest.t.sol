@@ -800,7 +800,10 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // increase shareValue of ibWeth by 2.5%
     // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
-    weth.mint(address(moneyMarketDiamond), 1 ether);
+    vm.prank(BOB);
+    lendFacet.deposit(address(weth), 1 ether);
+
+    ibWeth.burn(BOB, 1 ether);
 
     // mm state before
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
@@ -844,6 +847,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
     /**
+     * todo: simulate if weth has debt, should still correct
      * scenario:
      *
      * 1. 1 usdc/weth, ALICE post 40 ibWeth (value 40 weth) as collateral, borrow 30 usdc
@@ -888,8 +892,6 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
     uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
-    console.log("_totalSupplyIbWethBefore", _totalSupplyIbWethBefore);
-    console.log("_totalWethInMMBefore", _totalWethInMMBefore);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 ether USD
@@ -953,9 +955,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // todo: check this
 
     // should fail because 11 weth left in mm not enough to liquidate 15 usdc debt
-    // but it will fail during withdraw after executeLiquidation
-    // because we will try to send all underlying of subAccount to liquidate anyway
-    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken.selector));
+    vm.expectRevert("ERC20: transfer amount exceeds balance");
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
