@@ -154,7 +154,7 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function getprotocolReserve(address _token) external view returns (uint256 _reserve) {
+  function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
     return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
 
