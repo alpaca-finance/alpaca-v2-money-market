@@ -16,8 +16,6 @@ import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeERC20 for ERC20;
@@ -466,8 +464,8 @@ library LibMoneyMarket01 {
     uint256 _shareAmount,
     address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _shareValue) {
-    address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
+  ) internal returns (address _token, uint256 _shareValue) {
+    _token = moneyMarketDs.ibTokenToTokens[_ibToken];
     accrueInterest(_token, moneyMarketDs);
 
     if (_token == address(0)) {
@@ -485,15 +483,10 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NoTinyShares();
     }
 
-    console.log("reserve", moneyMarketDs.reserves[_token]);
-    console.log("balanceof", ERC20(_token).balanceOf(address(this)));
-    console.log("_shareValue", _shareValue);
-
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _shareValue;
 
     IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
-    ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }

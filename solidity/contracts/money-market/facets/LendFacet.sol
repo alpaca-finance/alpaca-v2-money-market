@@ -21,8 +21,6 @@ import { IbToken } from "../IbToken.sol";
 
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
   using LibSafeToken for address;
@@ -85,10 +83,17 @@ contract LendFacet is ILendFacet {
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256 _shareValue) {
+  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    _shareValue = LibMoneyMarket01.withdraw(_ibToken, _shareAmount, msg.sender, moneyMarketDs);
+    (address _token, uint256 _shareValue) = LibMoneyMarket01.withdraw(
+      _ibToken,
+      _shareAmount,
+      msg.sender,
+      moneyMarketDs
+    );
+    ERC20(_token).safeTransfer(msg.sender, _shareValue);
+    return _shareValue;
   }
 
   function depositETH() external payable nonReentrant {
