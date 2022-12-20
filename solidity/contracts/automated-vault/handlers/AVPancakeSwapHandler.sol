@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -13,15 +14,25 @@ import { IPancakePair } from "../interfaces/IPancakePair.sol";
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 
-contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
+contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUpgradeable {
   using SafeERC20 for ERC20;
+
+  mapping(address => bool) public whitelistedCallers;
 
   IPancakeRouter02 public router;
   IPancakePair public lpToken;
 
   uint256 public totalLpBalance;
 
+  modifier onlyWhitelisted() {
+    if (!whitelistedCallers[msg.sender]) {
+      revert AVPancakeSwapHandler_Unauthorized(msg.sender);
+    }
+    _;
+  }
+
   function initialize(address _router, address _lpToken) public initializer {
+    OwnableUpgradeable.__Ownable_init();
     router = IPancakeRouter02(_router);
     lpToken = IPancakePair(_lpToken);
   }
@@ -32,12 +43,16 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     uint256 _token0Amount,
     uint256 _token1Amount,
     uint256 _minLpAmount
-  ) external returns (uint256 _mintedLpAmount) {
+  ) external onlyWhitelisted returns (uint256 _mintedLpAmount) {
     _mintedLpAmount = composeLpToken(_token0, _token1, _token0Amount, _token1Amount, _minLpAmount);
     totalLpBalance += _mintedLpAmount;
   }
 
-  function onWithdraw(uint256 _lpAmountToWithdraw) external returns (uint256 _token0Amount, uint256 _token1Amount) {
+  function onWithdraw(uint256 _lpAmountToWithdraw)
+    external
+    onlyWhitelisted
+    returns (uint256 _token0Amount, uint256 _token1Amount)
+  {
     (_token0Amount, _token1Amount) = removeLiquidity(_lpAmountToWithdraw);
     totalLpBalance -= _lpAmountToWithdraw;
   }
@@ -88,13 +103,16 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
   function removeLiquidity(uint256 _lpToRemove) internal returns (uint256 _token0Return, uint256 _token1Return) {
     ERC20(address(lpToken)).safeApprove(address(router), type(uint256).max);
 
-    address _token1 = lpToken.token1();
     address _token0 = lpToken.token0();
+    address _token1 = lpToken.token1();
+
+    uint256 _token0Before = ERC20(_token0).balanceOf(address(this));
+    uint256 _token1Before = ERC20(_token1).balanceOf(address(this));
 
     router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
 
-    _token0Return = ERC20(_token0).balanceOf(address(this));
-    _token1Return = ERC20(_token1).balanceOf(address(this));
+    _token0Return = ERC20(_token0).balanceOf(address(this)) - _token0Before;
+    _token1Return = ERC20(_token1).balanceOf(address(this)) - _token1Before;
 
     ERC20(_token0).safeTransfer(msg.sender, _token0Return);
     ERC20(_token1).safeTransfer(msg.sender, _token1Return);
@@ -149,5 +167,15 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     uint256 denominator = a * (2);
 
     return numerator / (denominator);
+  }
+
+  function setWhitelistedCallers(address[] calldata callers, bool ok) external onlyOwner {
+    uint256 len = uint256(callers.length);
+    for (uint256 i = 0; i < len; ) {
+      whitelistedCallers[callers[i]] = ok;
+      unchecked {
+        i++;
+      }
+    }
   }
 }
