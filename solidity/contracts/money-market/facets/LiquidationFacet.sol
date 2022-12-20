@@ -50,7 +50,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     // avoid stack too deep
     uint256 _borrowedValue;
@@ -125,7 +125,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     // 1. check if position is underwater and can be liquidated
     {
