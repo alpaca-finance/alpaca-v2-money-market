@@ -23,6 +23,5 @@ interface ILendFacet {
 
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
-  error LendFacet_NoTinyShares();
   error LendFacet_InvalidAmount(uint256 _amount);
 }

@@ -133,6 +133,7 @@ contract LendFacet is ILendFacet {
     _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
   }
 
+  // TODO: refactor
   // calculate _shareToMint to mint before transfer token to MM
   function _getShareToMint(
     address _token,
@@ -142,14 +143,9 @@ contract LendFacet is ILendFacet {
     // calculate _shareToMint to mint before transfer token to MM
     uint256 _totalSupply;
     (_ibToken, _totalSupply, _shareToMint) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
-
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
-
-    if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
-      revert LendFacet_NoTinyShares();
-    }
   }
 
+  // TODO: refactor
   function _getShareValue(
     address _token,
     address _ibToken,
@@ -157,15 +153,9 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _shareValue) {
     uint256 _totalSupply = IbToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
-
-    uint256 _shareLeft = _totalSupply - _shareAmount;
-    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
-      revert LendFacet_NoTinyShares();
-    }
   }
 
   function _getShareAmountFromValue(
