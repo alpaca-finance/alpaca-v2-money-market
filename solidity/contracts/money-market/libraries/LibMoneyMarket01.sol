@@ -39,7 +39,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_NotEnoughToken();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToReservePool);
+  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
 
   enum AssetTier {
     UNLISTED,
@@ -92,8 +92,7 @@ library LibMoneyMarket01 {
     uint256 repurchaseFeeBps;
     uint256 liquidationFeeBps;
     // reserve pool
-
-    mapping(address => uint256) reservePools;
+    mapping(address => uint256) protocolReserves;
     // diamond token balances
     mapping(address => uint256) reserves;
   }
@@ -334,7 +333,7 @@ library LibMoneyMarket01 {
 
       // book protocol's revenue
       uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
-      moneyMarketDs.reservePools[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
+      moneyMarketDs.protocolReserves[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
 
       emit LogAccrueInterest(_token, _totalInterest, _protocolFee);
     }
@@ -392,7 +391,7 @@ library LibMoneyMarket01 {
   {
     return
       (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) -
-      (moneyMarketDs.collats[_token] + moneyMarketDs.reservePools[_token]);
+      (moneyMarketDs.collats[_token] + moneyMarketDs.protocolReserves[_token]);
   }
 
   function getTotalTokenWithPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)

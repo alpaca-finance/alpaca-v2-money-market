@@ -69,7 +69,7 @@ interface IAdminFacet {
     uint256 _newLiquidationFeeBps
   ) external;
 
-  function getReservePool(address _token) external view returns (uint256 _reserve);
+  function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
   function withdrawReserve(
     address _token,
