@@ -83,6 +83,9 @@ contract BorrowFacet is IBorrowFacet {
     userDebtShare.addOrUpdate(_token, _newShareAmount);
     moneyMarketDs.accountDebtShares[msg.sender][_token] += _shareToAdd;
 
+    // update facet token balance
+    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    moneyMarketDs.reserves[_token] -= _amount;
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
@@ -116,6 +119,7 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     // transfer only amount to repay
+    moneyMarketDs.reserves[_token] += _actualRepayAmount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
 
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
@@ -317,7 +321,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    uint256 _mmTokenBalnce = ERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    uint256 _mmTokenBalnce = moneyMarketDs.reserves[_token] - moneyMarketDs.collats[_token];
 
     if (_mmTokenBalnce < _borrowAmount) {
       revert BorrowFacet_NotEnoughToken(_borrowAmount);

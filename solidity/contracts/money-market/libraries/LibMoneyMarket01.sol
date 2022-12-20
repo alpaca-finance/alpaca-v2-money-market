@@ -37,6 +37,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_ExceedCollateralLimit();
   error LibMoneyMarket01_TooManyCollateralRemoved();
   error LibMoneyMarket01_BorrowingPowerTooLow();
+  error LibMoneyMarket01_NotEnoughToken();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToReservePool);
@@ -123,6 +124,8 @@ library LibMoneyMarket01 {
     // reserve pool
 
     mapping(address => uint256) reservePools;
+    // diamond token balances
+    mapping(address => uint256) reserves;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -418,7 +421,7 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     return
-      (IERC20(_token).balanceOf(address(this)) + moneyMarketDs.globalDebts[_token]) -
+      (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) -
       (moneyMarketDs.collats[_token] + moneyMarketDs.reservePools[_token]);
   }
 
@@ -437,7 +440,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _floating)
   {
-    _floating = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    _floating = moneyMarketDs.reserves[_token] - moneyMarketDs.collats[_token];
   }
 
   function setIbPair(
@@ -516,6 +519,9 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NoTinyShares();
     }
 
+    if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
+    moneyMarketDs.reserves[_token] -= _shareValue;
+
     IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
     ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
 
@@ -551,6 +557,7 @@ library LibMoneyMarket01 {
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
     ds.collats[_token] += _addAmount;
     ds.accountCollats[msg.sender][_token] += _addAmount;
+    ds.reserves[_token] += _addAmount;
   }
 
   function removeCollat(
@@ -563,6 +570,8 @@ library LibMoneyMarket01 {
 
     ds.collats[_token] -= _removeAmount;
     ds.accountCollats[msg.sender][_token] -= _removeAmount;
+    if (_removeAmount > ds.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    ds.reserves[_token] -= _removeAmount;
   }
 
   function removeCollatFromSubAccount(
