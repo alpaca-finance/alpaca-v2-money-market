@@ -11,7 +11,6 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
-import { LibBorrowingReward } from "../libraries/LibBorrowingReward.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
@@ -66,10 +65,6 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
 
-    LibBorrowingReward.massUpdatePool(_token, moneyMarketDs);
-
-    LibBorrowingReward.massUpdateRewardDebt(msg.sender, _token, _shareToAdd.toInt256(), moneyMarketDs);
-
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
     moneyMarketDs.debtValues[_token] += _amount;
@@ -81,7 +76,6 @@ contract BorrowFacet is IBorrowFacet {
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, _newShareAmount);
-    moneyMarketDs.accountDebtShares[msg.sender][_token] += _shareToAdd;
 
     // update facet token balance
     moneyMarketDs.reserves[_token] -= _amount;
@@ -109,7 +103,6 @@ contract BorrowFacet is IBorrowFacet {
     _shareToRemove = _oldSubAccountDebtShare > _shareToRemove ? _shareToRemove : _oldSubAccountDebtShare;
 
     uint256 _actualRepayAmount = _removeDebt(
-      _account,
       _subAccount,
       _token,
       _oldSubAccountDebtShare,
@@ -150,7 +143,6 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     uint256 _actualRepayAmount = _removeDebt(
-      _account,
       _subAccount,
       _token,
       _oldSubAccountDebtShare,
@@ -164,7 +156,6 @@ contract BorrowFacet is IBorrowFacet {
 
     moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
     moneyMarketDs.collats[_token] -= _actualRepayAmount;
-    moneyMarketDs.accountCollats[_account][_token] -= _actualRepayAmount;
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
@@ -216,14 +207,7 @@ contract BorrowFacet is IBorrowFacet {
     return (moneyMarketDs.debtShares[_token], moneyMarketDs.debtValues[_token]);
   }
 
-  function accountDebtShares(address _account, address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    return moneyMarketDs.accountDebtShares[_account][_token];
-  }
-
   function _removeDebt(
-    address _account,
     address _subAccount,
     address _token,
     uint256 _oldSubAccountDebtShare,
@@ -233,13 +217,8 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
     uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
 
-    LibBorrowingReward.massUpdatePool(_token, moneyMarketDs);
-
-    LibBorrowingReward.massUpdateRewardDebt(_account, _token, -_shareToRemove.toInt256(), moneyMarketDs);
-
     // update user debtShare
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRemove);
-    moneyMarketDs.accountDebtShares[_account][_token] -= _shareToRemove;
 
     // update over collat debtShare
     _repayAmount = LibShareUtil.shareToValue(_shareToRemove, _oldDebtValue, _oldDebtShare);

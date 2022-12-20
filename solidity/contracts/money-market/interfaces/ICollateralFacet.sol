@@ -32,6 +32,4 @@ interface ICollateralFacet {
   function collats(address _token) external view returns (uint256);
 
   function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
-
-  function accountCollats(address _account, address _ibToken) external view returns (uint256);
 }

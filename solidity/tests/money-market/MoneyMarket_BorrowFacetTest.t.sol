@@ -44,7 +44,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount1, address(weth));
 
     assertEq(_debtAmount, 0);
-    assertEq(borrowFacet.accountDebtShares(BOB, address(weth)), _borrowAmount);
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
@@ -71,8 +70,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
 
-    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), _aliceBorrowAmount);
-
     vm.startPrank(ALICE);
 
     // list will be add at the front of linkList
@@ -85,9 +82,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount);
 
-    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), _aliceBorrowAmount);
-    assertEq(borrowFacet.accountDebtShares(ALICE, address(usdc)), _aliceBorrowAmount2);
-
     vm.startPrank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
@@ -97,9 +91,6 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
-
-    assertEq(borrowFacet.accountDebtShares(ALICE, address(weth)), _aliceBorrowAmount * 2);
-    assertEq(borrowFacet.accountDebtShares(ALICE, address(usdc)), _aliceBorrowAmount2);
   }
 
   function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
