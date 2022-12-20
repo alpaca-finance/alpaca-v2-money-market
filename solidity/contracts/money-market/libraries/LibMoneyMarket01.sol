@@ -332,7 +332,7 @@ library LibMoneyMarket01 {
     return IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
   }
 
-  function accrueOverCollateralizedInterestRate(
+  function accrueOverCollateralizedInterest(
     address _token,
     uint256 _timePast,
     MoneyMarketDiamondStorage storage moneyMarketDs
@@ -349,8 +349,8 @@ library LibMoneyMarket01 {
     if (block.timestamp > _lastAccrueTime) {
       uint256 _timePast = block.timestamp - _lastAccrueTime;
 
-      uint256 _overCollatInterest = accrueOverCollateralizedInterestRate(_token, _timePast, moneyMarketDs);
-      uint256 _totalNonCollatInterest = accrueNonCollateralizedInterestRate(_token, _timePast, moneyMarketDs);
+      uint256 _overCollatInterest = accrueOverCollateralizedInterest(_token, _timePast, moneyMarketDs);
+      uint256 _totalNonCollatInterest = accrueNonCollateralizedInterest(_token, _timePast, moneyMarketDs);
 
       // update global debt
       uint256 _totalInterest = (_overCollatInterest + _totalNonCollatInterest);
@@ -367,7 +367,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function accrueNonCollateralizedInterestRate(
+  function accrueNonCollateralizedInterest(
     address _token,
     uint256 _timePast,
     MoneyMarketDiamondStorage storage moneyMarketDs
