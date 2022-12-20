@@ -183,10 +183,10 @@ contract AdminFacet is IAdminFacet {
     if (_amount > moneyMarketDs.reservePools[_token]) {
       revert AdminFacet_ReserveTooLow();
     }
+    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
 
     moneyMarketDs.reservePools[_token] -= _amount;
 
-    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _amount;
     ERC20(_token).safeTransfer(_to, _amount);
 
