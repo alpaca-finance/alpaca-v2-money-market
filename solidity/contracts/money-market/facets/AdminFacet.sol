@@ -57,7 +57,6 @@ contract AdminFacet is IAdminFacet {
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
         maxBorrow: _tokenConfigs[_i].maxBorrow,
-        maxAccountBorrow: _tokenConfigs[_i].maxAccountBorrow,
         maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond,
         to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigs[_i].token)
       });
@@ -379,5 +378,24 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+  }
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _protocolConfigInput.length;
+    address _account;
+    address _token;
+    for (uint256 _i; _i < _length; ) {
+      _account = _protocolConfigInput[_i].account;
+      _token = _protocolConfigInput[_i].token;
+
+      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[_account];
+
+      protocolConfig.maxTokenBorrow[_token] = _protocolConfigInput[_i].maxTokenBorrow;
+
+      unchecked {
+        _i++;
+      }
+    }
   }
 }

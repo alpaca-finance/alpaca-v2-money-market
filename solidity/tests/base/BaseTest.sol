@@ -33,6 +33,7 @@ contract BaseTest is DSTest {
   address internal constant BOB = address(0x168);
   address internal constant CAT = address(0x99);
   address internal constant EVE = address(0x55);
+  address internal constant LFY = address(0x56);
 
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 

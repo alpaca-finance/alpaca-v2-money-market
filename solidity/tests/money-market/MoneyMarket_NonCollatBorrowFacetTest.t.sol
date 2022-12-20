@@ -36,6 +36,30 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     _limitInputs[2] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
     _limitInputs[3] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
     adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](4);
+
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(weth),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(usdc),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[2] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(weth),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[3] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(usdc),
+      maxTokenBorrow: 30e18
+    });
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
@@ -133,7 +157,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e30,
-      maxAccountBorrow: 1e30,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -252,7 +275,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e30,
-      maxAccountBorrow: 1e30,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -280,7 +302,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
-      maxAccountBorrow: 5 ether,
       maxCollateral: 100 ether,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -293,25 +314,36 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenProtocolBorrowMoreThanTokenAccountLimit_ShouldRevert() external {
-    uint256 _wethAccountLimit = 5 ether;
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
-    _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: 10 ether,
-      maxAccountBorrow: _wethAccountLimit,
-      maxCollateral: 100 ether,
-      maxToleranceExpiredSecond: block.timestamp
-    });
-    adminFacet.setTokenConfigs(_inputs);
+    uint256 _aliceWethAccountLimit = 5 ether;
+    uint256 _bobWethAccountLimit = 4 ether;
 
-    uint256 _aliceBorrowAmount = _wethAccountLimit + 1;
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(weth),
+      maxTokenBorrow: _aliceWethAccountLimit
+    });
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(weth),
+      maxTokenBorrow: _bobWethAccountLimit
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
+    uint256 _aliceBorrowAmount = _aliceWethAccountLimit + 1;
+    uint256 _bobBorrowAmount = _bobWethAccountLimit + 1;
     vm.prank(ALICE);
     vm.expectRevert(
       abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+
+    vm.prank(BOB);
+    vm.expectRevert(
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _bobBorrowAmount);
   }
 }

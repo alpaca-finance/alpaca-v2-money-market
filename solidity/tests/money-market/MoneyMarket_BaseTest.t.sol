@@ -97,7 +97,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxAccountBorrow: 20e18,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -108,7 +107,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxAccountBorrow: 1e24,
       maxCollateral: 10e24,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -119,7 +117,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 0,
-      maxAccountBorrow: 0,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -130,7 +127,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxAccountBorrow: 30e18,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -141,7 +137,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxAccountBorrow: 30e18,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
@@ -152,12 +147,21 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 0,
-      maxAccountBorrow: 0,
       maxCollateral: 100e18,
       maxToleranceExpiredSecond: block.timestamp
     });
 
     adminFacet.setTokenConfigs(_inputs);
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](1);
+
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: LFY,
+      token: address(weth),
+      maxTokenBorrow: 30e18
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
 
     // open isolate token market
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));

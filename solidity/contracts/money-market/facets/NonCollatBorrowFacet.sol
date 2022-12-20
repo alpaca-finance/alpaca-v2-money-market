@@ -198,7 +198,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // check if accumulated borrowAmount exceed account limit
     if (
       _borrowAmount + moneyMarketDs.nonCollatAccountDebtValues[msg.sender].getAmount(_token) >
-      moneyMarketDs.tokenConfigs[_token].maxAccountBorrow
+      moneyMarketDs.protocolConfigs[msg.sender].maxTokenBorrow[_token]
     ) {
       revert NonCollatBorrowFacet_ExceedAccountBorrowLimit();
     }

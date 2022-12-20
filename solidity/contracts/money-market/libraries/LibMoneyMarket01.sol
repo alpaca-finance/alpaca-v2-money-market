@@ -53,9 +53,12 @@ library LibMoneyMarket01 {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow; // shared global limit
-    uint256 maxAccountBorrow; // account limit
     uint256 maxToleranceExpiredSecond;
     uint8 to18ConversionFactor;
+  }
+
+  struct ProtocolConfig {
+    mapping(address => uint256) maxTokenBorrow; // account limit
   }
 
   struct RewardConfig {
@@ -88,6 +91,8 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
     // account -> limit
     mapping(address => uint256) nonCollatBorrowLimitUSDValues;
+    // account -> ProtocolConfig
+    mapping(address => ProtocolConfig) protocolConfigs;
     mapping(address => bool) nonCollatBorrowerOk;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) debtLastAccureTime;

@@ -284,9 +284,9 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidAssetTier();
     }
 
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, moneyMarketDs);
-
     _checkAvailableAndTokenLimit(_token, _amount, moneyMarketDs);
+
+    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, moneyMarketDs);
   }
 
   // TODO: gas optimize on oracle call
