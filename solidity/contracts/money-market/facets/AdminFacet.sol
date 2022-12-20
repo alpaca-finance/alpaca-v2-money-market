@@ -154,8 +154,8 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function getReservePool(address _token) external view returns (uint256 _reserve) {
-    return LibMoneyMarket01.moneyMarketDiamondStorage().reservePools[_token];
+  function getprotocolReserve(address _token) external view returns (uint256 _reserve) {
+    return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
 
   function withdrawReserve(
@@ -164,11 +164,11 @@ contract AdminFacet is IAdminFacet {
     uint256 _amount
   ) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_amount > moneyMarketDs.reservePools[_token]) {
+    if (_amount > moneyMarketDs.protocolReserves[_token]) {
       revert AdminFacet_ReserveTooLow();
     }
 
-    moneyMarketDs.reservePools[_token] -= _amount;
+    moneyMarketDs.protocolReserves[_token] -= _amount;
 
     ERC20(_token).safeTransfer(_to, _amount);
 

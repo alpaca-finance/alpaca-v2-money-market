@@ -220,7 +220,7 @@ library MMDiamondDeployer {
     selectors[12] = AdminFacet.setLiquidationCallersOk.selector;
     selectors[14] = AdminFacet.setTreasury.selector;
     selectors[15] = AdminFacet.setFees.selector;
-    selectors[16] = AdminFacet.getReservePool.selector;
+    selectors[16] = AdminFacet.getprotocolReserve.selector;
     selectors[17] = AdminFacet.withdrawReserve.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
