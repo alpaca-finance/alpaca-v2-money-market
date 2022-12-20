@@ -60,10 +60,10 @@ contract BorrowFacet is IBorrowFacet {
       userDebtShare.init();
     }
 
-    uint256 _totalSupply = moneyMarketDs.debtShares[_token];
-    uint256 _totalValue = moneyMarketDs.debtValues[_token];
+    uint256 _globalDebtShare = moneyMarketDs.debtShares[_token];
+    uint256 _globalDebtValue = moneyMarketDs.debtValues[_token];
 
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _globalDebtShare, _globalDebtValue);
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -122,7 +122,7 @@ contract BorrowFacet is IBorrowFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
