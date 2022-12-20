@@ -246,7 +246,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // check state
     // note: before repurchase state should be like these
     // collat amount should be = 80 on weth
-    // collat debt value should be | usdc: 30.0050765511672 | btc: 3.00050765511672 | after accure interest
+    // collat debt value should be | usdc: 30.0050765511672 | btc: 3.00050765511672 | after accrue interest
     // collat debt share should be | usdc: 30 | btc: 3 |
     // then after repurchase
     // collat amount should be = 80 - (_collatAmountOut) = 80 - 25.25 = 54.75
@@ -362,7 +362,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // check state
     // note: before repurchase state should be like these
     // collat amount should be = 100 on weth
-    // collat debt value should be | usdc: 30.0050765511672 | btc: 5.001410153102144 | after accure interest
+    // collat debt value should be | usdc: 30.0050765511672 | btc: 5.001410153102144 | after accrue interest
     // collat debt share should be | usdc: 30 | btc: 5 |
     // then after repurchase
     // collat amount should be = 100 - (_collatAmountOut) = 100 - 38.26404964227130303 = 61.73595035772869697
