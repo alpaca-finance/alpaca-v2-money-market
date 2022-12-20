@@ -80,8 +80,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_wethDebtInterest, 1 ether);
     assertEq(_usdcDebtInterest, 0.5 ether);
 
-    farmFacet.accureInterest(address(weth), address(wethUsdcLPToken));
-    farmFacet.accureInterest(address(usdc), address(wethUsdcLPToken));
+    farmFacet.accrueInterest(address(weth), address(wethUsdcLPToken));
+    farmFacet.accrueInterest(address(usdc), address(wethUsdcLPToken));
 
     (, uint256 _subAccountWethDebtValueAfter) = farmFacet.getDebt(
       BOB,

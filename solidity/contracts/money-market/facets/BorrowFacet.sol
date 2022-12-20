@@ -129,7 +129,7 @@ contract BorrowFacet is IBorrowFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-    LibMoneyMarket01.accureAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
 
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
@@ -352,9 +352,9 @@ contract BorrowFacet is IBorrowFacet {
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
   }
 
-  function debtLastAccureTime(address _token) external view returns (uint256) {
+  function debtLastAccrueTime(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtLastAccureTime[_token];
+    return moneyMarketDs.debtLastAccrueTime[_token];
   }
 
   function pendingInterest(address _token) external view returns (uint256) {

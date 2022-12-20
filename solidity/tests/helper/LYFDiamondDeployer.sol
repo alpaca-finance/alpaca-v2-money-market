@@ -79,9 +79,9 @@ library LYFDiamondDeployer {
     selectors[4] = LYFFarmFacet.getDebt.selector;
     selectors[5] = LYFFarmFacet.repay.selector;
     selectors[6] = LYFFarmFacet.getGlobalDebt.selector;
-    selectors[7] = LYFFarmFacet.debtLastAccureTime.selector;
+    selectors[7] = LYFFarmFacet.debtLastAccrueTime.selector;
     selectors[8] = LYFFarmFacet.pendingInterest.selector;
-    selectors[9] = LYFFarmFacet.accureInterest.selector;
+    selectors[9] = LYFFarmFacet.accrueInterest.selector;
     selectors[10] = LYFFarmFacet.debtValues.selector;
     selectors[11] = LYFFarmFacet.debtShares.selector;
     selectors[12] = LYFFarmFacet.reducePosition.selector;
@@ -107,7 +107,7 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](8);
+    bytes4[] memory selectors = new bytes4[](11);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.oracle.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
@@ -116,6 +116,9 @@ library LYFDiamondDeployer {
     selectors[5] = LYFAdminFacet.setDebtShareId.selector;
     selectors[6] = LYFAdminFacet.setDebtInterestModel.selector;
     selectors[7] = LYFAdminFacet.setReinvestorsOk.selector;
+    selectors[8] = LYFAdminFacet.setLiquidationStratsOk.selector;
+    selectors[9] = LYFAdminFacet.setLiquidationCallersOk.selector;
+    selectors[10] = LYFAdminFacet.setTreasury.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -156,8 +159,10 @@ library LYFDiamondDeployer {
   {
     _liquidationFacet = new LYFLiquidationFacet();
 
-    _selectors = new bytes4[](1);
+    _selectors = new bytes4[](3);
     _selectors[0] = LYFLiquidationFacet.repurchase.selector;
+    _selectors[1] = LYFLiquidationFacet.lpLiquidationCall.selector;
+    _selectors[2] = LYFLiquidationFacet.liquidationCall.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_liquidationFacet),

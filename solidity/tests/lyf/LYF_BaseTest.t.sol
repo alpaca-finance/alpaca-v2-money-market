@@ -54,6 +54,7 @@ import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
   address internal moneyMarketDiamond;
+  address internal treasury = address(888);
 
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
@@ -124,7 +125,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](6);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](7);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -186,6 +187,16 @@ abstract contract LYF_BaseTest is BaseTest {
       maxToleranceExpiredSecond: block.timestamp
     });
 
+    _inputs[6] = ILYFAdminFacet.TokenConfigInput({
+      token: address(ibBtc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 10e24,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
     address[] memory _reinvestPath = new address[](2);
@@ -225,6 +236,8 @@ abstract contract LYF_BaseTest is BaseTest {
     // set interest model
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
+
+    adminFacet.setTreasury(treasury);
   }
 
   function setUpMM() internal {

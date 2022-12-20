@@ -47,7 +47,7 @@ interface IBorrowFacet {
 
   function getGlobalDebt(address _token) external view returns (uint256, uint256);
 
-  function debtLastAccureTime(address _token) external view returns (uint256);
+  function debtLastAccrueTime(address _token) external view returns (uint256);
 
   function pendingInterest(address _token) external view returns (uint256);
 
