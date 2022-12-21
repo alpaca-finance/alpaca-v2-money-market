@@ -31,8 +31,8 @@ contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 5 ether);
 
     // assert reward user info, both user info should be same
-    assertRewarderUserAmount(rewarder1, ALICE, wethPoolID, 5 ether);
-    assertRewarderUserAmount(rewarder2, ALICE, wethPoolID, 5 ether);
+    assertRewarderUserInfo(rewarder1, ALICE, wethPoolID, 5 ether, 0);
+    assertRewarderUserInfo(rewarder2, ALICE, wethPoolID, 5 ether, 0);
   }
 
   function testCorrectness_WhenWithdrawDebToken_RewarderUserInfoShouldBeCorrect() external {
@@ -51,8 +51,8 @@ contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
     assertEq(debtToken1.balanceOf(BOB) - _bobDTokenBalanceBefore, 5 ether);
 
     // assert reward user info
-    assertRewarderUserAmount(rewarder1, BOB, dtokenPoolID, 5 ether);
+    assertRewarderUserInfo(rewarder1, BOB, dtokenPoolID, 5 ether, 0);
     // rewarder2 is not register in this pool then user amount should be 0
-    assertRewarderUserAmount(rewarder2, BOB, dtokenPoolID, 0 ether);
+    assertRewarderUserInfo(rewarder2, BOB, dtokenPoolID, 0 ether, 0);
   }
 }

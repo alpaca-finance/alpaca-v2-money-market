@@ -11,7 +11,7 @@ import { LibAccount } from "../libs/LibAccount.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_PendingAlpaca is MiniFL_BaseTest {
+contract MiniFL_PendingReward is MiniFL_BaseTest {
   using LibAccount for address;
 
   function setUp() public override {
@@ -20,33 +20,44 @@ contract MiniFL_PendingAlpaca is MiniFL_BaseTest {
     prepareForHarvest();
   }
 
-  // note:
-  // block timestamp start at 1
-  // alpaca per second is 1000 ether
-  // weth pool alloc point is 60%
-  // dtoken pool alloc point is 40%
-
-  function testCorrectness_WhenTimpast_PendingRewardShouldBeCorrectly() external {
+  function testCorrectness_WhenTimpast_PendingAlpacaShouldBeCorrectly() external {
     // timpast for 100 second
     vm.warp(block.timestamp + 100);
-    // alpaca reward distributed 1000 * 100 = 100000 ether
-    // | Staking Token | ALICE | BOB | Total | ALLOC Point | ALPACA Reward |
-    // |          WETH |    20 |  10 |    30 |    60 (60%) |         60000 |
-    // |        DToken |    10 |  90 |   100 |    40 (40%) |         40000 |
-    // WETHPool accRewardPerShare is 60000 / 30 = 2000
-    // DTOKENPool accRewardPerShare is 40000 / 100 = 400
 
-    // in weth pool alice staked 20, bob staked 10
-    // in dtoken pool alice staked 10, bob staked 90
+    // Mini FL, alpaca per second = 1000 ether then distributed reward = 1000 * 100 = 100000 ether
+    // ----------------------------------------------------------------------------------------------------
+    // | Pool   | AllocPoint | ALICE | BOB | Total Staked Token | Reward Amount* | ACC Reward per Share** |
+    // |--------|------------|-------|-----|--------------------|----------------|------------------------|
+    // | WETH   |         60 |    20 |  10 |                 30 |          60000 |                   2000 |
+    // | DToken |         40 |    10 |  90 |                100 |          40000 |                    400 |
+    // | Total  |        100 |       |     |                    |         100000 |                        |
+    // ----------------------------------------------------------------------------------------------------
+    // * distributedReward * alloc point / total alloc point
+    // ** Reward amount / Total Staked Token
 
-    // alice pending alpaca = 2000 * 20 = 40000 ether
+    // Summarize
+    // *** Reward Formula: (AMOUNT * ACC PER SHARE) - Reward Debt
+    // ALICE Reward
+    // ----------------------------
+    // |    Pool |  ALPACA Reward |
+    // |---------|----------------|
+    // |    WETH |          40000 |
+    // |  DToken |           4000 |
+    // |   Total |          44000 |
+    // ----------------------------
+    // BOB Reward
+    // ----------------------------
+    // |    Pool |  ALPACA Reward |
+    // |---------|----------------|
+    // |    WETH |          20000 |
+    // |  DToken |          36000 |
+    // |   Total |          56000 |
+    // ----------------------------
+
     assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
-    // bob pending alpaca = 2000 * 10 = 20000 ether
-    assertEq(miniFL.pendingAlpaca(wethPoolID, BOB), 20000 ether);
-
-    // alice pending alpaca = 400 * 10 = 4000 ether
     assertEq(miniFL.pendingAlpaca(dtokenPoolID, ALICE), 4000 ether);
-    // bob pending alpaca = 400 * 90 = 36000 ether
+
+    assertEq(miniFL.pendingAlpaca(wethPoolID, BOB), 20000 ether);
     assertEq(miniFL.pendingAlpaca(dtokenPoolID, BOB), 36000 ether);
   }
 }

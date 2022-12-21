@@ -14,17 +14,25 @@ import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 contract MiniFL_Harvest is MiniFL_BaseTest {
   using LibAccount for address;
 
+  uint256 _aliceWethDeposited = 20 ether;
+  uint256 _aliceDTokenDeposited = 10 ether;
+
+  uint256 _bobWethDeposited = 10 ether;
+  uint256 _bobDTokenDeposited = 90 ether;
+
   function setUp() public override {
     super.setUp();
     setupMiniFLPool();
     prepareForHarvest();
-  }
 
-  // note:
-  // block timestamp start at 1
-  // alpaca per second is 1000 ether
-  // weth pool alloc point is 60%
-  // dtoken pool alloc point is 40%
+    // deposited info
+    // ------------------------
+    // | Pool   | ALICE | BOB |
+    // |--------|-------|-----|
+    // | WETH   |    20 |  10 |
+    // | DToken |    10 |  90 |
+    // ------------------------
+  }
 
   function testCorrectness_WhenHarvestWithNoRewardPending() external {
     // alpaca is base reward
@@ -42,25 +50,28 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     uint256 _aliceAlpacaBefore = ALICE.myBalanceOf(address(alpaca));
     uint256 _bobAlpacaBefore = BOB.myBalanceOf(address(alpaca));
 
-    // alice harvest all pools
-    vm.startPrank(ALICE);
-    miniFL.harvest(wethPoolID);
-    miniFL.harvest(dtokenPoolID);
-    vm.stopPrank();
-
-    // bob harvest all pools
-    vm.startPrank(BOB);
-    miniFL.harvest(wethPoolID);
-    miniFL.harvest(dtokenPoolID);
-    vm.stopPrank();
-
-    // note: ref pending alpaca from MiniFL_PendingAlpaca.sol:testCorrectness_WhenTimpast_PendingRewardShouldBeCorrectly
     // alice pending alpaca on WETHPool = 40000
+    vm.prank(ALICE);
+    miniFL.harvest(wethPoolID);
+    assertUserInfo(ALICE, wethPoolID, _aliceWethDeposited, 40000 ether);
+
     // alice pending alpaca on DTOKENPool = 4000
-    assertEq(ALICE.myBalanceOf(address(alpaca)) - _aliceAlpacaBefore, 44000 ether);
+    vm.prank(ALICE);
+    miniFL.harvest(dtokenPoolID);
+    assertUserInfo(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
 
     // bob pending alpaca on WETHPool = 20000
+    vm.prank(BOB);
+    miniFL.harvest(wethPoolID);
+    assertUserInfo(BOB, wethPoolID, _bobWethDeposited, 20000 ether);
+
     // bob pending alpaca on DTOKENPool = 36000
+    vm.prank(BOB);
+    miniFL.harvest(dtokenPoolID);
+    assertUserInfo(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
+
+    // assert all alpaca received
+    assertEq(ALICE.myBalanceOf(address(alpaca)) - _aliceAlpacaBefore, 44000 ether);
     assertEq(BOB.myBalanceOf(address(alpaca)) - _bobAlpacaBefore, 56000 ether);
   }
 

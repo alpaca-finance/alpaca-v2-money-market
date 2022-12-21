@@ -28,8 +28,8 @@ contract MiniFL_BaseTest is BaseTest {
     rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), _maximumReward);
     rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), _maximumReward);
 
-    rewarder1.setRewardPerSecond(_maximumReward, false);
-    rewarder2.setRewardPerSecond(_maximumReward, false);
+    rewarder1.setRewardPerSecond(100 ether, false);
+    rewarder2.setRewardPerSecond(150 ether, false);
   }
 
   function setupMiniFLPool() internal {
@@ -47,19 +47,27 @@ contract MiniFL_BaseTest is BaseTest {
     debtToken1.mint(BOB, 1000 ether);
   }
 
+  // Rewarder1 Info
+  // | Pool   | AllocPoint |
+  // | WETH   |         90 |
+  // | DToken |         10 |
+  // Rewarder2 Info
+  // | Pool   | AllocPoint |
+  // | DToken |        100 |
   function setupRewarder() internal {
-    // setup rewarder
+    rewarder1.addPool(90, wethPoolID, false);
+    rewarder1.addPool(10, dtokenPoolID, false);
+
+    rewarder2.addPool(100, wethPoolID, false);
+
     address[] memory _poolWethRewarders = new address[](2);
     _poolWethRewarders[0] = address(rewarder1);
     _poolWethRewarders[1] = address(rewarder2);
     miniFL.setPoolRewarders(wethPoolID, _poolWethRewarders);
-    rewarder1.addPool(100, wethPoolID, false);
-    rewarder2.addPool(100, wethPoolID, false);
 
     address[] memory _poolDebtTokenRewarders = new address[](1);
     _poolDebtTokenRewarders[0] = address(rewarder1);
     miniFL.setPoolRewarders(dtokenPoolID, _poolDebtTokenRewarders);
-    rewarder1.addPool(100, dtokenPoolID, false);
   }
 
   function prepareForHarvest() internal {
@@ -84,13 +92,26 @@ contract MiniFL_BaseTest is BaseTest {
     vm.stopPrank();
   }
 
-  function assertRewarderUserAmount(
+  function assertUserInfo(
+    address _user,
+    uint256 _pid,
+    uint256 _expectedAmount,
+    int256 _expectedRewardDebt
+  ) internal {
+    (uint256 _amount, int256 _rewardDebt) = miniFL.userInfo(_pid, _user);
+    assertEq(_amount, _expectedAmount);
+    assertEq(_rewardDebt, _expectedRewardDebt);
+  }
+
+  function assertRewarderUserInfo(
     Rewarder _rewarder,
     address _user,
     uint256 _pid,
-    uint256 _expectedAmount
+    uint256 _expectedAmount,
+    int256 _expectedRewardDebt
   ) internal {
-    (uint256 _amount, ) = _rewarder.userInfo(_pid, _user);
+    (uint256 _amount, int256 _rewardDebt) = _rewarder.userInfo(_pid, _user);
     assertEq(_amount, _expectedAmount);
+    assertEq(_rewardDebt, _expectedRewardDebt);
   }
 }
