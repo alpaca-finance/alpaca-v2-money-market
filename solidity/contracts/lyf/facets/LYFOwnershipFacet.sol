@@ -1,14 +1,10 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 import { LibDiamond } from "../libraries/LibDiamond.sol";
-import { IERC173 } from "../interfaces/IERC173.sol";
+import { ILYFOwnershipFacet } from "../interfaces/ILYFOwnershipFacet.sol";
 
-contract OwnershipFacet is IERC173 {
-  error OwnershipFacet_CallerIsNotPendingOwner();
-
-  event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
-
+contract LYFOwnershipFacet is ILYFOwnershipFacet {
   address private _pendingOwner;
 
   function transferOwnership(address _newOwner) external override {
@@ -20,7 +16,7 @@ contract OwnershipFacet is IERC173 {
   }
 
   function acceptOwnership() external {
-    if (msg.sender != _pendingOwner) revert OwnershipFacet_CallerIsNotPendingOwner();
+    if (msg.sender != _pendingOwner) revert LYFOwnershipFacet_CallerIsNotPendingOwner();
 
     address _previousOwner = LibDiamond.contractOwner();
     LibDiamond.setContractOwner(_pendingOwner);
