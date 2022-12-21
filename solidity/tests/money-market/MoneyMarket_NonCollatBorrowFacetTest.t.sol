@@ -5,6 +5,7 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 
 // interfaces
 import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
@@ -262,6 +263,33 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenUserBorrowUpToTokenGlobalLimit_ThenProtocolBorrowSameToken_ShouldRevert() external {
+    uint256 _wethGlobalLimit = 10 ether;
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: _wethGlobalLimit,
+      maxCollateral: 100 ether,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
+    // Collater borrow
+    // BOB borrow weth upto Global limit
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
+    borrowFacet.borrow(subAccount0, address(weth), _wethGlobalLimit);
+    vm.stopPrank();
+
+    // Non collat borrow
+    vm.prank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 1);
   }
 
   function testRevert_WhenProtocolBorrowMoreThanTokenAccountLimit_ShouldRevert() external {
