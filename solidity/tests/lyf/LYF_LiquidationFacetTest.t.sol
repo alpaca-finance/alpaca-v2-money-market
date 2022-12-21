@@ -364,7 +364,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)), 10 ether);
     assertEq(farmFacet.getTotalBorrowingPower(ALICE, subAccount0), 63 ether);
-    assertEq(farmFacet.getTotalUsedBorrowedPower(ALICE, subAccount0), 33.333333333333333333 ether);
+    assertEq(farmFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 33.333333333333333333 ether);
 
     usdc.mint(liquidator, 10000 ether);
 
@@ -437,7 +437,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken), 4 ether);
     assertEq(farmFacet.getTotalBorrowingPower(ALICE, subAccount0), 90 ether);
-    assertEq(farmFacet.getTotalUsedBorrowedPower(ALICE, subAccount0), 66.666666666666666666 ether);
+    assertEq(farmFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 66.666666666666666666 ether);
 
     usdc.mint(liquidator, 10000 ether);
 

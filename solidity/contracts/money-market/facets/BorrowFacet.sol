@@ -60,10 +60,14 @@ contract BorrowFacet is IBorrowFacet {
       userDebtShare.init();
     }
 
-    uint256 _totalSupply = moneyMarketDs.debtShares[_token];
-    uint256 _totalValue = moneyMarketDs.debtValues[_token];
+    uint256 _totalOverCollatDebtShare = moneyMarketDs.debtShares[_token];
+    uint256 _totalOverCollatDebtValue = moneyMarketDs.debtValues[_token];
 
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
+      _amount,
+      _totalOverCollatDebtShare,
+      _totalOverCollatDebtValue
+    );
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -86,7 +90,7 @@ contract BorrowFacet is IBorrowFacet {
     address _account,
     uint256 _subAccountId,
     address _token,
-    uint256 _repayAmount
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
@@ -94,19 +98,13 @@ contract BorrowFacet is IBorrowFacet {
 
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      _repayAmount,
-      moneyMarketDs.debtShares[_token],
-      moneyMarketDs.debtValues[_token]
-    );
-
-    _shareToRemove = _oldSubAccountDebtShare > _shareToRemove ? _shareToRemove : _oldSubAccountDebtShare;
+    uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
       _token,
       _oldSubAccountDebtShare,
-      _shareToRemove,
+      _actualShareToRepay,
       moneyMarketDs
     );
 
@@ -125,16 +123,14 @@ contract BorrowFacet is IBorrowFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
     (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _maximumAmountToRemove = _collateralAmount > _oldDebtAmount ? _oldDebtAmount : _collateralAmount;
-
-    uint256 _amountToRemove = _repayAmount > _maximumAmountToRemove ? _maximumAmountToRemove : _repayAmount;
+    uint256 _amountToRemove = LibFullMath.min(_repayAmount, LibFullMath.min(_oldDebtAmount, _collateralAmount));
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _amountToRemove,
@@ -251,7 +247,7 @@ contract BorrowFacet is IBorrowFacet {
     // check asset tier
     uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
 
-    (uint256 _totalUsedBorrowedPower, bool _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(
+    (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
       _subAccount,
       moneyMarketDs
     );
@@ -267,7 +263,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidAssetTier();
     }
 
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
 
     _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
@@ -284,7 +280,7 @@ contract BorrowFacet is IBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
@@ -321,7 +317,7 @@ contract BorrowFacet is IBorrowFacet {
     _totalBorrowingPowerUSDValue = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
   }
 
-  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
+  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
@@ -330,7 +326,10 @@ contract BorrowFacet is IBorrowFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
+      _subAccount,
+      moneyMarketDs
+    );
   }
 
   function debtLastAccrueTime(address _token) external view returns (uint256) {
