@@ -16,9 +16,7 @@ import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IWNative } from "../interfaces/IWNative.sol";
 import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
-
 import { IbToken } from "../IbToken.sol";
-
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract LendFacet is ILendFacet {
@@ -168,7 +166,6 @@ contract LendFacet is ILendFacet {
 
     _totalSupply = IbToken(_ibToken).totalSupply();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
     _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
   }
 

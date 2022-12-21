@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
 contract MoneyMarket_Lend_Deposit_Test is MoneyMarket_BaseTest {
   function setUp() public override {
@@ -71,5 +72,47 @@ contract MoneyMarket_Lend_Deposit_Test is MoneyMarket_BaseTest {
     assertEq(nativeToken.balanceOf(moneyMarketDiamond), 10 ether);
 
     assertEq(ibWNative.balanceOf(ALICE), 10 ether);
+  }
+
+  function testCorrectness_WhenUserDepositWithUnaccrueInterest_ShouldMintShareCorrectly() external {
+    /**
+     * scenario:
+     *
+     * 1. Alice deposit 10 weth and get 10 ibWeth
+     *
+     * 2. Bob add collateral and borrow 5 weth out
+     *
+     * 3. After 10 seconds, alice deposit another 5 weth
+     *    - interest 0.1% per second, pendingInterest = 5 * 10 * (5 * 0.001) = 0.25 weth
+     *    - totalToken = 10.25, totalSupply = 10
+     *    - alice should get 5 * 10 / 10.25 = 4.878048780487804878
+     *    - alice's total ibWeth = 14.878048780487804878
+     */
+
+    FixedInterestRateModel model = new FixedInterestRateModel();
+    adminFacet.setInterestModel(address(weth), address(model));
+    borrowFacet.accrueInterest(address(weth));
+
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 10 ether);
+    vm.stopPrank();
+
+    assertEq(ibWeth.balanceOf(ALICE), 10 ether);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), 20 ether);
+    borrowFacet.borrow(subAccount0, address(weth), 5 ether);
+    vm.stopPrank();
+
+    // advance time for interest
+    vm.warp(block.timestamp + 10 seconds);
+
+    assertEq(borrowFacet.pendingInterest(address(weth)), 0.25 ether);
+
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 5 ether);
+    vm.stopPrank();
+
+    assertEq(ibWeth.balanceOf(ALICE), 14.878048780487804878 ether);
   }
 }
