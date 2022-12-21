@@ -114,7 +114,7 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs.subAccountCollats[_subAccount].getAll();
 
     address _collatToken;
-    address _actualToken;
+    address _underlyingToken;
     uint256 _tokenPrice;
     TokenConfig memory _tokenConfig;
 
@@ -125,8 +125,8 @@ library LibMoneyMarket01 {
 
       (_tokenPrice, ) = getPriceUSD(_collatToken, moneyMarketDs);
 
-      _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-      _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken == address(0) ? _collatToken : _actualToken];
+      _underlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
+      _tokenConfig = moneyMarketDs.tokenConfigs[_underlyingToken == address(0) ? _collatToken : _underlyingToken];
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(

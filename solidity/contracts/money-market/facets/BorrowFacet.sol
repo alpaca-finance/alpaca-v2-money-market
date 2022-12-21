@@ -11,7 +11,6 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
-import { Math } from "../libraries/Math.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
@@ -61,10 +60,14 @@ contract BorrowFacet is IBorrowFacet {
       userDebtShare.init();
     }
 
-    uint256 _globalDebtShare = moneyMarketDs.debtShares[_token];
-    uint256 _globalDebtValue = moneyMarketDs.debtValues[_token];
+    uint256 _totalOverCollatDebtShare = moneyMarketDs.debtShares[_token];
+    uint256 _totalOverCollatDebtValue = moneyMarketDs.debtValues[_token];
 
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _globalDebtShare, _globalDebtValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
+      _amount,
+      _totalOverCollatDebtShare,
+      _totalOverCollatDebtValue
+    );
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
@@ -93,7 +96,7 @@ contract BorrowFacet is IBorrowFacet {
 
     (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _actualShareToRepay = Math.min(_oldSubAccountDebtShare, _debtShareToRepay);
+    uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
@@ -124,7 +127,7 @@ contract BorrowFacet is IBorrowFacet {
 
     (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _amountToRemove = Math.min(_repayAmount, Math.min(_oldDebtAmount, _collateralAmount));
+    uint256 _amountToRemove = LibFullMath.min(_repayAmount, LibFullMath.min(_oldDebtAmount, _collateralAmount));
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _amountToRemove,
