@@ -118,7 +118,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
   }
 
-  function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowedPower_ShouldRevert() external {
+  function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowingPower_ShouldRevert() external {
     // BOB deposit 10 weth
     vm.startPrank(BOB);
     lendFacet.deposit(address(weth), 10 ether);
@@ -134,7 +134,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     // alice borrow 1 weth
     borrowFacet.borrow(subAccount0, address(weth), 1 ether);
 
-    // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowedPower
+    // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowingPower
     // should revert
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_BorrowingPowerTooLow.selector));
     collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether);

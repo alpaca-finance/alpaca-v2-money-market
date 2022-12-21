@@ -240,7 +240,7 @@ contract BorrowFacet is IBorrowFacet {
     // check asset tier
     uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
 
-    (uint256 _totalUsedBorrowedPower, bool _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(
+    (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
       _subAccount,
       moneyMarketDs
     );
@@ -256,7 +256,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidAssetTier();
     }
 
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowedPower, _token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
 
     _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
@@ -273,7 +273,7 @@ contract BorrowFacet is IBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
@@ -312,7 +312,7 @@ contract BorrowFacet is IBorrowFacet {
     _totalBorrowingPowerUSDValue = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
   }
 
-  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
+  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
@@ -321,7 +321,10 @@ contract BorrowFacet is IBorrowFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
+      _subAccount,
+      moneyMarketDs
+    );
   }
 
   function debtLastAccrueTime(address _token) external view returns (uint256) {

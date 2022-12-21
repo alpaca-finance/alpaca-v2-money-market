@@ -164,10 +164,10 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getTotalUsedBorrowedPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+  function getTotalUsedBorrowingPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _totalUsedBorrowedPower, bool _hasIsolateAsset)
+    returns (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset)
   {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
@@ -188,7 +188,7 @@ library LibMoneyMarket01 {
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
-      _totalUsedBorrowedPower += usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+      _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
 
       unchecked {
         _i++;
@@ -227,13 +227,13 @@ library LibMoneyMarket01 {
     }
   }
 
-  // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
-  function usedBorrowedPower(
+  // _usedBorrowingPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
+  function usedBorrowingPower(
     uint256 _borrowedAmount,
     uint256 _tokenPrice,
     uint256 _borrowingFactor
-  ) internal pure returns (uint256 _usedBorrowedPower) {
-    _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
+  ) internal pure returns (uint256 _usedBorrowingPower) {
+    _usedBorrowingPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 
   function pendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -538,9 +538,9 @@ library LibMoneyMarket01 {
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
 
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
-    (uint256 _totalUsedBorrowedPower, ) = getTotalUsedBorrowedPower(_subAccount, ds);
+    (uint256 _totalUsedBorrowingPower, ) = getTotalUsedBorrowingPower(_subAccount, ds);
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
-    if (_totalBorrowingPower < _totalUsedBorrowedPower) {
+    if (_totalBorrowingPower < _totalUsedBorrowingPower) {
       revert LibMoneyMarket01_BorrowingPowerTooLow();
     }
   }

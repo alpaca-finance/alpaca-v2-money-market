@@ -130,7 +130,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // 1. check if position is underwater and can be liquidated
     {
       uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
       if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
         revert LiquidationFacet_Healthy();
       }
