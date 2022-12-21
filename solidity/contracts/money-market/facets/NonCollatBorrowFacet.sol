@@ -62,6 +62,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     moneyMarketDs.globalDebts[_token] += _amount;
 
+    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    moneyMarketDs.reserves[_token] -= _amount;
     ERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
@@ -80,6 +82,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     _removeDebt(_account, _token, _oldDebtValue, _debtToRemove, moneyMarketDs);
 
     // transfer only amount to repay
+    moneyMarketDs.reserves[_token] += _debtToRemove;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
