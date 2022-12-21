@@ -2,13 +2,9 @@
 pragma solidity 0.8.17;
 
 import { LibDiamond } from "../libraries/LibDiamond.sol";
-import { IERC173 } from "../interfaces/IERC173.sol";
+import { IOwnershipFacet } from "../interfaces/IOwnershipFacet.sol";
 
-contract OwnershipFacet is IERC173 {
-  error OwnershipFacet_CallerIsNotPendingOwner();
-
-  event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
-
+contract OwnershipFacet is IOwnershipFacet {
   address private _pendingOwner;
 
   function transferOwnership(address _newOwner) external override {
