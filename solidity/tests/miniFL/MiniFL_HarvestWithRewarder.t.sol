@@ -11,7 +11,7 @@ import { LibAccount } from "../libs/LibAccount.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_Harvest is MiniFL_BaseTest {
+contract MiniFL_HarvestWithRewarder is MiniFL_BaseTest {
   using LibAccount for address;
 
   uint256 _aliceWethDeposited = 20 ether;

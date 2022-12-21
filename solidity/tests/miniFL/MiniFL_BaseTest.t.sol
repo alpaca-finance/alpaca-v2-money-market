@@ -19,14 +19,15 @@ contract MiniFL_BaseTest is BaseTest {
   uint256 dtokenPoolID = 1;
   uint256 notExistsPoolID = 999;
 
+  uint256 alpacaMaximumReward = 1000 ether;
+
   function setUp() public virtual {
-    uint256 _maximumReward = 1000 ether;
-    miniFL = deployMiniFL(address(alpaca), _maximumReward);
-    miniFL.setAlpacaPerSecond(_maximumReward, false);
+    miniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
+    miniFL.setAlpacaPerSecond(alpacaMaximumReward, false);
     alpaca.mint(address(miniFL), 10000000 ether);
 
-    rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), _maximumReward);
-    rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), _maximumReward);
+    rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), alpacaMaximumReward);
+    rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), alpacaMaximumReward);
 
     rewarder1.setRewardPerSecond(100 ether, false);
     rewarder2.setRewardPerSecond(150 ether, false);
