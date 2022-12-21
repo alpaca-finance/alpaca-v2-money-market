@@ -91,7 +91,6 @@ library LibMoneyMarket01 {
     uint256 repurchaseFeeBps;
     uint256 liquidationFeeBps;
     // reserve pool
-
     mapping(address => uint256) protocolReserves;
     // diamond token balances
     mapping(address => uint256) reserves;
@@ -382,7 +381,7 @@ library LibMoneyMarket01 {
   }
 
   // totalToken is the amount of token remains in ((MM + borrowed amount)
-  // - (collateral from user + protocol's reserve pool)
+  // - (protocol's reserve pool)
   // where borrowed amount consists of over-collat and non-collat borrowing
   function getTotalToken(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
@@ -390,8 +389,7 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     return
-      (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) -
-      (moneyMarketDs.collats[_token] + moneyMarketDs.protocolReserves[_token]);
+      (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) - (moneyMarketDs.protocolReserves[_token]);
   }
 
   function getTotalTokenWithPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -409,7 +407,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _floating)
   {
-    _floating = moneyMarketDs.reserves[_token] - moneyMarketDs.collats[_token];
+    _floating = moneyMarketDs.reserves[_token];
   }
 
   function setIbPair(
@@ -465,8 +463,8 @@ library LibMoneyMarket01 {
     uint256 _shareAmount,
     address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _shareValue) {
-    address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
+  ) internal returns (address _token, uint256 _shareValue) {
+    _token = moneyMarketDs.ibTokenToTokens[_ibToken];
     accrueInterest(_token, moneyMarketDs);
 
     if (_token == address(0)) {
@@ -483,7 +481,6 @@ library LibMoneyMarket01 {
     moneyMarketDs.reserves[_token] -= _shareValue;
 
     IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
-    ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }
@@ -516,7 +513,6 @@ library LibMoneyMarket01 {
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
     ds.collats[_token] += _addAmount;
-    ds.reserves[_token] += _addAmount;
   }
 
   function removeCollat(
@@ -528,8 +524,6 @@ library LibMoneyMarket01 {
     removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
 
     ds.collats[_token] -= _removeAmount;
-    if (_removeAmount > ds.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
-    ds.reserves[_token] -= _removeAmount;
   }
 
   function removeCollatFromSubAccount(

@@ -156,6 +156,7 @@ contract BorrowFacet is IBorrowFacet {
 
     moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
     moneyMarketDs.collats[_token] -= _actualRepayAmount;
+    moneyMarketDs.reserves[_token] += _actualRepayAmount;
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
   }
@@ -247,9 +248,6 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidToken(_token);
     }
 
-    // check enough token for borrow
-    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
-
     // check asset tier
     uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
 
@@ -302,9 +300,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    uint256 _mmTokenBalnce = moneyMarketDs.reserves[_token] - moneyMarketDs.collats[_token];
-
-    if (_mmTokenBalnce < _borrowAmount) {
+    if (moneyMarketDs.reserves[_token] < _borrowAmount) {
       revert BorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
