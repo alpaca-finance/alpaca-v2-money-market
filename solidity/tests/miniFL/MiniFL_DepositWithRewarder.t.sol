@@ -10,7 +10,7 @@ import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_DepositWithRewarderTest is MiniFL_BaseTest {
+contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
   uint256 wethPoolID = 0;
   uint256 debtTokenPoolID = 1;
 
