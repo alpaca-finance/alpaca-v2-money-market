@@ -20,20 +20,22 @@ contract MiniFLTest is MiniFL_BaseTest {
     rewarder1.addPool(50, 0, false);
     rewarder1.addPool(50, 1, false);
 
-    rewarder2.addPool(100, 0, false);
-    rewarder2.addPool(0, 1, false);
+    rewarder2.addPool(100, 1, false);
 
     // set rewarders
-    address[] memory _rewarders = new address[](2);
-    _rewarders[0] = address(rewarder1);
-    _rewarders[1] = address(rewarder2);
-    miniFL.setPoolRewarders(0, _rewarders);
-    miniFL.setPoolRewarders(1, _rewarders);
+    address[] memory _rewarders1 = new address[](1);
+    _rewarders1[0] = address(rewarder1);
+    miniFL.setPoolRewarders(0, _rewarders1);
+
+    address[] memory _rewarders2 = new address[](2);
+    _rewarders2[0] = address(rewarder1);
+    _rewarders2[1] = address(rewarder2);
+    miniFL.setPoolRewarders(1, _rewarders2);
 
     // allocation point
     // | PID | ALPACA | Reward1 | Reward2 |
-    // |   0 |     60 |      50 |     100 |
-    // |   1 |     40 |      50 |       0 |
+    // |   0 |     60 |      50 |       0 |
+    // |   1 |     40 |      50 |     100 |
     // Reward per second
     // | ALPACA | Reward1 | Reward2 |
     // |   1000 |    1000 |    1000 |
@@ -53,16 +55,16 @@ contract MiniFLTest is MiniFL_BaseTest {
     // | 100000 |  100000 |  100000 |
     // Expectation
     // | PID | ALPACA | Reward1 | Reward2 |
-    // |   0 |  60000 |   50000 |  100000 |
-    // |   1 |  40000 |   50000 |       0 |
+    // |   0 |  60000 |   50000 |       0 |
+    // |   1 |  40000 |   50000 |  100000 |
 
     vm.warp(block.timestamp + 100);
     assertEq(miniFL.pendingAlpaca(0, ALICE), 60000 ether);
     assertEq(rewarder1.pendingToken(0, ALICE), 50000 ether);
-    assertEq(rewarder2.pendingToken(0, ALICE), 100000 ether);
+    assertEq(rewarder2.pendingToken(0, ALICE), 0 ether);
 
     assertEq(miniFL.pendingAlpaca(1, ALICE), 40000 ether);
     assertEq(rewarder1.pendingToken(1, ALICE), 50000 ether);
-    assertEq(rewarder2.pendingToken(1, ALICE), 0 ether);
+    assertEq(rewarder2.pendingToken(1, ALICE), 100000 ether);
   }
 }

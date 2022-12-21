@@ -361,17 +361,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _pid pool id
   /// @param _rewarders rewarders
   function setPoolRewarders(uint256 _pid, address[] calldata _rewarders) external onlyOwner {
-    delete rewarders[_pid];
-    uint256 _length = _rewarders.length;
-    for (uint256 _i; _i < _length; ) {
-      address _rewarder = _rewarders[_i];
-      if (_rewarder != address(0)) {
-        IRewarder(_rewarder).name();
-        rewarders[_pid].push(_rewarder);
-      }
-      unchecked {
-        ++_i;
-      }
-    }
+    // todo: rethink about validation
+    rewarders[_pid] = _rewarders;
   }
 }
