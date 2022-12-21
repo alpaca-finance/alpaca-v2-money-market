@@ -140,21 +140,6 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.treasury = newTreasury;
   }
 
-  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
-    external
-    onlyOwner
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _nonCollatBorrowLimitInputs.length;
-    for (uint8 _i; _i < _length; ) {
-      NonCollatBorrowLimitInput memory input = _nonCollatBorrowLimitInputs[_i];
-      moneyMarketDs.nonCollatBorrowLimitUSDValues[input.account] = input.limit;
-      unchecked {
-        _i++;
-      }
-    }
-  }
-
   function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
     return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
@@ -203,5 +188,36 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     IInterestBearingToken(_newImplementation).decimals(); // sanity check
     moneyMarketDs.ibTokenImplementation = _newImplementation;
+  }
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _protocolConfigInputs.length;
+    ProtocolConfigInput memory _protocolConfigInput;
+
+    for (uint256 _i; _i < _length; ) {
+      _protocolConfigInput = _protocolConfigInputs[_i];
+
+      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[
+        _protocolConfigInput.account
+      ];
+
+      protocolConfig.borrowLimitUSDValue = _protocolConfigInput.borrowLimitUSDValue;
+
+      // set limit for each token
+      uint256 _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
+      for (uint256 _j; _j < _tokenBorrowLimitLength; ) {
+        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
+        protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
+
+        unchecked {
+          _j++;
+        }
+      }
+
+      unchecked {
+        _i++;
+      }
+    }
   }
 }
