@@ -12,7 +12,6 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
-import { IIbToken } from "../interfaces/IIbToken.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 

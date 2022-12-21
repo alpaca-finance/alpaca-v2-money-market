@@ -17,10 +17,8 @@ import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IWNative } from "../interfaces/IWNative.sol";
 import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
-
-import { InterestBearingToken } from "../InterestBearingToken.sol";
-
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
@@ -49,7 +47,7 @@ contract LendFacet is ILendFacet {
     }
 
     _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
-    InterestBearingToken(_newIbToken).initialize(_token, address(this));
+    IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
     // todo: tbd
     LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
@@ -76,7 +74,7 @@ contract LendFacet is ILendFacet {
 
     moneyMarketDs.reserves[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    InterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
+    IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
@@ -106,7 +104,7 @@ contract LendFacet is ILendFacet {
 
     moneyMarketDs.reserves[_nativeToken] += _amount;
     IWNative(_nativeToken).deposit{ value: _amount }();
-    InterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
+    IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDepositETH(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
   }
@@ -121,7 +119,7 @@ contract LendFacet is ILendFacet {
 
     uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
 
-    InterestBearingToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
+    IInterestBearingToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
     _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
 
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
@@ -148,7 +146,7 @@ contract LendFacet is ILendFacet {
     uint256 _totalSupply;
     (_ibToken, _totalSupply, _shareToMint) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
 
-    uint256 _tokenDecimals = InterestBearingToken(_ibToken).decimals();
+    uint256 _tokenDecimals = IInterestBearingToken(_ibToken).decimals();
 
     if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
       revert LendFacet_NoTinyShares();
@@ -161,8 +159,8 @@ contract LendFacet is ILendFacet {
     uint256 _shareAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _shareValue) {
-    uint256 _totalSupply = InterestBearingToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = InterestBearingToken(_ibToken).decimals();
+    uint256 _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
+    uint256 _tokenDecimals = IInterestBearingToken(_ibToken).decimals();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
@@ -191,7 +189,7 @@ contract LendFacet is ILendFacet {
       revert LendFacet_InvalidToken(_token);
     }
 
-    _totalSupply = InterestBearingToken(_ibToken).totalSupply();
+    _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
 
     _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);

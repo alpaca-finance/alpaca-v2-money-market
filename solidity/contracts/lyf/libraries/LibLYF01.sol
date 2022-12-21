@@ -13,7 +13,6 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
-import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
@@ -171,7 +170,7 @@ library LibLYF01 {
       if (_actualToken == address(0)) {
         _actualToken = _collatToken;
       } else {
-        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
+        uint256 _totalSupply = ERC20(_collatToken).totalSupply();
         uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_actualToken);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);

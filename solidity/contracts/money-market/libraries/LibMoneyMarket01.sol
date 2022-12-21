@@ -12,7 +12,7 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
-import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
@@ -129,7 +129,7 @@ library LibMoneyMarket01 {
       if (_actualToken == address(0)) {
         _actualToken = _collatToken;
       } else {
-        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
+        uint256 _totalSupply = IInterestBearingToken(_collatToken).totalSupply();
         uint256 _totalToken = getTotalTokenWithPendingInterest(_actualToken, moneyMarketDs);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
@@ -488,7 +488,7 @@ library LibMoneyMarket01 {
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _shareValue;
 
-    IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
+    IInterestBearingToken(_ibToken).burn(_withdrawFrom, _shareAmount);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }
