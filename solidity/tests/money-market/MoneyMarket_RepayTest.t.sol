@@ -119,6 +119,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     (, _debtAmount) = borrowFacet.getDebt(ALICE, subAccount0, address(weth));
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
+
     uint256 _totalTokenBefore = lendFacet.getTotalToken(address(weth));
     vm.prank(ALICE);
     borrowFacet.repayWithCollat(ALICE, subAccount0, address(weth), _repayAmount);
