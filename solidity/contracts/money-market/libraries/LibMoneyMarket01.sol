@@ -95,6 +95,8 @@ library LibMoneyMarket01 {
     mapping(address => uint256) protocolReserves;
     // diamond token balances
     mapping(address => uint256) reserves;
+    // ibToken implementation
+    address ibTokenImplementation;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

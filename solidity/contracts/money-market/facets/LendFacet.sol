@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
@@ -47,7 +48,8 @@ contract LendFacet is ILendFacet {
       revert LendFacet_InvalidToken(_token);
     }
 
-    _newIbToken = address(new InterestBearingToken(_token));
+    _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
+    InterestBearingToken(_newIbToken).initialize(_token);
 
     // todo: tbd
     LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({

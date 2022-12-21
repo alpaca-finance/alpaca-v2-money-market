@@ -197,4 +197,9 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
   }
+
+  function setIbTokenImplementation(address _newImplementation) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.ibTokenImplementation = _newImplementation;
+  }
 }
