@@ -13,6 +13,7 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
+import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 
 contract AdminFacet is IAdminFacet {
   using SafeERC20 for ERC20;
@@ -200,6 +201,7 @@ contract AdminFacet is IAdminFacet {
 
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    IInterestBearingToken(_newImplementation).decimals(); // sanity check
     moneyMarketDs.ibTokenImplementation = _newImplementation;
   }
 }
