@@ -263,7 +263,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidAssetTier();
     }
 
-    _checkAvailableAndTokenLimit(_token, _amount, moneyMarketDs);
+    _checkCapacity(_token, _amount, moneyMarketDs);
 
     _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
   }
@@ -291,7 +291,7 @@ contract BorrowFacet is IBorrowFacet {
     }
   }
 
-  function _checkAvailableAndTokenLimit(
+  function _checkCapacity(
     address _token,
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs

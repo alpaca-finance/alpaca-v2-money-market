@@ -155,9 +155,9 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // check credit
     (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
 
-    _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
+    _checkCapacity(_token, _amount, moneyMarketDs);
 
-    _checkAvailableAndTokenLimit(_token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
   }
 
   // TODO: gas optimize on oracle call
@@ -182,7 +182,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
   }
 
-  function _checkAvailableAndTokenLimit(
+  function _checkCapacity(
     address _token,
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
