@@ -205,7 +205,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(usdc), 2.025 ether);
     vm.stopPrank();
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 4.5 ether);
   }
 
@@ -244,7 +244,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 8.1 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 9 ether);
   }
 
@@ -288,7 +288,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 12.15 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowedPower(ALICE, subAccount0);
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 13.5 ether);
   }
 
