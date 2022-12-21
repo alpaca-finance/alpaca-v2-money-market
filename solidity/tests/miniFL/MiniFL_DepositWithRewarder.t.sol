@@ -11,26 +11,11 @@ import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
 contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
-  uint256 wethPoolID = 0;
-  uint256 debtTokenPoolID = 1;
-
-  uint256 amountToDeposit = 10 ether;
-
   function setUp() public override {
     super.setUp();
+    prepareMiniFLPool();
 
-    miniFL.addPool(100, IERC20Upgradeable(address(weth)), false, false);
-    miniFL.addPool(100, IERC20Upgradeable(address(debtToken1)), true, false);
-
-    // set debtToken staker
-    uint256[] memory _poolIds = new uint256[](1);
-    _poolIds[0] = debtTokenPoolID;
-    address[] memory _stakers = new address[](1);
-    _stakers[0] = BOB;
-    miniFL.approveStakeDebtToken(_poolIds, _stakers, true);
-    debtToken1.mint(BOB, 1000 ether);
-
-    // rewarder
+    // setup rewarder
     address[] memory _poolWethRewarders = new address[](2);
     _poolWethRewarders[0] = address(rewarder1);
     _poolWethRewarders[1] = address(rewarder2);
@@ -40,8 +25,8 @@ contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
 
     address[] memory _poolDebtTokenRewarders = new address[](1);
     _poolDebtTokenRewarders[0] = address(rewarder1);
-    miniFL.setPoolRewarders(debtTokenPoolID, _poolDebtTokenRewarders);
-    rewarder1.addPool(100, debtTokenPoolID, false);
+    miniFL.setPoolRewarders(dtokenPoolID, _poolDebtTokenRewarders);
+    rewarder1.addPool(100, dtokenPoolID, false);
   }
 
   function testCorrectness_WhenDeposit_RewarderUserInfoShouldBeCorrect() external {
@@ -64,16 +49,16 @@ contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
 
     vm.startPrank(BOB);
     debtToken1.approve(address(miniFL), 10 ether);
-    miniFL.deposit(BOB, debtTokenPoolID, 10 ether);
+    miniFL.deposit(BOB, dtokenPoolID, 10 ether);
     vm.stopPrank();
 
     // assert bob balance
     assertEq(_bobDebtTokenBalanceBefore - debtToken1.balanceOf(BOB), 10 ether);
 
     // assert reward user info
-    _assertRewarderUserAmount(rewarder1, BOB, debtTokenPoolID, 10 ether);
+    _assertRewarderUserAmount(rewarder1, BOB, dtokenPoolID, 10 ether);
     // rewarder2 is not register in this pool then user amount should be 0
-    _assertRewarderUserAmount(rewarder2, BOB, debtTokenPoolID, 0 ether);
+    _assertRewarderUserAmount(rewarder2, BOB, dtokenPoolID, 0 ether);
   }
 
   function _assertRewarderUserAmount(

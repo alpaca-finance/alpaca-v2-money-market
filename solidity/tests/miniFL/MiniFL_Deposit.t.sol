@@ -10,23 +10,9 @@ import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 import { IRewarder } from "../../contracts/miniFL/interfaces/IRewarder.sol";
 
 contract MiniFL_Deposit is MiniFL_BaseTest {
-  uint256 wethPoolID = 0;
-  uint256 debtTokenPoolID = 1;
-  uint256 notExistsPoolID = 999;
-
   function setUp() public override {
     super.setUp();
-
-    miniFL.addPool(100, IERC20Upgradeable(address(weth)), false, false);
-    miniFL.addPool(100, IERC20Upgradeable(address(debtToken1)), true, false);
-
-    // set debtToken staker
-    uint256[] memory _poolIds = new uint256[](1);
-    _poolIds[0] = debtTokenPoolID;
-    address[] memory _stakers = new address[](1);
-    _stakers[0] = BOB;
-    miniFL.approveStakeDebtToken(_poolIds, _stakers, true);
-    debtToken1.mint(BOB, 1000 ether);
+    prepareMiniFLPool();
   }
 
   function testRevert_WhenDepositOnNotExistsPool() external {
@@ -59,19 +45,19 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
 
     vm.startPrank(BOB);
     debtToken1.approve(address(miniFL), 10 ether);
-    miniFL.deposit(BOB, debtTokenPoolID, 10 ether);
+    miniFL.deposit(BOB, dtokenPoolID, 10 ether);
     vm.stopPrank();
 
     assertEq(_bobDebtTokenBalanceBefore - debtToken1.balanceOf(BOB), 10 ether);
   }
 
-  // note: now debt token can depost for another
+  // note: now debt token can deposit for another
   function testCorrectness_WhenDepositDebtTokenForAnother() external {
     uint256 _bobDebtTokenBalanceBefore = debtToken1.balanceOf(BOB);
     // BOB deposit for ALICE
     vm.startPrank(BOB);
     debtToken1.approve(address(miniFL), 10 ether);
-    miniFL.deposit(ALICE, debtTokenPoolID, 10 ether);
+    miniFL.deposit(ALICE, dtokenPoolID, 10 ether);
     vm.stopPrank();
 
     assertEq(_bobDebtTokenBalanceBefore - debtToken1.balanceOf(BOB), 10 ether);
@@ -81,7 +67,7 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     // alice is not debt token staker
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
-    miniFL.deposit(BOB, debtTokenPoolID, 10 ether);
+    miniFL.deposit(BOB, dtokenPoolID, 10 ether);
     vm.stopPrank();
   }
 }
