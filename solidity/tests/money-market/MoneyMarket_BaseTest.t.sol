@@ -40,6 +40,8 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
 
@@ -151,6 +153,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setTokenConfigs(_inputs);
 
     // open isolate token market
+    adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);
 

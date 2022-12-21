@@ -49,7 +49,7 @@ contract LendFacet is ILendFacet {
     }
 
     _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
-    InterestBearingToken(_newIbToken).initialize(_token);
+    InterestBearingToken(_newIbToken).initialize(_token, address(this));
 
     // todo: tbd
     LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({

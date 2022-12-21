@@ -76,4 +76,6 @@ interface IAdminFacet {
     address _to,
     uint256 _amount
   ) external;
+
+  function setIbTokenImplementation(address _newImplementation) external;
 }

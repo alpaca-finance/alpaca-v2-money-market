@@ -56,9 +56,10 @@ contract InterestBearingToken is Context, IERC20, IERC20Metadata, Ownable, Initi
    * @param underlying_ Address of underlying token. Used for getting decimals
    * during initialization, getting symbol in name and symbol getter
    */
-  function initialize(address underlying_) external initializer {
+  function initialize(address underlying_, address owner_) external initializer {
     _underlying = underlying_;
     _decimals = IERC20Metadata(underlying_).decimals();
+    _transferOwnership(owner_);
   }
 
   /**
