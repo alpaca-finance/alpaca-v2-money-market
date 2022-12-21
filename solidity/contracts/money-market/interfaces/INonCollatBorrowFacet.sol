@@ -14,7 +14,7 @@ interface INonCollatBorrowFacet {
 
   function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
 
-  function nonCollatGetTotalUsedBorrowedPower(address _account)
+  function nonCollatGetTotalUsedBorrowingPower(address _account)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
@@ -37,5 +37,6 @@ interface INonCollatBorrowFacet {
   );
   error NonCollatBorrowFacet_InvalidAssetTier();
   error NonCollatBorrowFacet_ExceedBorrowLimit();
+  error NonCollatBorrowFacet_ExceedAccountBorrowLimit();
   error NonCollatBorrowFacet_Unauthorized();
 }

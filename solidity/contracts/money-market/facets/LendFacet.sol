@@ -74,48 +74,65 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    (address _ibToken, uint256 _shareToMint) = _getShareToMint(_token, _amount, moneyMarketDs);
+    (address _ibToken, , uint256 _shareToMint) = _getShareAmountFromValue(_token, _amount, moneyMarketDs);
 
+    moneyMarketDs.reserves[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256 _shareValue) {
+  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    _shareValue = LibMoneyMarket01.withdraw(_ibToken, _shareAmount, msg.sender, moneyMarketDs);
+    (address _token, uint256 _shareValue) = LibMoneyMarket01.withdraw(
+      _ibToken,
+      _shareAmount,
+      msg.sender,
+      moneyMarketDs
+    );
+    ERC20(_token).safeTransfer(msg.sender, _shareValue);
+    return _shareValue;
   }
 
   function depositETH() external payable nonReentrant {
+    if (msg.value == 0) revert LendFacet_InvalidAmount(msg.value);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _nativeToken = moneyMarketDs.nativeToken;
-    uint256 _amount = msg.value;
     if (_nativeToken == address(0)) revert LendFacet_InvalidToken(_nativeToken);
-    if (_amount == 0) revert LendFacet_InvalidAmount(_amount);
+
     LibMoneyMarket01.accrueInterest(_nativeToken, moneyMarketDs);
 
-    (address _ibToken, uint256 _shareToMint) = _getShareToMint(_nativeToken, _amount, moneyMarketDs);
+    (address _ibToken, , uint256 _shareToMint) = _getShareAmountFromValue(_nativeToken, msg.value, moneyMarketDs);
 
-    IWNative(_nativeToken).deposit{ value: _amount }();
+    moneyMarketDs.reserves[_nativeToken] += msg.value;
+    IWNative(_nativeToken).deposit{ value: msg.value }();
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
-    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
+    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, msg.value, _shareToMint);
   }
 
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
-    address _relayer = moneyMarketDs.nativeRelayer;
     if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
+
+    address _relayer = moneyMarketDs.nativeRelayer;
     if (_relayer == address(0)) revert LendFacet_InvalidAddress(_relayer);
+
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
+    uint256 _shareValue = LibShareUtil.shareToValue(
+      _shareAmount,
+      LibMoneyMarket01.getTotalToken(_token, moneyMarketDs),
+      IbToken(_ibWNativeToken).totalSupply()
+    );
 
     IbToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
-    _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue);
+    _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
 
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
   }
@@ -129,41 +146,6 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     // total token + pending interest that belong to lender
     _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
-  }
-
-  // calculate _shareToMint to mint before transfer token to MM
-  function _getShareToMint(
-    address _token,
-    uint256 _underlyingAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (address _ibToken, uint256 _shareToMint) {
-    // calculate _shareToMint to mint before transfer token to MM
-    uint256 _totalSupply;
-    (_ibToken, _totalSupply, _shareToMint) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
-
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
-
-    if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
-      revert LendFacet_NoTinyShares();
-    }
-  }
-
-  function _getShareValue(
-    address _token,
-    address _ibToken,
-    uint256 _shareAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _shareValue) {
-    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
-    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
-    _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
-
-    uint256 _shareLeft = _totalSupply - _shareAmount;
-    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
-      revert LendFacet_NoTinyShares();
-    }
   }
 
   function _getShareAmountFromValue(
@@ -204,8 +186,11 @@ contract LendFacet is ILendFacet {
     address _nativeToken,
     address _nativeRelayer,
     address _to,
-    uint256 _amount
+    uint256 _amount,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
+    if (_amount > moneyMarketDs.reserves[_nativeToken]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    moneyMarketDs.reserves[_nativeToken] -= _amount;
     LibSafeToken.safeTransfer(_nativeToken, _nativeRelayer, _amount);
     IWNativeRelayer(_nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);

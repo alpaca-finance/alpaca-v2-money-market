@@ -31,7 +31,7 @@ library LibLYF01 {
 
   uint256 internal constant MAX_BPS = 10000;
 
-  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToReservePool);
+  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
   event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
 
   error LibLYF01_BadSubAccountId();
@@ -194,10 +194,10 @@ library LibLYF01 {
     }
   }
 
-  function getTotalUsedBorrowedPower(address _subAccount, LYFDiamondStorage storage lyfDs)
+  function getTotalUsedBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
     internal
     view
-    returns (uint256 _totalUsedBorrowedPower)
+    returns (uint256 _totalUsedBorrowingPower)
   {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
@@ -211,7 +211,7 @@ library LibLYF01 {
         lyfDs.debtValues[_borrowed[_i].index],
         lyfDs.debtShares[_borrowed[_i].index]
       );
-      _totalUsedBorrowedPower += usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+      _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
       unchecked {
         _i++;
       }
@@ -280,13 +280,13 @@ library LibLYF01 {
     return (_price, _lastUpdated);
   }
 
-  // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
-  function usedBorrowedPower(
+  // _usedBorrowingPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
+  function usedBorrowingPower(
     uint256 _borrowedAmount,
     uint256 _tokenPrice,
     uint256 _borrowingFactor
-  ) internal pure returns (uint256 _usedBorrowedPower) {
-    _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
+  ) internal pure returns (uint256 _usedBorrowingPower) {
+    _usedBorrowingPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 
   function addCollat(
@@ -379,8 +379,8 @@ library LibLYF01 {
 
   function isSubaccountHealthy(address _subAccount, LYFDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
-    uint256 _totalUsedBorrowedPower = getTotalUsedBorrowedPower(_subAccount, ds);
-    return _totalBorrowingPower >= _totalUsedBorrowedPower;
+    uint256 _totalUsedBorrowingPower = getTotalUsedBorrowingPower(_subAccount, ds);
+    return _totalBorrowingPower >= _totalUsedBorrowingPower;
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {

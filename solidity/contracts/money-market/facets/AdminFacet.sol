@@ -139,23 +139,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.treasury = newTreasury;
   }
 
-  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
-    external
-    onlyOwner
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _nonCollatBorrowLimitInputs.length;
-    for (uint8 _i; _i < _length; ) {
-      NonCollatBorrowLimitInput memory input = _nonCollatBorrowLimitInputs[_i];
-      moneyMarketDs.nonCollatBorrowLimitUSDValues[input.account] = input.limit;
-      unchecked {
-        _i++;
-      }
-    }
-  }
-
-  function getReservePool(address _token) external view returns (uint256 _reserve) {
-    return LibMoneyMarket01.moneyMarketDiamondStorage().reservePools[_token];
+  function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
+    return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
 
   function withdrawReserve(
@@ -164,12 +149,14 @@ contract AdminFacet is IAdminFacet {
     uint256 _amount
   ) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_amount > moneyMarketDs.reservePools[_token]) {
+    if (_amount > moneyMarketDs.protocolReserves[_token]) {
       revert AdminFacet_ReserveTooLow();
     }
+    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
 
-    moneyMarketDs.reservePools[_token] -= _amount;
+    moneyMarketDs.protocolReserves[_token] -= _amount;
 
+    moneyMarketDs.reserves[_token] -= _amount;
     ERC20(_token).safeTransfer(_to, _amount);
 
     emit LogWitdrawReserve(_token, _to, _amount);
@@ -194,5 +181,36 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+  }
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _protocolConfigInputs.length;
+    ProtocolConfigInput memory _protocolConfigInput;
+
+    for (uint256 _i; _i < _length; ) {
+      _protocolConfigInput = _protocolConfigInputs[_i];
+
+      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[
+        _protocolConfigInput.account
+      ];
+
+      protocolConfig.borrowLimitUSDValue = _protocolConfigInput.borrowLimitUSDValue;
+
+      // set limit for each token
+      uint256 _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
+      for (uint256 _j; _j < _tokenBorrowLimitLength; ) {
+        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
+        protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
+
+        unchecked {
+          _j++;
+        }
+      }
+
+      unchecked {
+        _i++;
+      }
+    }
   }
 }

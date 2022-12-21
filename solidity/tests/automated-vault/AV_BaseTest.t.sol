@@ -143,14 +143,37 @@ abstract contract AV_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
 
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: avDiamond, limit: 1000 ether });
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
+    _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(weth),
+      maxTokenBorrow: type(uint256).max
+    });
+    _tokenBorrowLimitInputs[1] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(usdc),
+      maxTokenBorrow: type(uint256).max
+    });
+    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(btc),
+      maxTokenBorrow: type(uint256).max
+    });
 
-    IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: avDiamond,
+      tokenBorrowLimit: _tokenBorrowLimitInputs,
+      borrowLimitUSDValue: type(uint256).max
+    });
+
+    IAdminFacet(moneyMarketDiamond).setProtocolConfigs(_protocolConfigInputs);
 
     // prepare for borrow
-    weth.mint(moneyMarketDiamond, 1000 ether);
-    usdc.mint(moneyMarketDiamond, 1000 ether);
+    vm.startPrank(EVE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    vm.stopPrank();
   }
 
   function deployAVPancakeSwapHandler(address _router, address _lpToken) internal returns (AVPancakeSwapHandler) {
