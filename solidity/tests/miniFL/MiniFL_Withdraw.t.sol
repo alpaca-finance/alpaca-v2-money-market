@@ -71,9 +71,8 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
   }
 
   function testRevert_WhenNotAllowToWithdrawDebtToken() external {
-    vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
+    vm.prank(ALICE);
     miniFL.withdraw(ALICE, dtokenPoolID, 5 ether);
-    vm.stopPrank();
   }
 }

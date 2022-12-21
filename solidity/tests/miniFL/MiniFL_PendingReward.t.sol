@@ -45,6 +45,9 @@ contract MiniFL_PendingReward is MiniFL_BaseTest {
     // |  DToken |           4000 |
     // |   Total |          44000 |
     // ----------------------------
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
+    assertEq(miniFL.pendingAlpaca(dtokenPoolID, ALICE), 4000 ether);
+
     // BOB Reward
     // ----------------------------
     // |    Pool |  ALPACA Reward |
@@ -53,10 +56,6 @@ contract MiniFL_PendingReward is MiniFL_BaseTest {
     // |  DToken |          36000 |
     // |   Total |          56000 |
     // ----------------------------
-
-    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
-    assertEq(miniFL.pendingAlpaca(dtokenPoolID, ALICE), 4000 ether);
-
     assertEq(miniFL.pendingAlpaca(wethPoolID, BOB), 20000 ether);
     assertEq(miniFL.pendingAlpaca(dtokenPoolID, BOB), 36000 ether);
   }

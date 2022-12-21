@@ -44,6 +44,7 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     assertEq(_balanceBefore, ALICE.myBalanceOf(address(alpaca)));
   }
 
+  // note: ref pending reward from MiniFL_PendingReward.sol:testCorrectness_WhenTimpast_PendingAlpacaShouldBeCorrectly
   function testCorrectness_WhenTimepast_AndHarvest() external {
     // timpast for 100 second
     vm.warp(block.timestamp + 100);
@@ -79,9 +80,8 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     // timepast too far, made alpaca distributed 1000000 * 1000 = 1000,000,000 but alpaca in miniFL has only 10,000,000
     vm.warp(block.timestamp + 1000000);
 
-    vm.startPrank(ALICE);
     vm.expectRevert();
+    vm.prank(ALICE);
     miniFL.harvest(wethPoolID);
-    vm.stopPrank();
   }
 }

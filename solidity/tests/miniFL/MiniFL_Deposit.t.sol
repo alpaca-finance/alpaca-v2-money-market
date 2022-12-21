@@ -65,9 +65,8 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
 
   function testRevert_WhenNotAllowToDepositDebtToken() external {
     // alice is not debt token staker
-    vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
+    vm.prank(ALICE);
     miniFL.deposit(BOB, dtokenPoolID, 10 ether);
-    vm.stopPrank();
   }
 }
