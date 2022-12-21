@@ -23,6 +23,7 @@ contract MiniFL_BaseTest is BaseTest {
     uint256 _maximumReward = 1000 ether;
     miniFL = deployMiniFL(address(alpaca), _maximumReward);
     miniFL.setAlpacaPerSecond(_maximumReward, false);
+    alpaca.mint(address(miniFL), 10000000 ether);
 
     rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), _maximumReward);
     rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), _maximumReward);
@@ -33,9 +34,9 @@ contract MiniFL_BaseTest is BaseTest {
 
   function prepareMiniFLPool() internal {
     // add staking pool
-    miniFL.addPool(100, IERC20Upgradeable(address(weth)), false, false);
+    miniFL.addPool(60, IERC20Upgradeable(address(weth)), false, false);
     // add debt token pool
-    miniFL.addPool(100, IERC20Upgradeable(address(debtToken1)), true, false);
+    miniFL.addPool(40, IERC20Upgradeable(address(debtToken1)), true, false);
 
     // set debtToken staker
     uint256[] memory _poolIds = new uint256[](1);
@@ -54,5 +55,27 @@ contract MiniFL_BaseTest is BaseTest {
   ) internal {
     (uint256 _amount, ) = _rewarder.userInfo(_pid, _user);
     assertEq(_amount, _expectedAmount);
+  }
+
+  function prepareForHarvest() internal {
+    vm.startPrank(ALICE);
+    weth.approve(address(miniFL), 20 ether);
+    miniFL.deposit(ALICE, wethPoolID, 20 ether);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    weth.approve(address(miniFL), 10 ether);
+    miniFL.deposit(BOB, wethPoolID, 10 ether);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    debtToken1.approve(address(miniFL), 90 ether);
+    miniFL.deposit(BOB, dtokenPoolID, 90 ether);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    debtToken1.approve(address(miniFL), 10 ether);
+    miniFL.deposit(ALICE, dtokenPoolID, 10 ether);
+    vm.stopPrank();
   }
 }
