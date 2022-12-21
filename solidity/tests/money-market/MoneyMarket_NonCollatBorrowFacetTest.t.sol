@@ -9,6 +9,9 @@ import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol"
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
+// libs
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+
 contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
@@ -239,5 +242,59 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       )
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanTokenGlobalLimit_ShouldRevert() external {
+    uint256 _wethGlobalLimit = 10 ether;
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: _wethGlobalLimit,
+      maxCollateral: 100 ether,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
+    uint256 _aliceBorrowAmount = _wethGlobalLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanTokenAccountLimit_ShouldRevert() external {
+    uint256 _aliceWethAccountLimit = 5 ether;
+    uint256 _bobWethAccountLimit = 4 ether;
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(weth),
+      maxTokenBorrow: _aliceWethAccountLimit
+    });
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(weth),
+      maxTokenBorrow: _bobWethAccountLimit
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
+    uint256 _aliceBorrowAmount = _aliceWethAccountLimit + 1;
+    uint256 _bobBorrowAmount = _bobWethAccountLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+
+    vm.prank(BOB);
+    vm.expectRevert(
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _bobBorrowAmount);
   }
 }

@@ -150,6 +150,39 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](6);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(weth),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(usdc),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[2] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      token: address(btc),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[3] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(weth),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[4] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(usdc),
+      maxTokenBorrow: 30e18
+    });
+    _protocolConfigInputs[5] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      token: address(btc),
+      maxTokenBorrow: 30e18
+    });
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
     // open isolate token market
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);

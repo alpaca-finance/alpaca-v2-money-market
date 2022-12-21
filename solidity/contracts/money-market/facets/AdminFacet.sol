@@ -197,4 +197,23 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
   }
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _protocolConfigInput.length;
+    address _account;
+    address _token;
+    for (uint256 _i; _i < _length; ) {
+      _account = _protocolConfigInput[_i].account;
+      _token = _protocolConfigInput[_i].token;
+
+      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[_account];
+
+      protocolConfig.maxTokenBorrow[_token] = _protocolConfigInput[_i].maxTokenBorrow;
+
+      unchecked {
+        _i++;
+      }
+    }
+  }
 }

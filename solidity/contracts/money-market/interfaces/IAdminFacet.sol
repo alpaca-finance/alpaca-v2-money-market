@@ -25,6 +25,12 @@ interface IAdminFacet {
     uint256 maxToleranceExpiredSecond;
   }
 
+  struct ProtocolConfigInput {
+    address account;
+    address token;
+    uint256 maxTokenBorrow;
+  }
+
   struct NonCollatBorrowLimitInput {
     address account;
     uint256 limit;
@@ -76,4 +82,6 @@ interface IAdminFacet {
     address _to,
     uint256 _amount
   ) external;
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 }
