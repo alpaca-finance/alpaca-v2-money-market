@@ -183,22 +183,26 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
   }
 
-  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external onlyOwner {
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _protocolConfigInput.length;
-    address _account;
+    uint256 _length = _protocolConfigInputs.length;
+    ProtocolConfigInput memory _protocolConfigInput;
+
     for (uint256 _i; _i < _length; ) {
-      _account = _protocolConfigInput[_i].account;
+      _protocolConfigInput = _protocolConfigInputs[_i];
 
-      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[_account];
+      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[
+        _protocolConfigInput.account
+      ];
 
-      protocolConfig.borrowLimitUSDValue = _protocolConfigInput[_i].borrowLimitUSDValue;
+      protocolConfig.borrowLimitUSDValue = _protocolConfigInput.borrowLimitUSDValue;
 
       // set limit for each token
-      uint256 _tokenBorrowLimitLength = _protocolConfigInput[_i].tokenBorrowLimit.length;
+      uint256 _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
       for (uint256 _j; _j < _tokenBorrowLimitLength; ) {
-        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput[_i].tokenBorrowLimit[_j];
+        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
+
         unchecked {
           _j++;
         }
