@@ -8,6 +8,11 @@ import { console } from "../utils/console.sol";
 
 // interfaces
 import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
+import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
+
+// miniFL
+import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
+import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
@@ -41,6 +46,7 @@ contract BaseTest is DSTest {
   MockERC20 internal usdc;
   MockERC20 internal btc;
   MockERC20 internal opm; // open market token
+  MockERC20 internal alpaca;
   address internal usd;
   MockERC20 internal isolateToken;
 
@@ -49,6 +55,9 @@ contract BaseTest is DSTest {
   MockERC20 internal ibUsdc;
   MockERC20 internal ibIsolateToken;
   MockERC20 internal ibWNative;
+
+  MockERC20 internal rewardToken1;
+  MockERC20 internal rewardToken2;
 
   IPriceOracle internal oracle;
   IAlpacaV2Oracle internal alpacaV2Oracle;
@@ -66,6 +75,7 @@ contract BaseTest is DSTest {
     usdc = deployMockErc20("USD COIN", "USDC", 18);
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
+    alpaca = deployMockErc20("ALPACA TOKEN", "ALPACA", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
     nativeToken = deployMockWNative();
 
@@ -74,6 +84,9 @@ contract BaseTest is DSTest {
     ibUsdc = deployMockErc20("Interest USD COIN", "IBUSDC", 18);
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
     ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
+
+    rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
+    rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 18);
 
     nativeRelayer = deployMockWNativeRelayer();
 
@@ -97,6 +110,8 @@ contract BaseTest is DSTest {
     usdc.mint(BOB, 1000 ether);
     isolateToken.mint(BOB, 1000 ether);
 
+    // miniFL
+
     _setupProxyAdmin();
   }
 
@@ -118,6 +133,35 @@ contract BaseTest is DSTest {
 
   function deployMockWNativeRelayer() internal returns (MockWNativeRelayer) {
     return new MockWNativeRelayer(address(nativeToken));
+  }
+
+  function deployMiniFL(address _rewardToken, uint256 _rewardPerSec) internal returns (MiniFL) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/MiniFL.sol/MiniFL.json"));
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,uint256)")),
+      _rewardToken,
+      _rewardPerSec
+    );
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return MiniFL(_proxy);
+  }
+
+  function deployRewarder(
+    string memory _name,
+    address _miniFL,
+    address _rewardToken,
+    uint256 _maxRewardPerSecond
+  ) internal returns (Rewarder) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/Rewarder.sol/Rewarder.json"));
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(string,address,address,uint256)")),
+      _name,
+      _miniFL,
+      _rewardToken,
+      _maxRewardPerSecond
+    );
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return Rewarder(_proxy);
   }
 
   function deployAlpacaV2Oracle(address _oracleMedianizer) internal returns (AlpacaV2Oracle) {

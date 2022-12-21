@@ -138,18 +138,6 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     emit LogHarvest(_user, _pid, _pendingRewards);
   }
 
-  function pendingTokens(
-    uint256 _pid,
-    address _user,
-    uint256
-  ) external view override returns (IERC20Upgradeable[] memory rewardTokens, uint256[] memory rewardAmounts) {
-    IERC20Upgradeable[] memory _rewardTokens = new IERC20Upgradeable[](1);
-    _rewardTokens[0] = (rewardToken);
-    uint256[] memory _rewardAmounts = new uint256[](1);
-    _rewardAmounts[0] = pendingToken(_pid, _user);
-    return (_rewardTokens, _rewardAmounts);
-  }
-
   /// @notice Sets the reward per second to be distributed.
   /// @dev Can only be called by the owner.
   /// @param _rewardPerSecond The amount of reward token to be distributed per second.

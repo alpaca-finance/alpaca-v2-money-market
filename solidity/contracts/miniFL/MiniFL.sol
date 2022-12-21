@@ -35,7 +35,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   IERC20Upgradeable public ALPACA;
   PoolInfo[] public poolInfo;
   IERC20Upgradeable[] public stakingToken;
-  IRewarder[] public rewarder;
+
+  mapping(uint256 => address[]) rewarders;
   mapping(address => bool) public isStakingToken;
   mapping(uint256 => mapping(address => bool)) public stakeDebtTokenAllowance;
 
@@ -50,17 +51,13 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogWithdraw(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
   event LogEmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
   event LogHarvest(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogAddPool(
-    uint256 indexed pid,
-    uint256 allocPoint,
-    IERC20Upgradeable indexed stakingToken,
-    IRewarder indexed rewarder
-  );
-  event LogSetPool(uint256 indexed pid, uint256 allocPoint, IRewarder indexed rewarder, bool overwrite);
+  event LogAddPool(uint256 indexed pid, uint256 allocPoint, IERC20Upgradeable indexed stakingToken);
+  event LogSetPool(uint256 indexed pid, uint256 allocPoint);
   event LogUpdatePool(uint256 indexed pid, uint64 lastRewardTime, uint256 stakedBalance, uint256 accAlpacaPerShare);
   event LogAlpacaPerSecond(uint256 alpacaPerSecond);
   event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool allow);
   event LogSetMaxAlpacaPerSecond(uint256 maxAlpacaPerSecond);
+  event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
 
   /// @param _alpaca The ALPACA token contract address.
   function initialize(address _alpaca, uint256 _maxAlpacaPerSecond) external initializer {
@@ -79,13 +76,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Add a new staking token pool. Can only be called by the owner.
   /// @param _allocPoint AP of the new pool.
   /// @param _stakingToken Address of the staking token.
-  /// @param _rewarder Address of the rewarder delegate.
   /// @param _isDebtTokenPool Whether the pool is a debt token pool.
   /// @param _withUpdate If true, do mass update pools.
   function addPool(
     uint256 _allocPoint,
     IERC20Upgradeable _stakingToken,
-    IRewarder _rewarder,
     bool _isDebtTokenPool,
     bool _withUpdate
   ) external onlyOwner {
@@ -99,13 +94,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     totalAllocPoint = totalAllocPoint + _allocPoint;
     stakingToken.push(_stakingToken);
-    rewarder.push(_rewarder);
     isStakingToken[address(_stakingToken)] = true;
-
-    if (address(_rewarder) != address(0)) {
-      // Sanity check that the rewarder is a valid IRewarder.
-      _rewarder.name();
-    }
 
     poolInfo.push(
       PoolInfo({
@@ -115,33 +104,25 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         isDebtTokenPool: _isDebtTokenPool
       })
     );
-    emit LogAddPool(stakingToken.length - 1, _allocPoint, _stakingToken, _rewarder);
+    emit LogAddPool(stakingToken.length - 1, _allocPoint, _stakingToken);
   }
 
   /// @notice Update the given pool's ALPACA allocation point and `IRewarder` contract.
   /// @dev Can only be called by the owner.
   /// @param _pid The index of the pool. See `poolInfo`.
   /// @param _allocPoint New AP of the pool.
-  /// @param _rewarder Address of the rewarder delegate.
-  /// @param _overwrite True if _rewarder should be `set`. Otherwise `_rewarder` is ignored.
   /// @param _withUpdate If true, do mass update pools
   function setPool(
     uint256 _pid,
     uint256 _allocPoint,
-    IRewarder _rewarder,
-    bool _overwrite,
     bool _withUpdate
   ) external onlyOwner {
     if (_withUpdate) massUpdatePools();
 
     totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;
     poolInfo[_pid].allocPoint = _allocPoint.toUint64();
-    if (_overwrite) {
-      // Sanity check that the rewarder is a valid IRewarder.
-      _rewarder.name();
-      rewarder[_pid] = _rewarder;
-    }
-    emit LogSetPool(_pid, _allocPoint, _overwrite ? _rewarder : rewarder[_pid], _overwrite);
+
+    emit LogSetPool(_pid, _allocPoint);
   }
 
   /// @notice Sets the ALPACA per second to be distributed. Can only be called by the owner.
@@ -237,9 +218,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     user.rewardDebt = user.rewardDebt + ((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
     // Interactions
-    IRewarder _rewarder = rewarder[_pid];
-    if (address(_rewarder) != address(0)) {
-      _rewarder.onDeposit(_pid, _for, 0, user.amount);
+    uint256 _rewarderLength = rewarders[_pid].length;
+    for (uint256 _i; _i < _rewarderLength; ) {
+      address _rewarder = rewarders[_pid][_i];
+      if (address(_rewarder) != address(0)) {
+        IRewarder(_rewarder).onDeposit(_pid, _for, 0, user.amount);
+      }
+      unchecked {
+        ++_i;
+      }
     }
 
     stakingToken[_pid].safeTransferFrom(msg.sender, address(this), _amount);
@@ -267,9 +254,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     user.amount = user.amount - _amount;
 
     // Interactions
-    IRewarder _rewarder = rewarder[_pid];
-    if (address(_rewarder) != address(0)) {
-      _rewarder.onWithdraw(_pid, _for, 0, user.amount);
+    uint256 _rewarderLength = rewarders[_pid].length;
+    for (uint256 _i; _i < _rewarderLength; ) {
+      address _rewarder = rewarders[_pid][_i];
+      if (address(_rewarder) != address(0)) {
+        IRewarder(_rewarder).onWithdraw(_pid, _for, 0, user.amount);
+      }
+      unchecked {
+        ++_i;
+      }
     }
 
     stakingToken[_pid].safeTransfer(msg.sender, _amount);
@@ -294,9 +287,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       ALPACA.safeTransfer(msg.sender, _pendingAlpaca);
     }
 
-    IRewarder _rewarder = rewarder[_pid];
-    if (address(_rewarder) != address(0)) {
-      _rewarder.onHarvest(_pid, msg.sender, 0);
+    uint256 _rewarderLength = rewarders[_pid].length;
+    for (uint256 _i; _i < _rewarderLength; ) {
+      address _rewarder = rewarders[_pid][_i];
+      if (address(_rewarder) != address(0)) {
+        IRewarder(_rewarder).onHarvest(_pid, msg.sender, 0);
+      }
+      unchecked {
+        ++_i;
+      }
     }
 
     emit LogHarvest(msg.sender, _pid, _pendingAlpaca);
@@ -314,9 +313,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     _user.amount = 0;
     _user.rewardDebt = 0;
 
-    IRewarder _rewarder = rewarder[_pid];
-    if (address(_rewarder) != address(0)) {
-      _rewarder.onWithdraw(_pid, msg.sender, 0, 0);
+    uint256 _rewarderLength = rewarders[_pid].length;
+    for (uint256 _i; _i < _rewarderLength; ) {
+      address _rewarder = rewarders[_pid][_i];
+      if (address(_rewarder) != address(0)) {
+        IRewarder(_rewarder).onWithdraw(_pid, msg.sender, 0, 0);
+      }
+      unchecked {
+        ++_i;
+      }
     }
 
     // Note: transfer can fail or succeed if `amount` is zero.
@@ -350,5 +355,13 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (_maxAlpacaPerSecond <= alpacaPerSecond) revert MiniFL_InvalidArguments();
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
     emit LogSetMaxAlpacaPerSecond(_maxAlpacaPerSecond);
+  }
+
+  /// @notice Set rewarders in Pool
+  /// @param _pid pool id
+  /// @param _rewarders rewarders
+  function setPoolRewarders(uint256 _pid, address[] calldata _rewarders) external onlyOwner {
+    // todo: rethink about validation
+    rewarders[_pid] = _rewarders;
   }
 }

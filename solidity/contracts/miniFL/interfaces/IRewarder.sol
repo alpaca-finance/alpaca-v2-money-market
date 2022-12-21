@@ -26,9 +26,5 @@ interface IRewarder {
     uint256 alpacaAmount
   ) external;
 
-  function pendingTokens(
-    uint256 pid,
-    address user,
-    uint256 alpacaAmount
-  ) external view returns (IERC20Upgradeable[] memory, uint256[] memory);
+  function pendingToken(uint256 pid, address user) external view returns (uint256);
 }
