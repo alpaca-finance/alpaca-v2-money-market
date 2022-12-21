@@ -426,8 +426,8 @@ library LibMoneyMarket01 {
     returns (uint256 _price, uint256 _lastUpdated)
   {
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_token];
+    // If the token is ibToken, do an additional shareToValue before pricing
     if (_underlyingToken != address(0)) {
-      // _token is ibToken
       uint256 _underlyingTokenPrice;
       (_underlyingTokenPrice, _lastUpdated) = moneyMarketDs.oracle.getTokenPrice(_underlyingToken);
 
@@ -436,7 +436,6 @@ library LibMoneyMarket01 {
 
       _price = LibShareUtil.shareToValue(_underlyingTokenPrice, _totalToken, _totalSupply);
     } else {
-      // normal token
       (_price, _lastUpdated) = moneyMarketDs.oracle.getTokenPrice(_token);
     }
 
