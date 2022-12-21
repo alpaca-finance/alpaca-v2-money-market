@@ -32,7 +32,7 @@ contract MiniFL_BaseTest is BaseTest {
     rewarder2.setRewardPerSecond(_maximumReward, false);
   }
 
-  function prepareMiniFLPool() internal {
+  function setupMiniFLPool() internal {
     // add staking pool
     miniFL.addPool(60, IERC20Upgradeable(address(weth)), false, false);
     // add debt token pool
@@ -47,14 +47,19 @@ contract MiniFL_BaseTest is BaseTest {
     debtToken1.mint(BOB, 1000 ether);
   }
 
-  function _assertRewarderUserAmount(
-    Rewarder _rewarder,
-    address _user,
-    uint256 _pid,
-    uint256 _expectedAmount
-  ) internal {
-    (uint256 _amount, ) = _rewarder.userInfo(_pid, _user);
-    assertEq(_amount, _expectedAmount);
+  function setupRewarder() internal {
+    // setup rewarder
+    address[] memory _poolWethRewarders = new address[](2);
+    _poolWethRewarders[0] = address(rewarder1);
+    _poolWethRewarders[1] = address(rewarder2);
+    miniFL.setPoolRewarders(wethPoolID, _poolWethRewarders);
+    rewarder1.addPool(100, wethPoolID, false);
+    rewarder2.addPool(100, wethPoolID, false);
+
+    address[] memory _poolDebtTokenRewarders = new address[](1);
+    _poolDebtTokenRewarders[0] = address(rewarder1);
+    miniFL.setPoolRewarders(dtokenPoolID, _poolDebtTokenRewarders);
+    rewarder1.addPool(100, dtokenPoolID, false);
   }
 
   function prepareForHarvest() internal {
@@ -77,5 +82,15 @@ contract MiniFL_BaseTest is BaseTest {
     debtToken1.approve(address(miniFL), 10 ether);
     miniFL.deposit(ALICE, dtokenPoolID, 10 ether);
     vm.stopPrank();
+  }
+
+  function assertRewarderUserAmount(
+    Rewarder _rewarder,
+    address _user,
+    uint256 _pid,
+    uint256 _expectedAmount
+  ) internal {
+    (uint256 _amount, ) = _rewarder.userInfo(_pid, _user);
+    assertEq(_amount, _expectedAmount);
   }
 }

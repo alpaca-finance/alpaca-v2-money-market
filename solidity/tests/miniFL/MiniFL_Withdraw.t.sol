@@ -11,7 +11,7 @@ import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 contract MiniFL_Withdraw is MiniFL_BaseTest {
   function setUp() public override {
     super.setUp();
-    prepareMiniFLPool();
+    setupMiniFLPool();
   }
 
   // #withdraw ibToken (not debt token)

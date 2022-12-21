@@ -16,7 +16,7 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
 
   function setUp() public override {
     super.setUp();
-    prepareMiniFLPool();
+    setupMiniFLPool();
     prepareForHarvest();
   }
 

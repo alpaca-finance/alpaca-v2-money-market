@@ -12,7 +12,7 @@ import { IRewarder } from "../../contracts/miniFL/interfaces/IRewarder.sol";
 contract MiniFL_Deposit is MiniFL_BaseTest {
   function setUp() public override {
     super.setUp();
-    prepareMiniFLPool();
+    setupMiniFLPool();
   }
 
   function testRevert_WhenDepositOnNotExistsPool() external {

@@ -26,7 +26,7 @@ contract MiniFL_PendingAlpaca is MiniFL_BaseTest {
   // weth pool alloc point is 60%
   // dtoken pool alloc point is 40%
 
-  function testCorrectness_WhenTimpast_PendingAlpacaShouldBeCorrectly() external {
+  function testCorrectness_WhenTimpast_PendingRewardShouldBeCorrectly() external {
     // timpast for 100 second
     vm.warp(block.timestamp + 100);
     // alpaca reward distributed 1000 * 100 = 100000 ether

@@ -13,20 +13,8 @@ import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
   function setUp() public override {
     super.setUp();
-    prepareMiniFLPool();
-
-    // setup rewarder
-    address[] memory _poolWethRewarders = new address[](2);
-    _poolWethRewarders[0] = address(rewarder1);
-    _poolWethRewarders[1] = address(rewarder2);
-    miniFL.setPoolRewarders(wethPoolID, _poolWethRewarders);
-    rewarder1.addPool(100, wethPoolID, false);
-    rewarder2.addPool(100, wethPoolID, false);
-
-    address[] memory _poolDebtTokenRewarders = new address[](1);
-    _poolDebtTokenRewarders[0] = address(rewarder1);
-    miniFL.setPoolRewarders(dtokenPoolID, _poolDebtTokenRewarders);
-    rewarder1.addPool(100, dtokenPoolID, false);
+    setupMiniFLPool();
+    setupRewarder();
   }
 
   function testCorrectness_WhenDeposit_RewarderUserInfoShouldBeCorrect() external {
@@ -40,8 +28,8 @@ contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
     assertEq(_aliceWethBalanceBefore - weth.balanceOf(ALICE), 10 ether);
 
     // assert reward user info, both user info should be same
-    _assertRewarderUserAmount(rewarder1, ALICE, wethPoolID, 10 ether);
-    _assertRewarderUserAmount(rewarder2, ALICE, wethPoolID, 10 ether);
+    assertRewarderUserAmount(rewarder1, ALICE, wethPoolID, 10 ether);
+    assertRewarderUserAmount(rewarder2, ALICE, wethPoolID, 10 ether);
   }
 
   function testCorrectness_WhenDepositDebtToken_RewarderUserInfoShouldBeCorrect() external {
@@ -56,8 +44,8 @@ contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
     assertEq(_bobDebtTokenBalanceBefore - debtToken1.balanceOf(BOB), 10 ether);
 
     // assert reward user info
-    _assertRewarderUserAmount(rewarder1, BOB, dtokenPoolID, 10 ether);
+    assertRewarderUserAmount(rewarder1, BOB, dtokenPoolID, 10 ether);
     // rewarder2 is not register in this pool then user amount should be 0
-    _assertRewarderUserAmount(rewarder2, BOB, dtokenPoolID, 0 ether);
+    assertRewarderUserAmount(rewarder2, BOB, dtokenPoolID, 0 ether);
   }
 }
