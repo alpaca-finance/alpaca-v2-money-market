@@ -45,4 +45,14 @@ contract MiniFL_BaseTest is BaseTest {
     miniFL.approveStakeDebtToken(_poolIds, _stakers, true);
     debtToken1.mint(BOB, 1000 ether);
   }
+
+  function _assertRewarderUserAmount(
+    Rewarder _rewarder,
+    address _user,
+    uint256 _pid,
+    uint256 _expectedAmount
+  ) internal {
+    (uint256 _amount, ) = _rewarder.userInfo(_pid, _user);
+    assertEq(_amount, _expectedAmount);
+  }
 }
