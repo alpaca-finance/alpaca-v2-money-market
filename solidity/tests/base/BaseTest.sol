@@ -14,7 +14,6 @@ import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol"
 import { ChainLinkPriceOracle2, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 import { AlpacaV2Oracle, IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
-import { RewardDistributor } from "../../contracts/money-market/RewardDistributor.sol";
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -52,9 +51,6 @@ contract BaseTest is DSTest {
   MockERC20 internal ibIsolateToken;
   MockERC20 internal ibWNative;
 
-  MockERC20 internal rewardToken;
-  MockERC20 internal rewardToken2;
-
   IPriceOracle internal oracle;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   OracleMedianizer internal oracleMedianizer;
@@ -62,8 +58,6 @@ contract BaseTest is DSTest {
   MockWNativeRelayer nativeRelayer;
 
   ProxyAdminLike internal proxyAdmin;
-
-  RewardDistributor rewardDistributor;
 
   constructor() {
     // deploy
@@ -82,11 +76,7 @@ contract BaseTest is DSTest {
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
     ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
 
-    rewardToken = deployMockErc20("Reward Token", "REWARD", 18);
-    rewardToken2 = deployMockErc20("Reward Token 2", "REWARD2", 18);
-
     nativeRelayer = deployMockWNativeRelayer();
-    rewardDistributor = deployRewardDistributor();
 
     // mint token
     vm.deal(ALICE, 1000 ether);
@@ -107,9 +97,6 @@ contract BaseTest is DSTest {
     btc.mint(BOB, 1000 ether);
     usdc.mint(BOB, 1000 ether);
     isolateToken.mint(BOB, 1000 ether);
-
-    rewardToken.mint(address(rewardDistributor), 1000000 ether);
-    rewardToken2.mint(address(rewardDistributor), 1000000 ether);
 
     _setupProxyAdmin();
   }
@@ -150,10 +137,6 @@ contract BaseTest is DSTest {
     bytes memory _initializer = abi.encodeWithSelector(bytes4(keccak256("initialize()")));
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return OracleMedianizer(_proxy);
-  }
-
-  function deployRewardDistributor() internal returns (RewardDistributor) {
-    return new RewardDistributor();
   }
 
   function _setupUpgradeable(bytes memory _logicBytecode, bytes memory _initializer) internal returns (address) {

@@ -47,7 +47,7 @@ interface IBorrowFacet {
 
   function getGlobalDebt(address _token) external view returns (uint256, uint256);
 
-  function debtLastAccureTime(address _token) external view returns (uint256);
+  function debtLastAccrueTime(address _token) external view returns (uint256);
 
   function pendingInterest(address _token) external view returns (uint256);
 
@@ -58,8 +58,6 @@ interface IBorrowFacet {
   function debtShares(address _token) external view returns (uint256);
 
   function getFloatingBalance(address _token) external view returns (uint256);
-
-  function accountDebtShares(address _account, address _token) external view returns (uint256);
 
   // Errors
   error BorrowFacet_InvalidToken(address _token);

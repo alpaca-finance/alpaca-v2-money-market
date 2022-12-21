@@ -59,5 +59,39 @@ contract AV_TradeFacetTest is AV_BaseTest {
     vm.stopPrank();
   }
 
-  // TODO: test management fee to treasury
+  // managment fee tests
+
+  function testCorrectness_GetPendingManagementFee() external {
+    // managementFeePerSec = 1, set in AV_BaseTest
+
+    // block.timestamp = 1
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0); // totalSupply(avShareToken) = 0
+
+    vm.prank(avDiamond);
+    avShareToken.mint(address(this), 1 ether);
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 1);
+
+    // block.timestamp = 2
+    vm.warp(2);
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 2);
+  }
+
+  function testCorrectness_WhenDepositAndWithdraw_ShouldMintPendingManagementFeeToTreasury() external {
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0);
+
+    vm.prank(ALICE);
+    tradeFacet.deposit(address(avShareToken), 1 ether, 1 ether);
+
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0); // fee was collected during deposit, so no more pending fee in the same block
+    assertEq(avShareToken.balanceOf(treasury), 0);
+
+    vm.warp(2);
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 1);
+
+    vm.prank(ALICE);
+    tradeFacet.withdraw(address(avShareToken), 1 ether, 0);
+
+    assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 0);
+    assertEq(avShareToken.balanceOf(treasury), 1);
+  }
 }

@@ -70,13 +70,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
 
     // 1. get token from collat (underlying and ib if possible), borrow if not enough
     _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount, lyfDs);
@@ -128,13 +128,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
 
     // 1. if desired amount exceeds provided amount, get token from collat (underlying and ib if possible), borrow if not enough
     _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount - _token0AmountIn, lyfDs);
@@ -194,8 +194,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _vars.debtShareId0 = lyfDs.debtShareIds[_vars.token0][_lpToken];
     _vars.debtShareId1 = lyfDs.debtShareIds[_vars.token1][_lpToken];
 
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
-    LibLYF01.accureInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
 
     // 1. Remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
@@ -242,7 +242,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
 
-    LibLYF01.accureInterest(_debtShareId, lyfDs);
+    LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
     uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _repayAmount, lyfDs);
@@ -275,7 +275,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    LibLYF01.accureAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     (, uint256 _debtAmount) = _getDebt(_subAccount, _debtShareId, lyfDs);
@@ -478,10 +478,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
   }
 
-  function debtLastAccureTime(address _token, address _lpToken) external view returns (uint256) {
+  function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtLastAccureTime[_debtShareId];
+    return lyfDs.debtLastAccrueTime[_debtShareId];
   }
 
   function pendingInterest(address _token, address _lpToken) public view returns (uint256) {
@@ -490,10 +490,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     return LibLYF01.pendingInterest(_debtShareId, lyfDs);
   }
 
-  function accureInterest(address _token, address _lpToken) external {
+  function accrueInterest(address _token, address _lpToken) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    LibLYF01.accureInterest(_debtShareId, lyfDs);
+    LibLYF01.accrueInterest(_debtShareId, lyfDs);
   }
 
   function debtValues(address _token, address _lpToken) external view returns (uint256) {
