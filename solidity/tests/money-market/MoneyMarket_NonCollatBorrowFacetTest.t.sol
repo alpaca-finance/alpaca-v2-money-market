@@ -227,11 +227,18 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceBorrowLimit = 10 ether;
 
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: _aliceBorrowLimit });
-
     uint256 _expectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
-    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
+
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](0);
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](1);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      tokenBorrowLimit: _tokenBorrowLimitInputs,
+      borrowLimitUSDValue: _aliceBorrowLimit
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
     vm.prank(ALICE);
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -286,12 +293,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: ALICE,
       tokenBorrowLimit: _aliceTokenBorrowLimitInputs,
-      borrowLimitUSDValue: 0
+      borrowLimitUSDValue: type(uint256).max
     });
+
     _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
       account: BOB,
       tokenBorrowLimit: _bobTokenBorrowLimitInputs,
-      borrowLimitUSDValue: 0
+      borrowLimitUSDValue: type(uint256).max
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);

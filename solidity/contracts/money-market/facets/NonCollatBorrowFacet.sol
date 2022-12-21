@@ -171,7 +171,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
+    uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowLimitUSDValue;
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
