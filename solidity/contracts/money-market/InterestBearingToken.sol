@@ -3,10 +3,11 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Context } from "@openzeppelin/contracts/utils/Context.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -33,7 +34,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract InterestBearingToken is Context, IERC20, IERC20Metadata, Ownable {
+contract InterestBearingToken is Context, IERC20, IERC20Metadata, Ownable, Initializable {
   mapping(address => uint256) private _balances;
 
   mapping(address => mapping(address => uint256)) private _allowances;
@@ -47,15 +48,15 @@ contract InterestBearingToken is Context, IERC20, IERC20Metadata, Ownable {
   uint8 private _decimals;
 
   /**
-   * @dev Sets the values for {name} and {symbol}.
-   *
-   * The default value of {decimals} is 18. To select a different value for
-   * {decimals} you should overload it.
+   * @dev Sets the values for {underlying} and {decimals}.
    *
    * All two of these values are immutable: they can only be set once during
-   * construction.
+   * initialization.
+   *
+   * @param underlying_ Address of underlying token. Used for getting decimals
+   * during initialization, getting symbol in name and symbol getter
    */
-  constructor(address underlying_) {
+  function initialize(address underlying_) external initializer {
     _underlying = underlying_;
     _decimals = IERC20Metadata(underlying_).decimals();
   }
