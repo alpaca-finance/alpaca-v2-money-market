@@ -48,6 +48,10 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
 
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
+    uint256 avDiamondUsdcBefore = usdc.balanceOf(avDiamond);
+    uint256 avDiamondWethBefore = weth.balanceOf(avDiamond);
+
+    vm.prank(avDiamond);
     (uint256 _token0Out, uint256 _token1Out) = handler.onWithdraw(5 ether);
     // note: the amounts out is from mock
     assertEq(_token0Out, 5 ether);
@@ -56,8 +60,8 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     assertEq(handler.totalLpBalance(), 5 ether);
 
     // caller should got funds
-    assertEq(weth.balanceOf(address(this)), 5 ether);
-    assertEq(usdc.balanceOf(address(this)), 5 ether);
+    assertEq(weth.balanceOf(avDiamond) - avDiamondUsdcBefore, 5 ether);
+    assertEq(usdc.balanceOf(avDiamond) - avDiamondWethBefore, 5 ether);
   }
 
   function testCorrectness_WhenWithdraw_SomeoneTransferTokenDirectly_CallerShouldGetFundsCorrectly() external {
