@@ -97,37 +97,39 @@ contract LendFacet is ILendFacet {
   }
 
   function depositETH() external payable nonReentrant {
+    if (msg.value == 0) revert LendFacet_InvalidAmount(msg.value);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _nativeToken = moneyMarketDs.nativeToken;
-    uint256 _amount = msg.value;
     if (_nativeToken == address(0)) revert LendFacet_InvalidToken(_nativeToken);
-    if (_amount == 0) revert LendFacet_InvalidAmount(_amount);
+
     LibMoneyMarket01.accrueInterest(_nativeToken, moneyMarketDs);
 
-    (address _ibToken, , uint256 _shareToMint) = _getShareAmountFromValue(_nativeToken, _amount, moneyMarketDs);
+    (address _ibToken, , uint256 _shareToMint) = _getShareAmountFromValue(_nativeToken, msg.value, moneyMarketDs);
 
-    moneyMarketDs.reserves[_nativeToken] += _amount;
-    IWNative(_nativeToken).deposit{ value: _amount }();
+    moneyMarketDs.reserves[_nativeToken] += msg.value;
+    IWNative(_nativeToken).deposit{ value: msg.value }();
     IbToken(_ibToken).mint(msg.sender, _shareToMint);
 
-    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
+    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, msg.value, _shareToMint);
   }
 
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
-    address _relayer = moneyMarketDs.nativeRelayer;
     if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
+
+    address _relayer = moneyMarketDs.nativeRelayer;
     if (_relayer == address(0)) revert LendFacet_InvalidAddress(_relayer);
+
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    uint256 _shareValue;
-    {
-      uint256 _totalSupply = IbToken(_ibWNativeToken).totalSupply();
-      uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
-      _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
-    }
+    uint256 _shareValue = LibShareUtil.shareToValue(
+      _shareAmount,
+      LibMoneyMarket01.getTotalToken(_token, moneyMarketDs),
+      IbToken(_ibWNativeToken).totalSupply()
+    );
 
     IbToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
     _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
