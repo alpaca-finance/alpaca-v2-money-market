@@ -5,9 +5,18 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IERC173 } from "../interfaces/IERC173.sol";
 
 contract OwnershipFacet is IERC173 {
+  error OwnershipFacet_Unauthorized();
+
+  address public pendingOwner;
+
   function transferOwnership(address _newOwner) external override {
     LibDiamond.enforceIsContractOwner();
-    LibDiamond.setContractOwner(_newOwner);
+    pendingOwner = _newOwner;
+  }
+
+  function claimOwnership() external {
+    if (msg.sender != pendingOwner) revert OwnershipFacet_Unauthorized();
+    LibDiamond.setContractOwner(pendingOwner);
   }
 
   function owner() external view override returns (address owner_) {
