@@ -139,7 +139,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // 1. check if position is underwater and can be liquidated
     {
       uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
+      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
       if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
         revert LYFLiquidationFacet_Healthy();
       }
@@ -309,7 +309,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // 0. check borrowing power
     {
       uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
-      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowedPower(vars.subAccount, lyfDs);
+      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(vars.subAccount, lyfDs);
       if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
         revert LYFLiquidationFacet_Healthy();
       }

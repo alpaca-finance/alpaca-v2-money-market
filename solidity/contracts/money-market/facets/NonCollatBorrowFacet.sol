@@ -153,7 +153,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     // check credit
-    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
+    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
 
     _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
 
@@ -172,7 +172,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
@@ -202,14 +202,14 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
   }
 
-  function nonCollatGetTotalUsedBorrowedPower(address _account)
+  function nonCollatGetTotalUsedBorrowingPower(address _account)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
+    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
   }
 
   function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {

@@ -154,7 +154,7 @@ library MMDiamondDeployer {
     selectors[0] = BorrowFacet.borrow.selector;
     selectors[1] = BorrowFacet.getDebtShares.selector;
     selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
-    selectors[3] = BorrowFacet.getTotalUsedBorrowedPower.selector;
+    selectors[3] = BorrowFacet.getTotalUsedBorrowingPower.selector;
     selectors[4] = BorrowFacet.getDebt.selector;
     selectors[5] = BorrowFacet.repay.selector;
     selectors[6] = BorrowFacet.getGlobalDebt.selector;
@@ -185,7 +185,7 @@ library MMDiamondDeployer {
     bytes4[] memory selectors = new bytes4[](7);
     selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
     selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
-    selectors[2] = NonCollatBorrowFacet.nonCollatGetTotalUsedBorrowedPower.selector;
+    selectors[2] = NonCollatBorrowFacet.nonCollatGetTotalUsedBorrowingPower.selector;
     selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
     selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
     selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;

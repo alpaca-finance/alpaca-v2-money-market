@@ -75,7 +75,7 @@ library LYFDiamondDeployer {
     selectors[0] = LYFFarmFacet.addFarmPosition.selector;
     selectors[1] = LYFFarmFacet.getDebtShares.selector;
     selectors[2] = LYFFarmFacet.getTotalBorrowingPower.selector;
-    selectors[3] = LYFFarmFacet.getTotalUsedBorrowedPower.selector;
+    selectors[3] = LYFFarmFacet.getTotalUsedBorrowingPower.selector;
     selectors[4] = LYFFarmFacet.getDebt.selector;
     selectors[5] = LYFFarmFacet.repay.selector;
     selectors[6] = LYFFarmFacet.getGlobalDebt.selector;

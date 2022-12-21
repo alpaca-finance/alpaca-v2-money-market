@@ -50,7 +50,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // avoid stack too deep
     uint256 _borrowedValue;
@@ -130,12 +130,12 @@ contract LiquidationFacet is ILiquidationFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // 1. check if position is underwater and can be liquidated
     {
       uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_subAccount, moneyMarketDs);
+      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
       if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
         revert LiquidationFacet_Healthy();
       }
@@ -345,17 +345,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _rewardBps,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
-    address _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-
-    uint256 _collatTokenPrice;
-    {
-      // _collatToken is ibToken
-      if (_actualToken != address(0)) {
-        (_collatTokenPrice, ) = LibMoneyMarket01.getIbPriceUSD(_collatToken, _actualToken, moneyMarketDs);
-      } else {
-        (_collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
-      }
-    }
+    (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_collatToken];
 
