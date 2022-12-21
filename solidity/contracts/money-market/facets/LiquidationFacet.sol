@@ -338,17 +338,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _rewardBps,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _collatTokenAmountOut) {
-    address _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-
-    uint256 _collatTokenPrice;
-    {
-      // _collatToken is ibToken
-      if (_actualToken != address(0)) {
-        (_collatTokenPrice, ) = LibMoneyMarket01.getIbPriceUSD(_collatToken, _actualToken, moneyMarketDs);
-      } else {
-        (_collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
-      }
-    }
+    (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_collatToken];
 
