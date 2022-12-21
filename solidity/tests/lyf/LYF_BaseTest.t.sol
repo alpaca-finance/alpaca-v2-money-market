@@ -306,12 +306,6 @@ abstract contract LYF_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setProtocolConfigs(_protocolConfigInputs);
 
-    // TODO: remove
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: lyfDiamond, limit: 1000 ether });
-
-    IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
-
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);

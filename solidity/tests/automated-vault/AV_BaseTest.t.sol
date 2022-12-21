@@ -166,13 +166,6 @@ abstract contract AV_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setProtocolConfigs(_protocolConfigInputs);
 
-    // TODO: remove
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: avDiamond, limit: 1000 ether });
-
-    IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
-    // ***
-
     // prepare for borrow
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);

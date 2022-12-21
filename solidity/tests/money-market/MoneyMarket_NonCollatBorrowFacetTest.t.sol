@@ -29,13 +29,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(usdc), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
-
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](4);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
-    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
-    _limitInputs[2] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
-    _limitInputs[3] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
-    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {

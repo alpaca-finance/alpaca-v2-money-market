@@ -80,8 +80,6 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues;
     // token -> debt of each account
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
-    // account -> limit
-    mapping(address => uint256) nonCollatBorrowLimitUSDValues;
     // account -> ProtocolConfig
     mapping(address => ProtocolConfig) protocolConfigs;
     mapping(address => bool) nonCollatBorrowerOk;

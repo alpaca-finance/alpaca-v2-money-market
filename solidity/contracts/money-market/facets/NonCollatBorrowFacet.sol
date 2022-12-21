@@ -219,7 +219,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.nonCollatBorrowLimitUSDValues[_account];
+    return moneyMarketDs.protocolConfigs[_account].borrowLimitUSDValue;
   }
 
   function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _pendingInterest) {

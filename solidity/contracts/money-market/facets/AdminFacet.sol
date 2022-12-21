@@ -139,21 +139,6 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.treasury = newTreasury;
   }
 
-  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs)
-    external
-    onlyOwner
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _nonCollatBorrowLimitInputs.length;
-    for (uint8 _i; _i < _length; ) {
-      NonCollatBorrowLimitInput memory input = _nonCollatBorrowLimitInputs[_i];
-      moneyMarketDs.nonCollatBorrowLimitUSDValues[input.account] = input.limit;
-      unchecked {
-        _i++;
-      }
-    }
-  }
-
   function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
     return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
