@@ -186,7 +186,8 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // increase ibWeth price to 1.2 weth/ibWeth
     vm.prank(BOB);
-    weth.transfer(moneyMarketDiamond, 28 ether);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 28 ether);
+    ibWeth.burn(BOB, 28 ether);
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);

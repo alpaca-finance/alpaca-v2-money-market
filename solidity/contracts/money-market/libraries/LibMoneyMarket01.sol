@@ -26,7 +26,6 @@ library LibMoneyMarket01 {
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
   uint256 internal constant MAX_BPS = 10000;
-  uint256 internal constant ACC_REWARD_PRECISION = 1e12;
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
@@ -37,9 +36,10 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_ExceedCollateralLimit();
   error LibMoneyMarket01_TooManyCollateralRemoved();
   error LibMoneyMarket01_BorrowingPowerTooLow();
+  error LibMoneyMarket01_NotEnoughToken();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToReservePool);
+  event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
 
   enum AssetTier {
     UNLISTED,
@@ -56,17 +56,6 @@ library LibMoneyMarket01 {
     uint256 maxBorrow;
     uint256 maxToleranceExpiredSecond;
     uint8 to18ConversionFactor;
-  }
-
-  struct RewardConfig {
-    address rewardToken;
-    uint256 rewardPerSecond;
-  }
-
-  struct PoolInfo {
-    uint256 accRewardPerShare;
-    uint128 lastRewardTime;
-    uint128 allocPoint;
   }
 
   // Storage
@@ -97,32 +86,15 @@ library LibMoneyMarket01 {
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
     address treasury;
-    // reward stuff
-    address rewardDistributor;
-    mapping(address => mapping(address => uint256)) accountCollats;
-    mapping(address => mapping(address => uint256)) accountDebtShares;
-    mapping(address => LibDoublyLinkedList.List) rewardLendingPoolList;
-    mapping(address => LibDoublyLinkedList.List) rewardBorrowingPoolList;
-    // reward token => token => pool info
-    mapping(bytes32 => PoolInfo) lendingPoolInfos;
-    mapping(bytes32 => PoolInfo) borrowingPoolInfos;
-    // account => reward token + pool key (token) => amount
-    mapping(address => mapping(bytes32 => int256)) lenderRewardDebts;
-    mapping(address => mapping(bytes32 => int256)) borrowerRewardDebts;
-    // multiple reward
-    LibDoublyLinkedList.List lendingRewardPerSecList;
-    LibDoublyLinkedList.List borrowingRewardPerSecList;
-    // reward token
-    mapping(address => uint256) totalLendingPoolAllocPoints;
-    mapping(address => uint256) totalBorrowingPoolAllocPoints;
     // fees
     uint256 lendingFeeBps;
     uint256 repurchaseRewardBps;
     uint256 repurchaseFeeBps;
     uint256 liquidationFeeBps;
     // reserve pool
-
-    mapping(address => uint256) reservePools;
+    mapping(address => uint256) protocolReserves;
+    // diamond token balances
+    mapping(address => uint256) reserves;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -361,7 +333,7 @@ library LibMoneyMarket01 {
 
       // book protocol's revenue
       uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
-      moneyMarketDs.reservePools[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
+      moneyMarketDs.protocolReserves[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
 
       emit LogAccrueInterest(_token, _totalInterest, _protocolFee);
     }
@@ -410,7 +382,7 @@ library LibMoneyMarket01 {
   }
 
   // totalToken is the amount of token remains in ((MM + borrowed amount)
-  // - (collateral from user + protocol's reserve pool)
+  // - (protocol's reserve pool)
   // where borrowed amount consists of over-collat and non-collat borrowing
   function getTotalToken(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
@@ -418,8 +390,7 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     return
-      (IERC20(_token).balanceOf(address(this)) + moneyMarketDs.globalDebts[_token]) -
-      (moneyMarketDs.collats[_token] + moneyMarketDs.reservePools[_token]);
+      (moneyMarketDs.reserves[_token] + moneyMarketDs.globalDebts[_token]) - (moneyMarketDs.protocolReserves[_token]);
   }
 
   function getTotalTokenWithPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -437,7 +408,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _floating)
   {
-    _floating = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    _floating = moneyMarketDs.reserves[_token];
   }
 
   function setIbPair(
@@ -488,17 +459,13 @@ library LibMoneyMarket01 {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
 
-  function getPoolKey(address _rewardToken, address _token) internal pure returns (bytes32 _key) {
-    _key = keccak256(abi.encodePacked(_rewardToken, _token));
-  }
-
   function withdraw(
     address _ibToken,
     uint256 _shareAmount,
     address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _shareValue) {
-    address _token = moneyMarketDs.ibTokenToTokens[_ibToken];
+  ) internal returns (address _token, uint256 _shareValue) {
+    _token = moneyMarketDs.ibTokenToTokens[_ibToken];
     accrueInterest(_token, moneyMarketDs);
 
     if (_token == address(0)) {
@@ -516,8 +483,10 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NoTinyShares();
     }
 
+    if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
+    moneyMarketDs.reserves[_token] -= _shareValue;
+
     IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
-    ERC20(_token).safeTransfer(_withdrawFrom, _shareValue);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }
@@ -550,7 +519,6 @@ library LibMoneyMarket01 {
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
     ds.collats[_token] += _addAmount;
-    ds.accountCollats[msg.sender][_token] += _addAmount;
   }
 
   function removeCollat(
@@ -562,7 +530,6 @@ library LibMoneyMarket01 {
     removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
 
     ds.collats[_token] -= _removeAmount;
-    ds.accountCollats[msg.sender][_token] -= _removeAmount;
   }
 
   function removeCollatFromSubAccount(
@@ -598,21 +565,5 @@ library LibMoneyMarket01 {
     }
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
-  }
-
-  function getLendingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
-    internal
-    view
-    returns (uint256)
-  {
-    return ds.lendingRewardPerSecList.getAmount(_rewardToken);
-  }
-
-  function getBorrowingRewardPerSec(address _rewardToken, MoneyMarketDiamondStorage storage ds)
-    internal
-    view
-    returns (uint256)
-  {
-    return ds.borrowingRewardPerSecList.getAmount(_rewardToken);
   }
 }
