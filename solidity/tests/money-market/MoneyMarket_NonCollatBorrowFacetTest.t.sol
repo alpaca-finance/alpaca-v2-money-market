@@ -279,14 +279,14 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     });
     adminFacet.setTokenConfigs(_inputs);
 
-    // Collater borrow
+    // Over-collat borrow
     // BOB borrow weth upto Global limit
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
     borrowFacet.borrow(subAccount0, address(weth), _wethGlobalLimit);
     vm.stopPrank();
 
-    // Non collat borrow
+    // Non-collat borrow
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), 1);
