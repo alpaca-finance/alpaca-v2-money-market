@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -91,11 +91,43 @@ contract MoneyMarket_Lend_Withdraw_Test is MoneyMarket_BaseTest {
     assertEq(ibWeth.totalSupply(), _expectedTotalShare);
   }
 
-  function testRevert_WhenUserWithdrawAndLeftWithTinyShares_ShouldRevert() external {
+  function testCorrectness_WhenTryToExploitTinySharesOnLendFacet_ShouldDepositWithdrawCorrectlyWithoutTinyShares()
+    external
+  {
+    // no tiny share exploit since we use reserves state variable internally instead of balanceOf
+
+    // exploiter deposit 1 wei weth, get 1 wei ibWeth back
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 1 ether);
-    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NoTinyShares.selector));
-    lendFacet.withdraw(address(ibWeth), 0.5 ether);
+    lendFacet.deposit(address(weth), 1);
+
+    assertEq(ibWeth.balanceOf(ALICE), 1);
+
+    // exploiter direct transfer 1B weth
+    weth.mint(ALICE, 1e10 ether);
+    weth.transfer(moneyMarketDiamond, 1e10 ether);
+    vm.stopPrank();
+
+    // user deposit 1M weth, get 1M ibWeth back
+    weth.mint(BOB, 1e7 ether);
+    vm.startPrank(BOB);
+    lendFacet.deposit(address(weth), 1e7 ether);
+
+    assertEq(ibWeth.balanceOf(BOB), 1e7 ether);
+
+    // user withdraw 1M ibWeth, get 1M weth back
+    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
+    lendFacet.withdraw(address(ibWeth), 1e7 ether);
+
+    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 1e7 ether);
+    vm.stopPrank();
+
+    // exploiter withdraw 1 wei ibWeth, get 1 wei weth back
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
+
+    vm.prank(ALICE);
+    lendFacet.withdraw(address(ibWeth), 1);
+
+    assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 1);
   }
 
   function testCorrectness_WhenUserWithdrawETH_ShareShouldBurnedAndTransferTokenBackCorrectly() external {
