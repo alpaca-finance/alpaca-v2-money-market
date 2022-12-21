@@ -30,6 +30,9 @@ contract MiniFL_BaseTest is BaseTest {
 
     rewarder1.setRewardPerSecond(100 ether, false);
     rewarder2.setRewardPerSecond(150 ether, false);
+
+    rewardToken1.mint(address(rewarder1), 10000 ether);
+    rewardToken2.mint(address(rewarder2), 15000 ether);
   }
 
   function setupMiniFLPool() internal {
