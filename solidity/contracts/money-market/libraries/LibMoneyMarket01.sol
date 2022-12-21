@@ -30,7 +30,6 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
   error LibMoneyMarket01_InvalidToken(address _token);
-  error LibMoneyMarket01_NoTinyShares();
   error LibMoneyMarket01_UnsupportedDecimals();
   error LibMoneyMarket01_InvalidAssetTier();
   error LibMoneyMarket01_ExceedCollateralLimit();
@@ -466,16 +465,11 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_InvalidToken(_ibToken);
     }
 
-    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
-    uint256 _tokenDecimals = ERC20(_ibToken).decimals();
-    uint256 _totalToken = getTotalToken(_token, moneyMarketDs);
-
-    _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
-
-    uint256 _shareLeft = _totalSupply - _shareAmount;
-    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
-      revert LibMoneyMarket01_NoTinyShares();
-    }
+    _shareValue = LibShareUtil.shareToValue(
+      _shareAmount,
+      getTotalToken(_token, moneyMarketDs),
+      ERC20(_ibToken).totalSupply()
+    );
 
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _shareValue;
