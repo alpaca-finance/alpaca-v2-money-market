@@ -149,8 +149,13 @@ abstract contract AV_BaseTest is BaseTest {
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrowLimitUSDValues(_limitInputs);
 
     // prepare for borrow
-    weth.mint(moneyMarketDiamond, 1000 ether);
-    usdc.mint(moneyMarketDiamond, 1000 ether);
+    vm.startPrank(EVE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    vm.stopPrank();
   }
 
   function deployAVPancakeSwapHandler(address _router, address _lpToken) internal returns (AVPancakeSwapHandler) {
