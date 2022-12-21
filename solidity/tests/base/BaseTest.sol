@@ -56,6 +56,8 @@ contract BaseTest is DSTest {
   MockERC20 internal ibIsolateToken;
   MockERC20 internal ibWNative;
 
+  MockERC20 internal debtToken1;
+
   MockERC20 internal rewardToken1;
   MockERC20 internal rewardToken2;
 
@@ -84,6 +86,8 @@ contract BaseTest is DSTest {
     ibUsdc = deployMockErc20("Interest USD COIN", "IBUSDC", 18);
     ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
     ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
+
+    debtToken1 = deployMockErc20("Debt Token 1", "DTOKEN1", 18);
 
     rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
     rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 18);
