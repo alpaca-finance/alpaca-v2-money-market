@@ -35,11 +35,6 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     adminFacet.setNonCollatInterestModel(BOB, address(weth), address(model));
     adminFacet.setNonCollatInterestModel(BOB, address(btc), address(tripleSlope7));
 
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](2);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
-    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
-    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
-
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(btc), 100 ether);
