@@ -283,24 +283,30 @@ abstract contract LYF_BaseTest is BaseTest {
 
     IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
 
-    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](3);
-    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
-      account: lyfDiamond,
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
+    _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
       token: address(weth),
       maxTokenBorrow: type(uint256).max
     });
-    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
-      account: lyfDiamond,
+    _tokenBorrowLimitInputs[1] = IAdminFacet.TokenBorrowLimitInput({
       token: address(usdc),
       maxTokenBorrow: type(uint256).max
     });
-    _protocolConfigInputs[2] = IAdminFacet.ProtocolConfigInput({
-      account: lyfDiamond,
+    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
       token: address(btc),
       maxTokenBorrow: type(uint256).max
     });
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: lyfDiamond,
+      tokenBorrowLimit: _tokenBorrowLimitInputs,
+      borrowLimitUSDValue: type(uint256).max
+    });
+
     IAdminFacet(moneyMarketDiamond).setProtocolConfigs(_protocolConfigInputs);
 
+    // TODO: remove
     IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
     _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: lyfDiamond, limit: 1000 ether });
 

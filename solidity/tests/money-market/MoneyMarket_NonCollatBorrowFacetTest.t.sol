@@ -268,17 +268,30 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceWethAccountLimit = 5 ether;
     uint256 _bobWethAccountLimit = 4 ether;
 
-    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
-
-    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
-      account: ALICE,
+    IAdminFacet.TokenBorrowLimitInput[] memory _aliceTokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](
+      1
+    );
+    _aliceTokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
       token: address(weth),
       maxTokenBorrow: _aliceWethAccountLimit
     });
-    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
-      account: BOB,
+
+    IAdminFacet.TokenBorrowLimitInput[] memory _bobTokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](1);
+    _bobTokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
       token: address(weth),
       maxTokenBorrow: _bobWethAccountLimit
+    });
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      tokenBorrowLimit: _aliceTokenBorrowLimitInputs,
+      borrowLimitUSDValue: 0
+    });
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      tokenBorrowLimit: _bobTokenBorrowLimitInputs,
+      borrowLimitUSDValue: 0
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);

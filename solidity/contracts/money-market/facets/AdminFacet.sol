@@ -202,14 +202,22 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _protocolConfigInput.length;
     address _account;
-    address _token;
     for (uint256 _i; _i < _length; ) {
       _account = _protocolConfigInput[_i].account;
-      _token = _protocolConfigInput[_i].token;
 
       LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[_account];
 
-      protocolConfig.maxTokenBorrow[_token] = _protocolConfigInput[_i].maxTokenBorrow;
+      protocolConfig.borrowLimitUSDValue = _protocolConfigInput[_i].borrowLimitUSDValue;
+
+      // set limit for each token
+      uint256 _tokenBorrowLimitLength = _protocolConfigInput[_i].tokenBorrowLimit.length;
+      for (uint256 _j; _j < _tokenBorrowLimitLength; ) {
+        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput[_i].tokenBorrowLimit[_j];
+        protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
+        unchecked {
+          _j++;
+        }
+      }
 
       unchecked {
         _i++;
