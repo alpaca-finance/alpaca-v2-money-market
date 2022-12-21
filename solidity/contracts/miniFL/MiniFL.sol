@@ -92,8 +92,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     if (_withUpdate) massUpdatePools();
 
-    uint256 _pid = stakingToken.length;
-
     totalAllocPoint = totalAllocPoint + _allocPoint;
     stakingToken.push(_stakingToken);
     isStakingToken[address(_stakingToken)] = true;
@@ -106,7 +104,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         isDebtTokenPool: _isDebtTokenPool
       })
     );
-    emit LogAddPool(_pid, _allocPoint, _stakingToken);
+    emit LogAddPool(stakingToken.length - 1, _allocPoint, _stakingToken);
   }
 
   /// @notice Update the given pool's ALPACA allocation point and `IRewarder` contract.
