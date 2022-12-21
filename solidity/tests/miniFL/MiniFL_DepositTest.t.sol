@@ -9,7 +9,7 @@ import { MiniFL_BaseTest } from "./MiniFL_BaseTest.t.sol";
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 import { IRewarder } from "../../contracts/miniFL/interfaces/IRewarder.sol";
 
-contract MiniFLTest_Deposit is MiniFL_BaseTest {
+contract MiniFL_DepositTest is MiniFL_BaseTest {
   uint256 wethPoolID = 0;
   uint256 debtTokenPoolID = 1;
   uint256 notExistsPoolID = 999;
