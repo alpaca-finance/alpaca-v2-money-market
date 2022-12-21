@@ -113,31 +113,29 @@ library LibMoneyMarket01 {
   {
     LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs.subAccountCollats[_subAccount].getAll();
 
+    address _collatToken;
+    address _actualToken;
+    uint256 _tokenPrice;
+    TokenConfig memory _tokenConfig;
+
     uint256 _collatsLength = _collats.length;
 
     for (uint256 _i = 0; _i < _collatsLength; ) {
-      address _collatToken = _collats[_i].token;
-      uint256 _collatAmount = _collats[_i].amount;
-      uint256 _actualAmount = _collatAmount;
+      _collatToken = _collats[_i].token;
 
       // will return address(0) if _collatToken is not ibToken
-      address _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
+      _actualToken = moneyMarketDs.ibTokenToTokens[_collatToken];
       if (_actualToken == address(0)) {
-        _actualToken = _collatToken;
+        (_tokenPrice, ) = getPriceUSD(_collatToken, moneyMarketDs);
+        _tokenConfig = moneyMarketDs.tokenConfigs[_collatToken];
       } else {
-        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
-        uint256 _totalToken = getTotalTokenWithPendingInterest(_actualToken, moneyMarketDs);
-
-        _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
+        (_tokenPrice, ) = getIbPriceUSD(_collatToken, _actualToken, moneyMarketDs);
+        _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
       }
-
-      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_actualToken];
-
-      (uint256 _tokenPrice, ) = getPriceUSD(_actualToken, moneyMarketDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _actualAmount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
+        _collats[_i].amount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
       );
@@ -442,16 +440,13 @@ library LibMoneyMarket01 {
     address _ibToken,
     address _token,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256, uint256) {
-    (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, moneyMarketDs);
+  ) internal view returns (uint256 _price, uint256 _lastUpdated) {
+    uint256 _underlyingTokenPrice;
+    (_underlyingTokenPrice, _lastUpdated) = getPriceUSD(_token, moneyMarketDs);
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
-    uint256 _one = 10**IERC20(_ibToken).decimals();
 
     uint256 _totalToken = getTotalTokenWithPendingInterest(_token, moneyMarketDs);
-    uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
-
-    uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
-    return (_price, _lastUpdated);
+    _price = LibShareUtil.shareToValue(_underlyingTokenPrice, _totalToken, _totalSupply);
   }
 
   function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {
