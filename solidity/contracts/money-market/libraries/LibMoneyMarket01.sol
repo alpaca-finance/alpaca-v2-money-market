@@ -242,7 +242,7 @@ library LibMoneyMarket01 {
   function getGlobalPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _getGlobalPendingInterest)
+    returns (uint256 _globalPendingInterest)
   {
     uint256 _lastAccrueTime = moneyMarketDs.debtLastAccrueTime[_token];
     if (block.timestamp > _lastAccrueTime) {
@@ -255,7 +255,7 @@ library LibMoneyMarket01 {
 
       uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
 
-      _getGlobalPendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.overCollatDebtValues[_token]) / 1e18;
+      _globalPendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.overCollatDebtValues[_token]) / 1e18;
 
       // non collat interest
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
