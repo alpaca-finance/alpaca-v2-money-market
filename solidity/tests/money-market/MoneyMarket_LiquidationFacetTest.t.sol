@@ -96,7 +96,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be = 30
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -139,7 +139,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -187,7 +187,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be | usdc: 30 | btc: 3 |
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -236,7 +236,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -263,7 +263,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
       collat: viewFacet.getTotalCollatOfToken(address(btc)),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, address(btc)),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(address(btc)),
       debtValue: viewFacet.debtValues(address(btc)),
       subAccountDebtShare: 0
@@ -297,7 +297,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be | usdc: 30 | btc: 5 |
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -352,7 +352,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -379,7 +379,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
       collat: viewFacet.getTotalCollatOfToken(address(btc)),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, address(btc)),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(address(btc)),
       debtValue: viewFacet.debtValues(address(btc)),
       subAccountDebtShare: 0
@@ -427,7 +427,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be = 30
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -549,7 +549,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -613,7 +613,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -680,7 +680,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -722,7 +722,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -825,7 +825,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -910,7 +910,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -1030,7 +1030,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt share should be = 60
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
@@ -1072,7 +1072,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
-      subAccountCollat: viewFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
       debtValue: viewFacet.debtValues(_debtToken),
       subAccountDebtShare: 0
