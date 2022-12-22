@@ -133,17 +133,6 @@ contract LendFacet is ILendFacet {
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
   }
 
-  function getTotalToken(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-  }
-
-  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // total token + pending interest that belong to lender
-    _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
-  }
-
   function _getShareAmountFromValue(
     address _token,
     uint256 _value,
@@ -167,16 +156,6 @@ contract LendFacet is ILendFacet {
     _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
   }
 
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _ibShareAmount)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    (, , _ibShareAmount) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
-  }
-
   function _safeUnwrap(
     address _nativeToken,
     address _nativeRelayer,
@@ -189,5 +168,26 @@ contract LendFacet is ILendFacet {
     LibSafeToken.safeTransfer(_nativeToken, _nativeRelayer, _amount);
     IWNativeRelayer(_nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);
+  }
+
+  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
+    external
+    view
+    returns (uint256 _ibShareAmount)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    (, , _ibShareAmount) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
+  }
+
+  function getTotalToken(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
+  }
+
+  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // total token + pending interest that belong to lender
+    _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
   }
 }

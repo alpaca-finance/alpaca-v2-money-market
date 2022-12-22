@@ -33,7 +33,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory collats = viewFacet.getCollaterals(ALICE, subAccount0);
 
     assertEq(collats.length, 1);
     assertEq(collats[0].amount, _aliceCollateralAmount);
@@ -44,7 +44,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
     vm.stopPrank();
 
-    collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getCollaterals(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -55,7 +55,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getCollaterals(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -154,7 +154,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore + _addCollateralAmount);
-    assertEq(collateralFacet.collats(address(weth)), _addCollateralAmount);
+    assertEq(viewFacet.collats(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
@@ -164,7 +164,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore);
     assertEq(_borrowingPower, 0);
-    assertEq(collateralFacet.collats(address(weth)), 0);
+    assertEq(viewFacet.collats(address(weth)), 0);
   }
 
   function testCorrectness_WhenUserTransferCollateralBTWSubAccount_ShouldWork() external {
@@ -177,15 +177,15 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     uint256 _MMbalanceBeforeTransfer = weth.balanceOf(moneyMarketDiamond);
     uint256 _balanceBeforeTransfer = weth.balanceOf(ALICE);
-    uint256 _wethCollateralAmountBeforeTransfer = collateralFacet.collats(address(weth));
+    uint256 _wethCollateralAmountBeforeTransfer = viewFacet.collats(address(weth));
 
     // alice transfer collateral from subAccount0 to subAccount1
     vm.prank(ALICE);
     collateralFacet.transferCollateral(subAccount0, subAccount1, address(weth), _transferCollateralAmount);
 
-    LibDoublyLinkedList.Node[] memory subAccount0CollatList = collateralFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory subAccount0CollatList = viewFacet.getCollaterals(ALICE, subAccount0);
 
-    LibDoublyLinkedList.Node[] memory subAccount1CollatList = collateralFacet.getCollaterals(ALICE, subAccount1);
+    LibDoublyLinkedList.Node[] memory subAccount1CollatList = viewFacet.getCollaterals(ALICE, subAccount1);
 
     uint256 _subAccount0BorrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
@@ -203,7 +203,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // Global states
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBeforeTransfer);
-    assertEq(collateralFacet.collats(address(weth)), _wethCollateralAmountBeforeTransfer);
+    assertEq(viewFacet.collats(address(weth)), _wethCollateralAmountBeforeTransfer);
     assertEq(weth.balanceOf(ALICE), _balanceBeforeTransfer);
   }
 
@@ -230,7 +230,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // check account ib token collat
     address _aliceSubaccount0 = address(uint160(ALICE) ^ uint160(0));
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
+    assertEq(viewFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
   }
 
   // Add and Remove Collat with ibToken
@@ -249,7 +249,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // check account ib token collat
     address _aliceSubaccount0 = address(uint160(ALICE) ^ uint160(0));
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
+    assertEq(viewFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
 
     vm.startPrank(ALICE);
     collateralFacet.removeCollateral(0, address(ibWeth), 10 ether);
@@ -257,6 +257,6 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // check account ib token collat
 
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 0 ether);
+    assertEq(viewFacet.subAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 0 ether);
   }
 }

@@ -88,28 +88,4 @@ contract CollateralFacet is ICollateralFacet {
 
     emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
   }
-
-  function getCollaterals(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-
-    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs.subAccountCollats[_subAccount];
-
-    return subAccountCollateralList.getAll();
-  }
-
-  function collats(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.collats[_token];
-  }
-
-  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
-  }
 }

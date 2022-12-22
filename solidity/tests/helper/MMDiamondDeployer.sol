@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](12);
+    bytes4[] memory selectors = new bytes4[](15);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.tokenConfigs.selector;
     selectors[2] = ViewFacet.getDebtShares.selector;
@@ -123,6 +123,9 @@ library MMDiamondDeployer {
     selectors[9] = ViewFacet.debtShares.selector;
     selectors[10] = ViewFacet.getFloatingBalance.selector;
     selectors[11] = ViewFacet.getDebt.selector;
+    selectors[12] = ViewFacet.getCollaterals.selector;
+    selectors[13] = ViewFacet.collats.selector;
+    selectors[14] = ViewFacet.subAccountCollatAmount.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -160,13 +163,10 @@ library MMDiamondDeployer {
   function deployCollateralFacet(DiamondCutFacet diamondCutFacet) internal returns (CollateralFacet, bytes4[] memory) {
     CollateralFacet _collateralFacet = new CollateralFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = CollateralFacet.addCollateral.selector;
-    selectors[1] = CollateralFacet.getCollaterals.selector;
-    selectors[2] = CollateralFacet.removeCollateral.selector;
-    selectors[3] = CollateralFacet.collats.selector;
-    selectors[4] = CollateralFacet.transferCollateral.selector;
-    selectors[5] = CollateralFacet.subAccountCollatAmount.selector;
+    selectors[1] = CollateralFacet.removeCollateral.selector;
+    selectors[2] = CollateralFacet.transferCollateral.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_collateralFacet),
