@@ -13,6 +13,7 @@ import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol
 import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { LiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
+import { OwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -33,6 +34,7 @@ library MMDiamondDeployer {
     deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployOwnershipFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -251,5 +253,24 @@ library MMDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_LiquidationFacet, selectors);
+  }
+
+  function deployOwnershipFacet(DiamondCutFacet diamondCutFacet) internal returns (OwnershipFacet, bytes4[] memory) {
+    OwnershipFacet _ownershipFacet = new OwnershipFacet();
+
+    bytes4[] memory selectors = new bytes4[](4);
+    selectors[0] = _ownershipFacet.transferOwnership.selector;
+    selectors[1] = _ownershipFacet.acceptOwnership.selector;
+    selectors[2] = _ownershipFacet.owner.selector;
+    selectors[3] = _ownershipFacet.pendingOwner.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_ownershipFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_ownershipFacet, selectors);
   }
 }
