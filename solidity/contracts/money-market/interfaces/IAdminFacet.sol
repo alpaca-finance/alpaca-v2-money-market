@@ -81,5 +81,7 @@ interface IAdminFacet {
     uint256 _amount
   ) external;
 
+  function setIbTokenImplementation(address _newImplementation) external;
+
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 }

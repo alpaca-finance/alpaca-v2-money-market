@@ -10,7 +10,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
-contract MoneyMarket_Lend_Withdraw_Test is MoneyMarket_BaseTest {
+contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }

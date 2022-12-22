@@ -12,7 +12,7 @@ import { LibShareUtil } from "./LibShareUtil.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
-import { IIbToken } from "../interfaces/IIbToken.sol";
+import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
@@ -99,6 +99,8 @@ library LibMoneyMarket01 {
     mapping(address => uint256) protocolReserves;
     // diamond token balances
     mapping(address => uint256) reserves;
+    // ibToken implementation
+    address ibTokenImplementation;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -474,7 +476,7 @@ library LibMoneyMarket01 {
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _shareValue;
 
-    IIbToken(_ibToken).burn(_withdrawFrom, _shareAmount);
+    IInterestBearingToken(_ibToken).burn(_withdrawFrom, _shareAmount);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }

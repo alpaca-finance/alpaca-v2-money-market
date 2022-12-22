@@ -11,7 +11,7 @@ import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
-contract MoneyMarket_Lend_Deposit_Test is MoneyMarket_BaseTest {
+contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }

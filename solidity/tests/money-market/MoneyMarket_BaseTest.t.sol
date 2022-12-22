@@ -27,6 +27,7 @@ import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol"
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IOwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -40,6 +41,8 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
 
@@ -48,8 +51,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
-
   ILiquidationFacet internal liquidationFacet;
+  IOwnershipFacet internal ownershipFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -62,6 +65,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
+    ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -170,6 +174,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setProtocolConfigs(_protocolConfigInputs);
 
     // open isolate token market
+    adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);
 

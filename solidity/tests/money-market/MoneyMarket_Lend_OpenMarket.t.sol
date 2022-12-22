@@ -10,7 +10,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
-contract MoneyMarket_Lend_OpenMarket_Test is MoneyMarket_BaseTest {
+contract MoneyMarket_Lend_OpenMarketTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
@@ -20,7 +20,7 @@ contract MoneyMarket_Lend_OpenMarket_Test is MoneyMarket_BaseTest {
     // should pass when register new token
     address _ibToken = lendFacet.openMarket(address(opm));
     assertEq(IERC20(_ibToken).name(), "Interest Bearing OPM");
-    assertEq(IERC20(_ibToken).symbol(), "IBOPM");
+    assertEq(IERC20(_ibToken).symbol(), "ibOPM");
     assertEq(IERC20(_ibToken).decimals(), 9);
 
     vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, address(opm)));
