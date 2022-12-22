@@ -162,7 +162,7 @@ contract ViewFacet {
     (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
   }
 
-  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
+  function getNonCollatBorrowingPower(address _account) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.protocolConfigs[_account].borrowLimitUSDValue;
   }
