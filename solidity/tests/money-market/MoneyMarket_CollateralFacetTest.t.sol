@@ -154,7 +154,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore + _addCollateralAmount);
-    assertEq(viewFacet.getTotalCollatOfToken(address(weth)), _addCollateralAmount);
+    assertEq(viewFacet.getTotalCollat(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
@@ -164,7 +164,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore);
     assertEq(_borrowingPower, 0);
-    assertEq(viewFacet.getTotalCollatOfToken(address(weth)), 0);
+    assertEq(viewFacet.getTotalCollat(address(weth)), 0);
   }
 
   function testCorrectness_WhenUserTransferCollateralBTWSubAccount_ShouldWork() external {
@@ -177,7 +177,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     uint256 _MMbalanceBeforeTransfer = weth.balanceOf(moneyMarketDiamond);
     uint256 _balanceBeforeTransfer = weth.balanceOf(ALICE);
-    uint256 _wethCollateralAmountBeforeTransfer = viewFacet.getTotalCollatOfToken(address(weth));
+    uint256 _wethCollateralAmountBeforeTransfer = viewFacet.getTotalCollat(address(weth));
 
     // alice transfer collateral from subAccount0 to subAccount1
     vm.prank(ALICE);
@@ -203,7 +203,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // Global states
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBeforeTransfer);
-    assertEq(viewFacet.getTotalCollatOfToken(address(weth)), _wethCollateralAmountBeforeTransfer);
+    assertEq(viewFacet.getTotalCollat(address(weth)), _wethCollateralAmountBeforeTransfer);
     assertEq(weth.balanceOf(ALICE), _balanceBeforeTransfer);
   }
 

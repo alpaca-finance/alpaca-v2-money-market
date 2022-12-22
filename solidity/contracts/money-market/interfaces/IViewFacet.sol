@@ -48,7 +48,7 @@ interface IViewFacet {
     view
     returns (LibDoublyLinkedList.Node[] memory);
 
-  function getTotalCollatOfToken(address _token) external view returns (uint256);
+  function getTotalCollat(address _token) external view returns (uint256);
 
   function getOverCollatSubAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
 

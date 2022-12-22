@@ -108,7 +108,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
 
-    assertEq(viewFacet.getTotalCollatOfToken(address(weth)), 90 ether);
+    assertEq(viewFacet.getTotalCollat(address(weth)), 90 ether);
   }
 
   function testCorrectness_WhenUserRepayWithCollatMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
@@ -136,7 +136,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
 
-    assertEq(viewFacet.getTotalCollatOfToken(address(weth)), 90 ether);
+    assertEq(viewFacet.getTotalCollat(address(weth)), 90 ether);
   }
 
   function testCorrectness_WhenUserRepayWithCollatWithTinyAmount_ShouldWork() external {
@@ -160,7 +160,7 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5 ether);
 
-    assertEq(viewFacet.getTotalCollatOfToken(address(weth)), 95 ether);
+    assertEq(viewFacet.getTotalCollat(address(weth)), 95 ether);
   }
 
   function testCorrectness_WhenUserRepayWithCollatAndDebtIsMoreThanCollatAmount_ShoulRepayOnlyAsCollatAmount()
@@ -188,6 +188,6 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5 ether);
 
-    assertEq(viewFacet.getTotalCollatOfToken(address(usdc)), 0 ether);
+    assertEq(viewFacet.getTotalCollat(address(usdc)), 0 ether);
   }
 }
