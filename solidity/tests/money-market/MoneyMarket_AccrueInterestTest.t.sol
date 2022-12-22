@@ -406,7 +406,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     // 100 bps for lending fee on interest = (4e18 * 100 / 10000) = 4 e16
     // total token =  54 e18 - 4e16 = 5396e16
     assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
-    assertEq(adminFacet.getProtocolReserve(address(weth)), 4e16);
+    assertEq(viewFacet.getProtocolReserve(address(weth)), 4e16);
 
     // test withdrawing reserve
     vm.expectRevert(IAdminFacet.AdminFacet_ReserveTooLow.selector);
@@ -417,7 +417,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     adminFacet.withdrawReserve(address(weth), address(this), 4e16);
 
     adminFacet.withdrawReserve(address(weth), address(this), 4e16);
-    assertEq(adminFacet.getProtocolReserve(address(weth)), 0);
+    assertEq(viewFacet.getProtocolReserve(address(weth)), 0);
     assertEq(lendFacet.getTotalToken(address(weth)), 5396e16);
   }
 

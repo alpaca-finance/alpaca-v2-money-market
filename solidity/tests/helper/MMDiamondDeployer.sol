@@ -7,6 +7,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
+import { ViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
 import { LendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { CollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
@@ -35,6 +36,7 @@ library MMDiamondDeployer {
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployOwnershipFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployViewFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -103,6 +105,23 @@ library MMDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_diamondLoupeFacet, selectors);
+  }
+
+  function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
+    ViewFacet _viewFacet = new ViewFacet();
+
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = ViewFacet.getProtocolReserve.selector;
+    selectors[1] = ViewFacet.tokenConfigs.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_viewFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_viewFacet, selectors);
   }
 
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
@@ -206,25 +225,23 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](18);
+    bytes4[] memory selectors = new bytes4[](16);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
     selectors[3] = AdminFacet.setTokenConfigs.selector;
-    selectors[4] = AdminFacet.tokenConfigs.selector;
-    selectors[5] = AdminFacet.setNonCollatBorrower.selector;
-    selectors[6] = AdminFacet.setInterestModel.selector;
-    selectors[7] = AdminFacet.setOracle.selector;
-    selectors[8] = AdminFacet.setRepurchasersOk.selector;
-    selectors[9] = AdminFacet.setNonCollatInterestModel.selector;
-    selectors[10] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[11] = AdminFacet.setLiquidationCallersOk.selector;
-    selectors[12] = AdminFacet.setTreasury.selector;
-    selectors[13] = AdminFacet.setFees.selector;
-    selectors[14] = AdminFacet.getProtocolReserve.selector;
-    selectors[15] = AdminFacet.withdrawReserve.selector;
-    selectors[16] = AdminFacet.setProtocolConfigs.selector;
-    selectors[17] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[4] = AdminFacet.setNonCollatBorrower.selector;
+    selectors[5] = AdminFacet.setInterestModel.selector;
+    selectors[6] = AdminFacet.setOracle.selector;
+    selectors[7] = AdminFacet.setRepurchasersOk.selector;
+    selectors[8] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[9] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[10] = AdminFacet.setLiquidationCallersOk.selector;
+    selectors[11] = AdminFacet.setTreasury.selector;
+    selectors[12] = AdminFacet.setFees.selector;
+    selectors[13] = AdminFacet.withdrawReserve.selector;
+    selectors[14] = AdminFacet.setProtocolConfigs.selector;
+    selectors[15] = AdminFacet.setIbTokenImplementation.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

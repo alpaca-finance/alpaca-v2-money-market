@@ -46,8 +46,6 @@ interface IAdminFacet {
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external;
 
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
-
   function setInterestModel(address _token, address model) external;
 
   function setOracle(address _oracle) external;
@@ -72,8 +70,6 @@ interface IAdminFacet {
     uint256 _newRepurchaseFeeBps,
     uint256 _newLiquidationFeeBps
   ) external;
-
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
   function withdrawReserve(
     address _token,
