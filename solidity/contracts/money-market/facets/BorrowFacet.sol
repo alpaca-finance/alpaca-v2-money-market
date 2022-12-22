@@ -55,10 +55,12 @@ contract BorrowFacet is IBorrowFacet {
       userDebtShare.init();
     }
 
+    // accrue interest for borrowed debt token, to mint share correctly
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
     // accrue all debt tokens under subaccount
+    // because used borrowing power is calcualated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
-    // if _token is first time to borrow
-    if (userDebtShare.getAmount(_token) == 0) LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     _validate(_subAccount, _token, _amount, moneyMarketDs);
 
