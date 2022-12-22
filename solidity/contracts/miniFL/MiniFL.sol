@@ -32,7 +32,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   PoolInfo[] public poolInfo;
   IERC20Upgradeable[] public stakingToken;
 
-  mapping(uint256 => address[]) rewarders;
+  mapping(uint256 => address[]) public rewarders;
   mapping(address => bool) public isStakingToken;
   mapping(uint256 => mapping(address => bool)) public stakeDebtTokenAllowance;
 
