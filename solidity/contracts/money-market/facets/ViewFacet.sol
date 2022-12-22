@@ -119,7 +119,7 @@ contract ViewFacet {
     return subAccountCollateralList.getAll();
   }
 
-  function collats(address _token) external view returns (uint256) {
+  function getTotalCollatOfToken(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.collats[_token];
   }
