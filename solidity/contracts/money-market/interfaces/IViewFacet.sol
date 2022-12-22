@@ -43,7 +43,7 @@ interface IViewFacet {
     address _token
   ) external view returns (uint256 _debtShare, uint256 _debtAmount);
 
-  function getCollaterals(address _account, uint256 _subAccountId)
+  function getAllSubAccountCollats(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);

@@ -105,7 +105,7 @@ contract ViewFacet {
     (_debtShare, _debtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
   }
 
-  function getCollaterals(address _account, uint256 _subAccountId)
+  function getAllSubAccountCollats(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)

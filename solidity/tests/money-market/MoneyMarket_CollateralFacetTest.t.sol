@@ -33,7 +33,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory collats = viewFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 1);
     assertEq(collats[0].amount, _aliceCollateralAmount);
@@ -44,7 +44,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
     vm.stopPrank();
 
-    collats = viewFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -55,7 +55,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    collats = viewFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -183,9 +183,9 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     collateralFacet.transferCollateral(subAccount0, subAccount1, address(weth), _transferCollateralAmount);
 
-    LibDoublyLinkedList.Node[] memory subAccount0CollatList = viewFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory subAccount0CollatList = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
-    LibDoublyLinkedList.Node[] memory subAccount1CollatList = viewFacet.getCollaterals(ALICE, subAccount1);
+    LibDoublyLinkedList.Node[] memory subAccount1CollatList = viewFacet.getAllSubAccountCollats(ALICE, subAccount1);
 
     uint256 _subAccount0BorrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 

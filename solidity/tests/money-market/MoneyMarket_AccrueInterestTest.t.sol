@@ -120,7 +120,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     collateralFacet.removeCollateral(0, address(weth), 10 ether);
     uint256 wethAliceAfterWithdraw = weth.balanceOf(ALICE);
     assertEq(wethAliceAfterWithdraw - wethAliceBeforeWithdraw, 10 ether);
-    LibDoublyLinkedList.Node[] memory collats = viewFacet.getCollaterals(ALICE, 0);
+    LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, 0);
     assertEq(collats.length, 0);
   }
 
