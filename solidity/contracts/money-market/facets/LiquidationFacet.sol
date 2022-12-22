@@ -220,13 +220,16 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _underlyingAmountBefore = ERC20(_collatUnderlyingToken).balanceOf(address(this));
     uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
+    uint256 _ibTotalSupply = ERC20(params.collatToken).totalSupply();
+
     // if mm has no actual token left, withdraw will fail anyway
+
     ERC20(_collatUnderlyingToken).safeTransfer(
       params.liquidationStrat,
-      _shareToValue(
-        params.collatToken,
+      LibShareUtil.shareToValue(
         moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
-        _totalToken
+        _totalToken,
+        _ibTotalSupply
       )
     );
 
@@ -248,11 +251,15 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+    // avoid stack too deep
+    uint256 _repaidAmount;
+    {
+      uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+      _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+    }
     uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
 
-    uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _totalToken);
+    uint256 _collatSold = LibShareUtil.valueToShare(_underlyingSold, _ibTotalSupply, _totalToken);
 
     ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
@@ -272,26 +279,6 @@ contract LiquidationFacet is ILiquidationFacet {
       _underlyingSold,
       _feeToTreasury
     );
-  }
-
-  function _valueToShare(
-    address _ibToken,
-    uint256 _value,
-    uint256 _totalToken
-  ) internal view returns (uint256 _shareValue) {
-    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
-
-    _shareValue = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
-  }
-
-  function _shareToValue(
-    address _ibToken,
-    uint256 _shareAmount,
-    uint256 _totalToken
-  ) internal view returns (uint256 _underlyingAmount) {
-    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
-
-    _underlyingAmount = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
   }
 
   /// @dev min(repayAmount, debtValue)
