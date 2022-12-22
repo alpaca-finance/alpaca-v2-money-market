@@ -51,7 +51,7 @@ interface ILYFFarmFacet {
     view
     returns (uint256 _totalBorrowingPowerUSDValue);
 
-  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
+  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
     returns (uint256 _totalBorrowedUSDValue);
