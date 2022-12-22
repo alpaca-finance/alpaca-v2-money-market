@@ -180,7 +180,7 @@ contract ViewFacet {
     return _debtShares.getAll();
   }
 
-  function nonCollatGetDebt(address _account, address _token) external view returns (uint256 _debtAmount) {
+  function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256 _debtAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     _debtAmount = LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);

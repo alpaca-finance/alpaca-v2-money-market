@@ -68,7 +68,7 @@ interface IViewFacet {
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
 
-  function nonCollatGetDebt(address _account, address _token) external view returns (uint256);
+  function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256);
 
   function nonCollatGetTokenDebt(address _token) external view returns (uint256);
 
