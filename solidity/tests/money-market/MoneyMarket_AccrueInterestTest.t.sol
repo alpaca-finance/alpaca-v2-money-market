@@ -542,4 +542,48 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     assertGt(borrowFacet.debtValues(address(weth)), _borrowAmount);
     assertGt(borrowFacet.debtValues(address(usdc)), _borrowAmount);
   }
+
+  function testCorrectness_WhenUserBorrowMultipleTokens_AllDebtTokenShouldAccrueInterest() external {
+    vm.prank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 100 ether);
+
+    // add 100 btc, collateralFactor = 9000, weth price = 10
+    // _borrowingPowerUSDValue = 100 * 10 * 9000/ 10000 = 900 ether USD
+    assertEq(borrowFacet.getTotalBorrowingPower(ALICE, subAccount0), 900 ether);
+
+    // borrow 9 weth => with 9000 borrow factor
+    vm.prank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), 9 ether);
+    // weth debt share = 9, debt value = 9
+    // borrowed value = 9 * 9 / 9 = 9
+    // the used borrowed power should be 9 * 10000 / 9000 = 10 ether
+
+    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    assertEq(_borrowedUSDValue, 10 ether);
+
+    // timepast 100
+    vm.warp(block.timestamp + 100);
+    // weth interest model = 0.009 ether per second
+    // weth pending interest for 1 borrowed token should be 0.009 * 100 = 0.9 ether
+    // alice has borrowed 9 ether then pendint interest will be 9 * 0.9 ether = 8.1 ether
+    assertEq(borrowFacet.pendingInterest(address(weth)), 8.1 ether);
+
+    // alice borrow other asset, weth debt value should be accrued interest
+    // borrow 9 usdc => with 9000 borrow factor
+    vm.prank(ALICE);
+    borrowFacet.borrow(subAccount0, address(usdc), 9 ether);
+
+    // weth debt value increased by 8.1
+    // weth debt share = 9, debt value = 9 + 8.1 = 17.1
+    // borrowed value = 9 * 17.1 / 9 = 17.1
+    // the used borrowed power (weth) should be 17.1 * 10000 / 9000 = 19 ether
+
+    // usdc debt share = 9, debt value = 9
+    // borrowed value = 9 * 9 / 9 = 9
+    // the used borrowed power (usdc) should be 9 * 10000 / 9000 = 10 ether
+
+    // total used borrowed power = 19 + 10 = 29 ether
+    (_borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    assertEq(_borrowedUSDValue, 29 ether);
+  }
 }
