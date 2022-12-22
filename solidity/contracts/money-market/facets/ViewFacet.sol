@@ -167,9 +167,9 @@ contract ViewFacet {
     return moneyMarketDs.protocolConfigs[_account].borrowLimitUSDValue;
   }
 
-  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _pendingInterest) {
+  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _interestRate) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    _pendingInterest = LibMoneyMarket01.getNonCollatInterestRate(_account, _token, moneyMarketDs);
+    _interestRate = LibMoneyMarket01.getNonCollatInterestRate(_account, _token, moneyMarketDs);
   }
 
   function getNonCollatAccountDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory) {
