@@ -332,7 +332,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     uint256 _debtAmount;
     (, _debtAmount) = viewFacet.getDebt(BOB, subAccount0, address(weth));
-    uint256 _nonCollatDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _nonCollatDebtAmount = viewFacet.nonCollatGetDebt(BOB, address(weth));
     assertEq(_debtAmount, _borrowAmount);
     assertEq(_nonCollatDebtAmount, _nonCollatBorrowAmount);
 
@@ -346,8 +346,8 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = viewFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
-    uint256 _bobNonCollatDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
-    uint256 _tokenCollatDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _bobNonCollatDebt = viewFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _tokenCollatDebt = viewFacet.nonCollatGetTokenDebt(address(weth));
     assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
     assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
 
@@ -380,7 +380,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     uint256 _debtAmount;
     (, _debtAmount) = viewFacet.getDebt(BOB, subAccount0, address(weth));
-    uint256 _nonCollatDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _nonCollatDebtAmount = viewFacet.nonCollatGetDebt(BOB, address(weth));
     assertEq(_debtAmount, _borrowAmount);
     assertEq(_nonCollatDebtAmount, _nonCollatBorrowAmount);
 
@@ -394,8 +394,8 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = viewFacet.getDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
-    uint256 _bobNonCollatDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
-    uint256 _tokenCollatDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _bobNonCollatDebt = viewFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _tokenCollatDebt = viewFacet.nonCollatGetTokenDebt(address(weth));
     assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
     assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
 
@@ -455,18 +455,14 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     // 1 day passed _bobExpectedDebtAmount = debtAmount + (debtAmount * seconedPass * ratePerSec)
     // alice = 15 + (15 * 1 * 0.061764705867600000/365) = 15.002538275583600000
     // bob = 15 + (15 * 1 * 0.085714285713120000/365) = 15.003522504892320000
-    uint256 _aliceDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(btc));
+    uint256 _aliceDebt = viewFacet.nonCollatGetDebt(ALICE, address(btc));
     assertEq(_aliceDebt, 15.002538275583600000 ether, "Alice debtAmount mismatch");
-    uint256 _bobDebt = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(btc));
+    uint256 _bobDebt = viewFacet.nonCollatGetDebt(BOB, address(btc));
     assertEq(_bobDebt, 15.003522504892320000 ether, "Bob debtAmount mismatch");
 
     // assert Global
     // from Alice 15.002538275583600000, Bob 15.003522504892320000 = 15.002538275583600000 + 15.003522504892320000 = 30.006060780475920000
-    assertEq(
-      nonCollatBorrowFacet.nonCollatGetTokenDebt(address(btc)),
-      30.006060780475920000 ether,
-      "Global debtValues missmatch"
-    );
+    assertEq(viewFacet.nonCollatGetTokenDebt(address(btc)), 30.006060780475920000 ether, "Global debtValues missmatch");
   }
 
   function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldaccrueInterestForAllBorrowedToken()

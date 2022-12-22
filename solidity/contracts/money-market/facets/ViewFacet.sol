@@ -151,4 +151,44 @@ contract ViewFacet {
     // total token + pending interest that belong to lender
     _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
   }
+
+  function nonCollatGetTotalUsedBorrowingPower(address _account)
+    external
+    view
+    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
+  }
+
+  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.protocolConfigs[_account].borrowLimitUSDValue;
+  }
+
+  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _pendingInterest) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _pendingInterest = LibMoneyMarket01.getNonCollatInterestRate(_account, _token, moneyMarketDs);
+  }
+
+  function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    LibDoublyLinkedList.List storage _debtShares = moneyMarketDs.nonCollatAccountDebtValues[_account];
+
+    return _debtShares.getAll();
+  }
+
+  function nonCollatGetDebt(address _account, address _token) external view returns (uint256 _debtAmount) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    _debtAmount = LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);
+  }
+
+  function nonCollatGetTokenDebt(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    return LibMoneyMarket01.getNonCollatTokenDebt(_token, moneyMarketDs);
+  }
 }

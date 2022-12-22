@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](18);
+    bytes4[] memory selectors = new bytes4[](23);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.tokenConfigs.selector;
     selectors[2] = ViewFacet.getDebtShares.selector;
@@ -129,6 +129,11 @@ library MMDiamondDeployer {
     selectors[15] = ViewFacet.getTotalToken.selector;
     selectors[16] = ViewFacet.getIbShareFromUnderlyingAmount.selector;
     selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
+    selectors[18] = ViewFacet.nonCollatGetDebtValues.selector;
+    selectors[19] = ViewFacet.nonCollatGetTotalUsedBorrowingPower.selector;
+    selectors[20] = ViewFacet.nonCollatGetDebt.selector;
+    selectors[21] = ViewFacet.nonCollatGetTokenDebt.selector;
+    selectors[22] = ViewFacet.nonCollatBorrowLimitUSDValues.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -203,14 +208,9 @@ library MMDiamondDeployer {
   {
     NonCollatBorrowFacet _nonCollatBorrow = new NonCollatBorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](7);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
-    selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
-    selectors[2] = NonCollatBorrowFacet.nonCollatGetTotalUsedBorrowingPower.selector;
-    selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
-    selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
-    selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
-    selectors[6] = NonCollatBorrowFacet.nonCollatBorrowLimitUSDValues.selector;
+    selectors[1] = NonCollatBorrowFacet.nonCollatRepay.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_nonCollatBorrow),

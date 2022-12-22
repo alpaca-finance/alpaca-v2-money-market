@@ -572,6 +572,14 @@ library LibMoneyMarket01 {
     );
   }
 
+  function getNonCollatDebt(
+    address _account,
+    address _token,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _debtAmount) {
+    _debtAmount = moneyMarketDs.nonCollatAccountDebtValues[_account].getAmount(_token);
+  }
+
   function getShareAmountFromValue(
     address _underlyingToken,
     address _ibToken,
