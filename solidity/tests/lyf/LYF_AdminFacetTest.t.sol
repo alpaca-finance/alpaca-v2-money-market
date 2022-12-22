@@ -16,7 +16,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
 
     adminFacet.setOracle(_oracleAddress);
 
-    assertEq(viewFacet.oracle(), _oracleAddress);
+    assertEq(viewFacet.getOracle(), _oracleAddress);
   }
 
   function testCorrectness_WhenNonAdminSetSomeLYFConfig_ShouldRevert() external {

@@ -67,7 +67,7 @@ library LibLYF01 {
   struct LYFDiamondStorage {
     address moneyMarket;
     address treasury;
-    IAlpacaV2Oracle oracle;
+    address oracle;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -255,9 +255,9 @@ library LibLYF01 {
     returns (uint256 _price, uint256 _lastUpdated)
   {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = lyfDs.oracle.lpToDollar(1e18, _token);
+      (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
+      (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
     }
     if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
       revert LibLYF01_PriceStale(_token);

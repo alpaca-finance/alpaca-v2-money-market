@@ -7,11 +7,48 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 
 interface ILYFViewFacet {
-  // ILYFFarmFacet
-  function getDebtShares(address _account, uint256 _subAccountId)
+  function getOracle() external view returns (address);
+
+  function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory);
+
+  function getLpTokenValue(address _lpToken) external view returns (uint256);
+
+  function getLpTokenShare(address _lpToken) external view returns (uint256);
+
+  function getSubAccountCollats(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (LibDoublyLinkedList.Node[] memory);
+
+  function getTokenCollatAmount(address _token) external view returns (uint256);
+
+  function getSubAccountTokenCollatAmount(address _subAccount, address _token) external view returns (uint256);
+
+  function getMMDebt(address _token) external view returns (uint256);
+
+  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256);
+
+  function getTokenDebtValue(address _token, address _lpToken) external view returns (uint256);
+
+  function getTokenDebtShare(address _token, address _lpToken) external view returns (uint256);
+
+  function getSubAccountDebt(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    address _lpToken
+  ) external view returns (uint256, uint256);
+
+  function getSubAccountDebtShares(address _account, uint256 _subAccountId)
     external
     view
     returns (LibUIntDoublyLinkedList.Node[] memory);
+
+  function getDebtLastAccrueTime(address _token, address _lpToken) external view returns (uint256);
+
+  function getPendingInterest(address _token, address _lpToken) external view returns (uint256);
+
+  function getPendingReward(address _lpToken) external view returns (uint256);
 
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
     external
@@ -22,44 +59,4 @@ interface ILYFViewFacet {
     external
     view
     returns (uint256 _totalBorrowedUSDValue);
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    address _lpToken
-  ) external view returns (uint256, uint256);
-
-  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256);
-
-  function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256);
-
-  function pendingInterest(address _token, address _lpToken) external view returns (uint256);
-
-  function debtValues(address _token, address _lpToken) external view returns (uint256);
-
-  function debtShares(address _token, address _lpToken) external view returns (uint256);
-
-  function pendingRewards(address _lpToken) external view returns (uint256);
-
-  function getMMDebt(address _token) external view returns (uint256);
-
-  function lpValues(address _lpToken) external view returns (uint256);
-
-  function lpShares(address _lpToken) external view returns (uint256);
-
-  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory);
-
-  // ILYFCollateralFacet
-  function getCollaterals(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory);
-
-  function collats(address _token) external view returns (uint256);
-
-  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
-
-  // Admin
-  function oracle() external view returns (address);
 }

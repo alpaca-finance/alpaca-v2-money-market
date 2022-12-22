@@ -13,7 +13,86 @@ contract LYFViewFacet is ILYFViewFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  function getDebtShares(address _account, uint256 _subAccountId)
+  function getOracle() external view returns (address) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.oracle;
+  }
+
+  function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpConfigs[_lpToken];
+  }
+
+  function getLpTokenValue(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpValues[_lpToken];
+  }
+
+  function getLpTokenShare(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.lpShares[_lpToken];
+  }
+
+  function getSubAccountCollats(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (LibDoublyLinkedList.Node[] memory)
+  {
+    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
+    return subAccountCollateralList.getAll();
+  }
+
+  function getTokenCollatAmount(address _token) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    return ds.collats[_token];
+  }
+
+  function getSubAccountTokenCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    return ds.subAccountCollats[_subAccount].getAmount(_token);
+  }
+
+  function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).nonCollatGetDebt(address(this), _token);
+  }
+
+  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    return (lyfDs.debtShares[_debtShareId], lyfDs.debtValues[_debtShareId]);
+  }
+
+  function getTokenDebtValue(address _token, address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    return lyfDs.debtValues[_debtShareId];
+  }
+
+  function getTokenDebtShare(address _token, address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    return lyfDs.debtShares[_debtShareId];
+  }
+
+  function getSubAccountDebt(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    address _lpToken
+  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+
+    (_debtShare, _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+  }
+
+  function getSubAccountDebtShares(address _account, uint256 _subAccountId)
     external
     view
     returns (LibUIntDoublyLinkedList.Node[] memory)
@@ -25,6 +104,23 @@ contract LYFViewFacet is ILYFViewFacet {
     LibUIntDoublyLinkedList.List storage subAccountDebtShares = lyfDs.subAccountDebtShares[_subAccount];
 
     return subAccountDebtShares.getAll();
+  }
+
+  function getDebtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    return lyfDs.debtLastAccrueTime[_debtShareId];
+  }
+
+  function getPendingInterest(address _token, address _lpToken) public view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    return LibLYF01.pendingInterest(_debtShareId, lyfDs);
+  }
+
+  function getPendingReward(address _lpToken) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.pendingRewards[_lpToken];
   }
 
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
@@ -49,107 +145,5 @@ contract LYFViewFacet is ILYFViewFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
     _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-  }
-
-  function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtLastAccrueTime[_debtShareId];
-  }
-
-  function pendingInterest(address _token, address _lpToken) public view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return LibLYF01.pendingInterest(_debtShareId, lyfDs);
-  }
-
-  function accrueInterest(address _token, address _lpToken) external {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    LibLYF01.accrueInterest(_debtShareId, lyfDs);
-  }
-
-  function debtValues(address _token, address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtValues[_debtShareId];
-  }
-
-  function lpValues(address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpValues[_lpToken];
-  }
-
-  function lpShares(address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpShares[_lpToken];
-  }
-
-  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpConfigs[_lpToken];
-  }
-
-  function debtShares(address _token, address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtShares[_debtShareId];
-  }
-
-  function pendingRewards(address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.pendingRewards[_lpToken];
-  }
-
-  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return (lyfDs.debtShares[_debtShareId], lyfDs.debtValues[_debtShareId]);
-  }
-
-  function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).nonCollatGetDebt(address(this), _token);
-  }
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    address _lpToken
-  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-
-    (_debtShare, _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
-  }
-
-  function getCollaterals(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory)
-  {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
-    return subAccountCollateralList.getAll();
-  }
-
-  function collats(address _token) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-    return ds.collats[_token];
-  }
-
-  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-    return ds.subAccountCollats[_subAccount].getAmount(_token);
-  }
-
-  function oracle() external view returns (address) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return address(lyfDs.oracle);
   }
 }
