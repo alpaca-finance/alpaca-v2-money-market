@@ -20,6 +20,7 @@ contract BorrowFacet is IBorrowFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
 
+  event LogBorrow(address indexed _subAccount, address indexed _token, uint256 _borrowedAmount, uint256 _debtShare);
   event LogRemoveDebt(
     address indexed _subAccount,
     address indexed _token,
@@ -56,38 +57,13 @@ contract BorrowFacet is IBorrowFacet {
     // because used borrowing power is calcualated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount];
-
-    if (userDebtShare.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      userDebtShare.init();
-    }
-
     _validate(_subAccount, _token, _amount, moneyMarketDs);
 
-    uint256 _totalOverCollatDebtShare = moneyMarketDs.debtShares[_token];
-    uint256 _totalOverCollatDebtValue = moneyMarketDs.debtValues[_token];
+    uint256 _debtShare = LibMoneyMarket01.overCollatBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
-      _amount,
-      _totalOverCollatDebtShare,
-      _totalOverCollatDebtValue
-    );
-
-    // update over collat debt
-    moneyMarketDs.debtShares[_token] += _shareToAdd;
-    moneyMarketDs.debtValues[_token] += _amount;
-
-    // update global debt
-    moneyMarketDs.globalDebts[_token] += _amount;
-
-    uint256 _newShareAmount = userDebtShare.getAmount(_token) + _shareToAdd;
-
-    // update user's debtshare
-    userDebtShare.addOrUpdate(_token, _newShareAmount);
-
-    // update facet token balance
-    moneyMarketDs.reserves[_token] -= _amount;
     ERC20(_token).safeTransfer(msg.sender, _amount);
+
+    emit LogBorrow(_subAccount, _token, _amount, _debtShare);
   }
 
   function repay(

@@ -556,4 +556,36 @@ library LibMoneyMarket01 {
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
   }
+
+  function overCollatBorrow(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _shareToAdd) {
+    LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount];
+
+    if (userDebtShare.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      userDebtShare.init();
+    }
+
+    _shareToAdd = LibShareUtil.valueToShareRoundingUp(
+      _amount,
+      moneyMarketDs.debtShares[_token],
+      moneyMarketDs.debtValues[_token]
+    );
+
+    // update over collat debt
+    moneyMarketDs.debtShares[_token] += _shareToAdd;
+    moneyMarketDs.debtValues[_token] += _amount;
+
+    // update global debt
+    moneyMarketDs.globalDebts[_token] += _amount;
+
+    // update user's debtshare
+    userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
+
+    // update facet token balance
+    moneyMarketDs.reserves[_token] -= _amount;
+  }
 }
