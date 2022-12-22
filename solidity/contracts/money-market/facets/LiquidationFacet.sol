@@ -38,7 +38,7 @@ contract LiquidationFacet is ILiquidationFacet {
   struct RepurchaseLocalVars {
     address subAccount;
     uint256 usedBorrowingPower;
-    uint256 actualRepayAmountWithFee;
+    uint256 repayAmountWithFee;
     uint256 repurchaseFeeToProtocol;
     uint256 repayAmountAfterFee;
     uint256 repayTokenPrice;
@@ -49,7 +49,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount
+    uint256 _desiredRepayAmount
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -76,17 +76,17 @@ contract LiquidationFacet is ILiquidationFacet {
         moneyMarketDs.debtValues[_repayToken],
         moneyMarketDs.debtShares[_repayToken]
       );
-      // TODO: explain maxFee
-      uint256 _maxFee = (_debtValue * moneyMarketDs.repurchaseFeeBps) /
-        (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps);
-
-      vars.actualRepayAmountWithFee = LibFullMath.min(_repayAmount, _debtValue + _maxFee);
-
-      vars.repurchaseFeeToProtocol =
-        (vars.actualRepayAmountWithFee * moneyMarketDs.repurchaseFeeBps) /
+      uint256 _maxAmountRepurchaseable = (_debtValue * (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) /
         LibMoneyMarket01.MAX_BPS;
 
-      vars.repayAmountAfterFee = vars.actualRepayAmountWithFee - vars.repurchaseFeeToProtocol;
+      vars.repayAmountWithFee = LibFullMath.min(_desiredRepayAmount, _maxAmountRepurchaseable);
+
+      vars.repayAmountAfterFee = _desiredRepayAmount > _maxAmountRepurchaseable
+        ? (vars.repayAmountWithFee * _debtValue) / _maxAmountRepurchaseable
+        : (_desiredRepayAmount * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps)) /
+          LibMoneyMarket01.MAX_BPS;
+
+      vars.repurchaseFeeToProtocol = vars.repayAmountWithFee - vars.repayAmountAfterFee;
     }
 
     (vars.repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
@@ -111,7 +111,7 @@ contract LiquidationFacet is ILiquidationFacet {
         (LibMoneyMarket01.MAX_BPS + moneyMarketDs.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
 
       _collatAmountOut =
-        (vars.actualRepayAmountWithFee *
+        (vars.repayAmountWithFee *
           _repayTokenPriceWithPremium *
           moneyMarketDs.tokenConfigs[_collatToken].to18ConversionFactor) /
         (_collatTokenPrice * moneyMarketDs.tokenConfigs[_collatToken].to18ConversionFactor);
@@ -128,7 +128,7 @@ contract LiquidationFacet is ILiquidationFacet {
     moneyMarketDs.reserves[_repayToken] += vars.repayAmountAfterFee;
 
     // transfer tokens
-    ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), vars.actualRepayAmountWithFee);
+    ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), vars.repayAmountWithFee);
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
     ERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, vars.repurchaseFeeToProtocol);
 
@@ -136,7 +136,7 @@ contract LiquidationFacet is ILiquidationFacet {
       msg.sender,
       _repayToken,
       _collatToken,
-      vars.actualRepayAmountWithFee,
+      vars.repayAmountWithFee,
       _collatAmountOut,
       vars.repurchaseFeeToProtocol,
       (_collatAmountOut * moneyMarketDs.repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS

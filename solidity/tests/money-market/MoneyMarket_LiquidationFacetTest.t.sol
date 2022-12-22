@@ -336,19 +336,19 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 40 ether);
 
     // alice just have usdc debt 30.0050765511672 (with interest)
-    // when repay amount (40) > _debtValue + fee (30.0050765511672 + 0.303081581324921212) = 30.308158132492121212
-    // then actual repay amount should be 30.308158132492121212
-    // repay value = 30.308158132492121212 * 1 = 30.308158132492121212 USD
-    // reward amount = 30.308158132492121212 * 1.01 = 30.611239713817042424 USD
-    // converted weth amount = 30.611239713817042424 / 0.8 = 38.26404964227130303
-    // fee amount = 30.308158132492121212 * 0.01 = 0.303081581324921212
-    uint256 _expectedFee = 0.303081581324921212 ether;
+    // when repay amount (40) > _debtValue + fee (30.0050765511672 + 0.300050765511672) = 30.305127316678872
+    // then actual repay amount should be 30.305127316678872
+    // repay value = 30.305127316678872 * 1 = 30.305127316678872 USD
+    // reward amount = 30.305127316678872 * 1.01 = 30.60817858984566072 USD
+    // converted weth amount = 30.60817858984566072 / 0.8 = 38.2602232373070759
+    // fee amount = 30.305127316678872 * 0.01 = 0.300050765511672
+    uint256 _expectedFee = 0.300050765511672 ether;
     uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceAfter = weth.balanceOf(BOB);
 
     // check bob balance
-    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 30.308158132492121212 ether); // pay 30.308158132492121212
-    assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 38.26404964227130303 ether); // get 38.26404964227130303 weth
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 30.305127316678872 ether); // pay 30.305127316678872
+    assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 38.2602232373070759 ether); // get 38.2602232373070759 weth
 
     CacheState memory _stateAfter = CacheState({
       collat: collateralFacet.collats(_collatToken),
@@ -365,13 +365,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be | usdc: 30.0050765511672 | btc: 5.001410153102144 | after accure interest
     // collat debt share should be | usdc: 30 | btc: 5 |
     // then after repurchase
-    // collat amount should be = 100 - (_collatAmountOut) = 100 - 38.26404964227130303 = 61.73595035772869697
+    // collat amount should be = 100 - (_collatAmountOut) = 100 - 38.2602232373070759 = 61.7397767626929241
     // actual repaid debt amount = (_repayAmount - fee) = 30.308158132492121212 - 0.303081581324921212 = 30.0050765511672
     // collat debt value should be = 30.0050765511672 - (actual repaid debt amount) = 30.0050765511672 - 30.0050765511672 = 0
     // _repayShare = actual repaid debt amount * totalDebtShare / totalDebtValue = 30.0050765511672 * 30 / 30.0050765511672 = 30
     // collat debt share should be = 30 - (_repayShare) = 30 - 30 = 0
-    assertEq(_stateAfter.collat, 61.73595035772869697 ether);
-    assertEq(_stateAfter.subAccountCollat, 61.73595035772869697 ether);
+    assertEq(_stateAfter.collat, 61.7397767626929241 ether);
+    assertEq(_stateAfter.subAccountCollat, 61.7397767626929241 ether);
     assertEq(_stateAfter.debtValue, 0);
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
