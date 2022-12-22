@@ -177,23 +177,6 @@ contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 1);
   }
 
-  function testCorrectness_WhenUserOpenNewMarket_ShouldOpenOncePerToken() external {
-    vm.startPrank(ALICE);
-    // should pass when register new token
-    address _ibToken = lendFacet.openMarket(address(opm));
-    assertEq(IERC20(_ibToken).name(), "Interest Bearing OPM");
-    assertEq(IERC20(_ibToken).symbol(), "IBOPM");
-    assertEq(IERC20(_ibToken).decimals(), 9);
-
-    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, address(opm)));
-    lendFacet.openMarket(address(opm));
-
-    // able to deposit
-    lendFacet.deposit(address(opm), 5 ether);
-    assertEq(IERC20(_ibToken).balanceOf(ALICE), 5 ether);
-    vm.stopPrank();
-  }
-
   function testCorrectness_WhenUserDepositETH_TokenShouldSafeTransferFromUserToMM() external {
     vm.prank(ALICE);
     lendFacet.depositETH{ value: 10 ether }();
