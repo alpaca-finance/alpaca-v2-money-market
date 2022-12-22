@@ -38,10 +38,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
 
     uint256 _debtAmount;
-    (, _debtAmount) = viewFacet.getDebt(BOB, subAccount0, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
     assertEq(_debtAmount, _borrowAmount);
     // sanity check on subaccount1
-    (, _debtAmount) = viewFacet.getDebt(BOB, subAccount1, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount1, address(weth));
 
     assertEq(_debtAmount, 0);
   }

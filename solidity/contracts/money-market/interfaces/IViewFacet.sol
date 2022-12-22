@@ -37,7 +37,7 @@ interface IViewFacet {
 
   function getFloatingBalance(address _token) external view returns (uint256);
 
-  function getDebt(
+  function getOverCollatSubAccountDebt(
     address _account,
     uint256 _subAccountId,
     address _token

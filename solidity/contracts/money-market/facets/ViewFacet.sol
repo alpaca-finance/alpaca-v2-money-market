@@ -93,7 +93,7 @@ contract ViewFacet {
     return (moneyMarketDs.debtShares[_token], moneyMarketDs.debtValues[_token]);
   }
 
-  function getDebt(
+  function getOverCollatSubAccountDebt(
     address _account,
     uint256 _subAccountId,
     address _token
