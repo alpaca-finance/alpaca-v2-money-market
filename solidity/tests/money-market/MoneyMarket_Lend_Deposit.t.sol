@@ -83,7 +83,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
      * 2. Bob add collateral and borrow 5 weth out
      *
      * 3. After 10 seconds, alice deposit another 5 weth
-     *    - interest 0.1% per second, pendingInterest = 5 * 10 * (5 * 0.001) = 0.25 weth
+     *    - interest 0.1% per second, getGlobalPendingInterest = 5 * 10 * (5 * 0.001) = 0.25 weth
      *    - totalToken = 10.25, totalSupply = 10
      *    - alice should get 5 * 10 / 10.25 = 4.878048780487804878
      *    - alice's total ibWeth = 14.878048780487804878
@@ -107,7 +107,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     // advance time for interest
     vm.warp(block.timestamp + 10 seconds);
 
-    assertEq(viewFacet.pendingInterest(address(weth)), 0.25 ether);
+    assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0.25 ether);
 
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 5 ether);

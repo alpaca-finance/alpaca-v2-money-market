@@ -118,7 +118,7 @@ library MMDiamondDeployer {
     selectors[4] = ViewFacet.getTotalUsedBorrowingPower.selector;
     selectors[5] = ViewFacet.getOverCollatTokenDebt.selector;
     selectors[6] = ViewFacet.getDebtLastAccrueTime.selector;
-    selectors[7] = ViewFacet.pendingInterest.selector;
+    selectors[7] = ViewFacet.getGlobalPendingInterest.selector;
     selectors[8] = ViewFacet.debtValues.selector;
     selectors[9] = ViewFacet.getOverCollatDebtSharesOfToken.selector;
     selectors[10] = ViewFacet.getFloatingBalance.selector;

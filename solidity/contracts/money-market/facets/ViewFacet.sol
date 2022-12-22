@@ -53,9 +53,9 @@ contract ViewFacet {
     return moneyMarketDs.debtLastAccrueTime[_token];
   }
 
-  function pendingInterest(address _token) external view returns (uint256) {
+  function getGlobalPendingInterest(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01.pendingInterest(_token, moneyMarketDs);
+    return LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
   }
 
   function debtValues(address _token) external view returns (uint256) {

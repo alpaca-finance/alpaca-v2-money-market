@@ -44,7 +44,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldBeCorrectPendingInterest() external {
-    uint256 _actualInterest = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterest = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
     uint256 _borrowAmount = 10 ether;
@@ -68,7 +68,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     uint256 _expectedDebtAmount = 1e18 + _borrowAmount;
 
-    uint256 _actualInterestAfter = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterestAfter = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterestAfter, 1e18);
     borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
@@ -130,7 +130,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
   */
   function testCorrectness_WhenMultipleUserBorrow_ShouldaccrueInterestCorrectly() external {
     // BOB add ALICE add collateral
-    uint256 _actualInterest = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterest = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
     uint256 _borrowAmount = 10 ether;
@@ -231,7 +231,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenMMUseTripleSlopeInterestModel_InterestShouldAccrueCorrectly() external {
     // BOB add ALICE add collateral
-    uint256 _actualInterest = viewFacet.pendingInterest(address(usdc));
+    uint256 _actualInterest = viewFacet.getGlobalPendingInterest(address(usdc));
     assertEq(_actualInterest, 0);
 
     uint256 _borrowAmount = 10 ether;
@@ -310,7 +310,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserBorrowBothOverCollatAndNonCollat_ShouldaccrueInterestCorrectly() external {
-    uint256 _actualInterest = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterest = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
     uint256 _borrowAmount = 10 ether;
@@ -341,7 +341,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     uint256 _expectedDebtAmount = 2e18 + _borrowAmount;
     uint256 _expectedNonDebtAmount = 2e18 + _nonCollatBorrowAmount;
 
-    uint256 _actualInterestAfter = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterestAfter = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterestAfter, 4e18);
     borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
@@ -358,7 +358,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenAccrueInterestAndThereIsLendingFee_ProtocolShouldGetRevenue() external {
     // set lending fee to 100 bps
     adminFacet.setFees(100, 0, 0, 0);
-    uint256 _actualInterest = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterest = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
     uint256 _borrowAmount = 10 ether;
@@ -389,7 +389,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     uint256 _expectedDebtAmount = 2e18 + _borrowAmount;
     uint256 _expectedNonDebtAmount = 2e18 + _nonCollatBorrowAmount;
 
-    uint256 _actualInterestAfter = viewFacet.pendingInterest(address(weth));
+    uint256 _actualInterestAfter = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterestAfter, 4e18);
     borrowFacet.accrueInterest(address(weth));
     (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));

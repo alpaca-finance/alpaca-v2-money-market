@@ -239,10 +239,10 @@ library LibMoneyMarket01 {
     _usedBorrowingPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 
-  function pendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
+  function getGlobalPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _pendingInterest)
+    returns (uint256 _getGlobalPendingInterest)
   {
     uint256 _lastAccrueTime = moneyMarketDs.debtLastAccrueTime[_token];
     if (block.timestamp > _lastAccrueTime) {
@@ -255,7 +255,7 @@ library LibMoneyMarket01 {
 
       uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
 
-      _pendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18;
+      _getGlobalPendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.debtValues[_token]) / 1e18;
 
       // non collat interest
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
@@ -265,7 +265,7 @@ library LibMoneyMarket01 {
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
 
-        _pendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
+        _getGlobalPendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
 
         unchecked {
           _i++;
@@ -399,7 +399,7 @@ library LibMoneyMarket01 {
   {
     return
       getTotalToken(_token, moneyMarketDs) +
-      ((pendingInterest(_token, moneyMarketDs) * moneyMarketDs.lendingFeeBps) / LibMoneyMarket01.MAX_BPS);
+      ((getGlobalPendingInterest(_token, moneyMarketDs) * moneyMarketDs.lendingFeeBps) / LibMoneyMarket01.MAX_BPS);
   }
 
   function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
