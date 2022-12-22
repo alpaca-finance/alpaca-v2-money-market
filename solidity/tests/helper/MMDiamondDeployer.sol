@@ -130,7 +130,7 @@ library MMDiamondDeployer {
     selectors[16] = ViewFacet.getIbShareFromUnderlyingAmount.selector;
     selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
     selectors[18] = ViewFacet.nonCollatGetDebtValues.selector;
-    selectors[19] = ViewFacet.nonCollatGetTotalUsedBorrowingPower.selector;
+    selectors[19] = ViewFacet.getNonCollatTotalUsedBorrowingPower.selector;
     selectors[20] = ViewFacet.nonCollatGetDebt.selector;
     selectors[21] = ViewFacet.nonCollatGetTokenDebt.selector;
     selectors[22] = ViewFacet.nonCollatBorrowLimitUSDValues.selector;

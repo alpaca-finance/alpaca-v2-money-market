@@ -152,7 +152,7 @@ contract ViewFacet {
     _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
   }
 
-  function nonCollatGetTotalUsedBorrowingPower(address _account)
+  function getNonCollatTotalUsedBorrowingPower(address _account)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)

@@ -63,7 +63,7 @@ interface IViewFacet {
 
   function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
 
-  function nonCollatGetTotalUsedBorrowingPower(address _account)
+  function getNonCollatTotalUsedBorrowingPower(address _account)
     external
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
