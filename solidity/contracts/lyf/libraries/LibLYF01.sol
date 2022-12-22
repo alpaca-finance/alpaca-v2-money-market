@@ -475,4 +475,14 @@ library LibLYF01 {
     // TODO: assign param properly
     emit LogReinvest(msg.sender, 0, 0);
   }
+
+  function getDebt(
+    address _subAccount,
+    uint256 _debtShareId,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
+    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    // Note: precision loss 1 wei when convert share back to value
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
+  }
 }

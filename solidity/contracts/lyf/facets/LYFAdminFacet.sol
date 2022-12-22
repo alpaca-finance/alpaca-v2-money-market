@@ -19,11 +19,6 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.oracle = IAlpacaV2Oracle(_oracle);
   }
 
-  function oracle() external view returns (address) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return address(lyfDs.oracle);
-  }
-
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _inputLength = _tokenConfigs.length;
