@@ -65,7 +65,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getSubAccountDebtShare(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -76,7 +76,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(usdc), _aliceBorrowAmount2);
     vm.stopPrank();
 
-    aliceDebtShares = viewFacet.getDebtShares(ALICE, subAccount0);
+    aliceDebtShares = viewFacet.getSubAccountDebtShare(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
@@ -86,7 +86,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    aliceDebtShares = viewFacet.getDebtShares(ALICE, subAccount0);
+    aliceDebtShares = viewFacet.getSubAccountDebtShare(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
@@ -103,7 +103,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getSubAccountDebtShare(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);

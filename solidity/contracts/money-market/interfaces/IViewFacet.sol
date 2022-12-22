@@ -8,9 +8,9 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 interface IViewFacet {
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
+  function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
-  function getDebtShares(address _account, uint256 _subAccountId)
+  function getSubAccountDebtShare(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);

@@ -15,7 +15,7 @@ contract ViewFacet {
     return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
 
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory) {
+  function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return moneyMarketDs.tokenConfigs[_token];
@@ -73,7 +73,7 @@ contract ViewFacet {
     return moneyMarketDs.debtShares[_token];
   }
 
-  function getDebtShares(address _account, uint256 _subAccountId)
+  function getSubAccountDebtShare(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)

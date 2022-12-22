@@ -112,8 +112,8 @@ library MMDiamondDeployer {
 
     bytes4[] memory selectors = new bytes4[](23);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
-    selectors[1] = ViewFacet.tokenConfigs.selector;
-    selectors[2] = ViewFacet.getDebtShares.selector;
+    selectors[1] = ViewFacet.getTokenConfig.selector;
+    selectors[2] = ViewFacet.getSubAccountDebtShare.selector;
     selectors[3] = ViewFacet.getTotalBorrowingPower.selector;
     selectors[4] = ViewFacet.getTotalUsedBorrowingPower.selector;
     selectors[5] = ViewFacet.getGlobalDebt.selector;
