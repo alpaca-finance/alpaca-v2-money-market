@@ -73,7 +73,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
     vm.stopPrank();
 
-    uint256 _aliceBorrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _aliceBorrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
     assertEq(_aliceBorrowingPower, 27 ether);
   }
 
@@ -159,7 +159,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
 
-    uint256 _borrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore);
@@ -187,9 +187,9 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     LibDoublyLinkedList.Node[] memory subAccount1CollatList = collateralFacet.getCollaterals(ALICE, subAccount1);
 
-    uint256 _subAccount0BorrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _subAccount0BorrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
-    uint256 _subAccount1BorrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount1);
+    uint256 _subAccount1BorrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount1);
 
     // validate
     // subAccount0

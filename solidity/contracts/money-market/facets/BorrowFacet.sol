@@ -96,7 +96,7 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _token, moneyMarketDs);
+    (uint256 _oldSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
 
     uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
 
@@ -128,7 +128,11 @@ contract BorrowFacet is IBorrowFacet {
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
-    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
+    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
+      _subAccount,
+      _token,
+      moneyMarketDs
+    );
 
     uint256 _amountToRemove = LibFullMath.min(_repayAmount, LibFullMath.min(_oldDebtAmount, _collateralAmount));
 
@@ -155,53 +159,6 @@ contract BorrowFacet is IBorrowFacet {
     moneyMarketDs.reserves[_token] += _actualRepayAmount;
 
     emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
-  }
-
-  function getDebtShares(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-
-    LibDoublyLinkedList.List storage subAccountDebtShares = moneyMarketDs.subAccountDebtShares[_subAccount];
-
-    return subAccountDebtShares.getAll();
-  }
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token
-  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-
-    (_debtShare, _debtAmount) = _getDebt(_subAccount, _token, moneyMarketDs);
-  }
-
-  function _getDebt(
-    address _subAccount,
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
-    _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_token);
-
-    // Note: precision loss 1 wei when convert share back to value
-    _debtAmount = LibShareUtil.shareToValue(
-      _debtShare,
-      moneyMarketDs.debtValues[_token],
-      moneyMarketDs.debtShares[_token]
-    );
-  }
-
-  function getGlobalDebt(address _token) external view returns (uint256, uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    return (moneyMarketDs.debtShares[_token], moneyMarketDs.debtValues[_token]);
   }
 
   function _removeDebt(
@@ -305,60 +262,8 @@ contract BorrowFacet is IBorrowFacet {
     }
   }
 
-  function getTotalBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-
-    _totalBorrowingPowerUSDValue = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-  }
-
-  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
-      _subAccount,
-      moneyMarketDs
-    );
-  }
-
-  function debtLastAccrueTime(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtLastAccrueTime[_token];
-  }
-
-  function pendingInterest(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01.pendingInterest(_token, moneyMarketDs);
-  }
-
   function accrueInterest(address _token) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
-  }
-
-  function debtValues(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtValues[_token];
-  }
-
-  function getFloatingBalance(address _token) external view returns (uint256 _floating) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    _floating = LibMoneyMarket01.getFloatingBalance(_token, moneyMarketDs);
-  }
-
-  function debtShares(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtShares[_token];
   }
 }

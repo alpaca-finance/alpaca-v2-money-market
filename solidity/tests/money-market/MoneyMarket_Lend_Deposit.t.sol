@@ -107,7 +107,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     // advance time for interest
     vm.warp(block.timestamp + 10 seconds);
 
-    assertEq(borrowFacet.pendingInterest(address(weth)), 0.25 ether);
+    assertEq(viewFacet.pendingInterest(address(weth)), 0.25 ether);
 
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 5 ether);

@@ -110,9 +110,19 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](2);
+    bytes4[] memory selectors = new bytes4[](12);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.tokenConfigs.selector;
+    selectors[2] = ViewFacet.getDebtShares.selector;
+    selectors[3] = ViewFacet.getTotalBorrowingPower.selector;
+    selectors[4] = ViewFacet.getTotalUsedBorrowingPower.selector;
+    selectors[5] = ViewFacet.getGlobalDebt.selector;
+    selectors[6] = ViewFacet.debtLastAccrueTime.selector;
+    selectors[7] = ViewFacet.pendingInterest.selector;
+    selectors[8] = ViewFacet.debtValues.selector;
+    selectors[9] = ViewFacet.debtShares.selector;
+    selectors[10] = ViewFacet.getFloatingBalance.selector;
+    selectors[11] = ViewFacet.getDebt.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -171,21 +181,11 @@ library MMDiamondDeployer {
   function deployBorrowFacet(DiamondCutFacet diamondCutFacet) internal returns (BorrowFacet, bytes4[] memory) {
     BorrowFacet _brrowFacet = new BorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](14);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = BorrowFacet.borrow.selector;
-    selectors[1] = BorrowFacet.getDebtShares.selector;
-    selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
-    selectors[3] = BorrowFacet.getTotalUsedBorrowingPower.selector;
-    selectors[4] = BorrowFacet.getDebt.selector;
-    selectors[5] = BorrowFacet.repay.selector;
-    selectors[6] = BorrowFacet.getGlobalDebt.selector;
-    selectors[7] = BorrowFacet.debtLastAccrueTime.selector;
-    selectors[8] = BorrowFacet.pendingInterest.selector;
-    selectors[9] = BorrowFacet.accrueInterest.selector;
-    selectors[10] = BorrowFacet.debtValues.selector;
-    selectors[11] = BorrowFacet.debtShares.selector;
-    selectors[12] = BorrowFacet.repayWithCollat.selector;
-    selectors[13] = BorrowFacet.getFloatingBalance.selector;
+    selectors[1] = BorrowFacet.repay.selector;
+    selectors[2] = BorrowFacet.accrueInterest.selector;
+    selectors[3] = BorrowFacet.repayWithCollat.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_brrowFacet),

@@ -119,7 +119,6 @@ contract RegisterFacet is Script {
   function registerBorrowFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
     bytes4[] memory selectors = new bytes4[](12);
     selectors[0] = BorrowFacet.borrow.selector;
-    selectors[1] = BorrowFacet.getDebtShares.selector;
     selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
     selectors[3] = BorrowFacet.getTotalUsedBorrowedPower.selector;
     selectors[4] = BorrowFacet.getDebt.selector;
