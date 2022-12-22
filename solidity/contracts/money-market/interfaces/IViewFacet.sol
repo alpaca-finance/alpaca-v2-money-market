@@ -51,4 +51,17 @@ interface IViewFacet {
   function collats(address _token) external view returns (uint256);
 
   function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
+
+  function getTotalToken(address _token) external view returns (uint256);
+
+  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
+    external
+    view
+    returns (uint256 _shareAmount);
+
+  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
+
+  error LendFacet_InvalidToken(address _token);
+  error LendFacet_InvalidAddress(address _addr);
+  error LendFacet_InvalidAmount(uint256 _amount);
 }

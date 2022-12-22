@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](15);
+    bytes4[] memory selectors = new bytes4[](18);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.tokenConfigs.selector;
     selectors[2] = ViewFacet.getDebtShares.selector;
@@ -126,6 +126,9 @@ library MMDiamondDeployer {
     selectors[12] = ViewFacet.getCollaterals.selector;
     selectors[13] = ViewFacet.collats.selector;
     selectors[14] = ViewFacet.subAccountCollatAmount.selector;
+    selectors[15] = ViewFacet.getTotalToken.selector;
+    selectors[16] = ViewFacet.getIbShareFromUnderlyingAmount.selector;
+    selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -140,15 +143,12 @@ library MMDiamondDeployer {
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
     LendFacet _lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](8);
+    bytes4[] memory selectors = new bytes4[](5);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
-    selectors[2] = LendFacet.getTotalToken.selector;
-    selectors[3] = LendFacet.openMarket.selector;
-    selectors[4] = LendFacet.depositETH.selector;
-    selectors[5] = LendFacet.withdrawETH.selector;
-    selectors[6] = LendFacet.getIbShareFromUnderlyingAmount.selector;
-    selectors[7] = LendFacet.getTotalTokenWithPendingInterest.selector;
+    selectors[2] = LendFacet.openMarket.selector;
+    selectors[3] = LendFacet.depositETH.selector;
+    selectors[4] = LendFacet.withdrawETH.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_lendFacet),

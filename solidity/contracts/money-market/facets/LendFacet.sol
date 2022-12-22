@@ -162,27 +162,4 @@ contract LendFacet is ILendFacet {
     IWNativeRelayer(_nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);
   }
-
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _ibShareAmount)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
-    (, _ibShareAmount) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _underlyingAmount, moneyMarketDs);
-  }
-
-  function getTotalToken(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-  }
-
-  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // total token + pending interest that belong to lender
-    _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
-  }
 }

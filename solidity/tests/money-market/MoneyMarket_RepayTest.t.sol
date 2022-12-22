@@ -55,11 +55,11 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
     (, _debtAmount) = viewFacet.getDebt(ALICE, subAccount0, address(weth));
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
-    uint256 _totalTokenBefore = lendFacet.getTotalToken(address(weth));
+    uint256 _totalTokenBefore = viewFacet.getTotalToken(address(weth));
     vm.prank(ALICE);
     borrowFacet.repay(ALICE, subAccount0, address(weth), _repayAmount);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
-    uint256 _totalTokenAfter = lendFacet.getTotalToken(address(weth));
+    uint256 _totalTokenAfter = viewFacet.getTotalToken(address(weth));
 
     (, _debtAmount) = viewFacet.getDebt(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getGlobalDebt(address(weth));
@@ -120,11 +120,11 @@ contract MoneyMarket_RepayTest is MoneyMarket_BaseTest {
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
 
-    uint256 _totalTokenBefore = lendFacet.getTotalToken(address(weth));
+    uint256 _totalTokenBefore = viewFacet.getTotalToken(address(weth));
     vm.prank(ALICE);
     borrowFacet.repayWithCollat(ALICE, subAccount0, address(weth), _repayAmount);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
-    uint256 _totalTokenAfter = lendFacet.getTotalToken(address(weth));
+    uint256 _totalTokenAfter = viewFacet.getTotalToken(address(weth));
 
     (, _debtAmount) = viewFacet.getDebt(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getGlobalDebt(address(weth));
