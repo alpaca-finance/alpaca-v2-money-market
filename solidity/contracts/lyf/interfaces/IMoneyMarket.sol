@@ -12,7 +12,7 @@ interface IMoneyMarket {
 
   function getFloatingBalance(address _token) external view returns (uint256);
 
-  function nonCollatGetDebt(address _account, address _token) external view returns (uint256 _debtAmount);
+  function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256 _debtAmount);
 
   function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
 

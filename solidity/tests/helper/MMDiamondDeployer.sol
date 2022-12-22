@@ -132,7 +132,7 @@ library MMDiamondDeployer {
     selectors[18] = ViewFacet.getNonCollatAccountDebtValues.selector;
     selectors[19] = ViewFacet.getNonCollatTotalUsedBorrowingPower.selector;
     selectors[20] = ViewFacet.getNonCollatAccountDebt.selector;
-    selectors[21] = ViewFacet.nonCollatGetTokenDebt.selector;
+    selectors[21] = ViewFacet.getNonCollatTokenDebt.selector;
     selectors[22] = ViewFacet.nonCollatBorrowLimitUSDValues.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(

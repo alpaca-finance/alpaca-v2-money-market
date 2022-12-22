@@ -62,7 +62,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(_aliceDebtAmount, _borrowAmount);
 
     // total debt should equal sum of alice's and bob's debt
-    uint256 _totalDebtAmount = viewFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _totalDebtAmount = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_totalDebtAmount, _borrowAmount * 2);
     assertEq(_bobDebtAmount, _aliceDebtAmount);
@@ -113,7 +113,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
 
-    uint256 _totalwethDebtAmount = viewFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _totalwethDebtAmount = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_totalwethDebtAmount, _aliceBorrowAmount * 2);
   }
@@ -189,7 +189,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_aliceRemainingDebt, _aliceBorrowAmount - _aliceRepayAmount);
 
-    uint256 _tokenDebt = viewFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _tokenDebt = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_tokenDebt, (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount);
   }
@@ -212,7 +212,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_aliceWethBalanceBefore - _aliceWethBalanceAfter, _aliceBorrowAmount);
 
-    uint256 _tokenDebt = viewFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _tokenDebt = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_tokenDebt, 0);
   }

@@ -70,7 +70,7 @@ interface IViewFacet {
 
   function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256);
 
-  function nonCollatGetTokenDebt(address _token) external view returns (uint256);
+  function getNonCollatTokenDebt(address _token) external view returns (uint256);
 
   function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256);
 
