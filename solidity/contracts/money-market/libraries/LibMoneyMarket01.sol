@@ -69,7 +69,7 @@ library LibMoneyMarket01 {
     IAlpacaV2Oracle oracle;
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
-    mapping(address => uint256) getOverCollatDebtValue;
+    mapping(address => uint256) overCollatDebtValues;
     mapping(address => uint256) debtShares;
     mapping(address => uint256) globalDebts;
     mapping(address => uint256) collats;
@@ -187,7 +187,7 @@ library LibMoneyMarket01 {
 
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
-        moneyMarketDs.getOverCollatDebtValue[_borrowed[_i].token],
+        moneyMarketDs.overCollatDebtValues[_borrowed[_i].token],
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
@@ -212,7 +212,7 @@ library LibMoneyMarket01 {
       (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
-        moneyMarketDs.getOverCollatDebtValue[_borrowed[_i].token],
+        moneyMarketDs.overCollatDebtValues[_borrowed[_i].token],
         moneyMarketDs.debtShares[_borrowed[_i].token]
       );
 
@@ -255,9 +255,7 @@ library LibMoneyMarket01 {
 
       uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
 
-      _getGlobalPendingInterest =
-        (_interestRatePerSec * _timePast * moneyMarketDs.getOverCollatDebtValue[_token]) /
-        1e18;
+      _getGlobalPendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.overCollatDebtValues[_token]) / 1e18;
 
       // non collat interest
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
@@ -311,10 +309,10 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _overCollatInterest) {
     _overCollatInterest =
-      (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * moneyMarketDs.getOverCollatDebtValue[_token]) /
+      (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * moneyMarketDs.overCollatDebtValues[_token]) /
       1e18;
     // update overcollat debt
-    moneyMarketDs.getOverCollatDebtValue[_token] += _overCollatInterest;
+    moneyMarketDs.overCollatDebtValues[_token] += _overCollatInterest;
   }
 
   function accrueInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
@@ -569,7 +567,7 @@ library LibMoneyMarket01 {
     // Note: precision loss 1 wei when convert share back to value
     _debtAmount = LibShareUtil.shareToValue(
       _debtShare,
-      moneyMarketDs.getOverCollatDebtValue[_token],
+      moneyMarketDs.overCollatDebtValues[_token],
       moneyMarketDs.debtShares[_token]
     );
   }
