@@ -571,4 +571,15 @@ library LibMoneyMarket01 {
       moneyMarketDs.debtShares[_token]
     );
   }
+
+  function getShareAmountFromValue(
+    address _underlyingToken,
+    address _ibToken,
+    uint256 _value,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _totalSupply, uint256 _ibShareAmount) {
+    _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
+    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_underlyingToken, moneyMarketDs);
+    _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
+  }
 }
