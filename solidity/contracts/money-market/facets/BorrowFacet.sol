@@ -47,18 +47,20 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
-    // interest must accrue first
-    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
-
-    _validate(_subAccount, _token, _amount, moneyMarketDs);
 
     LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount];
 
     if (userDebtShare.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
       userDebtShare.init();
     }
+
+    // accrue all debt tokens under subaccount
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
+    // if _token is first time to borrow
+    if (userDebtShare.getAmount(_token) == 0) LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
+    _validate(_subAccount, _token, _amount, moneyMarketDs);
 
     uint256 _totalOverCollatDebtShare = moneyMarketDs.debtShares[_token];
     uint256 _totalOverCollatDebtValue = moneyMarketDs.debtValues[_token];
