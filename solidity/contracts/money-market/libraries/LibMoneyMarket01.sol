@@ -70,7 +70,7 @@ library LibMoneyMarket01 {
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) overCollatDebtValues;
-    mapping(address => uint256) debtShares;
+    mapping(address => uint256) overCollatDebtShares;
     mapping(address => uint256) globalDebts;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
@@ -188,7 +188,7 @@ library LibMoneyMarket01 {
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.overCollatDebtValues[_borrowed[_i].token],
-        moneyMarketDs.debtShares[_borrowed[_i].token]
+        moneyMarketDs.overCollatDebtShares[_borrowed[_i].token]
       );
 
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
@@ -213,7 +213,7 @@ library LibMoneyMarket01 {
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.overCollatDebtValues[_borrowed[_i].token],
-        moneyMarketDs.debtShares[_borrowed[_i].token]
+        moneyMarketDs.overCollatDebtShares[_borrowed[_i].token]
       );
 
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
@@ -265,7 +265,7 @@ library LibMoneyMarket01 {
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
 
-        _getGlobalPendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
+        _globalPendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
 
         unchecked {
           _i++;
@@ -568,7 +568,7 @@ library LibMoneyMarket01 {
     _debtAmount = LibShareUtil.shareToValue(
       _debtShare,
       moneyMarketDs.overCollatDebtValues[_token],
-      moneyMarketDs.debtShares[_token]
+      moneyMarketDs.overCollatDebtShares[_token]
     );
   }
 
@@ -589,5 +589,37 @@ library LibMoneyMarket01 {
     _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_underlyingToken, moneyMarketDs);
     _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
+  }
+
+  function overCollatBorrow(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _shareToAdd) {
+    LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount];
+
+    if (userDebtShare.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      userDebtShare.init();
+    }
+
+    _shareToAdd = LibShareUtil.valueToShareRoundingUp(
+      _amount,
+      moneyMarketDs.overCollatDebtShares[_token],
+      moneyMarketDs.overCollatDebtValues[_token]
+    );
+
+    // update over collat debt
+    moneyMarketDs.overCollatDebtShares[_token] += _shareToAdd;
+    moneyMarketDs.overCollatDebtValues[_token] += _amount;
+
+    // update global debt
+    moneyMarketDs.globalDebts[_token] += _amount;
+
+    // update user's debtshare
+    userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
+
+    // update facet token balance
+    moneyMarketDs.reserves[_token] -= _amount;
   }
 }

@@ -306,7 +306,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _debtValue = LibShareUtil.shareToValue(
       _debtShare,
       moneyMarketDs.overCollatDebtValues[_repayToken],
-      moneyMarketDs.debtShares[_repayToken]
+      moneyMarketDs.overCollatDebtShares[_repayToken]
     );
 
     _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
@@ -325,7 +325,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _debtValue = LibShareUtil.shareToValue(
       _debtShare,
       moneyMarketDs.overCollatDebtValues[_repayToken],
-      moneyMarketDs.debtShares[_repayToken]
+      moneyMarketDs.overCollatDebtShares[_repayToken]
     );
 
     // let _debtValue is value after reduced repurchse fee
@@ -372,11 +372,11 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
     uint256 _repayShare = LibShareUtil.valueToShare(
       _repayAmount,
-      moneyMarketDs.debtShares[_repayToken],
+      moneyMarketDs.overCollatDebtShares[_repayToken],
       moneyMarketDs.overCollatDebtValues[_repayToken]
     );
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _debtShare - _repayShare);
-    moneyMarketDs.debtShares[_repayToken] -= _repayShare;
+    moneyMarketDs.overCollatDebtShares[_repayToken] -= _repayShare;
     moneyMarketDs.overCollatDebtValues[_repayToken] -= _repayAmount;
   }
 

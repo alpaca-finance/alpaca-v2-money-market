@@ -70,7 +70,7 @@ contract ViewFacet {
 
   function getOverCollatTokenDebtShares(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtShares[_token];
+    return moneyMarketDs.overCollatDebtShares[_token];
   }
 
   function getOverCollatSubAccountDebtShares(address _account, uint256 _subAccountId)
@@ -90,7 +90,7 @@ contract ViewFacet {
   function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return (moneyMarketDs.debtShares[_token], moneyMarketDs.overCollatDebtValues[_token]);
+    return (moneyMarketDs.overCollatDebtShares[_token], moneyMarketDs.overCollatDebtValues[_token]);
   }
 
   function getOverCollatSubAccountDebt(
