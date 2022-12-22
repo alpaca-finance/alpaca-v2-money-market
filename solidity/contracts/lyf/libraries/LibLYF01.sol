@@ -118,7 +118,8 @@ library LibLYF01 {
       address _interestModel = address(lyfDs.interestModels[_debtShareId]);
       if (_interestModel != address(0)) {
         address _token = lyfDs.debtShareTokens[_debtShareId];
-        (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getGlobalDebt(_token);
+        // TODO: fix
+        (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getOverCollatTokenDebt(_token);
         uint256 _floating = IMoneyMarket(lyfDs.moneyMarket).getFloatingBalance(_token);
         uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
 
