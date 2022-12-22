@@ -7,7 +7,7 @@ import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
-contract MoneyMarket_LendFacet_OpenMarketTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Lend_OpenMarketTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
