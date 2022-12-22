@@ -2,9 +2,9 @@
 pragma solidity 0.8.17;
 
 import { LibDiamond } from "../libraries/LibDiamond.sol";
-import { IOwnershipFacet } from "../interfaces/IOwnershipFacet.sol";
+import { ILYFOwnershipFacet } from "../interfaces/ILYFOwnershipFacet.sol";
 
-contract OwnershipFacet is IOwnershipFacet {
+contract LYFOwnershipFacet is ILYFOwnershipFacet {
   address private _pendingOwner;
 
   function transferOwnership(address _newOwner) external override {
@@ -16,7 +16,7 @@ contract OwnershipFacet is IOwnershipFacet {
   }
 
   function acceptOwnership() external {
-    if (msg.sender != _pendingOwner) revert OwnershipFacet_CallerIsNotPendingOwner();
+    if (msg.sender != _pendingOwner) revert LYFOwnershipFacet_CallerIsNotPendingOwner();
 
     address _previousOwner = LibDiamond.contractOwner();
     LibDiamond.setContractOwner(_pendingOwner);
