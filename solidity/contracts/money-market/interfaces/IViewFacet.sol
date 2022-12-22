@@ -27,7 +27,7 @@ interface IViewFacet {
 
   function getGlobalDebt(address _token) external view returns (uint256, uint256);
 
-  function debtLastAccrueTime(address _token) external view returns (uint256);
+  function getDebtLastAccrueTime(address _token) external view returns (uint256);
 
   function pendingInterest(address _token) external view returns (uint256);
 
