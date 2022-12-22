@@ -183,7 +183,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     // assert Global
     // from BOB 10 + 1, Alice 10
-    assertEq(viewFacet.debtValues(address(weth)), 21 ether, "Global debtValues missmatch");
+    assertEq(viewFacet.getOverCollatDebtValue(address(weth)), 21 ether, "Global getOverCollatDebtValue missmatch");
 
     // assert IB exchange rate change
     // alice wthdraw 10 ibWeth, totalToken = 51, totalSupply = 50
@@ -286,7 +286,11 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     // assert Global
     // from BOB 10 + 0.002820306204288 =, Alice 10 = 20.002820306204288
-    assertEq(viewFacet.debtValues(address(usdc)), 20.002820306204288 ether, "Global debtValues missmatch");
+    assertEq(
+      viewFacet.getOverCollatDebtValue(address(usdc)),
+      20.002820306204288 ether,
+      "Global getOverCollatDebtValue missmatch"
+    );
 
     // assert IB exchange rate change
     // alice wthdraw 10 ibUSDC, totalToken = 20.002820306204288, totalSupply = 20
@@ -462,7 +466,11 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     // assert Global
     // from Alice 15.002538275583600000, Bob 15.003522504892320000 = 15.002538275583600000 + 15.003522504892320000 = 30.006060780475920000
-    assertEq(viewFacet.getNonCollatTokenDebt(address(btc)), 30.006060780475920000 ether, "Global debtValues missmatch");
+    assertEq(
+      viewFacet.getNonCollatTokenDebt(address(btc)),
+      30.006060780475920000 ether,
+      "Global getOverCollatDebtValue missmatch"
+    );
   }
 
   function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldaccrueInterestForAllBorrowedToken()
@@ -498,8 +506,8 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
 
     //assert Global
-    assertGt(viewFacet.debtValues(address(weth)), _borrowAmount);
-    assertGt(viewFacet.debtValues(address(usdc)), _borrowAmount);
+    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
+    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
   }
 
   function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldaccrueInterestForAllBorrowedToken()
@@ -535,7 +543,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
 
     //assert Global
-    assertGt(viewFacet.debtValues(address(weth)), _borrowAmount);
-    assertGt(viewFacet.debtValues(address(usdc)), _borrowAmount);
+    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
+    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
   }
 }

@@ -58,9 +58,9 @@ contract ViewFacet {
     return LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
   }
 
-  function debtValues(address _token) external view returns (uint256) {
+  function getOverCollatDebtValue(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtValues[_token];
+    return moneyMarketDs.getOverCollatDebtValue[_token];
   }
 
   function getFloatingBalance(address _token) external view returns (uint256 _floating) {
@@ -90,7 +90,7 @@ contract ViewFacet {
   function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return (moneyMarketDs.debtShares[_token], moneyMarketDs.debtValues[_token]);
+    return (moneyMarketDs.debtShares[_token], moneyMarketDs.getOverCollatDebtValue[_token]);
   }
 
   function getOverCollatSubAccountDebt(

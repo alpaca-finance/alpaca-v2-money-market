@@ -61,7 +61,7 @@ contract BorrowFacet is IBorrowFacet {
     }
 
     uint256 _totalOverCollatDebtShare = moneyMarketDs.debtShares[_token];
-    uint256 _totalOverCollatDebtValue = moneyMarketDs.debtValues[_token];
+    uint256 _totalOverCollatDebtValue = moneyMarketDs.getOverCollatDebtValue[_token];
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
       _amount,
@@ -71,7 +71,7 @@ contract BorrowFacet is IBorrowFacet {
 
     // update over collat debt
     moneyMarketDs.debtShares[_token] += _shareToAdd;
-    moneyMarketDs.debtValues[_token] += _amount;
+    moneyMarketDs.getOverCollatDebtValue[_token] += _amount;
 
     // update global debt
     moneyMarketDs.globalDebts[_token] += _amount;
@@ -139,7 +139,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _amountToRemove,
       moneyMarketDs.debtShares[_token],
-      moneyMarketDs.debtValues[_token]
+      moneyMarketDs.getOverCollatDebtValue[_token]
     );
 
     uint256 _actualRepayAmount = _removeDebt(
@@ -169,7 +169,7 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _repayAmount) {
     uint256 _oldDebtShare = moneyMarketDs.debtShares[_token];
-    uint256 _oldDebtValue = moneyMarketDs.debtValues[_token];
+    uint256 _oldDebtValue = moneyMarketDs.getOverCollatDebtValue[_token];
 
     // update user debtShare
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRemove);
@@ -178,7 +178,7 @@ contract BorrowFacet is IBorrowFacet {
     _repayAmount = LibShareUtil.shareToValue(_shareToRemove, _oldDebtValue, _oldDebtShare);
 
     moneyMarketDs.debtShares[_token] -= _shareToRemove;
-    moneyMarketDs.debtValues[_token] -= _repayAmount;
+    moneyMarketDs.getOverCollatDebtValue[_token] -= _repayAmount;
 
     // update global debt
 

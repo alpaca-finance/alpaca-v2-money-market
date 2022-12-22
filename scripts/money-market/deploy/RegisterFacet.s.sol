@@ -127,7 +127,7 @@ contract RegisterFacet is Script {
     selectors[7] = BorrowFacet.debtLastAccureTime.selector;
     selectors[8] = BorrowFacet.getGlobalPendingInterest.selector;
     selectors[9] = BorrowFacet.accureInterest.selector;
-    selectors[10] = BorrowFacet.debtValues.selector;
+    selectors[10] = BorrowFacet.getOverCollatDebtValue.selector;
     selectors[11] = BorrowFacet.debtShares.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);

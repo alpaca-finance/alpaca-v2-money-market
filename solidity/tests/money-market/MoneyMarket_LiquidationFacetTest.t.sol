@@ -98,7 +98,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -141,7 +141,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -189,7 +189,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -238,7 +238,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -265,7 +265,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(address(btc)),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, address(btc)),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(address(btc)),
-      debtValue: viewFacet.debtValues(address(btc)),
+      debtValue: viewFacet.getOverCollatDebtValue(address(btc)),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, address(btc));
@@ -299,7 +299,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -354,7 +354,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -381,7 +381,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(address(btc)),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, address(btc)),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(address(btc)),
-      debtValue: viewFacet.debtValues(address(btc)),
+      debtValue: viewFacet.getOverCollatDebtValue(address(btc)),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, address(btc));
@@ -429,7 +429,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -551,7 +551,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -615,7 +615,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -682,7 +682,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -724,7 +724,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -827,7 +827,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -912,7 +912,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -1032,7 +1032,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
@@ -1074,7 +1074,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       collat: viewFacet.getTotalCollatOfToken(_collatToken),
       subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatDebtSharesOfToken(_debtToken),
-      debtValue: viewFacet.debtValues(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
