@@ -186,7 +186,8 @@ contract AdminFacet is IAdminFacet {
 
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    IInterestBearingToken(_newImplementation).decimals(); // sanity check
+    // sanity check
+    IInterestBearingToken(_newImplementation).decimals();
     moneyMarketDs.ibTokenImplementation = _newImplementation;
   }
 
