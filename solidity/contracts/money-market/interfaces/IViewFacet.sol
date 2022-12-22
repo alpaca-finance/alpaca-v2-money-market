@@ -33,7 +33,7 @@ interface IViewFacet {
 
   function debtValues(address _token) external view returns (uint256);
 
-  function debtShares(address _token) external view returns (uint256);
+  function getOverCollatDebtSharesOfToken(address _token) external view returns (uint256);
 
   function getFloatingBalance(address _token) external view returns (uint256);
 
