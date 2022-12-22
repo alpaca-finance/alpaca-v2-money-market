@@ -164,7 +164,6 @@ contract LendFacet is ILendFacet {
 
     _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
     _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
   }
 

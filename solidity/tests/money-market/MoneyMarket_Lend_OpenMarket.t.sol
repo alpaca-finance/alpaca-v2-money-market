@@ -3,6 +3,9 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 
+// libs
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+
 // interfaces
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
