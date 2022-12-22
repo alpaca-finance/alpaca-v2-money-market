@@ -73,7 +73,7 @@ contract ViewFacet {
     return moneyMarketDs.debtShares[_token];
   }
 
-  function getOverCollatDebtSharesOfSubAccount(address _account, uint256 _subAccountId)
+  function getOverCollatSubAccountDebtShares(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)
