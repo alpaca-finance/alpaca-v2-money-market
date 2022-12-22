@@ -22,11 +22,13 @@ import { MoneyMarketInit } from "../../contracts/money-market/initializers/Money
 
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IOwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
@@ -40,28 +42,33 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
 
+  IViewFacet internal viewFacet;
   IAdminFacet internal adminFacet;
   ILendFacet internal lendFacet;
   ICollateralFacet internal collateralFacet;
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
-
   ILiquidationFacet internal liquidationFacet;
+  IOwnershipFacet internal ownershipFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
 
+    viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
     collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
+    ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -150,7 +157,27 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
+    _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({ token: address(weth), maxTokenBorrow: 30e18 });
+    _tokenBorrowLimitInputs[1] = IAdminFacet.TokenBorrowLimitInput({ token: address(usdc), maxTokenBorrow: 30e18 });
+    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({ token: address(btc), maxTokenBorrow: 30e18 });
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      tokenBorrowLimit: _tokenBorrowLimitInputs,
+      borrowLimitUSDValue: 1e30
+    });
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      tokenBorrowLimit: _tokenBorrowLimitInputs,
+      borrowLimitUSDValue: 1e30
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
     // open isolate token market
+    adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
     address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
     ibIsolateToken = MockERC20(_ibIsolateToken);
 

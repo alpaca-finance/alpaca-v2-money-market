@@ -10,19 +10,9 @@ interface ILendFacet {
 
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external;
 
-  function getTotalToken(address _token) external view returns (uint256);
-
   function openMarket(address _token) external returns (address);
-
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _shareAmount);
-
-  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
 
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
-  error LendFacet_NoTinyShares();
   error LendFacet_InvalidAmount(uint256 _amount);
 }

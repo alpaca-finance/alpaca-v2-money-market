@@ -25,9 +25,15 @@ interface IAdminFacet {
     uint256 maxToleranceExpiredSecond;
   }
 
-  struct NonCollatBorrowLimitInput {
+  struct ProtocolConfigInput {
     address account;
-    uint256 limit;
+    TokenBorrowLimitInput[] tokenBorrowLimit;
+    uint256 borrowLimitUSDValue;
+  }
+
+  struct TokenBorrowLimitInput {
+    address token;
+    uint256 maxTokenBorrow;
   }
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;
@@ -39,8 +45,6 @@ interface IAdminFacet {
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external;
-
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
   function setInterestModel(address _token, address model) external;
 
@@ -60,8 +64,6 @@ interface IAdminFacet {
     address _model
   ) external;
 
-  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
-
   function setFees(
     uint256 _newLendingFeeBps,
     uint256 _newRepurchaseRewardBps,
@@ -69,11 +71,13 @@ interface IAdminFacet {
     uint256 _newLiquidationFeeBps
   ) external;
 
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve);
-
   function withdrawReserve(
     address _token,
     address _to,
     uint256 _amount
   ) external;
+
+  function setIbTokenImplementation(address _newImplementation) external;
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 }

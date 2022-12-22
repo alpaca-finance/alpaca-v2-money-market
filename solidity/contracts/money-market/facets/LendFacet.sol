@@ -5,6 +5,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // libs
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
@@ -16,10 +17,8 @@ import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IWNative } from "../interfaces/IWNative.sol";
 import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
-
-import { IbToken } from "../IbToken.sol";
-
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 
 contract LendFacet is ILendFacet {
   using SafeERC20 for ERC20;
@@ -47,11 +46,8 @@ contract LendFacet is ILendFacet {
       revert LendFacet_InvalidToken(_token);
     }
 
-    string memory _tokenSymbol = IERC20(_token).symbol();
-    uint8 _tokenDecimals = IERC20(_token).decimals();
-    _newIbToken = address(
-      new IbToken(string.concat("Interest Bearing ", _tokenSymbol), string.concat("IB", _tokenSymbol), _tokenDecimals)
-    );
+    _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
+    IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
     // todo: tbd
     LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
@@ -72,13 +68,19 @@ contract LendFacet is ILendFacet {
 
   function deposit(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    if (_ibToken == address(0)) {
+      revert LendFacet_InvalidToken(_token);
+    }
+
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    (address _ibToken, uint256 _shareToMint) = _getShareToMint(_token, _amount, moneyMarketDs);
+    (, uint256 _shareToMint) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _amount, moneyMarketDs);
 
     moneyMarketDs.reserves[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    IbToken(_ibToken).mint(msg.sender, _shareToMint);
+    IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
@@ -97,116 +99,54 @@ contract LendFacet is ILendFacet {
   }
 
   function depositETH() external payable nonReentrant {
+    if (msg.value == 0) revert LendFacet_InvalidAmount(msg.value);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _nativeToken = moneyMarketDs.nativeToken;
-    uint256 _amount = msg.value;
     if (_nativeToken == address(0)) revert LendFacet_InvalidToken(_nativeToken);
-    if (_amount == 0) revert LendFacet_InvalidAmount(_amount);
+
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_nativeToken];
+    if (_ibToken == address(0)) {
+      revert LendFacet_InvalidToken(_nativeToken);
+    }
+
     LibMoneyMarket01.accrueInterest(_nativeToken, moneyMarketDs);
 
-    (address _ibToken, uint256 _shareToMint) = _getShareToMint(_nativeToken, _amount, moneyMarketDs);
+    (, uint256 _shareToMint) = LibMoneyMarket01.getShareAmountFromValue(
+      _nativeToken,
+      _ibToken,
+      msg.value,
+      moneyMarketDs
+    );
 
-    moneyMarketDs.reserves[_nativeToken] += _amount;
-    IWNative(_nativeToken).deposit{ value: _amount }();
-    IbToken(_ibToken).mint(msg.sender, _shareToMint);
+    moneyMarketDs.reserves[_nativeToken] += msg.value;
+    IWNative(_nativeToken).deposit{ value: msg.value }();
+    IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
 
-    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, _amount, _shareToMint);
+    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, msg.value, _shareToMint);
   }
 
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
-    address _relayer = moneyMarketDs.nativeRelayer;
     if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
+
+    address _relayer = moneyMarketDs.nativeRelayer;
     if (_relayer == address(0)) revert LendFacet_InvalidAddress(_relayer);
+
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    uint256 _shareValue = _getShareValue(_token, _ibWNativeToken, _shareAmount, moneyMarketDs);
+    uint256 _shareValue = LibShareUtil.shareToValue(
+      _shareAmount,
+      LibMoneyMarket01.getTotalToken(_token, moneyMarketDs),
+      IInterestBearingToken(_ibWNativeToken).totalSupply()
+    );
 
-    IbToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
+    IInterestBearingToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
     _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
 
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);
-  }
-
-  function getTotalToken(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-  }
-
-  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // total token + pending interest that belong to lender
-    _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_token, moneyMarketDs);
-  }
-
-  // calculate _shareToMint to mint before transfer token to MM
-  function _getShareToMint(
-    address _token,
-    uint256 _underlyingAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (address _ibToken, uint256 _shareToMint) {
-    // calculate _shareToMint to mint before transfer token to MM
-    uint256 _totalSupply;
-    (_ibToken, _totalSupply, _shareToMint) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
-
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
-
-    if (_totalSupply + _shareToMint < 10**(_tokenDecimals) - 1) {
-      revert LendFacet_NoTinyShares();
-    }
-  }
-
-  function _getShareValue(
-    address _token,
-    address _ibToken,
-    uint256 _shareAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _shareValue) {
-    uint256 _totalSupply = IbToken(_ibToken).totalSupply();
-    uint256 _tokenDecimals = IbToken(_ibToken).decimals();
-    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
-    _shareValue = LibShareUtil.shareToValue(_shareAmount, _totalToken, _totalSupply);
-
-    uint256 _shareLeft = _totalSupply - _shareAmount;
-    if (_shareLeft != 0 && _shareLeft < 10**(_tokenDecimals) - 1) {
-      revert LendFacet_NoTinyShares();
-    }
-  }
-
-  function _getShareAmountFromValue(
-    address _token,
-    uint256 _value,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  )
-    internal
-    view
-    returns (
-      address _ibToken,
-      uint256 _totalSupply,
-      uint256 _ibShareAmount
-    )
-  {
-    _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-    if (_ibToken == address(0)) {
-      revert LendFacet_InvalidToken(_token);
-    }
-
-    _totalSupply = IbToken(_ibToken).totalSupply();
-    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_token, moneyMarketDs);
-
-    _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
-  }
-
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _ibShareAmount)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    (, , _ibShareAmount) = _getShareAmountFromValue(_token, _underlyingAmount, moneyMarketDs);
   }
 
   function _safeUnwrap(

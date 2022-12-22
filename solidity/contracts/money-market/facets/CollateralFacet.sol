@@ -62,7 +62,7 @@ contract CollateralFacet is ICollateralFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
 
-    LibMoneyMarket01.accrueAllSubAccountDebtToken(_subAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 
@@ -80,36 +80,12 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);
-    LibMoneyMarket01.accrueAllSubAccountDebtToken(_fromSubAccount, moneyMarketDs);
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_fromSubAccount, moneyMarketDs);
     LibMoneyMarket01.removeCollatFromSubAccount(_fromSubAccount, _token, _amount, moneyMarketDs);
 
     address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
     LibMoneyMarket01.transferCollat(_toSubAccount, _token, _amount, moneyMarketDs);
 
     emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
-  }
-
-  function getCollaterals(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-
-    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs.subAccountCollats[_subAccount];
-
-    return subAccountCollateralList.getAll();
-  }
-
-  function collats(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.collats[_token];
-  }
-
-  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
   }
 }

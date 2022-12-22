@@ -5,9 +5,13 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 
 // interfaces
 import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
+
+// libs
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -26,13 +30,6 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(usdc), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
-
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](4);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
-    _limitInputs[1] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: 1e30 });
-    _limitInputs[2] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
-    _limitInputs[3] = IAdminFacet.NonCollatBorrowLimitInput({ account: BOB, limit: 1e30 });
-    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
@@ -46,7 +43,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
 
-    uint256 _bobDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _bobDebtAmount = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
     assertEq(_bobDebtAmount, _borrowAmount);
@@ -59,13 +56,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
 
-    uint256 _aliceDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _aliceDebtAmount = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
     assertEq(_aliceDebtAmount, _borrowAmount);
 
     // total debt should equal sum of alice's and bob's debt
-    uint256 _totalDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _totalDebtAmount = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_totalDebtAmount, _borrowAmount * 2);
     assertEq(_bobDebtAmount, _aliceDebtAmount);
@@ -89,7 +86,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -100,7 +97,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(usdc), _aliceBorrowAmount2);
     vm.stopPrank();
 
-    aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
@@ -110,13 +107,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
 
-    uint256 _totalwethDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _totalwethDebtAmount = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_totalwethDebtAmount, _aliceBorrowAmount * 2);
   }
@@ -129,7 +126,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -188,11 +185,11 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     vm.stopPrank();
 
-    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _aliceRemainingDebt = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     assertEq(_aliceRemainingDebt, _aliceBorrowAmount - _aliceRepayAmount);
 
-    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _tokenDebt = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_tokenDebt, (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount);
   }
@@ -209,13 +206,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceWethBalanceAfter = weth.balanceOf(ALICE);
     vm.stopPrank();
 
-    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _aliceRemainingDebt = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     assertEq(_aliceRemainingDebt, 0);
 
     assertEq(_aliceWethBalanceBefore - _aliceWethBalanceAfter, _aliceBorrowAmount);
 
-    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _tokenDebt = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_tokenDebt, 0);
   }
@@ -224,11 +221,18 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceBorrowAmount = 10 ether;
     uint256 _aliceBorrowLimit = 10 ether;
 
-    IAdminFacet.NonCollatBorrowLimitInput[] memory _limitInputs = new IAdminFacet.NonCollatBorrowLimitInput[](1);
-    _limitInputs[0] = IAdminFacet.NonCollatBorrowLimitInput({ account: ALICE, limit: _aliceBorrowLimit });
-
     uint256 _expectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
-    adminFacet.setNonCollatBorrowLimitUSDValues(_limitInputs);
+
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](0);
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](1);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      tokenBorrowLimit: _tokenBorrowLimitInputs,
+      borrowLimitUSDValue: _aliceBorrowLimit
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
     vm.prank(ALICE);
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -239,5 +243,100 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       )
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanTokenGlobalLimit_ShouldRevert() external {
+    uint256 _wethGlobalLimit = 10 ether;
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: _wethGlobalLimit,
+      maxCollateral: 100 ether,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
+    uint256 _aliceBorrowAmount = _wethGlobalLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+  }
+
+  function testRevert_WhenUserBorrowUpToTokenGlobalLimit_ThenProtocolBorrowSameToken_ShouldRevert() external {
+    uint256 _wethGlobalLimit = 10 ether;
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: _wethGlobalLimit,
+      maxCollateral: 100 ether,
+      maxToleranceExpiredSecond: block.timestamp
+    });
+    adminFacet.setTokenConfigs(_inputs);
+
+    // Over-collat borrow
+    // BOB borrow weth upto Global limit
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
+    borrowFacet.borrow(subAccount0, address(weth), _wethGlobalLimit);
+    vm.stopPrank();
+
+    // Non-collat borrow
+    vm.prank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedBorrowLimit.selector));
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 1);
+  }
+
+  function testRevert_WhenProtocolBorrowMoreThanTokenAccountLimit_ShouldRevert() external {
+    uint256 _aliceWethAccountLimit = 5 ether;
+    uint256 _bobWethAccountLimit = 4 ether;
+
+    IAdminFacet.TokenBorrowLimitInput[] memory _aliceTokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](
+      1
+    );
+    _aliceTokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(weth),
+      maxTokenBorrow: _aliceWethAccountLimit
+    });
+
+    IAdminFacet.TokenBorrowLimitInput[] memory _bobTokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](1);
+    _bobTokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(weth),
+      maxTokenBorrow: _bobWethAccountLimit
+    });
+
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
+      account: ALICE,
+      tokenBorrowLimit: _aliceTokenBorrowLimitInputs,
+      borrowLimitUSDValue: type(uint256).max
+    });
+
+    _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
+      account: BOB,
+      tokenBorrowLimit: _bobTokenBorrowLimitInputs,
+      borrowLimitUSDValue: type(uint256).max
+    });
+
+    adminFacet.setProtocolConfigs(_protocolConfigInputs);
+
+    uint256 _aliceBorrowAmount = _aliceWethAccountLimit + 1;
+    uint256 _bobBorrowAmount = _bobWethAccountLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert(
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
+
+    vm.prank(BOB);
+    vm.expectRevert(
+      abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_ExceedAccountBorrowLimit.selector)
+    );
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), _bobBorrowAmount);
   }
 }

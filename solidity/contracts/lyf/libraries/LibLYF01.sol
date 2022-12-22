@@ -13,7 +13,6 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // interfaces
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
-import { IIbToken } from "../interfaces/IIbToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
@@ -119,7 +118,8 @@ library LibLYF01 {
       address _interestModel = address(lyfDs.interestModels[_debtShareId]);
       if (_interestModel != address(0)) {
         address _token = lyfDs.debtShareTokens[_debtShareId];
-        (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getGlobalDebt(_token);
+        // TODO: fix
+        (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getOverCollatTokenDebt(_token);
         uint256 _floating = IMoneyMarket(lyfDs.moneyMarket).getFloatingBalance(_token);
         uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
 
@@ -171,7 +171,7 @@ library LibLYF01 {
       if (_actualToken == address(0)) {
         _actualToken = _collatToken;
       } else {
-        uint256 _totalSupply = IIbToken(_collatToken).totalSupply();
+        uint256 _totalSupply = ERC20(_collatToken).totalSupply();
         uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_actualToken);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
@@ -194,10 +194,10 @@ library LibLYF01 {
     }
   }
 
-  function getTotalUsedBorrowedPower(address _subAccount, LYFDiamondStorage storage lyfDs)
+  function getTotalUsedBorrowingPower(address _subAccount, LYFDiamondStorage storage lyfDs)
     internal
     view
-    returns (uint256 _totalUsedBorrowedPower)
+    returns (uint256 _totalUsedBorrowingPower)
   {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
@@ -211,7 +211,7 @@ library LibLYF01 {
         lyfDs.debtValues[_borrowed[_i].index],
         lyfDs.debtShares[_borrowed[_i].index]
       );
-      _totalUsedBorrowedPower += usedBorrowedPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+      _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
       unchecked {
         _i++;
       }
@@ -280,13 +280,13 @@ library LibLYF01 {
     return (_price, _lastUpdated);
   }
 
-  // _usedBorrowedPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
-  function usedBorrowedPower(
+  // _usedBorrowingPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
+  function usedBorrowingPower(
     uint256 _borrowedAmount,
     uint256 _tokenPrice,
     uint256 _borrowingFactor
-  ) internal pure returns (uint256 _usedBorrowedPower) {
-    _usedBorrowedPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
+  ) internal pure returns (uint256 _usedBorrowingPower) {
+    _usedBorrowingPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
   }
 
   function addCollat(
@@ -379,8 +379,8 @@ library LibLYF01 {
 
   function isSubaccountHealthy(address _subAccount, LYFDiamondStorage storage ds) internal view returns (bool) {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
-    uint256 _totalUsedBorrowedPower = getTotalUsedBorrowedPower(_subAccount, ds);
-    return _totalBorrowingPower >= _totalUsedBorrowedPower;
+    uint256 _totalUsedBorrowingPower = getTotalUsedBorrowingPower(_subAccount, ds);
+    return _totalBorrowingPower >= _totalUsedBorrowingPower;
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {

@@ -7,12 +7,14 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
+import { ViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
 import { LendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { CollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { LiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
+import { OwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
@@ -33,6 +35,8 @@ library MMDiamondDeployer {
     deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
     deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployOwnershipFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    deployViewFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
     initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
@@ -103,18 +107,53 @@ library MMDiamondDeployer {
     return (_diamondLoupeFacet, selectors);
   }
 
+  function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
+    ViewFacet _viewFacet = new ViewFacet();
+
+    bytes4[] memory selectors = new bytes4[](23);
+    selectors[0] = ViewFacet.getProtocolReserve.selector;
+    selectors[1] = ViewFacet.getTokenConfig.selector;
+    selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
+    selectors[3] = ViewFacet.getTotalBorrowingPower.selector;
+    selectors[4] = ViewFacet.getTotalUsedBorrowingPower.selector;
+    selectors[5] = ViewFacet.getOverCollatTokenDebt.selector;
+    selectors[6] = ViewFacet.getDebtLastAccrueTime.selector;
+    selectors[7] = ViewFacet.getGlobalPendingInterest.selector;
+    selectors[8] = ViewFacet.getOverCollatDebtValue.selector;
+    selectors[9] = ViewFacet.getOverCollatTokenDebtShares.selector;
+    selectors[10] = ViewFacet.getFloatingBalance.selector;
+    selectors[11] = ViewFacet.getOverCollatSubAccountDebt.selector;
+    selectors[12] = ViewFacet.getAllSubAccountCollats.selector;
+    selectors[13] = ViewFacet.getTotalCollat.selector;
+    selectors[14] = ViewFacet.getOverCollatSubAccountCollatAmount.selector;
+    selectors[15] = ViewFacet.getTotalToken.selector;
+    selectors[16] = ViewFacet.getIbShareFromUnderlyingAmount.selector;
+    selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
+    selectors[18] = ViewFacet.getNonCollatAccountDebtValues.selector;
+    selectors[19] = ViewFacet.getNonCollatTotalUsedBorrowingPower.selector;
+    selectors[20] = ViewFacet.getNonCollatAccountDebt.selector;
+    selectors[21] = ViewFacet.getNonCollatTokenDebt.selector;
+    selectors[22] = ViewFacet.getNonCollatBorrowingPower.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_viewFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_viewFacet, selectors);
+  }
+
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
     LendFacet _lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](8);
+    bytes4[] memory selectors = new bytes4[](5);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
-    selectors[2] = LendFacet.getTotalToken.selector;
-    selectors[3] = LendFacet.openMarket.selector;
-    selectors[4] = LendFacet.depositETH.selector;
-    selectors[5] = LendFacet.withdrawETH.selector;
-    selectors[6] = LendFacet.getIbShareFromUnderlyingAmount.selector;
-    selectors[7] = LendFacet.getTotalTokenWithPendingInterest.selector;
+    selectors[2] = LendFacet.openMarket.selector;
+    selectors[3] = LendFacet.depositETH.selector;
+    selectors[4] = LendFacet.withdrawETH.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_lendFacet),
@@ -129,13 +168,10 @@ library MMDiamondDeployer {
   function deployCollateralFacet(DiamondCutFacet diamondCutFacet) internal returns (CollateralFacet, bytes4[] memory) {
     CollateralFacet _collateralFacet = new CollateralFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = CollateralFacet.addCollateral.selector;
-    selectors[1] = CollateralFacet.getCollaterals.selector;
-    selectors[2] = CollateralFacet.removeCollateral.selector;
-    selectors[3] = CollateralFacet.collats.selector;
-    selectors[4] = CollateralFacet.transferCollateral.selector;
-    selectors[5] = CollateralFacet.subAccountCollatAmount.selector;
+    selectors[1] = CollateralFacet.removeCollateral.selector;
+    selectors[2] = CollateralFacet.transferCollateral.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_collateralFacet),
@@ -150,21 +186,11 @@ library MMDiamondDeployer {
   function deployBorrowFacet(DiamondCutFacet diamondCutFacet) internal returns (BorrowFacet, bytes4[] memory) {
     BorrowFacet _brrowFacet = new BorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](14);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = BorrowFacet.borrow.selector;
-    selectors[1] = BorrowFacet.getDebtShares.selector;
-    selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
-    selectors[3] = BorrowFacet.getTotalUsedBorrowedPower.selector;
-    selectors[4] = BorrowFacet.getDebt.selector;
-    selectors[5] = BorrowFacet.repay.selector;
-    selectors[6] = BorrowFacet.getGlobalDebt.selector;
-    selectors[7] = BorrowFacet.debtLastAccrueTime.selector;
-    selectors[8] = BorrowFacet.pendingInterest.selector;
-    selectors[9] = BorrowFacet.accrueInterest.selector;
-    selectors[10] = BorrowFacet.debtValues.selector;
-    selectors[11] = BorrowFacet.debtShares.selector;
-    selectors[12] = BorrowFacet.repayWithCollat.selector;
-    selectors[13] = BorrowFacet.getFloatingBalance.selector;
+    selectors[1] = BorrowFacet.repay.selector;
+    selectors[2] = BorrowFacet.accrueInterest.selector;
+    selectors[3] = BorrowFacet.repayWithCollat.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_brrowFacet),
@@ -182,14 +208,9 @@ library MMDiamondDeployer {
   {
     NonCollatBorrowFacet _nonCollatBorrow = new NonCollatBorrowFacet();
 
-    bytes4[] memory selectors = new bytes4[](7);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
-    selectors[1] = NonCollatBorrowFacet.nonCollatGetDebtValues.selector;
-    selectors[2] = NonCollatBorrowFacet.nonCollatGetTotalUsedBorrowedPower.selector;
-    selectors[3] = NonCollatBorrowFacet.nonCollatGetDebt.selector;
-    selectors[4] = NonCollatBorrowFacet.nonCollatRepay.selector;
-    selectors[5] = NonCollatBorrowFacet.nonCollatGetTokenDebt.selector;
-    selectors[6] = NonCollatBorrowFacet.nonCollatBorrowLimitUSDValues.selector;
+    selectors[1] = NonCollatBorrowFacet.nonCollatRepay.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_nonCollatBorrow),
@@ -204,24 +225,23 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](18);
+    bytes4[] memory selectors = new bytes4[](16);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
     selectors[3] = AdminFacet.setTokenConfigs.selector;
-    selectors[4] = AdminFacet.tokenConfigs.selector;
-    selectors[5] = AdminFacet.setNonCollatBorrower.selector;
-    selectors[6] = AdminFacet.setInterestModel.selector;
-    selectors[7] = AdminFacet.setOracle.selector;
-    selectors[8] = AdminFacet.setRepurchasersOk.selector;
-    selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
-    selectors[10] = AdminFacet.setNonCollatInterestModel.selector;
-    selectors[11] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[12] = AdminFacet.setLiquidationCallersOk.selector;
-    selectors[14] = AdminFacet.setTreasury.selector;
-    selectors[15] = AdminFacet.setFees.selector;
-    selectors[16] = AdminFacet.getProtocolReserve.selector;
-    selectors[17] = AdminFacet.withdrawReserve.selector;
+    selectors[4] = AdminFacet.setNonCollatBorrower.selector;
+    selectors[5] = AdminFacet.setInterestModel.selector;
+    selectors[6] = AdminFacet.setOracle.selector;
+    selectors[7] = AdminFacet.setRepurchasersOk.selector;
+    selectors[8] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[9] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[10] = AdminFacet.setLiquidationCallersOk.selector;
+    selectors[11] = AdminFacet.setTreasury.selector;
+    selectors[12] = AdminFacet.setFees.selector;
+    selectors[13] = AdminFacet.withdrawReserve.selector;
+    selectors[14] = AdminFacet.setProtocolConfigs.selector;
+    selectors[15] = AdminFacet.setIbTokenImplementation.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -251,5 +271,24 @@ library MMDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_LiquidationFacet, selectors);
+  }
+
+  function deployOwnershipFacet(DiamondCutFacet diamondCutFacet) internal returns (OwnershipFacet, bytes4[] memory) {
+    OwnershipFacet _ownershipFacet = new OwnershipFacet();
+
+    bytes4[] memory selectors = new bytes4[](4);
+    selectors[0] = _ownershipFacet.transferOwnership.selector;
+    selectors[1] = _ownershipFacet.acceptOwnership.selector;
+    selectors[2] = _ownershipFacet.owner.selector;
+    selectors[3] = _ownershipFacet.pendingOwner.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_ownershipFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_ownershipFacet, selectors);
   }
 }

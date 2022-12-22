@@ -75,7 +75,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    uint256 _oldDebtValue = _getDebt(_account, _token, moneyMarketDs);
+    uint256 _oldDebtValue = LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);
 
     uint256 _debtToRemove = _oldDebtValue > _repayAmount ? _repayAmount : _oldDebtValue;
 
@@ -86,34 +86,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
-  }
-
-  function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    LibDoublyLinkedList.List storage debtShares = moneyMarketDs.nonCollatAccountDebtValues[_account];
-
-    return debtShares.getAll();
-  }
-
-  function nonCollatGetDebt(address _account, address _token) external view returns (uint256 _debtAmount) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    _debtAmount = _getDebt(_account, _token, moneyMarketDs);
-  }
-
-  function _getDebt(
-    address _account,
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _debtAmount) {
-    _debtAmount = moneyMarketDs.nonCollatAccountDebtValues[_account].getAmount(_token);
-  }
-
-  function nonCollatGetTokenDebt(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    return LibMoneyMarket01.getNonCollatTokenDebt(_token, moneyMarketDs);
   }
 
   function _removeDebt(
@@ -153,11 +125,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     // check credit
-    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
+    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
+
+    _checkCapacity(_token, _amount, moneyMarketDs);
 
     _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
-
-    _checkAvailableToken(_token, _amount, moneyMarketDs);
   }
 
   // TODO: gas optimize on oracle call
@@ -171,8 +143,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    uint256 _borrowingPower = moneyMarketDs.nonCollatBorrowLimitUSDValues[msg.sender];
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowedPower(
+    uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowLimitUSDValue;
+    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
@@ -182,7 +154,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
   }
 
-  function _checkAvailableToken(
+  function _checkCapacity(
     address _token,
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
@@ -192,33 +164,18 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     if (_mmTokenBalnce < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
-    // in order to find total non-collat borrow
-    // we can use globalDebt - over-collat debt
 
-    uint256 _nonCollatDebt = moneyMarketDs.globalDebts[_token] - moneyMarketDs.debtValues[_token];
-
-    if (_borrowAmount + _nonCollatDebt > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+    // check if accumulated borrowAmount exceed global limit
+    if (_borrowAmount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }
-  }
 
-  function nonCollatGetTotalUsedBorrowedPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowedPower(_account, moneyMarketDs);
-  }
-
-  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.nonCollatBorrowLimitUSDValues[_account];
-  }
-
-  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _pendingInterest) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    _pendingInterest = LibMoneyMarket01.getNonCollatInterestRate(_account, _token, moneyMarketDs);
+    // check if accumulated borrowAmount exceed account limit
+    if (
+      _borrowAmount + moneyMarketDs.nonCollatAccountDebtValues[msg.sender].getAmount(_token) >
+      moneyMarketDs.protocolConfigs[msg.sender].maxTokenBorrow[_token]
+    ) {
+      revert NonCollatBorrowFacet_ExceedAccountBorrowLimit();
+    }
   }
 }

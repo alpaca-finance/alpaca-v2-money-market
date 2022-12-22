@@ -340,7 +340,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_token];
 
-    uint256 _borrowingUSDValue = LibLYF01.usedBorrowedPower(
+    uint256 _borrowingUSDValue = LibLYF01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
@@ -466,7 +466,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _totalBorrowingPowerUSDValue = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
   }
 
-  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
+  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
     returns (uint256 _totalBorrowedUSDValue)
@@ -475,7 +475,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowedPower(_subAccount, lyfDs);
+    _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
   }
 
   function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
@@ -537,7 +537,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).nonCollatGetDebt(address(this), _token);
+    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).getNonCollatAccountDebt(address(this), _token);
   }
 
   function getDebtShares(address _account, uint256 _subAccountId)
