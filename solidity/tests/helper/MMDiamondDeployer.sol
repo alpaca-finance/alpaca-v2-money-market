@@ -206,7 +206,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](18);
+    bytes4[] memory selectors = new bytes4[](19);
     selectors[0] = AdminFacet.setTokenToIbTokens.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
@@ -225,6 +225,7 @@ library MMDiamondDeployer {
     selectors[15] = AdminFacet.withdrawReserve.selector;
     selectors[16] = AdminFacet.setProtocolConfigs.selector;
     selectors[17] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[18] = AdminFacet.setLiquidationFactor.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

@@ -84,4 +84,6 @@ interface IAdminFacet {
   function setIbTokenImplementation(address _newImplementation) external;
 
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
+
+  function setLiquidationFactor(uint16 _newFactor) external;
 }

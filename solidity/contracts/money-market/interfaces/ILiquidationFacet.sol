@@ -33,7 +33,7 @@ interface ILiquidationFacet {
 
   error LiquidationFacet_Unauthorized();
   error LiquidationFacet_Healthy();
-  error LiquidationFacet_RepayDebtValueTooHigh();
+  error LiquidationFacet_RepayAmountExceedThreshold();
   error LiquidationFacet_InsufficientAmount();
   error LiquidationFacet_RepayAmountMismatch();
 

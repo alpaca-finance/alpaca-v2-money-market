@@ -101,6 +101,8 @@ library LibMoneyMarket01 {
     mapping(address => uint256) reserves;
     // ibToken implementation
     address ibTokenImplementation;
+    // liquidation factor
+    uint16 liquidationFactor;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

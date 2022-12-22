@@ -417,47 +417,46 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  // TODO: uncomment this case when finding 30 is resolved and re-implemented into repurchase
-  // function testRevert_shouldRevertIfRepayIsTooHigh() external {
-  //   // criteria
-  //   address _debtToken = address(usdc);
-  //   address _collatToken = address(weth);
+  function testRevert_shouldRevertIfRepayIsTooHigh() external {
+    // criteria
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
 
-  //   // collat amount should be = 40
-  //   // collat debt value should be = 30
-  //   // collat debt share should be = 30
-  //   CacheState memory _stateBefore = CacheState({
-  //     collat: collateralFacet.collats(_collatToken),
-  //     subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-  //     debtShare: borrowFacet.debtShares(_debtToken),
-  //     debtValue: borrowFacet.debtValues(_debtToken),
-  //     subAccountDebtShare: 0
-  //   });
-  //   (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    // collat amount should be = 40
+    // collat debt value should be = 30
+    // collat debt share should be = 30
+    CacheState memory _stateBefore = CacheState({
+      collat: collateralFacet.collats(_collatToken),
+      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: borrowFacet.debtShares(_debtToken),
+      debtValue: borrowFacet.debtValues(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
 
-  //   // add time 1 day
-  //   // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-  //   vm.warp(1 days + 1);
+    // add time 1 day
+    // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
+    vm.warp(1 days + 1);
 
-  //   // set price to weth from 1 to 0.8 ether USD
-  //   // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
+    // set price to weth from 1 to 0.8 ether USD
+    // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
 
-  //   mockOracle.setTokenPrice(address(weth), 8e17);
-  //   mockOracle.setTokenPrice(address(usdc), 1 ether);
-  //   mockOracle.setTokenPrice(address(btc), 10e18);
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+    mockOracle.setTokenPrice(address(btc), 10e18);
 
-  //   // bob try repurchase with 2 usdc
-  //   // eth price = 0.8 USD
-  //   // usdc price = 1 USD
-  //   // reward = 0.01%
-  //   // timestamp increased by 1 day, debt value should increased to 30.0050765511672
-  //   vm.startPrank(BOB);
-  //   vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayDebtValueTooHigh.selector));
-  //   // bob try repurchase with 20 usdc but borrowed value is 30.0050765511672 / 2 = 15.0025382755836,
-  //   // so bob can't pay more than 15.0025382755836 followed by condition (!> 50% of borrowed value)
-  //   liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 20 ether);
-  //   vm.stopPrank();
-  // }
+    // bob try repurchase with 2 usdc
+    // eth price = 0.8 USD
+    // usdc price = 1 USD
+    // reward = 0.01%
+    // timestamp increased by 1 day, debt value should increased to 30.0050765511672
+    vm.startPrank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
+    // bob try repurchase with 20 usdc but borrowed value is 30.0050765511672 / 2 = 15.0025382755836,
+    // so bob can't pay more than 15.0025382755836 followed by condition (!> 50% of borrowed value)
+    liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 20 ether);
+    vm.stopPrank();
+  }
 
   function testRevert_ShouldRevertIfInsufficientCollateralAmount() external {
     vm.startPrank(ALICE);
