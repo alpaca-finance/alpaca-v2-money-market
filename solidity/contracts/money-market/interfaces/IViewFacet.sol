@@ -61,7 +61,7 @@ interface IViewFacet {
 
   function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
 
-  function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
+  function getNonCollatAccountDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
 
   function getNonCollatTotalUsedBorrowingPower(address _account)
     external
