@@ -11,6 +11,16 @@ import { IViewFacet } from "../interfaces/IViewFacet.sol";
 contract ViewFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  function getIbTokenFromToken(address _token) external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.tokenToIbTokens[_token];
+  }
+
+  function getTokenFromIbToken(address _ibToken) external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.ibTokenToTokens[_ibToken];
+  }
+
   function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
     return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }

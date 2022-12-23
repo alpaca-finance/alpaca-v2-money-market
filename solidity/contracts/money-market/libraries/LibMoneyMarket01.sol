@@ -371,20 +371,27 @@ library LibMoneyMarket01 {
   ) internal returns (uint256 _totalNonCollatInterest) {
     LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
     uint256 _accountLength = _borrowedAccounts.length;
+    address _account;
+    uint256 _currentAccountDebt;
+    uint256 _accountInterest;
+    uint256 _newNonCollatDebtValue;
+
     for (uint256 _i = 0; _i < _accountLength; ) {
-      address _account = _borrowedAccounts[_i].token;
-      uint256 _oldAccountDebt = _borrowedAccounts[_i].amount;
+      _account = _borrowedAccounts[_i].token;
+      _currentAccountDebt = _borrowedAccounts[_i].amount;
 
-      uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
+      _accountInterest =
+        (getNonCollatInterestRate(_account, _token, moneyMarketDs) * _timePast * _currentAccountDebt) /
+        1e18;
+      {
+        // update non collat debt states
+        _newNonCollatDebtValue = _currentAccountDebt + _accountInterest;
+        // 1. account debt
+        moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _newNonCollatDebtValue);
 
-      uint256 _accountInterest = (_nonCollatInterestRate * _timePast * _oldAccountDebt) / 1e18;
-
-      // update non collat debt states
-      // 1. account debt
-      moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _oldAccountDebt + _accountInterest);
-
-      // 2. token debt
-      moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(_account, _oldAccountDebt + _accountInterest);
+        // 2. token debt
+        moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(_account, _newNonCollatDebtValue);
+      }
 
       _totalNonCollatInterest += _accountInterest;
       unchecked {
