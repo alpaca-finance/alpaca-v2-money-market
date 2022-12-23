@@ -101,8 +101,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 12000,
       borrowingFactor: 5000,
       maxCollateral: 1000e18,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
 
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
@@ -117,8 +116,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 6000,
       borrowingFactor: 12000,
       maxCollateral: 1000e18,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
 
     // borrowing factor is more than MAX_BPS
@@ -134,8 +132,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 12000,
       borrowingFactor: 5000,
       maxCollateral: 1e41,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
 
     // maxCollateral is more than MAX_BPS
@@ -151,8 +148,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 12000,
       borrowingFactor: 5000,
       maxCollateral: 1000e18,
-      maxBorrow: 1e41,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 1e41
     });
 
     // maxBorrow is more than MAX_BPS
