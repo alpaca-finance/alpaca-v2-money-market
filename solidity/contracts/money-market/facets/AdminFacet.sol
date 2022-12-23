@@ -20,6 +20,19 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  event LogSetTokenToIbTokens();
+  event LogSetTokenConfigs();
+  event LogSetNonCollatBorrower();
+  event LogSetInterestModel();
+  event LogSetNonCollatInterestModel();
+  event LogSetOracle();
+  event LogSetRepurchasersOk();
+  event LogSetLiquidationStratsOk();
+  event LogSetLiquidationCallersOk();
+  event LogSetTreasury();
+  event LogSetFees();
+  event LogSetIbTokenImplementation();
+  event LogSetProtocolConfigs();
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
