@@ -49,12 +49,12 @@ library LibMoneyMarket01 {
 
   struct TokenConfig {
     LibMoneyMarket01.AssetTier tier;
+    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow; // shared global limit
     uint256 maxToleranceExpiredSecond;
-    uint8 to18ConversionFactor;
   }
 
   struct ProtocolConfig {
