@@ -33,7 +33,7 @@ contract LYFViewFacet is ILYFViewFacet {
     return lyfDs.lpShares[_lpToken];
   }
 
-  function getSubAccountCollats(address _account, uint256 _subAccountId)
+  function getAllSubAccountCollats(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)

@@ -15,7 +15,7 @@ interface ILYFViewFacet {
 
   function getLpTokenShare(address _lpToken) external view returns (uint256);
 
-  function getSubAccountCollats(address _account, uint256 _subAccountId)
+  function getAllSubAccountCollats(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);
