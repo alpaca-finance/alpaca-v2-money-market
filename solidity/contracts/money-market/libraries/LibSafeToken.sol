@@ -50,6 +50,28 @@ library LibSafeToken {
     require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeApprove");
   }
 
+  function safeIncreaseAllowance(
+    address token,
+    address to,
+    uint256 value
+  ) internal {
+    // bytes4(keccak256(bytes('increaseAllowance(address,uint256)')));
+    require(isContract(token), "!not contract");
+    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x39509351, to, value));
+    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeApprove");
+  }
+
+  function safeDecreaseAllowance(
+    address token,
+    address to,
+    uint256 value
+  ) internal {
+    // bytes4(keccak256(bytes('decreaseAllowance(address,uint256)')));
+    require(isContract(token), "!not contract");
+    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa457c2d7, to, value));
+    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeApprove");
+  }
+
   function safeTransferETH(address to, uint256 value) internal {
     // solhint-disable-next-line no-call-value
     (bool success, ) = to.call{ value: value }(new bytes(0));
