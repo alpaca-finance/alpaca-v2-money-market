@@ -144,10 +144,10 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _debtShares = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _debtShareLength = _debtShares.length;
 
-    for (uint256 _i = 0; _i < _debtShareLength; ) {
+    for (uint256 _i; _i < _debtShareLength; ) {
       accrueInterest(_debtShares[_i].index, lyfDs);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -161,7 +161,7 @@ library LibLYF01 {
 
     uint256 _collatsLength = _collats.length;
 
-    for (uint256 _i = 0; _i < _collatsLength; ) {
+    for (uint256 _i; _i < _collatsLength; ) {
       address _collatToken = _collats[_i].token;
       uint256 _collatAmount = _collats[_i].amount;
       uint256 _actualAmount = _collatAmount;
@@ -189,7 +189,7 @@ library LibLYF01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -202,7 +202,7 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
@@ -213,7 +213,7 @@ library LibLYF01 {
       );
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -227,7 +227,7 @@ library LibLYF01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
@@ -245,7 +245,7 @@ library LibLYF01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }

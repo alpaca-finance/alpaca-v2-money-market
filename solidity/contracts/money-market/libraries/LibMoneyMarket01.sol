@@ -128,7 +128,7 @@ library LibMoneyMarket01 {
 
     uint256 _collatsLength = _collats.length;
 
-    for (uint256 _i = 0; _i < _collatsLength; ) {
+    for (uint256 _i; _i < _collatsLength; ) {
       _collatToken = _collats[_i].token;
 
       (_tokenPrice, ) = getPriceUSD(_collatToken, moneyMarketDs);
@@ -144,7 +144,7 @@ library LibMoneyMarket01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -158,11 +158,11 @@ library LibMoneyMarket01 {
 
     uint256 _length = _nonCollatDebts.length;
 
-    for (uint256 _i = 0; _i < _length; ) {
+    for (uint256 _i; _i < _length; ) {
       _totalNonCollatDebt += _nonCollatDebts[_i].amount;
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -176,7 +176,7 @@ library LibMoneyMarket01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
 
       if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
@@ -194,7 +194,7 @@ library LibMoneyMarket01 {
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -208,7 +208,7 @@ library LibMoneyMarket01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
@@ -225,7 +225,7 @@ library LibMoneyMarket01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -260,7 +260,7 @@ library LibMoneyMarket01 {
       // non collat interest
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
-      for (uint256 _i = 0; _i < _accountLength; ) {
+      for (uint256 _i; _i < _accountLength; ) {
         address _account = _borrowedAccounts[_i].token;
 
         uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
@@ -268,7 +268,7 @@ library LibMoneyMarket01 {
         _globalPendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
 
         unchecked {
-          _i++;
+          ++_i;
         }
       }
     }
@@ -350,7 +350,7 @@ library LibMoneyMarket01 {
     uint256 _accountInterest;
     uint256 _newNonCollatDebtValue;
 
-    for (uint256 _i = 0; _i < _accountLength; ) {
+    for (uint256 _i; _i < _accountLength; ) {
       _account = _borrowedAccounts[_i].token;
       _currentAccountDebt = _borrowedAccounts[_i].amount;
 
@@ -369,7 +369,7 @@ library LibMoneyMarket01 {
 
       _totalNonCollatInterest += _accountInterest;
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -379,10 +379,10 @@ library LibMoneyMarket01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       accrueInterest(_borrowed[_i].token, moneyMarketDs);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
