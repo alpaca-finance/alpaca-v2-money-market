@@ -194,7 +194,33 @@ library LibMoneyMarket01 {
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
 
       unchecked {
-        _i++;
+        ++_i;
+      }
+    }
+  }
+
+  function getTotalNonCollatUsedBorrowingPower(address _account, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+    returns (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset)
+  {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.nonCollatAccountDebtValues[_account].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
+
+      if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
+        _hasIsolateAsset = true;
+      }
+
+      (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
+
+      _totalUsedBorrowingPower += usedBorrowingPower(_borrowed[_i].amount, _tokenPrice, _tokenConfig.borrowingFactor);
+
+      unchecked {
+        ++_i;
       }
     }
   }
@@ -225,7 +251,7 @@ library LibMoneyMarket01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -369,6 +395,21 @@ library LibMoneyMarket01 {
 
   function accrueBorrowedPositionsOf(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+
+    for (uint256 _i = 0; _i < _borrowedLength; ) {
+      accrueInterest(_borrowed[_i].token, moneyMarketDs);
+      unchecked {
+        _i++;
+      }
+    }
+  }
+
+  function accrueNonCollatBorrowedPositionsOf(address _account, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+  {
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.nonCollatAccountDebtValues[_account].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
 
