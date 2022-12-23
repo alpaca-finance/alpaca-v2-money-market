@@ -21,7 +21,6 @@ interface IAVAdminFacet {
   struct TokenConfigInput {
     LibAV01.AssetTier tier;
     address token;
-    uint256 maxToleranceExpiredSecond;
   }
 
   error AVTradeFacet_InvalidToken(address _token);

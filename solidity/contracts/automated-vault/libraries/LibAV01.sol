@@ -38,7 +38,6 @@ library LibAV01 {
   struct TokenConfig {
     AssetTier tier;
     uint8 to18ConversionFactor;
-    uint256 maxToleranceExpiredSecond;
   }
 
   struct AVDiamondStorage {
@@ -50,6 +49,7 @@ library LibAV01 {
     mapping(address => uint256) lastFeeCollectionTimestamps;
     // share token => debt token => debt value
     mapping(address => mapping(address => uint256)) vaultDebtValues;
+    uint256 maxPriceStale;
   }
 
   error LibAV01_NoTinyShares();
@@ -58,7 +58,7 @@ library LibAV01 {
   error LibAV01_PriceStale(address _token);
   error LibAV01_UnsupportedDecimals();
 
-  function getStorage() internal pure returns (AVDiamondStorage storage ds) {
+  function avDiamondStorage() internal pure returns (AVDiamondStorage storage ds) {
     assembly {
       ds.slot := AV_STORAGE_POSITION
     }
@@ -124,8 +124,7 @@ library LibAV01 {
     } else {
       (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibAV01_PriceStale(_token);
+    if (_lastUpdated < block.timestamp - avDs.maxPriceStale) revert LibAV01_PriceStale(_token);
   }
 
   function borrowMoneyMarket(

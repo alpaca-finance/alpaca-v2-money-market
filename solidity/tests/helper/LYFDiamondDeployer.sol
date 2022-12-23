@@ -14,6 +14,7 @@ import { LYFOwnershipFacet } from "../../contracts/lyf/facets/LYFOwnershipFacet.
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
+import { LYFInit } from "../../contracts/lyf/initializers/LYFInit.sol";
 
 library LYFDiamondDeployer {
   function deployPoolDiamond() internal returns (address) {
@@ -35,16 +36,11 @@ library LYFDiamondDeployer {
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
-    // Deploy DiamondInit
-    DiamondInit diamondInitializer = new DiamondInit();
+    LYFInit _initializer = new LYFInit();
     IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
 
     // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(diamondInitializer),
-      abi.encodeWithSelector(bytes4(keccak256("init()")))
-    );
+    diamondCutFacet.diamondCut(facetCuts, address(_initializer), abi.encodeWithSelector(bytes4(keccak256("init()"))));
   }
 
   function deployDiamondLoupeFacet(DiamondCutFacet diamondCutFacet)

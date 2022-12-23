@@ -11,5 +11,7 @@ contract MoneyMarketInit {
     if (_nativeToken == address(0) || _nativeRelayer == address(0)) revert MoneyMarketInit_InvalidAddress();
     ds.nativeToken = _nativeToken;
     ds.nativeRelayer = _nativeRelayer;
+
+    ds.maxPriceStale = 86400;
   }
 }

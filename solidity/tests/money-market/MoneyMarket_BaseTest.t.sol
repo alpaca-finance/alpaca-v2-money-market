@@ -101,8 +101,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -111,8 +110,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -121,8 +119,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[3] = IAdminFacet.TokenConfigInput({
@@ -131,8 +128,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[4] = IAdminFacet.TokenConfigInput({
@@ -141,8 +137,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[5] = IAdminFacet.TokenConfigInput({
@@ -151,8 +146,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     adminFacet.setTokenConfigs(_inputs);
