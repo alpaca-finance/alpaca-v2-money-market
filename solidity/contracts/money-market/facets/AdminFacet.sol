@@ -76,12 +76,6 @@ contract AdminFacet is IAdminFacet {
     return moneyMarketDs.ibTokenToTokens[_ibToken];
   }
 
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    return moneyMarketDs.tokenConfigs[_token];
-  }
-
   function setInterestModel(address _token, address _model) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
@@ -138,10 +132,6 @@ contract AdminFacet is IAdminFacet {
   function setTreasury(address newTreasury) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.treasury = newTreasury;
-  }
-
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
-    return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
 
   function withdrawReserve(

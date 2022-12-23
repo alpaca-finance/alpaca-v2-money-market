@@ -39,7 +39,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     adminFacet.setTokenConfigs(_inputs);
 
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = adminFacet.tokenConfigs(address(weth));
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = viewFacet.getTokenConfig(address(weth));
 
     // assertEq not accept enum
     assertTrue(_tokenConfig.tier == LibMoneyMarket01.AssetTier.COLLATERAL);
