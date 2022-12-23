@@ -92,7 +92,7 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](11);
+    bytes4[] memory selectors = new bytes4[](10);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.setTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
@@ -103,7 +103,6 @@ library LYFDiamondDeployer {
     selectors[7] = LYFAdminFacet.setReinvestorsOk.selector;
     selectors[8] = LYFAdminFacet.setLiquidationStratsOk.selector;
     selectors[9] = LYFAdminFacet.setLiquidatorsOk.selector;
-    selectors[10] = LYFAdminFacet.setTreasury.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
