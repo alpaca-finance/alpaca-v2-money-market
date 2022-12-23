@@ -56,7 +56,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address[] memory _liquidationCallers = new address[](2);
     _liquidationCallers[0] = BOB;
     _liquidationCallers[1] = address(this);
-    adminFacet.setLiquidationCallersOk(_liquidationCallers, true);
+    adminFacet.setLiquidatorsOk(_liquidationCallers, true);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);

@@ -114,7 +114,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     }
   }
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external onlyOwner {
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
     for (uint256 _i; _i < _length; ) {

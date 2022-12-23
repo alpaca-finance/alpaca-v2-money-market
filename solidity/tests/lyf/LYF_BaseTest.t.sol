@@ -242,7 +242,7 @@ abstract contract LYF_BaseTest is BaseTest {
     _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
     _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
     _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
-    IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
+    IAdminFacet(moneyMarketDiamond).setIbPairs(_ibPair);
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);

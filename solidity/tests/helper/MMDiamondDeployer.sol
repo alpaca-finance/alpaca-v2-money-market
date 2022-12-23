@@ -228,7 +228,7 @@ library MMDiamondDeployer {
     AdminFacet _adminFacet = new AdminFacet();
 
     bytes4[] memory selectors = new bytes4[](14);
-    selectors[0] = AdminFacet.setTokenToIbTokens.selector;
+    selectors[0] = AdminFacet.setIbPairs.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
     selectors[2] = AdminFacet.setNonCollatBorrower.selector;
     selectors[3] = AdminFacet.setInterestModel.selector;
@@ -236,7 +236,7 @@ library MMDiamondDeployer {
     selectors[5] = AdminFacet.setRepurchasersOk.selector;
     selectors[6] = AdminFacet.setNonCollatInterestModel.selector;
     selectors[7] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[8] = AdminFacet.setLiquidationCallersOk.selector;
+    selectors[8] = AdminFacet.setLiquidatorsOk.selector;
     selectors[9] = AdminFacet.setTreasury.selector;
     selectors[10] = AdminFacet.setFees.selector;
     selectors[11] = AdminFacet.withdrawReserve.selector;
