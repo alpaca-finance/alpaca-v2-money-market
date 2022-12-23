@@ -49,12 +49,11 @@ library LibMoneyMarket01 {
 
   struct TokenConfig {
     LibMoneyMarket01.AssetTier tier;
+    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow; // shared global limit
-    uint256 maxToleranceExpiredSecond;
-    uint8 to18ConversionFactor;
   }
 
   struct ProtocolConfig {
@@ -101,6 +100,7 @@ library LibMoneyMarket01 {
     mapping(address => uint256) reserves;
     // ibToken implementation
     address ibTokenImplementation;
+    uint256 maxPriceStale;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
@@ -453,8 +453,7 @@ library LibMoneyMarket01 {
       (_price, _lastUpdated) = moneyMarketDs.oracle.getTokenPrice(_token);
     }
 
-    if (_lastUpdated < block.timestamp - moneyMarketDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibMoneyMarket01_PriceStale(_token);
+    if (_lastUpdated < block.timestamp - moneyMarketDs.maxPriceStale) revert LibMoneyMarket01_PriceStale(_token);
   }
 
   function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {

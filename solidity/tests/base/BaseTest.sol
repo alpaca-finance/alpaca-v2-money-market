@@ -59,6 +59,7 @@ contract BaseTest is DSTest {
   ProxyAdminLike internal proxyAdmin;
 
   constructor() {
+    vm.warp(100000);
     // deploy
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);

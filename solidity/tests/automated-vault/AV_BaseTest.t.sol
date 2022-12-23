@@ -77,22 +77,10 @@ abstract contract AV_BaseTest is BaseTest {
 
     // setup token configs
     IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](3);
-    tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({
-      token: address(weth),
-      tier: LibAV01.AssetTier.TOKEN,
-      maxToleranceExpiredSecond: block.timestamp
-    });
-    tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({
-      token: address(usdc),
-      tier: LibAV01.AssetTier.TOKEN,
-      maxToleranceExpiredSecond: block.timestamp
-    });
+    tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({ token: address(weth), tier: LibAV01.AssetTier.TOKEN });
+    tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({ token: address(usdc), tier: LibAV01.AssetTier.TOKEN });
     // todo: should we set this in openVault
-    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({
-      token: address(wethUsdcLPToken),
-      tier: LibAV01.AssetTier.LP,
-      maxToleranceExpiredSecond: block.timestamp
-    });
+    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({ token: address(wethUsdcLPToken), tier: LibAV01.AssetTier.LP });
     adminFacet.setTokenConfigs(tokenConfigs);
 
     // setup oracle
@@ -127,8 +115,7 @@ abstract contract AV_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -137,8 +124,7 @@ abstract contract AV_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
