@@ -39,7 +39,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     // accrue all debt tokens under account
-    // because used borrowing power is calcualated from all debt token of account
+    // total used borrowing power is calculated from all debt token of the account
     LibMoneyMarket01.accrueNonCollatBorrowedPositionsOf(msg.sender, moneyMarketDs);
 
     _validate(msg.sender, _token, _amount, moneyMarketDs);
