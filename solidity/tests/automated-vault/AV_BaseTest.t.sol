@@ -116,7 +116,7 @@ abstract contract AV_BaseTest is BaseTest {
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](2);
     _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
     _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
-    IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
+    IAdminFacet(moneyMarketDiamond).setIbPairs(_ibPair);
 
     IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(avDiamond, true);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);

@@ -18,7 +18,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
     _ibPair[0] = IAdminFacet.IbPair({ token: _depositToken, ibToken: _ibDepositToken });
 
-    adminFacet.setTokenToIbTokens(_ibPair);
+    adminFacet.setIbPairs(_ibPair);
 
     assertEq(adminFacet.tokenToIbTokens(_depositToken), _ibDepositToken);
     assertEq(adminFacet.ibTokenToTokens(_ibDepositToken), _depositToken);
@@ -50,11 +50,11 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenNonAdminSetSomeConfig_ShouldRevert() external {
     vm.startPrank(ALICE);
 
-    // try to setTokenToIbTokens
+    // try to setIbPairs
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
     _ibPair[0] = IAdminFacet.IbPair({ token: address(9998), ibToken: address(9999) });
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setTokenToIbTokens(_ibPair);
+    adminFacet.setIbPairs(_ibPair);
 
     // try to setTokenConfigs
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);

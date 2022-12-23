@@ -20,19 +20,29 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogSetTokenToIbTokens();
-  event LogSetTokenConfigs();
-  event LogSetNonCollatBorrower();
-  event LogSetInterestModel();
-  event LogSetNonCollatInterestModel();
-  event LogSetOracle();
-  event LogSetRepurchasersOk();
-  event LogSetLiquidationStratsOk();
-  event LogSetLiquidationCallersOk();
-  event LogSetTreasury();
-  event LogSetFees();
-  event LogSetIbTokenImplementation();
-  event LogSetProtocolConfigs();
+  event LogSetIbPair(address indexed _token, address indexed _ibToken);
+  event LogSetTokenConfig(address indexed _token);
+  event LogSetNonCollatBorrower(address indexed _account, bool isOk);
+  event LogSetInterestModel(address indexed _token, address _interestModel);
+  event LogSetNonCollatInterestModel(address indexed _account, address indexed _token, address _interestModel);
+  event LogSetOracle(address _oracle);
+  event LogSetRepurchaserOk(address indexed _account, bool isOk);
+  event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
+  event LogSetLiquidatorOk(address indexed _account, bool isOk);
+  event LogSetTreasury(address indexed _treasury);
+  event LogSetFees(
+    uint256 lendingFeeBps,
+    uint256 repurchaseRewardBps,
+    uint256 repurchaseFeeBps,
+    uint256 liquidationFeeBps
+  );
+  event LogSetIbTokenImplementation(address indexed _newImplementation);
+  event LogSetProtocolConfig(
+    address indexed _account,
+    address indexed _token,
+    uint256 maxTokenBorrow,
+    uint256 borrowLimitUSDValue
+  );
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
@@ -40,19 +50,20 @@ contract AdminFacet is IAdminFacet {
     _;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external onlyOwner {
+  function setIbPairs(IbPair[] calldata _ibPair) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     uint256 _ibPairLength = _ibPair.length;
     for (uint8 _i; _i < _ibPairLength; ) {
       LibMoneyMarket01.setIbPair(_ibPair[_i].token, _ibPair[_i].ibToken, moneyMarketDs);
+      emit LogSetIbPair(_ibPair[_i].token, _ibPair[_i].ibToken);
       unchecked {
         ++_i;
       }
     }
   }
 
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
+  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigs.length;
     for (uint8 _i; _i < _inputLength; ) {
@@ -68,6 +79,9 @@ contract AdminFacet is IAdminFacet {
 
       LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
 
+      // todo: which argument to emit
+      emit LogSetTokenConfig(_tokenConfigs[_i].token);
+
       unchecked {
         ++_i;
       }
@@ -77,6 +91,7 @@ contract AdminFacet is IAdminFacet {
   function setNonCollatBorrower(address _borrower, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
+    emit LogSetNonCollatBorrower(_borrower, _isOk);
   }
 
   // todo: move this to view facet
@@ -94,6 +109,7 @@ contract AdminFacet is IAdminFacet {
   function setInterestModel(address _token, address _model) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
+    emit LogSetInterestModel(_token, _model);
   }
 
   function setNonCollatInterestModel(
@@ -104,49 +120,55 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     bytes32 _nonCollatId = LibMoneyMarket01.getNonCollatId(_account, _token);
     moneyMarketDs.nonCollatInterestModels[_nonCollatId] = IInterestRateModel(_model);
+    emit LogSetNonCollatInterestModel(_account, _token, _model);
   }
 
   function setOracle(address _oracle) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IAlpacaV2Oracle(_oracle);
+    emit LogSetOracle(_oracle);
   }
 
-  function setRepurchasersOk(address[] memory list, bool _isOk) external onlyOwner {
+  function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = list.length;
+    uint256 _length = _repurchasers.length;
     for (uint8 _i; _i < _length; ) {
-      moneyMarketDs.repurchasersOk[list[_i]] = _isOk;
+      moneyMarketDs.repurchasersOk[_repurchasers[_i]] = _isOk;
+      emit LogSetRepurchaserOk(_repurchasers[_i], _isOk);
       unchecked {
         ++_i;
       }
     }
   }
 
-  function setLiquidationStratsOk(address[] calldata list, bool _isOk) external onlyOwner {
+  function setLiquidationStratsOk(address[] calldata _strats, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = list.length;
+    uint256 _length = _strats.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.liquidationStratOk[list[_i]] = _isOk;
+      moneyMarketDs.liquidationStratOk[_strats[_i]] = _isOk;
+      emit LogSetLiquidationStratOk(_strats[_i], _isOk);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external onlyOwner {
+  function setLiquidatorsOk(address[] calldata _liquidator, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = list.length;
+    uint256 _length = _liquidator.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.liquidationCallersOk[list[_i]] = _isOk;
+      moneyMarketDs.liquidatorsOk[_liquidator[_i]] = _isOk;
+      emit LogSetLiquidatorOk(_liquidator[_i], _isOk);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setTreasury(address newTreasury) external onlyOwner {
+  function setTreasury(address _treasury) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.treasury = newTreasury;
+    moneyMarketDs.treasury = _treasury;
+    emit LogSetTreasury(_treasury);
   }
 
   function withdrawReserve(
@@ -187,6 +209,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+
+    emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
@@ -194,6 +218,7 @@ contract AdminFacet is IAdminFacet {
     // sanity check
     IInterestBearingToken(_newImplementation).decimals();
     moneyMarketDs.ibTokenImplementation = _newImplementation;
+    emit LogSetIbTokenImplementation(_newImplementation);
   }
 
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
@@ -216,11 +241,16 @@ contract AdminFacet is IAdminFacet {
         TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
 
+        emit LogSetProtocolConfig(
+          _protocolConfigInput.account,
+          _tokenBorrowLimit.token,
+          _tokenBorrowLimit.maxTokenBorrow,
+          _protocolConfigInput.borrowLimitUSDValue
+        );
         unchecked {
           ++_j;
         }
       }
-
       unchecked {
         ++_i;
       }

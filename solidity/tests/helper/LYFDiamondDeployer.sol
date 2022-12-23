@@ -119,7 +119,7 @@ library LYFDiamondDeployer {
     selectors[6] = LYFAdminFacet.setDebtInterestModel.selector;
     selectors[7] = LYFAdminFacet.setReinvestorsOk.selector;
     selectors[8] = LYFAdminFacet.setLiquidationStratsOk.selector;
-    selectors[9] = LYFAdminFacet.setLiquidationCallersOk.selector;
+    selectors[9] = LYFAdminFacet.setLiquidatorsOk.selector;
     selectors[10] = LYFAdminFacet.setTreasury.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(

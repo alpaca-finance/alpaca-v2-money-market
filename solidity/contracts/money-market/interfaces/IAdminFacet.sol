@@ -36,7 +36,7 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external;
+  function setIbPairs(IbPair[] memory _ibPair) external;
 
   function tokenToIbTokens(address _token) external view returns (address);
 
@@ -54,7 +54,7 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
   function setTreasury(address newTreasury) external;
 

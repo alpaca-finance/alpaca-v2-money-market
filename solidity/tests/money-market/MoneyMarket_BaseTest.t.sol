@@ -91,7 +91,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
     _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
     _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
-    adminFacet.setTokenToIbTokens(_ibPair);
+    adminFacet.setIbPairs(_ibPair);
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](6);
 

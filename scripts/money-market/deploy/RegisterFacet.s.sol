@@ -152,7 +152,7 @@ contract RegisterFacet is Script {
 
   function registerAdminFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
     bytes4[] memory selectors = new bytes4[](9);
-    selectors[0] = AdminFacet.setTokenToIbTokens.selector;
+    selectors[0] = AdminFacet.setIbPairs.selector;
     selectors[1] = AdminFacet.tokenToIbTokens.selector;
     selectors[2] = AdminFacet.ibTokenToTokens.selector;
     selectors[3] = AdminFacet.setTokenConfigs.selector;

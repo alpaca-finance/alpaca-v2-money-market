@@ -88,7 +88,7 @@ library LibMoneyMarket01 {
     mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
     mapping(address => bool) repurchasersOk;
     mapping(address => bool) liquidationStratOk;
-    mapping(address => bool) liquidationCallersOk;
+    mapping(address => bool) liquidatorsOk;
     address treasury;
     // fees
     uint256 lendingFeeBps;
