@@ -136,8 +136,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = ILYFAdminFacet.TokenConfigInput({
@@ -146,8 +145,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
@@ -156,8 +154,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[3] = ILYFAdminFacet.TokenConfigInput({
@@ -166,8 +163,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 0,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[4] = ILYFAdminFacet.TokenConfigInput({
@@ -176,8 +172,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[5] = ILYFAdminFacet.TokenConfigInput({
@@ -186,8 +181,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[6] = ILYFAdminFacet.TokenConfigInput({
@@ -196,8 +190,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -260,8 +253,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -270,8 +262,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -280,8 +271,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);

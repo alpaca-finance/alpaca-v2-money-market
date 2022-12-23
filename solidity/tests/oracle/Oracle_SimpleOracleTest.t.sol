@@ -55,7 +55,7 @@ contract Oracle_SimpleOracleTest is BaseTest {
 
     (uint192 price, uint64 ts) = SimplePriceOracle(address(oracle)).store(address(weth), address(usdc));
     assertEq(price, 1500 ether);
-    assertEq(ts, 1);
+    assertEq(ts, block.timestamp);
   }
 
   function testCorrectness_getPriceBeforeSet_shouldRevertBadPriceData() external {
@@ -83,6 +83,6 @@ contract Oracle_SimpleOracleTest is BaseTest {
 
     (uint256 price, uint256 ts) = oracle.getPrice(address(weth), address(usdc));
     assertEq(price, 1500 ether);
-    assertEq(ts, 1);
+    assertEq(ts, block.timestamp);
   }
 }

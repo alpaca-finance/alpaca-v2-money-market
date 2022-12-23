@@ -45,12 +45,11 @@ library LibLYF01 {
 
   struct TokenConfig {
     LibLYF01.AssetTier tier;
+    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
-    uint8 to18ConversionFactor;
   }
 
   struct LPConfig {
@@ -86,6 +85,7 @@ library LibLYF01 {
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
+    uint256 maxPriceStale;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -260,8 +260,7 @@ library LibLYF01 {
     } else {
       (_price, _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibLYF01_PriceStale(_token);
+    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) revert LibLYF01_PriceStale(_token);
   }
 
   function getIbPriceUSD(
