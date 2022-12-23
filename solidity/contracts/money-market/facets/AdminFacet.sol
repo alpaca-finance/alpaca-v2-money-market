@@ -107,6 +107,9 @@ contract AdminFacet is IAdminFacet {
   }
 
   function setInterestModel(address _token, address _model) external onlyOwner {
+    // Sanity check
+    IInterestRateModel(_model).getInterestRate(0, 0);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
     emit LogSetInterestModel(_token, _model);
@@ -117,6 +120,9 @@ contract AdminFacet is IAdminFacet {
     address _token,
     address _model
   ) external onlyOwner {
+    // Sanity check
+    IInterestRateModel(_model).getInterestRate(0, 0);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     bytes32 _nonCollatId = LibMoneyMarket01.getNonCollatId(_account, _token);
     moneyMarketDs.nonCollatInterestModels[_nonCollatId] = IInterestRateModel(_model);
@@ -124,6 +130,8 @@ contract AdminFacet is IAdminFacet {
   }
 
   function setOracle(address _oracle) external onlyOwner {
+    // Sanity check
+    IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IAlpacaV2Oracle(_oracle);
     emit LogSetOracle(_oracle);

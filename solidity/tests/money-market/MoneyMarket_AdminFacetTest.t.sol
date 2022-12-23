@@ -72,4 +72,26 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     vm.stopPrank();
   }
+
+  function testRevert_FailedSanityCheck() external {
+    // address 0
+    vm.expectRevert();
+    adminFacet.setInterestModel(address(weth), address(0));
+
+    vm.expectRevert();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(0));
+
+    vm.expectRevert();
+    adminFacet.setOracle(address(0));
+
+    // wrong contract
+    vm.expectRevert();
+    adminFacet.setInterestModel(address(weth), address(btc));
+
+    vm.expectRevert();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(btc));
+
+    vm.expectRevert();
+    adminFacet.setOracle(address(btc));
+  }
 }
