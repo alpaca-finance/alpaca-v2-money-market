@@ -104,7 +104,7 @@ contract AdminFacet is IAdminFacet {
     if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
       revert AdminFacet_InvalidArguments();
 
-    // note: to prevent user add collot or borrow too much
+    // prevent user add collat or borrow too much
     if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
     if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
   }
