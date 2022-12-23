@@ -60,15 +60,15 @@ contract AVAdminFacet is IAVAdminFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
 
     uint256 length = configs.length;
-    for (uint256 i; i < length; ) {
-      TokenConfigInput calldata config = configs[i];
+    for (uint256 _i; _i < length; ) {
+      TokenConfigInput calldata config = configs[_i];
       avDs.tokenConfigs[config.token] = LibAV01.TokenConfig({
         tier: config.tier,
         maxToleranceExpiredSecond: config.maxToleranceExpiredSecond,
         to18ConversionFactor: LibAV01.to18ConversionFactor(config.token)
       });
       unchecked {
-        i++;
+        ++_i;
       }
     }
   }
