@@ -56,7 +56,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address[] memory _liquidationCallers = new address[](2);
     _liquidationCallers[0] = BOB;
     _liquidationCallers[1] = address(this);
-    adminFacet.setLiquidationCallersOk(_liquidationCallers, true);
+    adminFacet.setLiquidatorsOk(_liquidationCallers, true);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);
@@ -107,7 +107,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -200,7 +200,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // 0.00016921837224 is interest rate per day of (30% condition slope)
     // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
     // then total debt value of btc should increase by 0.00016921837224 * 3 = 0.00050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -316,7 +316,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // 0.0002820306204288 is interest rate per day of (50% condition slope)
     // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
     // then total debt value of btc should increase by 0.0002820306204288 * 5 = 0.001410153102144
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -529,7 +529,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // LiquidationFacet need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -591,7 +591,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _collatToken = address(weth);
     uint256 _repayAmount = 40 ether;
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // LiquidationFacet need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -662,7 +662,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     mockOracle.setTokenPrice(address(btc), 1e17);
     mockOracle.setTokenPrice(address(weth), 1 ether);
@@ -702,7 +702,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // LiquidationFacet need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -796,13 +796,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // increase shareValue of ibWeth by 2.5%
     // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
-
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     // mm state before
@@ -880,12 +880,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _collatToken = address(ibWeth);
     uint256 _repayAmount = 40 ether;
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // increase shareValue of ibWeth by 2.5%
     // would need 36.5915567697161341463414634... ibWeth to redeem 37.506345688959 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     // mm state before
@@ -949,6 +950,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -979,6 +981,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 4 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 4 ether);
     // set price to weth from 1 to 0.8 ether USD
     // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
@@ -1016,6 +1019,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // make 1 ibWeth = 2 weth by inflating MM with 40 weth
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 40 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 40 ether);
 
     // ALICE borrow another 30 USDC = 60 USDC in debt

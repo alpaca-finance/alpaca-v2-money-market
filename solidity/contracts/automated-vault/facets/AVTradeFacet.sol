@@ -28,7 +28,7 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external nonReentrant {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
@@ -71,7 +71,7 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _shareAmountIn,
     uint256 _minTokenOut
   ) external nonReentrant {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
@@ -79,7 +79,7 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function getDebtValues(address _shareToken) external view returns (uint256, uint256) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
     return (
       avDs.vaultDebtValues[_shareToken][_config.stableToken],
@@ -94,7 +94,7 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
     _pendingManagementFee =

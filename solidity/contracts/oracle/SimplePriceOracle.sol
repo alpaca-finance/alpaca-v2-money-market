@@ -64,15 +64,15 @@ contract SimplePriceOracle is OwnableUpgradeable, IPriceOracle {
     if (_token1s.length != len || _prices.length != len) {
       revert SimplePriceOracle_InvalidLengthInput();
     }
-    for (uint256 _idx = 0; _idx < len; ) {
-      address token0 = _token0s[_idx];
-      address token1 = _token1s[_idx];
-      uint256 price = _prices[_idx];
+    for (uint256 _i; _i < len; ) {
+      address token0 = _token0s[_i];
+      address token1 = _token1s[_i];
+      uint256 price = _prices[_i];
       store[token0][token1] = PriceData({ price: uint192(price), lastUpdate: uint64(block.timestamp) });
       emit LogSetPrice(token0, token1, price);
 
       unchecked {
-        _idx++;
+        ++_i;
       }
     }
   }

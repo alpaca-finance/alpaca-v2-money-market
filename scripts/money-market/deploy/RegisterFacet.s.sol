@@ -91,11 +91,10 @@ contract RegisterFacet is Script {
   }
 
   function registerLendFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
     selectors[2] = LendFacet.getTotalToken.selector;
-    selectors[3] = LendFacet.openMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
 
@@ -151,16 +150,21 @@ contract RegisterFacet is Script {
   }
 
   function registerAdminFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
-    bytes4[] memory selectors = new bytes4[](9);
-    selectors[0] = AdminFacet.setTokenToIbTokens.selector;
-    selectors[1] = AdminFacet.tokenToIbTokens.selector;
-    selectors[2] = AdminFacet.ibTokenToTokens.selector;
-    selectors[3] = AdminFacet.setTokenConfigs.selector;
-    selectors[4] = AdminFacet.setNonCollatBorrower.selector;
-    selectors[5] = AdminFacet.setInterestModel.selector;
-    selectors[6] = AdminFacet.setOracle.selector;
-    selectors[7] = AdminFacet.setRepurchasersOk.selector;
-    selectors[8] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
+    bytes4[] memory selectors = new bytes4[](14);
+    selectors[0] = AdminFacet.openMarket.selector;
+    selectors[1] = AdminFacet.setTokenConfigs.selector;
+    selectors[2] = AdminFacet.setNonCollatBorrower.selector;
+    selectors[3] = AdminFacet.setInterestModel.selector;
+    selectors[4] = AdminFacet.setOracle.selector;
+    selectors[5] = AdminFacet.setRepurchasersOk.selector;
+    selectors[6] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[7] = AdminFacet.setLiquidatorsOk.selector;
+    selectors[8] = AdminFacet.setTreasury.selector;
+    selectors[9] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[10] = AdminFacet.setFees.selector;
+    selectors[11] = AdminFacet.withdrawReserve.selector;
+    selectors[12] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[13] = AdminFacet.setProtocolConfigs.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
 

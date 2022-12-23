@@ -7,8 +7,10 @@ interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
-  error AdminFacet_BadBps();
   error AdminFacet_ReserveTooLow();
+  error AdminFacet_InvalidArguments();
+  error AdminFacet_InvalidToken(address _token);
+  error AdminFacet_InvalidIbTokenImplementation();
 
   struct IbPair {
     address token;
@@ -22,7 +24,6 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
   }
 
   struct ProtocolConfigInput {
@@ -36,7 +37,7 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external;
+  function openMarket(address _token) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
@@ -50,7 +51,7 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
   function setTreasury(address newTreasury) external;
 

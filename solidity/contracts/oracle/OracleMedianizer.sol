@@ -140,11 +140,17 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
     }
     if (validSourceCount == 0) revert OracleMedianizer_NoValidSource();
     // Sort prices (asc)
-    for (uint256 i = 0; i < validSourceCount - 1; i++) {
-      for (uint256 j = 0; j < validSourceCount - i - 1; j++) {
-        if (prices[j] > prices[j + 1]) {
-          (prices[j], prices[j + 1]) = (prices[j + 1], prices[j]);
+    for (uint256 _i; _i < validSourceCount - 1; ) {
+      for (uint256 _j; _j < validSourceCount - _i - 1; ) {
+        if (prices[_j] > prices[_j + 1]) {
+          (prices[_j], prices[_j + 1]) = (prices[_j + 1], prices[_j]);
         }
+        unchecked {
+          ++_j;
+        }
+      }
+      unchecked {
+        ++_i;
       }
     }
     uint256 maxPriceDeviation = maxPriceDeviations[token0][token1];

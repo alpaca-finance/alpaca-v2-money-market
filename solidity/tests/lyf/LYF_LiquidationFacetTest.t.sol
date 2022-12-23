@@ -34,7 +34,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     address[] memory _liquidators = new address[](1);
     _liquidators[0] = address(liquidator);
-    adminFacet.setLiquidationCallersOk(_liquidators, true);
+    adminFacet.setLiquidatorsOk(_liquidators, true);
 
     usdc.mint(address(mockLiquidationStrategy), 1000 ether);
 
@@ -187,6 +187,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     // increase ibWeth price to 1.2 weth/ibWeth
     vm.prank(BOB);
     IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 28 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 28 ether);
 
     vm.startPrank(ALICE);

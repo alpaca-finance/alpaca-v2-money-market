@@ -15,6 +15,7 @@ import { LYFViewFacet } from "../../contracts/lyf/facets/LYFViewFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
+import { LYFInit } from "../../contracts/lyf/initializers/LYFInit.sol";
 
 library LYFDiamondDeployer {
   function deployPoolDiamond() internal returns (address) {
@@ -37,16 +38,11 @@ library LYFDiamondDeployer {
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
-    // Deploy DiamondInit
-    DiamondInit diamondInitializer = new DiamondInit();
+    LYFInit _initializer = new LYFInit();
     IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
 
     // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(diamondInitializer),
-      abi.encodeWithSelector(bytes4(keccak256("init()")))
-    );
+    diamondCutFacet.diamondCut(facetCuts, address(_initializer), abi.encodeWithSelector(bytes4(keccak256("init()"))));
   }
 
   function deployDiamondLoupeFacet(DiamondCutFacet diamondCutFacet)
@@ -96,7 +92,7 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](10);
+    bytes4[] memory selectors = new bytes4[](11);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.setTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
@@ -106,7 +102,8 @@ library LYFDiamondDeployer {
     selectors[6] = LYFAdminFacet.setDebtInterestModel.selector;
     selectors[7] = LYFAdminFacet.setReinvestorsOk.selector;
     selectors[8] = LYFAdminFacet.setLiquidationStratsOk.selector;
-    selectors[9] = LYFAdminFacet.setLiquidationCallersOk.selector;
+    selectors[9] = LYFAdminFacet.setLiquidatorsOk.selector;
+    selectors[10] = LYFAdminFacet.setTreasury.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
