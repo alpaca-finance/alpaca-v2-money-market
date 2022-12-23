@@ -91,6 +91,8 @@ abstract contract AV_BaseTest is BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
     adminFacet.setOracle(address(mockOracle));
+    // set oracle in MM
+    IAdminFacet(moneyMarketDiamond).setOracle(address(mockOracle));
 
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
