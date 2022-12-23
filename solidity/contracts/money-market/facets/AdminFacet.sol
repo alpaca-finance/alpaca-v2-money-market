@@ -34,7 +34,7 @@ contract AdminFacet is IAdminFacet {
     for (uint8 _i; _i < _ibPairLength; ) {
       LibMoneyMarket01.setIbPair(_ibPair[_i].token, _ibPair[_i].ibToken, moneyMarketDs);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -56,7 +56,7 @@ contract AdminFacet is IAdminFacet {
       LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -66,11 +66,13 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
   }
 
+  // todo: move this to view facet
   function tokenToIbTokens(address _token) external view returns (address) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.tokenToIbTokens[_token];
   }
 
+  // todo: move this to view facet
   function ibTokenToTokens(address _ibToken) external view returns (address) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.ibTokenToTokens[_ibToken];
@@ -102,7 +104,7 @@ contract AdminFacet is IAdminFacet {
     for (uint8 _i; _i < _length; ) {
       moneyMarketDs.repurchasersOk[list[_i]] = _isOk;
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -202,12 +204,12 @@ contract AdminFacet is IAdminFacet {
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
 
         unchecked {
-          _j++;
+          ++_j;
         }
       }
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
