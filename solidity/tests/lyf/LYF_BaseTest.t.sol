@@ -26,12 +26,14 @@ import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollater
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
 import { ILYFOwnershipFacet } from "../../contracts/lyf/interfaces/ILYFOwnershipFacet.sol";
+import { ILYFViewFacet } from "../../contracts/lyf/interfaces/ILYFViewFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IRouterLike } from "../../contracts/lyf/interfaces/IRouterLike.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 import { IPriceOracle } from "../../contracts/oracle/interfaces/IPriceOracle.sol";
 import { IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
+
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
@@ -65,6 +67,7 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFFarmFacet internal farmFacet;
   ILYFLiquidationFacet internal liquidationFacet;
   ILYFOwnershipFacet internal ownershipFacet;
+  ILYFViewFacet internal viewFacet;
 
   MockLPToken internal wethUsdcLPToken;
   uint256 internal wethUsdcPoolId;
@@ -88,6 +91,7 @@ abstract contract LYF_BaseTest is BaseTest {
     farmFacet = ILYFFarmFacet(lyfDiamond);
     liquidationFacet = ILYFLiquidationFacet(lyfDiamond);
     ownershipFacet = ILYFOwnershipFacet(lyfDiamond);
+    viewFacet = ILYFViewFacet(lyfDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, type(uint256).max);

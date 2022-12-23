@@ -35,7 +35,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 1);
     assertEq(collats[0].amount, _aliceCollateralAmount);
@@ -46,7 +46,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
     vm.stopPrank();
 
-    collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -57,7 +57,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -155,7 +155,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
     assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore + _addCollateralAmount);
-    assertEq(collateralFacet.collats(address(weth)), _addCollateralAmount);
+    assertEq(viewFacet.getTokenCollatAmount(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
@@ -166,7 +166,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore);
     // assertEq(_borrowingPower, 0);
-    assertEq(collateralFacet.collats(address(weth)), 0);
+    assertEq(viewFacet.getTokenCollatAmount(address(weth)), 0);
   }
 
   // Add Collat with ibToken

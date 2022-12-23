@@ -95,10 +95,10 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken),
       10 ether - _wethReceivedFromRepurchase // TODO: account for repurchase fee
     );
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 25 ether);
   }
 
@@ -147,12 +147,12 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken),
       4 ether - _btcReceivedFromRepurchase // TODO: account for repurchase fee
     );
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 0);
-    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 30 ether);
   }
 
@@ -210,11 +210,11 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken),
       15 ether - _ibWethReceivedFromRepurchase, // TODO: account for repurchase fee
       "alice remaining ibWeth collat"
     );
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 25 ether, "alice remaining usdc debt");
   }
 
@@ -363,9 +363,9 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)), 10 ether);
-    assertEq(farmFacet.getTotalBorrowingPower(ALICE, subAccount0), 63 ether);
-    assertEq(farmFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 33.333333333333333333 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)), 10 ether);
+    assertEq(viewFacet.getTotalBorrowingPower(ALICE, subAccount0), 63 ether);
+    assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 33.333333333333333333 ether);
 
     usdc.mint(liquidator, 10000 ether);
 
@@ -387,10 +387,10 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     // collateral is sold to repay
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)), 0);
 
     // debt reduce
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 20.1 ether);
 
     // treasury get fee
@@ -436,9 +436,9 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken), 4 ether);
-    assertEq(farmFacet.getTotalBorrowingPower(ALICE, subAccount0), 90 ether);
-    assertEq(farmFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 66.666666666666666666 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken), 4 ether);
+    assertEq(viewFacet.getTotalBorrowingPower(ALICE, subAccount0), 90 ether);
+    assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 66.666666666666666666 ether);
 
     usdc.mint(liquidator, 10000 ether);
 
@@ -460,12 +460,12 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     // collateral is sold to repay
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(ibBtc)), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(ibBtc)), 0);
     // leftover underlying token is add to collateral
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)), 3.495 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(btc)), 3.495 ether);
 
     // debt reduce
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 25.0 ether);
 
     // // treasury get fee
@@ -516,23 +516,23 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken),
       25 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
       15 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
       1 ether,
       "alice remaining usdc collat"
     );
-    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 26.04 ether, "alice remaining usdc debt");
 
     // check treasury
@@ -580,20 +580,20 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
 
     // check alice position
-    assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
       40 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
       25 ether,
       "alice remaining usdc collat"
     );
-    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 25.05 ether, "alice remaining usdc debt");
 
     // check treasury
@@ -642,23 +642,23 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken),
       45 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
       1 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
       1 ether,
       "alice remaining usdc collat"
     );
-    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 26.04 ether, "alice remaining weth debt");
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 26.04 ether, "alice remaining usdc debt");
 
     // check treasury
@@ -707,23 +707,23 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken),
       25 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
       12 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
       0,
       "alice remaining usdc collat"
     );
-    (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+    (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
-    (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 28.02 ether, "alice remaining usdc debt");
 
     // check treasury
@@ -770,20 +770,20 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
   //   liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
 
   //   // check alice position
-  //   assertEq(collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
+  //   assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
   //   assertEq(
-  //     collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(weth)),
+  //     viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
   //     30 ether,
   //     "alice remaining weth collat"
   //   );
   //   assertEq(
-  //     collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(usdc)),
+  //     viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
   //     30 ether,
   //     "alice remaining usdc collat"
   //   );
-  //   (, uint256 _aliceWethDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(weth), _lpToken);
+  //   (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
   //   assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
-  //   (, uint256 _aliceUsdcDebtValue) = farmFacet.getDebt(ALICE, subAccount0, address(usdc), _lpToken);
+  //   (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
   //   assertEq(_aliceUsdcDebtValue, 0, "alice remaining usdc debt");
   // }
 

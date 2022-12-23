@@ -122,7 +122,7 @@ contract RegisterFacet is Script {
     selectors[3] = BorrowFacet.getTotalUsedBorrowedPower.selector;
     selectors[4] = BorrowFacet.getDebt.selector;
     selectors[5] = BorrowFacet.repay.selector;
-    selectors[6] = BorrowFacet.getGlobalDebt.selector;
+    selectors[6] = BorrowFacet.getDebtForLpToken.selector;
     selectors[7] = BorrowFacet.debtLastAccureTime.selector;
     selectors[8] = BorrowFacet.getGlobalPendingInterest.selector;
     selectors[9] = BorrowFacet.accureInterest.selector;
