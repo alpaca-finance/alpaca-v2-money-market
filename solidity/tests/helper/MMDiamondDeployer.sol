@@ -150,12 +150,11 @@ library MMDiamondDeployer {
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
     LendFacet _lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
-    selectors[2] = LendFacet.openMarket.selector;
-    selectors[3] = LendFacet.depositETH.selector;
-    selectors[4] = LendFacet.withdrawETH.selector;
+    selectors[2] = LendFacet.depositETH.selector;
+    selectors[3] = LendFacet.withdrawETH.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_lendFacet),
@@ -228,7 +227,7 @@ library MMDiamondDeployer {
     AdminFacet _adminFacet = new AdminFacet();
 
     bytes4[] memory selectors = new bytes4[](14);
-    selectors[0] = AdminFacet.setIbPairs.selector;
+    selectors[0] = AdminFacet.openMarket.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
     selectors[2] = AdminFacet.setNonCollatBorrower.selector;
     selectors[3] = AdminFacet.setInterestModel.selector;

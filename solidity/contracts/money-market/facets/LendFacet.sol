@@ -26,7 +26,6 @@ contract LendFacet is ILendFacet {
 
   event LogDeposit(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
   event LogDepositETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdrawETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
 
@@ -34,35 +33,6 @@ contract LendFacet is ILendFacet {
     LibReentrancyGuard.lock();
     _;
     LibReentrancyGuard.unlock();
-  }
-
-  // open isolate token market, able to borrow only
-  function openMarket(address _token) external nonReentrant returns (address _newIbToken) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
-    if (_ibToken != address(0)) {
-      revert LendFacet_InvalidToken(_token);
-    }
-
-    _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
-    IInterestBearingToken(_newIbToken).initialize(_token, address(this));
-
-    // todo: tbd
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
-      tier: LibMoneyMarket01.AssetTier.ISOLATE,
-      collateralFactor: 0,
-      borrowingFactor: 8500,
-      maxCollateral: 0,
-      maxBorrow: 100e18,
-      to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
-    });
-
-    LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
-    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
-
-    emit LogOpenMarket(msg.sender, _token, _newIbToken);
   }
 
   function deposit(address _token, uint256 _amount) external nonReentrant {

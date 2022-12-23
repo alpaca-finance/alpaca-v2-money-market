@@ -91,11 +91,10 @@ contract RegisterFacet is Script {
   }
 
   function registerLendFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
     selectors[2] = LendFacet.getTotalToken.selector;
-    selectors[3] = LendFacet.openMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
 
@@ -152,7 +151,7 @@ contract RegisterFacet is Script {
 
   function registerAdminFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
     bytes4[] memory selectors = new bytes4[](14);
-    selectors[0] = AdminFacet.setIbPairs.selector;
+    selectors[0] = AdminFacet.openMarket.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
     selectors[2] = AdminFacet.setNonCollatBorrower.selector;
     selectors[3] = AdminFacet.setInterestModel.selector;

@@ -802,7 +802,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
-
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     // mm state before
@@ -886,6 +886,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // would need 36.5915567697161341463414634... ibWeth to redeem 37.506345688959 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     // mm state before
@@ -949,6 +950,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -979,6 +981,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 4 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 4 ether);
     // set price to weth from 1 to 0.8 ether USD
     // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
@@ -1016,6 +1019,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // make 1 ibWeth = 2 weth by inflating MM with 40 weth
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 40 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 40 ether);
 
     // ALICE borrow another 30 USDC = 60 USDC in debt
