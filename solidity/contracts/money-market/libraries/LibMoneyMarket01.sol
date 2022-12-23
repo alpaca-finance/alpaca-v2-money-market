@@ -423,7 +423,7 @@ library LibMoneyMarket01 {
     for (uint256 _i = 0; _i < _borrowedLength; ) {
       accrueInterest(_borrowed[_i].token, moneyMarketDs);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
