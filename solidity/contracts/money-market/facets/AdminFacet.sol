@@ -101,8 +101,9 @@ contract AdminFacet is IAdminFacet {
     uint256 maxBorrow
   ) internal pure {
     // factors should not greater than MAX_BPS
-    if (collateralFactor > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
-    if (borrowingFactor > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
+    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
+      revert AdminFacet_InvalidArguments();
+
     // note: to prevent user add collot or borrow too much
     if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
     if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
@@ -217,7 +218,7 @@ contract AdminFacet is IAdminFacet {
       _newRepurchaseRewardBps > LibMoneyMarket01.MAX_BPS ||
       _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
       _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS
-    ) revert AdminFacet_BadBps();
+    ) revert AdminFacet_InvalidArguments();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
