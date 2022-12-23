@@ -80,7 +80,6 @@ contract AdminFacet is IAdminFacet {
         borrowingFactor: _tokenConfigInput.borrowingFactor,
         maxCollateral: _tokenConfigInput.maxCollateral,
         maxBorrow: _tokenConfigInput.maxBorrow,
-        maxToleranceExpiredSecond: _tokenConfigInput.maxToleranceExpiredSecond,
         to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
       });
 

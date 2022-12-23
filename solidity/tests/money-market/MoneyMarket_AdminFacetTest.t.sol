@@ -33,8 +33,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -64,8 +63,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
     vm.expectRevert("LibDiamond: Must be contract owner");
     adminFacet.setTokenConfigs(_inputs);

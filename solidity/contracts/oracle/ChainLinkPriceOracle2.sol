@@ -56,10 +56,10 @@ contract ChainLinkPriceOracle2 is OwnableUpgradeable, IPriceOracle {
     if (token0s.length != token1s.length || token0s.length != allSources.length)
       revert ChainlinkPriceOracle_InconsistentLength();
 
-    for (uint256 idx = 0; idx < token0s.length; ) {
-      _setPriceFeed(token0s[idx], token1s[idx], allSources[idx]);
+    for (uint256 _i; _i < token0s.length; ) {
+      _setPriceFeed(token0s[_i], token1s[_i], allSources[_i]);
       unchecked {
-        idx++;
+        ++_i;
       }
     }
   }
@@ -79,10 +79,10 @@ contract ChainLinkPriceOracle2 is OwnableUpgradeable, IPriceOracle {
 
     // Effect
     priceFeedCount[token0][token1] = sources.length;
-    for (uint256 idx = 0; idx < sources.length; ) {
-      priceFeeds[token0][token1][idx] = sources[idx];
+    for (uint256 _i; _i < sources.length; ) {
+      priceFeeds[token0][token1][_i] = sources[_i];
       unchecked {
-        idx++;
+        ++_i;
       }
     }
 

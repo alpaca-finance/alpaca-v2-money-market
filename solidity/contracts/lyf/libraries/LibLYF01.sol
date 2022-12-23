@@ -45,12 +45,11 @@ library LibLYF01 {
 
   struct TokenConfig {
     LibLYF01.AssetTier tier;
+    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
-    uint8 to18ConversionFactor;
   }
 
   struct LPConfig {
@@ -86,6 +85,7 @@ library LibLYF01 {
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
+    uint256 maxPriceStale;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -144,10 +144,10 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _debtShares = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _debtShareLength = _debtShares.length;
 
-    for (uint256 _i = 0; _i < _debtShareLength; ) {
+    for (uint256 _i; _i < _debtShareLength; ) {
       accrueInterest(_debtShares[_i].index, lyfDs);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -161,7 +161,7 @@ library LibLYF01 {
 
     uint256 _collatsLength = _collats.length;
 
-    for (uint256 _i = 0; _i < _collatsLength; ) {
+    for (uint256 _i; _i < _collatsLength; ) {
       address _collatToken = _collats[_i].token;
       uint256 _collatAmount = _collats[_i].amount;
       uint256 _actualAmount = _collatAmount;
@@ -189,7 +189,7 @@ library LibLYF01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -202,7 +202,7 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
@@ -213,7 +213,7 @@ library LibLYF01 {
       );
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -227,7 +227,7 @@ library LibLYF01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
@@ -245,7 +245,7 @@ library LibLYF01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -260,8 +260,7 @@ library LibLYF01 {
     } else {
       (_price, _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibLYF01_PriceStale(_token);
+    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) revert LibLYF01_PriceStale(_token);
   }
 
   function getIbPriceUSD(
