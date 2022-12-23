@@ -46,7 +46,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // adding liquidity first time of weth-usdc
     // weth = 30 and usdc = 30, so lp = 30
     assertEq(_lpBalance, 30 ether);
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), 30 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 30 ether);
 
     // time pass and reward pending in MasterChef = 3
     cake.mint(address(this), 3 ether);
@@ -65,7 +65,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // total Reward = 3, swap to token0 = 1.5 and token1 = 1.5
     // lpReceive = 1.5, 30 + 1.5 = 31.5
     assertEq(_lpBalance, 31.5 ether);
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), 31.5 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 31.5 ether);
     assertEq(viewFacet.getPendingReward(address(wethUsdcLPToken)), 0);
   }
 
@@ -138,7 +138,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), _bobLpAmount);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), _bobLpAmount);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), _bobLpAmount);
 
     // time pass and reward pending in MasterChef = 20
@@ -163,7 +163,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // bob shares = 50
     // alice should get 30 * 50 / 60 = 25 shares
     // totalShare = 50 + 25 = 75
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), 90 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 90 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 75 ether);
     assertEq(viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(wethUsdcLPToken)), 50 ether);
     assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubaccount, address(wethUsdcLPToken)), 25 ether);
@@ -186,7 +186,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), _bobLpAmount);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), _bobLpAmount);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), _bobLpAmount);
 
     // ALICE deposit another 25 lp
@@ -199,7 +199,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // alice get = 25 * 50 / 50 = 25 shares
     // totalLPValues = 75
     // totalShares = 75
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), 75 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 75 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 75 ether);
 
     // time pass and reward pending in MasterChef = 20
@@ -217,7 +217,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // 10 shares = 10 * 85 / 75 = 11.333333333333333333 lpValue
     // totalLPValues = 75 + 10 - 11.333333333333333333 = 73.666666666666666667
     // totalShares = 65
-    assertEq(viewFacet.getLpTokenValue(address(wethUsdcLPToken)), 73.666666666666666667 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 73.666666666666666667 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 65 ether);
   }
 

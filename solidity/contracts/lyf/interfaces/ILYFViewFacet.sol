@@ -26,7 +26,7 @@ interface ILYFViewFacet {
 
   function getMMDebt(address _token) external view returns (uint256);
 
-  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256);
+  function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256);
 
   function getTokenDebtValue(address _token, address _lpToken) external view returns (uint256);
 
@@ -39,7 +39,7 @@ interface ILYFViewFacet {
     address _lpToken
   ) external view returns (uint256, uint256);
 
-  function getSubAccountDebtShares(address _account, uint256 _subAccountId)
+  function getAllSubAccountDebtShares(address _account, uint256 _subAccountId)
     external
     view
     returns (LibUIntDoublyLinkedList.Node[] memory);

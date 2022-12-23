@@ -60,7 +60,7 @@ contract LYFViewFacet is ILYFViewFacet {
     _debtAmount = IMoneyMarket(lyfDs.moneyMarket).getNonCollatAccountDebt(address(this), _token);
   }
 
-  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256) {
+  function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     return (lyfDs.debtShares[_debtShareId], lyfDs.debtValues[_debtShareId]);
@@ -92,7 +92,7 @@ contract LYFViewFacet is ILYFViewFacet {
     (_debtShare, _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
   }
 
-  function getSubAccountDebtShares(address _account, uint256 _subAccountId)
+  function getAllSubAccountDebtShares(address _account, uint256 _subAccountId)
     external
     view
     returns (LibUIntDoublyLinkedList.Node[] memory)

@@ -35,7 +35,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory collats = viewFacet.getSubAccountCollats(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 1);
     assertEq(collats[0].amount, _aliceCollateralAmount);
@@ -46,7 +46,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
     vm.stopPrank();
 
-    collats = viewFacet.getSubAccountCollats(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -57,7 +57,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    collats = viewFacet.getSubAccountCollats(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
