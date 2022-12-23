@@ -11,7 +11,7 @@ interface ILYFViewFacet {
 
   function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory);
 
-  function getLpTokenValue(address _lpToken) external view returns (uint256);
+  function getLpTokenAmount(address _lpToken) external view returns (uint256);
 
   function getLpTokenShare(address _lpToken) external view returns (uint256);
 

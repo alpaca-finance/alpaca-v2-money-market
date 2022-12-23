@@ -78,7 +78,7 @@ library LibLYF01 {
     mapping(uint256 => uint256) debtValues;
     mapping(uint256 => uint256) debtLastAccrueTime;
     mapping(address => uint256) lpShares;
-    mapping(address => uint256) lpValues;
+    mapping(address => uint256) lpAmounts;
     mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
     mapping(address => uint256) pendingRewards;
@@ -306,11 +306,11 @@ library LibLYF01 {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
 
-      _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpValues[_token]);
+      _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
 
       // update lp global state
       lyfDs.lpShares[_token] += _amountAdded;
-      lyfDs.lpValues[_token] += _amount;
+      lyfDs.lpAmounts[_token] += _amount;
     }
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
@@ -336,10 +336,10 @@ library LibLYF01 {
       if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
         reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
 
-        uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpValues[_token], ds.lpShares[_token]);
+        uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpAmounts[_token], ds.lpShares[_token]);
 
         ds.lpShares[_token] -= _amountRemoved;
-        ds.lpValues[_token] -= _lpValueRemoved;
+        ds.lpAmounts[_token] -= _lpValueRemoved;
 
         // _amountRemoved used to represent lpShare, we need to return lpValue so re-assign it here
         _amountRemoved = _lpValueRemoved;
@@ -466,7 +466,7 @@ library LibLYF01 {
     );
 
     // deposit lp back to masterChef
-    lyfDs.lpValues[_lpToken] += _lpReceived;
+    lyfDs.lpAmounts[_lpToken] += _lpReceived;
     depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
 
     // reset pending reward

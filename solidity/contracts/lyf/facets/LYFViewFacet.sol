@@ -23,9 +23,9 @@ contract LYFViewFacet is ILYFViewFacet {
     return lyfDs.lpConfigs[_lpToken];
   }
 
-  function getLpTokenValue(address _lpToken) external view returns (uint256) {
+  function getLpTokenAmount(address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpValues[_lpToken];
+    return lyfDs.lpAmounts[_lpToken];
   }
 
   function getLpTokenShare(address _lpToken) external view returns (uint256) {
