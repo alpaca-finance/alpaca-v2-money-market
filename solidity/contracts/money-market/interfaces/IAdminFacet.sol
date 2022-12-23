@@ -9,6 +9,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidAddress();
   error AdminFacet_BadBps();
   error AdminFacet_ReserveTooLow();
+  error AdminFacet_InvalidArguments();
 
   struct IbPair {
     address token;

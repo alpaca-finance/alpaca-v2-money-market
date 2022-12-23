@@ -21,7 +21,7 @@ contract AdminFacet is IAdminFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   event LogSetIbPair(address indexed _token, address indexed _ibToken);
-  event LogSetTokenConfig(address indexed _token);
+  event LogSetTokenConfig(address indexed _token, LibMoneyMarket01.TokenConfig _config);
   event LogSetNonCollatBorrower(address indexed _account, bool isOk);
   event LogSetInterestModel(address indexed _token, address _interestModel);
   event LogSetNonCollatInterestModel(address indexed _account, address indexed _token, address _interestModel);
@@ -63,29 +63,49 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigs) external onlyOwner {
+  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _inputLength = _tokenConfigs.length;
+    uint256 _inputLength = _tokenConfigInputs.length;
     for (uint8 _i; _i < _inputLength; ) {
+      TokenConfigInput calldata _tokenConfigInput = _tokenConfigInputs[_i];
+      _validateTokenConfig(
+        _tokenConfigInput.collateralFactor,
+        _tokenConfigInput.borrowingFactor,
+        _tokenConfigInput.maxCollateral,
+        _tokenConfigInput.maxBorrow
+      );
       LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
-        tier: _tokenConfigs[_i].tier,
-        collateralFactor: _tokenConfigs[_i].collateralFactor,
-        borrowingFactor: _tokenConfigs[_i].borrowingFactor,
-        maxCollateral: _tokenConfigs[_i].maxCollateral,
-        maxBorrow: _tokenConfigs[_i].maxBorrow,
-        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond,
-        to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigs[_i].token)
+        tier: _tokenConfigInput.tier,
+        collateralFactor: _tokenConfigInput.collateralFactor,
+        borrowingFactor: _tokenConfigInput.borrowingFactor,
+        maxCollateral: _tokenConfigInput.maxCollateral,
+        maxBorrow: _tokenConfigInput.maxBorrow,
+        maxToleranceExpiredSecond: _tokenConfigInput.maxToleranceExpiredSecond,
+        to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
       });
 
-      LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
+      LibMoneyMarket01.setTokenConfig(_tokenConfigInput.token, _tokenConfig, moneyMarketDs);
 
-      // todo: which argument to emit
-      emit LogSetTokenConfig(_tokenConfigs[_i].token);
+      emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
 
       unchecked {
         ++_i;
       }
     }
+  }
+
+  function _validateTokenConfig(
+    uint256 collateralFactor,
+    uint256 borrowingFactor,
+    uint256 maxCollateral,
+    uint256 maxBorrow
+  ) internal pure {
+    // factors should not greater than MAX_BPS
+    if (collateralFactor > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
+    if (borrowingFactor > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
+    // note: to prevent user add collot or borrow too much
+    if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
+    if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
   }
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external onlyOwner {
