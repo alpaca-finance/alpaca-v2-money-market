@@ -134,8 +134,8 @@ library MMDiamondDeployer {
     selectors[20] = ViewFacet.getNonCollatAccountDebt.selector;
     selectors[21] = ViewFacet.getNonCollatTokenDebt.selector;
     selectors[22] = ViewFacet.getNonCollatBorrowingPower.selector;
-    selectors[23] = ViewFacet.getTokenToIbTokens.selector;
-    selectors[24] = ViewFacet.getIbTokenToTokens.selector;
+    selectors[23] = ViewFacet.getIbTokenFromToken.selector;
+    selectors[24] = ViewFacet.getTokenFromIbToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),

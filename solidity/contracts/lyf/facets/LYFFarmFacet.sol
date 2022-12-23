@@ -379,7 +379,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _tokenAmountFromIbCollat = LibLYF01.removeIbCollateral(
       _subAccount,
       _token,
-      IMoneyMarket(lyfDs.moneyMarket).getTokenToIbTokens(_token),
+      IMoneyMarket(lyfDs.moneyMarket).getIbTokenFromToken(_token),
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );

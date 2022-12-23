@@ -6,9 +6,9 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface IViewFacet {
-  function getTokenToIbTokens(address _token) external view returns (address);
+  function getIbTokenFromToken(address _token) external view returns (address);
 
-  function getIbTokenToTokens(address _ibToken) external view returns (address);
+  function getTokenFromIbToken(address _ibToken) external view returns (address);
 
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
