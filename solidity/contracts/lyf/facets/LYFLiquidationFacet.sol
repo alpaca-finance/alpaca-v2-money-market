@@ -155,7 +155,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       paramsForStrategy: _paramsForStrategy
     });
 
-    address _collatUnderlyingToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
+    address _collatUnderlyingToken = IMoneyMarket(lyfDs.moneyMarket).getIbTokenToTokens(_collatToken);
     if (_collatUnderlyingToken != address(0)) {
       _ibLiquidationCall(_params, _collatUnderlyingToken, lyfDs);
     } else {
@@ -404,7 +404,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _rewardBps,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
-    address _actualToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
+    address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getIbTokenToTokens(_collatToken);
 
     uint256 _collatTokenPrice;
     // _collatToken is ibToken

@@ -66,16 +66,6 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
   }
 
-  function tokenToIbTokens(address _token) external view returns (address) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.tokenToIbTokens[_token];
-  }
-
-  function ibTokenToTokens(address _ibToken) external view returns (address) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.ibTokenToTokens[_ibToken];
-  }
-
   function setInterestModel(address _token, address _model) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
