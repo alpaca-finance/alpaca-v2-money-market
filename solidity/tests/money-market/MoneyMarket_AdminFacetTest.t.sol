@@ -18,7 +18,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
     _ibPair[0] = IAdminFacet.IbPair({ token: _depositToken, ibToken: _ibDepositToken });
 
-    adminFacet.setTokenToIbTokens(_ibPair);
+    adminFacet.setIbPairs(_ibPair);
 
     assertEq(viewFacet.getIbTokenFromToken(_depositToken), _ibDepositToken);
     assertEq(viewFacet.getTokenFromIbToken(_ibDepositToken), _depositToken);
@@ -33,8 +33,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -50,11 +49,11 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenNonAdminSetSomeConfig_ShouldRevert() external {
     vm.startPrank(ALICE);
 
-    // try to setTokenToIbTokens
+    // try to setIbPairs
     IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
     _ibPair[0] = IAdminFacet.IbPair({ token: address(9998), ibToken: address(9999) });
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setTokenToIbTokens(_ibPair);
+    adminFacet.setIbPairs(_ibPair);
 
     // try to setTokenConfigs
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
@@ -64,12 +63,96 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
-      maxBorrow: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxBorrow: 100e18
     });
     vm.expectRevert("LibDiamond: Must be contract owner");
     adminFacet.setTokenConfigs(_inputs);
 
     vm.stopPrank();
+  }
+
+  function testRevert_FailedSanityCheck() external {
+    // address 0
+    vm.expectRevert();
+    adminFacet.setInterestModel(address(weth), address(0));
+
+    vm.expectRevert();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(0));
+
+    vm.expectRevert();
+    adminFacet.setOracle(address(0));
+
+    // wrong contract
+    vm.expectRevert();
+    adminFacet.setInterestModel(address(weth), address(btc));
+
+    vm.expectRevert();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(btc));
+
+    vm.expectRevert();
+    adminFacet.setOracle(address(btc));
+  }
+
+  function testRevert_WhenSetTokenConfigWithInvalidCollateralFactor() external {
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(9998),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 12000,
+      borrowingFactor: 5000,
+      maxCollateral: 1000e18,
+      maxBorrow: 100e18
+    });
+
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
+    adminFacet.setTokenConfigs(_inputs);
+  }
+
+  function testRevert_WhenSetTokenConfigWithInvalidBorrowingFactor() external {
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(9998),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 6000,
+      borrowingFactor: 12000,
+      maxCollateral: 1000e18,
+      maxBorrow: 100e18
+    });
+
+    // borrowing factor is more than MAX_BPS
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
+    adminFacet.setTokenConfigs(_inputs);
+  }
+
+  function testRevert_WhenSetTokenConfigWithInvalidMaxCollateral() external {
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(9998),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 12000,
+      borrowingFactor: 5000,
+      maxCollateral: 1e41,
+      maxBorrow: 100e18
+    });
+
+    // maxCollateral is more than MAX_BPS
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
+    adminFacet.setTokenConfigs(_inputs);
+  }
+
+  function testRevert_WhenSetTokenConfigWithInvalidMaxBorrow() external {
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    _inputs[0] = IAdminFacet.TokenConfigInput({
+      token: address(9998),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 12000,
+      borrowingFactor: 5000,
+      maxCollateral: 1000e18,
+      maxBorrow: 1e41
+    });
+
+    // maxBorrow is more than MAX_BPS
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
+    adminFacet.setTokenConfigs(_inputs);
   }
 }

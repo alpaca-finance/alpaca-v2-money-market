@@ -34,14 +34,13 @@ contract LYFAdminFacet is ILYFAdminFacet {
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
         maxBorrow: _tokenConfigs[_i].maxBorrow,
-        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond,
         to18ConversionFactor: LibLYF01.to18ConversionFactor(_tokenConfigs[_i].token)
       });
 
       LibLYF01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, lyfDs);
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -54,19 +53,19 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setLPConfigs(LPConfigInput[] calldata _configs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    uint256 len = _configs.length;
-    for (uint256 i = 0; i < len; ) {
-      lyfDs.lpConfigs[_configs[i].lpToken] = LibLYF01.LPConfig({
-        strategy: _configs[i].strategy,
-        masterChef: _configs[i].masterChef,
-        router: _configs[i].router,
-        rewardToken: _configs[i].rewardToken,
-        reinvestPath: _configs[i].reinvestPath,
-        reinvestThreshold: _configs[i].reinvestThreshold,
-        poolId: _configs[i].poolId
+    uint256 _len = _configs.length;
+    for (uint256 _i; _i < _len; ) {
+      lyfDs.lpConfigs[_configs[_i].lpToken] = LibLYF01.LPConfig({
+        strategy: _configs[_i].strategy,
+        masterChef: _configs[_i].masterChef,
+        router: _configs[_i].router,
+        rewardToken: _configs[_i].rewardToken,
+        reinvestPath: _configs[_i].reinvestPath,
+        reinvestThreshold: _configs[_i].reinvestThreshold,
+        poolId: _configs[_i].poolId
       });
       unchecked {
-        i++;
+        ++_i;
       }
     }
   }
@@ -99,7 +98,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     for (uint8 _i; _i < _length; ) {
       lyfDs.reinvestorsOk[list[_i]] = _isOk;
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -110,18 +109,18 @@ contract LYFAdminFacet is ILYFAdminFacet {
     for (uint256 _i; _i < _length; ) {
       lyfDs.liquidationStratOk[list[_i]] = _isOk;
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external onlyOwner {
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
     for (uint256 _i; _i < _length; ) {
       lyfDs.liquidationCallersOk[list[_i]] = _isOk;
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }

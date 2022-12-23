@@ -175,11 +175,11 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   }
 
   function setWhitelistedCallers(address[] calldata callers, bool ok) external onlyOwner {
-    uint256 len = uint256(callers.length);
-    for (uint256 i = 0; i < len; ) {
-      whitelistedCallers[callers[i]] = ok;
+    uint256 _len = uint256(callers.length);
+    for (uint256 _i; _i < _len; ) {
+      whitelistedCallers[callers[_i]] = ok;
       unchecked {
-        i++;
+        ++_i;
       }
     }
   }

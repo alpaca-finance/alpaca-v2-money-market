@@ -254,8 +254,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
-      maxCollateral: 100 ether,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100 ether
     });
     adminFacet.setTokenConfigs(_inputs);
 
@@ -274,8 +273,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
-      maxCollateral: 100 ether,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100 ether
     });
     adminFacet.setTokenConfigs(_inputs);
 
