@@ -22,6 +22,7 @@ import { MoneyMarketInit } from "../../contracts/money-market/initializers/Money
 
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
@@ -46,6 +47,7 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
 
+  IViewFacet internal viewFacet;
   IAdminFacet internal adminFacet;
   ILendFacet internal lendFacet;
   ICollateralFacet internal collateralFacet;
@@ -59,6 +61,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   function setUp() public virtual {
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
 
+    viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
     collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);

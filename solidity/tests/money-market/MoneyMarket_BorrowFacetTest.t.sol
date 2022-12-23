@@ -38,10 +38,10 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
 
     uint256 _debtAmount;
-    (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount0, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
     assertEq(_debtAmount, _borrowAmount);
     // sanity check on subaccount1
-    (, _debtAmount) = borrowFacet.getDebt(BOB, subAccount1, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount1, address(weth));
 
     assertEq(_debtAmount, 0);
   }
@@ -65,7 +65,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getOverCollatSubAccountDebtShares(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -76,7 +76,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(usdc), _aliceBorrowAmount2);
     vm.stopPrank();
 
-    aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
+    aliceDebtShares = viewFacet.getOverCollatSubAccountDebtShares(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
@@ -86,7 +86,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
+    aliceDebtShares = viewFacet.getOverCollatSubAccountDebtShares(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
@@ -103,7 +103,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = borrowFacet.getDebtShares(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getOverCollatSubAccountDebtShares(ALICE, subAccount0);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -189,7 +189,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollatAmount);
 
-    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000/ 10000 = 4.5 ether USD
@@ -205,7 +205,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(usdc), 2.025 ether);
     vm.stopPrank();
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 4.5 ether);
   }
 
@@ -225,7 +225,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), _ibTokenCollatAmount);
     vm.stopPrank();
 
-    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
@@ -244,7 +244,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 8.1 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 9 ether);
   }
 
@@ -269,7 +269,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(weth), 50 ether);
     ibWeth.burn(BOB, 50 ether);
 
-    uint256 _borrowingPowerUSDValue = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
@@ -288,7 +288,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), 12.15 ether);
 
-    (uint256 _borrowedUSDValue, ) = borrowFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, 13.5 ether);
   }
 

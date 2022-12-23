@@ -38,15 +38,9 @@ interface IAdminFacet {
 
   function setTokenToIbTokens(IbPair[] memory _ibPair) external;
 
-  function tokenToIbTokens(address _token) external view returns (address);
-
-  function ibTokenToTokens(address _ibToken) external view returns (address);
-
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external;
-
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
   function setInterestModel(address _token, address model) external;
 
@@ -72,8 +66,6 @@ interface IAdminFacet {
     uint256 _newRepurchaseFeeBps,
     uint256 _newLiquidationFeeBps
   ) external;
-
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
   function withdrawReserve(
     address _token,

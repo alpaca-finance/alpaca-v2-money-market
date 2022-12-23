@@ -276,8 +276,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     vm.stopPrank();
 
-    uint256 debtAmount = viewFacet.getMMDebt(address(weth));
-    uint256 mmDebtAmount = IMoneyMarket(moneyMarketDiamond).nonCollatGetDebt(address(lyfDiamond), address(weth));
+    uint256 debtAmount = farmFacet.getMMDebt(address(weth));
+    uint256 mmDebtAmount = IMoneyMarket(moneyMarketDiamond).getNonCollatAccountDebt(address(lyfDiamond), address(weth));
 
     assertEq(debtAmount, mmDebtAmount);
   }
