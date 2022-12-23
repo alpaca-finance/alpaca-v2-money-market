@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](23);
+    bytes4[] memory selectors = new bytes4[](25);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.getTokenConfig.selector;
     selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
@@ -134,6 +134,8 @@ library MMDiamondDeployer {
     selectors[20] = ViewFacet.getNonCollatAccountDebt.selector;
     selectors[21] = ViewFacet.getNonCollatTokenDebt.selector;
     selectors[22] = ViewFacet.getNonCollatBorrowingPower.selector;
+    selectors[23] = ViewFacet.getIbTokenFromToken.selector;
+    selectors[24] = ViewFacet.getTokenFromIbToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -225,23 +227,21 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](16);
+    bytes4[] memory selectors = new bytes4[](14);
     selectors[0] = AdminFacet.setIbPairs.selector;
-    selectors[1] = AdminFacet.tokenToIbTokens.selector;
-    selectors[2] = AdminFacet.ibTokenToTokens.selector;
-    selectors[3] = AdminFacet.setTokenConfigs.selector;
-    selectors[4] = AdminFacet.setNonCollatBorrower.selector;
-    selectors[5] = AdminFacet.setInterestModel.selector;
-    selectors[6] = AdminFacet.setOracle.selector;
-    selectors[7] = AdminFacet.setRepurchasersOk.selector;
-    selectors[8] = AdminFacet.setNonCollatInterestModel.selector;
-    selectors[9] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[10] = AdminFacet.setLiquidatorsOk.selector;
-    selectors[11] = AdminFacet.setTreasury.selector;
-    selectors[12] = AdminFacet.setFees.selector;
-    selectors[13] = AdminFacet.withdrawReserve.selector;
-    selectors[14] = AdminFacet.setProtocolConfigs.selector;
-    selectors[15] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[1] = AdminFacet.setTokenConfigs.selector;
+    selectors[2] = AdminFacet.setNonCollatBorrower.selector;
+    selectors[3] = AdminFacet.setInterestModel.selector;
+    selectors[4] = AdminFacet.setOracle.selector;
+    selectors[5] = AdminFacet.setRepurchasersOk.selector;
+    selectors[6] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[7] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[8] = AdminFacet.setLiquidationCallersOk.selector;
+    selectors[9] = AdminFacet.setTreasury.selector;
+    selectors[10] = AdminFacet.setFees.selector;
+    selectors[11] = AdminFacet.withdrawReserve.selector;
+    selectors[12] = AdminFacet.setProtocolConfigs.selector;
+    selectors[13] = AdminFacet.setIbTokenImplementation.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

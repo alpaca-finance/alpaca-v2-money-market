@@ -39,10 +39,6 @@ interface IAdminFacet {
 
   function setIbPairs(IbPair[] memory _ibPair) external;
 
-  function tokenToIbTokens(address _token) external view returns (address);
-
-  function ibTokenToTokens(address _ibToken) external view returns (address);
-
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external;

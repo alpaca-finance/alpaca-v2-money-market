@@ -114,18 +114,6 @@ contract AdminFacet is IAdminFacet {
     emit LogSetNonCollatBorrower(_borrower, _isOk);
   }
 
-  // todo: move this to view facet
-  function tokenToIbTokens(address _token) external view returns (address) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.tokenToIbTokens[_token];
-  }
-
-  // todo: move this to view facet
-  function ibTokenToTokens(address _ibToken) external view returns (address) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.ibTokenToTokens[_ibToken];
-  }
-
   function setInterestModel(address _token, address _model) external onlyOwner {
     // Sanity check
     IInterestRateModel(_model).getInterestRate(0, 0);
