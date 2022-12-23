@@ -20,8 +20,8 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
 
     adminFacet.setTokenToIbTokens(_ibPair);
 
-    assertEq(adminFacet.tokenToIbTokens(_depositToken), _ibDepositToken);
-    assertEq(adminFacet.ibTokenToTokens(_ibDepositToken), _depositToken);
+    assertEq(viewFacet.getIbTokenFromToken(_depositToken), _ibDepositToken);
+    assertEq(viewFacet.getTokenFromIbToken(_ibDepositToken), _depositToken);
   }
 
   function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {

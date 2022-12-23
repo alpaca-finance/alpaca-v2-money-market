@@ -167,7 +167,7 @@ library LibLYF01 {
       uint256 _actualAmount = _collatAmount;
 
       // will return address(0) if _collatToken is not ibToken
-      address _actualToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
+      address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
       if (_actualToken == address(0)) {
         _actualToken = _collatToken;
       } else {
