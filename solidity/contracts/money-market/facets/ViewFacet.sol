@@ -214,4 +214,10 @@ contract ViewFacet {
 
     return LibMoneyMarket01.getNonCollatTokenDebt(_token, moneyMarketDs);
   }
+
+  function getLiquidationParams() external view returns (uint16, uint16) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    return (moneyMarketDs.maxLiquidateBps, moneyMarketDs.liquidationThresholdBps);
+  }
 }
