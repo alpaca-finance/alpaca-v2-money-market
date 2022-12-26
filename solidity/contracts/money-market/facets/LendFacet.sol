@@ -49,7 +49,7 @@ contract LendFacet is ILendFacet {
 
     moneyMarketDs.reserves[_token] += _amount;
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
+    IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
@@ -90,7 +90,7 @@ contract LendFacet is ILendFacet {
 
     moneyMarketDs.reserves[_nativeToken] += msg.value;
     IWNative(_nativeToken).deposit{ value: msg.value }();
-    IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
+    IInterestBearingToken(_ibToken).onDeposit(msg.sender, msg.value, _shareToMint);
 
     emit LogDepositETH(msg.sender, _nativeToken, _ibToken, msg.value, _shareToMint);
   }
@@ -112,7 +112,7 @@ contract LendFacet is ILendFacet {
       IInterestBearingToken(_ibWNativeToken).totalSupply()
     );
 
-    IInterestBearingToken(_ibWNativeToken).burn(msg.sender, _shareAmount);
+    IInterestBearingToken(_ibWNativeToken).onWithdraw(msg.sender, msg.sender, _shareValue, _shareAmount);
     _safeUnwrap(_token, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
 
     emit LogWithdrawETH(msg.sender, _token, _ibWNativeToken, _shareAmount, _shareValue);

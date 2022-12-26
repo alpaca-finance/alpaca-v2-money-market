@@ -188,7 +188,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     vm.prank(BOB);
     IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 28 ether);
     vm.prank(moneyMarketDiamond);
-    ibWeth.burn(BOB, 28 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, 28 ether);
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);

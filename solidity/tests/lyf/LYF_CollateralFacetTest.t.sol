@@ -85,7 +85,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
     // mint ibToken to ALICE
     vm.prank(moneyMarketDiamond);
-    ibWeth.mint(ALICE, 10 ether);
+    ibWeth.onDeposit(ALICE, 0, 10 ether);
 
     vm.startPrank(ALICE);
 
@@ -173,7 +173,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
   function testCorrectness_WhenAddLYFCollateralViaIbToken_ibTokenShouldTransferFromUserToLYF() external {
     // mint ibToken to ALICE
     vm.prank(moneyMarketDiamond);
-    ibWeth.mint(ALICE, 10 ether);
+    ibWeth.onDeposit(ALICE, 0, 10 ether);
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
 
     // Add collat by ibToken

@@ -6,9 +6,18 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 interface IInterestBearingToken is IERC20 {
   function initialize(address underlying_, address owner_) external;
 
-  function mint(address to, uint256 amount) external;
+  function onDeposit(
+    address receiver,
+    uint256 assets,
+    uint256 shares
+  ) external;
 
-  function burn(address from, uint256 amount) external;
+  function onWithdraw(
+    address owner,
+    address receiver,
+    uint256 assets,
+    uint256 shares
+  ) external;
 
   function decimals() external view returns (uint256);
 }

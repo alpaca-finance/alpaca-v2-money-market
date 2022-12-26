@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
 // bases
@@ -29,12 +29,33 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
     _transferOwnership(owner_);
   }
 
-  function mint(address to, uint256 amount) external onlyOwner {
-    _mint(to, amount);
+  /**
+   * @dev Hook for LendFacet to call when deposit.
+   *
+   * It emits event that is expected by ERC4626 when deposit / mint.
+   */
+  function onDeposit(
+    address receiver,
+    uint256 assets,
+    uint256 shares
+  ) external onlyOwner {
+    _mint(receiver, shares);
+    emit Deposit(msg.sender, receiver, assets, shares);
   }
 
-  function burn(address from, uint256 amount) external onlyOwner {
-    _burn(from, amount);
+  /**
+   * @dev Hook for LendFacet to call when withdraw.
+   *
+   * It emits event that is expected by ERC4626 when withdraw / redeem.
+   */
+  function onWithdraw(
+    address owner,
+    address receiver,
+    uint256 assets,
+    uint256 shares
+  ) external onlyOwner {
+    _burn(owner, shares);
+    emit Withdraw(msg.sender, receiver, owner, assets, shares);
   }
 
   /// -----------------------------------------------------------------------
@@ -42,44 +63,36 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   /// -----------------------------------------------------------------------
 
   /**
-   * @dev This method should be only called by LendFacet.deposit.
+   * @dev Intentionally left unimplemented since we don't allow users to deposit via ibToken.
    *
-   * actual deposit logic including token transfer is implemented in LendFacet,
-   * which calls this method on deposit.
+   * Actual deposit logic including token transfer is implemented in LendFacet.
    */
-  function deposit(uint256 assets, address receiver) external override onlyOwner returns (uint256 shares) {
-    shares = convertToShares(assets);
-    emit Deposit(msg.sender, receiver, assets, shares);
-  }
+  function deposit(uint256 assets, address receiver) external override returns (uint256 shares) {}
 
   /**
-   * @notice intentionally left unimplemented since LendFacet doesn't have ERC4626 mint-like functionality
+   * @dev Intentionally left unimplemented since we didn't implement ERC4626 mint-like functionality
    */
-  function mint(uint256 shares, address receiver) external override onlyOwner returns (uint256 assets) {}
+  function mint(uint256 shares, address receiver) external override returns (uint256 assets) {}
 
   /**
-   * @notice intentionally left unimplemented since LendFacet doesn't have ERC4626 withdraw-like functionality
+   * @dev Intentionally left unimplemented since we didn't implement ERC4626 withdraw-like functionality
    */
   function withdraw(
     uint256 assets,
     address receiver,
     address owner
-  ) external override onlyOwner returns (uint256 shares) {}
+  ) external override returns (uint256 shares) {}
 
   /**
-   * @dev This method should be only called by LendFacet.withdraw.
+   * @dev Intentionally left unimplemented since we don't allow users to withdraw via ibToken.
    *
-   * actual withdrawal logic including token transfer is implemented in LendFacet,
-   * which calls this method on withdraw.
+   * Actual withdrawal logic including token transfer is implemented in LendFacet.
    */
   function redeem(
     uint256 shares,
     address receiver,
     address owner
-  ) external override returns (uint256 assets) {
-    assets = convertToAssets(shares);
-    emit Withdraw(msg.sender, receiver, owner, assets, shares);
-  }
+  ) external override returns (uint256 assets) {}
 
   /// -----------------------------------------------------------------------
   /// ERC4626 accounting logic
@@ -106,12 +119,12 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   /**
-   * @notice intentionally left unimplemented since LendFacet doesn't have ERC4626 mint-like functionality.
+   * @dev Intentionally left unimplemented since we didn't implement ERC4626 mint-like functionality.
    */
   function previewMint(uint256 shares) external view override returns (uint256 assets) {}
 
   /**
-   * @notice intentionally left unimplemented since LendFacet doesn't have ERC4626 withdraw-like functionality.
+   * @dev Intentionally left unimplemented since we didn't implement ERC4626 withdraw-like functionality.
    */
   function previewWithdraw(uint256 assets) external view override returns (uint256 shares) {}
 
@@ -128,17 +141,17 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   /**
-   * @notice intentionally left unimplemented since LendFacet doesn't have ERC4626 mint-like functionality.
+   * @dev Intentionally left unimplemented since we didn't implement ERC4626 mint-like functionality.
    */
   function maxMint(address) external pure override returns (uint256 maxShares) {}
 
   /**
-   * @notice intentionally left unimplemented since LendFacet doesn't have ERC4626 withdraw-like functionality.
+   * @dev Intentionally left unimplemented since we didn't implement ERC4626 withdraw-like functionality.
    */
   function maxWithdraw(address owner) external view override returns (uint256 maxAssets) {}
 
   /**
-   * @notice intentionally left unimplemented since we don't know how many subAccount an address have,
+   * @dev Intentionally left unimplemented since we don't know how many subAccount an address have,
    * so we can't find how much an address has borrowed.
    */
   function maxRedeem(address owner) external view override returns (uint256 maxShares) {}
