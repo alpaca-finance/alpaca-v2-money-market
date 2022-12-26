@@ -45,12 +45,11 @@ library LibLYF01 {
 
   struct TokenConfig {
     LibLYF01.AssetTier tier;
+    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
-    uint8 to18ConversionFactor;
   }
 
   struct LPConfig {
@@ -67,7 +66,7 @@ library LibLYF01 {
   struct LYFDiamondStorage {
     address moneyMarket;
     address treasury;
-    IAlpacaV2Oracle oracle;
+    address oracle;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -79,13 +78,14 @@ library LibLYF01 {
     mapping(uint256 => uint256) debtValues;
     mapping(uint256 => uint256) debtLastAccrueTime;
     mapping(address => uint256) lpShares;
-    mapping(address => uint256) lpValues;
+    mapping(address => uint256) lpAmounts;
     mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
     mapping(address => uint256) pendingRewards;
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
+    uint256 maxPriceStale;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -118,7 +118,8 @@ library LibLYF01 {
       address _interestModel = address(lyfDs.interestModels[_debtShareId]);
       if (_interestModel != address(0)) {
         address _token = lyfDs.debtShareTokens[_debtShareId];
-        (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getGlobalDebt(_token);
+        // TODO: fix
+        (uint256 _debtValue, ) = IMoneyMarket(lyfDs.moneyMarket).getOverCollatTokenDebt(_token);
         uint256 _floating = IMoneyMarket(lyfDs.moneyMarket).getFloatingBalance(_token);
         uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
 
@@ -143,10 +144,10 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _debtShares = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _debtShareLength = _debtShares.length;
 
-    for (uint256 _i = 0; _i < _debtShareLength; ) {
+    for (uint256 _i; _i < _debtShareLength; ) {
       accrueInterest(_debtShares[_i].index, lyfDs);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -160,13 +161,13 @@ library LibLYF01 {
 
     uint256 _collatsLength = _collats.length;
 
-    for (uint256 _i = 0; _i < _collatsLength; ) {
+    for (uint256 _i; _i < _collatsLength; ) {
       address _collatToken = _collats[_i].token;
       uint256 _collatAmount = _collats[_i].amount;
       uint256 _actualAmount = _collatAmount;
 
       // will return address(0) if _collatToken is not ibToken
-      address _actualToken = IMoneyMarket(lyfDs.moneyMarket).ibTokenToTokens(_collatToken);
+      address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
       if (_actualToken == address(0)) {
         _actualToken = _collatToken;
       } else {
@@ -188,7 +189,7 @@ library LibLYF01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -201,7 +202,7 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
@@ -212,7 +213,7 @@ library LibLYF01 {
       );
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -226,7 +227,7 @@ library LibLYF01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
@@ -244,7 +245,7 @@ library LibLYF01 {
       );
 
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
@@ -255,12 +256,11 @@ library LibLYF01 {
     returns (uint256 _price, uint256 _lastUpdated)
   {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = lyfDs.oracle.lpToDollar(1e18, _token);
+      (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = lyfDs.oracle.getTokenPrice(_token);
+      (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - lyfDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibLYF01_PriceStale(_token);
+    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) revert LibLYF01_PriceStale(_token);
   }
 
   function getIbPriceUSD(
@@ -306,11 +306,11 @@ library LibLYF01 {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
 
-      _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpValues[_token]);
+      _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
 
       // update lp global state
       lyfDs.lpShares[_token] += _amountAdded;
-      lyfDs.lpValues[_token] += _amount;
+      lyfDs.lpAmounts[_token] += _amount;
     }
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
@@ -336,10 +336,10 @@ library LibLYF01 {
       if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
         reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
 
-        uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpValues[_token], ds.lpShares[_token]);
+        uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpAmounts[_token], ds.lpShares[_token]);
 
         ds.lpShares[_token] -= _amountRemoved;
-        ds.lpValues[_token] -= _lpValueRemoved;
+        ds.lpAmounts[_token] -= _lpValueRemoved;
 
         // _amountRemoved used to represent lpShare, we need to return lpValue so re-assign it here
         _amountRemoved = _lpValueRemoved;
@@ -466,7 +466,7 @@ library LibLYF01 {
     );
 
     // deposit lp back to masterChef
-    lyfDs.lpValues[_lpToken] += _lpReceived;
+    lyfDs.lpAmounts[_lpToken] += _lpReceived;
     depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
 
     // reset pending reward
@@ -474,5 +474,15 @@ library LibLYF01 {
 
     // TODO: assign param properly
     emit LogReinvest(msg.sender, 0, 0);
+  }
+
+  function getDebt(
+    address _subAccount,
+    uint256 _debtShareId,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
+    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    // Note: precision loss 1 wei when convert share back to value
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
   }
 }

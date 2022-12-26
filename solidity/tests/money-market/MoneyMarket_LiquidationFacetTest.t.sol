@@ -56,7 +56,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address[] memory _liquidationCallers = new address[](2);
     _liquidationCallers[0] = BOB;
     _liquidationCallers[1] = address(this);
-    adminFacet.setLiquidationCallersOk(_liquidationCallers, true);
+    adminFacet.setLiquidatorsOk(_liquidationCallers, true);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);
@@ -95,19 +95,19 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be = 30
     // collat debt share should be = 30
     CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -138,13 +138,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 18.9375 ether); // get 18.9375 weth
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     // check state
     // note: before repurchase state should be like these
@@ -186,13 +186,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be | usdc: 30 | btc: 3 |
     // collat debt share should be | usdc: 30 | btc: 3 |
     CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
@@ -200,7 +200,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // 0.00016921837224 is interest rate per day of (30% condition slope)
     // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
     // then total debt value of btc should increase by 0.00016921837224 * 3 = 0.00050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -235,13 +235,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 25.25 ether); // get 25.25 weth
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     // check state
     // note: before repurchase state should be like these
@@ -262,13 +262,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
-      collat: collateralFacet.collats(address(btc)),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)),
-      debtShare: borrowFacet.debtShares(address(btc)),
-      debtValue: borrowFacet.debtValues(address(btc)),
+      collat: viewFacet.getTotalCollat(address(btc)),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, address(btc)),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(address(btc)),
+      debtValue: viewFacet.getOverCollatDebtValue(address(btc)),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, address(btc));
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, address(btc));
     assertEq(_btcState.collat, 0 ether);
     assertEq(_btcState.subAccountCollat, 0 ether);
     assertEq(_btcState.debtValue, 3.00050765511672 ether);
@@ -296,13 +296,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be | usdc: 30 | btc: 5 |
     // collat debt share should be | usdc: 30 | btc: 5 |
     CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
@@ -316,7 +316,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // 0.0002820306204288 is interest rate per day of (50% condition slope)
     // then total debt value of usdc should increase by 0.00016921837224 * 30 = 0.0050765511672
     // then total debt value of btc should increase by 0.0002820306204288 * 5 = 0.001410153102144
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -351,13 +351,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 38.2602232373070759 ether); // get 38.2602232373070759 weth
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     // check state
     // note: before repurchase state should be like these
@@ -378,13 +378,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
-      collat: collateralFacet.collats(address(btc)),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, address(btc)),
-      debtShare: borrowFacet.debtShares(address(btc)),
-      debtValue: borrowFacet.debtValues(address(btc)),
+      collat: viewFacet.getTotalCollat(address(btc)),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, address(btc)),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(address(btc)),
+      debtValue: viewFacet.getOverCollatDebtValue(address(btc)),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, address(btc));
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, address(btc));
     assertEq(_btcState.collat, 0 ether);
     assertEq(_btcState.subAccountCollat, 0 ether);
     assertEq(_btcState.debtValue, 5.001410153102144 ether);
@@ -426,13 +426,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be = 30
     // collat debt share should be = 30
     CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
@@ -529,7 +529,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // LiquidationFacet need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -548,13 +548,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     );
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, 21.0625 ether);
     assertEq(_stateAfter.subAccountCollat, 21.0625 ether);
@@ -591,7 +591,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _collatToken = address(weth);
     uint256 _repayAmount = 40 ether;
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // LiquidationFacet need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -612,13 +612,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     );
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, 2.11859085415141 ether); // 40 - 37.88140914584859 = 2.11859085415141 weth remaining
     assertEq(_stateAfter.subAccountCollat, 2.11859085415141 ether); // same as collat
@@ -662,7 +662,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     mockOracle.setTokenPrice(address(btc), 1e17);
     mockOracle.setTokenPrice(address(weth), 1 ether);
@@ -679,13 +679,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     );
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, 0);
     assertEq(_stateAfter.subAccountCollat, 0);
@@ -702,7 +702,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // LiquidationFacet need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -721,13 +721,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     );
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     // strategy doesn't return collat
     assertEq(_stateAfter.collat, 0);
@@ -796,13 +796,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // increase shareValue of ibWeth by 2.5%
     // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
-
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     // mm state before
@@ -824,13 +824,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     );
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, 21.524390243902439025 ether); // 21.5243902439024 repeating
     assertEq(_stateAfter.subAccountCollat, 21.524390243902439025 ether); // 21.5243902439024 repeating
@@ -880,12 +880,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     address _collatToken = address(ibWeth);
     uint256 _repayAmount = 40 ether;
 
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days);
 
     // increase shareValue of ibWeth by 2.5%
     // would need 36.5915567697161341463414634... ibWeth to redeem 37.506345688959 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     // mm state before
@@ -909,13 +910,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     );
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
     assertEq(_stateAfter.subAccountCollat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
@@ -949,6 +950,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
 
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 1 ether);
 
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -979,6 +981,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 4 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 4 ether);
     // set price to weth from 1 to 0.8 ether USD
     // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
@@ -1016,6 +1019,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // make 1 ibWeth = 2 weth by inflating MM with 40 weth
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 40 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 40 ether);
 
     // ALICE borrow another 30 USDC = 60 USDC in debt
@@ -1029,13 +1033,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be = 60
     // collat debt share should be = 60
     CacheState memory _stateBefore = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateBefore.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     // add time 1 day
@@ -1071,13 +1075,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     assertEq(_bobIbWethBalanceAfter - _bobIbWethBalanceBefore, 9.46875 ether); // get 9.46875 weth
 
     CacheState memory _stateAfter = CacheState({
-      collat: collateralFacet.collats(_collatToken),
-      subAccountCollat: collateralFacet.subAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: borrowFacet.debtShares(_debtToken),
-      debtValue: borrowFacet.debtValues(_debtToken),
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = borrowFacet.getDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
     // check state
     // note: before repurchase state should be like these

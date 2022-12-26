@@ -24,40 +24,7 @@ interface IBorrowFacet {
     uint256 _repayAmount
   ) external;
 
-  function getDebtShares(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory);
-
-  function getTotalBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue);
-
-  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token
-  ) external view returns (uint256, uint256);
-
-  function getGlobalDebt(address _token) external view returns (uint256, uint256);
-
-  function debtLastAccrueTime(address _token) external view returns (uint256);
-
-  function pendingInterest(address _token) external view returns (uint256);
-
   function accrueInterest(address _token) external;
-
-  function debtValues(address _token) external view returns (uint256);
-
-  function debtShares(address _token) external view returns (uint256);
-
-  function getFloatingBalance(address _token) external view returns (uint256);
 
   // Errors
   error BorrowFacet_InvalidToken(address _token);

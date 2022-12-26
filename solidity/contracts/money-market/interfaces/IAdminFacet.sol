@@ -7,8 +7,10 @@ interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
-  error AdminFacet_BadBps();
   error AdminFacet_ReserveTooLow();
+  error AdminFacet_InvalidArguments();
+  error AdminFacet_InvalidToken(address _token);
+  error AdminFacet_InvalidIbTokenImplementation();
 
   struct IbPair {
     address token;
@@ -22,7 +24,6 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
   }
 
   struct ProtocolConfigInput {
@@ -36,17 +37,11 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external;
-
-  function tokenToIbTokens(address _token) external view returns (address);
-
-  function ibTokenToTokens(address _ibToken) external view returns (address);
+  function openMarket(address _token) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external;
-
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
   function setInterestModel(address _token, address model) external;
 
@@ -56,7 +51,7 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
   function setTreasury(address newTreasury) external;
 
@@ -72,8 +67,6 @@ interface IAdminFacet {
     uint256 _newRepurchaseFeeBps,
     uint256 _newLiquidationFeeBps
   ) external;
-
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
   function withdrawReserve(
     address _token,

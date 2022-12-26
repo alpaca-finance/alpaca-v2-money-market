@@ -30,11 +30,17 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
     }
+
+    // accrue interest for borrowed debt token, to mint share correctly
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
+    // accrue all debt tokens under account
+    // total used borrowing power is calculated from all debt token of the account
+    LibMoneyMarket01.accrueNonCollatBorrowedPositionsOf(msg.sender, moneyMarketDs);
 
     _validate(msg.sender, _token, _amount, moneyMarketDs);
 
@@ -75,7 +81,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    uint256 _oldDebtValue = _getDebt(_account, _token, moneyMarketDs);
+    uint256 _oldDebtValue = LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);
 
     uint256 _debtToRemove = _oldDebtValue > _repayAmount ? _repayAmount : _oldDebtValue;
 
@@ -86,34 +92,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     ERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
-  }
-
-  function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    LibDoublyLinkedList.List storage debtShares = moneyMarketDs.nonCollatAccountDebtValues[_account];
-
-    return debtShares.getAll();
-  }
-
-  function nonCollatGetDebt(address _account, address _token) external view returns (uint256 _debtAmount) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    _debtAmount = _getDebt(_account, _token, moneyMarketDs);
-  }
-
-  function _getDebt(
-    address _account,
-    address _token,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _debtAmount) {
-    _debtAmount = moneyMarketDs.nonCollatAccountDebtValues[_account].getAmount(_token);
-  }
-
-  function nonCollatGetTokenDebt(address _token) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    return LibMoneyMarket01.getNonCollatTokenDebt(_token, moneyMarketDs);
   }
 
   function _removeDebt(
@@ -153,7 +131,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     // check credit
-    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
+    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
 
     _checkCapacity(_token, _amount, moneyMarketDs);
 
@@ -205,25 +183,5 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     ) {
       revert NonCollatBorrowFacet_ExceedAccountBorrowLimit();
     }
-  }
-
-  function nonCollatGetTotalUsedBorrowingPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
-  }
-
-  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.protocolConfigs[_account].borrowLimitUSDValue;
-  }
-
-  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256 _pendingInterest) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    _pendingInterest = LibMoneyMarket01.getNonCollatInterestRate(_account, _token, moneyMarketDs);
   }
 }

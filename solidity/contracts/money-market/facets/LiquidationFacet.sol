@@ -154,7 +154,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    if (!moneyMarketDs.liquidationStratOk[_liquidationStrat] || !moneyMarketDs.liquidationCallersOk[msg.sender]) {
+    if (!moneyMarketDs.liquidationStratOk[_liquidationStrat] || !moneyMarketDs.liquidatorsOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
 
@@ -323,8 +323,8 @@ contract LiquidationFacet is ILiquidationFacet {
     // for ib debtValue is in ib shares not in underlying
     uint256 _debtValue = LibShareUtil.shareToValue(
       _debtShare,
-      moneyMarketDs.debtValues[_repayToken],
-      moneyMarketDs.debtShares[_repayToken]
+      moneyMarketDs.overCollatDebtValues[_repayToken],
+      moneyMarketDs.overCollatDebtShares[_repayToken]
     );
 
     _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
@@ -339,12 +339,12 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
     uint256 _repayShare = LibShareUtil.valueToShare(
       _repayAmount,
-      moneyMarketDs.debtShares[_repayToken],
-      moneyMarketDs.debtValues[_repayToken]
+      moneyMarketDs.overCollatDebtShares[_repayToken],
+      moneyMarketDs.overCollatDebtValues[_repayToken]
     );
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _debtShare - _repayShare);
-    moneyMarketDs.debtShares[_repayToken] -= _repayShare;
-    moneyMarketDs.debtValues[_repayToken] -= _repayAmount;
+    moneyMarketDs.overCollatDebtShares[_repayToken] -= _repayShare;
+    moneyMarketDs.overCollatDebtValues[_repayToken] -= _repayAmount;
   }
 
   function _reduceCollateral(

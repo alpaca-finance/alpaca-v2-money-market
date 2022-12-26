@@ -11,6 +11,7 @@ import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFace
 
 // initializers
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
+import { AVInit } from "../../contracts/automated-vault/initializers/AVInit.sol";
 
 library AVDiamondDeployer {
   function deployPoolDiamond() internal returns (address _avDiamondAddr) {
@@ -32,15 +33,11 @@ library AVDiamondDeployer {
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
     // Deploy DiamondInit
-    DiamondInit diamondInitializer = new DiamondInit();
+    AVInit _initializer = new AVInit();
     IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
 
     // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(diamondInitializer),
-      abi.encodeWithSelector(bytes4(keccak256("init()")))
-    );
+    diamondCutFacet.diamondCut(facetCuts, address(_initializer), abi.encodeWithSelector(bytes4(keccak256("init()"))));
   }
 
   function deployDiamondLoupeFacet(DiamondCutFacet diamondCutFacet)

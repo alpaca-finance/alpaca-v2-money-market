@@ -4,10 +4,13 @@ pragma solidity 0.8.17;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
+// libraries
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
@@ -20,6 +23,29 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
+  event LogSetTokenConfig(address indexed _token, LibMoneyMarket01.TokenConfig _config);
+  event LogSetNonCollatBorrower(address indexed _account, bool isOk);
+  event LogSetInterestModel(address indexed _token, address _interestModel);
+  event LogSetNonCollatInterestModel(address indexed _account, address indexed _token, address _interestModel);
+  event LogSetOracle(address _oracle);
+  event LogSetRepurchaserOk(address indexed _account, bool isOk);
+  event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
+  event LogSetLiquidatorOk(address indexed _account, bool isOk);
+  event LogSetTreasury(address indexed _treasury);
+  event LogSetFees(
+    uint256 lendingFeeBps,
+    uint256 repurchaseRewardBps,
+    uint256 repurchaseFeeBps,
+    uint256 liquidationFeeBps
+  );
+  event LogSetIbTokenImplementation(address indexed _newImplementation);
+  event LogSetProtocolConfig(
+    address indexed _account,
+    address indexed _token,
+    uint256 maxTokenBorrow,
+    uint256 borrowLimitUSDValue
+  );
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
@@ -27,64 +53,100 @@ contract AdminFacet is IAdminFacet {
     _;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
 
-    uint256 _ibPairLength = _ibPair.length;
-    for (uint8 _i; _i < _ibPairLength; ) {
-      LibMoneyMarket01.setIbPair(_ibPair[_i].token, _ibPair[_i].ibToken, moneyMarketDs);
+  // open isolate token market, able to borrow only
+  function openMarket(address _token) external onlyOwner nonReentrant returns (address _newIbToken) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (moneyMarketDs.ibTokenImplementation == address(0)) revert AdminFacet_InvalidIbTokenImplementation();
+
+    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+
+    if (_ibToken != address(0)) {
+      revert AdminFacet_InvalidToken(_token);
+    }
+
+    _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
+    IInterestBearingToken(_newIbToken).initialize(_token, address(this));
+
+    // todo: tbd
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+      tier: LibMoneyMarket01.AssetTier.ISOLATE,
+      collateralFactor: 0,
+      borrowingFactor: 8500,
+      maxCollateral: 0,
+      maxBorrow: 100e18,
+      to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
+    });
+
+    LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
+    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
+
+    emit LogOpenMarket(msg.sender, _token, _newIbToken);
+  }
+
+  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _inputLength = _tokenConfigInputs.length;
+    for (uint8 _i; _i < _inputLength; ) {
+      TokenConfigInput calldata _tokenConfigInput = _tokenConfigInputs[_i];
+      _validateTokenConfig(
+        _tokenConfigInput.collateralFactor,
+        _tokenConfigInput.borrowingFactor,
+        _tokenConfigInput.maxCollateral,
+        _tokenConfigInput.maxBorrow
+      );
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+        tier: _tokenConfigInput.tier,
+        collateralFactor: _tokenConfigInput.collateralFactor,
+        borrowingFactor: _tokenConfigInput.borrowingFactor,
+        maxCollateral: _tokenConfigInput.maxCollateral,
+        maxBorrow: _tokenConfigInput.maxBorrow,
+        to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
+      });
+
+      LibMoneyMarket01.setTokenConfig(_tokenConfigInput.token, _tokenConfig, moneyMarketDs);
+
+      emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
+
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _inputLength = _tokenConfigs.length;
-    for (uint8 _i; _i < _inputLength; ) {
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
-        tier: _tokenConfigs[_i].tier,
-        collateralFactor: _tokenConfigs[_i].collateralFactor,
-        borrowingFactor: _tokenConfigs[_i].borrowingFactor,
-        maxCollateral: _tokenConfigs[_i].maxCollateral,
-        maxBorrow: _tokenConfigs[_i].maxBorrow,
-        maxToleranceExpiredSecond: _tokenConfigs[_i].maxToleranceExpiredSecond,
-        to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigs[_i].token)
-      });
+  function _validateTokenConfig(
+    uint256 collateralFactor,
+    uint256 borrowingFactor,
+    uint256 maxCollateral,
+    uint256 maxBorrow
+  ) internal pure {
+    // factors should not greater than MAX_BPS
+    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
+      revert AdminFacet_InvalidArguments();
 
-      LibMoneyMarket01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, moneyMarketDs);
-
-      unchecked {
-        _i++;
-      }
-    }
+    // prevent user add collat or borrow too much
+    if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
+    if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
   }
 
   function setNonCollatBorrower(address _borrower, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
-  }
-
-  function tokenToIbTokens(address _token) external view returns (address) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.tokenToIbTokens[_token];
-  }
-
-  function ibTokenToTokens(address _ibToken) external view returns (address) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.ibTokenToTokens[_ibToken];
-  }
-
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    return moneyMarketDs.tokenConfigs[_token];
+    emit LogSetNonCollatBorrower(_borrower, _isOk);
   }
 
   function setInterestModel(address _token, address _model) external onlyOwner {
+    // Sanity check
+    IInterestRateModel(_model).getInterestRate(0, 0);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.interestModels[_token] = IInterestRateModel(_model);
+    emit LogSetInterestModel(_token, _model);
   }
 
   function setNonCollatInterestModel(
@@ -92,56 +154,63 @@ contract AdminFacet is IAdminFacet {
     address _token,
     address _model
   ) external onlyOwner {
+    // Sanity check
+    IInterestRateModel(_model).getInterestRate(0, 0);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     bytes32 _nonCollatId = LibMoneyMarket01.getNonCollatId(_account, _token);
     moneyMarketDs.nonCollatInterestModels[_nonCollatId] = IInterestRateModel(_model);
+    emit LogSetNonCollatInterestModel(_account, _token, _model);
   }
 
   function setOracle(address _oracle) external onlyOwner {
+    // Sanity check
+    IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IAlpacaV2Oracle(_oracle);
+    emit LogSetOracle(_oracle);
   }
 
-  function setRepurchasersOk(address[] memory list, bool _isOk) external onlyOwner {
+  function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = list.length;
+    uint256 _length = _repurchasers.length;
     for (uint8 _i; _i < _length; ) {
-      moneyMarketDs.repurchasersOk[list[_i]] = _isOk;
+      moneyMarketDs.repurchasersOk[_repurchasers[_i]] = _isOk;
+      emit LogSetRepurchaserOk(_repurchasers[_i], _isOk);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setLiquidationStratsOk(address[] calldata list, bool _isOk) external onlyOwner {
+  function setLiquidationStratsOk(address[] calldata _strats, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = list.length;
+    uint256 _length = _strats.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.liquidationStratOk[list[_i]] = _isOk;
+      moneyMarketDs.liquidationStratOk[_strats[_i]] = _isOk;
+      emit LogSetLiquidationStratOk(_strats[_i], _isOk);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external onlyOwner {
+  function setLiquidatorsOk(address[] calldata _liquidator, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = list.length;
+    uint256 _length = _liquidator.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.liquidationCallersOk[list[_i]] = _isOk;
+      moneyMarketDs.liquidatorsOk[_liquidator[_i]] = _isOk;
+      emit LogSetLiquidatorOk(_liquidator[_i], _isOk);
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }
 
-  function setTreasury(address newTreasury) external onlyOwner {
+  function setTreasury(address _treasury) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.treasury = newTreasury;
-  }
-
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve) {
-    return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
+    moneyMarketDs.treasury = _treasury;
+    emit LogSetTreasury(_treasury);
   }
 
   function withdrawReserve(
@@ -174,7 +243,7 @@ contract AdminFacet is IAdminFacet {
       _newRepurchaseRewardBps > LibMoneyMarket01.MAX_BPS ||
       _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
       _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS
-    ) revert AdminFacet_BadBps();
+    ) revert AdminFacet_InvalidArguments();
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -182,6 +251,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+
+    emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
@@ -189,6 +260,7 @@ contract AdminFacet is IAdminFacet {
     // sanity check
     IInterestBearingToken(_newImplementation).decimals();
     moneyMarketDs.ibTokenImplementation = _newImplementation;
+    emit LogSetIbTokenImplementation(_newImplementation);
   }
 
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
@@ -211,13 +283,18 @@ contract AdminFacet is IAdminFacet {
         TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
 
+        emit LogSetProtocolConfig(
+          _protocolConfigInput.account,
+          _tokenBorrowLimit.token,
+          _tokenBorrowLimit.maxTokenBorrow,
+          _protocolConfigInput.borrowLimitUSDValue
+        );
         unchecked {
-          _j++;
+          ++_j;
         }
       }
-
       unchecked {
-        _i++;
+        ++_i;
       }
     }
   }

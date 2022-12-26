@@ -7,28 +7,27 @@ import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
-contract MoneyMarket_Lend_OpenMarketTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
 
   function testCorrectness_WhenUserOpenNewMarket_ShouldOpenOncePerToken() external {
-    vm.startPrank(ALICE);
     // should pass when register new token
-    address _ibToken = lendFacet.openMarket(address(opm));
+    address _ibToken = adminFacet.openMarket(address(opm));
     assertEq(IERC20(_ibToken).name(), "Interest Bearing OPM");
     assertEq(IERC20(_ibToken).symbol(), "ibOPM");
     assertEq(IERC20(_ibToken).decimals(), 9);
 
-    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, address(opm)));
-    lendFacet.openMarket(address(opm));
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidToken.selector, address(opm)));
+    adminFacet.openMarket(address(opm));
 
     // able to deposit
+    vm.prank(ALICE);
     lendFacet.deposit(address(opm), 5 ether);
     assertEq(IERC20(_ibToken).balanceOf(ALICE), 5 ether);
-    vm.stopPrank();
   }
 }

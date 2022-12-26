@@ -43,7 +43,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
 
-    uint256 _bobDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(BOB, address(weth));
+    uint256 _bobDebtAmount = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
     assertEq(_bobDebtAmount, _borrowAmount);
@@ -56,13 +56,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
 
-    uint256 _aliceDebtAmount = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _aliceDebtAmount = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
     assertEq(_aliceDebtAmount, _borrowAmount);
 
     // total debt should equal sum of alice's and bob's debt
-    uint256 _totalDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _totalDebtAmount = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_totalDebtAmount, _borrowAmount * 2);
     assertEq(_bobDebtAmount, _aliceDebtAmount);
@@ -86,7 +86,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -97,7 +97,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(usdc), _aliceBorrowAmount2);
     vm.stopPrank();
 
-    aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
@@ -107,13 +107,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 2);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount2);
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount * 2, "updated weth");
 
-    uint256 _totalwethDebtAmount = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _totalwethDebtAmount = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_totalwethDebtAmount, _aliceBorrowAmount * 2);
   }
@@ -126,7 +126,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory aliceDebtShares = nonCollatBorrowFacet.nonCollatGetDebtValues(ALICE);
+    LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getNonCollatAccountDebtValues(ALICE);
 
     assertEq(aliceDebtShares.length, 1);
     assertEq(aliceDebtShares[0].amount, _aliceBorrowAmount);
@@ -185,11 +185,11 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     vm.stopPrank();
 
-    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _aliceRemainingDebt = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     assertEq(_aliceRemainingDebt, _aliceBorrowAmount - _aliceRepayAmount);
 
-    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _tokenDebt = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_tokenDebt, (_aliceBorrowAmount + _bobBorrowAmount) - _aliceRepayAmount);
   }
@@ -206,13 +206,13 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     uint256 _aliceWethBalanceAfter = weth.balanceOf(ALICE);
     vm.stopPrank();
 
-    uint256 _aliceRemainingDebt = nonCollatBorrowFacet.nonCollatGetDebt(ALICE, address(weth));
+    uint256 _aliceRemainingDebt = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     assertEq(_aliceRemainingDebt, 0);
 
     assertEq(_aliceWethBalanceBefore - _aliceWethBalanceAfter, _aliceBorrowAmount);
 
-    uint256 _tokenDebt = nonCollatBorrowFacet.nonCollatGetTokenDebt(address(weth));
+    uint256 _tokenDebt = viewFacet.getNonCollatTokenDebt(address(weth));
 
     assertEq(_tokenDebt, 0);
   }
@@ -254,8 +254,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
-      maxCollateral: 100 ether,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100 ether
     });
     adminFacet.setTokenConfigs(_inputs);
 
@@ -274,8 +273,7 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
-      maxCollateral: 100 ether,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100 ether
     });
     adminFacet.setTokenConfigs(_inputs);
 

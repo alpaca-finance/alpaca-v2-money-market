@@ -5,6 +5,7 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // core
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
@@ -22,13 +23,13 @@ import { MoneyMarketInit } from "../../contracts/money-market/initializers/Money
 
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { IOwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -41,11 +42,10 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // helper
 import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
-import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
-
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
 
+  IViewFacet internal viewFacet;
   IAdminFacet internal adminFacet;
   ILendFacet internal lendFacet;
   ICollateralFacet internal collateralFacet;
@@ -59,6 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   function setUp() public virtual {
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
 
+    viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
     collateralFacet = ICollateralFacet(moneyMarketDiamond);
     adminFacet = IAdminFacet(moneyMarketDiamond);
@@ -66,6 +67,20 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
     ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
+
+    // set ib token implementation
+    // warning: this one should set before open market
+    adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+
+    address _ibWeth = adminFacet.openMarket(address(weth));
+    address _ibUsdc = adminFacet.openMarket(address(usdc));
+    address _ibBtc = adminFacet.openMarket(address(btc));
+    address _ibNativeToken = adminFacet.openMarket(address(nativeToken));
+
+    ibWeth = InterestBearingToken(_ibWeth);
+    ibUsdc = InterestBearingToken(_ibUsdc);
+    ibBtc = InterestBearingToken(_ibBtc);
+    ibWNative = InterestBearingToken(_ibNativeToken);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -83,13 +98,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](4);
-    _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
-    _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
-    _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
-    _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
-    adminFacet.setTokenToIbTokens(_ibPair);
-
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](6);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
@@ -98,8 +106,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -108,8 +115,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -118,8 +124,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[3] = IAdminFacet.TokenConfigInput({
@@ -128,8 +133,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[4] = IAdminFacet.TokenConfigInput({
@@ -138,8 +142,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[5] = IAdminFacet.TokenConfigInput({
@@ -148,8 +151,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -174,9 +176,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setProtocolConfigs(_protocolConfigInputs);
 
     // open isolate token market
-    adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
-    address _ibIsolateToken = lendFacet.openMarket(address(isolateToken));
-    ibIsolateToken = MockERC20(_ibIsolateToken);
+    address _ibIsolateToken = adminFacet.openMarket(address(isolateToken));
+    ibIsolateToken = InterestBearingToken(_ibIsolateToken);
 
     //set oracle
 
