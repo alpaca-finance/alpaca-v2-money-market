@@ -336,19 +336,19 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 40 ether);
 
     // alice just have usdc debt 30.0050765511672 (with interest)
-    // when repay amount (40) > _debtValue + fee (30.0050765511672 + 0.303081581324921212) = 30.308158132492121212
-    // then actual repay amount should be 30.308158132492121212
-    // repay value = 30.308158132492121212 * 1 = 30.308158132492121212 USD
-    // reward amount = 30.308158132492121212 * 1.01 = 30.611239713817042424 USD
-    // converted weth amount = 30.611239713817042424 / 0.8 = 38.26404964227130303
-    // fee amount = 30.308158132492121212 * 0.01 = 0.303081581324921212
-    uint256 _expectedFee = 0.303081581324921212 ether;
+    // when repay amount (40) > _debtValue + fee (30.0050765511672 + 0.300050765511672) = 30.305127316678872
+    // then actual repay amount should be 30.305127316678872
+    // repay value = 30.305127316678872 * 1 = 30.305127316678872 USD
+    // reward amount = 30.305127316678872 * 1.01 = 30.60817858984566072 USD
+    // converted weth amount = 30.60817858984566072 / 0.8 = 38.2602232373070759
+    // fee amount = 30.305127316678872 * 0.01 = 0.300050765511672
+    uint256 _expectedFee = 0.300050765511672 ether;
     uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceAfter = weth.balanceOf(BOB);
 
     // check bob balance
-    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 30.308158132492121212 ether); // pay 30.308158132492121212
-    assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 38.26404964227130303 ether); // get 38.26404964227130303 weth
+    assertEq(_bobUsdcBalanceBefore - _bobUsdcBalanceAfter, 30.305127316678872 ether); // pay 30.305127316678872
+    assertEq(_bobWethBalanceAfter - _bobWethBalanceBefore, 38.2602232373070759 ether); // get 38.2602232373070759 weth
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollat(_collatToken),
@@ -365,13 +365,13 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // collat debt value should be | usdc: 30.0050765511672 | btc: 5.001410153102144 | after accure interest
     // collat debt share should be | usdc: 30 | btc: 5 |
     // then after repurchase
-    // collat amount should be = 100 - (_collatAmountOut) = 100 - 38.26404964227130303 = 61.73595035772869697
+    // collat amount should be = 100 - (_collatAmountOut) = 100 - 38.2602232373070759 = 61.7397767626929241
     // actual repaid debt amount = (_repayAmount - fee) = 30.308158132492121212 - 0.303081581324921212 = 30.0050765511672
     // collat debt value should be = 30.0050765511672 - (actual repaid debt amount) = 30.0050765511672 - 30.0050765511672 = 0
     // _repayShare = actual repaid debt amount * totalDebtShare / totalDebtValue = 30.0050765511672 * 30 / 30.0050765511672 = 30
     // collat debt share should be = 30 - (_repayShare) = 30 - 30 = 0
-    assertEq(_stateAfter.collat, 61.73595035772869697 ether);
-    assertEq(_stateAfter.subAccountCollat, 61.73595035772869697 ether);
+    assertEq(_stateAfter.collat, 61.7397767626929241 ether);
+    assertEq(_stateAfter.subAccountCollat, 61.7397767626929241 ether);
     assertEq(_stateAfter.debtValue, 0);
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
@@ -451,7 +451,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // reward = 0.01%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
     vm.startPrank(BOB);
-    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayDebtValueTooHigh.selector));
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     // bob try repurchase with 20 usdc but borrowed value is 30.0050765511672 / 2 = 15.0025382755836,
     // so bob can't pay more than 15.0025382755836 followed by condition (!> 50% of borrowed value)
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 20 ether);
@@ -587,6 +587,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0
      */
 
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
     uint256 _repayAmount = 40 ether;
@@ -699,6 +701,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
     external
   {
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
@@ -776,6 +780,29 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       address(usdc),
       address(weth),
       1 ether,
+      abi.encode()
+    );
+  }
+
+  function testRevert_WhenLiquidateMoreThanThreshold() external {
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+    uint256 _repayAmount = 30 ether;
+
+    // LiquidationFacet need these to function
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+
+    // alice has 40 weth collat, 30 usdc debt
+    // liquidate 30 usdc debt should fail because liquidatedBorrowingPower > maxLiquidateBps * totalUsedBorrowingPower
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      _repayAmount,
       abi.encode()
     );
   }
@@ -868,6 +895,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt value = 0 usdc
      *    - remaining debt share = 0 shares
      */
+
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
 
     // add ib as collat
     vm.startPrank(ALICE);
@@ -1000,6 +1029,34 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       abi.encode()
     );
   }
+
+  function testRevert_WhenIbLiquidateMoreThanThreshold() external {
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    vm.stopPrank();
+
+    address _debtToken = address(usdc);
+    address _collatToken = address(ibWeth);
+    uint256 _repayAmount = 30 ether;
+
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      _repayAmount,
+      abi.encode()
+    );
+  }
+
+  // ib repurchase tests
 
   function testCorrectness_WhenRepurchaseDebtAndTakeIbTokenAsCollateral_ShouldWork() external {
     // criteria

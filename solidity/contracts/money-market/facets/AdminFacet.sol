@@ -298,4 +298,12 @@ contract AdminFacet is IAdminFacet {
       }
     }
   }
+
+  function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold > LibMoneyMarket01.MAX_BPS)
+      revert AdminFacet_InvalidArguments();
+    moneyMarketDs.maxLiquidateBps = _newMaxLiquidateBps;
+    moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
+  }
 }

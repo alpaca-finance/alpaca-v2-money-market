@@ -77,4 +77,6 @@ interface IAdminFacet {
   function setIbTokenImplementation(address _newImplementation) external;
 
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
+
+  function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external;
 }

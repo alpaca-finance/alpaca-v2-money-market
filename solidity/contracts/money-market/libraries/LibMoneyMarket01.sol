@@ -100,6 +100,9 @@ library LibMoneyMarket01 {
     mapping(address => uint256) reserves;
     // ibToken implementation
     address ibTokenImplementation;
+    // liquidation factor
+    uint16 maxLiquidateBps;
+    uint16 liquidationThresholdBps;
     uint256 maxPriceStale;
   }
 
