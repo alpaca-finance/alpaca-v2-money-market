@@ -41,7 +41,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 usedBorrowingPower;
     uint256 repayAmountWithFee;
     uint256 repurchaseFeeToProtocol;
-    uint256 repayAmountAfterFee;
+    uint256 repayAmountWihtoutFee;
     uint256 repayTokenPrice;
   }
 
@@ -72,18 +72,18 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // calculate how much can be repurchased and fee
     {
-      (, uint256 _debtValue) = LibMoneyMarket01.getOverCollatDebt(vars.subAccount, _repayToken, moneyMarketDs);
-      uint256 _maxAmountRepurchaseable = (_debtValue * (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) /
-        LibMoneyMarket01.MAX_BPS;
+      (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(vars.subAccount, _repayToken, moneyMarketDs);
+      uint256 _maxAmountRepurchaseable = (_currentDebtAmount *
+        (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) / LibMoneyMarket01.MAX_BPS;
 
       vars.repayAmountWithFee = LibFullMath.min(_desiredRepayAmount, _maxAmountRepurchaseable);
 
-      vars.repayAmountAfterFee = _desiredRepayAmount > _maxAmountRepurchaseable
-        ? (vars.repayAmountWithFee * _debtValue) / _maxAmountRepurchaseable
+      vars.repayAmountWihtoutFee = _desiredRepayAmount > _maxAmountRepurchaseable
+        ? (vars.repayAmountWithFee * _currentDebtAmount) / _maxAmountRepurchaseable
         : (_desiredRepayAmount * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps)) /
           LibMoneyMarket01.MAX_BPS;
 
-      vars.repurchaseFeeToProtocol = vars.repayAmountWithFee - vars.repayAmountAfterFee;
+      vars.repurchaseFeeToProtocol = vars.repayAmountWithFee - vars.repayAmountWihtoutFee;
     }
 
     (vars.repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
@@ -91,13 +91,12 @@ contract LiquidationFacet is ILiquidationFacet {
     // revert if repay > x% of totalUsedBorrowingPower
     {
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
-        vars.repayAmountAfterFee,
+        vars.repayAmountWihtoutFee,
         vars.repayTokenPrice,
         moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor
       );
-      if (
-        _repaidBorrowingPower > (moneyMarketDs.liquidationFactor * vars.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) revert LiquidationFacet_RepayAmountExceedThreshold();
+      if (_repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * vars.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS)
+        revert LiquidationFacet_RepayAmountExceedThreshold();
     }
 
     // calculate how much collateral + reward should be paid out
@@ -119,10 +118,10 @@ contract LiquidationFacet is ILiquidationFacet {
     }
 
     // update states
-    _reduceDebt(vars.subAccount, _repayToken, vars.repayAmountAfterFee, moneyMarketDs);
+    _reduceDebt(vars.subAccount, _repayToken, vars.repayAmountWihtoutFee, moneyMarketDs);
     _reduceCollateral(vars.subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
 
-    moneyMarketDs.reserves[_repayToken] += vars.repayAmountAfterFee;
+    moneyMarketDs.reserves[_repayToken] += vars.repayAmountWihtoutFee;
 
     // transfer tokens
     ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), vars.repayAmountWithFee);
@@ -162,7 +161,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // 1. check if position is underwater and can be liquidated
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
-    if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
+    if ((_borrowingPower * LibMoneyMarket01.MAX_BPS) > _usedBorrowingPower * moneyMarketDs.liquidationThresholdBps) {
       revert LiquidationFacet_Healthy();
     }
 
@@ -228,7 +227,7 @@ contract LiquidationFacet is ILiquidationFacet {
       );
       // revert if repay > x% of totalUsedBorrowingPower
       if (
-        _repaidBorrowingPower > (moneyMarketDs.liquidationFactor * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
+        _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
       ) revert LiquidationFacet_RepayAmountExceedThreshold();
     }
 

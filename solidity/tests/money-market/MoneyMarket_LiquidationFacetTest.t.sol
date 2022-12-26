@@ -587,7 +587,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0
      */
 
-    adminFacet.setLiquidationFactor(10000); // allow to liquidate entire subAccount
+    adminFacet.setMaxLiquidateBps(10000); // allow to liquidate entire subAccount
 
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
@@ -701,7 +701,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
     external
   {
-    adminFacet.setLiquidationFactor(10000); // allow to liquidate entire subAccount
+    adminFacet.setMaxLiquidateBps(10000); // allow to liquidate entire subAccount
 
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
@@ -794,7 +794,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
     // alice has 40 weth collat, 30 usdc debt
-    // liquidate 30 usdc debt should fail because liquidatedBorrowingPower > liquidationFactor * totalUsedBorrowingPower
+    // liquidate 30 usdc debt should fail because liquidatedBorrowingPower > maxLiquidateBps * totalUsedBorrowingPower
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -896,7 +896,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0 shares
      */
 
-    adminFacet.setLiquidationFactor(10000); // allow to liquidate entire subAccount
+    adminFacet.setMaxLiquidateBps(10000); // allow to liquidate entire subAccount
 
     // add ib as collat
     vm.startPrank(ALICE);

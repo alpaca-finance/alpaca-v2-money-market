@@ -199,6 +199,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
     adminFacet.setFees(0, 100, 100, 100);
 
-    adminFacet.setLiquidationFactor(5000); // 50%
+    adminFacet.setMaxLiquidateBps(5000); // 50%
   }
 }
