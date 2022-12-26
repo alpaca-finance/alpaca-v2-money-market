@@ -896,6 +896,8 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0 shares
      */
 
+    adminFacet.setLiquidationFactor(10000); // allow to liquidate entire subAccount
+
     // add ib as collat
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 40 ether);
@@ -1027,6 +1029,34 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
       abi.encode()
     );
   }
+
+  function testRevert_WhenIbLiquidateMoreThanThreshold() external {
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    vm.stopPrank();
+
+    address _debtToken = address(usdc);
+    address _collatToken = address(ibWeth);
+    uint256 _repayAmount = 30 ether;
+
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      _repayAmount,
+      abi.encode()
+    );
+  }
+
+  // ib repurchase tests
 
   function testCorrectness_WhenRepurchaseDebtAndTakeIbTokenAsCollateral_ShouldWork() external {
     // criteria
