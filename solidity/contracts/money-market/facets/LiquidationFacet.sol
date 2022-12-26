@@ -73,8 +73,8 @@ contract LiquidationFacet is ILiquidationFacet {
     {
       uint256 _debtValue = LibShareUtil.shareToValue(
         moneyMarketDs.subAccountDebtShares[vars.subAccount].getAmount(_repayToken),
-        moneyMarketDs.debtValues[_repayToken],
-        moneyMarketDs.debtShares[_repayToken]
+        moneyMarketDs.overCollatDebtValues[_repayToken],
+        moneyMarketDs.overCollatDebtShares[_repayToken]
       );
       uint256 _maxAmountRepurchaseable = (_debtValue * (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) /
         LibMoneyMarket01.MAX_BPS;

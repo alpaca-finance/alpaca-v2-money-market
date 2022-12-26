@@ -301,7 +301,7 @@ contract AdminFacet is IAdminFacet {
 
   function setLiquidationFactor(uint16 _newFactor) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_newFactor > LibMoneyMarket01.MAX_BPS) revert AdminFacet_BadBps();
+    if (_newFactor > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
     moneyMarketDs.liquidationFactor = _newFactor;
   }
 }
