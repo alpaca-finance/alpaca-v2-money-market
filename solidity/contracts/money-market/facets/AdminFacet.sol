@@ -304,5 +304,10 @@ contract AdminFacet is IAdminFacet {
     if (_newBps > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
     moneyMarketDs.maxLiquidateBps = _newBps;
   }
+
+  function setLiquidationThresholdBps(uint16 _newBps) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    if (_newBps > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
+    moneyMarketDs.liquidationThresholdBps = _newBps;
   }
 }

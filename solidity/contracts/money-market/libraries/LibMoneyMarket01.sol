@@ -102,6 +102,7 @@ library LibMoneyMarket01 {
     address ibTokenImplementation;
     // liquidation factor
     uint16 maxLiquidateBps;
+    uint16 liquidationThresholdBps;
     uint256 maxPriceStale;
   }
 

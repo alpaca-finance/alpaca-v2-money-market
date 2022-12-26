@@ -316,7 +316,7 @@ contract LiquidationFacet is ILiquidationFacet {
       );
       // revert if repay > x% of totalUsedBorrowingPower
       if (
-        _repaidBorrowingPower > (moneyMarketDs.liquidationFactor * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
+        _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
       ) revert LiquidationFacet_RepayAmountExceedThreshold();
     }
 

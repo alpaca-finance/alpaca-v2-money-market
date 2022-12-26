@@ -79,4 +79,6 @@ interface IAdminFacet {
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 
   function setMaxLiquidateBps(uint16 _newFactor) external;
+
+  function setLiquidationThresholdBps(uint16 _newBps) external;
 }
