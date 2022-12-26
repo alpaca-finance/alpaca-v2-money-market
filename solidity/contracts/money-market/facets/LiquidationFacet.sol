@@ -26,6 +26,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address repayToken;
     address collatToken;
     uint256 repayAmount;
+    uint256 usedBorrowingPower;
     bytes paramsForStrategy;
   }
 
@@ -159,12 +160,10 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // 1. check if position is underwater and can be liquidated
-    {
-      uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
-      if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
-        revert LiquidationFacet_Healthy();
-      }
+    uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
+    (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
+    if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
+      revert LiquidationFacet_Healthy();
     }
 
     InternalLiquidationCallParams memory _params = InternalLiquidationCallParams({
@@ -173,6 +172,7 @@ contract LiquidationFacet is ILiquidationFacet {
       repayToken: _repayToken,
       collatToken: _collatToken,
       repayAmount: _repayAmount,
+      usedBorrowingPower: _usedBorrowingPower,
       paramsForStrategy: _paramsForStrategy
     });
 
@@ -216,8 +216,22 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+    uint256 _repaidAmount;
+    {
+      uint256 _repayAmountFromLiquidation = ERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+      _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+      (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
+      uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
+        _repaidAmount,
+        _repayTokenPrice,
+        moneyMarketDs.tokenConfigs[params.repayToken].borrowingFactor
+      );
+      // revert if repay > x% of totalUsedBorrowingPower
+      if (
+        _repaidBorrowingPower > (moneyMarketDs.liquidationFactor * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
+      ) revert LiquidationFacet_RepayAmountExceedThreshold();
+    }
+
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
