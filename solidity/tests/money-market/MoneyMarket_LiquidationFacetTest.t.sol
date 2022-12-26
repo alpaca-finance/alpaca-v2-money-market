@@ -587,7 +587,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0
      */
 
-    adminFacet.setMaxLiquidateBps(10000); // allow to liquidate entire subAccount
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
 
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
@@ -701,7 +701,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
     external
   {
-    adminFacet.setMaxLiquidateBps(10000); // allow to liquidate entire subAccount
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
 
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
@@ -896,7 +896,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0 shares
      */
 
-    adminFacet.setMaxLiquidateBps(10000); // allow to liquidate entire subAccount
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
 
     // add ib as collat
     vm.startPrank(ALICE);

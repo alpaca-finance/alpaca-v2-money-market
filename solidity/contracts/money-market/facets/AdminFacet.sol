@@ -299,15 +299,11 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setMaxLiquidateBps(uint16 _newBps) external onlyOwner {
+  function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_newBps > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
-    moneyMarketDs.maxLiquidateBps = _newBps;
-  }
-
-  function setLiquidationThresholdBps(uint16 _newBps) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_newBps > LibMoneyMarket01.MAX_BPS) revert AdminFacet_InvalidArguments();
-    moneyMarketDs.liquidationThresholdBps = _newBps;
+    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold > LibMoneyMarket01.MAX_BPS)
+      revert AdminFacet_InvalidArguments();
+    moneyMarketDs.maxLiquidateBps = _newMaxLiquidateBps;
+    moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
   }
 }
