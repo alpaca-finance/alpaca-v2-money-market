@@ -9,7 +9,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 // interfaces
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IViewFacet } from "./interfaces/IViewFacet.sol";
+import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 
 // libs
 import { LibShareUtil } from "./libraries/LibShareUtil.sol";
@@ -18,15 +18,15 @@ import "solidity/tests/utils/console.sol";
 
 contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   address private _asset;
-  IViewFacet private _viewFacet;
+  IMoneyMarket private _moneyMarket;
   uint8 private _decimals;
 
   constructor() ERC20("", "") {}
 
   function initialize(address asset_, address moneyMarket_) external initializer {
-    _viewFacet = IViewFacet(moneyMarket_);
+    _moneyMarket = IMoneyMarket(moneyMarket_);
     // sanity check
-    _viewFacet.getIbTokenFromToken(asset_);
+    _moneyMarket.getTotalToken(asset_);
 
     _asset = asset_;
     _decimals = IERC20Metadata(_asset).decimals();
@@ -34,7 +34,7 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   function moneyMarket() external view returns (address) {
-    return address(_viewFacet);
+    return address(_moneyMarket);
   }
 
   /**
@@ -111,15 +111,15 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   function totalAssets() external view override returns (uint256 totalManagedAssets) {
-    return _viewFacet.getTotalToken(_asset);
+    return _moneyMarket.getTotalTokenWithPendingInterest(_asset);
   }
 
   function convertToShares(uint256 assets) public view override returns (uint256 shares) {
-    return LibShareUtil.valueToShare(assets, totalSupply(), _viewFacet.getTotalToken(_asset));
+    return LibShareUtil.valueToShare(assets, totalSupply(), _moneyMarket.getTotalToken(_asset));
   }
 
   function convertToAssets(uint256 shares) public view override returns (uint256 assets) {
-    return LibShareUtil.shareToValue(shares, _viewFacet.getTotalToken(_asset), totalSupply());
+    return LibShareUtil.shareToValue(shares, _moneyMarket.getTotalToken(_asset), totalSupply());
   }
 
   function previewDeposit(uint256 assets) external view override returns (uint256 shares) {
