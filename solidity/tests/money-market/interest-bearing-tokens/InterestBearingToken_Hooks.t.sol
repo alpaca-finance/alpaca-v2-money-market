@@ -43,6 +43,7 @@ contract InterestBearingToken_HooksTest is MoneyMarket_BaseTest {
     uint256 _shareAmount = 1 ether;
 
     vm.startPrank(moneyMarketDiamond);
+
     ibToken.onDeposit(BOB, 0, _shareAmount);
 
     assertEq(ibToken.balanceOf(BOB), _shareAmount);
@@ -54,15 +55,39 @@ contract InterestBearingToken_HooksTest is MoneyMarket_BaseTest {
     assertEq(ibToken.balanceOf(BOB), 0);
   }
 
+  function testRevert_WhenCallOnWithdrawWithInsufficientBalance() external {
+    vm.prank(moneyMarketDiamond);
+    vm.expectRevert("ERC20: burn amount exceeds balance");
+    ibToken.onWithdraw(ALICE, ALICE, 0, 1 ether);
+  }
+
+  function testRevert_WhenCallOnDepositAndOnWithdrawWithZeroAddress() external {
+    vm.startPrank(moneyMarketDiamond);
+
+    vm.expectRevert("ERC20: mint to the zero address");
+    ibToken.onDeposit(address(0), 0, 1 ether);
+
+    vm.expectRevert("ERC20: burn from the zero address");
+    ibToken.onWithdraw(address(0), address(0), 0, 1 ether);
+  }
+
   function testRevert_WhenCallOnDepositCallerIsNotOwner() external {
     vm.prank(ALICE);
     vm.expectRevert("Ownable: caller is not the owner");
+    ibToken.onDeposit(ALICE, 0, 0);
+
+    // shouldn't revert because caller is owner
+    vm.prank(moneyMarketDiamond);
     ibToken.onDeposit(ALICE, 0, 0);
   }
 
   function testRevert_WhenCallOnWithdrawCallerIsNotOwner() external {
     vm.prank(ALICE);
     vm.expectRevert("Ownable: caller is not the owner");
+    ibToken.onWithdraw(ALICE, ALICE, 0, 0);
+
+    // shouldn't revert because caller is owner
+    vm.prank(moneyMarketDiamond);
     ibToken.onWithdraw(ALICE, ALICE, 0, 0);
   }
 }
