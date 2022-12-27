@@ -14,6 +14,8 @@ import { IViewFacet } from "./interfaces/IViewFacet.sol";
 // libs
 import { LibShareUtil } from "./libraries/LibShareUtil.sol";
 
+import "solidity/tests/utils/console.sol";
+
 contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   address private _asset;
   IViewFacet private _viewFacet;
@@ -21,18 +23,24 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
 
   constructor() ERC20("", "") {}
 
-  /// @dev owner_ should be MoneyMarketDiamond
-  function initialize(address asset_, address owner_) external initializer {
+  function initialize(address asset_, address moneyMarket_) external initializer {
+    _viewFacet = IViewFacet(moneyMarket_);
+    // sanity check
+    _viewFacet.getIbTokenFromToken(asset_);
+
     _asset = asset_;
     _decimals = IERC20Metadata(_asset).decimals();
-    _viewFacet = IViewFacet(owner_);
-    _transferOwnership(owner_);
+    _transferOwnership(moneyMarket_);
+  }
+
+  function moneyMarket() external view returns (address) {
+    return address(_viewFacet);
   }
 
   /**
    * @dev Hook for LendFacet to call when deposit.
    *
-   * It emits event that is expected by ERC4626 when deposit / mint.
+   * It emits `Deposit` event that is expected by ERC4626 standard when deposit / mint.
    */
   function onDeposit(
     address receiver,
@@ -46,7 +54,7 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   /**
    * @dev Hook for LendFacet to call when withdraw.
    *
-   * It emits event that is expected by ERC4626 when withdraw / redeem.
+   * It emits `Withdraw` event that is expected by ERC4626 standard when withdraw / redeem.
    */
   function onWithdraw(
     address owner,
@@ -98,16 +106,16 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   /// ERC4626 accounting logic
   /// -----------------------------------------------------------------------
 
-  function asset() external view override returns (address) {
+  function asset() external view override returns (address assetTokenAddress) {
     return _asset;
   }
 
-  function totalAssets() external view override returns (uint256) {
+  function totalAssets() external view override returns (uint256 totalManagedAssets) {
     return _viewFacet.getTotalToken(_asset);
   }
 
-  function convertToShares(uint256 assets) public view override returns (uint256) {
-    return _viewFacet.getIbShareFromUnderlyingAmount(_asset, assets);
+  function convertToShares(uint256 assets) public view override returns (uint256 shares) {
+    return LibShareUtil.valueToShare(assets, totalSupply(), _viewFacet.getTotalToken(_asset));
   }
 
   function convertToAssets(uint256 shares) public view override returns (uint256 assets) {
