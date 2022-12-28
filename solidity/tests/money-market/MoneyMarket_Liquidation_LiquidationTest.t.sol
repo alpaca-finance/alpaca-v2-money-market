@@ -327,6 +327,34 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       1 ether,
       abi.encode()
     );
+
+    // case borrowingPower == usedBorrowingPower * threshold
+    vm.prank(ALICE);
+
+    // note: have to borrow and lower price because doing just either borrow or increase price
+    // won't be able to make both side equal
+
+    // if we only set weth price to 0.8333..
+    // there will be precision loss that make it impossible for both side to be equal
+    // if we only borrow more it will hit borrow limit before reach equality
+
+    // try to make borrowingPower = usedBorrowingPower * threshold = 32.4
+    // borrow more to increase usedBorrowingPower to 36 ether -> 36 * 0.9 (threshold) = 32.4
+    borrowFacet.borrow(0, address(usdc), 2.4 ether);
+
+    // decrease price to lower borrowingPower to 32.4
+    mockOracle.setTokenPrice(address(weth), 0.9 ether);
+
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      address(usdc),
+      address(weth),
+      1 ether,
+      abi.encode()
+    );
   }
 
   function testRevert_WhenLiquidationStrategyIsNotOk() external {

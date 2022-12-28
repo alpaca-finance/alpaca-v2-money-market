@@ -57,8 +57,6 @@ contract MoneyMarket_Liquidation_RepurhcaseTest is MoneyMarket_BaseTest {
     treasury = address(this);
   }
 
-  // Repurchase tests
-
   function testCorrectness_ShouldRepurchasePassed_TransferTokenCorrectly() external {
     // criteria
     address _debtToken = address(usdc);
@@ -374,11 +372,20 @@ contract MoneyMarket_Liquidation_RepurhcaseTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.startPrank(BOB);
+    vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     // bob try repurchase with 2 usdc
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 2 ether);
-    vm.stopPrank();
+
+    // case borrowingPower == usedBorrowingPower
+    // borrow more to increase usedBorrowingPower to be equal to totalBorrowingPower
+    // ALICE borrow 32.4 usdc convert to usedBorrowingPower = 32.4 * 10000 / 9000 = 36 USD
+    vm.prank(ALICE);
+    borrowFacet.borrow(0, address(usdc), 2.4 ether);
+
+    vm.prank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
+    liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 2 ether);
   }
 
   function testRevert_ShouldRevertRepurchaserIsNotOK() external {
