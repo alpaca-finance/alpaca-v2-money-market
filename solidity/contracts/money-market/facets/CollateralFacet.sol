@@ -46,9 +46,9 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
-
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
@@ -77,6 +77,8 @@ contract CollateralFacet is ICollateralFacet {
     address _token,
     uint256 _amount
   ) external nonReentrant {
+    if (_fromSubAccountId == _toSubAccountId) revert CollateralFacet_NoSelfTransfer();
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);
