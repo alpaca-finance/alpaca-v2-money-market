@@ -58,6 +58,19 @@ contract ViewFacet {
     );
   }
 
+  function getTotalNonCollatUsedBorrowingPower(address _account)
+    external
+    view
+    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    (_totalBorrowedUSDValue, _hasIsolateAsset) = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(
+      _account,
+      moneyMarketDs
+    );
+  }
+
   function getDebtLastAccrueTime(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.debtLastAccrueTime[_token];
@@ -200,5 +213,11 @@ contract ViewFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return LibMoneyMarket01.getNonCollatTokenDebt(_token, moneyMarketDs);
+  }
+
+  function getLiquidationParams() external view returns (uint16, uint16) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    return (moneyMarketDs.maxLiquidateBps, moneyMarketDs.liquidationThresholdBps);
   }
 }

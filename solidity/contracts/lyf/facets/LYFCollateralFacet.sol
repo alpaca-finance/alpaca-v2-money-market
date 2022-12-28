@@ -104,25 +104,4 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
   }
-
-  function getCollaterals(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory)
-  {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
-    return subAccountCollateralList.getAll();
-  }
-
-  function collats(address _token) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-    return ds.collats[_token];
-  }
-
-  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-    return ds.subAccountCollats[_subAccount].getAmount(_token);
-  }
 }

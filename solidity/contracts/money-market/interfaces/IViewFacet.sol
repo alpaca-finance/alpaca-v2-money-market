@@ -29,6 +29,11 @@ interface IViewFacet {
     view
     returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
 
+  function getTotalNonCollatUsedBorrowingPower(address _account)
+    external
+    view
+    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+
   function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256);
 
   function getDebtLastAccrueTime(address _token) external view returns (uint256);
@@ -79,4 +84,6 @@ interface IViewFacet {
   function getNonCollatBorrowingPower(address _account) external view returns (uint256);
 
   function getNonCollatInterestRate(address _account, address _token) external view returns (uint256);
+
+  function getLiquidationParams() external view returns (uint16, uint16);
 }

@@ -267,6 +267,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // manipulate ib price
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 50 ether);
+    vm.prank(moneyMarketDiamond);
     ibWeth.burn(BOB, 50 ether);
 
     uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);

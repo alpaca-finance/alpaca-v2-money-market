@@ -11,19 +11,6 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     super.setUp();
   }
 
-  function testCorrectness_WhenAdminSetTokenToIbTokens_ShouldWork() external {
-    address _depositToken = address(9998);
-    address _ibDepositToken = address(9999);
-
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
-    _ibPair[0] = IAdminFacet.IbPair({ token: _depositToken, ibToken: _ibDepositToken });
-
-    adminFacet.setIbPairs(_ibPair);
-
-    assertEq(viewFacet.getIbTokenFromToken(_depositToken), _ibDepositToken);
-    assertEq(viewFacet.getTokenFromIbToken(_ibDepositToken), _depositToken);
-  }
-
   function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
 
@@ -46,14 +33,8 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     assertEq(_tokenConfig.borrowingFactor, 6000);
   }
 
-  function testCorrectness_WhenNonAdminSetSomeConfig_ShouldRevert() external {
+  function testCorrectness_WhenNotOwnerSetSomeConfig_ShouldRevert() external {
     vm.startPrank(ALICE);
-
-    // try to setIbPairs
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](1);
-    _ibPair[0] = IAdminFacet.IbPair({ token: address(9998), ibToken: address(9999) });
-    vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setIbPairs(_ibPair);
 
     // try to setTokenConfigs
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);

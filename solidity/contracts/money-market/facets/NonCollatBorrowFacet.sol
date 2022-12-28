@@ -30,11 +30,17 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
     }
+
+    // accrue interest for borrowed debt token, to mint share correctly
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
+    // accrue all debt tokens under account
+    // total used borrowing power is calculated from all debt token of the account
+    LibMoneyMarket01.accrueNonCollatBorrowedPositionsOf(msg.sender, moneyMarketDs);
 
     _validate(msg.sender, _token, _amount, moneyMarketDs);
 
@@ -125,7 +131,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     // check credit
-    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_account, moneyMarketDs);
+    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
 
     _checkCapacity(_token, _amount, moneyMarketDs);
 

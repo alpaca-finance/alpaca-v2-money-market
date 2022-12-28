@@ -9,6 +9,8 @@ interface IAdminFacet {
   error AdminFacet_InvalidAddress();
   error AdminFacet_ReserveTooLow();
   error AdminFacet_InvalidArguments();
+  error AdminFacet_InvalidToken(address _token);
+  error AdminFacet_InvalidIbTokenImplementation();
 
   struct IbPair {
     address token;
@@ -35,7 +37,7 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
-  function setIbPairs(IbPair[] memory _ibPair) external;
+  function openMarket(address _token) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
@@ -75,4 +77,6 @@ interface IAdminFacet {
   function setIbTokenImplementation(address _newImplementation) external;
 
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
+
+  function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external;
 }
