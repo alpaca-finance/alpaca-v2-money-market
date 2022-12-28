@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // libraries
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { ILYFLiquidationFacet } from "../interfaces/ILYFLiquidationFacet.sol";
@@ -18,9 +16,10 @@ import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
@@ -109,8 +108,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
     // 4. transfer
-    ERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _actualDebtToRepurchase);
-    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
+    IERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _actualDebtToRepurchase);
+    IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
     emit LogRepurchase(msg.sender, _debtToken, _collatToken, _actualDebtToRepurchase, _collatAmountOut);
   }
@@ -167,10 +166,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     internal
   {
     // 2. send all collats under subaccount to strategy
-    uint256 _collatAmountBefore = ERC20(_params.collatToken).balanceOf(address(this));
-    uint256 _repayAmountBefore = ERC20(_params.repayToken).balanceOf(address(this));
+    uint256 _collatAmountBefore = IERC20(_params.collatToken).balanceOf(address(this));
+    uint256 _repayAmountBefore = IERC20(_params.repayToken).balanceOf(address(this));
 
-    ERC20(_params.collatToken).safeTransfer(
+    IERC20(_params.collatToken).safeTransfer(
       _params.liquidationStrat,
       lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken)
     );
@@ -193,12 +192,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _repayAmountFromLiquidation = ERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _repayAmountFromLiquidation = IERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
 
-    uint256 _collatSold = _collatAmountBefore - ERC20(_params.collatToken).balanceOf(address(this));
+    uint256 _collatSold = _collatAmountBefore - IERC20(_params.collatToken).balanceOf(address(this));
 
-    ERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
+    IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
 
     // give priority to fee
     _reduceDebt(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
@@ -226,11 +225,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _returnedUnderlyingAmount = IMoneyMarket(lyfDs.moneyMarket).withdraw(_params.collatToken, _collatAmount);
 
     // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
-    uint256 _underlyingAmountBefore = ERC20(_collatUnderlyingToken).balanceOf(address(this));
-    uint256 _repayAmountBefore = ERC20(_params.repayToken).balanceOf(address(this));
+    uint256 _underlyingAmountBefore = IERC20(_collatUnderlyingToken).balanceOf(address(this));
+    uint256 _repayAmountBefore = IERC20(_params.repayToken).balanceOf(address(this));
 
     // transfer _underlyingToken to strat
-    ERC20(_collatUnderlyingToken).safeTransfer(_params.liquidationStrat, _returnedUnderlyingAmount);
+    IERC20(_collatUnderlyingToken).safeTransfer(_params.liquidationStrat, _returnedUnderlyingAmount);
 
     // 3. call executeLiquidation on strategy to liquidate underlying token
     uint256 _actualRepayAmount = _getActualRepayAmount(
@@ -250,11 +249,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _repayAmountFromLiquidation = ERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    uint256 _repayAmountFromLiquidation = IERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
-    uint256 _underlyingSold = _underlyingAmountBefore - ERC20(_collatUnderlyingToken).balanceOf(address(this));
+    uint256 _underlyingSold = _underlyingAmountBefore - IERC20(_collatUnderlyingToken).balanceOf(address(this));
 
-    ERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
+    IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
 
     // give priority to fee
     _reduceDebt(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
@@ -321,7 +320,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // 2. remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
-    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    IERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
 
     (vars.token0Return, vars.token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
@@ -371,7 +370,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     if (_actualAmountToRepay > 0) {
       uint256 _feeToTreasury = (_actualAmountToRepay * LIQUIDATION_FEE_BPS) / 10000;
       _reduceDebt(_subAccount, _debtShareId, _actualAmountToRepay - _feeToTreasury, lyfDs);
-      ERC20(_token).safeTransfer(lyfDs.treasury, _feeToTreasury);
+      IERC20(_token).safeTransfer(lyfDs.treasury, _feeToTreasury);
     }
 
     // add remaining as subAccount collateral

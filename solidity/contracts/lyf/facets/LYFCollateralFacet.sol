@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
@@ -11,9 +8,11 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../interfaces/ILYFCollateralFacet.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract LYFCollateralFacet is ILYFCollateralFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
@@ -50,7 +49,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     LibLYF01.addCollat(_subAccount, _token, _amount, ds);
 
-    ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
@@ -73,7 +72,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
     }
 
-    ERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
+    IERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
 
     emit LogRemoveCollateral(_subAccount, _token, _actualAmountRemoved);
   }

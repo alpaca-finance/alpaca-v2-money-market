@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // interfaces
 import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 contract AVTradeFacet is IAVTradeFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -45,7 +44,7 @@ contract AVTradeFacet is IAVTradeFacet {
     );
 
     // get fund from user
-    ERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
+    IERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
     // borrow from MM
     LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
     LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
@@ -98,7 +97,7 @@ contract AVTradeFacet is IAVTradeFacet {
 
     uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
     _pendingManagementFee =
-      (ERC20(_shareToken).totalSupply() *
+      (IERC20(_shareToken).totalSupply() *
         avDs.vaultConfigs[_shareToken].managementFeePerSec *
         _secondsFromLastCollection) /
       1e18;

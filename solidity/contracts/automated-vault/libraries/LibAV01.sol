@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // libraries
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
@@ -13,9 +11,10 @@ import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 library LibAV01 {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
 
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
@@ -74,8 +73,8 @@ library LibAV01 {
   ) internal returns (uint256 _shareToMint) {
     address _handler = avDs.vaultConfigs[_shareToken].handler;
 
-    ERC20(_token0).safeTransfer(_handler, _desiredAmount0);
-    ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
+    IERC20(_token0).safeTransfer(_handler, _desiredAmount0);
+    IERC20(_token1).safeTransfer(_handler, _desiredAmount1);
 
     uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
 
@@ -90,11 +89,11 @@ library LibAV01 {
     uint256 _equityAfter = _getEquity(_shareToken, _handler, avDs);
     uint256 _equityChanged = _equityAfter - _equityBefore;
 
-    uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
+    uint256 _totalShareTokenSupply = IERC20(_shareToken).totalSupply();
 
     _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
 
-    if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
+    if (_totalShareTokenSupply + _shareToMint < 10**(IERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
   }
 
   function withdraw(
@@ -110,7 +109,7 @@ library LibAV01 {
     // TODO: handle slippage
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
+    IERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
   }
 
   /// @dev return price in 1e18
@@ -164,7 +163,7 @@ library LibAV01 {
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
-    uint256 _decimals = ERC20(_token).decimals();
+    uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) revert LibAV01_UnsupportedDecimals();
     uint256 _conversionFactor = 10**(18 - _decimals);
     return uint8(_conversionFactor);

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
@@ -11,6 +8,7 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
@@ -18,9 +16,10 @@ import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -83,8 +82,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
     // 2. send token to strat
-    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
-    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
+    IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
+    IERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
     // 3. compose lp
     uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
@@ -141,10 +140,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountIn, lyfDs);
 
     // 2. send token to strat
-    ERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
-    ERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
-    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
-    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
+    IERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
+    IERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
+    IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
+    IERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
 
     // 3. compose lp
     uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
@@ -203,7 +202,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // 2. Remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
-    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    IERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
 
     (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
@@ -220,10 +219,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // 4. Transfer remaining back to user
     if (_amount0Out > 0) {
-      ERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
+      IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
     }
     if (_amount1Out > 0) {
-      ERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
+      IERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
     }
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
@@ -248,7 +247,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _repayAmount, lyfDs);
 
     // transfer only amount to repay
-    ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
   }
 
   function reinvest(address _lpToken) external nonReentrant {
@@ -347,7 +346,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _borrowAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view {
-    uint256 _mmTokenBalnce = ERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
+    uint256 _mmTokenBalnce = IERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
 
     if (_mmTokenBalnce < _borrowAmount) {
       revert LYFFarmFacet_NotEnoughToken(_borrowAmount);

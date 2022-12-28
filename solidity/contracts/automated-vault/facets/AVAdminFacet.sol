@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -31,8 +30,8 @@ contract AVAdminFacet is IAVAdminFacet {
     IAVHandler(_handler).totalLpBalance();
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
-    string memory _tokenSymbol = ERC20(_lpToken).symbol();
-    uint8 _tokenDecimals = ERC20(_lpToken).decimals();
+    string memory _tokenSymbol = IERC20(_lpToken).symbol();
+    uint8 _tokenDecimals = IERC20(_lpToken).decimals();
     _newShareToken = address(
       new AVShareToken(
         string.concat("Share Token ", _tokenSymbol),
