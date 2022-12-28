@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // libs
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
@@ -20,7 +18,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 
 contract LendFacet is ILendFacet {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
 
   event LogDeposit(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
@@ -46,7 +44,7 @@ contract LendFacet is ILendFacet {
     (, uint256 _shareToMint) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _amount, moneyMarketDs);
 
     moneyMarketDs.reserves[_token] += _amount;
-    _token.safeTransferFrom(msg.sender, address(this), _amount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
     IInterestBearingToken(_ibToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
@@ -61,7 +59,7 @@ contract LendFacet is ILendFacet {
       msg.sender,
       moneyMarketDs
     );
-    _token.safeTransfer(msg.sender, _shareValue);
+    IERC20(_token).safeTransfer(msg.sender, _shareValue);
     return _shareValue;
   }
 
@@ -125,7 +123,7 @@ contract LendFacet is ILendFacet {
   ) internal {
     if (_amount > moneyMarketDs.reserves[_nativeToken]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_nativeToken] -= _amount;
-    _nativeToken.safeTransfer(_nativeRelayer, _amount);
+    IERC20(_nativeToken).safeTransfer(_nativeRelayer, _amount);
     IWNativeRelayer(_nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);
   }

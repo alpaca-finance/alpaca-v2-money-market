@@ -2,19 +2,19 @@
 pragma solidity 0.8.17;
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // interfaces
 import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
 import { IPancakeRouter02 } from "../interfaces/IPancakeRouter02.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
 
   IPancakeRouter02 public router;
   IPancakePair public lpToken;
@@ -45,8 +45,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     uint256 _minLpAmount
   ) internal returns (uint256 _mintedLpAmount) {
     // 1. Approve router to do their stuffs
-    _token0.safeApprove(address(router), type(uint256).max);
-    _token1.safeApprove(address(router), type(uint256).max);
+    IERC20(_token0).safeApprove(address(router), type(uint256).max);
+    IERC20(_token1).safeApprove(address(router), type(uint256).max);
 
     // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
     uint256 swapAmt;
@@ -64,8 +64,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     (, , _mintedLpAmount) = router.addLiquidity(
       _token0,
       _token1,
-      ERC20(_token0).balanceOf(address(this)),
-      ERC20(_token1).balanceOf(address(this)),
+      IERC20(_token0).balanceOf(address(this)),
+      IERC20(_token1).balanceOf(address(this)),
       0,
       0,
       address(this),
@@ -76,8 +76,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     }
 
     // 7. Reset approve to 0 for safety reason
-    _token0.safeApprove(address(router), 0);
-    _token1.safeApprove(address(router), 0);
+    IERC20(_token0).safeApprove(address(router), 0);
+    IERC20(_token1).safeApprove(address(router), 0);
   }
 
   /// @dev Compute optimal deposit amount

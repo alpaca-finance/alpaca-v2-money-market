@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
@@ -518,7 +517,7 @@ library LibMoneyMarket01 {
     _shareValue = LibShareUtil.shareToValue(
       _shareAmount,
       getTotalToken(_token, moneyMarketDs),
-      ERC20(_ibToken).totalSupply()
+      IERC20(_ibToken).totalSupply()
     );
 
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
@@ -18,11 +16,12 @@ import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 library LibLYF01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
 
   // keccak256("lyf.diamond.storage");
   bytes32 internal constant LYF_STORAGE_POSITION = 0x23ec0f04376c11672050f8fa65aa7cdd1b6edcb0149eaae973a7060e7ef8f3f4;
@@ -170,7 +169,7 @@ library LibLYF01 {
       if (_actualToken == address(0)) {
         _actualToken = _collatToken;
       } else {
-        uint256 _totalSupply = ERC20(_collatToken).totalSupply();
+        uint256 _totalSupply = IERC20(_collatToken).totalSupply();
         uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_actualToken);
 
         _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
@@ -268,8 +267,8 @@ library LibLYF01 {
     LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256, uint256) {
     (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, lyfDs);
-    uint256 _totalSupply = ERC20(_ibToken).totalSupply();
-    uint256 _one = 10**ERC20(_ibToken).decimals();
+    uint256 _totalSupply = IERC20(_ibToken).totalSupply();
+    uint256 _one = 10**IERC20(_ibToken).decimals();
 
     uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_token);
     uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
@@ -382,7 +381,7 @@ library LibLYF01 {
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
-    uint256 _decimals = ERC20(_token).decimals();
+    uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) revert LibLYF01_UnsupportedDecimals();
     uint256 _conversionFactor = 10**(18 - _decimals);
     return uint8(_conversionFactor);
@@ -393,7 +392,7 @@ library LibLYF01 {
     LibLYF01.LPConfig memory _lpconfig,
     uint256 _amount
   ) internal {
-    _lpToken.safeIncreaseAllowance(_lpconfig.masterChef, _amount);
+    IERC20(_lpToken).safeIncreaseAllowance(_lpconfig.masterChef, _amount);
     IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
   }
 
@@ -402,12 +401,12 @@ library LibLYF01 {
     LibLYF01.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    uint256 _rewardBefore = ERC20(_lpConfig.rewardToken).balanceOf(address(this));
+    uint256 _rewardBefore = IERC20(_lpConfig.rewardToken).balanceOf(address(this));
 
     IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, 0);
 
     // accumulate harvested reward for LP
-    lyfDs.pendingRewards[_lpToken] += ERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
+    lyfDs.pendingRewards[_lpToken] += IERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
   }
 
   function reinvest(
@@ -431,7 +430,7 @@ library LibLYF01 {
     if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
       _reinvestAmount = _rewardAmount;
     } else {
-      _lpConfig.rewardToken.safeIncreaseAllowance(_lpConfig.router, _rewardAmount);
+      IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _rewardAmount);
       uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
         _rewardAmount,
         0,
@@ -452,8 +451,8 @@ library LibLYF01 {
       _token1Amount = _reinvestAmount;
     }
 
-    _token0.safeTransfer(_lpConfig.strategy, _token0Amount);
-    _token1.safeTransfer(_lpConfig.strategy, _token1Amount);
+    IERC20(_token0).safeTransfer(_lpConfig.strategy, _token0Amount);
+    IERC20(_token1).safeTransfer(_lpConfig.strategy, _token1Amount);
     uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
       _token0,
       _token1,

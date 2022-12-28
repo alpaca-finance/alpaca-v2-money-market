@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // libs
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
@@ -13,9 +11,10 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { INonCollatBorrowFacet } from "../interfaces/INonCollatBorrowFacet.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract NonCollatBorrowFacet is INonCollatBorrowFacet {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   event LogNonCollatRemoveDebt(address indexed _account, address indexed _token, uint256 _removeDebtAmount);
@@ -70,7 +69,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _amount;
-    _token.safeTransfer(msg.sender, _amount);
+    IERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
   function nonCollatRepay(
@@ -89,7 +88,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     // transfer only amount to repay
     moneyMarketDs.reserves[_token] += _debtToRemove;
-    _token.safeTransferFrom(msg.sender, address(this), _debtToRemove);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
   }
@@ -165,7 +164,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    uint256 _mmTokenBalnce = ERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    uint256 _mmTokenBalnce = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
 
     if (_mmTokenBalnce < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);

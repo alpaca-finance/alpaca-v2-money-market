@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 // interfaces
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
 import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
+import { IERC20 } from "./interfaces/IERC20.sol";
 
 // libraries
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
 contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
 
   error PancakeswapV2LiquidationStrategy_InvalidPath();
 
@@ -33,9 +32,9 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
       revert PancakeswapV2LiquidationStrategy_InvalidPath();
     }
 
-    uint256 _collatBalance = ERC20(_collatToken).balanceOf(address(this));
+    uint256 _collatBalance = IERC20(_collatToken).balanceOf(address(this));
 
-    _collatToken.safeApprove(address(router), _collatBalance);
+    IERC20(_collatToken).safeApprove(address(router), _collatBalance);
 
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, path);
     // _amountsIn[0] = collat that is required to swap for _repayAmount
@@ -46,12 +45,12 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy {
       router.swapExactTokensForTokens(_collatBalance, _minReceive, path, _repayTo, block.timestamp);
     }
 
-    _collatToken.safeApprove(address(router), 0);
+    IERC20(_collatToken).safeApprove(address(router), 0);
 
-    uint256 _remainCollat = ERC20(_collatToken).balanceOf(address(this));
+    uint256 _remainCollat = IERC20(_collatToken).balanceOf(address(this));
 
     if (_remainCollat > 0) {
-      _collatToken.safeTransfer(_repayTo, _remainCollat);
+      IERC20(_collatToken).safeTransfer(_repayTo, _remainCollat);
     }
   }
 }

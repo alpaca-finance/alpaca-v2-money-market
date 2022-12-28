@@ -1,75 +1,73 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-interface ERC20Interface {
-  function balanceOf(address user) external view returns (uint256);
-}
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 library LibSafeToken {
-  function balanceOf(address token, address user) internal view returns (uint256) {
-    return ERC20Interface(token).balanceOf(user);
-  }
-
-  function myBalance(address token) internal view returns (uint256) {
-    return ERC20Interface(token).balanceOf(address(this));
-  }
-
   function safeTransfer(
-    address token,
+    IERC20 _token,
     address to,
     uint256 value
   ) internal {
-    // bytes4(keccak256(bytes('transfer(address,uint256)')));
-    // solhint-disable-next-line avoid-low-level-calls
-    require(isContract(token), "!contract");
-    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
+    require(isContract(_token), "!contract");
+    (bool success, bytes memory data) = address(_token).call(
+      abi.encodeWithSelector(_token.transfer.selector, to, value)
+    );
     require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeTransfer");
   }
 
   function safeTransferFrom(
-    address token,
+    IERC20 _token,
     address from,
     address to,
     uint256 value
   ) internal {
-    // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
-    // solhint-disable-next-line avoid-low-level-calls
-    require(isContract(token), "!not contract");
-    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
+    require(isContract(_token), "!not contract");
+    (bool success, bytes memory data) = address(_token).call(
+      abi.encodeWithSelector(_token.transferFrom.selector, from, to, value)
+    );
     require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeTransferFrom");
   }
 
   function safeApprove(
-    address token,
+    IERC20 _token,
     address to,
     uint256 value
   ) internal {
-    // bytes4(keccak256(bytes('approve(address,uint256)')));
-    require(isContract(token), "!not contract");
-    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x095ea7b3, to, value));
+    require(isContract(_token), "!not contract");
+    (bool success, bytes memory data) = address(_token).call(
+      abi.encodeWithSelector(_token.approve.selector, to, value)
+    );
     require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeApprove");
   }
 
   function safeIncreaseAllowance(
-    address token,
-    address to,
-    uint256 value
+    IERC20 _token,
+    address _spender,
+    uint256 _addValue
   ) internal {
-    // bytes4(keccak256(bytes('increaseAllowance(address,uint256)')));
-    require(isContract(token), "!not contract");
-    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x39509351, to, value));
+    require(isContract(_token), "!not contract");
+    uint256 currentAllowance = _token.allowance(msg.sender, _spender);
+    (bool success, bytes memory data) = address(_token).call(
+      abi.encodeWithSelector(_token.approve.selector, _spender, currentAllowance + _addValue)
+    );
     require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeIncreaseAllowance");
   }
 
   function safeDecreaseAllowance(
-    address token,
-    address to,
-    uint256 value
+    IERC20 _token,
+    address _spender,
+    uint256 _substractValue
   ) internal {
-    // bytes4(keccak256(bytes('decreaseAllowance(address,uint256)')));
-    require(isContract(token), "!not contract");
-    (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa457c2d7, to, value));
-    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeDecreaseAllowance");
+    unchecked {
+      require(isContract(_token), "!not contract");
+      uint256 currentAllowance = _token.allowance(address(this), _spender);
+      require(currentAllowance >= _substractValue, "LibSafeToken: decreased allowance below zero");
+      (bool success, bytes memory data) = address(_token).call(
+        abi.encodeWithSelector(_token.approve.selector, _spender, currentAllowance - _substractValue)
+      );
+      require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeDecreaseAllowance");
+    }
   }
 
   function safeTransferETH(address to, uint256 value) internal {
@@ -78,7 +76,7 @@ library LibSafeToken {
     require(success, "!safeTransferETH");
   }
 
-  function isContract(address account) internal view returns (bool) {
+  function isContract(IERC20 account) internal view returns (bool) {
     // This method relies on extcodesize, which returns 0 for contracts in
     // construction, since the code is only stored at the end of the
     // constructor execution.

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
@@ -13,9 +12,10 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract CollateralFacet is ICollateralFacet {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
   using SafeCast for int256;
@@ -48,7 +48,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    _token.safeTransferFrom(msg.sender, address(this), _amount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
@@ -66,7 +66,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 
-    _token.safeTransfer(msg.sender, _removeAmount);
+    IERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }

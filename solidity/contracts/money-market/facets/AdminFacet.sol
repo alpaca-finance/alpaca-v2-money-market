@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
@@ -17,9 +16,10 @@ import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract AdminFacet is IAdminFacet {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -227,7 +227,7 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.protocolReserves[_token] -= _amount;
 
     moneyMarketDs.reserves[_token] -= _amount;
-    _token.safeTransfer(_to, _amount);
+    IERC20(_token).safeTransfer(_to, _amount);
 
     emit LogWitdrawReserve(_token, _to, _amount);
   }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
@@ -14,9 +13,10 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract BorrowFacet is IBorrowFacet {
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
 
@@ -61,7 +61,7 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _debtShare = LibMoneyMarket01.overCollatBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
-    _token.safeTransfer(msg.sender, _amount);
+    IERC20(_token).safeTransfer(msg.sender, _amount);
 
     emit LogBorrow(_subAccount, _token, _amount, _debtShare);
   }
@@ -90,7 +90,7 @@ contract BorrowFacet is IBorrowFacet {
 
     // transfer only amount to repay
     moneyMarketDs.reserves[_token] += _actualRepayAmount;
-    _token.safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
 
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
