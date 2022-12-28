@@ -184,7 +184,7 @@ library LYFDiamondDeployer {
   {
     _viewFacet = new LYFViewFacet();
 
-    _selectors = new bytes4[](18);
+    _selectors = new bytes4[](19);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
     _selectors[2] = LYFViewFacet.getLpTokenAmount.selector;
@@ -203,6 +203,7 @@ library LYFDiamondDeployer {
     _selectors[15] = LYFViewFacet.getPendingReward.selector;
     _selectors[16] = LYFViewFacet.getTotalBorrowingPower.selector;
     _selectors[17] = LYFViewFacet.getTotalUsedBorrowingPower.selector;
+    _selectors[18] = LYFViewFacet.getMaxNumOfToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),

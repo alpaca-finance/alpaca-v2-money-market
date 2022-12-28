@@ -33,9 +33,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_TooManyCollateralRemoved();
   error LibMoneyMarket01_BorrowingPowerTooLow();
   error LibMoneyMarket01_NotEnoughToken();
-  error LibMoneyMarket01_SubAccountCallatTokenExceed();
-  error LibMoneyMarket01_SubAccountOverCollatBorrowTokenExceed();
-  error LibMoneyMarket01_AccountNonCollatBorrowTokenExceed();
+  error LibMoneyMarket01_NumberOfTokenExceedLimit();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -66,7 +64,6 @@ library LibMoneyMarket01 {
     address nativeToken;
     address nativeRelayer;
     address treasury;
-    // ibToken implementation
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
     mapping(address => address) tokenToIbTokens;
@@ -95,6 +92,7 @@ library LibMoneyMarket01 {
     mapping(address => uint256) protocolReserves;
     // diamond token balances
     mapping(address => uint256) reserves;
+    // maximum number of token in the link list
     uint8 maxNumOfCollatPerSubAccount;
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
@@ -562,7 +560,7 @@ library LibMoneyMarket01 {
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
     if (subAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount)
-      revert LibMoneyMarket01_SubAccountCallatTokenExceed();
+      revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     ds.collats[_token] += _addAmount;
   }
 
@@ -611,7 +609,7 @@ library LibMoneyMarket01 {
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
     if (toSubAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount)
-      revert LibMoneyMarket01_SubAccountCallatTokenExceed();
+      revert LibMoneyMarket01_NumberOfTokenExceedLimit();
   }
 
   function getOverCollatDebt(
@@ -675,8 +673,7 @@ library LibMoneyMarket01 {
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
-    if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount)
-      revert LibMoneyMarket01_SubAccountOverCollatBorrowTokenExceed();
+    if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount) revert LibMoneyMarket01_NumberOfTokenExceedLimit();
 
     // update facet token balance
     ds.reserves[_token] -= _amount;
@@ -706,8 +703,7 @@ library LibMoneyMarket01 {
 
     debtValue.addOrUpdate(_token, _newAccountDebt);
 
-    if (debtValue.length() > ds.maxNumOfDebtPerNonCollatAccount)
-      revert LibMoneyMarket01_AccountNonCollatBorrowTokenExceed();
+    if (debtValue.length() > ds.maxNumOfDebtPerNonCollatAccount) revert LibMoneyMarket01_NumberOfTokenExceedLimit();
 
     tokenDebts.addOrUpdate(msg.sender, _newTokenDebt);
 

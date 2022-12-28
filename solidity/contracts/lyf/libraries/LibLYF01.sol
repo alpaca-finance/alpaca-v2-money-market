@@ -34,7 +34,7 @@ library LibLYF01 {
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
   error LibLYF01_UnsupportedDecimals();
-  error LibLYF01_SubAccountCollatTokenExceed();
+  error LibLYF01_NumberOfTokenExceedLimit();
 
   enum AssetTier {
     UNLISTED,
@@ -315,7 +315,7 @@ library LibLYF01 {
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
     if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount)
-      revert LibLYF01_SubAccountCollatTokenExceed();
+      revert LibLYF01_NumberOfTokenExceedLimit();
 
     lyfDs.collats[_token] += _amount;
   }
@@ -499,8 +499,6 @@ library LibLYF01 {
 
     IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
 
-    // update subaccount debt
-    // todo: optimize this
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
 
     if (

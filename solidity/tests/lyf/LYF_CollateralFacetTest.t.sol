@@ -38,7 +38,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
     // now maximum is 3 token per account, when try add collat 4th token should revert
     cake.approve(lyfDiamond, 10 ether);
-    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_SubAccountCollatTokenExceed.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_NumberOfTokenExceedLimit.selector));
     collateralFacet.addCollateral(ALICE, 0, address(cake), 10 ether);
     vm.stopPrank();
   }

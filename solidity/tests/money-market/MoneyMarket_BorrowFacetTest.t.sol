@@ -67,9 +67,7 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(usdc), 1 ether);
 
     // now maximum is 3 token per account, when try borrow 4th token should revert
-    vm.expectRevert(
-      abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_SubAccountOverCollatBorrowTokenExceed.selector)
-    );
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
     borrowFacet.borrow(subAccount0, address(cake), 1 ether);
     vm.stopPrank();
   }

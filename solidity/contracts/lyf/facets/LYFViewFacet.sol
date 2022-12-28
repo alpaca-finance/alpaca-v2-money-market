@@ -146,4 +146,10 @@ contract LYFViewFacet is ILYFViewFacet {
 
     _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
   }
+
+  function getMaxNumOfToken() external view returns (uint8 _maxNumOfCollat) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    _maxNumOfCollat = lyfDs.maxNumOfCollatPerSubAccount;
+  }
 }

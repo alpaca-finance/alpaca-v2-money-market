@@ -27,7 +27,7 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
 
     // now maximum is 3 token per account, when try add collat 4th token should revert
     cake.approve(moneyMarketDiamond, 10 ether);
-    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_SubAccountCallatTokenExceed.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
     collateralFacet.addCollateral(ALICE, 0, address(cake), 10 ether);
     vm.stopPrank();
   }
