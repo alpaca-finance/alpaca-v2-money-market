@@ -250,6 +250,9 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
 
     adminFacet.setTreasury(treasury);
+
+    // set max num of tokens
+    adminFacet.setMaxNumOfToken(3);
   }
 
   function setUpMM() internal {
@@ -344,5 +347,8 @@ abstract contract LYF_BaseTest is BaseTest {
     ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
     vm.stopPrank();
+
+    // set max num of tokens
+    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
   }
 }

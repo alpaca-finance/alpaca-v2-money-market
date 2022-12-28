@@ -62,10 +62,10 @@ interface IAdminFacet {
   ) external;
 
   function setFees(
-    uint256 _newLendingFeeBps,
-    uint256 _newRepurchaseRewardBps,
-    uint256 _newRepurchaseFeeBps,
-    uint256 _newLiquidationFeeBps
+    uint16 _newLendingFeeBps,
+    uint16 _newRepurchaseRewardBps,
+    uint16 _newRepurchaseFeeBps,
+    uint16 _newLiquidationFeeBps
   ) external;
 
   function withdrawReserve(
@@ -79,4 +79,10 @@ interface IAdminFacet {
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external;
+
+  function setMaxNumOfToken(
+    uint8 _numOfCollat,
+    uint8 _numOfDebt,
+    uint8 _numOfNonCollatDebt
+  ) external;
 }

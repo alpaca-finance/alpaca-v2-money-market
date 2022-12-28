@@ -36,9 +36,6 @@ library LibLYF01 {
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_SubAccountCollatTokenExceed();
 
-  // todo: move to state
-  uint256 internal constant MAX_COLLAT_TOKEN_PER_SUBACCOUNT = 3;
-
   enum AssetTier {
     UNLISTED,
     COLLATERAL,
@@ -87,6 +84,7 @@ library LibLYF01 {
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
+    uint8 maxNumOfCollatPerSubAccount;
     uint256 maxPriceStale;
   }
 
@@ -316,7 +314,7 @@ library LibLYF01 {
     }
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
-    if (subAccountCollateralList.length() > MAX_COLLAT_TOKEN_PER_SUBACCOUNT)
+    if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount)
       revert LibLYF01_SubAccountCollatTokenExceed();
 
     lyfDs.collats[_token] += _amount;

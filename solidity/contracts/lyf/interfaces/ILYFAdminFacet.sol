@@ -42,5 +42,7 @@ interface ILYFAdminFacet {
 
   function setReinvestorsOk(address[] memory list, bool _isOk) external;
 
+  function setMaxNumOfToken(uint8 _numOfCollat) external;
+
   error LYFAdminFacet_BadDebtShareId();
 }

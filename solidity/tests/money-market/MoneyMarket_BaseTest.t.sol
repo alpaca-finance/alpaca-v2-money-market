@@ -214,5 +214,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set liquidation params: maxLiquidate 50%, liquidationThreshold 90%
     adminFacet.setLiquidationParams(5000, 9000);
+
+    // set max num of token
+    adminFacet.setMaxNumOfToken(3, 3, 3);
   }
 }
