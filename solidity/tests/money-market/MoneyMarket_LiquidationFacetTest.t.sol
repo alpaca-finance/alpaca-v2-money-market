@@ -830,7 +830,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
     vm.prank(moneyMarketDiamond);
-    ibWeth.burn(BOB, 1 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, 1 ether);
 
     // mm state before
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
@@ -916,7 +916,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
     vm.prank(moneyMarketDiamond);
-    ibWeth.burn(BOB, 1 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, 1 ether);
 
     // mm state before
     uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
@@ -980,7 +980,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 1 ether);
     vm.prank(moneyMarketDiamond);
-    ibWeth.burn(BOB, 1 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, 1 ether);
 
     mockOracle.setTokenPrice(address(weth), 8e17);
     // todo: check this
@@ -1007,11 +1007,11 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     // increase shareValue of ibWeth by 2.5%
-    // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
+    // would need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 4 ether);
     vm.prank(moneyMarketDiamond);
-    ibWeth.burn(BOB, 4 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, 4 ether);
     // set price to weth from 1 to 0.8 ether USD
     // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
     mockOracle.setTokenPrice(address(weth), 8e17);
@@ -1077,7 +1077,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 40 ether);
     vm.prank(moneyMarketDiamond);
-    ibWeth.burn(BOB, 40 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, 40 ether);
 
     // ALICE borrow another 30 USDC = 60 USDC in debt
     vm.prank(ALICE);
