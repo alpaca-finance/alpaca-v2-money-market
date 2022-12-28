@@ -526,7 +526,7 @@ library LibMoneyMarket01 {
     if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _shareValue;
 
-    IInterestBearingToken(_ibToken).burn(_withdrawFrom, _shareAmount);
+    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _shareValue, _shareAmount);
 
     emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
   }
