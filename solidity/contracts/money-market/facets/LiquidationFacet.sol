@@ -64,7 +64,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // revert if position is healthy
     (vars.usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(vars.subAccount, moneyMarketDs);
-    if (LibMoneyMarket01.getTotalBorrowingPower(vars.subAccount, moneyMarketDs) > vars.usedBorrowingPower) {
+    if (LibMoneyMarket01.getTotalBorrowingPower(vars.subAccount, moneyMarketDs) >= vars.usedBorrowingPower) {
       revert LiquidationFacet_Healthy();
     }
 
@@ -169,7 +169,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // 1. check if position is underwater and can be liquidated
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
-    if ((_borrowingPower * LibMoneyMarket01.MAX_BPS) > _usedBorrowingPower * moneyMarketDs.liquidationThresholdBps) {
+    if ((_borrowingPower * LibMoneyMarket01.MAX_BPS) >= _usedBorrowingPower * moneyMarketDs.liquidationThresholdBps) {
       revert LiquidationFacet_Healthy();
     }
 
