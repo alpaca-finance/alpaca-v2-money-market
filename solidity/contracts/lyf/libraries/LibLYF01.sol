@@ -2,14 +2,13 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // libs
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
-import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "./LibSafeToken.sol";
 
 // interfaces
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
@@ -23,7 +22,7 @@ import { IStrat } from "../interfaces/IStrat.sol";
 library LibLYF01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
-  using SafeERC20 for ERC20;
+  using LibSafeToken for address;
 
   // keccak256("lyf.diamond.storage");
   bytes32 internal constant LYF_STORAGE_POSITION = 0x23ec0f04376c11672050f8fa65aa7cdd1b6edcb0149eaae973a7060e7ef8f3f4;
@@ -394,9 +393,8 @@ library LibLYF01 {
     LibLYF01.LPConfig memory _lpconfig,
     uint256 _amount
   ) internal {
-    ERC20(_lpToken).safeApprove(_lpconfig.masterChef, type(uint256).max);
+    _lpToken.safeIncreaseAllowance(_lpconfig.masterChef, _amount);
     IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
-    ERC20(_lpToken).safeApprove(_lpconfig.masterChef, 0);
   }
 
   function harvest(
@@ -433,7 +431,7 @@ library LibLYF01 {
     if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
       _reinvestAmount = _rewardAmount;
     } else {
-      ERC20(_lpConfig.rewardToken).safeApprove(_lpConfig.router, _rewardAmount);
+      _lpConfig.rewardToken.safeIncreaseAllowance(_lpConfig.router, _rewardAmount);
       uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
         _rewardAmount,
         0,
@@ -454,8 +452,8 @@ library LibLYF01 {
       _token1Amount = _reinvestAmount;
     }
 
-    ERC20(_token0).safeTransfer(_lpConfig.strategy, _token0Amount);
-    ERC20(_token1).safeTransfer(_lpConfig.strategy, _token1Amount);
+    _token0.safeTransfer(_lpConfig.strategy, _token0Amount);
+    _token1.safeTransfer(_lpConfig.strategy, _token1Amount);
     uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
       _token0,
       _token1,

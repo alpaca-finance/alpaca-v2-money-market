@@ -58,7 +58,7 @@ library LibSafeToken {
     // bytes4(keccak256(bytes('increaseAllowance(address,uint256)')));
     require(isContract(token), "!not contract");
     (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x39509351, to, value));
-    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeApprove");
+    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeIncreaseAllowance");
   }
 
   function safeDecreaseAllowance(
@@ -69,7 +69,7 @@ library LibSafeToken {
     // bytes4(keccak256(bytes('decreaseAllowance(address,uint256)')));
     require(isContract(token), "!not contract");
     (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa457c2d7, to, value));
-    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeApprove");
+    require(success && (data.length == 0 || abi.decode(data, (bool))), "!safeDecreaseAllowance");
   }
 
   function safeTransferETH(address to, uint256 value) internal {
