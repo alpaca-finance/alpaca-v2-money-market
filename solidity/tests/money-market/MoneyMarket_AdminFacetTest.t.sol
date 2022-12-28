@@ -136,4 +136,20 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
     adminFacet.setTokenConfigs(_inputs);
   }
+
+  function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
+    (uint8 _maxNumOfCollatBefore, uint8 _maxNumOfDebtBefore, uint8 _maxNumOfNonColaltDebtBefore) = viewFacet
+      .getMaxNumOfToken();
+    // 3 is set from basetest
+    assertEq(_maxNumOfCollatBefore, 3);
+    assertEq(_maxNumOfDebtBefore, 3);
+    assertEq(_maxNumOfNonColaltDebtBefore, 3);
+    adminFacet.setMaxNumOfToken(4, 5, 6);
+
+    (uint8 _maxNumOfCollatAfter, uint8 _maxNumOfDebtAfter, uint8 _maxNumOfNonColaltDebtAfter) = viewFacet
+      .getMaxNumOfToken();
+    assertEq(_maxNumOfCollatAfter, 4);
+    assertEq(_maxNumOfDebtAfter, 5);
+    assertEq(_maxNumOfNonColaltDebtAfter, 6);
+  }
 }

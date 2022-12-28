@@ -41,4 +41,10 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
   function testCorrectness_WhenAdminSetSebtShareIdForSameToken_ShouldWork() external {
     adminFacet.setDebtShareId(address(weth), address(8888), 1);
   }
+
+  function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
+    assertEq(viewFacet.getMaxNumOfToken(), 3); // 3 is set from basetest
+    adminFacet.setMaxNumOfToken(10);
+    assertEq(viewFacet.getMaxNumOfToken(), 10);
+  }
 }

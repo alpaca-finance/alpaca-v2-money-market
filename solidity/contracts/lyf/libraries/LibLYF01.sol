@@ -34,6 +34,7 @@ library LibLYF01 {
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
   error LibLYF01_UnsupportedDecimals();
+  error LibLYF01_NumberOfTokenExceedLimit();
 
   enum AssetTier {
     UNLISTED,
@@ -83,6 +84,7 @@ library LibLYF01 {
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
+    uint8 maxNumOfCollatPerSubAccount;
     uint256 maxPriceStale;
   }
 
@@ -312,6 +314,8 @@ library LibLYF01 {
     }
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
+    if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount)
+      revert LibLYF01_NumberOfTokenExceedLimit();
 
     lyfDs.collats[_token] += _amount;
   }
@@ -481,5 +485,40 @@ library LibLYF01 {
     _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
     // Note: precision loss 1 wei when convert share back to value
     _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
+  }
+
+  function borrowFromMoneyMarket(
+    address _subAccount,
+    address _token,
+    address _lpToken,
+    uint256 _amount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    if (_amount == 0) return;
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+
+    IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
+
+    LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
+
+    if (
+      lyfDs.subAccountDebtShares[_subAccount].getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY
+    ) {
+      lyfDs.subAccountDebtShares[_subAccount].init();
+    }
+
+    uint256 _totalSupply = lyfDs.debtShares[_debtShareId];
+    uint256 _totalValue = lyfDs.debtValues[_debtShareId];
+
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
+
+    // update over collat debt
+    lyfDs.debtShares[_debtShareId] += _shareToAdd;
+    lyfDs.debtValues[_debtShareId] += _amount;
+
+    uint256 _newShareAmount = userDebtShare.getAmount(_debtShareId) + _shareToAdd;
+
+    // update user's debtshare
+    userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
 }

@@ -28,6 +28,8 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);
+    lendFacet.deposit(address(btc), 20 ether);
+    lendFacet.deposit(address(cake), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
@@ -66,6 +68,18 @@ contract MoneyMarket_NonCollatBorrowFacetTest is MoneyMarket_BaseTest {
 
     assertEq(_totalDebtAmount, _borrowAmount * 2);
     assertEq(_bobDebtAmount, _aliceDebtAmount);
+  }
+
+  function testRevert_WhenUserNonCollatBorrowTooMuchTokePerSubAccount() external {
+    vm.startPrank(BOB);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 1 ether);
+    nonCollatBorrowFacet.nonCollatBorrow(address(btc), 1 ether);
+    nonCollatBorrowFacet.nonCollatBorrow(address(usdc), 1 ether);
+
+    // now maximum is 3 token per account, when try borrow 4th token should revert
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
+    nonCollatBorrowFacet.nonCollatBorrow(address(cake), 1 ether);
+    vm.stopPrank();
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {

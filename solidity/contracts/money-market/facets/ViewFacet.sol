@@ -220,4 +220,20 @@ contract ViewFacet {
 
     return (moneyMarketDs.maxLiquidateBps, moneyMarketDs.liquidationThresholdBps);
   }
+
+  function getMaxNumOfToken()
+    external
+    view
+    returns (
+      uint8 _maxNumOfCollat,
+      uint8 _maxNumOfDebt,
+      uint8 _maxNumOfOverCollatDebt
+    )
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    _maxNumOfCollat = moneyMarketDs.maxNumOfCollatPerSubAccount;
+    _maxNumOfDebt = moneyMarketDs.maxNumOfDebtPerSubAccount;
+    _maxNumOfOverCollatDebt = moneyMarketDs.maxNumOfDebtPerNonCollatAccount;
+  }
 }
