@@ -17,6 +17,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  event LogNonCollatBorrow(address indexed _account, address indexed _token, uint256 _removeDebtAmount);
   event LogNonCollatRemoveDebt(address indexed _account, address indexed _token, uint256 _removeDebtAmount);
 
   event LogNonCollatRepay(address indexed _user, address indexed _token, uint256 _actualRepayAmount);
@@ -43,33 +44,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     _validate(msg.sender, _token, _amount, moneyMarketDs);
 
-    LibDoublyLinkedList.List storage debtValue = moneyMarketDs.nonCollatAccountDebtValues[msg.sender];
-
-    if (debtValue.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      debtValue.init();
-    }
-
-    LibDoublyLinkedList.List storage tokenDebts = moneyMarketDs.nonCollatTokenDebtValues[_token];
-
-    if (tokenDebts.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      tokenDebts.init();
-    }
-
-    // update account debt
-    uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;
-    uint256 _newTokenDebt = tokenDebts.getAmount(msg.sender) + _amount;
-
-    debtValue.addOrUpdate(_token, _newAccountDebt);
-
-    tokenDebts.addOrUpdate(msg.sender, _newTokenDebt);
-
-    // update global debt
-
-    moneyMarketDs.globalDebts[_token] += _amount;
+    LibMoneyMarket01.nonCollatBorrow(msg.sender, _token, _amount, moneyMarketDs);
 
     if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
     moneyMarketDs.reserves[_token] -= _amount;
     IERC20(_token).safeTransfer(msg.sender, _amount);
+
+    emit LogNonCollatBorrow(msg.sender, _token, _amount);
   }
 
   function nonCollatRepay(

@@ -5,6 +5,7 @@ import { LYF_BaseTest } from "./LYF_BaseTest.t.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
+import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
@@ -24,6 +25,22 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
     assertEq(_aliceBalanceBefore - _aliceBalanceAfter, 10 ether);
     assertEq(weth.balanceOf(lyfDiamond), 10 ether);
+  }
+
+  function testRevert_WhenAddLYFCollateralTooMuchToken() external {
+    vm.startPrank(ALICE);
+    weth.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
+    usdc.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(usdc), 10 ether);
+    btc.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(btc), 10 ether);
+
+    // now maximum is 3 token per account, when try add collat 4th token should revert
+    cake.approve(lyfDiamond, 10 ether);
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_SubAccountCollatTokenExceed.selector));
+    collateralFacet.addCollateral(ALICE, 0, address(cake), 10 ether);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenUserAddMultipleLYFCollaterals_ListShouldUpdate() external {

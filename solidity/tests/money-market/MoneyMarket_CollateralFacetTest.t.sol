@@ -14,6 +14,24 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     super.setUp();
   }
 
+  function testRevert_WhenUserAddTooMuchToken() external {
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
+
+    usdc.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(usdc), 10 ether);
+
+    btc.approve(moneyMarketDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(btc), 10 ether);
+
+    // now maximum is 3 token per account, when try add collat 4th token should revert
+    cake.approve(moneyMarketDiamond, 10 ether);
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_SubAccountCallatTokenExceed.selector));
+    collateralFacet.addCollateral(ALICE, 0, address(cake), 10 ether);
+    vm.stopPrank();
+  }
+
   function testCorrectness_WhenAddCollateral_TokenShouldTransferFromUserToMM() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);

@@ -135,7 +135,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](7);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](8);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -200,6 +200,15 @@ abstract contract LYF_BaseTest is BaseTest {
       maxCollateral: 10e24
     });
 
+    _inputs[7] = ILYFAdminFacet.TokenConfigInput({
+      token: address(cake),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
     address[] memory _reinvestPath = new address[](2);
@@ -261,7 +270,7 @@ abstract contract LYF_BaseTest is BaseTest {
     ibWNative = InterestBearingToken(_ibNativeToken);
 
     mmAdminFacet.setNonCollatBorrower(lyfDiamond, true);
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -290,9 +299,18 @@ abstract contract LYF_BaseTest is BaseTest {
       maxCollateral: 100e18
     });
 
+    _inputs[3] = IAdminFacet.TokenConfigInput({
+      token: address(cake),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18
+    });
+
     mmAdminFacet.setTokenConfigs(_inputs);
 
-    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
     _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
       token: address(weth),
       maxTokenBorrow: type(uint256).max
@@ -303,6 +321,10 @@ abstract contract LYF_BaseTest is BaseTest {
     });
     _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
       token: address(btc),
+      maxTokenBorrow: type(uint256).max
+    });
+    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(cake),
       maxTokenBorrow: type(uint256).max
     });
 

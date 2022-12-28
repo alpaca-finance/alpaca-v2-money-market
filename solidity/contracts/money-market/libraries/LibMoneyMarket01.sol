@@ -24,6 +24,11 @@ library LibMoneyMarket01 {
 
   uint256 internal constant MAX_BPS = 10000;
 
+  // todo: move to state
+  uint256 internal constant MAX_COLLAT_TOKEN_PER_SUBACCOUNT = 3;
+  uint256 internal constant MAX_OVER_COLLAT_BORROW_TOKEN_PER_SUBACCOUNT = 3;
+  uint256 internal constant MAX_NON_COLLAT_BORROW_TOKEN_PER_ACCOUNT = 3;
+
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_PriceStale(address);
   error LibMoneyMarket01_InvalidToken(address _token);
@@ -33,6 +38,9 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_TooManyCollateralRemoved();
   error LibMoneyMarket01_BorrowingPowerTooLow();
   error LibMoneyMarket01_NotEnoughToken();
+  error LibMoneyMarket01_SubAccountCallatTokenExceed();
+  error LibMoneyMarket01_SubAccountOverCollatBorrowTokenExceed();
+  error LibMoneyMarket01_AccountNonCollatBorrowTokenExceed();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -555,6 +563,8 @@ library LibMoneyMarket01 {
     uint256 _currentCollatAmount = subAccountCollateralList.getAmount(_token);
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
+    if (subAccountCollateralList.length() > MAX_COLLAT_TOKEN_PER_SUBACCOUNT)
+      revert LibMoneyMarket01_SubAccountCallatTokenExceed();
     ds.collats[_token] += _addAmount;
   }
 
@@ -602,6 +612,8 @@ library LibMoneyMarket01 {
     }
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
+    if (toSubAccountCollateralList.length() > MAX_COLLAT_TOKEN_PER_SUBACCOUNT)
+      revert LibMoneyMarket01_SubAccountCallatTokenExceed();
   }
 
   function getOverCollatDebt(
@@ -665,8 +677,46 @@ library LibMoneyMarket01 {
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
+    if (userDebtShare.length() > MAX_OVER_COLLAT_BORROW_TOKEN_PER_SUBACCOUNT)
+      revert LibMoneyMarket01_SubAccountOverCollatBorrowTokenExceed();
 
     // update facet token balance
     moneyMarketDs.reserves[_token] -= _amount;
+  }
+
+  function nonCollatBorrow(
+    address _account,
+    address _token,
+    uint256 _amount,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    LibDoublyLinkedList.List storage debtValue = moneyMarketDs.nonCollatAccountDebtValues[_account];
+
+    if (debtValue.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      debtValue.init();
+    }
+
+    LibDoublyLinkedList.List storage tokenDebts = moneyMarketDs.nonCollatTokenDebtValues[_token];
+
+    if (tokenDebts.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
+      tokenDebts.init();
+    }
+
+    // update account debt
+    uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;
+    uint256 _newTokenDebt = tokenDebts.getAmount(msg.sender) + _amount;
+
+    debtValue.addOrUpdate(_token, _newAccountDebt);
+
+    // todo: should we have maximum for non collat borrow amount per account
+    //       now using hard cap same with sub account
+    if (debtValue.length() > MAX_NON_COLLAT_BORROW_TOKEN_PER_ACCOUNT)
+      revert LibMoneyMarket01_AccountNonCollatBorrowTokenExceed();
+
+    tokenDebts.addOrUpdate(msg.sender, _newTokenDebt);
+
+    // update global debt
+
+    moneyMarketDs.globalDebts[_token] += _amount;
   }
 }
