@@ -207,17 +207,13 @@ contract MoneyMarket_CollateralFacetTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE), _balanceBeforeTransfer);
   }
 
-  function testRevert_WhenUserTransferCollateralWithSameSubAccount_ShouldWork() external {
+  function testRevert_WhenUserTransferCollateralWithSameSubAccount_ShouldRevert() external {
     uint256 _addCollateralAmount = 10 ether;
     uint256 _transferCollateralAmount = 1 ether;
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
-
-    uint256 _MMbalanceBeforeTransfer = weth.balanceOf(moneyMarketDiamond);
-    uint256 _balanceBeforeTransfer = weth.balanceOf(ALICE);
-    uint256 _wethCollateralAmountBeforeTransfer = viewFacet.getTotalCollat(address(weth));
 
     // alice transfer collateral from subAccount0 to subAccount0
     vm.prank(ALICE);
