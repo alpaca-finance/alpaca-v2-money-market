@@ -8,18 +8,19 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // interfaces
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 
 // libs
 import { LibShareUtil } from "./libraries/LibShareUtil.sol";
 
-import "solidity/tests/utils/console.sol";
-
 contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   address private _asset;
   IMoneyMarket private _moneyMarket;
   uint8 private _decimals;
+
+  error InterestBearingToken_NoSelfTransfer();
 
   constructor() ERC20("", "") {}
 
@@ -178,5 +179,24 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
 
   function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
     return _decimals;
+  }
+
+  function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
+    address owner = _msgSender();
+    if (owner == to) revert InterestBearingToken_NoSelfTransfer();
+    _transfer(owner, to, amount);
+    return true;
+  }
+
+  function transferFrom(
+    address from,
+    address to,
+    uint256 amount
+  ) public virtual override(ERC20, IERC20) returns (bool) {
+    if (from == to) revert InterestBearingToken_NoSelfTransfer();
+    address spender = _msgSender();
+    _spendAllowance(from, spender, amount);
+    _transfer(from, to, amount);
+    return true;
   }
 }
