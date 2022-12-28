@@ -84,11 +84,12 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     uint256 _debtToRemove = _oldDebtValue > _repayAmount ? _repayAmount : _oldDebtValue;
 
+    // transfer only amount to repay
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
+
     _removeDebt(_account, _token, _oldDebtValue, _debtToRemove, moneyMarketDs);
 
-    // transfer only amount to repay
     moneyMarketDs.reserves[_token] += _debtToRemove;
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
   }
