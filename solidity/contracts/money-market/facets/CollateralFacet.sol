@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // libs
@@ -10,12 +9,13 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 
 contract CollateralFacet is ICollateralFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for address;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
   using SafeCast for int256;
@@ -48,7 +48,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    ERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    _token.safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
@@ -66,7 +66,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
 
-    ERC20(_token).safeTransfer(msg.sender, _removeAmount);
+    _token.safeTransfer(msg.sender, _removeAmount);
 
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }

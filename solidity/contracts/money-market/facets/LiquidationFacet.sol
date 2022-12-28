@@ -2,13 +2,13 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // libraries
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
@@ -17,7 +17,7 @@ import { ILendFacet } from "../interfaces/ILendFacet.sol";
 
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
-  using SafeERC20 for ERC20;
+  using LibSafeToken for address;
 
   struct InternalLiquidationCallParams {
     address liquidationStrat;
@@ -98,9 +98,9 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs.reserves[_repayToken] += _amountAfterFee;
     }
 
-    ERC20(_repayToken).safeTransferFrom(msg.sender, address(this), _actualRepayAmountWithFee);
-    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-    ERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, _repurchaseFee);
+    _repayToken.safeTransferFrom(msg.sender, address(this), _actualRepayAmountWithFee);
+    _collatToken.safeTransfer(msg.sender, _collatAmountOut);
+    _repayToken.safeTransfer(moneyMarketDs.treasury, _repurchaseFee);
 
     emit LogRepurchase(
       msg.sender,
@@ -166,7 +166,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _collatAmountBefore = ERC20(params.collatToken).balanceOf(address(this));
     uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
 
-    ERC20(params.collatToken).safeTransfer(
+    params.collatToken.safeTransfer(
       params.liquidationStrat,
       moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken)
     );
@@ -194,7 +194,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _collatSold = _collatAmountBefore - ERC20(params.collatToken).balanceOf(address(this));
 
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
-    ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
+    params.repayToken.safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
@@ -221,7 +221,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repayAmountBefore = ERC20(params.repayToken).balanceOf(address(this));
     uint256 _totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
     // if mm has no actual token left, withdraw will fail anyway
-    ERC20(_collatUnderlyingToken).safeTransfer(
+    _collatUnderlyingToken.safeTransfer(
       params.liquidationStrat,
       _shareToValue(
         params.collatToken,
@@ -254,7 +254,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     uint256 _collatSold = _valueToShare(params.collatToken, _underlyingSold, _totalToken);
 
-    ERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
+    params.repayToken.safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
     LibMoneyMarket01.withdraw(params.collatToken, _collatSold, address(this), moneyMarketDs);
 

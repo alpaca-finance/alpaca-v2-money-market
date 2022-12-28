@@ -3,7 +3,6 @@ pragma solidity 0.8.17;
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // interfaces
 import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
@@ -12,9 +11,10 @@ import { IPancakePair } from "../interfaces/IPancakePair.sol";
 
 // libraries
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for address;
 
   IPancakeRouter02 public router;
   IPancakePair public lpToken;
@@ -45,8 +45,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     uint256 _minLpAmount
   ) internal returns (uint256 _mintedLpAmount) {
     // 1. Approve router to do their stuffs
-    ERC20(_token0).safeApprove(address(router), type(uint256).max);
-    ERC20(_token1).safeApprove(address(router), type(uint256).max);
+    _token0.safeApprove(address(router), type(uint256).max);
+    _token1.safeApprove(address(router), type(uint256).max);
 
     // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
     uint256 swapAmt;
@@ -76,8 +76,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable {
     }
 
     // 7. Reset approve to 0 for safety reason
-    ERC20(_token0).safeApprove(address(router), 0);
-    ERC20(_token1).safeApprove(address(router), 0);
+    _token0.safeApprove(address(router), 0);
+    _token1.safeApprove(address(router), 0);
   }
 
   /// @dev Compute optimal deposit amount

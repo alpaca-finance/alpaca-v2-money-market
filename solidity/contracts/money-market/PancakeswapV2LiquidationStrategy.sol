@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // interfaces
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";

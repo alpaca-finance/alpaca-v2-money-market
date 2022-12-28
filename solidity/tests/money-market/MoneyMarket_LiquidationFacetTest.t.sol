@@ -955,7 +955,7 @@ contract MoneyMarket_LiquidationFacetTest is MoneyMarket_BaseTest {
     // todo: check this
 
     // should fail because 11 weth left in mm not enough to liquidate 15 usdc debt
-    vm.expectRevert("ERC20: transfer amount exceeds balance");
+    vm.expectRevert("!safeTransfer");
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,

@@ -2,7 +2,6 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // interfaces
 import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
@@ -13,9 +12,10 @@ import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { LibAV01 } from "../libraries/LibAV01.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 contract AVTradeFacet is IAVTradeFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for address;
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -45,7 +45,7 @@ contract AVTradeFacet is IAVTradeFacet {
     );
 
     // get fund from user
-    ERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
+    _stableToken.safeTransferFrom(msg.sender, address(this), _stableAmountIn);
     // borrow from MM
     LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
     LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);

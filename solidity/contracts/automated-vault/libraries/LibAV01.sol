@@ -2,10 +2,10 @@
 pragma solidity 0.8.17;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // libraries
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
@@ -15,7 +15,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 
 library LibAV01 {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for address;
 
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
@@ -74,8 +74,8 @@ library LibAV01 {
   ) internal returns (uint256 _shareToMint) {
     address _handler = avDs.vaultConfigs[_shareToken].handler;
 
-    ERC20(_token0).safeTransfer(_handler, _desiredAmount0);
-    ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
+    _token0.safeTransfer(_handler, _desiredAmount0);
+    _token1.safeTransfer(_handler, _desiredAmount1);
 
     uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
 
@@ -110,7 +110,7 @@ library LibAV01 {
     // TODO: handle slippage
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
+    vaultConfig.stableToken.safeTransfer(msg.sender, _minTokenOut);
   }
 
   /// @dev return price in 1e18
