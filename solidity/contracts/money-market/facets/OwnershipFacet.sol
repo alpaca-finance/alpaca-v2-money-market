@@ -8,22 +8,27 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IOwnershipFacet } from "../interfaces/IOwnershipFacet.sol";
 
 contract OwnershipFacet is IOwnershipFacet {
-  address private _pendingOwner;
-
+  /**
+   * @dev Transfer ownership by set new owner as pending owner
+   */
   function transferOwnership(address _newOwner) external override {
     LibDiamond.enforceIsContractOwner();
 
-    _pendingOwner = _newOwner;
+    LibDiamond.setPendingOwner(_newOwner);
 
     emit OwnershipTransferStarted(LibDiamond.contractOwner(), _newOwner);
   }
 
+  /**
+   * @dev Accept pending owner to be new owner
+   */
   function acceptOwnership() external {
+    address _pendingOwner = LibDiamond.pendingOwner();
     if (msg.sender != _pendingOwner) revert OwnershipFacet_CallerIsNotPendingOwner();
 
     address _previousOwner = LibDiamond.contractOwner();
     LibDiamond.setContractOwner(_pendingOwner);
-    delete _pendingOwner;
+    LibDiamond.setPendingOwner(address(0));
 
     emit OwnershipTransferred(_previousOwner, LibDiamond.contractOwner());
   }
@@ -38,7 +43,7 @@ contract OwnershipFacet is IOwnershipFacet {
   /**
    * @dev Returns the address of the pending owner.
    */
-  function pendingOwner() external view returns (address) {
-    return _pendingOwner;
+  function pendingOwner() external view returns (address pendingOwner_) {
+    pendingOwner_ = LibDiamond.pendingOwner();
   }
 }
