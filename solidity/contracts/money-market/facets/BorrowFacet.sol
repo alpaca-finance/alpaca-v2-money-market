@@ -107,14 +107,13 @@ contract BorrowFacet is IBorrowFacet {
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral
-  /// @param _account The account to repay for
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to repay
-  /// @param _repayAmount The amount to repay
+  /// @param _debtShareToRepay The amount to repay
   function repayWithCollat(
     uint256 _subAccountId,
     address _token,
-    uint256 _repayAmount
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
@@ -123,25 +122,24 @@ contract BorrowFacet is IBorrowFacet {
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
-    (uint256 _oldSubAccountDebtShare, uint256 _oldDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
-      _subAccount,
-      _token,
-      moneyMarketDs
-    );
-
-    uint256 _amountToRemove = LibFullMath.min(_repayAmount, LibFullMath.min(_oldDebtAmount, _collateralAmount));
-
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      _amountToRemove,
+    uint256 _collateralAsShare = LibShareUtil.valueToShare(
+      _collateralAmount,
       moneyMarketDs.overCollatDebtShares[_token],
       moneyMarketDs.overCollatDebtValues[_token]
+    );
+
+    (uint256 _oldSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+
+    uint256 _actualShareToRepay = LibFullMath.min(
+      _debtShareToRepay,
+      LibFullMath.min(_oldSubAccountDebtShare, _collateralAsShare)
     );
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
       _token,
       _oldSubAccountDebtShare,
-      _shareToRemove,
+      _actualShareToRepay,
       moneyMarketDs
     );
 
