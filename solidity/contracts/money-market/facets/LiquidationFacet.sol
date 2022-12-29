@@ -132,22 +132,26 @@ contract LiquidationFacet is ILiquidationFacet {
       }
     }
 
-    // update states
-    _reduceDebt(vars.subAccount, _repayToken, vars.repayAmountWihtoutFee, moneyMarketDs);
-    _reduceCollateral(vars.subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
-
-    moneyMarketDs.reserves[_repayToken] += vars.repayAmountWihtoutFee;
-
     // transfer tokens
+    uint256 _repayTokenBefore = IERC20(_repayToken).balanceOf(address(this));
     IERC20(_repayToken).safeTransferFrom(msg.sender, address(this), vars.repayAmountWithFee);
+    uint256 _actualRepayAmountWithoutFee = IERC20(_repayToken).balanceOf(address(this)) -
+      _repayTokenBefore -
+      vars.repurchaseFeeToProtocol;
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
     IERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, vars.repurchaseFeeToProtocol);
+
+    // update states
+    _reduceDebt(vars.subAccount, _repayToken, _actualRepayAmountWithoutFee, moneyMarketDs);
+    _reduceCollateral(vars.subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+
+    moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithoutFee;
 
     emit LogRepurchase(
       msg.sender,
       _repayToken,
       _collatToken,
-      vars.repayAmountWithFee,
+      _actualRepayAmountWithoutFee,
       _collatAmountOut,
       vars.repurchaseFeeToProtocol,
       (_collatAmountOut * moneyMarketDs.repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS
