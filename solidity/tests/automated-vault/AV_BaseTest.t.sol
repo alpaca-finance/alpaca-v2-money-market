@@ -77,6 +77,11 @@ abstract contract AV_BaseTest is BaseTest {
     usdc.approve(avDiamond, type(uint256).max);
     vm.stopPrank();
 
+    vm.startPrank(BOB);
+    weth.approve(avDiamond, type(uint256).max);
+    usdc.approve(avDiamond, type(uint256).max);
+    vm.stopPrank();
+
     // setup token configs
     IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](3);
     tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({ token: address(weth), tier: LibAV01.AssetTier.TOKEN });
