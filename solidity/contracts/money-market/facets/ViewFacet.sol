@@ -81,6 +81,11 @@ contract ViewFacet {
     return LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
   }
 
+  function getGlobalDebtValue(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.globalDebts[_token];
+  }
+
   function getOverCollatDebtValue(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.overCollatDebtValues[_token];
