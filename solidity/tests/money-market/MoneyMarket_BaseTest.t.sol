@@ -77,6 +77,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address _ibBtc = adminFacet.openMarket(address(btc));
     address _ibNativeToken = adminFacet.openMarket(address(nativeToken));
 
+    adminFacet.openMarket(address(cake));
+
     ibWeth = InterestBearingToken(_ibWeth);
     ibUsdc = InterestBearingToken(_ibUsdc);
     ibBtc = InterestBearingToken(_ibBtc);
@@ -89,6 +91,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
+    cake.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -98,7 +101,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](6);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](7);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -154,12 +157,22 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxCollateral: 100e18
     });
 
+    _inputs[6] = IAdminFacet.TokenConfigInput({
+      token: address(cake),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18
+    });
+
     adminFacet.setTokenConfigs(_inputs);
 
-    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
     _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({ token: address(weth), maxTokenBorrow: 30e18 });
     _tokenBorrowLimitInputs[1] = IAdminFacet.TokenBorrowLimitInput({ token: address(usdc), maxTokenBorrow: 30e18 });
     _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({ token: address(btc), maxTokenBorrow: 30e18 });
+    _tokenBorrowLimitInputs[3] = IAdminFacet.TokenBorrowLimitInput({ token: address(cake), maxTokenBorrow: 30e18 });
 
     IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
@@ -201,5 +214,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set liquidation params: maxLiquidate 50%, liquidationThreshold 90%
     adminFacet.setLiquidationParams(5000, 9000);
+
+    // set max num of token
+    adminFacet.setMaxNumOfToken(3, 3, 3);
   }
 }

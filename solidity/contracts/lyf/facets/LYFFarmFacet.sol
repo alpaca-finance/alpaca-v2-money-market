@@ -372,50 +372,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );
-    _borrowFromMoneyMarket(
+    LibLYF01.borrowFromMoneyMarket(
       _subAccount,
       _token,
       _lpToken,
       _desireTokenAmount - _tokenAmountFromCollat - _tokenAmountFromIbCollat,
       lyfDs
     );
-  }
-
-  function _borrowFromMoneyMarket(
-    address _subAccount,
-    address _token,
-    address _lpToken,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    if (_amount == 0) return;
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-
-    IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
-
-    // update subaccount debt
-    // todo: optimize this
-    LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
-
-    if (
-      lyfDs.subAccountDebtShares[_subAccount].getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY
-    ) {
-      lyfDs.subAccountDebtShares[_subAccount].init();
-    }
-
-    uint256 _totalSupply = lyfDs.debtShares[_debtShareId];
-    uint256 _totalValue = lyfDs.debtValues[_debtShareId];
-
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
-
-    // update over collat debt
-    lyfDs.debtShares[_debtShareId] += _shareToAdd;
-    lyfDs.debtValues[_debtShareId] += _amount;
-
-    uint256 _newShareAmount = userDebtShare.getAmount(_debtShareId) + _shareToAdd;
-
-    // update user's debtshare
-    userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
 
   function _repayDebt(

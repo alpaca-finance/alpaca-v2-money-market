@@ -92,7 +92,7 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](10);
+    bytes4[] memory selectors = new bytes4[](11);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.setTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
@@ -103,6 +103,7 @@ library LYFDiamondDeployer {
     selectors[7] = LYFAdminFacet.setReinvestorsOk.selector;
     selectors[8] = LYFAdminFacet.setLiquidationStratsOk.selector;
     selectors[9] = LYFAdminFacet.setLiquidatorsOk.selector;
+    selectors[10] = LYFAdminFacet.setMaxNumOfToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -183,7 +184,7 @@ library LYFDiamondDeployer {
   {
     _viewFacet = new LYFViewFacet();
 
-    _selectors = new bytes4[](18);
+    _selectors = new bytes4[](19);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
     _selectors[2] = LYFViewFacet.getLpTokenAmount.selector;
@@ -202,6 +203,7 @@ library LYFDiamondDeployer {
     _selectors[15] = LYFViewFacet.getPendingReward.selector;
     _selectors[16] = LYFViewFacet.getTotalBorrowingPower.selector;
     _selectors[17] = LYFViewFacet.getTotalUsedBorrowingPower.selector;
+    _selectors[18] = LYFViewFacet.getMaxNumOfToken.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),

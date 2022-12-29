@@ -170,6 +170,8 @@ abstract contract AV_BaseTest is BaseTest {
     ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
     vm.stopPrank();
+
+    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
   }
 
   function deployAVPancakeSwapHandler(address _router, address _lpToken) internal returns (AVPancakeSwapHandler) {

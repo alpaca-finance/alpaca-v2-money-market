@@ -47,6 +47,7 @@ contract AdminFacet is IAdminFacet {
     uint256 borrowLimitUSDValue
   );
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
+  event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -233,10 +234,10 @@ contract AdminFacet is IAdminFacet {
   }
 
   function setFees(
-    uint256 _newLendingFeeBps,
-    uint256 _newRepurchaseRewardBps,
-    uint256 _newRepurchaseFeeBps,
-    uint256 _newLiquidationFeeBps
+    uint16 _newLendingFeeBps,
+    uint16 _newRepurchaseRewardBps,
+    uint16 _newRepurchaseFeeBps,
+    uint16 _newLiquidationFeeBps
   ) external onlyOwner {
     if (
       _newLendingFeeBps > LibMoneyMarket01.MAX_BPS ||
@@ -305,5 +306,18 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidArguments();
     moneyMarketDs.maxLiquidateBps = _newMaxLiquidateBps;
     moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
+  }
+
+  function setMaxNumOfToken(
+    uint8 _numOfCollat,
+    uint8 _numOfDebt,
+    uint8 _numOfNonCollatDebt
+  ) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.maxNumOfCollatPerSubAccount = _numOfCollat;
+    moneyMarketDs.maxNumOfDebtPerSubAccount = _numOfDebt;
+    moneyMarketDs.maxNumOfDebtPerNonCollatAccount = _numOfNonCollatDebt;
+
+    emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt, _numOfNonCollatDebt);
   }
 }

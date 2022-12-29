@@ -9,6 +9,8 @@ import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
+  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
+
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
     _;
@@ -123,5 +125,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setTreasury(address _newTreasury) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.treasury = _newTreasury;
+  }
+
+  function setMaxNumOfToken(uint8 _numOfCollat) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.maxNumOfCollatPerSubAccount = _numOfCollat;
+    emit LogSetMaxNumOfToken(_numOfCollat);
   }
 }
