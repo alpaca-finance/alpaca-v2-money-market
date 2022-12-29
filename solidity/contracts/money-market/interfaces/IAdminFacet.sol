@@ -41,7 +41,7 @@ interface IAdminFacet {
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
-  function setNonCollatBorrower(address _borrower, bool _isOk) external;
+  function setNonCollatBorrowerOk(address _borrower, bool _isOk) external;
 
   function setInterestModel(address _token, address model) external;
 
