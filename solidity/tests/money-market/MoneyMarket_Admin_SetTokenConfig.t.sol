@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+
+// libs
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { IAdminFacet, LibMoneyMarket01 } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
-contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
@@ -33,10 +36,7 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     assertEq(_tokenConfig.borrowingFactor, 6000);
   }
 
-  function testCorrectness_WhenNotOwnerSetSomeConfig_ShouldRevert() external {
-    vm.startPrank(ALICE);
-
-    // try to setTokenConfigs
+  function testRevert_WhenNonOwnerSetTokenConfig() external {
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(9998),
@@ -46,32 +46,10 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
       maxCollateral: 1000e18,
       maxBorrow: 100e18
     });
+
+    vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
     adminFacet.setTokenConfigs(_inputs);
-
-    vm.stopPrank();
-  }
-
-  function testRevert_FailedSanityCheck() external {
-    // address 0
-    vm.expectRevert();
-    adminFacet.setInterestModel(address(weth), address(0));
-
-    vm.expectRevert();
-    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(0));
-
-    vm.expectRevert();
-    adminFacet.setOracle(address(0));
-
-    // wrong contract
-    vm.expectRevert();
-    adminFacet.setInterestModel(address(weth), address(btc));
-
-    vm.expectRevert();
-    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(btc));
-
-    vm.expectRevert();
-    adminFacet.setOracle(address(btc));
   }
 
   function testRevert_WhenSetTokenConfigWithInvalidCollateralFactor() external {
@@ -135,6 +113,28 @@ contract MoneyMarket_AdminFacetTest is MoneyMarket_BaseTest {
     // maxBorrow is more than MAX_BPS
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
     adminFacet.setTokenConfigs(_inputs);
+  }
+
+  function testRevert_FailedSanityCheck() external {
+    // address 0
+    vm.expectRevert();
+    adminFacet.setInterestModel(address(weth), address(0));
+
+    vm.expectRevert();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(0));
+
+    vm.expectRevert();
+    adminFacet.setOracle(address(0));
+
+    // wrong contract
+    vm.expectRevert();
+    adminFacet.setInterestModel(address(weth), address(btc));
+
+    vm.expectRevert();
+    adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(btc));
+
+    vm.expectRevert();
+    adminFacet.setOracle(address(btc));
   }
 
   function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
