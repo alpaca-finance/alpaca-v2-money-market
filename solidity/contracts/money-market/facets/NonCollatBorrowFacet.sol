@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// libs
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -9,7 +9,7 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { INonCollatBorrowFacet } from "../interfaces/INonCollatBorrowFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
@@ -118,12 +118,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       revert NonCollatBorrowFacet_InvalidToken(_token);
     }
 
-    // check credit
-    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
+    uint256 _totalUsedBorrowingPower = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
 
     _checkCapacity(_token, _amount, moneyMarketDs);
 
-    _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
   }
 
   function _checkBorrowingPower(

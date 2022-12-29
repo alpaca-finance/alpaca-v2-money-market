@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- External Libraries ---- //
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-// libs
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 

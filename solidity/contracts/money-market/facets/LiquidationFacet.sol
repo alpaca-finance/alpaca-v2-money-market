@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// libraries
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";

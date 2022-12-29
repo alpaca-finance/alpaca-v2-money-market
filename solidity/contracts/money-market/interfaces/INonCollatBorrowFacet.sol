@@ -16,8 +16,8 @@ interface INonCollatBorrowFacet {
   error NonCollatBorrowFacet_InvalidToken(address _token);
   error NonCollatBorrowFacet_NotEnoughToken(uint256 _borrowAmount);
   error NonCollatBorrowFacet_BorrowingValueTooHigh(
-    uint256 _totalBorrowingPowerUSDValue,
-    uint256 _totalBorrowedUSDValue,
+    uint256 _totalBorrowingPower,
+    uint256 _totalUsedBorrowingPower,
     uint256 _borrowingUSDValue
   );
   error NonCollatBorrowFacet_InvalidAssetTier();

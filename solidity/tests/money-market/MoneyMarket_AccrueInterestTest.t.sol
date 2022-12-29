@@ -599,7 +599,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     // borrowed value = 9 * 9 / 9 = 9
     // the used borrowed power should be 9 * 10000 / 9000 = 10 ether
 
-    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalNonCollatUsedBorrowingPower(ALICE);
+    uint256 _borrowedUSDValue = viewFacet.getTotalNonCollatUsedBorrowingPower(ALICE);
     assertEq(_borrowedUSDValue, 10 ether);
 
     // timepast 100
@@ -624,7 +624,7 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     // the used borrowed power (usdc) should be 9 * 10000 / 9000 = 10 ether
 
     // total used borrowed power = 19 + 10 = 29 ether
-    (_borrowedUSDValue, ) = viewFacet.getTotalNonCollatUsedBorrowingPower(ALICE);
+    _borrowedUSDValue = viewFacet.getTotalNonCollatUsedBorrowingPower(ALICE);
     assertEq(_borrowedUSDValue, 29 ether);
   }
 }
