@@ -18,6 +18,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+/// @title AdminFacet is a contract responsible for protocol parameter configuration
 contract AdminFacet is IAdminFacet {
   using LibSafeToken for IERC20;
   using SafeCast for uint256;
@@ -60,7 +61,9 @@ contract AdminFacet is IAdminFacet {
     LibReentrancyGuard.unlock();
   }
 
-  // open isolate token market, able to borrow only
+  /// @notice Open a new market for new token
+  /// @param _token The token for lending/borrowing
+  /// @return _newIbToken The address of interest bearing token created for this market
   function openMarket(address _token) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     if (moneyMarketDs.ibTokenImplementation == address(0)) revert AdminFacet_InvalidIbTokenImplementation();
@@ -90,6 +93,8 @@ contract AdminFacet is IAdminFacet {
     emit LogOpenMarket(msg.sender, _token, _newIbToken);
   }
 
+  /// @notice Set token-specific configuration
+  /// @param _tokenConfigInputs A struct of parameters for the token
   function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
@@ -120,27 +125,18 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function _validateTokenConfig(
-    uint256 collateralFactor,
-    uint256 borrowingFactor,
-    uint256 maxCollateral,
-    uint256 maxBorrow
-  ) internal pure {
-    // factors should not greater than MAX_BPS
-    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
-      revert AdminFacet_InvalidArguments();
-
-    // prevent user add collat or borrow too much
-    if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
-    if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
-  }
-
+  /// @notice Whitelist/Blacklist the non collateralized borrower
+  /// @param _borrower The address of contract to put in the list
+  /// @param _isOk A flag to determine if allowed or not
   function setNonCollatBorrower(address _borrower, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
     emit LogSetNonCollatBorrower(_borrower, _isOk);
   }
 
+  /// @notice Set the interest model for a token specifically to over collateralized borrowing
+  /// @param _token The token that the interest model will be imposed on
+  /// @param _model The contract address of the interest model
   function setInterestModel(address _token, address _model) external onlyOwner {
     // Sanity check
     IInterestRateModel(_model).getInterestRate(0, 0);
@@ -150,6 +146,10 @@ contract AdminFacet is IAdminFacet {
     emit LogSetInterestModel(_token, _model);
   }
 
+  /// @notice Set the interest model for a token specifically on a non collateralized borrower
+  /// @param _account The address of borrower
+  /// @param _token The token that the interest model will be impsoed on
+  /// @param _model The contract address of the interest model
   function setNonCollatInterestModel(
     address _account,
     address _token,
@@ -164,6 +164,8 @@ contract AdminFacet is IAdminFacet {
     emit LogSetNonCollatInterestModel(_account, _token, _model);
   }
 
+  /// @notice Set the oracle used in token pricing
+  /// @param _oracle The address of oracle
   function setOracle(address _oracle) external onlyOwner {
     // Sanity check
     IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
@@ -172,6 +174,9 @@ contract AdminFacet is IAdminFacet {
     emit LogSetOracle(_oracle);
   }
 
+  /// @notice Whitelist/Blacklist the address allowed for repurchasing
+  /// @param _repurchasers an array of address of repurchasers
+  /// @param _isOk a flag to allow or disallow
   function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _repurchasers.length;
@@ -184,6 +189,9 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  /// @notice Whitelist/Blacklist the strategy contract used in liquidation
+  /// @param _strats an array of strategy contracts
+  /// @param _isOk a flag to allow or disallow
   function setLiquidationStratsOk(address[] calldata _strats, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _strats.length;
@@ -196,24 +204,33 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  function setLiquidatorsOk(address[] calldata _liquidator, bool _isOk) external onlyOwner {
+  /// @notice Whitelist/Blacklist the address allowed for liquidation
+  /// @param _liquidators an array of address of liquidators
+  /// @param _isOk a flag to allow or disallow
+  function setLiquidatorsOk(address[] calldata _liquidators, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _liquidator.length;
+    uint256 _length = _liquidators.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.liquidatorsOk[_liquidator[_i]] = _isOk;
-      emit LogSetLiquidatorOk(_liquidator[_i], _isOk);
+      moneyMarketDs.liquidatorsOk[_liquidators[_i]] = _isOk;
+      emit LogSetLiquidatorOk(_liquidators[_i], _isOk);
       unchecked {
         ++_i;
       }
     }
   }
 
+  /// @notice Set the treasury address
+  /// @param _treasury The new treasury address
   function setTreasury(address _treasury) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.treasury = _treasury;
     emit LogSetTreasury(_treasury);
   }
 
+  /// @notice Withdraw the protocol's reserve
+  /// @param _token The token to be withdrawn
+  /// @param _to The destination address
+  /// @param _amount The amount to withdraw
   function withdrawReserve(
     address _token,
     address _to,
@@ -232,6 +249,12 @@ contract AdminFacet is IAdminFacet {
 
     emit LogWitdrawReserve(_token, _to, _amount);
   }
+
+  /// @notice Set protocol's fees
+  /// @param _newLendingFeeBps The lending fee imposed on interest collected
+  /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
+  /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
+  /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
 
   function setFees(
     uint16 _newLendingFeeBps,
@@ -256,6 +279,8 @@ contract AdminFacet is IAdminFacet {
     emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
+  /// @notice Set the implementation address of interest bearing token
+  /// @param _newImplementation The address of interest bearing contract
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     // sanity check
@@ -264,6 +289,8 @@ contract AdminFacet is IAdminFacet {
     emit LogSetIbTokenImplementation(_newImplementation);
   }
 
+  /// @notice Set the non collteral's borrower configuration
+  /// @param _protocolConfigInputs An array of configrations for borrowers
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _protocolConfigInputs.length;
@@ -300,6 +327,9 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  /// @notice Set the liquidation configuration
+  /// @param _newMaxLiquidateBps The maximum percentage allowed in a single repurchase/liquidation call
+  /// @param _newLiquidationThreshold The threshold that need to reach to allow liquidation
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold > LibMoneyMarket01.MAX_BPS)
@@ -308,6 +338,10 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
   }
 
+  /// @notice Set the maximum number of collateral/borrowed
+  /// @param _numOfCollat The maximum number of collateral per subaccount
+  /// @param _numOfDebt The maximum number of borrowed per subaccount
+  /// @param _numOfNonCollatDebt The maximum number of borrowed per non collateralized borrower
   function setMaxNumOfToken(
     uint8 _numOfCollat,
     uint8 _numOfDebt,
@@ -319,5 +353,20 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.maxNumOfDebtPerNonCollatAccount = _numOfNonCollatDebt;
 
     emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt, _numOfNonCollatDebt);
+  }
+
+  function _validateTokenConfig(
+    uint256 collateralFactor,
+    uint256 borrowingFactor,
+    uint256 maxCollateral,
+    uint256 maxBorrow
+  ) internal pure {
+    // factors should not greater than MAX_BPS
+    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
+      revert AdminFacet_InvalidArguments();
+
+    // prevent user add collat or borrow too much
+    if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
+    if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
   }
 }
