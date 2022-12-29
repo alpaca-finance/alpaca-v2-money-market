@@ -23,11 +23,14 @@ import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 // of your diamond. Add parameters to the init funciton if you need to.
 
 contract DiamondInit {
+  error DiamondInit_Initialized();
+
   // You can add parameters to this function in order to pass in
   // data to set your own state variables
   function init() external {
     // adding ERC165 data
     LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+    if (ds.diamondInitialized > 0) revert DiamondInit_Initialized();
     ds.supportedInterfaces[type(IERC165).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
@@ -44,5 +47,6 @@ contract DiamondInit {
     ds.supportedInterfaces[type(ILendFacet).interfaceId] = true;
     ds.supportedInterfaces[type(IAdminFacet).interfaceId] = true;
     ds.supportedInterfaces[type(ICollateralFacet).interfaceId] = true;
+    ds.diamondInitialized = 1;
   }
 }
