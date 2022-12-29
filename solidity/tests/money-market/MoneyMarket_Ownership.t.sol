@@ -5,7 +5,7 @@ import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
 
 import { IOwnershipFacet } from "../../contracts/money-market/interfaces/IOwnershipFacet.sol";
 
-contract MoneyMarket_OwnershipFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_OwnershipTest is MoneyMarket_BaseTest {
   event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
