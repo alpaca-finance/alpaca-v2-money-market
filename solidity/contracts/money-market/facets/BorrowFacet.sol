@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- External Libraries ---- //
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-// libs
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -11,10 +12,11 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+/// @title BorrowFacet is dedicated to over collateralized borrowing and repayment
 contract BorrowFacet is IBorrowFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -42,6 +44,10 @@ contract BorrowFacet is IBorrowFacet {
     LibReentrancyGuard.unlock();
   }
 
+  /// @notice Borrow a token agaist the placed collaterals
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to borrow
+  /// @param _amount The amount to borrow
   function borrow(
     uint256 _subAccountId,
     address _token,
@@ -66,6 +72,11 @@ contract BorrowFacet is IBorrowFacet {
     emit LogBorrow(_subAccount, _token, _amount, _debtShare);
   }
 
+  /// @notice Repay the debt for the subaccount
+  /// @param _account The account to repay for
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to repay
+  /// @param _debtShareToRepay The share amount of debt token to repay
   function repay(
     address _account,
     uint256 _subAccountId,
@@ -95,6 +106,11 @@ contract BorrowFacet is IBorrowFacet {
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
+  /// @notice Repay the debt for the subaccount using the same collateral
+  /// @param _account The account to repay for
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to repay
+  /// @param _repayAmount The amount to repay
   function repayWithCollat(
     uint256 _subAccountId,
     address _token,

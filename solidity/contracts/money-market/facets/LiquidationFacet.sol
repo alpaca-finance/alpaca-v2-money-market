@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// libraries
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+/// @title LiquidationFacet is dedicated to repurchasing and liquidating
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibSafeToken for IERC20;
@@ -43,6 +44,12 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repayTokenPrice;
   }
 
+  /// @notice Repurchase the debt token in exchange of a collateral token
+  /// @param _account The account to be repurchased
+  /// @param _subAccountId The index to derive the subaccount
+  /// @param _repayToken The token that will be repurchase and repay the debt
+  /// @param _collatToken The collateral token that will be used for exchange
+  /// @param _desiredRepayAmount The amount of debt token that the repurchaser will provide
   function repurchase(
     address _account,
     uint256 _subAccountId,
@@ -151,6 +158,13 @@ contract LiquidationFacet is ILiquidationFacet {
     );
   }
 
+  /// @notice Liquidate the collateral token in exchange of the debt token
+  /// @param _liquidationStrat The address of strategy used in liqudation
+  /// @param _account The account to be repurchased
+  /// @param _subAccountId The index to derive the subaccount
+  /// @param _repayToken The token that will be repurchase and repay the debt
+  /// @param _collatToken The collateral token that will be used for exchange
+  /// @param _repayAmount The amount of debt token will be repaid after exchaing the collateral
   function liquidationCall(
     address _liquidationStrat,
     address _account,

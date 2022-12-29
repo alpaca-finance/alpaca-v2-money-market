@@ -22,8 +22,8 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
 
-    adminFacet.setNonCollatBorrower(ALICE, true);
-    adminFacet.setNonCollatBorrower(BOB, true);
+    adminFacet.setNonCollatBorrowerOk(ALICE, true);
+    adminFacet.setNonCollatBorrowerOk(BOB, true);
 
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);

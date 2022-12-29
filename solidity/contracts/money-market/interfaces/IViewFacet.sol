@@ -22,17 +22,17 @@ interface IViewFacet {
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowingPowerUSDValue);
+    returns (uint256 _totalBorrowingPower);
 
   function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+    returns (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset);
 
   function getTotalNonCollatUsedBorrowingPower(address _account)
     external
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+    returns (uint256 _totalUsedBorrowingPower);
 
   function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256);
 
@@ -70,14 +70,9 @@ interface IViewFacet {
     view
     returns (uint256 _shareAmount);
 
-  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
+  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256);
 
   function getNonCollatAccountDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
-
-  function getNonCollatTotalUsedBorrowingPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
 
   function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256);
 

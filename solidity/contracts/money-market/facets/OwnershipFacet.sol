@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- Libraries ---- //
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+
+// ---- Interfaces ---- //
 import { IOwnershipFacet } from "../interfaces/IOwnershipFacet.sol";
 
 contract OwnershipFacet is IOwnershipFacet {
