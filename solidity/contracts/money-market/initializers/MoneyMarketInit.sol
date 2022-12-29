@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
-contract MoneyMarketInit is Initializable {
+contract MoneyMarketInit {
   error MoneyMarketInit_InvalidAddress();
   error MoneyMarketInit_Initialized();
 

@@ -7,7 +7,6 @@ pragma solidity 0.8.17;
 *
 * Implementation of a diamond.
 /******************************************************************************/
-
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
