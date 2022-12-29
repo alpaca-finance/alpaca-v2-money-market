@@ -11,8 +11,13 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   }
 
   function testCorrectness_WhenDepositToken_ShouldWork() external {
+    uint256 _usdcAmountIn = 10 ether;
+    uint256 _minShareOut = 10 ether;
+
+    uint256 _usdcBalanceBefore = usdc.balanceOf(ALICE);
+
     vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
+    tradeFacet.deposit(address(avShareToken), _usdcAmountIn, _minShareOut);
 
     // leverage level is 3
     // price of weth and usdc are 1 USD
@@ -39,10 +44,28 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     // in this case is first mint, so shareToMint will be equityChange
     // shareToMint = 10
     assertEq(avShareToken.balanceOf(ALICE), 10 ether);
+    assertEq(_usdcBalanceBefore - usdc.balanceOf(ALICE), _usdcAmountIn);
 
     // note: for mock router compose LP
     // check liquidty in handler, 15 + 15 / 2 = 15
     assertEq(handler.totalLpBalance(), 15 ether);
+
+    // subsequent deposit should work
+    _usdcBalanceBefore = usdc.balanceOf(BOB);
+
+    vm.prank(BOB);
+    tradeFacet.deposit(address(avShareToken), _usdcAmountIn, _minShareOut);
+
+    // check BOB balance
+    assertEq(avShareToken.balanceOf(BOB), 10 ether);
+    assertEq(_usdcBalanceBefore - usdc.balanceOf(BOB), _usdcAmountIn);
+
+    // check vault state
+    // BOB deposit same amount as ALICE so everything in vault should double
+    (_stableDebtValue, _assetDebtValue) = tradeFacet.getDebtValues(address(avShareToken));
+    assertEq(_stableDebtValue, 10 ether);
+    assertEq(_assetDebtValue, 30 ether);
+    assertEq(handler.totalLpBalance(), 30 ether);
   }
 
   function testRevert_WhenDepositTokenAndGetTinyShares_ShouldRevert() external {

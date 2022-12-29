@@ -45,16 +45,21 @@ contract AVTradeFacet is IAVTradeFacet {
 
     // get fund from user
     IERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
+
+    uint256 _equityBefore = LibAV01.getEquity(_shareToken, vaultConfig.handler, avDs);
+
     // borrow from MM
     LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
     LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
 
     uint256 _shareToMint = LibAV01.depositToHandler(
+      vaultConfig.handler,
       _shareToken,
       _stableToken,
       _assetToken,
       _stableAmountIn + _stableBorrowAmount,
       _assetBorrowAmount,
+      _equityBefore,
       avDs
     );
 

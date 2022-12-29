@@ -64,19 +64,17 @@ library LibAV01 {
   }
 
   function depositToHandler(
+    address _handler,
     address _shareToken,
     address _token0,
     address _token1,
     uint256 _desiredAmount0,
     uint256 _desiredAmount1,
+    uint256 _equityBefore,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _shareToMint) {
-    address _handler = avDs.vaultConfigs[_shareToken].handler;
-
     IERC20(_token0).safeTransfer(_handler, _desiredAmount0);
     IERC20(_token1).safeTransfer(_handler, _desiredAmount1);
-
-    uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
 
     IAVPancakeSwapHandler(_handler).onDeposit(
       _token0,
@@ -86,12 +84,12 @@ library LibAV01 {
       0 // min lp amount
     );
 
-    uint256 _equityAfter = _getEquity(_shareToken, _handler, avDs);
+    uint256 _equityAfter = getEquity(_shareToken, _handler, avDs);
     uint256 _equityChanged = _equityAfter - _equityBefore;
 
     uint256 _totalShareTokenSupply = IERC20(_shareToken).totalSupply();
 
-    _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
+    _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityBefore);
 
     if (_totalShareTokenSupply + _shareToMint < 10**(IERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
   }
@@ -169,7 +167,7 @@ library LibAV01 {
     return uint8(_conversionFactor);
   }
 
-  function _getEquity(
+  function getEquity(
     address _shareToken,
     address _handler,
     AVDiamondStorage storage avDs
