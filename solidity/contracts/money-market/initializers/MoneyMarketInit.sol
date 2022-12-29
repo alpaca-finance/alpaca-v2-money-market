@@ -10,7 +10,7 @@ contract MoneyMarketInit {
 
   function init(address _nativeToken, address _nativeRelayer) external {
     LibDiamond.DiamondStorage storage diamondDs = LibDiamond.diamondStorage();
-    if (diamondDs.moneyMarketInitialized > 0) revert MoneyMarketInit_Initialized();
+    if (diamondDs.moneyMarketInitialized != 0) revert MoneyMarketInit_Initialized();
     LibMoneyMarket01.MoneyMarketDiamondStorage storage ds = LibMoneyMarket01.moneyMarketDiamondStorage();
     if (_nativeToken == address(0) || _nativeRelayer == address(0)) revert MoneyMarketInit_InvalidAddress();
     ds.nativeToken = _nativeToken;

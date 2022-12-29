@@ -27,7 +27,7 @@ contract DiamondInit {
   function init() external {
     // adding ERC165 data
     LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-    if (ds.diamondInitialized > 0) revert DiamondInit_Initialized();
+    if (ds.diamondInitialized != 0) revert DiamondInit_Initialized();
     ds.supportedInterfaces[type(IERC165).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
