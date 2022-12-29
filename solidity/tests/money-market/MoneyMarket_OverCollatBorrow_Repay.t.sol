@@ -97,10 +97,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     uint256 _debtAmount;
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
-    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (uint256 _repayShareAmount, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
 
     vm.prank(ALICE);
-    borrowFacet.repayWithCollat(subAccount0, address(weth), _debtAmount);
+    borrowFacet.repayWithCollat(subAccount0, address(weth), _repayShareAmount);
 
     (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(weth));
@@ -113,7 +113,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenUserRepayWithCollatMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
     uint256 _debtAmount;
-    uint256 _repayAmount = 20 ether;
+    uint256 _repayShareAmount = 20 ether;
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
     (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
@@ -122,7 +122,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     uint256 _totalTokenBefore = viewFacet.getTotalToken(address(weth));
     vm.prank(ALICE);
-    borrowFacet.repayWithCollat(subAccount0, address(weth), _repayAmount);
+    borrowFacet.repayWithCollat(subAccount0, address(weth), _repayShareAmount);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
     uint256 _totalTokenAfter = viewFacet.getTotalToken(address(weth));
 
@@ -141,14 +141,14 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenUserRepayWithCollatWithTinyAmount_ShouldWork() external {
     uint256 _debtAmount;
-    uint256 _repayAmount = 5 ether;
+    uint256 _repayShareAmount = 5 ether;
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
     (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
-    borrowFacet.repayWithCollat(subAccount0, address(weth), _repayAmount);
+    borrowFacet.repayWithCollat(subAccount0, address(weth), _repayShareAmount);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
 
     (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
