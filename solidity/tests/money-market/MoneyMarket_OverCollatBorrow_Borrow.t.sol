@@ -10,7 +10,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
-contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {

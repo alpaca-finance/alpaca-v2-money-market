@@ -10,7 +10,7 @@ import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/mone
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
-contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
+contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -471,80 +471,6 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
       30.006060780475920000 ether,
       "Global getOverCollatDebtValue missmatch"
     );
-  }
-
-  function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldaccrueInterestForAllBorrowedToken()
-    external
-  {
-    // ALICE add collateral
-    uint256 _borrowAmount = 10 ether;
-
-    vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
-    vm.stopPrank();
-
-    // BOB borrow
-    vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
-    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
-    vm.stopPrank();
-
-    // time past
-    vm.warp(block.timestamp + 10);
-
-    vm.startPrank(ALICE);
-    // remove collateral will trigger accrue interest on all borrowed token
-    collateralFacet.removeCollateral(subAccount0, address(weth), 0);
-    vm.stopPrank();
-
-    // assert ALICE
-    (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
-    (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
-
-    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
-    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
-
-    //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
-  }
-
-  function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldaccrueInterestForAllBorrowedToken()
-    external
-  {
-    // ALICE add collateral
-    uint256 _borrowAmount = 10 ether;
-
-    vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
-    vm.stopPrank();
-
-    // BOB borrow
-    vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
-    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
-    vm.stopPrank();
-
-    // time past
-    vm.warp(block.timestamp + 10);
-
-    vm.startPrank(ALICE);
-    // transfer collateral will trigger accrue interest on all borrowed token
-    collateralFacet.transferCollateral(0, 1, address(weth), 0);
-    vm.stopPrank();
-
-    // assert ALICE
-    (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
-    (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
-
-    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
-    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
-
-    //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
   }
 
   function testCorrectness_WhenUserBorrowMultipleTokens_AllDebtTokenShouldAccrueInterest() external {
