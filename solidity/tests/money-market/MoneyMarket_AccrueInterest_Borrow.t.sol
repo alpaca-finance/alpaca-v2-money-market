@@ -27,8 +27,8 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
     // non collat
-    adminFacet.setNonCollatBorrower(ALICE, true);
-    adminFacet.setNonCollatBorrower(BOB, true);
+    adminFacet.setNonCollatBorrowerOk(ALICE, true);
+    adminFacet.setNonCollatBorrowerOk(BOB, true);
 
     adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(model));
     adminFacet.setNonCollatInterestModel(ALICE, address(btc), address(tripleSlope6));

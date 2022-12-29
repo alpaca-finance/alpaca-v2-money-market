@@ -29,7 +29,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibReentrancyGuard.unlock();
   }
 
-  /// @notice Borrow with out collateral
+  /// @notice Borrow without collaterals
   /// @param _token The token to be borrowed
   /// @param _amount The amount to borrow
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {

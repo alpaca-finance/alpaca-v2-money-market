@@ -278,7 +278,7 @@ contract ViewFacet is IViewFacet {
   /// @notice Get the amount of token borrowed by a particular non collateralized borrower
   /// @param _account The non collateralized borrower
   /// @param _token The borrowed token
-  /// @return _debtAmount The amount of token borrowed
+  /// @return _debtAmount The amount of token borrowed by this particular non collateralized borrower
   function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256 _debtAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -287,7 +287,7 @@ contract ViewFacet is IViewFacet {
 
   /// @notice Get the amount of token borrowed by all non collateralized borrowers
   /// @param _token The borrowed token
-  /// @return _debtAmount The amount of token borrowed
+  /// @return _debtAmount The amount of token borrowed by non colleralized borrowers
   function getNonCollatTokenDebt(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 

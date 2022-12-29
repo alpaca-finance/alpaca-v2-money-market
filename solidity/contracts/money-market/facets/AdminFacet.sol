@@ -27,7 +27,7 @@ contract AdminFacet is IAdminFacet {
 
   event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
   event LogSetTokenConfig(address indexed _token, LibMoneyMarket01.TokenConfig _config);
-  event LogSetNonCollatBorrower(address indexed _account, bool isOk);
+  event LogsetNonCollatBorrowerOk(address indexed _account, bool isOk);
   event LogSetInterestModel(address indexed _token, address _interestModel);
   event LogSetNonCollatInterestModel(address indexed _account, address indexed _token, address _interestModel);
   event LogSetOracle(address _oracle);
@@ -129,10 +129,10 @@ contract AdminFacet is IAdminFacet {
   /// @notice Whitelist/Blacklist the non collateralized borrower
   /// @param _borrower The address of contract to put in the list
   /// @param _isOk A flag to determine if allowed or not
-  function setNonCollatBorrower(address _borrower, bool _isOk) external onlyOwner {
+  function setNonCollatBorrowerOk(address _borrower, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
-    emit LogSetNonCollatBorrower(_borrower, _isOk);
+    emit LogsetNonCollatBorrowerOk(_borrower, _isOk);
   }
 
   /// @notice Set the interest model for a token specifically to over collateralized borrowing

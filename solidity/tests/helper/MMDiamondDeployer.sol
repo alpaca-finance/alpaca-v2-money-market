@@ -231,7 +231,7 @@ library MMDiamondDeployer {
     bytes4[] memory selectors = new bytes4[](16);
     selectors[0] = AdminFacet.openMarket.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
-    selectors[2] = AdminFacet.setNonCollatBorrower.selector;
+    selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
     selectors[3] = AdminFacet.setInterestModel.selector;
     selectors[4] = AdminFacet.setOracle.selector;
     selectors[5] = AdminFacet.setRepurchasersOk.selector;
