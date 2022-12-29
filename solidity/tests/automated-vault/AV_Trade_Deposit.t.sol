@@ -74,4 +74,47 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     tradeFacet.deposit(address(avShareToken), 0.05 ether, 0.05 ether);
     vm.stopPrank();
   }
+
+  // TODO: enable this test and remove testRevert_WhenDepositTokenAndGetTinyShares_ShouldRevert
+  // when done with withdraw and tiny share
+  //   function testCorrectness_WhenTryToExploitTinysharesOnAV_ShouldDepositWithdrawCorrectlyWithoutTinyShares() external {
+  //     // no tiny share exploit since we use reserves state variable internally instead of balanceOf
+
+  //     // exploiter deposit 10 wei usdc, get 10 wei shareToken back
+  //     vm.startPrank(ALICE);
+  //     tradeFacet.deposit(address(avShareToken), 10, 10);
+
+  //     assertEq(avShareToken.balanceOf(ALICE), 10);
+  //     assertEq(handler.totalLpBalance(), 15);
+
+  //     // exploiter direct transfer 1B lp
+  //     wethUsdcLPToken.mint(ALICE, 1e10 ether);
+  //     wethUsdcLPToken.transfer(address(handler), 1e10 ether);
+  //     vm.stopPrank();
+
+  //     assertEq(handler.totalLpBalance(), 15);
+
+  //     // user deposit 1M usdc, get 1M shareToken back
+  //     console.log("==========");
+  //     usdc.mint(BOB, 1e7 ether);
+  //     vm.startPrank(BOB);
+  //     tradeFacet.deposit(address(avShareToken), 1e7 ether, 1e7 ether);
+
+  //     assertEq(avShareToken.balanceOf(BOB), 1e7 ether);
+
+  //     // user withdraw 1M ibWeth, get 1M weth back
+  //     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+  //     tradeFacet.withdraw(address(avShareToken), 1e7 ether, 1e7 ether);
+
+  //     assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, 1e7 ether);
+  //     vm.stopPrank();
+
+  //     // exploiter withdraw 10 wei share, get 10 wei usdc back
+  //     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
+
+  //     vm.prank(ALICE);
+  //     tradeFacet.withdraw(address(avShareToken), 10, 10);
+
+  //     assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1);
+  //   }
 }
