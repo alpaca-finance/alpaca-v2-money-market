@@ -5,6 +5,9 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IOwnershipFacet } from "../interfaces/IOwnershipFacet.sol";
 
 contract OwnershipFacet is IOwnershipFacet {
+  /**
+   * @dev Transfer ownership by set new owner as pending owner
+   */
   function transferOwnership(address _newOwner) external override {
     LibDiamond.enforceIsContractOwner();
 
@@ -13,6 +16,9 @@ contract OwnershipFacet is IOwnershipFacet {
     emit OwnershipTransferStarted(LibDiamond.contractOwner(), _newOwner);
   }
 
+  /**
+   * @dev Accept pending owner to be new owner
+   */
   function acceptOwnership() external {
     address _pendingOwner = LibDiamond.pendingOwner();
     if (msg.sender != _pendingOwner) revert OwnershipFacet_CallerIsNotPendingOwner();
