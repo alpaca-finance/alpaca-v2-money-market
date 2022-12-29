@@ -62,7 +62,7 @@ contract CollateralFacet is ICollateralFacet {
   /// @notice Remove a collateral token from a subaccount
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The collateral token
-  /// @param _removeCollateral The amount to remove
+  /// @param _removeAmount The amount to remove
   function removeCollateral(
     uint256 _subAccountId,
     address _token,

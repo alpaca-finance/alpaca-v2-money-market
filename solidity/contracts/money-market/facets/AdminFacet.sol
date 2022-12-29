@@ -18,7 +18,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-/// @title AdminFacet is a contract responsible for protocol parameter configuration
+/// @title AdminFacet is dedicated to protocol parameter configuration
 contract AdminFacet is IAdminFacet {
   using LibSafeToken for IERC20;
   using SafeCast for uint256;
