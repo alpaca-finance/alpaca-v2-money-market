@@ -96,13 +96,12 @@ contract BorrowFacet is IBorrowFacet {
   }
 
   function repayWithCollat(
-    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _repayAmount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+    address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // actual repay amount is minimum of collateral amount, debt amount, and repay amount
@@ -138,7 +137,7 @@ contract BorrowFacet is IBorrowFacet {
     moneyMarketDs.collats[_token] -= _actualRepayAmount;
     moneyMarketDs.reserves[_token] += _actualRepayAmount;
 
-    emit LogRepayWithCollat(_account, _subAccountId, _token, _actualRepayAmount);
+    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _actualRepayAmount);
   }
 
   function _removeDebt(

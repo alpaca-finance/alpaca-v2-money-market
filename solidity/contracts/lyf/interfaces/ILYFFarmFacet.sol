@@ -34,7 +34,6 @@ interface ILYFFarmFacet {
   function reinvest(address _lpToken) external;
 
   function repayWithCollat(
-    address _account,
     uint256 _subAccountId,
     address _token,
     address _lpToken,

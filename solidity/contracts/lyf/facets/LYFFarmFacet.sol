@@ -266,14 +266,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
   }
 
   function repayWithCollat(
-    address _account,
     uint256 _subAccountId,
     address _token,
     address _lpToken,
     uint256 _repayAmount
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
@@ -286,9 +285,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
       // remove collat as much as possible
       uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
       // remove debt as much as possible
-      uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _collatRemoved, lyfDs);
+      uint256 _actualRepayAmount = _repayDebt(msg.sender, _subAccountId, _token, _debtShareId, _collatRemoved, lyfDs);
 
-      emit LogRepayWithCollat(_account, _subAccountId, _token, _debtShareId, _actualRepayAmount);
+      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualRepayAmount);
     }
   }
 
