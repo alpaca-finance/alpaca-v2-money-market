@@ -7,6 +7,7 @@ pragma solidity 0.8.17;
 *
 * Implementation of a diamond.
 /******************************************************************************/
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
@@ -21,12 +22,15 @@ import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
 // with data from a deployment script. Use the init function to initialize state variables
 // of your diamond. Add parameters to the init funciton if you need to.
 
-contract DiamondInit {
+contract DiamondInit is Initializable {
+  error DiamondInit_Initialized();
+
   // You can add parameters to this function in order to pass in
   // data to set your own state variables
-  function init() external {
+  function init() external initializer {
     // adding ERC165 data
     LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+    if (ds.diamondInitialized > 0) revert DiamondInit_Initialized();
     ds.supportedInterfaces[type(IERC165).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
@@ -41,5 +45,6 @@ contract DiamondInit {
 
     // add others facets
     ds.supportedInterfaces[type(IAVAdminFacet).interfaceId] = true;
+    ds.diamondInitialized = 1;
   }
 }
