@@ -13,7 +13,7 @@ contract LYF_OwnershipFacetTest is LYF_BaseTest {
     super.setUp();
   }
 
-  function testCorrectness_WhenTransferOwnership_ShouldSetPendingOwner() external {
+  function testCorrectness_WhenLYFTransferOwnership_ShouldSetPendingOwner() external {
     assertEq(ownershipFacet.owner(), address(this));
     assertEq(ownershipFacet.pendingOwner(), address(0));
 
