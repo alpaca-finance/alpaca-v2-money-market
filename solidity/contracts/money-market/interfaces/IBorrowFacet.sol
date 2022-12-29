@@ -30,8 +30,8 @@ interface IBorrowFacet {
   error BorrowFacet_InvalidToken(address _token);
   error BorrowFacet_NotEnoughToken(uint256 _borrowAmount);
   error BorrowFacet_BorrowingValueTooHigh(
-    uint256 _totalBorrowingPowerUSDValue,
-    uint256 _totalBorrowedUSDValue,
+    uint256 _totalBorrowingPower,
+    uint256 _totalUsedBorrowingPower,
     uint256 _borrowingUSDValue
   );
   error BorrowFacet_InvalidAssetTier();

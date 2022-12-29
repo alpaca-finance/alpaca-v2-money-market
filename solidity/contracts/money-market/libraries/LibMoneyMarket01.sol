@@ -121,7 +121,7 @@ library LibMoneyMarket01 {
   function getTotalBorrowingPower(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _totalBorrowingPowerUSDValue)
+    returns (uint256 _totalBorrowingPower)
   {
     LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs.subAccountCollats[_subAccount].getAll();
 
@@ -140,8 +140,8 @@ library LibMoneyMarket01 {
       _underlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
       _tokenConfig = moneyMarketDs.tokenConfigs[_underlyingToken == address(0) ? _collatToken : _underlyingToken];
 
-      // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
-      _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
+      // _totalBorrowingPower += amount * tokenPrice * collateralFactor
+      _totalBorrowingPower += LibFullMath.mulDiv(
         _collats[_i].amount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
         1e22
@@ -206,7 +206,7 @@ library LibMoneyMarket01 {
   function getTotalNonCollatUsedBorrowingPower(address _account, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset)
+    returns (uint256 _totalUsedBorrowingPower)
   {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.nonCollatAccountDebtValues[_account].getAll();
 
@@ -214,10 +214,6 @@ library LibMoneyMarket01 {
 
     for (uint256 _i = 0; _i < _borrowedLength; ) {
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
-
-      if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
-        _hasIsolateAsset = true;
-      }
 
       (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
 

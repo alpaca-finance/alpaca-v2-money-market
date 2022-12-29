@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// libs
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -9,10 +9,11 @@ import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { INonCollatBorrowFacet } from "../interfaces/INonCollatBorrowFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+/// @title NonCollatBorrowFacet is dedicated to non collateralized borrowing
 contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -28,6 +29,9 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibReentrancyGuard.unlock();
   }
 
+  /// @notice Borrow without collaterals
+  /// @param _token The token to be borrowed
+  /// @param _amount The amount to borrow
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -53,6 +57,10 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     emit LogNonCollatBorrow(msg.sender, _token, _amount);
   }
 
+  /// @notice Repay the debt
+  /// @param _account The account to repay for
+  /// @param _token The token to be repaid
+  /// @param _repayAmount The amount to repay
   function nonCollatRepay(
     address _account,
     address _token,
@@ -111,21 +119,20 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
       revert NonCollatBorrowFacet_InvalidToken(_token);
     }
 
-    // check credit
-    (uint256 _totalBorrowedUSDValue, ) = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
+    uint256 _totalUsedBorrowingPower = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
 
     _checkCapacity(_token, _amount, moneyMarketDs);
 
-    _checkBorrowingPower(_totalBorrowedUSDValue, _token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
   }
 
-  // TODO: gas optimize on oracle call
   function _checkBorrowingPower(
     uint256 _borrowedValue,
     address _token,
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
+    /// @dev: check the gas optimization on oracle call
     (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];

@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// libs
+// ---- External Libraries ---- //
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -17,6 +19,7 @@ import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 
+/// @title LendFacet is dedicated for depositing and withdrawing token for lending
 contract LendFacet is ILendFacet {
   using LibSafeToken for IERC20;
 
@@ -31,6 +34,9 @@ contract LendFacet is ILendFacet {
     LibReentrancyGuard.unlock();
   }
 
+  /// @notice Deposit a token for lending
+  /// @param _token The token to lend
+  /// @param _amount The amount to lend
   function deposit(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -51,6 +57,9 @@ contract LendFacet is ILendFacet {
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
+  /// @notice Withdraw the lended token by burning the interest bearing token
+  /// @param _ibToken The interest bearing token to burn
+  /// @param _shareAmount The amount of interest bearing token to burn
   function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -64,6 +73,7 @@ contract LendFacet is ILendFacet {
     return _shareValue;
   }
 
+  /// @notice Deposit native token for lending
   function depositETH() external payable nonReentrant {
     if (msg.value == 0) revert LendFacet_InvalidAmount(msg.value);
 
@@ -92,6 +102,9 @@ contract LendFacet is ILendFacet {
     emit LogDepositETH(msg.sender, _nativeToken, _ibToken, msg.value, _shareToMint);
   }
 
+  /// @notice Withdraw the lended native token by burning the interest bearing token
+  /// @param _ibWNativeToken The interest bearing token to burn
+  /// @param _shareAmount The amount of interest bearing token to burn
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 

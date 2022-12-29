@@ -272,7 +272,7 @@ abstract contract LYF_BaseTest is BaseTest {
     ibBtc = InterestBearingToken(_ibBtc);
     ibWNative = InterestBearingToken(_ibNativeToken);
 
-    mmAdminFacet.setNonCollatBorrower(lyfDiamond, true);
+    mmAdminFacet.setNonCollatBorrowerOk(lyfDiamond, true);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({

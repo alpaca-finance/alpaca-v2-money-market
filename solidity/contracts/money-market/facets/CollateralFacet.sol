@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- External Libraries ---- //
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-// libs
+// ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-// interfaces
+// ---- Interfaces ---- //
 import { ICollateralFacet } from "../interfaces/ICollateralFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+/// @title CollateralFacet is dedicated to adding and removing collateral from subaccount
 contract CollateralFacet is ICollateralFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -37,6 +39,11 @@ contract CollateralFacet is ICollateralFacet {
     LibReentrancyGuard.unlock();
   }
 
+  /// @notice Add a token to a subaccount as a collateral
+  /// @param _account The account to add collateral to
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The collateral token
+  /// @param _amount The amount to add
   function addCollateral(
     address _account,
     uint256 _subAccountId,
@@ -53,6 +60,10 @@ contract CollateralFacet is ICollateralFacet {
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
 
+  /// @notice Remove a collateral token from a subaccount
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The collateral token
+  /// @param _removeAmount The amount to remove
   function removeCollateral(
     uint256 _subAccountId,
     address _token,
@@ -71,6 +82,11 @@ contract CollateralFacet is ICollateralFacet {
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }
 
+  /// @notice Transfer the collateral from one subaccount to another subaccount
+  /// @param _fromSubAccountId An index to derive the subaccount to transfer from
+  /// @param _toSubAccountId An index to derive the subaccount to transfer to
+  /// @param _token The token to transfer
+  /// @param _amount The amount to transfer
   function transferCollateral(
     uint256 _fromSubAccountId,
     uint256 _toSubAccountId,

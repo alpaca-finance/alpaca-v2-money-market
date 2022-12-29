@@ -116,7 +116,7 @@ abstract contract AV_BaseTest is BaseTest {
     ibWeth = InterestBearingToken(_ibWeth);
     ibUsdc = InterestBearingToken(_ibUsdc);
 
-    mmAdminFacet.setNonCollatBorrower(avDiamond, true);
+    mmAdminFacet.setNonCollatBorrowerOk(avDiamond, true);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
