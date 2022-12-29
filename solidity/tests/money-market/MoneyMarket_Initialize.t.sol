@@ -8,7 +8,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facet
 import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
 import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
 
-contract MoneyMarket_Init is MoneyMarket_BaseTest {
+contract MoneyMarket_InitializeTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }

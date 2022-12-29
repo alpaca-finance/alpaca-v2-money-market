@@ -8,7 +8,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/Diamond
 import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 import { LYFInit } from "../../contracts/lyf/initializers/LYFInit.sol";
 
-contract LYF_Init is LYF_BaseTest {
+contract LYF_InitializeTest is LYF_BaseTest {
   function setUp() public override {
     super.setUp();
   }

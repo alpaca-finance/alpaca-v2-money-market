@@ -8,7 +8,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/fa
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
 import { AVInit } from "../../contracts/automated-vault/initializers/AVInit.sol";
 
-contract AV_Init is AV_BaseTest {
+contract AV_InitializeTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
   }
