@@ -198,7 +198,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
 
     // totalBorrowingPowerAfterRepay < minDebtSize should revert
-    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.repay(ALICE, subAccount0, address(weth), 9.99 ether);
 
     // totalBorrowingPowerAfterRepay > minDebtSize should not revert
@@ -224,7 +224,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
 
     // totalBorrowingPowerAfterRepay < minDebtSize should revert
-    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.repayWithCollat(subAccount0, address(weth), 9.99 ether);
 
     // totalBorrowingPowerAfterRepay > minDebtSize should not revert

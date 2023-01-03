@@ -203,7 +203,7 @@ contract BorrowFacet is IBorrowFacet {
 
       // check borrow + currentDebt > minDebtSize
       if (((_currentSubAccountDebtAmount - _amountToRepay) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
-        revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
+        revert BorrowFacet_BorrowLessThanMinDebtSize();
       }
     }
   }
@@ -226,7 +226,7 @@ contract BorrowFacet is IBorrowFacet {
     // check borrow + currentDebt > minDebtSize
     (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
     if (((_amount + _currentDebtAmount) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
-      revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
+      revert BorrowFacet_BorrowLessThanMinDebtSize();
     }
 
     // check asset tier

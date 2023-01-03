@@ -335,7 +335,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
 
     // borrow < minDebtSize should revert
-    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
 
     // borrow == minDebtSize should not revert

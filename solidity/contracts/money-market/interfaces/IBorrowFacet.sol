@@ -35,6 +35,6 @@ interface IBorrowFacet {
   );
   error BorrowFacet_InvalidAssetTier();
   error BorrowFacet_ExceedBorrowLimit();
-  error BorrowFacet_TotalUsedBorrowingPowerTooLow();
+  error BorrowFacet_BorrowLessThanMinDebtSize();
   error BorrowFacet_TooManyCollateralRemoved();
 }
