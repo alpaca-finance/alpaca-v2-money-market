@@ -223,15 +223,18 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
 
-    // totalBorrowingPowerAfterRepay < minDebtSize should revert
+    // debt - repay < minDebtSize should revert
+    // 10 - 9.99 < 0.1
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.repayWithCollat(subAccount0, address(weth), 9.99 ether);
 
     // totalBorrowingPowerAfterRepay > minDebtSize should not revert
+    // 10 - 0.01 > 0.1
     borrowFacet.repayWithCollat(subAccount0, address(weth), 0.01 ether);
 
     // weth debt remaining = 9.99
     // totalBorrowingPowerAfterRepay == minDebtSize should not revert
+    // 9.99 - 9.89 == 0.1
     borrowFacet.repayWithCollat(subAccount0, address(weth), 9.89 ether);
 
     // weth debt remaining = 0.1

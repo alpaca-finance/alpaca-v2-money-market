@@ -331,19 +331,38 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserBorrowLessThanMinDebtSize() external {
     // minDebtSize = 0.1 ether, set in mm base test
+    // 1 weth = 1 usdc
+    // ALICE has 0 weth debt
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
 
-    // borrow < minDebtSize should revert
+    // borrow + debt < minDebtSize should revert
+    // 0.01 + 0 < 0.1
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
 
-    // borrow == minDebtSize should not revert
+    // borrow + debt == minDebtSize should not revert
+    // 0.1 + 0 == 0.1
     borrowFacet.borrow(subAccount0, address(weth), 0.1 ether);
-    // borrow > minDebtSize should not revert
-    borrowFacet.borrow(subAccount0, address(weth), 1 ether);
+
+    // ALICE has 0.1 weth debt
+    // borrow + debt > minDebtSize should not revert
+    // 0.01 + 0.1 > 0.1
+    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
 
     (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
-    assertEq(_debtAmount, 1.1 ether);
+    assertEq(_debtAmount, 0.11 ether);
+
+    // weth price dropped, debt value = 0.11 * 0.8 = 0.88 USD
+    mockOracle.setTokenPrice(address(weth), 0.8 ether);
+
+    // because weth price dropped, borrow + debt < minDebtSize should revert
+    // 0.01 + 0.88 < 0.1
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
+    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+
+    // borrow + debt == minDebtSize should not revert
+    // 0.12 + 0.88 == 0.1
+    borrowFacet.borrow(subAccount0, address(weth), 0.12 ether);
   }
 }
