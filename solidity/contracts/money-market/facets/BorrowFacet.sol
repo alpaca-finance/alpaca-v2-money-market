@@ -87,9 +87,9 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (uint256 _oldSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (uint256 _currentSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
 
-    uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
+    uint256 _actualShareToRepay = LibFullMath.min(_currentSubAccountDebtShare, _debtShareToRepay);
 
     uint256 _amountToRepay = LibShareUtil.shareToValue(
       _actualShareToRepay,
@@ -101,9 +101,16 @@ contract BorrowFacet is IBorrowFacet {
     moneyMarketDs.reserves[_token] += _amountToRepay;
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
 
-    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _validateRepay(
+      _subAccount,
+      _token,
+      _currentSubAccountDebtShare,
+      _actualShareToRepay,
+      _amountToRepay,
+      moneyMarketDs
+    );
 
-    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _removeDebt(_subAccount, _token, _currentSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     emit LogRepay(_account, _subAccountId, _token, _amountToRepay);
   }
@@ -130,11 +137,11 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtValues[_token]
     );
 
-    (uint256 _oldSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (uint256 _currentSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
 
     uint256 _actualShareToRepay = LibFullMath.min(
       _debtShareToRepay,
-      LibFullMath.min(_oldSubAccountDebtShare, _collateralAsShare)
+      LibFullMath.min(_currentSubAccountDebtShare, _collateralAsShare)
     );
 
     uint256 _amountToRepay = LibShareUtil.shareToValue(
@@ -143,9 +150,16 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _validateRepay(
+      _subAccount,
+      _token,
+      _currentSubAccountDebtShare,
+      _actualShareToRepay,
+      _amountToRepay,
+      moneyMarketDs
+    );
 
-    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _removeDebt(_subAccount, _token, _currentSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     if (_amountToRepay > _collateralAmount) {
       revert BorrowFacet_TooManyCollateralRemoved();
@@ -161,13 +175,13 @@ contract BorrowFacet is IBorrowFacet {
   function _removeDebt(
     address _subAccount,
     address _token,
-    uint256 _oldSubAccountDebtShare,
+    uint256 _currentSubAccountDebtShare,
     uint256 _shareToRepay,
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // update user debtShare
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRepay);
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _currentSubAccountDebtShare - _shareToRepay);
 
     // update over collat debtShare
     moneyMarketDs.overCollatDebtShares[_token] -= _shareToRepay;
@@ -183,14 +197,14 @@ contract BorrowFacet is IBorrowFacet {
   function _validateRepay(
     address _subAccount,
     address _repayToken,
-    uint256 _oldSubAccountDebtShare,
+    uint256 _currentSubAccountDebtShare,
     uint256 _shareToRepay,
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
     // if partial repay, check if totalBorrowingPower after repaid more than minimum
     // no check if repay entire debt
-    if (_oldSubAccountDebtShare > _shareToRepay) {
+    if (_currentSubAccountDebtShare > _shareToRepay) {
       (uint256 _totalUsedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
 
       (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
