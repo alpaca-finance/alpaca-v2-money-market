@@ -10,6 +10,8 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
 contract MoneyMarket_Admin_SetMinUsedBorrowingPowerTest is MoneyMarket_BaseTest {
+  event LogSetMinUsedBorrowingPower(uint256 _newValue);
+
   function setUp() public override {
     super.setUp();
   }
@@ -18,6 +20,8 @@ contract MoneyMarket_Admin_SetMinUsedBorrowingPowerTest is MoneyMarket_BaseTest 
     // 0.1 set by mm base test
     assertEq(viewFacet.getMinUsedBorrowingPower(), 0.1 ether);
 
+    vm.expectEmit(false, false, false, false, moneyMarketDiamond);
+    emit LogSetMinUsedBorrowingPower(1 ether);
     adminFacet.setMinUsedBorrowingPower(1 ether);
 
     assertEq(viewFacet.getMinUsedBorrowingPower(), 1 ether);

@@ -10,6 +10,8 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
 contract MoneyMarket_Admin_LiquidationParamsTest is MoneyMarket_BaseTest {
+  event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
+
   function setUp() public override {
     super.setUp();
   }
@@ -18,6 +20,8 @@ contract MoneyMarket_Admin_LiquidationParamsTest is MoneyMarket_BaseTest {
     uint16 _maxLiquidateBps = 5000;
     uint16 _liquidationThresholdBps = 5000;
 
+    vm.expectEmit(false, false, false, false, moneyMarketDiamond);
+    emit LogSetLiquidationParams(_maxLiquidateBps, _liquidationThresholdBps);
     adminFacet.setLiquidationParams(_maxLiquidateBps, _liquidationThresholdBps);
 
     (uint16 _actualMaxLiquidateBps, uint16 _actualLiquidationThresholdBps) = viewFacet.getLiquidationParams();
