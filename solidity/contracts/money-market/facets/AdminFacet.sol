@@ -50,6 +50,8 @@ contract AdminFacet is IAdminFacet {
   );
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
+  event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
+  event LogSetMinDebtSize(uint256 _newValue);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -336,6 +338,8 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidArguments();
     moneyMarketDs.maxLiquidateBps = _newMaxLiquidateBps;
     moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
+
+    emit LogSetLiquidationParams(_newMaxLiquidateBps, _newLiquidationThreshold);
   }
 
   /// @notice Set the maximum number of collateral/borrowed
@@ -353,6 +357,15 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.maxNumOfDebtPerNonCollatAccount = _numOfNonCollatDebt;
 
     emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt, _numOfNonCollatDebt);
+  }
+
+  /// @notice Set the minimum debt size that subaccount must maintain during borrow and repay
+  /// @param _newValue New minDebtSize value to be set
+  function setMinDebtSize(uint256 _newValue) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.minDebtSize = _newValue;
+
+    emit LogSetMinDebtSize(_newValue);
   }
 
   function _validateTokenConfig(
