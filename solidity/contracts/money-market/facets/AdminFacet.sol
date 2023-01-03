@@ -377,39 +377,42 @@ contract AdminFacet is IAdminFacet {
   }
 
   /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
-  /// @param _account Borrower address to write off from
-  /// @param _subAccountId  Borrower subaccount id to write off from
-  /// @param _token Debt token to write off
-  function writeOffSubAccountDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token
-  ) external onlyOwner {
+  /// @param _inputs An array of input to write off debt for subaccount
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+    uint256 _length = _inputs.length;
+    for (uint256 i = 0; i < _length; ) {
+      address _token = _inputs[i].token;
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+      LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    // get all subaccount token debt, calculate to value
-    (uint256 _shareToRemove, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
-    uint256 _amountToRemove = LibShareUtil.shareToValue(
-      _shareToRemove,
-      moneyMarketDs.overCollatDebtValues[_token],
-      moneyMarketDs.overCollatDebtShares[_token]
-    );
+      address _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
 
-    // update subaccount debtShare
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, 0);
+      // get all subaccount token debt, calculate to value
+      (uint256 _shareToRemove, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+      uint256 _amountToRemove = LibShareUtil.shareToValue(
+        _shareToRemove,
+        moneyMarketDs.overCollatDebtValues[_token],
+        moneyMarketDs.overCollatDebtShares[_token]
+      );
 
-    // update over collat debtShare
-    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
-    moneyMarketDs.overCollatDebtValues[_token] -= _amountToRemove;
+      // update subaccount debtShare
+      moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, 0);
 
-    // update global debt
-    moneyMarketDs.globalDebts[_token] -= _amountToRemove;
+      // update over collat debtShare
+      moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
+      moneyMarketDs.overCollatDebtValues[_token] -= _amountToRemove;
 
-    emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
+      // update global debt
+      moneyMarketDs.globalDebts[_token] -= _amountToRemove;
+
+      emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
+
+      unchecked {
+        i++;
+      }
+    }
   }
 
   /// @notice Transfer token to diamond to increase token reserves

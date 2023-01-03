@@ -249,7 +249,7 @@ library MMDiamondDeployer {
     selectors[14] = AdminFacet.setLiquidationParams.selector;
     selectors[15] = AdminFacet.setMaxNumOfToken.selector;
     selectors[16] = AdminFacet.setMinDebtSize.selector;
-    selectors[17] = AdminFacet.writeOffSubAccountDebt.selector;
+    selectors[17] = AdminFacet.writeOffSubAccountsDebt.selector;
     selectors[18] = AdminFacet.topUpTokenReserve.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(

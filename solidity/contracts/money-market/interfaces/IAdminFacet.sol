@@ -37,6 +37,12 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
+  struct WriteOffSubAccountDebtInput {
+    address account;
+    uint256 subAccountId;
+    address token;
+  }
+
   function openMarket(address _token) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
@@ -86,11 +92,7 @@ interface IAdminFacet {
     uint8 _numOfNonCollatDebt
   ) external;
 
-  function writeOffSubAccountDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token
-  ) external;
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
 
   function topUpTokenReserve(address _token, uint256 _amount) external;
 

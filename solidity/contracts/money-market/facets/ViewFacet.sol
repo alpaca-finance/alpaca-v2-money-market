@@ -331,7 +331,7 @@ contract ViewFacet is IViewFacet {
     _maxNumOfOverCollatDebt = moneyMarketDs.maxNumOfDebtPerNonCollatAccount;
   }
 
-  /// @notice Get the minimum borrowing power that subaccount must maintain during borrow and repay
+  /// @notice Get the minimum debt size that subaccount must maintain during borrow and repay
   function getMinDebtSize() external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 

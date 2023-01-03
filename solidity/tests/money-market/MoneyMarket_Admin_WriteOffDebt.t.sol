@@ -39,9 +39,12 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 1 ether);
     assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), 1 ether);
 
+    IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](1);
+    _inputs[0] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtToken);
+
     vm.expectEmit(true, true, false, false, moneyMarketDiamond);
     emit LogWriteOffSubAccountDebt(viewFacet.getSubAccount(ALICE, subAccount0), _debtToken, 1 ether, 1 ether);
-    adminFacet.writeOffSubAccountDebt(ALICE, subAccount0, _debtToken);
+    adminFacet.writeOffSubAccountsDebt(_inputs);
 
     (, _subAccountDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
     assertEq(_subAccountDebtAmount, 0);
@@ -53,6 +56,8 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
   function testRevert_WhenNonAdminWriteOffSubAccountDebt() external {
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.writeOffSubAccountDebt(ALICE, subAccount0, address(weth));
+    IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](1);
+    _inputs[0] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, address(weth));
+    adminFacet.writeOffSubAccountsDebt(_inputs);
   }
 }
