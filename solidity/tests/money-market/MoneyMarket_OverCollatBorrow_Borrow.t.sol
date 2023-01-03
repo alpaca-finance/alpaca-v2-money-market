@@ -329,18 +329,18 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenUserBorrowLessThanMinUsedBorrowingPower() external {
-    // minUsedBorrowingPower = 0.1 ether, set in mm base test
+  function testRevert_WhenUserBorrowLessThanMinDebtSize() external {
+    // minDebtSize = 0.1 ether, set in mm base test
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
 
-    // borrow < minUsedBorrowingPower should revert
+    // borrow < minDebtSize should revert
     vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
     borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
 
-    // borrow == minUsedBorrowingPower should not revert
+    // borrow == minDebtSize should not revert
     borrowFacet.borrow(subAccount0, address(weth), 0.1 ether);
-    // borrow > minUsedBorrowingPower should not revert
+    // borrow > minDebtSize should not revert
     borrowFacet.borrow(subAccount0, address(weth), 1 ether);
 
     (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));

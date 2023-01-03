@@ -51,7 +51,7 @@ contract AdminFacet is IAdminFacet {
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
-  event LogSetMinUsedBorrowingPower(uint256 _newValue);
+  event LogSetMinDebtSize(uint256 _newValue);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -360,12 +360,12 @@ contract AdminFacet is IAdminFacet {
   }
 
   /// @notice Set the minimum used borrowing power that subaccount must maintain during borrow and repay
-  /// @param _newValue New minUsedBorrowingPower value to be set
-  function setMinUsedBorrowingPower(uint256 _newValue) external onlyOwner {
+  /// @param _newValue New minDebtSize value to be set
+  function setMinDebtSize(uint256 _newValue) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.minUsedBorrowingPower = _newValue;
+    moneyMarketDs.minDebtSize = _newValue;
 
-    emit LogSetMinUsedBorrowingPower(_newValue);
+    emit LogSetMinDebtSize(_newValue);
   }
 
   function _validateTokenConfig(

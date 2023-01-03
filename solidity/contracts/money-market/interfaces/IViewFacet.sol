@@ -93,5 +93,5 @@ interface IViewFacet {
       uint8
     );
 
-  function getMinUsedBorrowingPower() external view returns (uint256);
+  function getMinDebtSize() external view returns (uint256);
 }

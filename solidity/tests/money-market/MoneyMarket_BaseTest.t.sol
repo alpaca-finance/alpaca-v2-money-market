@@ -219,6 +219,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setMaxNumOfToken(3, 3, 3);
 
     // set minimum debt required to borrow
-    adminFacet.setMinUsedBorrowingPower(0.1 ether);
+    adminFacet.setMinDebtSize(0.1 ether);
   }
 }

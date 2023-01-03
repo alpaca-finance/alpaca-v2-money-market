@@ -86,5 +86,5 @@ interface IAdminFacet {
     uint8 _numOfNonCollatDebt
   ) external;
 
-  function setMinUsedBorrowingPower(uint256 _newValue) external;
+  function setMinDebtSize(uint256 _newValue) external;
 }

@@ -139,7 +139,7 @@ library MMDiamondDeployer {
     selectors[25] = ViewFacet.getLiquidationParams.selector;
     selectors[26] = ViewFacet.getMaxNumOfToken.selector;
     selectors[27] = ViewFacet.getGlobalDebtValue.selector;
-    selectors[28] = ViewFacet.getMinUsedBorrowingPower.selector;
+    selectors[28] = ViewFacet.getMinDebtSize.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -247,7 +247,7 @@ library MMDiamondDeployer {
     selectors[13] = AdminFacet.setIbTokenImplementation.selector;
     selectors[14] = AdminFacet.setLiquidationParams.selector;
     selectors[15] = AdminFacet.setMaxNumOfToken.selector;
-    selectors[16] = AdminFacet.setMinUsedBorrowingPower.selector;
+    selectors[16] = AdminFacet.setMinDebtSize.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

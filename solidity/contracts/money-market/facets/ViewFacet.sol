@@ -331,9 +331,9 @@ contract ViewFacet is IViewFacet {
     _maxNumOfOverCollatDebt = moneyMarketDs.maxNumOfDebtPerNonCollatAccount;
   }
 
-  function getMinUsedBorrowingPower() external view returns (uint256) {
+  function getMinDebtSize() external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return moneyMarketDs.minUsedBorrowingPower;
+    return moneyMarketDs.minDebtSize;
   }
 }
