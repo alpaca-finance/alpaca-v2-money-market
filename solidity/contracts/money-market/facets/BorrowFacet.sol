@@ -170,22 +170,25 @@ contract BorrowFacet is IBorrowFacet {
     address _subAccount,
     address _token,
     uint256 _currentSubAccountDebtShare,
-    uint256 _shareToRepay,
-    uint256 _amountToRepay,
+    uint256 _shareToRemove,
+    uint256 _amountToRemove,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // update user debtShare
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _currentSubAccountDebtShare - _shareToRepay);
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(
+      _token,
+      _currentSubAccountDebtShare - _shareToRemove
+    );
 
     // update over collat debtShare
-    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRepay;
-    moneyMarketDs.overCollatDebtValues[_token] -= _amountToRepay;
+    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
+    moneyMarketDs.overCollatDebtValues[_token] -= _amountToRemove;
 
     // update global debt
-    moneyMarketDs.globalDebts[_token] -= _amountToRepay;
+    moneyMarketDs.globalDebts[_token] -= _amountToRemove;
 
     // emit event
-    emit LogRemoveDebt(_subAccount, _token, _shareToRepay, _amountToRepay);
+    emit LogRemoveDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
   }
 
   function _validateRepay(
@@ -196,13 +199,18 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    // if partial repay, check if totalBorrowingPower after repaid more than minimum
+    // if partial repay, check if debt after repaid more than minDebtSize
     // no check if repay entire debt
     if (_currentSubAccountDebtShare > _shareToRepay) {
       (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
-      // check borrow + currentDebt < minDebtSize
-      if (((_currentSubAccountDebtAmount - _amountToRepay) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
+      if (
+        ((_currentSubAccountDebtAmount - _amountToRepay) *
+          moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
+          _tokenPrice) /
+          1e18 <
+        moneyMarketDs.minDebtSize
+      ) {
         revert BorrowFacet_BorrowLessThanMinDebtSize();
       }
     }
@@ -214,24 +222,24 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
     // check open market
-    if (_ibToken == address(0)) {
+    if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) {
       revert BorrowFacet_InvalidToken(_token);
     }
 
     (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     // check borrow + currentDebt < minDebtSize
     (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
-    if (((_amount + _currentDebtAmount) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
+    if (
+      ((_amount + _currentDebtAmount) * _tokenConfig.to18ConversionFactor * _tokenPrice) / 1e18 <
+      moneyMarketDs.minDebtSize
+    ) {
       revert BorrowFacet_BorrowLessThanMinDebtSize();
     }
 
     // check asset tier
-    uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-
     (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
       _subAccount,
       moneyMarketDs
@@ -248,44 +256,26 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidAssetTier();
     }
 
-    _checkCapacity(_token, _amount, moneyMarketDs);
+    // check if tokens in reserve is enough to be borrowed
+    if (moneyMarketDs.reserves[_token] < _amount) {
+      revert BorrowFacet_NotEnoughToken(_amount);
+    }
 
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowingPower, _token, _amount, _tokenPrice, moneyMarketDs);
-  }
+    // check global borrowing limit
+    if (_amount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
+      revert BorrowFacet_ExceedBorrowLimit();
+    }
 
-  // TODO: gas optimize on oracle call
-  function _checkBorrowingPower(
-    uint256 _totalBorrowingPower,
-    uint256 _totalUsedBorrowingPower,
-    address _borrowingToken,
-    uint256 _amount,
-    uint256 _tokenPrice,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view {
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowingToken];
-
-    uint256 _usingBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
+    // check used borrowing power after borrow exceed total borrowing power
+    uint256 _borrowingPowerToBeUsed = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
     );
+    uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
 
-    if (_totalBorrowingPower < _totalUsedBorrowingPower + _usingBorrowingPower) {
-      revert BorrowFacet_BorrowingValueTooHigh(_totalBorrowingPower, _totalUsedBorrowingPower, _usingBorrowingPower);
-    }
-  }
-
-  function _checkCapacity(
-    address _token,
-    uint256 _borrowAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view {
-    if (moneyMarketDs.reserves[_token] < _borrowAmount) {
-      revert BorrowFacet_NotEnoughToken(_borrowAmount);
-    }
-
-    if (_borrowAmount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
-      revert BorrowFacet_ExceedBorrowLimit();
+    if (_totalBorrowingPower < _totalUsedBorrowingPower + _borrowingPowerToBeUsed) {
+      revert BorrowFacet_BorrowingValueTooHigh(_totalBorrowingPower, _totalUsedBorrowingPower, _borrowingPowerToBeUsed);
     }
   }
 
