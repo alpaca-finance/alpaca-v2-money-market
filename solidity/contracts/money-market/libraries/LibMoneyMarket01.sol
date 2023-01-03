@@ -92,11 +92,11 @@ library LibMoneyMarket01 {
     mapping(address => uint256) protocolReserves;
     // diamond token balances
     mapping(address => uint256) reserves;
-    // maximum number of token in the link list
+    // maximum number of token in the linked list
     uint8 maxNumOfCollatPerSubAccount;
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
-    // liquidation factor
+    // liquidation params
     uint16 maxLiquidateBps;
     uint16 liquidationThresholdBps;
     // fees
@@ -105,6 +105,7 @@ library LibMoneyMarket01 {
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
     uint256 maxPriceStale;
+    uint256 minUsedBorrowingPower;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

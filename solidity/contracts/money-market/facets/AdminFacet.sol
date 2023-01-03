@@ -256,7 +256,6 @@ contract AdminFacet is IAdminFacet {
   /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
   /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
-
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseRewardBps,
@@ -354,6 +353,11 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.maxNumOfDebtPerNonCollatAccount = _numOfNonCollatDebt;
 
     emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt, _numOfNonCollatDebt);
+  }
+
+  function setMinUsedBorrowingPower(uint256 _newValue) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.minUsedBorrowingPower = _newValue;
   }
 
   function _validateTokenConfig(
