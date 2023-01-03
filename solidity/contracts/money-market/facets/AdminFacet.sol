@@ -377,24 +377,27 @@ contract AdminFacet is IAdminFacet {
   }
 
   /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
-  /// @param _inputs An array of input to write off debt for subaccount
+  /// @param _inputs An array of input. Each should contain account, subAccountId, and token to write off for
   function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     uint256 _length = _inputs.length;
     for (uint256 i = 0; i < _length; ) {
       address _token = _inputs[i].token;
+      address _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+
+      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
+      if (LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs) >= _usedBorrowingPower) {
+        revert AdminFacet_SubAccountHealthy(_subAccount);
+      }
 
       LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-      address _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
-
       // get all subaccount token debt, calculate to value
-      (uint256 _shareToRemove, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
-      uint256 _amountToRemove = LibShareUtil.shareToValue(
-        _shareToRemove,
-        moneyMarketDs.overCollatDebtValues[_token],
-        moneyMarketDs.overCollatDebtShares[_token]
+      (uint256 _shareToRemove, uint256 _amountToRemove) = LibMoneyMarket01.getOverCollatDebt(
+        _subAccount,
+        _token,
+        moneyMarketDs
       );
 
       // update subaccount debtShare

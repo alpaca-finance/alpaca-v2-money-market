@@ -21,43 +21,95 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
     super.setUp();
 
     vm.prank(BOB);
-    lendFacet.deposit(address(weth), 100 ether);
-  }
-
-  function testCorrectness_WhenAdminWriteOffSubAccountDebt_DebtShouldBeZero() external {
-    address _debtToken = address(weth);
+    lendFacet.deposit(address(usdc), 100 ether);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(subAccount0, _debtToken, 1 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
+    borrowFacet.borrow(subAccount0, address(usdc), 1 ether);
+    collateralFacet.addCollateral(ALICE, subAccount1, address(weth), 10 ether);
+    borrowFacet.borrow(subAccount1, address(usdc), 2 ether);
     vm.stopPrank();
+  }
 
-    uint256 _subAccountDebtAmount;
-    (, _subAccountDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
-    assertEq(_subAccountDebtAmount, 1 ether);
-    assertEq(viewFacet.getGlobalDebtValue(_debtToken), 1 ether);
-    assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 1 ether);
-    assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), 1 ether);
+  function testCorrectness_WhenAdminWriteOffSubAccountsDebt_DebtShouldBeZero() external {
+    /**
+     * starting condition
+     *
+     * on ALICE subaccount0
+     *  - add 2 weth as collateral
+     *  - borrow 1 usdc
+     *
+     * on ALICE subaccount1
+     *  - add 10 weth as collateral
+     *  - borrow 2 usdc
+     *
+     * 1 weth = 1 usdc
+     */
 
-    IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](1);
+    address _debtToken = address(usdc);
+
+    // make both subaccount unhealthy
+    mockOracle.setTokenPrice(address(weth), 0.1 ether);
+
+    uint256 _subAccount0DebtAmount;
+    (, _subAccount0DebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
+    assertEq(_subAccount0DebtAmount, 1 ether);
+
+    uint256 _subAccount1DebtAmount;
+    (, _subAccount1DebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount1, _debtToken);
+    assertEq(_subAccount1DebtAmount, 2 ether);
+
+    assertEq(viewFacet.getGlobalDebtValue(_debtToken), 3 ether);
+    assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 3 ether);
+    assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), 3 ether);
+
+    // write off both subaccount debt
+    IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](2);
     _inputs[0] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtToken);
+    _inputs[1] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, _debtToken);
 
     vm.expectEmit(true, true, false, false, moneyMarketDiamond);
     emit LogWriteOffSubAccountDebt(viewFacet.getSubAccount(ALICE, subAccount0), _debtToken, 1 ether, 1 ether);
+    vm.expectEmit(true, true, false, false, moneyMarketDiamond);
+    emit LogWriteOffSubAccountDebt(viewFacet.getSubAccount(ALICE, subAccount1), _debtToken, 2 ether, 2 ether);
     adminFacet.writeOffSubAccountsDebt(_inputs);
 
-    (, _subAccountDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
-    assertEq(_subAccountDebtAmount, 0);
+    // check subaccounts debt, no debt remain
+    (, _subAccount0DebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
+    assertEq(_subAccount0DebtAmount, 0);
+
+    (, _subAccount1DebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount1, _debtToken);
+    assertEq(_subAccount1DebtAmount, 0);
+
+    // check diamond debt states, no debt remain
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 0);
     assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 0);
     assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), 0);
+  }
+
+  function testRevert_WhenAdminWriteOffSubAccountsDebt_ButOneSubAccountIsHealthy() external {
+    // make subaccount0 unhealthy while subaccount1 still healthy
+    mockOracle.setTokenPrice(address(weth), 0.4 ether);
+
+    IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](2);
+    _inputs[0] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, address(usdc));
+    _inputs[1] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, address(usdc));
+
+    // should revert since subaccount1 is healthy
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAdminFacet.AdminFacet_SubAccountHealthy.selector,
+        viewFacet.getSubAccount(ALICE, subAccount1)
+      )
+    );
+    adminFacet.writeOffSubAccountsDebt(_inputs);
   }
 
   function testRevert_WhenNonAdminWriteOffSubAccountDebt() external {
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
     IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](1);
-    _inputs[0] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, address(weth));
+    _inputs[0] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, address(usdc));
     adminFacet.writeOffSubAccountsDebt(_inputs);
   }
 }
