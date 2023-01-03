@@ -187,7 +187,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _params.collatToken,
       _params.repayToken,
       _actualRepayAmount + _feeToTreasury,
-      address(this),
       _params.paramsForStrategy
     );
 
@@ -244,7 +243,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _collatUnderlyingToken,
       _params.repayToken,
       _actualRepayAmount + _feeToTreasury,
-      address(this),
       _params.paramsForStrategy
     );
 

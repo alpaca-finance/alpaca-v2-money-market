@@ -217,11 +217,9 @@ contract LiquidationFacet is ILiquidationFacet {
     // 2. send all collats under subaccount to strategy
     uint256 _collatAmountBefore = IERC20(params.collatToken).balanceOf(address(this));
     uint256 _repayAmountBefore = IERC20(params.repayToken).balanceOf(address(this));
+    uint256 _subAccountCollatAmount = moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken);
 
-    IERC20(params.collatToken).safeTransfer(
-      params.liquidationStrat,
-      moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken)
-    );
+    IERC20(params.collatToken).safeTransfer(params.liquidationStrat, _subAccountCollatAmount);
 
     // 3. call executeLiquidation on strategy
     uint256 _actualRepayAmount = _getActualRepayAmount(
@@ -236,7 +234,6 @@ contract LiquidationFacet is ILiquidationFacet {
       params.collatToken,
       params.repayToken,
       _actualRepayAmount + _feeToTreasury,
-      address(this),
       params.paramsForStrategy
     );
 
@@ -325,7 +322,6 @@ contract LiquidationFacet is ILiquidationFacet {
       _collatUnderlyingToken,
       params.repayToken,
       vars.actualRepayAmount + vars.feeToTreasury,
-      address(this),
       params.paramsForStrategy
     );
 

@@ -38,13 +38,11 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _collatToken The source token
   /// @param _repayToken The destination token
   /// @param _repayAmount Exact destination token amount
-  /// @param _repayTo The address to transfer destination token to
   /// @param _data Extra calldata information
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
     uint256 _repayAmount,
-    address _repayTo,
     bytes calldata _data
   ) external onlyWhitelistedCallers {
     (address[] memory path, uint256 _minReceive) = abi.decode(_data, (address[], uint256));
@@ -60,9 +58,9 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     // _amountsIn[0] = collat that is required to swap for _repayAmount
     if (_collatBalance >= _amountsIn[0]) {
       // swapTokensForExactTokens will fail if _collatBalance is not enough to swap for _repayAmount during low liquidity period
-      router.swapTokensForExactTokens(_repayAmount, _collatBalance, path, _repayTo, block.timestamp);
+      router.swapTokensForExactTokens(_repayAmount, _collatBalance, path, msg.sender, block.timestamp);
     } else {
-      router.swapExactTokensForTokens(_collatBalance, _minReceive, path, _repayTo, block.timestamp);
+      router.swapExactTokensForTokens(_collatBalance, _minReceive, path, msg.sender, block.timestamp);
     }
 
     IERC20(_collatToken).safeApprove(address(router), 0);
@@ -70,7 +68,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     uint256 _remainCollat = IERC20(_collatToken).balanceOf(address(this));
 
     if (_remainCollat > 0) {
-      IERC20(_collatToken).safeTransfer(_repayTo, _remainCollat);
+      IERC20(_collatToken).safeTransfer(msg.sender, _remainCollat);
     }
   }
 

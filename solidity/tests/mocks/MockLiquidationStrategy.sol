@@ -26,7 +26,6 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     address _collatToken,
     address _repayToken,
     uint256 _repayAmount,
-    address _repayTo,
     bytes calldata /* _data */
   ) external {
     (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
@@ -39,8 +38,8 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     uint256 _actualCollatSold = _collatSold > _collatAmountBefore ? _collatAmountBefore : _collatSold;
     uint256 _actualRepayAmount = (_actualCollatSold * _priceCollatPerRepayToken) / 10**ERC20(_collatToken).decimals();
 
-    ERC20(_repayToken).safeTransfer(_repayTo, _actualRepayAmount);
-    ERC20(_collatToken).safeTransfer(_repayTo, _collatAmountBefore - _actualCollatSold);
+    ERC20(_repayToken).safeTransfer(msg.sender, _actualRepayAmount);
+    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountBefore - _actualCollatSold);
   }
 
   /// @notice Set callers ok

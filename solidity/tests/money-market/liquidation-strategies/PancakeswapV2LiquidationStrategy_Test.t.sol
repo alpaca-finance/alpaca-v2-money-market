@@ -36,13 +36,7 @@ contract PancakeswapV2LiquidationStrategy_Test is MoneyMarket_BaseTest {
     _path[1] = _debtToken;
 
     vm.prank(address(moneyMarketDiamond));
-    liquidationStrat.executeLiquidation(
-      _collatToken,
-      _debtToken,
-      1 ether,
-      address(moneyMarketDiamond),
-      abi.encode(_path)
-    );
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, abi.encode(_path));
 
     // nothing left in strat
     assertEq(weth.balanceOf(address(liquidationStrat)), 0);
@@ -70,12 +64,6 @@ contract PancakeswapV2LiquidationStrategy_Test is MoneyMarket_BaseTest {
     _path[1] = _debtToken;
 
     vm.expectRevert();
-    liquidationStrat.executeLiquidation(
-      _collatToken,
-      _debtToken,
-      1 ether,
-      address(moneyMarketDiamond),
-      abi.encode(_path)
-    );
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, abi.encode(_path));
   }
 }
