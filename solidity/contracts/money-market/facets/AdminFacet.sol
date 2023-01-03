@@ -52,7 +52,6 @@ contract AdminFacet is IAdminFacet {
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
-  event LogSetMinUsedBorrowingPower(uint256 _newValue);
   event LogWriteOffSubAccountDebt(
     address indexed subAccount,
     address indexed token,
@@ -60,6 +59,7 @@ contract AdminFacet is IAdminFacet {
     uint256 debtValueWrittenOff
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
+  event LogSetMinDebtSize(uint256 _newValue);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -367,13 +367,13 @@ contract AdminFacet is IAdminFacet {
     emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt, _numOfNonCollatDebt);
   }
 
-  /// @notice Set the minimum borrowing power that subaccount must maintain during borrow and repay
-  /// @param _newValue New minUsedBorrowingPower value to be set
-  function setMinUsedBorrowingPower(uint256 _newValue) external onlyOwner {
+  /// @notice Set the minimum debt size that subaccount must maintain during borrow and repay
+  /// @param _newValue New minDebtSize value to be set
+  function setMinDebtSize(uint256 _newValue) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.minUsedBorrowingPower = _newValue;
+    moneyMarketDs.minDebtSize = _newValue;
 
-    emit LogSetMinUsedBorrowingPower(_newValue);
+    emit LogSetMinDebtSize(_newValue);
   }
 
   /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero

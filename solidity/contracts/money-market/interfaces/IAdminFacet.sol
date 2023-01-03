@@ -86,8 +86,6 @@ interface IAdminFacet {
     uint8 _numOfNonCollatDebt
   ) external;
 
-  function setMinUsedBorrowingPower(uint256 _newValue) external;
-
   function writeOffSubAccountDebt(
     address _account,
     uint256 _subAccountId,
@@ -95,4 +93,6 @@ interface IAdminFacet {
   ) external;
 
   function topUpTokenReserve(address _token, uint256 _amount) external;
+
+  function setMinDebtSize(uint256 _newValue) external;
 }

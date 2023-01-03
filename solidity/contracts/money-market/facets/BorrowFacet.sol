@@ -87,9 +87,13 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (uint256 _oldSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
+      _subAccount,
+      _token,
+      moneyMarketDs
+    );
 
-    uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
+    uint256 _actualShareToRepay = LibFullMath.min(_currentDebtShare, _debtShareToRepay);
 
     uint256 _amountToRepay = LibShareUtil.shareToValue(
       _actualShareToRepay,
@@ -97,13 +101,13 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
-
-    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
-
     // transfer only amount to repay
-    moneyMarketDs.reserves[_token] += _amountToRepay;
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
+    moneyMarketDs.reserves[_token] += _amountToRepay;
+
+    _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+
+    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     emit LogRepay(_account, _subAccountId, _token, _amountToRepay);
   }
@@ -130,11 +134,15 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtValues[_token]
     );
 
-    (uint256 _oldSubAccountDebtShare, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
+      _subAccount,
+      _token,
+      moneyMarketDs
+    );
 
     uint256 _actualShareToRepay = LibFullMath.min(
       _debtShareToRepay,
-      LibFullMath.min(_oldSubAccountDebtShare, _collateralAsShare)
+      LibFullMath.min(_currentDebtShare, _collateralAsShare)
     );
 
     uint256 _amountToRepay = LibShareUtil.shareToValue(
@@ -143,9 +151,9 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
-    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     if (_amountToRepay > _collateralAmount) {
       revert BorrowFacet_TooManyCollateralRemoved();
@@ -161,13 +169,13 @@ contract BorrowFacet is IBorrowFacet {
   function _removeDebt(
     address _subAccount,
     address _token,
-    uint256 _oldSubAccountDebtShare,
+    uint256 _currentSubAccountDebtShare,
     uint256 _shareToRepay,
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // update user debtShare
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRepay);
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _currentSubAccountDebtShare - _shareToRepay);
 
     // update over collat debtShare
     moneyMarketDs.overCollatDebtShares[_token] -= _shareToRepay;
@@ -181,30 +189,22 @@ contract BorrowFacet is IBorrowFacet {
   }
 
   function _validateRepay(
-    address _subAccount,
     address _repayToken,
-    uint256 _oldSubAccountDebtShare,
+    uint256 _currentSubAccountDebtShare,
+    uint256 _currentSubAccountDebtAmount,
     uint256 _shareToRepay,
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
     // if partial repay, check if totalBorrowingPower after repaid more than minimum
     // no check if repay entire debt
-    if (_oldSubAccountDebtShare > _shareToRepay) {
-      (uint256 _totalUsedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
-
+    if (_currentSubAccountDebtShare > _shareToRepay) {
       (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
-      uint256 _borrowingPowerToRepay = LibMoneyMarket01.usedBorrowingPower(
-        _amountToRepay * _tokenConfig.to18ConversionFactor,
-        _tokenPrice,
-        _tokenConfig.borrowingFactor
-      );
 
-      uint256 _totalUsedBorrowingPowerAfterRepay = _totalUsedBorrowingPower - _borrowingPowerToRepay;
-
-      if (_totalUsedBorrowingPowerAfterRepay < moneyMarketDs.minUsedBorrowingPower)
-        revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
+      // check borrow + currentDebt < minDebtSize
+      if (((_currentSubAccountDebtAmount - _amountToRepay) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
+        revert BorrowFacet_BorrowLessThanMinDebtSize();
+      }
     }
   }
 
@@ -219,6 +219,14 @@ contract BorrowFacet is IBorrowFacet {
     // check open market
     if (_ibToken == address(0)) {
       revert BorrowFacet_InvalidToken(_token);
+    }
+
+    (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
+
+    // check borrow + currentDebt < minDebtSize
+    (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    if (((_amount + _currentDebtAmount) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
+      revert BorrowFacet_BorrowLessThanMinDebtSize();
     }
 
     // check asset tier
@@ -242,7 +250,7 @@ contract BorrowFacet is IBorrowFacet {
 
     _checkCapacity(_token, _amount, moneyMarketDs);
 
-    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
+    _checkBorrowingPower(_totalBorrowingPower, _totalUsedBorrowingPower, _token, _amount, _tokenPrice, moneyMarketDs);
   }
 
   // TODO: gas optimize on oracle call
@@ -251,10 +259,9 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _totalUsedBorrowingPower,
     address _borrowingToken,
     uint256 _amount,
+    uint256 _tokenPrice,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_borrowingToken, moneyMarketDs);
-
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowingToken];
 
     uint256 _usingBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
@@ -263,13 +270,9 @@ contract BorrowFacet is IBorrowFacet {
       _tokenConfig.borrowingFactor
     );
 
-    uint256 _newTotalUsedBorrowingPower = _totalUsedBorrowingPower + _usingBorrowingPower;
-
-    if (_newTotalUsedBorrowingPower < moneyMarketDs.minUsedBorrowingPower)
-      revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
-
-    if (_totalBorrowingPower < _newTotalUsedBorrowingPower)
+    if (_totalBorrowingPower < _totalUsedBorrowingPower + _usingBorrowingPower) {
       revert BorrowFacet_BorrowingValueTooHigh(_totalBorrowingPower, _totalUsedBorrowingPower, _usingBorrowingPower);
+    }
   }
 
   function _checkCapacity(

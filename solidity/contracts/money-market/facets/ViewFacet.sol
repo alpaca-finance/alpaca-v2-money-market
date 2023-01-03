@@ -332,10 +332,10 @@ contract ViewFacet is IViewFacet {
   }
 
   /// @notice Get the minimum borrowing power that subaccount must maintain during borrow and repay
-  function getMinUsedBorrowingPower() external view returns (uint256) {
+  function getMinDebtSize() external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return moneyMarketDs.minUsedBorrowingPower;
+    return moneyMarketDs.minDebtSize;
   }
 
   /// @notice Get subaccount address by perform bitwise XOR on target address and subaccount id

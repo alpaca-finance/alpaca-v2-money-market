@@ -193,19 +193,19 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserRepayAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {
     // ALICE borrow for 10 ether in setUp
-    // minUsedBorrowingPower = 0.1 ether, set in mm base test
+    // minDebtSize = 0.1 ether, set in mm base test
 
     vm.startPrank(ALICE);
 
-    // totalBorrowingPowerAfterRepay < minUsedBorrowingPower should revert
-    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    // totalBorrowingPowerAfterRepay < minDebtSize should revert
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.repay(ALICE, subAccount0, address(weth), 9.99 ether);
 
-    // totalBorrowingPowerAfterRepay > minUsedBorrowingPower should not revert
+    // totalBorrowingPowerAfterRepay > minDebtSize should not revert
     borrowFacet.repay(ALICE, subAccount0, address(weth), 0.01 ether);
 
     // weth debt remaining = 9.99
-    // totalBorrowingPowerAfterRepay == minUsedBorrowingPower should not revert
+    // totalBorrowingPowerAfterRepay == minDebtSize should not revert
     borrowFacet.repay(ALICE, subAccount0, address(weth), 9.89 ether);
 
     // weth debt remaining = 0.1
@@ -218,20 +218,23 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserRepayWithCollatAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {
     // ALICE borrow for 10 ether in setUp
-    // minUsedBorrowingPower = 0.1 ether, set in mm base test
+    // minDebtSize = 0.1 ether, set in mm base test
     // 1 weth = 1 ibWeth
 
     vm.startPrank(ALICE);
 
-    // totalBorrowingPowerAfterRepay < minUsedBorrowingPower should revert
-    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    // debt - repay < minDebtSize should revert
+    // 10 - 9.99 < 0.1
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
     borrowFacet.repayWithCollat(subAccount0, address(weth), 9.99 ether);
 
-    // totalBorrowingPowerAfterRepay > minUsedBorrowingPower should not revert
+    // totalBorrowingPowerAfterRepay > minDebtSize should not revert
+    // 10 - 0.01 > 0.1
     borrowFacet.repayWithCollat(subAccount0, address(weth), 0.01 ether);
 
     // weth debt remaining = 9.99
-    // totalBorrowingPowerAfterRepay == minUsedBorrowingPower should not revert
+    // totalBorrowingPowerAfterRepay == minDebtSize should not revert
+    // 9.99 - 9.89 == 0.1
     borrowFacet.repayWithCollat(subAccount0, address(weth), 9.89 ether);
 
     // weth debt remaining = 0.1

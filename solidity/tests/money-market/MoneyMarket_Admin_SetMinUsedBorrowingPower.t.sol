@@ -9,27 +9,27 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
-contract MoneyMarket_Admin_SetMinUsedBorrowingPowerTest is MoneyMarket_BaseTest {
-  event LogSetMinUsedBorrowingPower(uint256 _newValue);
+contract MoneyMarket_Admin_SetMinDebtSizeTest is MoneyMarket_BaseTest {
+  event LogSetMinDebtSize(uint256 _newValue);
 
   function setUp() public override {
     super.setUp();
   }
 
-  function testCorrectness_WhenAdminSetMinUsedBorrowingPower_ShouldWork() external {
+  function testCorrectness_WhenAdminSetMinDebtSize_ShouldWork() external {
     // 0.1 set by mm base test
-    assertEq(viewFacet.getMinUsedBorrowingPower(), 0.1 ether);
+    assertEq(viewFacet.getMinDebtSize(), 0.1 ether);
 
     vm.expectEmit(false, false, false, false, moneyMarketDiamond);
-    emit LogSetMinUsedBorrowingPower(1 ether);
-    adminFacet.setMinUsedBorrowingPower(1 ether);
+    emit LogSetMinDebtSize(1 ether);
+    adminFacet.setMinDebtSize(1 ether);
 
-    assertEq(viewFacet.getMinUsedBorrowingPower(), 1 ether);
+    assertEq(viewFacet.getMinDebtSize(), 1 ether);
   }
 
-  function testRevert_WhenNonAdminSetMinUsedBorrowingPower() external {
+  function testRevert_WhenNonAdminSetMinDebtSize() external {
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setMinUsedBorrowingPower(1 ether);
+    adminFacet.setMinDebtSize(1 ether);
   }
 }
