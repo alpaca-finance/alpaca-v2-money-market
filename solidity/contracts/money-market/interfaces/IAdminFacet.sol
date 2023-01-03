@@ -93,4 +93,6 @@ interface IAdminFacet {
     uint256 _subAccountId,
     address _token
   ) external;
+
+  function topUpTokenReserve(address _token, uint256 _amount) external;
 }

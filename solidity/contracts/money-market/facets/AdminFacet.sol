@@ -59,6 +59,7 @@ contract AdminFacet is IAdminFacet {
     uint256 debtShareWrittenOff,
     uint256 debtValueWrittenOff
   );
+  event LogTopUpTokenReserve(address indexed token, uint256 amount);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -409,6 +410,20 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.globalDebts[_token] -= _amountToRemove;
 
     emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
+  }
+
+  /// @notice Transfer token to diamond to increase token reserves
+  /// @param _token token to increase reserve for
+  /// @param _amount amount to transfer to diamond and increase reserve
+  function topUpTokenReserve(address _token, uint256 _amount) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) revert AdminFacet_InvalidToken(_token);
+
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    moneyMarketDs.reserves[_token] += _amount;
+
+    emit LogTopUpTokenReserve(_token, _amount);
   }
 
   function _validateTokenConfig(

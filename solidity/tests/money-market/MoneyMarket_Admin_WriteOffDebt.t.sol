@@ -49,4 +49,10 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 0);
     assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), 0);
   }
+
+  function testRevert_WhenNonAdminWriteOffSubAccountDebt() external {
+    vm.prank(ALICE);
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.writeOffSubAccountDebt(ALICE, subAccount0, address(weth));
+  }
 }
