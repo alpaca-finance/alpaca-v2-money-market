@@ -97,13 +97,13 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
-
-    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
-
     // transfer only amount to repay
     moneyMarketDs.reserves[_token] += _amountToRepay;
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
+
+    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+
+    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     emit LogRepay(_account, _subAccountId, _token, _amountToRepay);
   }
