@@ -188,24 +188,24 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    // allow repay entire debt, early return to save gas
-    if (_oldSubAccountDebtShare == _shareToRepay) return;
-
     // if partial repay, check if totalBorrowingPower after repaid more than minimum
-    (uint256 _totalUsedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
+    // no check if repay entire debt
+    if (_oldSubAccountDebtShare > _shareToRepay) {
+      (uint256 _totalUsedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
 
-    (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
-    uint256 _borrowingPowerToRepay = LibMoneyMarket01.usedBorrowingPower(
-      _amountToRepay * _tokenConfig.to18ConversionFactor,
-      _tokenPrice,
-      _tokenConfig.borrowingFactor
-    );
+      (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
+      uint256 _borrowingPowerToRepay = LibMoneyMarket01.usedBorrowingPower(
+        _amountToRepay * _tokenConfig.to18ConversionFactor,
+        _tokenPrice,
+        _tokenConfig.borrowingFactor
+      );
 
-    uint256 _totalUsedBorrowingPowerAfterRepay = _totalUsedBorrowingPower - _borrowingPowerToRepay;
+      uint256 _totalUsedBorrowingPowerAfterRepay = _totalUsedBorrowingPower - _borrowingPowerToRepay;
 
-    if (_totalUsedBorrowingPowerAfterRepay < moneyMarketDs.minUsedBorrowingPower)
-      revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
+      if (_totalUsedBorrowingPowerAfterRepay < moneyMarketDs.minUsedBorrowingPower)
+        revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
+    }
   }
 
   function _validateBorrow(
