@@ -102,8 +102,8 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     // transfer only amount to repay
-    moneyMarketDs.reserves[_token] += _amountToRepay;
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
+    moneyMarketDs.reserves[_token] += _amountToRepay;
 
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
