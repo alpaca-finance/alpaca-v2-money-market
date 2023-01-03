@@ -201,7 +201,7 @@ contract BorrowFacet is IBorrowFacet {
     if (_currentSubAccountDebtShare > _shareToRepay) {
       (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
-      // check borrow + currentDebt > minDebtSize
+      // check borrow + currentDebt < minDebtSize
       if (((_currentSubAccountDebtAmount - _amountToRepay) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
         revert BorrowFacet_BorrowLessThanMinDebtSize();
       }
@@ -223,7 +223,7 @@ contract BorrowFacet is IBorrowFacet {
 
     (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
 
-    // check borrow + currentDebt > minDebtSize
+    // check borrow + currentDebt < minDebtSize
     (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
     if (((_amount + _currentDebtAmount) * _tokenPrice) / 1e18 < moneyMarketDs.minDebtSize) {
       revert BorrowFacet_BorrowLessThanMinDebtSize();

@@ -359,7 +359,7 @@ contract AdminFacet is IAdminFacet {
     emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt, _numOfNonCollatDebt);
   }
 
-  /// @notice Set the minimum used borrowing power that subaccount must maintain during borrow and repay
+  /// @notice Set the minimum debt size that subaccount must maintain during borrow and repay
   /// @param _newValue New minDebtSize value to be set
   function setMinDebtSize(uint256 _newValue) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
