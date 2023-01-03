@@ -233,6 +233,7 @@ contract LiquidationFacet is ILiquidationFacet {
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
+      _subAccountCollatAmount,
       _actualRepayAmount + _feeToTreasury,
       params.paramsForStrategy
     );
@@ -299,15 +300,13 @@ contract LiquidationFacet is ILiquidationFacet {
     vars.totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
     vars.ibTotalSupply = IERC20(params.collatToken).totalSupply();
 
-    // if mm has no actual token left, withdraw will fail anyway
-    IERC20(_collatUnderlyingToken).safeTransfer(
-      params.liquidationStrat,
-      LibShareUtil.shareToValue(
-        moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
-        vars.totalToken,
-        vars.ibTotalSupply
-      )
+    uint256 _underlyingAmountToStrat = LibShareUtil.shareToValue(
+      moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
+      vars.totalToken,
+      vars.ibTotalSupply
     );
+    // if mm has no actual token left, withdraw will fail anyway
+    IERC20(_collatUnderlyingToken).safeTransfer(params.liquidationStrat, _underlyingAmountToStrat);
 
     // 3. call executeLiquidation on strategy to liquidate underlying token
     vars.actualRepayAmount = _getActualRepayAmount(
@@ -321,6 +320,7 @@ contract LiquidationFacet is ILiquidationFacet {
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       _collatUnderlyingToken,
       params.repayToken,
+      _underlyingAmountToStrat,
       vars.actualRepayAmount + vars.feeToTreasury,
       params.paramsForStrategy
     );

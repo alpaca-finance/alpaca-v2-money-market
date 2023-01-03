@@ -25,6 +25,7 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
+    uint256 _collatAmount,
     uint256 _repayAmount,
     bytes calldata /* _data */
   ) external {
@@ -39,7 +40,7 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     uint256 _actualRepayAmount = (_actualCollatSold * _priceCollatPerRepayToken) / 10**ERC20(_collatToken).decimals();
 
     ERC20(_repayToken).safeTransfer(msg.sender, _actualRepayAmount);
-    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountBefore - _actualCollatSold);
+    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmount - _actualCollatSold);
   }
 
   /// @notice Set callers ok

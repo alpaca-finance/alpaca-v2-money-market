@@ -36,10 +36,38 @@ contract PancakeswapV2LiquidationStrategy_Test is MoneyMarket_BaseTest {
     _path[1] = _debtToken;
 
     vm.prank(address(moneyMarketDiamond));
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, abi.encode(_path));
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, abi.encode(_path));
 
     // nothing left in strat
     assertEq(weth.balanceOf(address(liquidationStrat)), 0);
+    assertEq(usdc.balanceOf(address(liquidationStrat)), 0);
+
+    assertEq(usdc.balanceOf(address(moneyMarketDiamond)), 1 ether);
+    assertEq(usdc.balanceOf(address(router)), 0);
+  }
+
+  function testCorrectness_WhenInjectCollatToStrat_ExecuteLiquidation_ShouldTransferCollatAmountBackCorrectly()
+    external
+  {
+    address _collatToken = address(weth);
+    address _debtToken = address(usdc);
+
+    uint256 _collatAmount = 1 ether;
+    uint256 _repayAmount = 1 ether;
+
+    uint256 _injectAmount = 1 ether;
+    weth.mint(address(liquidationStrat), _collatAmount + _injectAmount);
+    usdc.mint(address(router), 1 ether);
+
+    address[] memory _path = new address[](2);
+    _path[0] = _collatToken;
+    _path[1] = _debtToken;
+
+    vm.prank(address(moneyMarketDiamond));
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, _repayAmount, abi.encode(_path));
+
+    // injected collat left in strat
+    assertEq(weth.balanceOf(address(liquidationStrat)), _injectAmount);
     assertEq(usdc.balanceOf(address(liquidationStrat)), 0);
 
     assertEq(usdc.balanceOf(address(moneyMarketDiamond)), 1 ether);
@@ -63,7 +91,9 @@ contract PancakeswapV2LiquidationStrategy_Test is MoneyMarket_BaseTest {
     _path[0] = _collatToken;
     _path[1] = _debtToken;
 
-    vm.expectRevert();
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, abi.encode(_path));
+    vm.expectRevert(
+      abi.encodeWithSelector(PancakeswapV2LiquidationStrategy.PancakeswapV2LiquidationStrategy_Unauthorized.selector)
+    );
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, abi.encode(_path));
   }
 }
