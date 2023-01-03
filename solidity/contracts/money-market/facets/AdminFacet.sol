@@ -256,7 +256,6 @@ contract AdminFacet is IAdminFacet {
   /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
   /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
-
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseRewardBps,

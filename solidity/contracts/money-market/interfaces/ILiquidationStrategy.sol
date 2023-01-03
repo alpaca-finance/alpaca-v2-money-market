@@ -9,4 +9,6 @@ interface ILiquidationStrategy {
     address _repayTo,
     bytes calldata _data
   ) external;
+
+  function setCallersOk(address[] calldata _callers, bool _isOk) external;
 }
