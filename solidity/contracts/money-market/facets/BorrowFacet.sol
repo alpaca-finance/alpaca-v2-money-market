@@ -199,12 +199,11 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    // if partial repay, check if totalBorrowingPower after repaid more than minimum
+    // if partial repay, check if debt after repaid more than minDebtSize
     // no check if repay entire debt
     if (_currentSubAccountDebtShare > _shareToRepay) {
       (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
-      // check borrow + currentDebt < minDebtSize
       if (
         ((_currentSubAccountDebtAmount - _amountToRepay) *
           moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
