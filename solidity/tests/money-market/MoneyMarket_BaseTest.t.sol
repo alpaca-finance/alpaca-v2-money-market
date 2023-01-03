@@ -196,6 +196,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     mockOracle = new MockAlpacaV2Oracle();
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
+    mockOracle.setTokenPrice(address(cake), 1e18);
     mockOracle.setTokenPrice(address(isolateToken), 1e18);
     mockOracle.setTokenPrice(address(btc), 10e18);
 
