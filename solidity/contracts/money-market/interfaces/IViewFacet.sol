@@ -94,4 +94,6 @@ interface IViewFacet {
     );
 
   function getMinUsedBorrowingPower() external view returns (uint256);
+
+  function getSubAccount(address _account, uint256 _subAccountId) external pure returns (address);
 }

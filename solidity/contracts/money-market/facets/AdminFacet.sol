@@ -11,6 +11,7 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // ---- Interfaces ---- //
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
@@ -52,6 +53,12 @@ contract AdminFacet is IAdminFacet {
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
   event LogSetMinUsedBorrowingPower(uint256 _newValue);
+  event LogWriteOffSubAccountDebt(
+    address indexed subAccount,
+    address indexed token,
+    uint256 debtShareWrittenOff,
+    uint256 debtValueWrittenOff
+  );
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -366,6 +373,42 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.minUsedBorrowingPower = _newValue;
 
     emit LogSetMinUsedBorrowingPower(_newValue);
+  }
+
+  /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
+  /// @param _account Borrower address to write off from
+  /// @param _subAccountId  Borrower subaccount id to write off from
+  /// @param _token Debt token to write off
+  function writeOffSubAccountDebt(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
+    // get all subaccount token debt, calculate to value
+    (uint256 _shareToRemove, ) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    uint256 _amountToRemove = LibShareUtil.shareToValue(
+      _shareToRemove,
+      moneyMarketDs.overCollatDebtValues[_token],
+      moneyMarketDs.overCollatDebtShares[_token]
+    );
+
+    // update subaccount debtShare
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, 0);
+
+    // update over collat debtShare
+    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
+    moneyMarketDs.overCollatDebtValues[_token] -= _amountToRemove;
+
+    // update global debt
+    moneyMarketDs.globalDebts[_token] -= _amountToRemove;
+
+    emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
   }
 
   function _validateTokenConfig(

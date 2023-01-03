@@ -87,4 +87,10 @@ interface IAdminFacet {
   ) external;
 
   function setMinUsedBorrowingPower(uint256 _newValue) external;
+
+  function writeOffSubAccountDebt(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external;
 }
