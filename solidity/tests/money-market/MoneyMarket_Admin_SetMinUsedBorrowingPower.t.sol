@@ -15,7 +15,8 @@ contract MoneyMarket_Admin_SetMinUsedBorrowingPowerTest is MoneyMarket_BaseTest 
   }
 
   function testCorrectness_WhenAdminSetMinUsedBorrowingPower_ShouldWork() external {
-    assertEq(viewFacet.getMinUsedBorrowingPower(), 0);
+    // 0.1 set by mm base test
+    assertEq(viewFacet.getMinUsedBorrowingPower(), 0.1 ether);
 
     adminFacet.setMinUsedBorrowingPower(1 ether);
 

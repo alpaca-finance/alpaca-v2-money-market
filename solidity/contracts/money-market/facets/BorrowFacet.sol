@@ -99,19 +99,13 @@ contract BorrowFacet is IBorrowFacet {
 
     _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
-    uint256 _actualRepayAmount = _removeDebt(
-      _subAccount,
-      _token,
-      _oldSubAccountDebtShare,
-      _actualShareToRepay,
-      moneyMarketDs
-    );
+    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     // transfer only amount to repay
-    moneyMarketDs.reserves[_token] += _actualRepayAmount;
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    moneyMarketDs.reserves[_token] += _amountToRepay;
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
 
-    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
+    emit LogRepay(_account, _subAccountId, _token, _amountToRepay);
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral
@@ -151,49 +145,39 @@ contract BorrowFacet is IBorrowFacet {
 
     _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
-    uint256 _actualRepayAmount = _removeDebt(
-      _subAccount,
-      _token,
-      _oldSubAccountDebtShare,
-      _actualShareToRepay,
-      moneyMarketDs
-    );
+    _removeDebt(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
-    if (_actualRepayAmount > _collateralAmount) {
+    if (_amountToRepay > _collateralAmount) {
       revert BorrowFacet_TooManyCollateralRemoved();
     }
 
-    moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _actualRepayAmount);
-    moneyMarketDs.collats[_token] -= _actualRepayAmount;
-    moneyMarketDs.reserves[_token] += _actualRepayAmount;
+    moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _amountToRepay);
+    moneyMarketDs.collats[_token] -= _amountToRepay;
+    moneyMarketDs.reserves[_token] += _amountToRepay;
 
-    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _actualRepayAmount);
+    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _amountToRepay);
   }
 
   function _removeDebt(
     address _subAccount,
     address _token,
     uint256 _oldSubAccountDebtShare,
-    uint256 _shareToRemove,
+    uint256 _shareToRepay,
+    uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _repayAmount) {
-    uint256 _oldDebtShare = moneyMarketDs.overCollatDebtShares[_token];
-    uint256 _oldDebtValue = moneyMarketDs.overCollatDebtValues[_token];
-
+  ) internal {
     // update user debtShare
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRemove);
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, _oldSubAccountDebtShare - _shareToRepay);
 
     // update over collat debtShare
-    _repayAmount = LibShareUtil.shareToValue(_shareToRemove, _oldDebtValue, _oldDebtShare);
-
-    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
-    moneyMarketDs.overCollatDebtValues[_token] -= _repayAmount;
+    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRepay;
+    moneyMarketDs.overCollatDebtValues[_token] -= _amountToRepay;
 
     // update global debt
-    moneyMarketDs.globalDebts[_token] -= _repayAmount;
+    moneyMarketDs.globalDebts[_token] -= _amountToRepay;
 
     // emit event
-    emit LogRemoveDebt(_subAccount, _token, _shareToRemove, _repayAmount);
+    emit LogRemoveDebt(_subAccount, _token, _shareToRepay, _amountToRepay);
   }
 
   function _validateRepay(
