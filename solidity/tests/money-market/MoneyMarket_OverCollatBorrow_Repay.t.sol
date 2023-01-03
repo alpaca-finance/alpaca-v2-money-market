@@ -190,4 +190,55 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     assertEq(viewFacet.getTotalCollat(address(usdc)), 0 ether);
   }
+
+  function testRevert_WhenUserRepayAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {
+    // ALICE borrow for 10 ether in setUp
+    // minUsedBorrowingPower = 0.1 ether, set in mm base test
+
+    vm.startPrank(ALICE);
+
+    // totalBorrowingPowerAfterRepay < minUsedBorrowingPower should revert
+    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    borrowFacet.repay(ALICE, subAccount0, address(weth), 9.99 ether);
+
+    // totalBorrowingPowerAfterRepay > minUsedBorrowingPower should not revert
+    borrowFacet.repay(ALICE, subAccount0, address(weth), 0.01 ether);
+
+    // weth debt remaining = 9.99
+    // totalBorrowingPowerAfterRepay == minUsedBorrowingPower should not revert
+    borrowFacet.repay(ALICE, subAccount0, address(weth), 9.89 ether);
+
+    // weth debt remaining = 0.1
+    // repay entire debt should not revert
+    borrowFacet.repay(ALICE, subAccount0, address(weth), 0.1 ether);
+
+    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    assertEq(_debtAmount, 0);
+  }
+
+  function testRevert_WhenUserRepayWithCollatAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {
+    // ALICE borrow for 10 ether in setUp
+    // minUsedBorrowingPower = 0.1 ether, set in mm base test
+    // 1 weth = 1 ibWeth
+
+    vm.startPrank(ALICE);
+
+    // totalBorrowingPowerAfterRepay < minUsedBorrowingPower should revert
+    vm.expectRevert(IBorrowFacet.BorrowFacet_TotalUsedBorrowingPowerTooLow.selector);
+    borrowFacet.repayWithCollat(subAccount0, address(weth), 9.99 ether);
+
+    // totalBorrowingPowerAfterRepay > minUsedBorrowingPower should not revert
+    borrowFacet.repayWithCollat(subAccount0, address(weth), 0.01 ether);
+
+    // weth debt remaining = 9.99
+    // totalBorrowingPowerAfterRepay == minUsedBorrowingPower should not revert
+    borrowFacet.repayWithCollat(subAccount0, address(weth), 9.89 ether);
+
+    // weth debt remaining = 0.1
+    // repay entire debt should not revert
+    borrowFacet.repayWithCollat(subAccount0, address(weth), 0.1 ether);
+
+    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    assertEq(_debtAmount, 0);
+  }
 }

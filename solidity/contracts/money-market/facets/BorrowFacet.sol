@@ -97,7 +97,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    _validateRepay(_subAccount, _token, _amountToRepay, moneyMarketDs);
+    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
@@ -149,7 +149,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    _validateRepay(_subAccount, _token, _amountToRepay, moneyMarketDs);
+    _validateRepay(_subAccount, _token, _oldSubAccountDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     uint256 _actualRepayAmount = _removeDebt(
       _subAccount,
@@ -199,24 +199,28 @@ contract BorrowFacet is IBorrowFacet {
   function _validateRepay(
     address _subAccount,
     address _repayToken,
+    uint256 _oldSubAccountDebtShare,
+    uint256 _shareToRepay,
     uint256 _amountToRepay,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
+    // allow repay entire debt, early return to save gas
+    if (_oldSubAccountDebtShare == _shareToRepay) return;
+
+    // if partial repay, check if totalBorrowingPower after repaid more than minimum
     (uint256 _totalUsedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
 
     (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
-
     uint256 _borrowingPowerToRepay = LibMoneyMarket01.usedBorrowingPower(
       _amountToRepay * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
       _tokenConfig.borrowingFactor
     );
 
-    uint256 _newTotalUsedBorrowingPower = _totalUsedBorrowingPower - _borrowingPowerToRepay;
+    uint256 _totalUsedBorrowingPowerAfterRepay = _totalUsedBorrowingPower - _borrowingPowerToRepay;
 
-    if (_newTotalUsedBorrowingPower < moneyMarketDs.minUsedBorrowingPower)
+    if (_totalUsedBorrowingPowerAfterRepay < moneyMarketDs.minUsedBorrowingPower)
       revert BorrowFacet_TotalUsedBorrowingPowerTooLow();
   }
 

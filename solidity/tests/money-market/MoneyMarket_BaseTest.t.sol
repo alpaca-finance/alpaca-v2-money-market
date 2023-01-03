@@ -193,7 +193,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibIsolateToken = InterestBearingToken(_ibIsolateToken);
 
     //set oracle
-
     mockOracle = new MockAlpacaV2Oracle();
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
@@ -217,5 +216,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set max num of token
     adminFacet.setMaxNumOfToken(3, 3, 3);
+
+    // set minimum debt required to borrow
+    adminFacet.setMinUsedBorrowingPower(0.1 ether);
   }
 }
