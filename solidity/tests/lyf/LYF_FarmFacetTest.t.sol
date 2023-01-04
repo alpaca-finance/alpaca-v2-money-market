@@ -597,7 +597,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 30 ether);
     // 1. repay < debt
-    farmFacet.repayWithCollat(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 5 ether);
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 5 ether);
     (, _subAccountWethDebtValue) = viewFacet.getSubAccountDebt(
       BOB,
       subAccount0,
@@ -610,7 +610,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountWethCollat, 25 ether);
 
     // 1. repay > debt
-    farmFacet.repayWithCollat(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
     (, _subAccountWethDebtValue) = viewFacet.getSubAccountDebt(
       BOB,
       subAccount0,

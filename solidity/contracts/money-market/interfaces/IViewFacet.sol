@@ -92,4 +92,6 @@ interface IViewFacet {
       uint8,
       uint8
     );
+
+  function getMinDebtSize() external view returns (uint256);
 }
