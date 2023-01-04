@@ -141,6 +141,7 @@ library MMDiamondDeployer {
     selectors[27] = ViewFacet.getGlobalDebtValue.selector;
     selectors[28] = ViewFacet.getMinDebtSize.selector;
     selectors[29] = ViewFacet.getSubAccount.selector;
+    selectors[30] = ViewFacet.getFeeParams.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),

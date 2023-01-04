@@ -344,4 +344,21 @@ contract ViewFacet is IViewFacet {
   function getSubAccount(address _account, uint256 _subAccountId) external pure returns (address) {
     return LibMoneyMarket01.getSubAccount(_account, _subAccountId);
   }
+
+  function getFeeParams()
+    external
+    view
+    returns (
+      uint16 _lendingFeeBps,
+      uint16 _repurchaseRewardBps,
+      uint16 _repurchaseFeeBps,
+      uint16 _liquidationFeeBps
+    )
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _lendingFeeBps = moneyMarketDs.lendingFeeBps;
+    _repurchaseRewardBps = moneyMarketDs.repurchaseRewardBps;
+    _repurchaseFeeBps = moneyMarketDs.repurchaseFeeBps;
+    _liquidationFeeBps = moneyMarketDs.liquidationFeeBps;
+  }
 }
