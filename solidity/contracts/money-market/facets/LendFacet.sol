@@ -65,6 +65,10 @@ contract LendFacet is ILendFacet {
 
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_ibToken];
 
+    if (_underlyingToken == address(0)) {
+      revert LendFacet_InvalidToken(_ibToken);
+    }
+
     LibMoneyMarket01.accrueInterest(_underlyingToken, moneyMarketDs);
 
     _amountWithdrawn = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, msg.sender, moneyMarketDs);

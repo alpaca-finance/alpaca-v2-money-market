@@ -41,7 +41,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserWithdrawInvalidibToken_ShouldRevert() external {
     address _randomToken = address(10);
     vm.startPrank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_InvalidToken.selector, _randomToken));
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
     lendFacet.withdraw(_randomToken, 10 ether);
     vm.stopPrank();
   }

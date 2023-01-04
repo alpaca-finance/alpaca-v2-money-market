@@ -510,10 +510,6 @@ library LibMoneyMarket01 {
     address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _amountToWithdraw) {
-    if (_underlyingToken == address(0)) {
-      revert LibMoneyMarket01_InvalidToken(_ibToken);
-    }
-
     _amountToWithdraw = LibShareUtil.shareToValue(
       _shareAmount,
       getTotalToken(_underlyingToken, moneyMarketDs), // ok to use getTotalToken here because we need to call accrueInterest before withdraw
