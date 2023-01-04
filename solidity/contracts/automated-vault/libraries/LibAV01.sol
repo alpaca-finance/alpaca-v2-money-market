@@ -114,7 +114,7 @@ library LibAV01 {
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToRemove);
   }
 
-  function getShareValue(
+  function getShareTokenValue(
     address _shareToken,
     uint256 _amount,
     AVDiamondStorage storage avDs

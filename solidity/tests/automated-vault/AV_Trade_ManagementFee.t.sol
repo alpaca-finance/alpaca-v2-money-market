@@ -37,6 +37,7 @@ contract AV_Trade_ManagementFeeTest is AV_BaseTest {
     vm.warp(block.timestamp + 2);
     assertEq(tradeFacet.pendingManagementFee(address(avShareToken)), 2);
 
+    mockRouter.setRemoveLiquidityAmountsOut(1 ether, 1 ether);
     vm.prank(ALICE);
     tradeFacet.withdraw(address(avShareToken), 1 ether, 0);
 

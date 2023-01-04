@@ -81,7 +81,7 @@ contract AVTradeFacet is IAVTradeFacet {
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
     address _stableToken = vaultConfig.stableToken;
-    uint256 _shareValueToWithdraw = LibAV01.getShareValue(_shareToken, _shareToWithdraw, avDs);
+    uint256 _shareValueToWithdraw = LibAV01.getShareTokenValue(_shareToken, _shareToWithdraw, avDs);
 
     (uint256 _stableTokenAmount, uint256 _assetTokenAmount) = LibAV01.withdrawFromHandler(
       _shareToken,
@@ -101,7 +101,7 @@ contract AVTradeFacet is IAVTradeFacet {
     LibAV01.repayMoneyMarket(_shareToken, vaultConfig.assetToken, _assetTokenAmount, avDs);
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareToWithdraw);
-    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _amountToReturn);
+    IERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _amountToReturn);
 
     emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _amountToReturn);
   }
