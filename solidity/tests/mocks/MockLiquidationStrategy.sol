@@ -5,9 +5,9 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/ILiquidationStrategy.sol";
-import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
+import { LibSafeToken } from "../../contracts/money-market/libraries/LibSafeToken.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
+import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 contract MockLiquidationStrategy is ILiquidationStrategy {
   using SafeERC20 for ERC20;
@@ -37,7 +37,6 @@ contract MockLiquidationStrategy is ILiquidationStrategy {
     uint256 _actualRepayAmount = (_actualCollatSold * _priceCollatPerRepayToken) / 10**ERC20(_collatToken).decimals();
 
     ERC20(_repayToken).safeTransfer(_repayTo, _actualRepayAmount);
-
     ERC20(_collatToken).safeTransfer(_repayTo, _collatAmountBefore - _actualCollatSold);
   }
 }

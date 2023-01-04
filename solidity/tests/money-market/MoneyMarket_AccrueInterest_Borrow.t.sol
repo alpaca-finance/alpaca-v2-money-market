@@ -10,7 +10,7 @@ import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/mone
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
-contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
+contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -27,8 +27,8 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
     // non collat
-    adminFacet.setNonCollatBorrower(ALICE, true);
-    adminFacet.setNonCollatBorrower(BOB, true);
+    adminFacet.setNonCollatBorrowerOk(ALICE, true);
+    adminFacet.setNonCollatBorrowerOk(BOB, true);
 
     adminFacet.setNonCollatInterestModel(ALICE, address(weth), address(model));
     adminFacet.setNonCollatInterestModel(ALICE, address(btc), address(tripleSlope6));
@@ -473,80 +473,6 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldaccrueInterestForAllBorrowedToken()
-    external
-  {
-    // ALICE add collateral
-    uint256 _borrowAmount = 10 ether;
-
-    vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
-    vm.stopPrank();
-
-    // BOB borrow
-    vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
-    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
-    vm.stopPrank();
-
-    // time past
-    vm.warp(block.timestamp + 10);
-
-    vm.startPrank(ALICE);
-    // remove collateral will trigger accrue interest on all borrowed token
-    collateralFacet.removeCollateral(subAccount0, address(weth), 0);
-    vm.stopPrank();
-
-    // assert ALICE
-    (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
-    (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
-
-    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
-    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
-
-    //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
-  }
-
-  function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldaccrueInterestForAllBorrowedToken()
-    external
-  {
-    // ALICE add collateral
-    uint256 _borrowAmount = 10 ether;
-
-    vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
-    vm.stopPrank();
-
-    // BOB borrow
-    vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
-    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
-    vm.stopPrank();
-
-    // time past
-    vm.warp(block.timestamp + 10);
-
-    vm.startPrank(ALICE);
-    // transfer collateral will trigger accrue interest on all borrowed token
-    collateralFacet.transferCollateral(0, 1, address(weth), 0);
-    vm.stopPrank();
-
-    // assert ALICE
-    (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
-    (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
-
-    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
-    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
-
-    //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
-  }
-
   function testCorrectness_WhenUserBorrowMultipleTokens_AllDebtTokenShouldAccrueInterest() external {
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 100 ether);
@@ -588,6 +514,43 @@ contract MoneyMarket_AccrueInterestTest is MoneyMarket_BaseTest {
 
     // total used borrowed power = 19 + 10 = 29 ether
     (_borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    assertEq(_borrowedUSDValue, 29 ether);
+  }
+
+  function testCorrectness_WhenUserNonCollatBorrowMultipleTokens_AllDebtTokenShouldAccrueInterest() external {
+    // borrow 9 weth => with 9000 borrow factor
+    vm.prank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 9 ether);
+    // weth debt share = 9, debt value = 9
+    // borrowed value = 9 * 9 / 9 = 9
+    // the used borrowed power should be 9 * 10000 / 9000 = 10 ether
+
+    uint256 _borrowedUSDValue = viewFacet.getTotalNonCollatUsedBorrowingPower(ALICE);
+    assertEq(_borrowedUSDValue, 10 ether);
+
+    // timepast 100
+    vm.warp(block.timestamp + 100);
+    // weth interest model = 0.009 ether per second
+    // weth pending interest for 1 borrowed token should be 0.009 * 100 = 0.9 ether
+    // alice has borrowed 9 ether then pendint interest will be 9 * 0.9 ether = 8.1 ether
+    assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 8.1 ether);
+
+    // alice borrow other asset, weth debt value should be accrued interest
+    // borrow 9 usdc => with 9000 borrow factor
+    vm.prank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(usdc), 9 ether);
+
+    // weth debt value increased by 8.1
+    // weth debt share = 9, debt value = 9 + 8.1 = 17.1
+    // borrowed value = 9 * 17.1 / 9 = 17.1
+    // the used borrowed power (weth) should be 17.1 * 10000 / 9000 = 19 ether
+
+    // usdc debt share = 9, debt value = 9
+    // borrowed value = 9 * 9 / 9 = 9
+    // the used borrowed power (usdc) should be 9 * 10000 / 9000 = 10 ether
+
+    // total used borrowed power = 19 + 10 = 29 ether
+    _borrowedUSDValue = viewFacet.getTotalNonCollatUsedBorrowingPower(ALICE);
     assertEq(_borrowedUSDValue, 29 ether);
   }
 }

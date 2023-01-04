@@ -20,13 +20,13 @@ contract TripleSlopeModel6 {
     uint256 total = debt + floating;
     uint256 utilization = (debt * 100e18) / total;
     if (utilization < CEIL_SLOPE_1) {
-      // Less than 60% utilization - 0%-20% APY
+      // Less than 85% utilization - 0%-17.5% APY
       return (utilization * MAX_INTEREST_SLOPE_1) / (CEIL_SLOPE_1) / 365 days;
     } else if (utilization < CEIL_SLOPE_2) {
-      // Between 60% and 90% - 20% APY
+      // Between 85% and 90% - 17.5% APY
       return uint256(MAX_INTEREST_SLOPE_2) / 365 days;
     } else if (utilization < CEIL_SLOPE_3) {
-      // Between 90% and 100% - 20%-150% APY
+      // Between 90% and 100% - 17.5%-150% APY
       return
         (MAX_INTEREST_SLOPE_2 +
           ((utilization - CEIL_SLOPE_2) * (MAX_INTEREST_SLOPE_3 - MAX_INTEREST_SLOPE_2)) /

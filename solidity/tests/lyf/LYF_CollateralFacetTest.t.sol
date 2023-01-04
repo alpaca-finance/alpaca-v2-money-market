@@ -5,6 +5,7 @@ import { LYF_BaseTest } from "./LYF_BaseTest.t.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
+import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
@@ -26,6 +27,22 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     assertEq(weth.balanceOf(lyfDiamond), 10 ether);
   }
 
+  function testRevert_WhenAddLYFCollateralTooMuchToken() external {
+    vm.startPrank(ALICE);
+    weth.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
+    usdc.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(usdc), 10 ether);
+    btc.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(btc), 10 ether);
+
+    // now maximum is 3 token per account, when try add collat 4th token should revert
+    cake.approve(lyfDiamond, 10 ether);
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_NumberOfTokenExceedLimit.selector));
+    collateralFacet.addCollateral(ALICE, 0, address(cake), 10 ether);
+    vm.stopPrank();
+  }
+
   function testCorrectness_WhenUserAddMultipleLYFCollaterals_ListShouldUpdate() external {
     uint256 _aliceCollateralAmount = 10 ether;
     uint256 _aliceCollateralAmount2 = 20 ether;
@@ -35,7 +52,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    LibDoublyLinkedList.Node[] memory collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 1);
     assertEq(collats[0].amount, _aliceCollateralAmount);
@@ -46,7 +63,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
     vm.stopPrank();
 
-    collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -57,7 +74,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
-    collats = collateralFacet.getCollaterals(ALICE, subAccount0);
+    collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
     assertEq(collats[0].amount, _aliceCollateralAmount2);
@@ -84,7 +101,8 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     uint256 _collateral = 100 ether;
 
     // mint ibToken to ALICE
-    ibWeth.mint(ALICE, 10 ether);
+    vm.prank(moneyMarketDiamond);
+    ibWeth.onDeposit(ALICE, 0, 10 ether);
 
     vm.startPrank(ALICE);
 
@@ -154,7 +172,7 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
     assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore + _addCollateralAmount);
-    assertEq(collateralFacet.collats(address(weth)), _addCollateralAmount);
+    assertEq(viewFacet.getTokenCollatAmount(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
     collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
@@ -165,13 +183,14 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     assertEq(weth.balanceOf(ALICE), _balanceBefore);
     assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore);
     // assertEq(_borrowingPower, 0);
-    assertEq(collateralFacet.collats(address(weth)), 0);
+    assertEq(viewFacet.getTokenCollatAmount(address(weth)), 0);
   }
 
   // Add Collat with ibToken
   function testCorrectness_WhenAddLYFCollateralViaIbToken_ibTokenShouldTransferFromUserToLYF() external {
     // mint ibToken to ALICE
-    ibWeth.mint(ALICE, 10 ether);
+    vm.prank(moneyMarketDiamond);
+    ibWeth.onDeposit(ALICE, 0, 10 ether);
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
 
     // Add collat by ibToken

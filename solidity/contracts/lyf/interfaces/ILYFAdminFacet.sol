@@ -11,7 +11,6 @@ interface ILYFAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
   }
 
   struct LPConfigInput {
@@ -26,8 +25,6 @@ interface ILYFAdminFacet {
   }
 
   function setOracle(address _oracle) external;
-
-  function oracle() external view returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
@@ -44,6 +41,8 @@ interface ILYFAdminFacet {
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
 
   function setReinvestorsOk(address[] memory list, bool _isOk) external;
+
+  function setMaxNumOfToken(uint8 _numOfCollat) external;
 
   error LYFAdminFacet_BadDebtShareId();
 }

@@ -6,6 +6,10 @@ import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface IViewFacet {
+  function getIbTokenFromToken(address _token) external view returns (address);
+
+  function getTokenFromIbToken(address _ibToken) external view returns (address);
+
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
   function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
@@ -18,18 +22,25 @@ interface IViewFacet {
   function getTotalBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowingPowerUSDValue);
+    returns (uint256 _totalBorrowingPower);
 
   function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
     external
     view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
+    returns (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset);
+
+  function getTotalNonCollatUsedBorrowingPower(address _account)
+    external
+    view
+    returns (uint256 _totalUsedBorrowingPower);
 
   function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256);
 
   function getDebtLastAccrueTime(address _token) external view returns (uint256);
 
   function getGlobalPendingInterest(address _token) external view returns (uint256);
+
+  function getGlobalDebtValue(address _token) external view returns (uint256);
 
   function getOverCollatDebtValue(address _token) external view returns (uint256);
 
@@ -59,14 +70,9 @@ interface IViewFacet {
     view
     returns (uint256 _shareAmount);
 
-  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
+  function getTotalTokenWithPendingInterest(address _token) external view returns (uint256);
 
   function getNonCollatAccountDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
-
-  function getNonCollatTotalUsedBorrowingPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
 
   function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256);
 
@@ -75,4 +81,17 @@ interface IViewFacet {
   function getNonCollatBorrowingPower(address _account) external view returns (uint256);
 
   function getNonCollatInterestRate(address _account, address _token) external view returns (uint256);
+
+  function getLiquidationParams() external view returns (uint16, uint16);
+
+  function getMaxNumOfToken()
+    external
+    view
+    returns (
+      uint8,
+      uint8,
+      uint8
+    );
+
+  function getMinDebtSize() external view returns (uint256);
 }

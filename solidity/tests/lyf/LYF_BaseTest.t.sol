@@ -7,6 +7,9 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 import { LYFDiamond } from "../../contracts/lyf/LYFDiamond.sol";
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
+// contracts
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
@@ -23,12 +26,14 @@ import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollater
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
 import { ILYFOwnershipFacet } from "../../contracts/lyf/interfaces/ILYFOwnershipFacet.sol";
+import { ILYFViewFacet } from "../../contracts/lyf/interfaces/ILYFViewFacet.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IRouterLike } from "../../contracts/lyf/interfaces/IRouterLike.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 import { IPriceOracle } from "../../contracts/oracle/interfaces/IPriceOracle.sol";
 import { IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
+
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
@@ -62,6 +67,7 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFFarmFacet internal farmFacet;
   ILYFLiquidationFacet internal liquidationFacet;
   ILYFOwnershipFacet internal ownershipFacet;
+  ILYFViewFacet internal viewFacet;
 
   MockLPToken internal wethUsdcLPToken;
   uint256 internal wethUsdcPoolId;
@@ -85,6 +91,7 @@ abstract contract LYF_BaseTest is BaseTest {
     farmFacet = ILYFFarmFacet(lyfDiamond);
     liquidationFacet = ILYFLiquidationFacet(lyfDiamond);
     ownershipFacet = ILYFOwnershipFacet(lyfDiamond);
+    viewFacet = ILYFViewFacet(lyfDiamond);
 
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, type(uint256).max);
@@ -128,7 +135,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](7);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](8);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -136,8 +143,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = ILYFAdminFacet.TokenConfigInput({
@@ -146,8 +152,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
@@ -156,8 +161,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[3] = ILYFAdminFacet.TokenConfigInput({
@@ -166,8 +170,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 0,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[4] = ILYFAdminFacet.TokenConfigInput({
@@ -176,8 +179,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 0,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[5] = ILYFAdminFacet.TokenConfigInput({
@@ -186,8 +188,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[6] = ILYFAdminFacet.TokenConfigInput({
@@ -196,8 +197,16 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
+    });
+
+    _inputs[7] = ILYFAdminFacet.TokenConfigInput({
+      token: address(cake),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18
     });
 
     adminFacet.setTokenConfigs(_inputs);
@@ -241,18 +250,30 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
 
     adminFacet.setTreasury(treasury);
+
+    // set max num of tokens
+    adminFacet.setMaxNumOfToken(3);
   }
 
   function setUpMM() internal {
-    IAdminFacet.IbPair[] memory _ibPair = new IAdminFacet.IbPair[](4);
-    _ibPair[0] = IAdminFacet.IbPair({ token: address(weth), ibToken: address(ibWeth) });
-    _ibPair[1] = IAdminFacet.IbPair({ token: address(usdc), ibToken: address(ibUsdc) });
-    _ibPair[2] = IAdminFacet.IbPair({ token: address(btc), ibToken: address(ibBtc) });
-    _ibPair[3] = IAdminFacet.IbPair({ token: address(nativeToken), ibToken: address(ibWNative) });
-    IAdminFacet(moneyMarketDiamond).setTokenToIbTokens(_ibPair);
+    IAdminFacet mmAdminFacet = IAdminFacet(moneyMarketDiamond);
 
-    IAdminFacet(moneyMarketDiamond).setNonCollatBorrower(lyfDiamond, true);
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](3);
+    // set ib token implementation
+    // warning: this one should set before open market
+    mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+
+    address _ibWeth = mmAdminFacet.openMarket(address(weth));
+    address _ibUsdc = mmAdminFacet.openMarket(address(usdc));
+    address _ibBtc = mmAdminFacet.openMarket(address(btc));
+    address _ibNativeToken = mmAdminFacet.openMarket(address(nativeToken));
+
+    ibWeth = InterestBearingToken(_ibWeth);
+    ibUsdc = InterestBearingToken(_ibUsdc);
+    ibBtc = InterestBearingToken(_ibBtc);
+    ibWNative = InterestBearingToken(_ibNativeToken);
+
+    mmAdminFacet.setNonCollatBorrowerOk(lyfDiamond, true);
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -260,8 +281,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -270,8 +290,7 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1e24,
-      maxCollateral: 10e24,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 10e24
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -280,13 +299,21 @@ abstract contract LYF_BaseTest is BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
-      maxCollateral: 100e18,
-      maxToleranceExpiredSecond: block.timestamp
+      maxCollateral: 100e18
     });
 
-    IAdminFacet(moneyMarketDiamond).setTokenConfigs(_inputs);
+    _inputs[3] = IAdminFacet.TokenConfigInput({
+      token: address(cake),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30e18,
+      maxCollateral: 100e18
+    });
 
-    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
+    mmAdminFacet.setTokenConfigs(_inputs);
+
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
     _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
       token: address(weth),
       maxTokenBorrow: type(uint256).max
@@ -299,6 +326,10 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(btc),
       maxTokenBorrow: type(uint256).max
     });
+    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
+      token: address(cake),
+      maxTokenBorrow: type(uint256).max
+    });
 
     IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
@@ -307,7 +338,7 @@ abstract contract LYF_BaseTest is BaseTest {
       borrowLimitUSDValue: type(uint256).max
     });
 
-    IAdminFacet(moneyMarketDiamond).setProtocolConfigs(_protocolConfigInputs);
+    mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
 
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -316,5 +347,8 @@ abstract contract LYF_BaseTest is BaseTest {
     ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
     vm.stopPrank();
+
+    // set max num of tokens
+    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
   }
 }

@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // interfaces
 import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 contract AVTradeFacet is IAVTradeFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -28,34 +27,39 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external nonReentrant {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
-    LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
-    address _stableToken = vaultConfig.stableToken;
-    address _assetToken = vaultConfig.assetToken;
+    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
+    address _stableToken = _vaultConfig.stableToken;
+    address _assetToken = _vaultConfig.assetToken;
 
     (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = LibAV01.calculateBorrowAmount(
       _stableToken,
       _assetToken,
       _stableAmountIn,
-      vaultConfig.leverageLevel,
+      _vaultConfig.leverageLevel,
       avDs
     );
 
     // get fund from user
-    ERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
+    IERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
+
+    uint256 _equityBefore = LibAV01.getEquity(_shareToken, _vaultConfig.handler, avDs);
+
     // borrow from MM
     LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
     LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
 
     uint256 _shareToMint = LibAV01.depositToHandler(
+      _vaultConfig.handler,
       _shareToken,
       _stableToken,
       _assetToken,
       _stableAmountIn + _stableBorrowAmount,
       _assetBorrowAmount,
+      _equityBefore,
       avDs
     );
 
@@ -71,7 +75,7 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _shareToWithdraw,
     uint256 _minTokenOut
   ) external nonReentrant {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
 
     _mintManagementFeeToTreasury(_shareToken, avDs);
@@ -103,7 +107,7 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function getDebtValues(address _shareToken) external view returns (uint256, uint256) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
     return (
       avDs.vaultDebtValues[_shareToken][_config.stableToken],
@@ -118,11 +122,11 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
     _pendingManagementFee =
-      (ERC20(_shareToken).totalSupply() *
+      (IERC20(_shareToken).totalSupply() *
         avDs.vaultConfigs[_shareToken].managementFeePerSec *
         _secondsFromLastCollection) /
       1e18;
