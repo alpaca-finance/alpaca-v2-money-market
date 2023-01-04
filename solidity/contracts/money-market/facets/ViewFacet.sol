@@ -337,7 +337,7 @@ contract ViewFacet is IViewFacet {
     return moneyMarketDs.minDebtSize;
   }
 
-  function getFees()
+  function getFeeParams()
     external
     view
     returns (

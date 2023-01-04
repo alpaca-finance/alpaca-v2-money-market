@@ -95,7 +95,7 @@ interface IViewFacet {
 
   function getMinDebtSize() external view returns (uint256);
 
-  function getFees()
+  function getFeeParams()
     external
     view
     returns (
