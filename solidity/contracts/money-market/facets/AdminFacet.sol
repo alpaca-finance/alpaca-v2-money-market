@@ -386,8 +386,7 @@ contract AdminFacet is IAdminFacet {
       address _token = _inputs[i].token;
       address _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
 
-      (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
-      if (LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs) >= _usedBorrowingPower) {
+      if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
         revert AdminFacet_SubAccountHealthy(_subAccount);
       }
 
@@ -413,7 +412,7 @@ contract AdminFacet is IAdminFacet {
       emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
 
       unchecked {
-        i++;
+        ++i;
       }
     }
   }
