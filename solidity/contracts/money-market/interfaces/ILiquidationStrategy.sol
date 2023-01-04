@@ -5,7 +5,7 @@ interface ILiquidationStrategy {
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
-    uint256 _collatAmount,
+    uint256 _collatAmountIn,
     uint256 _repayAmount,
     bytes calldata _data
   ) external;

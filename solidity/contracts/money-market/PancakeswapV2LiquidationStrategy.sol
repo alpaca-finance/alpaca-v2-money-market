@@ -37,13 +37,13 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @notice Execute liquidate from collatToken to repayToken
   /// @param _collatToken The source token
   /// @param _repayToken The destination token
-  /// @param _collatAmount Available amount of source token to trade
+  /// @param _collatAmountIn Available amount of source token to trade
   /// @param _repayAmount Exact destination token amount
   /// @param _data Extra calldata information
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
-    uint256 _collatAmount,
+    uint256 _collatAmountIn,
     uint256 _repayAmount,
     bytes calldata _data
   ) external onlyWhitelistedCallers {
@@ -52,16 +52,16 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
       revert PancakeswapV2LiquidationStrategy_InvalidPath();
     }
 
-    IERC20(_collatToken).safeApprove(address(router), _collatAmount);
+    IERC20(_collatToken).safeApprove(address(router), _collatAmountIn);
 
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, path);
     // _amountsIn[0] = collat that is required to swap for _repayAmount
-    if (_collatAmount >= _amountsIn[0]) {
-      // swapTokensForExactTokens will fail if _collatAmount is not enough to swap for _repayAmount during low liquidity period
-      router.swapTokensForExactTokens(_repayAmount, _collatAmount, path, msg.sender, block.timestamp);
-      IERC20(_collatToken).safeTransfer(msg.sender, _collatAmount - _amountsIn[0]);
+    if (_collatAmountIn >= _amountsIn[0]) {
+      // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
+      router.swapTokensForExactTokens(_repayAmount, _collatAmountIn, path, msg.sender, block.timestamp);
+      IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _amountsIn[0]);
     } else {
-      router.swapExactTokensForTokens(_collatAmount, _minReceive, path, msg.sender, block.timestamp);
+      router.swapExactTokensForTokens(_collatAmountIn, _minReceive, path, msg.sender, block.timestamp);
     }
 
     IERC20(_collatToken).safeApprove(address(router), 0);
