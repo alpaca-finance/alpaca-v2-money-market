@@ -94,4 +94,14 @@ interface IViewFacet {
     );
 
   function getMinDebtSize() external view returns (uint256);
+
+  function getFeeParams()
+    external
+    view
+    returns (
+      uint16 _lendingFeeBps,
+      uint16 _repurchaseRewardBps,
+      uint16 _repurchaseFeeBps,
+      uint16 _liquidationFeeBps
+    );
 }
