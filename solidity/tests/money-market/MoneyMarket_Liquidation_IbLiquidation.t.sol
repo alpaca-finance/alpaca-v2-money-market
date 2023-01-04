@@ -13,6 +13,7 @@ import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-mar
 // mocks
 import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 import { MockBadLiquidationStrategy } from "../mocks/MockBadLiquidationStrategy.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 struct CacheState {
   uint256 collat;
@@ -75,8 +76,6 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
     treasury = address(this);
   }
-
-  // ib liquidation tests
 
   function testCorrectness_WhenPartialLiquidateIbCollateral_ShouldRedeemUnderlyingToPayDebtCorrectly() external {
     // add ib as collat
@@ -324,4 +323,81 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       abi.encode()
     );
   }
+
+  function testCorrectness_WhenIbLiquidateWithDebtAndInterestOnIb_ShouldAccrueInterestAndLiquidate() external {
+    /**
+     * scenario
+     *
+     * 1. ALICE add 1.5 ibWeth as collateral, borrow 1 usdc
+     *    - borrowing power = 1.5 * 1 * 9000 / 10000 = 1.35
+     *    - used borrowing power = 1 * 1 * 10000 / 9000 = 1.111..
+     *
+     * 2. BOB add 10 usdc as collateral, borrow 0.1 weth
+     *
+     * 3. 1 block passed, interest accrue on weth 0.001, usdc 0.01
+     *    - note that in mm base test had lendingFee set to 0. has to account for if not 0
+     *
+     * 4. weth price dropped to 0.1 usdc/weth, ALICE position is liquidatable
+     *    - ALICE borrowing power = 1.5 * 0.1 * 9000 / 10000 = 0.135
+     *
+     * 5. liquidate entire position by dumping 1.5 ibWeth to 0.150075 usdc
+     *    - ibWeth collateral = 1.5 ibWeth = 1.50075 weth = 0.150075 usdc
+     *
+     * 6. state after liquidation
+     *    - collat = 0
+     *    - liquidation fee = 1.01 * 0.01 = 0.0101 usdc
+     *    - remaining debt value = 1.01 - (0.150075 - 0.0101) = 0.870025 usdc
+     */
+    address _collatToken = address(ibWeth);
+    address _debtToken = address(usdc);
+
+    MockInterestModel _interestModel = new MockInterestModel(0.01 ether);
+    adminFacet.setInterestModel(address(weth), address(_interestModel));
+    adminFacet.setInterestModel(address(usdc), address(_interestModel));
+
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(weth), 2 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 1.5 ether);
+    borrowFacet.repay(ALICE, subAccount0, _debtToken, 29 ether);
+    collateralFacet.removeCollateral(subAccount0, address(weth), 40 ether);
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), 10 ether);
+    borrowFacet.borrow(subAccount0, address(weth), 0.1 ether);
+    vm.stopPrank();
+
+    vm.warp(block.timestamp + 1);
+
+    assertEq(viewFacet.getGlobalPendingInterest(address(usdc)), 0.01 ether); // from ALICE
+    assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0.001 ether); // from BOB
+
+    mockOracle.setTokenPrice(address(weth), 0.1 ether);
+
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      2 ether,
+      abi.encode()
+    );
+
+    // ALICE is rekt
+    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken), 0);
+    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
+    assertEq(_debtAmount, 0.870025 ether);
+
+    // check mm state
+    assertEq(viewFacet.getTotalCollat(_collatToken), 0);
+    assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 0.870025 ether);
+    // accrue weth properly
+    assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0);
+    assertEq(viewFacet.getDebtLastAccrueTime(address(weth)), block.timestamp);
+    assertEq(viewFacet.getTotalToken(address(weth)), 0.50025 ether); // 2.001 - 1.50075
+    assertEq(viewFacet.getTotalTokenWithPendingInterest(address(weth)), 0.50025 ether); // 2.001 - 1.50075
+  }
+
+  // TODO: case where diamond has no actual token to transfer to strat
 }

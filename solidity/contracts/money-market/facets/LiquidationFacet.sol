@@ -352,6 +352,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, vars.feeToTreasury);
 
+    // note: within withdraw perform redundant shareToValue calculation. we can pass amount as param to save gas.
     LibMoneyMarket01.withdraw(
       _collatUnderlyingToken,
       params.collatToken,

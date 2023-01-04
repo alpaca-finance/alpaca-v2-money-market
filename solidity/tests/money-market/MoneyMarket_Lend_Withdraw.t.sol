@@ -10,6 +10,9 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
+// mocks
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
+
 contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
@@ -150,5 +153,50 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(nativeToken.balanceOf(moneyMarketDiamond), 5 ether);
 
     assertEq(ibWNative.balanceOf(ALICE), 5 ether);
+  }
+
+  function testCorrectness_WhenUnderlyingWasBorrowedAndAccrueInterest_AndUserPartialWithdraw_ShouldAccrueInterestAndTransferPrincipalWithInterestAndUpdateMMState()
+    external
+  {
+    /**
+     * scenario
+     * 1. ALICE deposit 2 usdc, get 2 ibUsdc back
+     * 2. BOB add 10 weth collateral, borrow 1 weth
+     * 3. time past 1 block, weth pending interest increase to 0.01 weth
+     *    - BOB borrow 1 weth with 0.01 ether interest per block
+     *    - pending interest = rate * timePast * debtValue = 0.01 ether * 1 * 1 ether = 0.01 ether
+     * 4. ALICE withdraw 0.2 ibUsdc (10% of vault), get 0.201 usdc back (principal + interest)
+     */
+    MockInterestModel _interestModel = new MockInterestModel(0.01 ether);
+    adminFacet.setInterestModel(address(weth), address(_interestModel));
+    adminFacet.setInterestModel(address(usdc), address(_interestModel));
+
+    address _token = address(usdc);
+
+    vm.prank(ALICE);
+    lendFacet.deposit(_token, 2 ether);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
+    borrowFacet.borrow(subAccount0, _token, 1 ether);
+    vm.stopPrank();
+
+    vm.warp(block.timestamp + 1);
+
+    assertEq(viewFacet.getGlobalPendingInterest(_token), 0.01 ether);
+
+    uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
+
+    vm.prank(ALICE);
+    lendFacet.withdraw(address(ibUsdc), 0.2 ether);
+
+    // check ALICE state
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 0.201 ether);
+
+    // check mm state
+    assertEq(viewFacet.getGlobalPendingInterest(_token), 0);
+    assertEq(viewFacet.getDebtLastAccrueTime(_token), block.timestamp);
+    assertEq(viewFacet.getTotalToken(_token), 1.809 ether);
+    assertEq(viewFacet.getTotalTokenWithPendingInterest(_token), 1.809 ether);
   }
 }
