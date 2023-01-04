@@ -34,48 +34,13 @@ interface ILYFFarmFacet {
   function reinvest(address _lpToken) external;
 
   function repayWithCollat(
-    address _account,
     uint256 _subAccountId,
     address _token,
     address _lpToken,
     uint256 _repayAmount
   ) external;
 
-  function getDebtShares(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibUIntDoublyLinkedList.Node[] memory);
-
-  function getTotalBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue);
-
-  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue);
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    address _lpToken
-  ) external view returns (uint256, uint256);
-
-  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256);
-
-  function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256);
-
-  function pendingInterest(address _token, address _lpToken) external view returns (uint256);
-
   function accrueInterest(address _token, address _lpToken) external;
-
-  function debtValues(address _token, address _lpToken) external view returns (uint256);
-
-  function debtShares(address _token, address _lpToken) external view returns (uint256);
-
-  function pendingRewards(address _lpToken) external view returns (uint256);
 
   function reducePosition(
     uint256 _subAccountId,
@@ -84,14 +49,6 @@ interface ILYFFarmFacet {
     uint256 _amount0Out,
     uint256 _amount1Out
   ) external;
-
-  function getMMDebt(address _token) external view returns (uint256);
-
-  function lpValues(address _lpToken) external view returns (uint256);
-
-  function lpShares(address _lpToken) external view returns (uint256);
-
-  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory);
 
   // Errors
   error LYFFarmFacet_InvalidToken(address _token);

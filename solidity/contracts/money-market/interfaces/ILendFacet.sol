@@ -10,8 +10,6 @@ interface ILendFacet {
 
   function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external;
 
-  function openMarket(address _token) external returns (address);
-
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
   error LendFacet_InvalidAmount(uint256 _amount);

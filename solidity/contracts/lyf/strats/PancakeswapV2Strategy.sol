@@ -13,21 +13,19 @@ Alpaca Fin Corporation
 
 pragma solidity 0.8.17;
 
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { IPancakePair } from "../interfaces/IPancakePair.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
-  using SafeERC20 for address;
-  using LibSafeToken for address;
+  using LibSafeToken for IERC20;
 
   mapping(address => bool) public whitelistedCallers;
 
@@ -110,10 +108,10 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   ) external onlyWhitelisted nonReentrant returns (uint256 _lpRecieved) {
     IPancakePair lpToken = IPancakePair(_lpToken);
     // 1. Approve router to do their stuffs
-    ERC20(_token0).approve(address(router), type(uint256).max);
-    ERC20(_token1).approve(address(router), type(uint256).max);
-    // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
+    IERC20(_token0).safeApprove(address(router), type(uint256).max);
+    IERC20(_token1).safeApprove(address(router), type(uint256).max);
 
+    // 2. Compute the optimal amount of BaseToken and FarmingToken to be converted.
     uint256 swapAmt;
     bool isReversed;
     {
@@ -129,8 +127,8 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     (, , uint256 moreLPAmount) = router.addLiquidity(
       _token0,
       _token1,
-      ERC20(_token0).balanceOf(address(this)),
-      ERC20(_token1).balanceOf(address(this)),
+      IERC20(_token0).balanceOf(address(this)),
+      IERC20(_token1).balanceOf(address(this)),
       0,
       0,
       address(this),
@@ -146,8 +144,8 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
       revert PancakeswapV2Strategy_TransferFailed();
     }
     // 7. Reset approve to 0 for safety reason
-    ERC20(_token0).approve(address(router), 0);
-    ERC20(_token1).approve(address(router), 0);
+    IERC20(_token0).safeApprove(address(router), 0);
+    IERC20(_token1).safeApprove(address(router), 0);
   }
 
   function removeLiquidity(address _lpToken)
@@ -156,30 +154,30 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     nonReentrant
     returns (uint256 _token0Return, uint256 _token1Return)
   {
-    uint256 _lpToRemove = ERC20(_lpToken).balanceOf(address(this));
+    uint256 _lpToRemove = IERC20(_lpToken).balanceOf(address(this));
 
-    ERC20(_lpToken).approve(address(router), type(uint256).max);
+    IERC20(_lpToken).safeApprove(address(router), type(uint256).max);
 
     address _token0 = IPancakePair(_lpToken).token0();
     address _token1 = IPancakePair(_lpToken).token1();
 
     router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
 
-    _token0Return = ERC20(_token0).balanceOf(address(this));
-    _token1Return = ERC20(_token1).balanceOf(address(this));
+    _token0Return = IERC20(_token0).balanceOf(address(this));
+    _token1Return = IERC20(_token1).balanceOf(address(this));
 
-    _token0.safeTransfer(msg.sender, _token0Return);
-    _token1.safeTransfer(msg.sender, _token1Return);
+    IERC20(_token0).safeTransfer(msg.sender, _token0Return);
+    IERC20(_token1).safeTransfer(msg.sender, _token1Return);
 
-    ERC20(_lpToken).approve(address(router), 0);
+    IERC20(_lpToken).safeApprove(address(router), 0);
   }
 
   function setWhitelistedCallers(address[] calldata callers, bool ok) external onlyOwner {
-    uint256 len = uint256(callers.length);
-    for (uint256 i = 0; i < len; ) {
-      whitelistedCallers[callers[i]] = ok;
+    uint256 _len = uint256(callers.length);
+    for (uint256 _i; _i < _len; ) {
+      whitelistedCallers[callers[_i]] = ok;
       unchecked {
-        i++;
+        ++_i;
       }
     }
   }

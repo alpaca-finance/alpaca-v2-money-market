@@ -3,11 +3,14 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
 
+// libraries
+import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 
-contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -19,6 +22,8 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(usdc), 20 ether);
+    lendFacet.deposit(address(btc), 20 ether);
+    lendFacet.deposit(address(cake), 20 ether);
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
@@ -51,6 +56,19 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidToken.selector, address(mockToken)));
     borrowFacet.borrow(subAccount0, address(mockToken), _borrowAmount);
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenUserBorrowTooMuchTokePerSubAccount() external {
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 20 ether);
+    borrowFacet.borrow(subAccount0, address(weth), 1 ether);
+    borrowFacet.borrow(subAccount0, address(btc), 1 ether);
+    borrowFacet.borrow(subAccount0, address(usdc), 1 ether);
+
+    // now maximum is 3 token per account, when try borrow 4th token should revert
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
+    borrowFacet.borrow(subAccount0, address(cake), 1 ether);
     vm.stopPrank();
   }
 
@@ -267,7 +285,8 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     // manipulate ib price
     vm.prank(BOB);
     lendFacet.deposit(address(weth), 50 ether);
-    ibWeth.burn(BOB, 50 ether);
+    vm.prank(moneyMarketDiamond);
+    ibWeth.onWithdraw(BOB, BOB, 0, 50 ether);
 
     uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
@@ -308,5 +327,42 @@ contract MoneyMarket_BorrowFacetTest is MoneyMarket_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector));
     borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
+  }
+
+  function testRevert_WhenUserBorrowLessThanMinDebtSize() external {
+    // minDebtSize = 0.1 ether, set in mm base test
+    // 1 weth = 1 usdc
+    // ALICE has 0 weth debt
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
+
+    // borrow + debt < minDebtSize should revert
+    // 0.01 + 0 < 0.1
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
+    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+
+    // borrow + debt == minDebtSize should not revert
+    // 0.1 + 0 == 0.1
+    borrowFacet.borrow(subAccount0, address(weth), 0.1 ether);
+
+    // ALICE has 0.1 weth debt
+    // borrow + debt > minDebtSize should not revert
+    // 0.01 + 0.1 > 0.1
+    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+
+    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    assertEq(_debtAmount, 0.11 ether);
+
+    // weth price dropped, debt value = 0.11 * 0.8 = 0.88 USD
+    mockOracle.setTokenPrice(address(weth), 0.8 ether);
+
+    // because weth price dropped, borrow + debt < minDebtSize should revert
+    // 0.01 + 0.88 < 0.1
+    vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
+    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+
+    // borrow + debt == minDebtSize should not revert
+    // 0.12 + 0.88 == 0.1
+    borrowFacet.borrow(subAccount0, address(weth), 0.12 ether);
   }
 }

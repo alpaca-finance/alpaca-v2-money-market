@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
@@ -11,6 +8,7 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
@@ -18,9 +16,10 @@ import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract LYFFarmFacet is ILYFFarmFacet {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
@@ -83,8 +82,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
     // 2. send token to strat
-    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
-    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
+    IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
+    IERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
     // 3. compose lp
     uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
@@ -141,10 +140,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountIn, lyfDs);
 
     // 2. send token to strat
-    ERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
-    ERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
-    ERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
-    ERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
+    IERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
+    IERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
+    IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
+    IERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
 
     // 3. compose lp
     uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
@@ -203,7 +202,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // 2. Remove from masterchef staking
     IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
 
-    ERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    IERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
 
     (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
 
@@ -220,10 +219,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // 4. Transfer remaining back to user
     if (_amount0Out > 0) {
-      ERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
+      IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
     }
     if (_amount1Out > 0) {
-      ERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
+      IERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
     }
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
@@ -248,7 +247,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _repayAmount, lyfDs);
 
     // transfer only amount to repay
-    ERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
   }
 
   function reinvest(address _lpToken) external nonReentrant {
@@ -267,18 +266,17 @@ contract LYFFarmFacet is ILYFFarmFacet {
   }
 
   function repayWithCollat(
-    address _account,
     uint256 _subAccountId,
     address _token,
     address _lpToken,
     uint256 _repayAmount
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (, uint256 _debtAmount) = _getDebt(_subAccount, _debtShareId, lyfDs);
+    (, uint256 _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
 
     // repay maxmimum debt
     _repayAmount = _repayAmount > _debtAmount ? _debtAmount : _repayAmount;
@@ -287,20 +285,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
       // remove collat as much as possible
       uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
       // remove debt as much as possible
-      uint256 _actualRepayAmount = _repayDebt(_account, _subAccountId, _token, _debtShareId, _collatRemoved, lyfDs);
+      uint256 _actualRepayAmount = _repayDebt(msg.sender, _subAccountId, _token, _debtShareId, _collatRemoved, lyfDs);
 
-      emit LogRepayWithCollat(_account, _subAccountId, _token, _debtShareId, _actualRepayAmount);
+      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualRepayAmount);
     }
-  }
-
-  function _getDebt(
-    address _subAccount,
-    uint256 _debtShareId,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
-    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-    // Note: precision loss 1 wei when convert share back to value
-    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
   }
 
   function _removeDebt(
@@ -357,7 +345,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _borrowAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view {
-    uint256 _mmTokenBalnce = ERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
+    uint256 _mmTokenBalnce = IERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
 
     if (_mmTokenBalnce < _borrowAmount) {
       revert LYFFarmFacet_NotEnoughToken(_borrowAmount);
@@ -383,50 +371,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );
-    _borrowFromMoneyMarket(
+    LibLYF01.borrowFromMoneyMarket(
       _subAccount,
       _token,
       _lpToken,
       _desireTokenAmount - _tokenAmountFromCollat - _tokenAmountFromIbCollat,
       lyfDs
     );
-  }
-
-  function _borrowFromMoneyMarket(
-    address _subAccount,
-    address _token,
-    address _lpToken,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    if (_amount == 0) return;
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-
-    IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
-
-    // update subaccount debt
-    // todo: optimize this
-    LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
-
-    if (
-      lyfDs.subAccountDebtShares[_subAccount].getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY
-    ) {
-      lyfDs.subAccountDebtShares[_subAccount].init();
-    }
-
-    uint256 _totalSupply = lyfDs.debtShares[_debtShareId];
-    uint256 _totalValue = lyfDs.debtValues[_debtShareId];
-
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
-
-    // update over collat debt
-    lyfDs.debtShares[_debtShareId] += _shareToAdd;
-    lyfDs.debtValues[_debtShareId] += _amount;
-
-    uint256 _newShareAmount = userDebtShare.getAmount(_debtShareId) + _shareToAdd;
-
-    // update user's debtshare
-    userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
 
   function _repayDebt(
@@ -439,7 +390,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) internal returns (uint256 _actualRepayAmount) {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    (uint256 _oldSubAccountDebtShare, ) = _getDebt(_subAccount, _debtShareId, lyfDs);
+    (uint256 _oldSubAccountDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _repayAmount,
@@ -454,117 +405,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
-  function getTotalBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue)
-  {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-
-    _totalBorrowingPowerUSDValue = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-  }
-
-  function getTotalUsedBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue)
-  {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-
-    _totalBorrowedUSDValue = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-  }
-
-  function debtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtLastAccrueTime[_debtShareId];
-  }
-
-  function pendingInterest(address _token, address _lpToken) public view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return LibLYF01.pendingInterest(_debtShareId, lyfDs);
-  }
-
   function accrueInterest(address _token, address _lpToken) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
-  }
-
-  function debtValues(address _token, address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtValues[_debtShareId];
-  }
-
-  function lpValues(address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpValues[_lpToken];
-  }
-
-  function lpShares(address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpShares[_lpToken];
-  }
-
-  function lpConfigs(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.lpConfigs[_lpToken];
-  }
-
-  function debtShares(address _token, address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtShares[_debtShareId];
-  }
-
-  function pendingRewards(address _lpToken) external view returns (uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.pendingRewards[_lpToken];
-  }
-
-  function getGlobalDebt(address _token, address _lpToken) external view returns (uint256, uint256) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return (lyfDs.debtShares[_debtShareId], lyfDs.debtValues[_debtShareId]);
-  }
-
-  function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).getNonCollatAccountDebt(address(this), _token);
-  }
-
-  function getDebtShares(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibUIntDoublyLinkedList.Node[] memory)
-  {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-
-    LibUIntDoublyLinkedList.List storage subAccountDebtShares = lyfDs.subAccountDebtShares[_subAccount];
-
-    return subAccountDebtShares.getAll();
-  }
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    address _lpToken
-  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-
-    (_debtShare, _debtAmount) = _getDebt(_subAccount, _debtShareId, lyfDs);
   }
 }

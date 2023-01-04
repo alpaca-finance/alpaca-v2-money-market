@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](25);
+    bytes4[] memory selectors = new bytes4[](29);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.getTokenConfig.selector;
     selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
@@ -130,12 +130,16 @@ library MMDiamondDeployer {
     selectors[16] = ViewFacet.getIbShareFromUnderlyingAmount.selector;
     selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
     selectors[18] = ViewFacet.getNonCollatAccountDebtValues.selector;
-    selectors[19] = ViewFacet.getNonCollatTotalUsedBorrowingPower.selector;
-    selectors[20] = ViewFacet.getNonCollatAccountDebt.selector;
-    selectors[21] = ViewFacet.getNonCollatTokenDebt.selector;
-    selectors[22] = ViewFacet.getNonCollatBorrowingPower.selector;
-    selectors[23] = ViewFacet.getIbTokenFromToken.selector;
-    selectors[24] = ViewFacet.getTokenFromIbToken.selector;
+    selectors[19] = ViewFacet.getNonCollatAccountDebt.selector;
+    selectors[20] = ViewFacet.getNonCollatTokenDebt.selector;
+    selectors[21] = ViewFacet.getNonCollatBorrowingPower.selector;
+    selectors[22] = ViewFacet.getIbTokenFromToken.selector;
+    selectors[23] = ViewFacet.getTokenFromIbToken.selector;
+    selectors[24] = ViewFacet.getTotalNonCollatUsedBorrowingPower.selector;
+    selectors[25] = ViewFacet.getLiquidationParams.selector;
+    selectors[26] = ViewFacet.getMaxNumOfToken.selector;
+    selectors[27] = ViewFacet.getGlobalDebtValue.selector;
+    selectors[28] = ViewFacet.getMinDebtSize.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -150,12 +154,11 @@ library MMDiamondDeployer {
   function deployLendFacet(DiamondCutFacet diamondCutFacet) internal returns (LendFacet, bytes4[] memory) {
     LendFacet _lendFacet = new LendFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
-    selectors[2] = LendFacet.openMarket.selector;
-    selectors[3] = LendFacet.depositETH.selector;
-    selectors[4] = LendFacet.withdrawETH.selector;
+    selectors[2] = LendFacet.depositETH.selector;
+    selectors[3] = LendFacet.withdrawETH.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_lendFacet),
@@ -227,21 +230,24 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](14);
-    selectors[0] = AdminFacet.setTokenToIbTokens.selector;
+    bytes4[] memory selectors = new bytes4[](17);
+    selectors[0] = AdminFacet.openMarket.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
-    selectors[2] = AdminFacet.setNonCollatBorrower.selector;
+    selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
     selectors[3] = AdminFacet.setInterestModel.selector;
     selectors[4] = AdminFacet.setOracle.selector;
     selectors[5] = AdminFacet.setRepurchasersOk.selector;
     selectors[6] = AdminFacet.setNonCollatInterestModel.selector;
     selectors[7] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[8] = AdminFacet.setLiquidationCallersOk.selector;
+    selectors[8] = AdminFacet.setLiquidatorsOk.selector;
     selectors[9] = AdminFacet.setTreasury.selector;
     selectors[10] = AdminFacet.setFees.selector;
     selectors[11] = AdminFacet.withdrawReserve.selector;
     selectors[12] = AdminFacet.setProtocolConfigs.selector;
     selectors[13] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[14] = AdminFacet.setLiquidationParams.selector;
+    selectors[15] = AdminFacet.setMaxNumOfToken.selector;
+    selectors[16] = AdminFacet.setMinDebtSize.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

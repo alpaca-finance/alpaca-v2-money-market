@@ -4,6 +4,8 @@ pragma solidity 0.8.17;
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface ICollateralFacet {
+  error CollateralFacet_NoSelfTransfer();
+
   function addCollateral(
     address _account,
     uint256 _subAccountId,

@@ -14,6 +14,9 @@ import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
+// mm contract
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
 import { ChainLinkPriceOracle2, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
@@ -50,11 +53,11 @@ contract BaseTest is DSTest {
   address internal usd;
   MockERC20 internal isolateToken;
 
-  MockERC20 internal ibWeth;
-  MockERC20 internal ibBtc;
-  MockERC20 internal ibUsdc;
-  MockERC20 internal ibIsolateToken;
-  MockERC20 internal ibWNative;
+  InterestBearingToken internal ibWeth;
+  InterestBearingToken internal ibBtc;
+  InterestBearingToken internal ibUsdc;
+  InterestBearingToken internal ibIsolateToken;
+  InterestBearingToken internal ibWNative;
 
   MockERC20 internal debtToken1;
 
@@ -70,6 +73,7 @@ contract BaseTest is DSTest {
   ProxyAdminLike internal proxyAdmin;
 
   constructor() {
+    vm.warp(100000);
     // deploy
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
@@ -81,17 +85,11 @@ contract BaseTest is DSTest {
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
     nativeToken = deployMockWNative();
 
-    ibWeth = deployMockErc20("Interest Bearing Wrapped Ethereum", "IBWETH", 18);
-    ibBtc = deployMockErc20("Interest Bearing Bitcoin", "IBBTC", 18);
-    ibUsdc = deployMockErc20("Interest USD COIN", "IBUSDC", 18);
-    ibIsolateToken = deployMockErc20("IBISOLATETOKEN", "IBISOLATETOKEN", 18);
-    ibWNative = deployMockErc20("Interest Bearing WNATIVE", "WNATIVE", 18);
-
     debtToken1 = deployMockErc20("Debt Token 1", "DTOKEN1", 18);
 
     rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
     rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 18);
-
+    
     nativeRelayer = deployMockWNativeRelayer();
 
     // mint token
@@ -101,6 +99,7 @@ contract BaseTest is DSTest {
     btc.mint(ALICE, 1000 ether);
     usdc.mint(ALICE, 1000 ether);
     opm.mint(ALICE, 1000 ether);
+    cake.mint(ALICE, 1000 ether);
     isolateToken.mint(ALICE, 1000 ether);
 
     weth.mint(EVE, 1000 ether);

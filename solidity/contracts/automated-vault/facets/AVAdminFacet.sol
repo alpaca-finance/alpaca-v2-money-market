@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 import { AVShareToken } from "../AVShareToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -29,10 +28,10 @@ contract AVAdminFacet is IAVAdminFacet {
   ) external onlyOwner returns (address _newShareToken) {
     // sanity call
     IAVHandler(_handler).totalLpBalance();
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
-    string memory _tokenSymbol = ERC20(_lpToken).symbol();
-    uint8 _tokenDecimals = ERC20(_lpToken).decimals();
+    string memory _tokenSymbol = IERC20(_lpToken).symbol();
+    uint8 _tokenDecimals = IERC20(_lpToken).decimals();
     _newShareToken = address(
       new AVShareToken(
         string.concat("Share Token ", _tokenSymbol),
@@ -57,34 +56,33 @@ contract AVAdminFacet is IAVAdminFacet {
   }
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     uint256 length = configs.length;
-    for (uint256 i; i < length; ) {
-      TokenConfigInput calldata config = configs[i];
+    for (uint256 _i; _i < length; ) {
+      TokenConfigInput calldata config = configs[_i];
       avDs.tokenConfigs[config.token] = LibAV01.TokenConfig({
         tier: config.tier,
-        maxToleranceExpiredSecond: config.maxToleranceExpiredSecond,
         to18ConversionFactor: LibAV01.to18ConversionFactor(config.token)
       });
       unchecked {
-        i++;
+        ++_i;
       }
     }
   }
 
   function setMoneyMarket(address _newMoneyMarket) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     avDs.moneyMarket = _newMoneyMarket;
   }
 
   function setOracle(address _oracle) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     avDs.oracle = _oracle;
   }
 
   function setTreasury(address _treasury) external onlyOwner {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.getStorage();
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     avDs.treasury = _treasury;
   }
 }
