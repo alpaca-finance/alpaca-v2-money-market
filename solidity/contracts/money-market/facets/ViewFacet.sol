@@ -345,6 +345,7 @@ contract ViewFacet is IViewFacet {
     return LibMoneyMarket01.getSubAccount(_account, _subAccountId);
   }
 
+  // TODO: natspec
   function getFeeParams()
     external
     view

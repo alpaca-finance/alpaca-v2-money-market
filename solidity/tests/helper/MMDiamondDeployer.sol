@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](30);
+    bytes4[] memory selectors = new bytes4[](31);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.getTokenConfig.selector;
     selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
