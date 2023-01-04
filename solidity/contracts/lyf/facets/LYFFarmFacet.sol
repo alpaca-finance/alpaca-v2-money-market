@@ -272,24 +272,28 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.reinvest(_lpToken, 0, lyfDs.lpConfigs[_lpToken], lyfDs);
   }
 
-  // todo: should we fix to _debtShareToRepay
   function repayWithCollat(
     uint256 _subAccountId,
     address _token,
     address _lpToken,
-    uint256 _repayAmount
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (, uint256 _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    (uint256 _debtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
 
     // repay maxmimum debt
-    _repayAmount = _repayAmount > _debtAmount ? _debtAmount : _repayAmount;
+    _debtShareToRepay = _debtShareToRepay > _debtShare ? _debtShare : _debtShareToRepay;
 
-    if (_repayAmount > 0) {
+    if (_debtShareToRepay > 0) {
+      uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
+      uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
+
+      uint256 _repayAmount = LibShareUtil.shareToValue(_debtShareToRepay, _oldDebtValue, _oldDebtShare);
+
       // remove collat as much as possible
       uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
       // remove debt as much as possible
