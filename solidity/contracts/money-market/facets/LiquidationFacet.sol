@@ -292,11 +292,15 @@ contract LiquidationFacet is ILiquidationFacet {
     address _collatUnderlyingToken,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
+    // withdraw and ib pricing required underlying token interest to be accrued to work correctly
+    LibMoneyMarket01.accrueInterest(_collatUnderlyingToken, moneyMarketDs);
+
     InternalIbLiquidationCallLocalVars memory vars;
 
     // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
     vars.underlyingAmountBefore = IERC20(_collatUnderlyingToken).balanceOf(address(this));
     vars.repayAmountBefore = IERC20(params.repayToken).balanceOf(address(this));
+    // ok to use getTotalToken here because we just accrued interest
     vars.totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
     vars.ibTotalSupply = IERC20(params.collatToken).totalSupply();
 
@@ -348,7 +352,13 @@ contract LiquidationFacet is ILiquidationFacet {
 
     IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, vars.feeToTreasury);
 
-    LibMoneyMarket01.withdraw(params.collatToken, vars.collatSold, address(this), moneyMarketDs);
+    LibMoneyMarket01.withdraw(
+      _collatUnderlyingToken,
+      params.collatToken,
+      vars.collatSold,
+      address(this),
+      moneyMarketDs
+    );
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, vars.repaidAmount, moneyMarketDs);
