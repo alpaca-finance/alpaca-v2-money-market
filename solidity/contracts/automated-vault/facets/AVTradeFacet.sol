@@ -81,16 +81,16 @@ contract AVTradeFacet is IAVTradeFacet {
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
     address _stableToken = _vaultConfig.stableToken;
-    uint256 _amountToWithdraw = LibAV01.getShareTokenValue(_shareToken, _shareToWithdraw, avDs);
+    uint256 _shareValueToWithdraw = LibAV01.getShareTokenValue(_shareToken, _shareToWithdraw, avDs);
 
     (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _shareToken,
-      _amountToWithdraw,
+      _shareValueToWithdraw,
       avDs
     );
 
     (uint256 _stableTokenPrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
-    uint256 _expectedStableTokenOut = (_amountToWithdraw * 1e18) /
+    uint256 _expectedStableTokenOut = (_shareValueToWithdraw * 1e18) /
       (_stableTokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
 
     if (_expectedStableTokenOut < _minStableTokenOut) revert AVTradeFacet_TooLittleReceived();
