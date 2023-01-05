@@ -113,7 +113,9 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
-    if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
+    if (_token != moneyMarketDs.nativeToken) {
+      revert LendFacet_InvalidToken(_token);
+    }
 
     address _relayer = moneyMarketDs.nativeRelayer;
     if (_relayer == address(0)) {
