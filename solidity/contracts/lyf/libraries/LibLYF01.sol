@@ -95,7 +95,9 @@ library LibLYF01 {
   }
 
   function getSubAccount(address primary, uint256 subAccountId) internal pure returns (address) {
-    if (subAccountId > 255) revert LibLYF01_BadSubAccountId();
+    if (subAccountId > 255) {
+      revert LibLYF01_BadSubAccountId();
+    }
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
@@ -259,7 +261,9 @@ library LibLYF01 {
     } else {
       (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) revert LibLYF01_PriceStale(_token);
+    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) {
+      revert LibLYF01_PriceStale(_token);
+    }
   }
 
   function getIbPriceUSD(
@@ -313,8 +317,9 @@ library LibLYF01 {
     }
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
-    if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount)
+    if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount) {
       revert LibLYF01_NumberOfTokenExceedLimit();
+    }
 
     lyfDs.collats[_token] += _amount;
   }
@@ -357,7 +362,9 @@ library LibLYF01 {
     uint256 _removeAmountUnderlying,
     LYFDiamondStorage storage ds
   ) internal returns (uint256 _underlyingRemoved) {
-    if (_ibToken == address(0) || _removeAmountUnderlying == 0) return 0;
+    if (_ibToken == address(0) || _removeAmountUnderlying == 0) {
+      return 0;
+    }
 
     LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
 
@@ -385,7 +392,9 @@ library LibLYF01 {
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
     uint256 _decimals = IERC20(_token).decimals();
-    if (_decimals > 18) revert LibLYF01_UnsupportedDecimals();
+    if (_decimals > 18) {
+      revert LibLYF01_UnsupportedDecimals();
+    }
     uint256 _conversionFactor = 10**(18 - _decimals);
     return uint8(_conversionFactor);
   }
@@ -421,7 +430,9 @@ library LibLYF01 {
     harvest(_lpToken, _lpConfig, lyfDs);
 
     uint256 _rewardAmount = lyfDs.pendingRewards[_lpToken];
-    if (_rewardAmount < _reinvestThreshold) return;
+    if (_rewardAmount < _reinvestThreshold) {
+      return;
+    }
 
     // TODO: extract fee
 

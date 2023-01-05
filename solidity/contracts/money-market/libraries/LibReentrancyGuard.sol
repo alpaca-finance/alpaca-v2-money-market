@@ -33,7 +33,9 @@ library LibReentrancyGuard {
 
   function lock() internal {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
-    if (reentrancyGuardDs.status == _ENTERED) revert LibReentrancyGuard_ReentrantCall();
+    if (reentrancyGuardDs.status == _ENTERED) {
+      revert LibReentrancyGuard_ReentrantCall();
+    }
 
     reentrancyGuardDs.status = _ENTERED;
   }
