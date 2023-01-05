@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -9,10 +10,12 @@ import { LibSafeToken } from "../../contracts/money-market/libraries/LibSafeToke
 
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
-contract MockLiquidationStrategy is ILiquidationStrategy {
+contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
   using SafeERC20 for ERC20;
 
   MockAlpacaV2Oracle internal _mockOracle;
+
+  mapping(address => bool) public callersOk;
 
   constructor(address _oracle) {
     _mockOracle = MockAlpacaV2Oracle(_oracle);
@@ -22,8 +25,8 @@ contract MockLiquidationStrategy is ILiquidationStrategy {
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
+    uint256 _collatAmount,
     uint256 _repayAmount,
-    address _repayTo,
     bytes calldata /* _data */
   ) external {
     (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
@@ -36,7 +39,20 @@ contract MockLiquidationStrategy is ILiquidationStrategy {
     uint256 _actualCollatSold = _collatSold > _collatAmountBefore ? _collatAmountBefore : _collatSold;
     uint256 _actualRepayAmount = (_actualCollatSold * _priceCollatPerRepayToken) / 10**ERC20(_collatToken).decimals();
 
-    ERC20(_repayToken).safeTransfer(_repayTo, _actualRepayAmount);
-    ERC20(_collatToken).safeTransfer(_repayTo, _collatAmountBefore - _actualCollatSold);
+    ERC20(_repayToken).safeTransfer(msg.sender, _actualRepayAmount);
+    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmount - _actualCollatSold);
+  }
+
+  /// @notice Set callers ok
+  /// @param _callers A list of caller addresses
+  /// @param _isOk An ok flag
+  function setCallersOk(address[] calldata _callers, bool _isOk) external onlyOwner {
+    uint256 _length = _callers.length;
+    for (uint256 _i = 0; _i < _length; ) {
+      callersOk[_callers[_i]] = _isOk;
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }
