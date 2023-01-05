@@ -136,6 +136,8 @@ contract MoneyMarket_Liquidation_RepurhcaseTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtValue, 15.1550765511672 ether);
     assertEq(_stateAfter.debtShare, 15.152512467672074226 ether);
     assertEq(_stateAfter.subAccountDebtShare, 15.152512467672074226 ether);
+    // globalDebt should equal to debtValue since there is only 1 position
+    assertEq(viewFacet.getGlobalDebtValue(_debtToken), 15.1550765511672 ether);
     vm.stopPrank();
 
     assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);

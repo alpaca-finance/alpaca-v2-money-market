@@ -38,7 +38,9 @@ library LibUIntDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (has(list, index)) revert LibUIntDoublyLinkedList_Existed();
+    if (has(list, index)) {
+      revert LibUIntDoublyLinkedList_Existed();
+    }
 
     // Effect
     list.next[index] = list.next[START];
@@ -54,7 +56,9 @@ library LibUIntDoublyLinkedList {
 
   function remove(List storage list, uint256 index) internal returns (List storage) {
     // Check
-    if (!has(list, index)) revert LibUIntDoublyLinkedList_NotExisted();
+    if (!has(list, index)) {
+      revert LibUIntDoublyLinkedList_NotExisted();
+    }
 
     // Effect
     uint256 prevAddr = list.prev[index];
@@ -77,7 +81,9 @@ library LibUIntDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (!has(list, index)) revert LibUIntDoublyLinkedList_NotExisted();
+    if (!has(list, index)) {
+      revert LibUIntDoublyLinkedList_NotExisted();
+    }
 
     // Effect
     if (amount == 0) {
@@ -110,7 +116,9 @@ library LibUIntDoublyLinkedList {
 
   function getAll(List storage list) internal view returns (Node[] memory) {
     Node[] memory nodes = new Node[](list.size);
-    if (list.size == 0) return nodes;
+    if (list.size == 0) {
+      return nodes;
+    }
     uint256 curr = list.next[START];
     for (uint256 i = 0; curr != END; i++) {
       nodes[i] = Node({ index: curr, amount: list.amount[curr] });

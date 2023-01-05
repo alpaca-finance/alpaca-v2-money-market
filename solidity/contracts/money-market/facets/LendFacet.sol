@@ -75,11 +75,15 @@ contract LendFacet is ILendFacet {
 
   /// @notice Deposit native token for lending
   function depositETH() external payable nonReentrant {
-    if (msg.value == 0) revert LendFacet_InvalidAmount(msg.value);
+    if (msg.value == 0) {
+      revert LendFacet_InvalidAmount(msg.value);
+    }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _nativeToken = moneyMarketDs.nativeToken;
-    if (_nativeToken == address(0)) revert LendFacet_InvalidToken(_nativeToken);
+    if (_nativeToken == address(0)) {
+      revert LendFacet_InvalidToken(_nativeToken);
+    }
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_nativeToken];
     if (_ibToken == address(0)) {
@@ -109,10 +113,14 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _token = moneyMarketDs.ibTokenToTokens[_ibWNativeToken];
-    if (_token != moneyMarketDs.nativeToken) revert LendFacet_InvalidToken(_token);
+    if (_token != moneyMarketDs.nativeToken) {
+      revert LendFacet_InvalidToken(_token);
+    }
 
     address _relayer = moneyMarketDs.nativeRelayer;
-    if (_relayer == address(0)) revert LendFacet_InvalidAddress(_relayer);
+    if (_relayer == address(0)) {
+      revert LendFacet_InvalidAddress(_relayer);
+    }
 
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
@@ -135,7 +143,9 @@ contract LendFacet is ILendFacet {
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    if (_amount > moneyMarketDs.reserves[_nativeToken]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    if (_amount > moneyMarketDs.reserves[_nativeToken]) {
+      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
     moneyMarketDs.reserves[_nativeToken] -= _amount;
     IERC20(_nativeToken).safeTransfer(_nativeRelayer, _amount);
     IWNativeRelayer(_nativeRelayer).withdraw(_amount);
