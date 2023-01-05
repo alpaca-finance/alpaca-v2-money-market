@@ -17,6 +17,13 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
 
   error PancakeswapV2LiquidationStrategy_Unauthorized();
   error PancakeswapV2LiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
+  error PancakeswapV2LiquidationStrategy_InvalidSetPathParams();
+
+  struct SetPathParams {
+    address tokenIn;
+    address tokenOut;
+    address[] path;
+  }
 
   IPancakeRouter02 internal router;
 
@@ -70,15 +77,21 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     IERC20(_collatToken).safeApprove(address(router), 0);
   }
 
-  function setPaths(address[][] calldata _newPaths) external onlyOwner {
-    uint256 len = _newPaths.length;
+  /// @notice Set paths config to be used during swap step in executeLiquidation
+  /// @param _inputs Array of parameters used to set path
+  function setPaths(SetPathParams[] calldata _inputs) external onlyOwner {
+    uint256 len = _inputs.length;
     for (uint256 i = 0; i < len; ) {
-      // sanity check. router will revert if pair doesn't exist
-      router.getAmountsIn(1 ether, _newPaths[i]);
+      SetPathParams memory _params = _inputs[i];
+      address[] memory _path = _params.path;
 
-      address _tokenIn = _newPaths[i][0];
-      address _tokenOut = _newPaths[i][_newPaths[i].length - 1];
-      paths[_tokenIn][_tokenOut] = _newPaths[i];
+      if (_params.tokenIn != _path[0] || _params.tokenOut != _path[_path.length - 1]) {
+        revert PancakeswapV2LiquidationStrategy_InvalidSetPathParams();
+      }
+      // sanity check. router will revert if pair doesn't exist
+      router.getAmountsIn(1 ether, _path);
+
+      paths[_params.tokenIn][_params.tokenOut] = _path;
 
       unchecked {
         ++i;

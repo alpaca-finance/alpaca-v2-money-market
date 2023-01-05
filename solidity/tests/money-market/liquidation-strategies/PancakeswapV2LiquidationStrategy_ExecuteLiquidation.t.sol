@@ -25,12 +25,19 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidation is MoneyMarket_Base
 
     liquidationStrat.setCallersOk(_callers, true);
 
-    address[][] memory _paths = new address[][](1);
-    _paths[0] = new address[](2);
-    _paths[0][0] = address(weth);
-    _paths[0][1] = address(usdc);
+    address[] memory _paths = new address[](2);
+    _paths[0] = address(weth);
+    _paths[1] = address(usdc);
 
-    liquidationStrat.setPaths(_paths);
+    PancakeswapV2LiquidationStrategy.SetPathParams[]
+      memory _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({
+      tokenIn: address(weth),
+      tokenOut: address(usdc),
+      path: _paths
+    });
+
+    liquidationStrat.setPaths(_setPathsInputs);
   }
 
   function testCorrectness_LiquidationStrat_WhenExecuteLiquidation_ShouldWork() external {

@@ -43,28 +43,73 @@ contract PancakeswapV2LiquidationStrategy_SetConfigs is MoneyMarket_BaseTest {
     address _token0 = address(usdc);
     address _token1 = address(weth);
 
-    address[][] memory _paths = new address[][](1);
+    address[] memory _paths = new address[](2);
+    _paths[0] = _token0;
+    _paths[1] = _token1;
 
-    _paths[0] = new address[](2);
-    _paths[0][0] = _token0;
-    _paths[0][1] = _token1;
+    PancakeswapV2LiquidationStrategy.SetPathParams[]
+      memory _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({
+      tokenIn: _token0,
+      tokenOut: _token1,
+      path: _paths
+    });
 
-    liquidationStrat.setPaths(_paths);
+    liquidationStrat.setPaths(_setPathsInputs);
 
     assertEq(liquidationStrat.paths(_token0, _token1, 0), _token0);
     assertEq(liquidationStrat.paths(_token0, _token1, 1), _token1);
   }
 
-  function testRevert_WhenNonOwnerSetPaths() external {
-    address[][] memory _paths = new address[][](1);
+  function testRevert_WhenSetPathWithMismatchTokenInAndOut() external {
+    address _tokenIn = address(usdc);
+    address _tokenOut = address(weth);
 
-    _paths[0] = new address[](2);
-    _paths[0][0] = address(usdc);
-    _paths[0][1] = address(weth);
+    address[] memory _paths = new address[](2);
+    _paths[0] = _tokenIn;
+    _paths[1] = _tokenOut;
+
+    PancakeswapV2LiquidationStrategy.SetPathParams[]
+      memory _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({
+      tokenIn: address(1234),
+      tokenOut: _tokenOut,
+      path: _paths
+    });
+
+    vm.expectRevert(PancakeswapV2LiquidationStrategy.PancakeswapV2LiquidationStrategy_InvalidSetPathParams.selector);
+    liquidationStrat.setPaths(_setPathsInputs);
+
+    _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({
+      tokenIn: _tokenIn,
+      tokenOut: address(1234),
+      path: _paths
+    });
+
+    vm.expectRevert(PancakeswapV2LiquidationStrategy.PancakeswapV2LiquidationStrategy_InvalidSetPathParams.selector);
+    liquidationStrat.setPaths(_setPathsInputs);
+  }
+
+  function testRevert_WhenNonOwnerSetPaths() external {
+    address _token0 = address(usdc);
+    address _token1 = address(weth);
+
+    address[] memory _paths = new address[](2);
+    _paths[0] = _token0;
+    _paths[1] = _token1;
+
+    PancakeswapV2LiquidationStrategy.SetPathParams[]
+      memory _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({
+      tokenIn: _token0,
+      tokenOut: _token1,
+      path: _paths
+    });
 
     vm.prank(ALICE);
     vm.expectRevert("Ownable: caller is not the owner");
-    liquidationStrat.setPaths(_paths);
+    liquidationStrat.setPaths(_setPathsInputs);
   }
 
   /// @dev must disable sanity check in strat for this test to work
@@ -75,12 +120,16 @@ contract PancakeswapV2LiquidationStrategy_SetConfigs is MoneyMarket_BaseTest {
   //   address _token1 = address(weth);
   //   address _token2 = address(btc);
 
-  //   address[][] memory _paths = new address[][](1);
+  // address[] memory _paths = new address[](3);
+  // _paths[0] = _token0;
+  // _paths[1] = _token1;
+  // _paths[2] = _token2;
 
-  //   _paths[0] = new address[](3);
-  //   _paths[0][0] = _token0;
-  //   _paths[0][1] = _token1;
-  //   _paths[0][2] = _token2;
+  // PancakeswapV2LiquidationStrategy.SetPathParams[]
+  //   memory _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+  // _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({ tokenIn: _token0, tokenOut: _token2, path: _paths });
+
+  // liquidationStrat.setPaths(_setPathsInputs);
 
   //   liquidationStrat.setPaths(_paths);
 
