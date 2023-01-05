@@ -392,7 +392,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
   }
 
-  // deprecated: please use _repayDebtWithShare
   function _repayDebt(
     address _account,
     uint256 _subAccountId,
