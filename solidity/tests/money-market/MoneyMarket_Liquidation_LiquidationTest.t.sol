@@ -137,6 +137,71 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
     assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.15 ether);
   }
 
+  function testCorrectness_InjectedCollatToStrat_ThenPartialLiquidate_ShouldWork() external {
+    /**
+     * scenario:
+     *
+     * 1. inject insane amount of collat to liquidation strat
+     *
+     * 2. 1 usdc/weth, ALICE post 40 weth as collateral, borrow 30 usdc
+     *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
+     *
+     * 3. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, position become liquidatable
+     *    - usdc debt has increased to 30.0050765511672 usdc
+     *    - ALICE borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd
+     *
+     * 4. try to liquidate 15 usdc with weth collateral
+     *
+     * 5. should be able to liquidate with 15 usdc repaid and 18.9375 weth reduced from collateral
+     *    - remaining collateral = 40 - 18.9375 = 21.0625 weth
+     *      - 15 usdc = 18.75 weth is liquidated
+     *      - 18.75 * 1% = 0.1875 weth is taken to treasury as liquidation fee
+     *    - remaining debt value = 30.0050765511672 - 15 = 15.0050765511672 usdc
+     *    - remaining debt share = 30 - 14.997462153866591690 = 15.00253784613340831 shares
+     *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 15 * 30 / 30.0050765511672 = 14.997462153866591690
+     */
+
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+    uint256 _injectedCollatAmount = 10000 ether;
+
+    vm.warp(block.timestamp + 1 days);
+
+    // LiquidationFacet need these to function
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+    weth.mint(address(mockLiquidationStrategy), _injectedCollatAmount);
+
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      15 ether,
+      abi.encode()
+    );
+
+    CacheState memory _stateAfter = CacheState({
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+
+    assertEq(_stateAfter.collat, 21.0625 ether);
+    assertEq(_stateAfter.subAccountCollat, 21.0625 ether);
+    assertEq(_stateAfter.debtValue, 15.0050765511672 ether);
+    assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
+
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.15 ether);
+  }
+
   function testCorrectness_WhenLiquidateMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
     /**
      * scenario:
