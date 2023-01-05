@@ -509,23 +509,23 @@ library LibMoneyMarket01 {
     uint256 _shareAmount,
     address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _amountToWithdraw) {
-    _amountToWithdraw = LibShareUtil.shareToValue(
+  ) internal returns (uint256 _withdrawAmount) {
+    _withdrawAmount = LibShareUtil.shareToValue(
       _shareAmount,
       getTotalToken(_underlyingToken, moneyMarketDs), // ok to use getTotalToken here because we need to call accrueInterest before withdraw
       IERC20(_ibToken).totalSupply()
     );
 
-    if (_amountToWithdraw > moneyMarketDs.reserves[_underlyingToken]) {
+    if (_withdrawAmount > moneyMarketDs.reserves[_underlyingToken]) {
       revert LibMoneyMarket01_NotEnoughToken();
     }
 
-    moneyMarketDs.reserves[_underlyingToken] -= _amountToWithdraw;
+    moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
 
     // burn ibToken
-    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _amountToWithdraw, _shareAmount);
+    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _withdrawAmount, _shareAmount);
 
-    emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _amountToWithdraw);
+    emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {

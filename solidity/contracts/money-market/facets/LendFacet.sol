@@ -60,7 +60,7 @@ contract LendFacet is ILendFacet {
   /// @notice Withdraw the lended token by burning the interest bearing token
   /// @param _ibToken The interest bearing token to burn
   /// @param _shareAmount The amount of interest bearing token to burn
-  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256 _amountWithdrawn) {
+  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256 _withdrawAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_ibToken];
@@ -71,9 +71,9 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.accrueInterest(_underlyingToken, moneyMarketDs);
 
-    _amountWithdrawn = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, msg.sender, moneyMarketDs);
+    _withdrawAmount = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, msg.sender, moneyMarketDs);
 
-    IERC20(_underlyingToken).safeTransfer(msg.sender, _amountWithdrawn);
+    IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
   }
 
   /// @notice Deposit native token for lending

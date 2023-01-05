@@ -334,7 +334,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
      *
      * 2. BOB add 10 usdc as collateral, borrow 0.1 weth
      *
-     * 3. 1 block passed, interest accrue on weth 0.001, usdc 0.01
+     * 3. 1 second passed, interest accrue on weth 0.001, usdc 0.01
      *    - note that in mm base test had lendingFee set to 0. has to account for if not 0
      *
      * 4. weth price dropped to 0.1 usdc/weth, ALICE position is liquidatable

@@ -162,8 +162,8 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
      * scenario
      * 1. ALICE deposit 2 usdc, get 2 ibUsdc back
      * 2. BOB add 10 weth collateral, borrow 1 weth
-     * 3. time past 1 block, weth pending interest increase to 0.01 weth
-     *    - BOB borrow 1 weth with 0.01 ether interest per block
+     * 3. time past 1 second, weth pending interest increase to 0.01 weth
+     *    - BOB borrow 1 weth with 0.01 ether interest per second
      *    - pending interest = rate * timePast * debtValue = 0.01 ether * 1 * 1 ether = 0.01 ether
      * 4. ALICE withdraw 0.2 ibUsdc (10% of vault), get 0.201 usdc back (principal + interest)
      */
