@@ -50,7 +50,9 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     LibMoneyMarket01.nonCollatBorrow(msg.sender, _token, _amount, moneyMarketDs);
 
-    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    if (_amount > moneyMarketDs.reserves[_token]) {
+      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
     moneyMarketDs.reserves[_token] -= _amount;
     IERC20(_token).safeTransfer(msg.sender, _amount);
 

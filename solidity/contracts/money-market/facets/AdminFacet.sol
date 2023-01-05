@@ -69,7 +69,9 @@ contract AdminFacet is IAdminFacet {
   /// @return _newIbToken The address of interest bearing token created for this market
   function openMarket(address _token) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (moneyMarketDs.ibTokenImplementation == address(0)) revert AdminFacet_InvalidIbTokenImplementation();
+    if (moneyMarketDs.ibTokenImplementation == address(0)) {
+      revert AdminFacet_InvalidIbTokenImplementation();
+    }
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 
@@ -243,7 +245,9 @@ contract AdminFacet is IAdminFacet {
     if (_amount > moneyMarketDs.protocolReserves[_token]) {
       revert AdminFacet_ReserveTooLow();
     }
-    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    if (_amount > moneyMarketDs.reserves[_token]) {
+      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
 
     moneyMarketDs.protocolReserves[_token] -= _amount;
 
@@ -269,7 +273,9 @@ contract AdminFacet is IAdminFacet {
       _newRepurchaseRewardBps > LibMoneyMarket01.MAX_BPS ||
       _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
       _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS
-    ) revert AdminFacet_InvalidArguments();
+    ) {
+      revert AdminFacet_InvalidArguments();
+    }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -334,8 +340,10 @@ contract AdminFacet is IAdminFacet {
   /// @param _newLiquidationThreshold The threshold that need to reach to allow liquidation
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold > LibMoneyMarket01.MAX_BPS)
+    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold > LibMoneyMarket01.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
+    }
+
     moneyMarketDs.maxLiquidateBps = _newMaxLiquidateBps;
     moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
 
@@ -375,11 +383,15 @@ contract AdminFacet is IAdminFacet {
     uint256 maxBorrow
   ) internal pure {
     // factors should not greater than MAX_BPS
-    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
+    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
-
+    }
     // prevent user add collat or borrow too much
-    if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
-    if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
+    if (maxCollateral > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
+    if (maxBorrow > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
   }
 }

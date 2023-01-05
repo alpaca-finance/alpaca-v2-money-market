@@ -183,7 +183,9 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
 
   function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
     address owner = _msgSender();
-    if (owner == to) revert InterestBearingToken_NoSelfTransfer();
+    if (owner == to) {
+      revert InterestBearingToken_NoSelfTransfer();
+    }
     _transfer(owner, to, amount);
     return true;
   }
@@ -193,7 +195,9 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
     address to,
     uint256 amount
   ) public virtual override(ERC20, IERC20) returns (bool) {
-    if (from == to) revert InterestBearingToken_NoSelfTransfer();
+    if (from == to) {
+      revert InterestBearingToken_NoSelfTransfer();
+    }
     address spender = _msgSender();
     _spendAllowance(from, spender, amount);
     _transfer(from, to, amount);

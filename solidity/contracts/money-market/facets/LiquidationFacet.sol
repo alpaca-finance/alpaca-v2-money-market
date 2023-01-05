@@ -252,7 +252,9 @@ contract LiquidationFacet is ILiquidationFacet {
       // revert if repay > x% of totalUsedBorrowingPower
       if (
         _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) revert LiquidationFacet_RepayAmountExceedThreshold();
+      ) {
+        revert LiquidationFacet_RepayAmountExceedThreshold();
+      }
     }
 
     uint256 _collatSold = _collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
@@ -338,7 +340,9 @@ contract LiquidationFacet is ILiquidationFacet {
       // revert if repay > x% of totalUsedBorrowingPower
       if (
         _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) revert LiquidationFacet_RepayAmountExceedThreshold();
+      ) {
+        revert LiquidationFacet_RepayAmountExceedThreshold();
+      }
     }
 
     vars.underlyingSold = vars.underlyingAmountBefore - IERC20(_collatUnderlyingToken).balanceOf(address(this));

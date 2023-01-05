@@ -122,7 +122,9 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     address[] memory path = new address[](2);
     (path[0], path[1]) = isReversed ? (_token1, _token0) : (_token0, _token1);
     // 4. Swap according to path
-    if (swapAmt > 0) router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
+    if (swapAmt > 0) {
+      router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
+    }
     // 5. Mint more LP tokens and return all LP tokens to the sender.
     (, , uint256 moreLPAmount) = router.addLiquidity(
       _token0,
