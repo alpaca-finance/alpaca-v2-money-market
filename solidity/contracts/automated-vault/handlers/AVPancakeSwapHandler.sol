@@ -62,6 +62,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     IERC20(_token1).safeTransfer(msg.sender, _returnedToken1);
 
     totalLpBalance -= _lpAmountToWithdraw;
+
+    emit LogOnWithdraw(address(lpToken), _lpAmountToWithdraw);
   }
 
   function composeLpToken(
@@ -114,13 +116,15 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
   ) internal returns (uint256 _returnedToken0, uint256 _returnedToken1) {
     IERC20(address(lpToken)).safeIncreaseAllowance(address(router), _lpToRemove);
 
-    uint256 _token0Before = IERC20(_token0).balanceOf(address(this));
-    uint256 _token1Before = IERC20(_token1).balanceOf(address(this));
-
-    router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
-
-    _returnedToken0 = IERC20(_token0).balanceOf(address(this)) - _token0Before;
-    _returnedToken1 = IERC20(_token1).balanceOf(address(this)) - _token1Before;
+    (_returnedToken0, _returnedToken1) = router.removeLiquidity(
+      _token0,
+      _token1,
+      _lpToRemove,
+      0, // min token0 amount
+      0, // min token1 amount
+      address(this),
+      block.timestamp
+    );
   }
 
   /// @dev Compute optimal deposit amount
