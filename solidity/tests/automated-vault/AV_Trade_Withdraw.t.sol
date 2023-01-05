@@ -57,18 +57,6 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     assertEq(handler.totalLpBalance(), 7.503749999999999994 ether);
   }
 
-  function testRevert_WhenWithdrawAndGetTokenLessThanExpectation_ShouldRevert() external {
-    vm.startPrank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
-
-    mockRouter.setRemoveLiquidityAmountsOut(1 ether, 7.5 ether);
-
-    vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_WithdrawalAmountTooLow.selector));
-    tradeFacet.withdraw(address(avShareToken), 5 ether, 5 ether);
-
-    vm.stopPrank();
-  }
-
   function testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert() external {
     vm.startPrank(ALICE);
     tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);

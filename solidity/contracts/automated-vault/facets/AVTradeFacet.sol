@@ -96,9 +96,6 @@ contract AVTradeFacet is IAVTradeFacet {
     if (_stableTokenToUser < _minStableTokenOut) {
       revert AVTradeFacet_TooLittleReceived();
     }
-    if (_withdrawalStableAmount < _stableTokenToUser) {
-      revert AVTradeFacet_WithdrawalAmountTooLow();
-    }
 
     // repay to MM
     LibAV01.repayMoneyMarket(_shareToken, _stableToken, _withdrawalStableAmount - _stableTokenToUser, avDs);
