@@ -403,6 +403,8 @@ contract LiquidationFacet is ILiquidationFacet {
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _debtShare - _repayShare);
     moneyMarketDs.overCollatDebtShares[_repayToken] -= _repayShare;
     moneyMarketDs.overCollatDebtValues[_repayToken] -= _repayAmount;
+
+    moneyMarketDs.globalDebts[_repayToken] -= _repayAmount;
   }
 
   function _reduceCollateral(
