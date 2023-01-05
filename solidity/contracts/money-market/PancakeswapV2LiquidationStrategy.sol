@@ -16,7 +16,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
   error PancakeswapV2LiquidationStrategy_Unauthorized();
-  error PancakeswapV2LiquidationStrategy_PathConfigNotFound(address source, address destination);
+  error PancakeswapV2LiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
 
   IPancakeRouter02 internal router;
 
@@ -51,7 +51,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     uint256 _minReceive = abi.decode(_data, (uint256));
     address[] memory _path = paths[_collatToken][_repayToken];
 
-    if (_path[0] == address(0) || _path[_path.length - 1] == address(0)) {
+    if (_path.length == 0) {
       revert PancakeswapV2LiquidationStrategy_PathConfigNotFound(_collatToken, _repayToken);
     }
 
@@ -76,9 +76,9 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
       // sanity check. router will revert if pair doesn't exist
       router.getAmountsIn(1 ether, _newPaths[i]);
 
-      address _source = _newPaths[i][0];
-      address _dest = _newPaths[i][_newPaths[i].length - 1];
-      paths[_source][_dest] = _newPaths[i];
+      address _tokenIn = _newPaths[i][0];
+      address _tokenOut = _newPaths[i][_newPaths[i].length - 1];
+      paths[_tokenIn][_tokenOut] = _newPaths[i];
 
       unchecked {
         ++i;
