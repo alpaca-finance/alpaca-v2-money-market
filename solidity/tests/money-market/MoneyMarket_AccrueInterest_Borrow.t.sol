@@ -395,7 +395,11 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     uint256 _actualInterestAfter = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterestAfter, 4e18);
+
+    uint256 _totalTokenWithInterestBeforeAccrue = viewFacet.getTotalTokenWithPendingInterest(address(weth));
     borrowFacet.accrueInterest(address(weth));
+    // total token with interest before accrue should equal to total token after accrue
+    assertEq(_totalTokenWithInterestBeforeAccrue, viewFacet.getTotalToken(address(weth)));
     (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
     uint256 _bobNonCollatDebt = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
