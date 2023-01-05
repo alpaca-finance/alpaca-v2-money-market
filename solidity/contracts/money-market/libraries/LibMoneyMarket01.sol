@@ -115,7 +115,9 @@ library LibMoneyMarket01 {
   }
 
   function getSubAccount(address primary, uint256 subAccountId) internal pure returns (address) {
-    if (subAccountId > 255) revert LibMoneyMarket01_BadSubAccountId();
+    if (subAccountId > 255) {
+      revert LibMoneyMarket01_BadSubAccountId();
+    }
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
@@ -359,7 +361,7 @@ library LibMoneyMarket01 {
 
       // book protocol's revenue
       uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
-      moneyMarketDs.protocolReserves[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
+      moneyMarketDs.protocolReserves[_token] += _protocolFee;
 
       emit LogAccrueInterest(_token, _totalInterest, _protocolFee);
     }
@@ -448,7 +450,8 @@ library LibMoneyMarket01 {
   {
     return
       getTotalToken(_token, moneyMarketDs) +
-      ((getGlobalPendingInterest(_token, moneyMarketDs) * moneyMarketDs.lendingFeeBps) / LibMoneyMarket01.MAX_BPS);
+      ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
+        LibMoneyMarket01.MAX_BPS);
   }
 
   function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -521,7 +524,9 @@ library LibMoneyMarket01 {
       IERC20(_ibToken).totalSupply()
     );
 
-    if (_shareValue > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01_NotEnoughToken();
+    if (_shareValue > moneyMarketDs.reserves[_token]) {
+      revert LibMoneyMarket01_NotEnoughToken();
+    }
     moneyMarketDs.reserves[_token] -= _shareValue;
 
     IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _shareValue, _shareAmount);
@@ -531,7 +536,9 @@ library LibMoneyMarket01 {
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
     uint256 _decimals = IERC20(_token).decimals();
-    if (_decimals > 18) revert LibMoneyMarket01_UnsupportedDecimals();
+    if (_decimals > 18) {
+      revert LibMoneyMarket01_UnsupportedDecimals();
+    }
     uint256 _conversionFactor = 10**(18 - _decimals);
     return uint8(_conversionFactor);
   }
@@ -543,9 +550,12 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage ds
   ) internal {
     // validation
-    if (ds.tokenConfigs[_token].tier != AssetTier.COLLATERAL) revert LibMoneyMarket01_InvalidAssetTier();
-    if (_addAmount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral)
+    if (ds.tokenConfigs[_token].tier != AssetTier.COLLATERAL) {
+      revert LibMoneyMarket01_InvalidAssetTier();
+    }
+    if (_addAmount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral) {
       revert LibMoneyMarket01_ExceedCollateralLimit();
+    }
 
     // init list
     LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
@@ -556,8 +566,9 @@ library LibMoneyMarket01 {
     uint256 _currentCollatAmount = subAccountCollateralList.getAmount(_token);
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
-    if (subAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount)
+    if (subAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
+    }
     ds.collats[_token] += _addAmount;
   }
 
@@ -605,8 +616,9 @@ library LibMoneyMarket01 {
     }
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
-    if (toSubAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount)
+    if (toSubAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
+    }
   }
 
   function getOverCollatDebt(
@@ -670,7 +682,9 @@ library LibMoneyMarket01 {
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
-    if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount) revert LibMoneyMarket01_NumberOfTokenExceedLimit();
+    if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount) {
+      revert LibMoneyMarket01_NumberOfTokenExceedLimit();
+    }
 
     // update facet token balance
     ds.reserves[_token] -= _amount;
@@ -700,7 +714,9 @@ library LibMoneyMarket01 {
 
     debtValue.addOrUpdate(_token, _newAccountDebt);
 
-    if (debtValue.length() > ds.maxNumOfDebtPerNonCollatAccount) revert LibMoneyMarket01_NumberOfTokenExceedLimit();
+    if (debtValue.length() > ds.maxNumOfDebtPerNonCollatAccount) {
+      revert LibMoneyMarket01_NumberOfTokenExceedLimit();
+    }
 
     tokenDebts.addOrUpdate(msg.sender, _newTokenDebt);
 

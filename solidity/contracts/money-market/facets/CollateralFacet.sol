@@ -93,7 +93,9 @@ contract CollateralFacet is ICollateralFacet {
     address _token,
     uint256 _amount
   ) external nonReentrant {
-    if (_fromSubAccountId == _toSubAccountId) revert CollateralFacet_NoSelfTransfer();
+    if (_fromSubAccountId == _toSubAccountId) {
+      revert CollateralFacet_NoSelfTransfer();
+    }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
