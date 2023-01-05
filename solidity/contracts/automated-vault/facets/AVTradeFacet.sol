@@ -89,7 +89,7 @@ contract AVTradeFacet is IAVTradeFacet {
       avDs
     );
 
-    (uint256 _stableTokenPrice, ) = LibAV01.getPriceUSD(vaultConfig.stableToken, avDs);
+    (uint256 _stableTokenPrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
     uint256 _expectedStableTokenOut = (_tokenToWithdraw * 1e18) /
       (_stableTokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
 
@@ -97,16 +97,11 @@ contract AVTradeFacet is IAVTradeFacet {
     if (_withdrawalStableAmount < _expectedStableTokenOut) revert AVTradeFacet_WithdrawalAmountTooLow();
 
     // repay to MM
-    LibAV01.repayMoneyMarket(
-      _shareToken,
-      vaultConfig.stableToken,
-      _withdrawalStableAmount - _expectedStableTokenOut,
-      avDs
-    );
+    LibAV01.repayMoneyMarket(_shareToken, _stableToken, _withdrawalStableAmount - _expectedStableTokenOut, avDs);
     LibAV01.repayMoneyMarket(_shareToken, vaultConfig.assetToken, _withdrawalAssetAmount, avDs);
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareToWithdraw);
-    IERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _expectedStableTokenOut);
+    IERC20(_stableToken).safeTransfer(msg.sender, _expectedStableTokenOut);
 
     emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _expectedStableTokenOut);
   }
