@@ -331,12 +331,21 @@ contract ViewFacet is IViewFacet {
     _maxNumOfOverCollatDebt = moneyMarketDs.maxNumOfDebtPerNonCollatAccount;
   }
 
+  /// @notice Get the minimum debt size that subaccount must maintain during borrow and repay
   function getMinDebtSize() external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return moneyMarketDs.minDebtSize;
   }
 
+  /// @notice Get subaccount address by perform bitwise XOR on target address and subaccount id
+  /// @param _account Target address to get subaccount from
+  /// @param _subAccountId  Subaccount id of target address, value must be between 0 and 255 inclusive
+  function getSubAccount(address _account, uint256 _subAccountId) external pure returns (address) {
+    return LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+  }
+
+  // TODO: natspec
   function getFeeParams()
     external
     view

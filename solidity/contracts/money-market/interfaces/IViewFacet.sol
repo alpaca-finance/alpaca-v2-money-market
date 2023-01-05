@@ -93,6 +93,8 @@ interface IViewFacet {
       uint8
     );
 
+  function getSubAccount(address _account, uint256 _subAccountId) external pure returns (address);
+
   function getMinDebtSize() external view returns (uint256);
 
   function getFeeParams()
