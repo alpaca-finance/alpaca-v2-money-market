@@ -359,7 +359,7 @@ library LibMoneyMarket01 {
 
       // book protocol's revenue
       uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
-      moneyMarketDs.protocolReserves[_token] += (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
+      moneyMarketDs.protocolReserves[_token] += _protocolFee;
 
       emit LogAccrueInterest(_token, _totalInterest, _protocolFee);
     }
@@ -448,7 +448,8 @@ library LibMoneyMarket01 {
   {
     return
       getTotalToken(_token, moneyMarketDs) +
-      ((getGlobalPendingInterest(_token, moneyMarketDs) * moneyMarketDs.lendingFeeBps) / LibMoneyMarket01.MAX_BPS);
+      ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
+        LibMoneyMarket01.MAX_BPS);
   }
 
   function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
