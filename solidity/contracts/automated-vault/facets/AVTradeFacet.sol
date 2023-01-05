@@ -73,7 +73,7 @@ contract AVTradeFacet is IAVTradeFacet {
   function withdraw(
     address _shareToken,
     uint256 _shareToWithdraw,
-    uint256 _minTokenOut
+    uint256 _minStableTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
@@ -81,29 +81,34 @@ contract AVTradeFacet is IAVTradeFacet {
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
     address _stableToken = vaultConfig.stableToken;
-    uint256 _shareValueToWithdraw = LibAV01.getShareTokenValue(_shareToken, _shareToWithdraw, avDs);
+    uint256 _tokenToWithdraw = LibAV01.getShareTokenValue(_shareToken, _shareToWithdraw, avDs);
 
-    (uint256 _stableTokenAmount, uint256 _assetTokenAmount) = LibAV01.withdrawFromHandler(
+    (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _shareToken,
-      _shareValueToWithdraw,
+      _tokenToWithdraw,
       avDs
     );
 
-    (uint256 _tokenPrice, ) = LibAV01.getPriceUSD(vaultConfig.stableToken, avDs);
-    uint256 _amountToReturn = (_shareValueToWithdraw * 1e18) /
-      (_tokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
+    (uint256 _stableTokenPrice, ) = LibAV01.getPriceUSD(vaultConfig.stableToken, avDs);
+    uint256 _expectedStableTokenOut = (_tokenToWithdraw * 1e18) /
+      (_stableTokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
 
-    if (_amountToReturn < _minTokenOut) revert AVTradeFacet_TooLittleReceived();
-    if (_amountToReturn > _stableTokenAmount) revert AVTradeFacet_InsufficientAmount();
+    if (_expectedStableTokenOut < _minStableTokenOut) revert AVTradeFacet_TooLittleReceived();
+    if (_withdrawalStableAmount < _expectedStableTokenOut) revert AVTradeFacet_WithdrawalAmountTooLow();
 
     // repay to MM
-    LibAV01.repayMoneyMarket(_shareToken, vaultConfig.stableToken, _stableTokenAmount - _amountToReturn, avDs);
-    LibAV01.repayMoneyMarket(_shareToken, vaultConfig.assetToken, _assetTokenAmount, avDs);
+    LibAV01.repayMoneyMarket(
+      _shareToken,
+      vaultConfig.stableToken,
+      _withdrawalStableAmount - _expectedStableTokenOut,
+      avDs
+    );
+    LibAV01.repayMoneyMarket(_shareToken, vaultConfig.assetToken, _withdrawalAssetAmount, avDs);
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareToWithdraw);
-    IERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _amountToReturn);
+    IERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _expectedStableTokenOut);
 
-    emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _amountToReturn);
+    emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _expectedStableTokenOut);
   }
 
   function getDebtValues(address _shareToken) external view returns (uint256, uint256) {

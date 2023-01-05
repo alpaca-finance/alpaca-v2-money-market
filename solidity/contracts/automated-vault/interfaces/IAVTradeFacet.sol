@@ -19,7 +19,7 @@ interface IAVTradeFacet {
   );
 
   error AVTradeFacet_TooLittleReceived();
-  error AVTradeFacet_InsufficientAmount();
+  error AVTradeFacet_WithdrawalAmountTooLow();
 
   function deposit(
     address _shareToken,

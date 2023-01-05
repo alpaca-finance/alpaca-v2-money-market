@@ -63,7 +63,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
 
     mockRouter.setRemoveLiquidityAmountsOut(1 ether, 7.5 ether);
 
-    vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_InsufficientAmount.selector));
+    vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_WithdrawalAmountTooLow.selector));
     tradeFacet.withdraw(address(avShareToken), 5 ether, 5 ether);
 
     vm.stopPrank();

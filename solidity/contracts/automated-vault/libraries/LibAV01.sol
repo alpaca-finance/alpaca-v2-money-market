@@ -143,9 +143,8 @@ library LibAV01 {
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _tokenValue) {
-    TokenConfig memory _config = avDs.tokenConfigs[_token];
     (uint256 _price, ) = getPriceUSD(_token, avDs);
-    _tokenValue = (_amount * _config.to18ConversionFactor * _price) / 1e18;
+    _tokenValue = (_amount * avDs.tokenConfigs[_token].to18ConversionFactor * _price) / 1e18;
   }
 
   function borrowMoneyMarket(

@@ -167,12 +167,12 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     return numerator / (denominator);
   }
 
-  function setWhitelistedCallers(address[] calldata callers, bool ok) external onlyOwner {
-    uint256 len = uint256(callers.length);
-    for (uint256 i = 0; i < len; ) {
-      whitelistedCallers[callers[i]] = ok;
+  function setWhitelistedCallers(address[] calldata _callers, bool _isOk) external onlyOwner {
+    uint256 _len = _callers.length;
+    for (uint256 _i = 0; _i < _len; ) {
+      whitelistedCallers[_callers[_i]] = _isOk;
       unchecked {
-        i++;
+        ++_i;
       }
     }
   }
