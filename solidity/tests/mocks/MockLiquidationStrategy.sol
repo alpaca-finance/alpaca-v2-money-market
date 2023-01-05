@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+// dependencies
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/ILiquidationStrategy.sol";
+// libraries
 import { LibSafeToken } from "../../contracts/money-market/libraries/LibSafeToken.sol";
 
+// interfaces
+import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/ILiquidationStrategy.sol";
+
+// mocks
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
@@ -25,7 +30,7 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
-    uint256 _collatAmount,
+    uint256 _collatAmountIn,
     uint256 _repayAmount,
     bytes calldata /* _data */
   ) external {
@@ -34,13 +39,12 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
 
     uint256 _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
 
-    uint256 _collatAmountBefore = ERC20(_collatToken).balanceOf(address(this));
     uint256 _collatSold = (_repayAmount * 10**ERC20(_repayToken).decimals()) / _priceCollatPerRepayToken;
-    uint256 _actualCollatSold = _collatSold > _collatAmountBefore ? _collatAmountBefore : _collatSold;
+    uint256 _actualCollatSold = _collatSold > _collatAmountIn ? _collatAmountIn : _collatSold;
     uint256 _actualRepayAmount = (_actualCollatSold * _priceCollatPerRepayToken) / 10**ERC20(_collatToken).decimals();
 
     ERC20(_repayToken).safeTransfer(msg.sender, _actualRepayAmount);
-    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmount - _actualCollatSold);
+    ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _actualCollatSold);
   }
 
   /// @notice Set callers ok

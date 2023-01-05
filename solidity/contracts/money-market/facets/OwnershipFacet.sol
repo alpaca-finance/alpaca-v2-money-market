@@ -24,7 +24,9 @@ contract OwnershipFacet is IOwnershipFacet {
    */
   function acceptOwnership() external {
     address _pendingOwner = LibDiamond.pendingOwner();
-    if (msg.sender != _pendingOwner) revert OwnershipFacet_CallerIsNotPendingOwner();
+    if (msg.sender != _pendingOwner) {
+      revert OwnershipFacet_CallerIsNotPendingOwner();
+    }
 
     address _previousOwner = LibDiamond.contractOwner();
     LibDiamond.setContractOwner(_pendingOwner);
