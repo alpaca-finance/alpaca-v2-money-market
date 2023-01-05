@@ -93,8 +93,12 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _expectedStableTokenOut = (_shareValueToWithdraw * 1e18) /
       (_stableTokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
 
-    if (_expectedStableTokenOut < _minStableTokenOut) revert AVTradeFacet_TooLittleReceived();
-    if (_withdrawalStableAmount < _expectedStableTokenOut) revert AVTradeFacet_WithdrawalAmountTooLow();
+    if (_expectedStableTokenOut < _minStableTokenOut) {
+      revert AVTradeFacet_TooLittleReceived();
+    }
+    if (_withdrawalStableAmount < _expectedStableTokenOut) {
+      revert AVTradeFacet_WithdrawalAmountTooLow();
+    }
 
     // repay to MM
     LibAV01.repayMoneyMarket(_shareToken, _stableToken, _withdrawalStableAmount - _expectedStableTokenOut, avDs);
