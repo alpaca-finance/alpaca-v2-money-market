@@ -51,9 +51,16 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
   function onWithdraw(uint256 _lpAmountToWithdraw)
     external
     onlyWhitelisted
-    returns (uint256 _token0Amount, uint256 _token1Amount)
+    returns (uint256 _returnedToken0, uint256 _returnedToken1)
   {
-    (_token0Amount, _token1Amount) = removeLiquidity(_lpAmountToWithdraw);
+    address _token0 = lpToken.token0();
+    address _token1 = lpToken.token1();
+
+    (_returnedToken0, _returnedToken1) = removeLiquidity(_lpAmountToWithdraw, _token0, _token1);
+
+    IERC20(_token0).safeTransfer(msg.sender, _returnedToken0);
+    IERC20(_token1).safeTransfer(msg.sender, _returnedToken1);
+
     totalLpBalance -= _lpAmountToWithdraw;
   }
 
@@ -100,22 +107,20 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     IERC20(_token1).safeApprove(address(router), 0);
   }
 
-  function removeLiquidity(uint256 _lpToRemove) internal returns (uint256 _token0Return, uint256 _token1Return) {
+  function removeLiquidity(
+    uint256 _lpToRemove,
+    address _token0,
+    address _token1
+  ) internal returns (uint256 _returnedToken0, uint256 _returnedToken1) {
     IERC20(address(lpToken)).safeIncreaseAllowance(address(router), _lpToRemove);
-
-    address _token0 = lpToken.token0();
-    address _token1 = lpToken.token1();
 
     uint256 _token0Before = IERC20(_token0).balanceOf(address(this));
     uint256 _token1Before = IERC20(_token1).balanceOf(address(this));
 
     router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
 
-    _token0Return = IERC20(_token0).balanceOf(address(this)) - _token0Before;
-    _token1Return = IERC20(_token1).balanceOf(address(this)) - _token1Before;
-
-    IERC20(_token0).safeTransfer(msg.sender, _token0Return);
-    IERC20(_token1).safeTransfer(msg.sender, _token1Return);
+    _returnedToken0 = IERC20(_token0).balanceOf(address(this)) - _token0Before;
+    _returnedToken1 = IERC20(_token1).balanceOf(address(this)) - _token1Before;
   }
 
   /// @dev Compute optimal deposit amount
