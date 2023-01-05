@@ -38,7 +38,9 @@ library LibDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (has(list, addr)) revert LibDoublyLinkedList_Existed();
+    if (has(list, addr)) {
+      revert LibDoublyLinkedList_Existed();
+    }
 
     // Effect
     list.next[addr] = list.next[START];
@@ -54,7 +56,9 @@ library LibDoublyLinkedList {
 
   function remove(List storage list, address addr) internal returns (List storage) {
     // Check
-    if (!has(list, addr)) revert LibDoublyLinkedList_NotExisted();
+    if (!has(list, addr)) {
+      revert LibDoublyLinkedList_NotExisted();
+    }
 
     // Effect
     address prevAddr = list.prev[addr];
@@ -77,7 +81,9 @@ library LibDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
-    if (!has(list, addr)) revert LibDoublyLinkedList_NotExisted();
+    if (!has(list, addr)) {
+      revert LibDoublyLinkedList_NotExisted();
+    }
 
     // Effect
     if (amount == 0) {
@@ -110,7 +116,9 @@ library LibDoublyLinkedList {
 
   function getAll(List storage list) internal view returns (Node[] memory) {
     Node[] memory nodes = new Node[](list.size);
-    if (list.size == 0) return nodes;
+    if (list.size == 0) {
+      return nodes;
+    }
     address curr = list.next[START];
     for (uint256 i = 0; curr != END; i++) {
       nodes[i] = Node({ token: curr, amount: list.amount[curr] });

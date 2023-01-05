@@ -373,7 +373,9 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // add remaining as subAccount collateral
     _remainingAmountAfterRepay = _amountAvailable - _actualAmountToRepay;
-    if (_remainingAmountAfterRepay > 0) LibLYF01.addCollat(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
+    if (_remainingAmountAfterRepay > 0) {
+      LibLYF01.addCollat(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
+    }
   }
 
   /// @dev min(amountToRepurchase, debtValue)
