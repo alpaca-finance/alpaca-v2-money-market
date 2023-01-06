@@ -28,7 +28,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     cake.approve(address(masterChef), type(uint256).max);
   }
 
-  function testCorrectness_WhenUserRepay_SubaccountShouldDecreased() external {
+  function testCorrectness_WhenUserRepay_SubaccountDebtShouldDecrease() external {
     // remove interest for convienice of test
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
