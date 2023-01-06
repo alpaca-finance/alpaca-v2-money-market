@@ -91,11 +91,10 @@ contract RegisterFacet is Script {
   }
 
   function registerLendFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](3);
     selectors[0] = LendFacet.deposit.selector;
     selectors[1] = LendFacet.withdraw.selector;
     selectors[2] = LendFacet.getTotalToken.selector;
-    selectors[3] = LendFacet.openMarket.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
 
@@ -119,16 +118,15 @@ contract RegisterFacet is Script {
   function registerBorrowFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
     bytes4[] memory selectors = new bytes4[](12);
     selectors[0] = BorrowFacet.borrow.selector;
-    selectors[1] = BorrowFacet.getDebtShares.selector;
     selectors[2] = BorrowFacet.getTotalBorrowingPower.selector;
     selectors[3] = BorrowFacet.getTotalUsedBorrowedPower.selector;
     selectors[4] = BorrowFacet.getDebt.selector;
     selectors[5] = BorrowFacet.repay.selector;
-    selectors[6] = BorrowFacet.getGlobalDebt.selector;
+    selectors[6] = BorrowFacet.getDebtForLpToken.selector;
     selectors[7] = BorrowFacet.debtLastAccureTime.selector;
-    selectors[8] = BorrowFacet.pendingInterest.selector;
+    selectors[8] = BorrowFacet.getGlobalPendingInterest.selector;
     selectors[9] = BorrowFacet.accureInterest.selector;
-    selectors[10] = BorrowFacet.debtValues.selector;
+    selectors[10] = BorrowFacet.getOverCollatDebtValue.selector;
     selectors[11] = BorrowFacet.debtShares.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
@@ -152,17 +150,21 @@ contract RegisterFacet is Script {
   }
 
   function registerAdminFacet(DiamondCutFacet diamondCutFacet, address facet) internal {
-    bytes4[] memory selectors = new bytes4[](10);
-    selectors[0] = AdminFacet.setTokenToIbTokens.selector;
-    selectors[1] = AdminFacet.tokenToIbTokens.selector;
-    selectors[2] = AdminFacet.ibTokenToTokens.selector;
-    selectors[3] = AdminFacet.setTokenConfigs.selector;
-    selectors[4] = AdminFacet.tokenConfigs.selector;
-    selectors[5] = AdminFacet.setNonCollatBorrower.selector;
-    selectors[6] = AdminFacet.setInterestModel.selector;
-    selectors[7] = AdminFacet.setOracle.selector;
-    selectors[8] = AdminFacet.setRepurchasersOk.selector;
-    selectors[9] = AdminFacet.setNonCollatBorrowLimitUSDValues.selector;
+    bytes4[] memory selectors = new bytes4[](14);
+    selectors[0] = AdminFacet.openMarket.selector;
+    selectors[1] = AdminFacet.setTokenConfigs.selector;
+    selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
+    selectors[3] = AdminFacet.setInterestModel.selector;
+    selectors[4] = AdminFacet.setOracle.selector;
+    selectors[5] = AdminFacet.setRepurchasersOk.selector;
+    selectors[6] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[7] = AdminFacet.setLiquidatorsOk.selector;
+    selectors[8] = AdminFacet.setTreasury.selector;
+    selectors[9] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[10] = AdminFacet.setFees.selector;
+    selectors[11] = AdminFacet.withdrawReserve.selector;
+    selectors[12] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[13] = AdminFacet.setProtocolConfigs.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(facet, IDiamondCut.FacetCutAction.Add, selectors);
 

@@ -4,6 +4,8 @@ pragma solidity 0.8.17;
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface ICollateralFacet {
+  error CollateralFacet_NoSelfTransfer();
+
   function addCollateral(
     address _account,
     uint256 _subAccountId,
@@ -23,15 +25,4 @@ interface ICollateralFacet {
     address _token,
     uint256 _amount
   ) external;
-
-  function getCollaterals(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory);
-
-  function collats(address _token) external view returns (uint256);
-
-  function subAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
-
-  function accountCollats(address _account, address _ibToken) external view returns (uint256);
 }

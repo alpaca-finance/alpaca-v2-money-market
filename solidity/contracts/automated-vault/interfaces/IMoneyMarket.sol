@@ -2,13 +2,21 @@
 pragma solidity 0.8.17;
 
 interface IMoneyMarket {
-  function tokenToIbTokens(address _token) external view returns (address);
+  function getIbTokenFromToken(address _token) external view returns (address);
 
-  function ibTokenToTokens(address _ibToken) external view returns (address);
+  function getTokenFromIbToken(address _ibToken) external view returns (address);
 
   function nonCollatBorrow(address _token, uint256 _amount) external;
 
+  function nonCollatRepay(
+    address _account,
+    address _token,
+    uint256 _repayAmount
+  ) external;
+
   function getGlobalDebt(address _token) external view returns (uint256, uint256);
+
+  function getDebtForLpToken(address _token) external view returns (uint256, uint256);
 
   function getFloatingBalance(address _token) external view returns (uint256);
 

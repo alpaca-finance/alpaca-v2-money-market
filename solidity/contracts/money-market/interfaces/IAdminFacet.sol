@@ -7,6 +7,11 @@ interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
+  error AdminFacet_ReserveTooLow();
+  error AdminFacet_InvalidArguments();
+  error AdminFacet_InvalidToken(address _token);
+  error AdminFacet_InvalidIbTokenImplementation();
+  error AdminFacet_SubAccountHealthy(address _subAccount);
 
   struct IbPair {
     address token;
@@ -20,25 +25,30 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
   }
 
-  struct NonCollatBorrowLimitInput {
+  struct ProtocolConfigInput {
     address account;
-    uint256 limit;
+    TokenBorrowLimitInput[] tokenBorrowLimit;
+    uint256 borrowLimitUSDValue;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external;
+  struct TokenBorrowLimitInput {
+    address token;
+    uint256 maxTokenBorrow;
+  }
 
-  function tokenToIbTokens(address _token) external view returns (address);
+  struct WriteOffSubAccountDebtInput {
+    address account;
+    uint256 subAccountId;
+    address token;
+  }
 
-  function ibTokenToTokens(address _ibToken) external view returns (address);
+  function openMarket(address _token) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
-  function setNonCollatBorrower(address _borrower, bool _isOk) external;
-
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
+  function setNonCollatBorrowerOk(address _borrower, bool _isOk) external;
 
   function setInterestModel(address _token, address model) external;
 
@@ -48,7 +58,7 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
   function setTreasury(address newTreasury) external;
 
@@ -58,43 +68,34 @@ interface IAdminFacet {
     address _model
   ) external;
 
-  function setNonCollatBorrowLimitUSDValues(NonCollatBorrowLimitInput[] memory _nonCollatBorrowLimitInputs) external;
-
-  function setRewardDistributor(address _addr) external;
-
-  function getLendingRewardPerSec(address _rewardToken) external view returns (uint256);
-
-  function addLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function updateLendingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function getBorrowingRewardPerSec(address _rewardToken) external view returns (uint256);
-
-  function addBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function updateBorrowingRewardPerSec(address _rewardToken, uint256 _rewardPerSec) external;
-
-  function addLendingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _allocPoint
+  function setFees(
+    uint16 _newLendingFeeBps,
+    uint16 _newRepurchaseRewardBps,
+    uint16 _newRepurchaseFeeBps,
+    uint16 _newLiquidationFeeBps
   ) external;
 
-  function setLendingPool(
-    address _rewardToken,
+  function withdrawReserve(
     address _token,
-    uint256 _newAllocPoint
+    address _to,
+    uint256 _amount
   ) external;
 
-  function addBorrowingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _allocPoint
+  function setIbTokenImplementation(address _newImplementation) external;
+
+  function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
+
+  function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external;
+
+  function setMaxNumOfToken(
+    uint8 _numOfCollat,
+    uint8 _numOfDebt,
+    uint8 _numOfNonCollatDebt
   ) external;
 
-  function setBorrowingPool(
-    address _rewardToken,
-    address _token,
-    uint256 _newAllocPoint
-  ) external;
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
+
+  function topUpTokenReserve(address _token, uint256 _amount) external;
+
+  function setMinDebtSize(uint256 _newValue) external;
 }

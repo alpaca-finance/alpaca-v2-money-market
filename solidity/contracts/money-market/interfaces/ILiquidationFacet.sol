@@ -6,9 +6,10 @@ interface ILiquidationFacet {
     address indexed repurchaser,
     address _repayToken,
     address _collatToken,
-    uint256 _amountIn,
-    uint256 _amountOut,
-    uint256 _feeToTreasury
+    uint256 _actualRepayAmountWithoutFee,
+    uint256 _collatAmountOut,
+    uint256 _feeToTreasury,
+    uint256 _repurchaseRewardToCaller
   );
   event LogLiquidate(
     address indexed caller,
@@ -32,7 +33,7 @@ interface ILiquidationFacet {
 
   error LiquidationFacet_Unauthorized();
   error LiquidationFacet_Healthy();
-  error LiquidationFacet_RepayDebtValueTooHigh();
+  error LiquidationFacet_RepayAmountExceedThreshold();
   error LiquidationFacet_InsufficientAmount();
   error LiquidationFacet_RepayAmountMismatch();
 

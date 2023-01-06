@@ -9,6 +9,16 @@ interface IAVTradeFacet {
     address stableToken,
     uint256 amountStableDeposited
   );
+  // todo: add fields
+  event LogWithdraw(
+    address indexed user,
+    address indexed shareToken,
+    uint256 burnedAmount,
+    address stableToken,
+    uint256 returnedAmount
+  );
+
+  error AVTradeFacet_TooLittleReceived();
 
   function deposit(
     address _shareToken,
@@ -21,4 +31,8 @@ interface IAVTradeFacet {
     uint256 _shareAmountIn,
     uint256 _minTokenOut
   ) external;
+
+  function getDebtValues(address _shareToken) external view returns (uint256, uint256);
+
+  function pendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee);
 }

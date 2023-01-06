@@ -12,30 +12,16 @@ interface INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external;
 
-  function nonCollatGetDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
-
-  function nonCollatGetTotalUsedBorrowedPower(address _account)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
-
-  function nonCollatGetDebt(address _account, address _token) external view returns (uint256);
-
-  function nonCollatGetTokenDebt(address _token) external view returns (uint256);
-
-  function nonCollatBorrowLimitUSDValues(address _account) external view returns (uint256);
-
-  function getNonCollatInterestRate(address _account, address _token) external view returns (uint256);
-
   // Errors
   error NonCollatBorrowFacet_InvalidToken(address _token);
   error NonCollatBorrowFacet_NotEnoughToken(uint256 _borrowAmount);
   error NonCollatBorrowFacet_BorrowingValueTooHigh(
-    uint256 _totalBorrowingPowerUSDValue,
-    uint256 _totalBorrowedUSDValue,
+    uint256 _totalBorrowingPower,
+    uint256 _totalUsedBorrowingPower,
     uint256 _borrowingUSDValue
   );
   error NonCollatBorrowFacet_InvalidAssetTier();
   error NonCollatBorrowFacet_ExceedBorrowLimit();
+  error NonCollatBorrowFacet_ExceedAccountBorrowLimit();
   error NonCollatBorrowFacet_Unauthorized();
 }

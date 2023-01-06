@@ -23,10 +23,11 @@ interface IAVAdminFacet {
   struct TokenConfigInput {
     LibAV01.AssetTier tier;
     address token;
-    uint256 maxToleranceExpiredSecond;
   }
 
   error AVTradeFacet_InvalidToken(address _token);
+  error AVAdminFacet_InvalidShareToken(address _token);
+  error AVAdminFacet_InvalidHandler();
 
   event LogOpenVault(
     address indexed _caller,
@@ -40,6 +41,7 @@ interface IAVAdminFacet {
     address _lpToken,
     address _stableToken,
     address _assetToken,
+    address _handler,
     uint8 _leverageLevel,
     uint16 _managementFeePerSec,
     address _stableTokenInterestModel,

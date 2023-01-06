@@ -18,59 +18,23 @@ interface IBorrowFacet {
   ) external;
 
   function repayWithCollat(
-    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _repayAmount
   ) external;
 
-  function getDebtShares(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (LibDoublyLinkedList.Node[] memory);
-
-  function getTotalBorrowingPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowingPowerUSDValue);
-
-  function getTotalUsedBorrowedPower(address _account, uint256 _subAccountId)
-    external
-    view
-    returns (uint256 _totalBorrowedUSDValue, bool _hasIsolateAsset);
-
-  function getDebt(
-    address _account,
-    uint256 _subAccountId,
-    address _token
-  ) external view returns (uint256, uint256);
-
-  function getGlobalDebt(address _token) external view returns (uint256, uint256);
-
-  function debtLastAccureTime(address _token) external view returns (uint256);
-
-  function pendingInterest(address _token) external view returns (uint256);
-
-  function accureInterest(address _token) external;
-
-  function debtValues(address _token) external view returns (uint256);
-
-  function debtShares(address _token) external view returns (uint256);
-
-  function getFloatingBalance(address _token) external view returns (uint256);
-
-  function accountDebtShares(address _account, address _token) external view returns (uint256);
+  function accrueInterest(address _token) external;
 
   // Errors
   error BorrowFacet_InvalidToken(address _token);
   error BorrowFacet_NotEnoughToken(uint256 _borrowAmount);
   error BorrowFacet_BorrowingValueTooHigh(
-    uint256 _totalBorrowingPowerUSDValue,
-    uint256 _totalBorrowedUSDValue,
+    uint256 _totalBorrowingPower,
+    uint256 _totalUsedBorrowingPower,
     uint256 _borrowingUSDValue
   );
   error BorrowFacet_InvalidAssetTier();
   error BorrowFacet_ExceedBorrowLimit();
-  error BorrowFacet_BorrowingPowerTooLow();
+  error BorrowFacet_BorrowLessThanMinDebtSize();
   error BorrowFacet_TooManyCollateralRemoved();
 }
