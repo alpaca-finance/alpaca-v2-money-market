@@ -41,10 +41,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);
-    // debt value should increase by 1 ether
-    // uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(address(weth));
-    // assertEq(_pendingInterest, 1 ether, "_pendingInterest");
-
+    // debt value should increase by 1 ether when accrue interest
     // before all alice weth debt share = 10 ether, debt value = 11 ether
   }
 
@@ -149,9 +146,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);
-    // debt value should increase by 1 ether
-    // uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(address(usdc));
-    // assertEq(_pendingInterest, 1 ether, "_pendingInterest");
+    // usdc debt value should increase by 1 ether
 
     (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
 
@@ -179,7 +174,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     assertEq(viewFacet.getTotalCollat(address(usdc)), 1); // dust
   }
 
-  function testRevert_WhenUserRepayWithCollatAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {
+  function testRevert_WhenUserRepayWithCollatAndTokenDebtGoesLowerThanMinimumDebtSize() external {
     // ALICE borrow for 10 ether in setUp
     // minDebtSize = 0.1 ether, set in mm base test
     // 1 weth = 1 ibWeth

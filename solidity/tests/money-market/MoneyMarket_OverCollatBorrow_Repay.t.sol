@@ -37,10 +37,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);
-    // debt value should increase by 1 ether
-    // uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(address(weth));
-    // assertEq(_pendingInterest, 1 ether, "_pendingInterest");
-
+    // debt value should increase by 1 ether when accrue interest
     // before all alice weth debt share = 10 ether, debt value = 11 ether
   }
 
