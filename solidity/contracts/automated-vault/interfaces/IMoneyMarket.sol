@@ -14,7 +14,7 @@ interface IMoneyMarket {
     uint256 _repayAmount
   ) external;
 
-  function getGlobalDebt(address _token) external view returns (uint256, uint256);
+  function getGlobalDebtValue(address _token) external view returns (uint256);
 
   function getDebtForLpToken(address _token) external view returns (uint256, uint256);
 

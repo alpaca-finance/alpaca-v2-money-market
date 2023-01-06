@@ -10,7 +10,6 @@ import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -176,7 +175,7 @@ library LibAV01 {
     address _interestModel,
     address _moneyMarket
   ) internal view returns (uint256 _interestRate) {
-    (uint256 _debtValue, ) = IMoneyMarket(_moneyMarket).getGlobalDebt(_token);
+    uint256 _debtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValue(_token);
     uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
     _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
   }

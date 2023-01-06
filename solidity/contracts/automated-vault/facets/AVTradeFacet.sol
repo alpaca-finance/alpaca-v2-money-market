@@ -82,8 +82,6 @@ contract AVTradeFacet is IAVTradeFacet {
 
     LibAV01.accrueVaultInterest(_shareToken, avDs);
 
-    LibAV01.withdraw(_shareToken, _shareToWithdraw, _minStableTokenOut, avDs);
-
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
     address _stableToken = _vaultConfig.stableToken;
