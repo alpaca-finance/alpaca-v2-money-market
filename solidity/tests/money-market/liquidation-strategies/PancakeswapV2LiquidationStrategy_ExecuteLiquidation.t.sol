@@ -31,11 +31,7 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidation is MoneyMarket_Base
 
     PancakeswapV2LiquidationStrategy.SetPathParams[]
       memory _setPathsInputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
-    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({
-      tokenIn: address(weth),
-      tokenOut: address(usdc),
-      path: _paths
-    });
+    _setPathsInputs[0] = PancakeswapV2LiquidationStrategy.SetPathParams({ path: _paths });
 
     liquidationStrat.setPaths(_setPathsInputs);
   }

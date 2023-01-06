@@ -17,17 +17,15 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
 
   error PancakeswapV2LiquidationStrategy_Unauthorized();
   error PancakeswapV2LiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
-  error PancakeswapV2LiquidationStrategy_InvalidSetPathParams();
 
   struct SetPathParams {
-    address tokenIn;
-    address tokenOut;
     address[] path;
   }
 
   IPancakeRouter02 internal router;
 
   mapping(address => bool) public callersOk;
+  // tokenIn => tokenOut => path
   mapping(address => mapping(address => address[])) public paths;
 
   /// @notice require that only allowed callers
@@ -85,13 +83,10 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
       SetPathParams memory _params = _inputs[_i];
       address[] memory _path = _params.path;
 
-      if (_params.tokenIn != _path[0] || _params.tokenOut != _path[_path.length - 1]) {
-        revert PancakeswapV2LiquidationStrategy_InvalidSetPathParams();
-      }
       // sanity check. router will revert if pair doesn't exist
       router.getAmountsIn(1 ether, _path);
 
-      paths[_params.tokenIn][_params.tokenOut] = _path;
+      paths[_path[0]][_path[_path.length - 1]] = _path;
 
       unchecked {
         ++_i;
