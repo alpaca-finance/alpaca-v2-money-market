@@ -111,6 +111,7 @@ contract AVTradeFacet is IAVTradeFacet {
     emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _stableTokenToUser);
   }
 
+  // TODO: move to viewFacet
   function getDebtValues(address _shareToken) external view returns (uint256, uint256) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
@@ -126,6 +127,7 @@ contract AVTradeFacet is IAVTradeFacet {
     avDs.lastFeeCollectionTimestamps[_shareToken] = block.timestamp;
   }
 
+  // TODO: move to viewFacet
   function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
@@ -135,5 +137,21 @@ contract AVTradeFacet is IAVTradeFacet {
         avDs.vaultConfigs[_shareToken].managementFeePerSec *
         _secondsFromLastCollection) /
       1e18;
+  }
+
+  // TODO: move to viewFacet
+  function getVaultPendingInterest(address _vaultToken)
+    external
+    view
+    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
+  {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+    (_stablePendingInterest, _assetPendingInterest) = LibAV01.getVaultPendingInterest(_vaultToken, avDs);
+  }
+
+  // TODO: move to viewFacet
+  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256) {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+    return avDs.lastAccrueInterestTimestamps[_vaultToken];
   }
 }

@@ -51,7 +51,7 @@ library LibAV01 {
     mapping(address => uint256) lastFeeCollectionTimestamps;
     // share token => debt token => debt value
     mapping(address => mapping(address => uint256)) vaultDebtValues;
-    mapping(address => uint256) lastAccrueInterestTimestamp;
+    mapping(address => uint256) lastAccrueInterestTimestamps;
     uint256 maxPriceStale;
   }
 
@@ -147,7 +147,7 @@ library LibAV01 {
     view
     returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
   {
-    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamp[_vaultToken];
+    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
 
     if (_timeSinceLastAccrual > 0) {
       VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
@@ -164,9 +164,12 @@ library LibAV01 {
         _moneyMarket
       );
 
-      // TODO: replace lyfDs.debtValues[_debtShareId] with avDs stuff
-      // _stablePendingInterest = (_stableInterestRate * _timeSinceLastAccrual * lyfDs.debtValues[_debtShareId]) / 1e18;
-      // _assetPendingInterest = (_assetInterestRate * _timeSinceLastAccrual * lyfDs.debtValues[_debtShareId]) / 1e18;
+      _stablePendingInterest =
+        (_stableInterestRate * _timeSinceLastAccrual * avDs.vaultDebtValues[_vaultToken][vaultConfig.stableToken]) /
+        1e18;
+      _assetPendingInterest =
+        (_assetInterestRate * _timeSinceLastAccrual * avDs.vaultDebtValues[_vaultToken][vaultConfig.assetToken]) /
+        1e18;
     }
   }
 
@@ -183,11 +186,12 @@ library LibAV01 {
   function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs) internal {
     (uint256 _stablePendingInterest, uint256 _assetPendingInterest) = getVaultPendingInterest(_vaultToken, avDs);
 
-    // TODO: update debt for both
-    // lyfDs.debtValues[_debtShareId] += _pendingInterest;
+    VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
+    avDs.vaultDebtValues[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;
+    avDs.vaultDebtValues[_vaultToken][vaultConfig.assetToken] += _assetPendingInterest;
 
     // update timestamp
-    avDs.lastAccrueInterestTimestamp[_vaultToken] = block.timestamp;
+    avDs.lastAccrueInterestTimestamps[_vaultToken] = block.timestamp;
   }
 
   function getTokenInUSD(

@@ -85,11 +85,13 @@ library AVDiamondDeployer {
   function deployTradeFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
     AVTradeFacet _tradeFacet = new AVTradeFacet();
 
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](6);
     selectors[0] = AVTradeFacet.deposit.selector;
     selectors[1] = AVTradeFacet.withdraw.selector;
     selectors[2] = AVTradeFacet.getDebtValues.selector;
     selectors[3] = AVTradeFacet.pendingManagementFee.selector;
+    selectors[4] = AVTradeFacet.getVaultPendingInterest.selector;
+    selectors[5] = AVTradeFacet.getVaultLastAccrueInterestTimestamp.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_tradeFacet),
