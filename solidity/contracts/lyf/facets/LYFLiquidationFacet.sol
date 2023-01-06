@@ -168,11 +168,9 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // 2. send all collats under subaccount to strategy
     uint256 _collatAmountBefore = IERC20(_params.collatToken).balanceOf(address(this));
     uint256 _repayAmountBefore = IERC20(_params.repayToken).balanceOf(address(this));
+    uint256 _collatAmountToStrat = lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken);
 
-    IERC20(_params.collatToken).safeTransfer(
-      _params.liquidationStrat,
-      lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken)
-    );
+    IERC20(_params.collatToken).safeTransfer(_params.liquidationStrat, _collatAmountToStrat);
 
     // 3. call executeLiquidation on strategy
     uint256 _actualRepayAmount = _getActualRepayAmount(
@@ -186,8 +184,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _params.collatToken,
       _params.repayToken,
+      _collatAmountToStrat,
       _actualRepayAmount + _feeToTreasury,
-      address(this),
       _params.paramsForStrategy
     );
 
@@ -243,8 +241,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _collatUnderlyingToken,
       _params.repayToken,
+      _returnedUnderlyingAmount,
       _actualRepayAmount + _feeToTreasury,
-      address(this),
       _params.paramsForStrategy
     );
 
@@ -375,7 +373,9 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // add remaining as subAccount collateral
     _remainingAmountAfterRepay = _amountAvailable - _actualAmountToRepay;
-    if (_remainingAmountAfterRepay > 0) LibLYF01.addCollat(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
+    if (_remainingAmountAfterRepay > 0) {
+      LibLYF01.addCollat(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
+    }
   }
 
   /// @dev min(amountToRepurchase, debtValue)

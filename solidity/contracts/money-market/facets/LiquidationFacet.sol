@@ -217,11 +217,9 @@ contract LiquidationFacet is ILiquidationFacet {
     // 2. send all collats under subaccount to strategy
     uint256 _collatAmountBefore = IERC20(params.collatToken).balanceOf(address(this));
     uint256 _repayAmountBefore = IERC20(params.repayToken).balanceOf(address(this));
+    uint256 _subAccountCollatAmount = moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken);
 
-    IERC20(params.collatToken).safeTransfer(
-      params.liquidationStrat,
-      moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken)
-    );
+    IERC20(params.collatToken).safeTransfer(params.liquidationStrat, _subAccountCollatAmount);
 
     // 3. call executeLiquidation on strategy
     uint256 _actualRepayAmount = _getActualRepayAmount(
@@ -235,8 +233,8 @@ contract LiquidationFacet is ILiquidationFacet {
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
+      _subAccountCollatAmount,
       _actualRepayAmount + _feeToTreasury,
-      address(this),
       params.paramsForStrategy
     );
 
@@ -254,7 +252,9 @@ contract LiquidationFacet is ILiquidationFacet {
       // revert if repay > x% of totalUsedBorrowingPower
       if (
         _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) revert LiquidationFacet_RepayAmountExceedThreshold();
+      ) {
+        revert LiquidationFacet_RepayAmountExceedThreshold();
+      }
     }
 
     uint256 _collatSold = _collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
@@ -302,15 +302,13 @@ contract LiquidationFacet is ILiquidationFacet {
     vars.totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
     vars.ibTotalSupply = IERC20(params.collatToken).totalSupply();
 
-    // if mm has no actual token left, withdraw will fail anyway
-    IERC20(_collatUnderlyingToken).safeTransfer(
-      params.liquidationStrat,
-      LibShareUtil.shareToValue(
-        moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
-        vars.totalToken,
-        vars.ibTotalSupply
-      )
+    uint256 _underlyingAmountToStrat = LibShareUtil.shareToValue(
+      moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
+      vars.totalToken,
+      vars.ibTotalSupply
     );
+    // if mm has no actual token left, withdraw will fail anyway
+    IERC20(_collatUnderlyingToken).safeTransfer(params.liquidationStrat, _underlyingAmountToStrat);
 
     // 3. call executeLiquidation on strategy to liquidate underlying token
     vars.actualRepayAmount = _getActualRepayAmount(
@@ -324,8 +322,8 @@ contract LiquidationFacet is ILiquidationFacet {
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       _collatUnderlyingToken,
       params.repayToken,
+      _underlyingAmountToStrat,
       vars.actualRepayAmount + vars.feeToTreasury,
-      address(this),
       params.paramsForStrategy
     );
 
@@ -342,7 +340,9 @@ contract LiquidationFacet is ILiquidationFacet {
       // revert if repay > x% of totalUsedBorrowingPower
       if (
         _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) revert LiquidationFacet_RepayAmountExceedThreshold();
+      ) {
+        revert LiquidationFacet_RepayAmountExceedThreshold();
+      }
     }
 
     vars.underlyingSold = vars.underlyingAmountBefore - IERC20(_collatUnderlyingToken).balanceOf(address(this));
@@ -403,6 +403,8 @@ contract LiquidationFacet is ILiquidationFacet {
     moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _debtShare - _repayShare);
     moneyMarketDs.overCollatDebtShares[_repayToken] -= _repayShare;
     moneyMarketDs.overCollatDebtValues[_repayToken] -= _repayAmount;
+
+    moneyMarketDs.globalDebts[_repayToken] -= _repayAmount;
   }
 
   function _reduceCollateral(
