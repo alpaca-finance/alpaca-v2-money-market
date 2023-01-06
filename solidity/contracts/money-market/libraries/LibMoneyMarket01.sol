@@ -505,33 +505,30 @@ library LibMoneyMarket01 {
     _id = keccak256(abi.encodePacked(_account, _token));
   }
 
+  /// @dev must accrue interest for underlying token before withdraw
   function withdraw(
+    address _underlyingToken,
     address _ibToken,
     uint256 _shareAmount,
     address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (address _token, uint256 _shareValue) {
-    _token = moneyMarketDs.ibTokenToTokens[_ibToken];
-    accrueInterest(_token, moneyMarketDs);
-
-    if (_token == address(0)) {
-      revert LibMoneyMarket01_InvalidToken(_ibToken);
-    }
-
-    _shareValue = LibShareUtil.shareToValue(
+  ) internal returns (uint256 _withdrawAmount) {
+    _withdrawAmount = LibShareUtil.shareToValue(
       _shareAmount,
-      getTotalToken(_token, moneyMarketDs),
+      getTotalToken(_underlyingToken, moneyMarketDs), // ok to use getTotalToken here because we need to call accrueInterest before withdraw
       IERC20(_ibToken).totalSupply()
     );
 
-    if (_shareValue > moneyMarketDs.reserves[_token]) {
+    if (_withdrawAmount > moneyMarketDs.reserves[_underlyingToken]) {
       revert LibMoneyMarket01_NotEnoughToken();
     }
-    moneyMarketDs.reserves[_token] -= _shareValue;
 
-    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _shareValue, _shareAmount);
+    moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
 
-    emit LogWithdraw(_withdrawFrom, _token, _ibToken, _shareAmount, _shareValue);
+    // burn ibToken
+    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _withdrawAmount, _shareAmount);
+
+    emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint8) {
