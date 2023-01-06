@@ -80,9 +80,9 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @notice Set paths config to be used during swap step in executeLiquidation
   /// @param _inputs Array of parameters used to set path
   function setPaths(SetPathParams[] calldata _inputs) external onlyOwner {
-    uint256 len = _inputs.length;
-    for (uint256 i = 0; i < len; ) {
-      SetPathParams memory _params = _inputs[i];
+    uint256 _len = _inputs.length;
+    for (uint256 _i = 0; _i < _len; ) {
+      SetPathParams memory _params = _inputs[_i];
       address[] memory _path = _params.path;
 
       if (_params.tokenIn != _path[0] || _params.tokenOut != _path[_path.length - 1]) {
@@ -94,7 +94,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
       paths[_params.tokenIn][_params.tokenOut] = _path;
 
       unchecked {
-        ++i;
+        ++_i;
       }
     }
   }
