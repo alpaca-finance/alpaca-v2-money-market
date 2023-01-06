@@ -15,7 +15,7 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
-import { IAVPancakeSwapHandler } from "../../contracts/automated-vault/interfaces/IAVPancakeSwapHandler.sol";
+import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
@@ -39,9 +39,10 @@ abstract contract AV_BaseTest is BaseTest {
 
   address internal treasury;
 
-  IAVPancakeSwapHandler internal handler;
+  IAVHandler internal handler;
   IAVShareToken internal avShareToken;
 
+  MockRouter internal mockRouter;
   MockLPToken internal wethUsdcLPToken;
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -60,11 +61,11 @@ abstract contract AV_BaseTest is BaseTest {
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     // setup router
-    MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    handler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
+    handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     avShareToken = IAVShareToken(
@@ -106,6 +107,12 @@ abstract contract AV_BaseTest is BaseTest {
     // set treasury
     treasury = address(this);
     adminFacet.setTreasury(treasury);
+
+    // set avHandler whitelist
+    address[] memory _callersOk = new address[](2);
+    _callersOk[0] = address(this);
+    _callersOk[1] = address(avDiamond);
+    handler.setWhitelistedCallers(_callersOk, true);
   }
 
   function setUpMM() internal {
