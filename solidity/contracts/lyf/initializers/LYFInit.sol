@@ -10,9 +10,6 @@ contract LYFInit {
   function init() external {
     LibDiamond.DiamondStorage storage diamondDs = LibDiamond.diamondStorage();
     if (diamondDs.lyfInitialized != 0) revert LYFInit_Initialized();
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
-
-    ds.maxPriceStale = 86400;
 
     diamondDs.lyfInitialized = 1;
   }
