@@ -49,7 +49,7 @@ library LibAV01 {
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) lastFeeCollectionTimestamps;
-    // share token => debt token => debt amount
+    // vault token => debt token => debt amount
     mapping(address => mapping(address => uint256)) vaultDebts;
     mapping(address => uint256) lastAccrueInterestTimestamps;
   }
@@ -105,7 +105,7 @@ library LibAV01 {
     address _handler = avDs.vaultConfigs[_vaultToken].handler;
     address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
-    uint256 _totalLPValue = getHandlerTotalLPValue(_handler, _lpToken, avDs);
+    uint256 _totalLPValue = getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs);
     uint256 _totalEquity = _totalLPValue - getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
     uint256 _lpTokenPrice = getPriceUSD(_lpToken, avDs);
     // lpValueToRemove = _shareValueToWithdraw * _totalLPValue / _totalEquity
@@ -124,13 +124,13 @@ library LibAV01 {
 
   /// @dev beware that unaccrued pendingInterest affect this calculation
   /// should call accrueInterest before calling this method to get correct value
-  function getShareTokenValue(
-    address _shareToken,
+  function getVaultTokenValueInUSD(
+    address _vaultToken,
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _shareValue) {
-    uint256 _currentEquity = getEquity(_shareToken, avDs.vaultConfigs[_shareToken].handler, avDs);
-    uint256 _totalShareTokenSupply = IERC20(_shareToken).totalSupply();
+    uint256 _currentEquity = getEquity(_vaultToken, avDs.vaultConfigs[_vaultToken].handler, avDs);
+    uint256 _totalShareTokenSupply = IERC20(_vaultToken).totalSupply();
     _shareValue = LibShareUtil.shareToValue(_amount, _currentEquity, _totalShareTokenSupply);
   }
 
@@ -154,12 +154,12 @@ library LibAV01 {
       VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
       address _moneyMarket = avDs.moneyMarket;
 
-      uint256 _stableInterestRate = calcInterestRate(
+      uint256 _stableInterestRate = getInterestRate(
         vaultConfig.stableToken,
         vaultConfig.stableTokenInterestModel,
         _moneyMarket
       );
-      uint256 _assetInterestRate = calcInterestRate(
+      uint256 _assetInterestRate = getInterestRate(
         vaultConfig.assetToken,
         vaultConfig.assetTokenInterestModel,
         _moneyMarket
@@ -174,7 +174,7 @@ library LibAV01 {
     }
   }
 
-  function calcInterestRate(
+  function getInterestRate(
     address _token,
     address _interestModel,
     address _moneyMarket
@@ -261,13 +261,13 @@ library LibAV01 {
     return uint8(_conversionFactor);
   }
 
-  function getHandlerTotalLPValue(
+  function getHandlerTotalLPValueInUSD(
     address _handler,
     address _lpToken,
     AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _totalLPValue) {
+  ) internal view returns (uint256 _totalLPValueUSD) {
     uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
-    _totalLPValue = getTokenInUSD(_lpToken, _lpAmount, avDs);
+    _totalLPValueUSD = getTokenInUSD(_lpToken, _lpAmount, avDs);
   }
 
   /// @dev beware that unaccrued pendingInterest affect the result
@@ -285,6 +285,7 @@ library LibAV01 {
 
   /// @dev beware that unaccrued pendingInterest affect this calculation
   /// should call accrueInterest before calling this method to get correct value
+  /// @return _equity totalHandlerLPValueInUSD - stableTokenDebtValueInUSD - assetTokenDebtValueInUSD
   function getEquity(
     address _vaultToken,
     address _handler,
@@ -292,8 +293,8 @@ library LibAV01 {
   ) internal view returns (uint256 _equity) {
     address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
+    uint256 _lpValue = getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs);
     uint256 _totalDebtValue = getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
-    uint256 _lpValue = getHandlerTotalLPValue(_handler, _lpToken, avDs);
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }

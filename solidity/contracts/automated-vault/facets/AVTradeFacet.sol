@@ -13,8 +13,6 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-import "solidity/tests/utils/console.sol";
-
 contract AVTradeFacet is IAVTradeFacet {
   using LibSafeToken for IERC20;
 
@@ -87,7 +85,7 @@ contract AVTradeFacet is IAVTradeFacet {
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
     address _stableToken = _vaultConfig.stableToken;
-    uint256 _shareValueToWithdraw = LibAV01.getShareTokenValue(_shareToken, _shareToWithdraw, avDs);
+    uint256 _shareValueToWithdraw = LibAV01.getVaultTokenValueInUSD(_shareToken, _shareToWithdraw, avDs);
 
     (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _shareToken,

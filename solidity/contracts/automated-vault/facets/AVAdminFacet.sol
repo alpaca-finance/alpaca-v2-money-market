@@ -44,8 +44,8 @@ contract AVAdminFacet is IAVAdminFacet {
 
     // sanity check
     address _moneyMarket = avDs.moneyMarket;
-    LibAV01.calcInterestRate(_stableToken, _stableTokenInterestModel, _moneyMarket);
-    LibAV01.calcInterestRate(_assetToken, _assetTokenInterestModel, _moneyMarket);
+    LibAV01.getInterestRate(_stableToken, _stableTokenInterestModel, _moneyMarket);
+    LibAV01.getInterestRate(_assetToken, _assetTokenInterestModel, _moneyMarket);
 
     avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
       shareToken: _newShareToken,
@@ -108,12 +108,12 @@ contract AVAdminFacet is IAVAdminFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     // sanity check
-    LibAV01.calcInterestRate(
+    LibAV01.getInterestRate(
       avDs.vaultConfigs[_vaultToken].stableToken,
       _newStableTokenInterestRateModel,
       avDs.moneyMarket
     );
-    LibAV01.calcInterestRate(
+    LibAV01.getInterestRate(
       avDs.vaultConfigs[_vaultToken].assetToken,
       _newAssetTokenInterestRateModel,
       avDs.moneyMarket
