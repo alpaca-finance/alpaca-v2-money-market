@@ -6,6 +6,8 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 // core
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { CollateralAdapter } from "../../contracts/money-market/CollateralAdapter.sol";
+import { IbCollateralAdapter } from "../../contracts/money-market/IbCollateralAdapter.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
@@ -22,14 +24,15 @@ import { DiamondInit } from "../../contracts/money-market/initializers/DiamondIn
 import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
 
 // interfaces
-import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-import { IOwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
+import { ICollateralFacet } from "../../contracts/money-market/interfaces/ICollateralFacet.sol";
+import { IViewFacet } from "../../contracts/money-market/interfaces/IViewFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
+import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
+import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
+import { IOwnershipFacet } from "../../contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { ICollateralAdapter } from "../../contracts/money-market/interfaces/ICollateralAdapter.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -55,6 +58,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IOwnershipFacet internal ownershipFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
+
+  ICollateralAdapter internal collateralAdapter;
+  ICollateralAdapter internal ibCollateralAdapter;
 
   function setUp() public virtual {
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
@@ -220,5 +226,22 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set minimum debt required to borrow
     adminFacet.setMinDebtSize(0.1 ether);
+
+    collateralAdapter = new CollateralAdapter(address(moneyMarketDiamond));
+    ibCollateralAdapter = new IbCollateralAdapter(address(moneyMarketDiamond));
+
+    adminFacet.setCollateralAdapterForCollatToken(address(cake), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(weth), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(btc), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(usdc), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(usd), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(opm), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(isolateToken), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(nativeToken), address(collateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(ibWeth), address(ibCollateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(ibUsdc), address(ibCollateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(ibBtc), address(ibCollateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(ibWNative), address(ibCollateralAdapter));
+    adminFacet.setCollateralAdapterForCollatToken(address(ibIsolateToken), address(ibCollateralAdapter));
   }
 }

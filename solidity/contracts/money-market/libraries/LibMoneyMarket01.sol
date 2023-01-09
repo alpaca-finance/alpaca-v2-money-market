@@ -13,6 +13,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { ICollateralAdapter } from "../interfaces/ICollateralAdapter.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -67,6 +68,8 @@ library LibMoneyMarket01 {
     IAlpacaV2Oracle oracle;
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
+    // token => adapter
+    mapping(address => ICollateralAdapter) collateralAdapters;
     mapping(address => uint256) overCollatDebtValues;
     mapping(address => uint256) overCollatDebtShares;
     mapping(address => uint256) globalDebts;
@@ -127,7 +130,7 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs.subAccountCollats[_subAccount].getAll();
 
     address _collatToken;
-    address _underlyingToken;
+    ICollateralAdapter _adapter;
     uint256 _tokenPrice;
     TokenConfig memory _tokenConfig;
 
@@ -135,11 +138,11 @@ library LibMoneyMarket01 {
 
     for (uint256 _i; _i < _collatsLength; ) {
       _collatToken = _collats[_i].token;
+      _adapter = moneyMarketDs.collateralAdapters[_collatToken];
 
-      _tokenPrice = getPriceUSD(_collatToken, moneyMarketDs);
+      _tokenPrice = _adapter.getPrice(_collatToken);
 
-      _underlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-      _tokenConfig = moneyMarketDs.tokenConfigs[_underlyingToken == address(0) ? _collatToken : _underlyingToken];
+      _tokenConfig = _adapter.getTokenConfig(_collatToken);
 
       // _totalBorrowingPower += amount * tokenPrice * collateralFactor
       _totalBorrowingPower += LibFullMath.mulDiv(

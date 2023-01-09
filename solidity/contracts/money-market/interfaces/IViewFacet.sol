@@ -5,7 +5,12 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
+// interfaces
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
+
 interface IViewFacet {
+  function getOracle() external view returns (IAlpacaV2Oracle);
+
   function getIbTokenFromToken(address _token) external view returns (address);
 
   function getTokenFromIbToken(address _ibToken) external view returns (address);

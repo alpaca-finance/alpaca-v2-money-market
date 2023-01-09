@@ -19,6 +19,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { ICollateralAdapter } from "../interfaces/ICollateralAdapter.sol";
 
 /// @title AdminFacet is dedicated to protocol parameter configuration
 contract AdminFacet is IAdminFacet {
@@ -60,6 +61,7 @@ contract AdminFacet is IAdminFacet {
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetMinDebtSize(uint256 _newValue);
+  event LogSetCollateralAdapterForCollatToken(address indexed _token, address _adapter);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -437,6 +439,13 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.reserves[_token] += _amount;
 
     emit LogTopUpTokenReserve(_token, _amount);
+  }
+
+  function setCollateralAdapterForCollatToken(address _collatToken, address _adapter) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.collateralAdapters[_collatToken] = ICollateralAdapter(_adapter);
+
+    emit LogSetCollateralAdapterForCollatToken(_collatToken, _adapter);
   }
 
   function _validateTokenConfig(

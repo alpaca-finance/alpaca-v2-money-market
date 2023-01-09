@@ -7,10 +7,16 @@ import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 // ---- Interfaces ---- //
 import { IViewFacet } from "../interfaces/IViewFacet.sol";
+import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 /// @title ViewFacet is dediciated to all view function used by external sources
 contract ViewFacet is IViewFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
+
+  function getOracle() external view returns (IAlpacaV2Oracle) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.oracle;
+  }
 
   /// @notice Get the address of interest bearing token for the lending token
   /// @param _token The lending token
