@@ -36,7 +36,7 @@ library LibAV01 {
 
   struct TokenConfig {
     AssetTier tier;
-    uint8 to18ConversionFactor;
+    uint64 to18ConversionFactor;
   }
 
   struct AVDiamondStorage {
@@ -188,11 +188,11 @@ library LibAV01 {
       (_assetPrice * avDs.tokenConfigs[_assetToken].to18ConversionFactor);
   }
 
-  function to18ConversionFactor(address _token) internal view returns (uint8) {
+  function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) revert LibAV01_UnsupportedDecimals();
     uint256 _conversionFactor = 10**(18 - _decimals);
-    return uint8(_conversionFactor);
+    return uint64(_conversionFactor);
   }
 
   function getEquity(

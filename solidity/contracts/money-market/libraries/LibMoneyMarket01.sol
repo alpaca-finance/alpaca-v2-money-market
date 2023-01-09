@@ -46,9 +46,9 @@ library LibMoneyMarket01 {
 
   struct TokenConfig {
     LibMoneyMarket01.AssetTier tier;
-    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
+    uint64 to18ConversionFactor;
     uint256 maxCollateral;
     uint256 maxBorrow; // shared global limit
   }
@@ -528,13 +528,13 @@ library LibMoneyMarket01 {
     emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
   }
 
-  function to18ConversionFactor(address _token) internal view returns (uint8) {
+  function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) {
       revert LibMoneyMarket01_UnsupportedDecimals();
     }
     uint256 _conversionFactor = 10**(18 - _decimals);
-    return uint8(_conversionFactor);
+    return uint64(_conversionFactor);
   }
 
   function addCollat(
