@@ -225,6 +225,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _repayDebt(msg.sender, _subAccountId, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
     _repayDebt(msg.sender, _subAccountId, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
+    if (
+      !LibLYF01.checkMinDebtSize(_vars.subAccount, _vars.debtShareId0, lyfDs) ||
+      !LibLYF01.checkMinDebtSize(_vars.subAccount, _vars.debtShareId1, lyfDs)
+    ) {
+      revert LYFFarmFacet_BorrowLessThanMinDebtSize();
+    }
+
     // 4. Transfer remaining back to user
     if (_amount0Out > 0) {
       IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
