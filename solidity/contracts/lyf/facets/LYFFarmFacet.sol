@@ -324,7 +324,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _amount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view {
-    (uint256 _tokenPrice, ) = LibLYF01.getPriceUSD(_token, lyfDs);
+    uint256 _tokenPrice = LibLYF01.getPriceUSD(_token, lyfDs);
 
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_token];
 

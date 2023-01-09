@@ -84,7 +84,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // avoid stack too deep
     {
-      (uint256 _debtTokenPrice, ) = LibLYF01.getPriceUSD(_debtToken, lyfDs);
+      uint256 _debtTokenPrice = LibLYF01.getPriceUSD(_debtToken, lyfDs);
       LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
       uint256 _debtInUSD = (_actualDebtToRepurchase * _debtTokenConfig.to18ConversionFactor * _debtTokenPrice) / 1e18;
       if (_debtInUSD * 2 > _borrowedValue) {
@@ -408,10 +408,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _collatTokenPrice;
     // _collatToken is ibToken
     if (_actualToken != address(0)) {
-      (_collatTokenPrice, ) = LibLYF01.getIbPriceUSD(_collatToken, _actualToken, lyfDs);
+      _collatTokenPrice = LibLYF01.getIbPriceUSD(_collatToken, _actualToken, lyfDs);
     } else {
       // _collatToken is normal ERC20 or LP token
-      (_collatTokenPrice, ) = LibLYF01.getPriceUSD(_collatToken, lyfDs);
+      _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);
     }
 
     LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
