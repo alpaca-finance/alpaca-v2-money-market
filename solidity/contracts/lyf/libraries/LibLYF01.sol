@@ -85,6 +85,7 @@ library LibLYF01 {
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
     uint8 maxNumOfCollatPerSubAccount;
+    uint256 minDebtSize;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
