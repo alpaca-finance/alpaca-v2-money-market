@@ -45,13 +45,13 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     adminFacet.setDebtShareId(address(weth), address(8888), 1);
   }
 
-  function testCorrectness_WhenLYFAdminSetMinDebtSize_ShouldCorrect() external {
+  function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
     assertEq(viewFacet.getMaxNumOfToken(), 3); // 3 is set from basetest
     adminFacet.setMaxNumOfToken(10);
     assertEq(viewFacet.getMaxNumOfToken(), 10);
   }
 
-  function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
+  function testCorrectness_WhenLYFAdminSetMinDebtSize_ShouldCorrect() external {
     assertEq(viewFacet.getMinDebtSize(), 0); // 3 is set from basetest
     adminFacet.setMinDebtSize(200 ether);
     assertEq(viewFacet.getMinDebtSize(), 200 ether);

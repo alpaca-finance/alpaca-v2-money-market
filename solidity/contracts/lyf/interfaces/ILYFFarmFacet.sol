@@ -66,4 +66,5 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_BorrowingPowerTooLow();
   error LYFFarmFacet_TooLittleReceived();
   error LYFFarmFacet_CollatNotEnough();
+  error LYFFarmFacet_BorrowLessThanMinDebtSize();
 }

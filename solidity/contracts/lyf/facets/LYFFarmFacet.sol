@@ -81,11 +81,19 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount, lyfDs);
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
-    // 2. send token to strat
+    // 2. Check min debt size
+    if (
+      !LibLYF01.checkMinDebtSize(_subAccount, lyfDs.debtShareIds[_token0][_lpToken], lyfDs) ||
+      !LibLYF01.checkMinDebtSize(_subAccount, lyfDs.debtShareIds[_token1][_lpToken], lyfDs)
+    ) {
+      revert LYFFarmFacet_BorrowLessThanMinDebtSize();
+    }
+
+    // 3. send token to strat
     IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
     IERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount);
 
-    // 3. compose lp
+    // 4. compose lp
     uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
       _token0,
       _token1,
@@ -313,46 +321,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
       // emit event
       emit LogRemoveDebt(_subAccount, _debtShareId, _shareToRemove, _repayAmount);
-    }
-  }
-
-  // TODO: gas optimize on oracle call
-  function _checkBorrowingPower(
-    uint256 _borrowingPower,
-    uint256 _borrowedValue,
-    address _token,
-    uint256 _amount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view {
-    uint256 _tokenPrice = LibLYF01.getPriceUSD(_token, lyfDs);
-
-    LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_token];
-
-    uint256 _borrowingUSDValue = LibLYF01.usedBorrowingPower(
-      _amount * _tokenConfig.to18ConversionFactor,
-      _tokenPrice,
-      _tokenConfig.borrowingFactor
-    );
-
-    if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
-      revert LYFFarmFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
-    }
-  }
-
-  function _checkAvailableToken(
-    address _token,
-    uint256 _debtShareId,
-    uint256 _borrowAmount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view {
-    uint256 _mmTokenBalnce = IERC20(_token).balanceOf(address(this)) - lyfDs.collats[_token];
-
-    if (_mmTokenBalnce < _borrowAmount) {
-      revert LYFFarmFacet_NotEnoughToken(_borrowAmount);
-    }
-
-    if (_borrowAmount + lyfDs.debtValues[_debtShareId] > lyfDs.tokenConfigs[_token].maxBorrow) {
-      revert LYFFarmFacet_ExceedBorrowLimit();
     }
   }
 

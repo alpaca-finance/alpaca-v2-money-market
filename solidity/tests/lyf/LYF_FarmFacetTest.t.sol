@@ -282,6 +282,48 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(debtAmount, mmDebtAmount);
   }
 
+  function testRevert_WhenAddFarmPosition_BorrowLessThanMinDebtSize_ShouldRevert() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    adminFacet.setMinDebtSize(20 ether);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // min debt size = 20 usd, borrow only 10 usd of weth
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    // if one side of the borrowing didn't pass the min debt size should revert
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 40 ether, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenAddFarmPosition_BorrowMoreThanMinDebtSizeOrNotBorrow_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 30 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    adminFacet.setMinDebtSize(10 ether);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // if there's no borrow, should pass the min
+    // borrow weth 10 ether,  borrow usdc 0 ether
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+  }
+
   // mix ib + underlying pair with underlying
   function testCorrectness_WhenUserAddFarmPositionWithEnoughUnderlyingAndIbCollatCombined_ShouldUseBothAsCollatAndNotBorrow()
     external

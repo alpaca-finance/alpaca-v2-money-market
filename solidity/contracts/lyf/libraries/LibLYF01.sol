@@ -389,6 +389,22 @@ library LibLYF01 {
     return _totalBorrowingPower >= _totalUsedBorrowingPower;
   }
 
+  function checkMinDebtSize(
+    address _subAccount,
+    uint256 _debtShareId,
+    LYFDiamondStorage storage lyfDs
+  ) internal view returns (bool) {
+    (uint256 _debtShare, uint256 _debtAmount) = getDebt(_subAccount, _debtShareId, lyfDs);
+    if (_debtShare == 0) {
+      return true;
+    }
+
+    address _debtToken = lyfDs.debtShareTokens[_debtShareId];
+    uint256 _tokenPrice = getPriceUSD(_debtToken, lyfDs);
+    TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
+    return LibFullMath.mulDiv(_debtAmount * _tokenConfig.to18ConversionFactor, _tokenPrice, 1e18) >= lyfDs.minDebtSize;
+  }
+
   function to18ConversionFactor(address _token) internal view returns (uint8) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) {
