@@ -188,8 +188,11 @@ library LibAV01 {
     _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
   }
 
-  function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs) internal {
-    (uint256 _stablePendingInterest, uint256 _assetPendingInterest) = getVaultPendingInterest(_vaultToken, avDs);
+  function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs)
+    internal
+    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
+  {
+    (_stablePendingInterest, _assetPendingInterest) = getVaultPendingInterest(_vaultToken, avDs);
 
     VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
     avDs.vaultDebtValues[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;

@@ -80,7 +80,7 @@ abstract contract AV_BaseTest is BaseTest {
         address(weth),
         address(handler),
         3,
-        1,
+        0,
         address(mockInterestModel1),
         address(mockInterestModel2)
       )

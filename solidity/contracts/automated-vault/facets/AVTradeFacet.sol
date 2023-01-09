@@ -13,6 +13,8 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
+import "solidity/tests/utils/console.sol";
+
 contract AVTradeFacet is IAVTradeFacet {
   using LibSafeToken for IERC20;
 
@@ -80,7 +82,7 @@ contract AVTradeFacet is IAVTradeFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
 
-    LibAV01.accrueVaultInterest(_shareToken, avDs);
+    (, uint256 _totalAssetTokenInterest) = LibAV01.accrueVaultInterest(_shareToken, avDs);
 
     _mintManagementFeeToTreasury(_shareToken, avDs);
 
@@ -102,8 +104,20 @@ contract AVTradeFacet is IAVTradeFacet {
     }
 
     // repay to MM
-    LibAV01.repayMoneyMarket(_shareToken, _stableToken, _withdrawalStableAmount - _stableTokenToUser, avDs);
-    LibAV01.repayMoneyMarket(_shareToken, _vaultConfig.assetToken, _withdrawalAssetAmount, avDs);
+    // only need to account for _userAssetTokenInterest since stable interest has been accrued
+    uint256 _userAssetTokenInterest = (_totalAssetTokenInterest * 1e18) / IAVShareToken(_shareToken).totalSupply();
+    LibAV01.repayMoneyMarket(
+      _shareToken,
+      _stableToken,
+      _withdrawalStableAmount - _stableTokenToUser - _userAssetTokenInterest,
+      avDs
+    );
+    LibAV01.repayMoneyMarket(
+      _shareToken,
+      _vaultConfig.assetToken,
+      _withdrawalAssetAmount + _userAssetTokenInterest,
+      avDs
+    );
 
     IAVShareToken(_shareToken).burn(msg.sender, _shareToWithdraw);
     IERC20(_stableToken).safeTransfer(msg.sender, _stableTokenToUser);
