@@ -21,12 +21,12 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     // after deposit, ref: from test testCorrectness_WhenDepositToken_ShouldWork
     // lpAmountPrice = 2, wethPrice = 1, usdcPrice = 1
     // lpAmount = 15, wethDebtAmount = 5, usdcDebtAmount = 15
-    // equity = (15 * 2) - ((5 * 1) + (15 * 1)) = 30 - (5 + 15) = 10
-    // then equity ratio = equity / total lp value = 10 / (15 * 2) = 0.333333333333333333
+    // _totalLPValue = 30
+    // _totalEquity = _totalLPValue - wethDebtAmount - usdcDebtAmount = 30 - 20 = 10
     // share to withdraw = 5, then shareValueToRemove = 5 * 10 (equity) / 10 (totalSupply) = 5 USD
-    // then lpValueToRemove = shareToken / equity ratio = 5 / 0.333333333333333333 = 15.000000000000000015
-    // then lpToRemove = 15.000000000000000015 / 2 (lpTokenPrice) = 7.500000000000000007
-    // buffer for 5% 7.500000000000000007 * 9995 / 10000 = 7.496250000000000006
+    // lpToRemove = (shareValueToRemove * _totalLPValue) / (_totalEquity * lpPrice)
+    // lpToRemove = (5 * 30) / (10 * 2) = 7.5
+    // buffer for 5% = 7.5 * 9995 / 10000 = 7.49625
 
     // mock router to return both tokens as 7.5 ether
     mockRouter.setRemoveLiquidityAmountsOut(7.5 ether, 7.5 ether);
@@ -34,7 +34,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     // after withdraw
     // equity should change a bit
     // before withdraw equity is 10 USD
-    // after withdraw equity should be lpTotalBalance after remove = 15 - 7.500000000000000007 = 7.499999999999999993 USD
+    // after withdraw equity should be lpTotalBalance after remove = 15 - 7.5 = 7.5 USD
     // share to withdraw = 5, shareToken price = 1 ether, then shareValueToRemove = 5 USD
     // then user should receive stable token back about 5 / 1 (tokenPrice) = 5 TOKEN
     // note: ref amount from setRemoveLiquidityAmountsOut
@@ -53,8 +53,8 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     assertEq(_stableDebtValueBefore - _stableDebtValueAfter, 2.5 ether);
     assertEq(_assetDebtValueBefore - _assetDebtValueAfter, 7.5 ether);
 
-    // 15 - 7.496250000000000006 = 7.503749999999999994
-    assertEq(handler.totalLpBalance(), 7.503749999999999994 ether);
+    // 15 - 7.49625 = 7.50375
+    assertEq(handler.totalLpBalance(), 7.50375 ether);
   }
 
   function testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert() external {
