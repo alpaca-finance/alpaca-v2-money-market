@@ -55,4 +55,12 @@ interface IAVAdminFacet {
   function setOracle(address _oracle) external;
 
   function setTreasury(address _treasury) external;
+
+  function setManagementFeePerSec(address _vaultToken, uint16 _newManagementFeePerSec) external;
+
+  function setInterestRateModels(
+    address _vaultToken,
+    address _newStableTokenInterestRateModel,
+    address _newAssetTokenInterestRateModel
+  ) external;
 }

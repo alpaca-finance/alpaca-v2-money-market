@@ -8,6 +8,8 @@ import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 contract AV_Trade_ManagementFeeTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
+
+    adminFacet.setManagementFeePerSec(address(avShareToken), 1);
   }
 
   function testCorrectness_GetPendingManagementFee() external {

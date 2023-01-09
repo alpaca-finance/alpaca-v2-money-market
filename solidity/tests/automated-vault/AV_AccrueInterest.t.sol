@@ -3,11 +3,22 @@ pragma solidity 0.8.17;
 
 import { AV_BaseTest, console } from "./AV_BaseTest.t.sol";
 
+// libs
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
+
+// mocks
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 contract AV_AccrueInterestTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
+
+    // address _vaultToken, address _newStableTokenInterestRateModel, address _newAssetTokenInterestRateModel
+    adminFacet.setInterestRateModels(
+      address(avShareToken),
+      address(new MockInterestModel(0.1 ether)),
+      address(new MockInterestModel(0.05 ether))
+    );
 
     weth.mint(address(mockRouter), 100 ether);
     usdc.mint(address(mockRouter), 100 ether);

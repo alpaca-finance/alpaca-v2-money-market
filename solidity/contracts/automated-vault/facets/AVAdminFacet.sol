@@ -94,4 +94,32 @@ contract AVAdminFacet is IAVAdminFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     avDs.treasury = _treasury;
   }
+
+  function setManagementFeePerSec(address _vaultToken, uint16 _newManagementFeePerSec) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+    avDs.vaultConfigs[_vaultToken].managementFeePerSec = _newManagementFeePerSec;
+  }
+
+  function setInterestRateModels(
+    address _vaultToken,
+    address _newStableTokenInterestRateModel,
+    address _newAssetTokenInterestRateModel
+  ) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+
+    // sanity check
+    LibAV01.calcInterestRate(
+      avDs.vaultConfigs[_vaultToken].stableToken,
+      _newStableTokenInterestRateModel,
+      avDs.moneyMarket
+    );
+    LibAV01.calcInterestRate(
+      avDs.vaultConfigs[_vaultToken].assetToken,
+      _newAssetTokenInterestRateModel,
+      avDs.moneyMarket
+    );
+
+    avDs.vaultConfigs[_vaultToken].stableTokenInterestModel = _newStableTokenInterestRateModel;
+    avDs.vaultConfigs[_vaultToken].assetTokenInterestModel = _newAssetTokenInterestRateModel;
+  }
 }

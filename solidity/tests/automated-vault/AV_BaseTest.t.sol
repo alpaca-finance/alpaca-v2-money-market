@@ -69,8 +69,8 @@ abstract contract AV_BaseTest is BaseTest {
     handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
 
     // setup interest rate models
-    MockInterestModel mockInterestModel1 = new MockInterestModel(0.1 ether);
-    MockInterestModel mockInterestModel2 = new MockInterestModel(0.05 ether);
+    MockInterestModel mockInterestModel1 = new MockInterestModel(0);
+    MockInterestModel mockInterestModel2 = new MockInterestModel(0);
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     avShareToken = IAVShareToken(
