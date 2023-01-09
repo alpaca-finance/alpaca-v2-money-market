@@ -106,7 +106,7 @@ library LibAV01 {
     uint256 _equityRatio = (_totalEquity * 1e18) / _totalLPValue;
     uint256 _lpValueToRemove = (_shareValueToWithdraw * 1e18) / _equityRatio;
 
-    (uint256 _lpTokenPrice, ) = getPriceUSD(_lpToken, avDs);
+    uint256 _lpTokenPrice = getPriceUSD(_lpToken, avDs);
     uint256 _lpToRemove = (_lpValueToRemove * 1e18) / _lpTokenPrice;
     _lpToRemove = (_lpToRemove * 9995) / 10000;
 
@@ -124,15 +124,11 @@ library LibAV01 {
   }
 
   /// @dev return price in 1e18
-  function getPriceUSD(address _token, AVDiamondStorage storage avDs)
-    internal
-    view
-    returns (uint256 _price, uint256 _lastUpdated)
-  {
+  function getPriceUSD(address _token, AVDiamondStorage storage avDs) internal view returns (uint256 _price) {
     if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
+      (_price, ) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
+      (_price, ) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
     }
   }
 
@@ -141,7 +137,7 @@ library LibAV01 {
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _tokenValue) {
-    (uint256 _price, ) = getPriceUSD(_token, avDs);
+    uint256 _price = getPriceUSD(_token, avDs);
     _tokenValue = (_amount * avDs.tokenConfigs[_token].to18ConversionFactor * _price) / 1e18;
   }
 
@@ -173,8 +169,8 @@ library LibAV01 {
     uint8 _leverageLevel,
     LibAV01.AVDiamondStorage storage avDs
   ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
-    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
+    uint256 _stablePrice = getPriceUSD(_stableToken, avDs);
+    uint256 _assetPrice = getPriceUSD(_assetToken, avDs);
 
     uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
 

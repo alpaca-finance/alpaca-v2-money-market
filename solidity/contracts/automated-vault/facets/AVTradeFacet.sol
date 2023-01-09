@@ -89,7 +89,7 @@ contract AVTradeFacet is IAVTradeFacet {
       avDs
     );
 
-    (uint256 _stableTokenPrice, ) = LibAV01.getPriceUSD(_stableToken, avDs);
+    uint256 _stableTokenPrice = LibAV01.getPriceUSD(_stableToken, avDs);
     uint256 _stableTokenToUser = (_shareValueToWithdraw * 1e18) /
       (_stableTokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
 
