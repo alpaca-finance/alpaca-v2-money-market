@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- Libraries ---- //
+import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+
 library LibReentrancyGuard {
   error LibReentrancyGuard_ReentrantCall();
 
@@ -43,5 +46,16 @@ library LibReentrancyGuard {
   function unlock() internal {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
     reentrancyGuardDs.status = _NOT_ENTERED;
+  }
+
+  function onWithdrawLock() internal {
+    ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (reentrancyGuardDs.status == _ENTERED && moneyMarketDs.IN_LIQUIDATE_EXEC == 0) {
+      revert LibReentrancyGuard_ReentrantCall();
+    }
+
+    reentrancyGuardDs.status = _ENTERED;
   }
 }

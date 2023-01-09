@@ -98,6 +98,7 @@ library LibMoneyMarket01 {
     // liquidation params
     uint16 maxLiquidateBps;
     uint16 liquidationThresholdBps;
+    uint8 IN_LIQUIDATE_EXEC;
     // fees
     uint16 lendingFeeBps;
     uint16 repurchaseRewardBps;

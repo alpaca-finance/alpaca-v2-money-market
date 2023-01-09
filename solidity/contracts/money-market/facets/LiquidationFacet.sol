@@ -180,6 +180,8 @@ contract LiquidationFacet is ILiquidationFacet {
       revert LiquidationFacet_Unauthorized();
     }
 
+    moneyMarketDs.IN_LIQUIDATE_EXEC = 1;
+
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
@@ -208,6 +210,8 @@ contract LiquidationFacet is ILiquidationFacet {
     } else {
       _liquidationCall(_params, moneyMarketDs);
     }
+
+    moneyMarketDs.IN_LIQUIDATE_EXEC = 0;
   }
 
   function _liquidationCall(
