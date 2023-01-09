@@ -178,4 +178,11 @@ library LibFullMath {
   function fdiv(uint256 lhs, uint256 rhs) internal pure returns (uint256) {
     return (lhs * (2**112)) / rhs;
   }
+
+  /**
+   * @dev Returns the smallest of two numbers.
+   */
+  function min(uint256 a, uint256 b) internal pure returns (uint256) {
+    return a < b ? a : b;
+  }
 }

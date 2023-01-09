@@ -52,7 +52,6 @@ library LibAV01 {
     // share token => debt token => debt amount
     mapping(address => mapping(address => uint256)) vaultDebts;
     mapping(address => uint256) lastAccrueInterestTimestamps;
-    uint256 maxPriceStale;
   }
 
   error LibAV01_NoTinyShares();
@@ -108,7 +107,7 @@ library LibAV01 {
 
     uint256 _totalLPValue = getHandlerTotalLPValue(_handler, _lpToken, avDs);
     uint256 _totalEquity = _totalLPValue - getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
-    (uint256 _lpTokenPrice, ) = getPriceUSD(_lpToken, avDs);
+    uint256 _lpTokenPrice = getPriceUSD(_lpToken, avDs);
     // lpValueToRemove = _shareValueToWithdraw * _totalLPValue / _totalEquity
     // lpToRemove = lpValueToRemove / _lpTokenPrice
     uint256 _lpToRemove = (((_shareValueToWithdraw * _totalLPValue) / _totalEquity) * 1e18) / _lpTokenPrice;
@@ -136,17 +135,12 @@ library LibAV01 {
   }
 
   /// @dev return price in 1e18
-  function getPriceUSD(address _token, AVDiamondStorage storage avDs)
-    internal
-    view
-    returns (uint256 _price, uint256 _lastUpdated)
-  {
+  function getPriceUSD(address _token, AVDiamondStorage storage avDs) internal view returns (uint256 _price) {
     if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
+      (_price, ) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
+      (_price, ) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - avDs.maxPriceStale) revert LibAV01_PriceStale(_token);
   }
 
   function getVaultPendingInterest(address _vaultToken, AVDiamondStorage storage avDs)
@@ -209,7 +203,7 @@ library LibAV01 {
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _tokenValue) {
-    (uint256 _price, ) = getPriceUSD(_token, avDs);
+    uint256 _price = getPriceUSD(_token, avDs);
     _tokenValue = (_amount * avDs.tokenConfigs[_token].to18ConversionFactor * _price) / 1e18;
   }
 
@@ -241,8 +235,8 @@ library LibAV01 {
     uint8 _leverageLevel,
     LibAV01.AVDiamondStorage storage avDs
   ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
-    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
+    uint256 _stablePrice = getPriceUSD(_stableToken, avDs);
+    uint256 _assetPrice = getPriceUSD(_assetToken, avDs);
 
     uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
 

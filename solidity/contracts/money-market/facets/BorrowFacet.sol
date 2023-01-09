@@ -202,7 +202,7 @@ contract BorrowFacet is IBorrowFacet {
     // if partial repay, check if debt after repaid more than minDebtSize
     // no check if repay entire debt
     if (_currentSubAccountDebtShare > _shareToRepay) {
-      (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+      uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
       if (
         ((_currentSubAccountDebtAmount - _amountToRepay) *
@@ -227,7 +227,7 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_InvalidToken(_token);
     }
 
-    (uint256 _tokenPrice, ) = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
+    uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     // check borrow + currentDebt < minDebtSize

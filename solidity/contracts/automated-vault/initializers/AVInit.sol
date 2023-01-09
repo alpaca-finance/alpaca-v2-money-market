@@ -12,7 +12,6 @@ contract AVInit {
     if (diamondDs.avInitialized != 0) revert AVInit_Initialized();
     LibAV01.AVDiamondStorage storage ds = LibAV01.avDiamondStorage();
 
-    ds.maxPriceStale = 86400;
     diamondDs.avInitialized = 1;
   }
 }
