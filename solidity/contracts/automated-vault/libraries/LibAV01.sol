@@ -20,6 +20,14 @@ library LibAV01 {
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
+  event LogAccrueInterest(
+    address indexed _vaultToken,
+    address indexed _stableToken,
+    address indexed _assetToken,
+    uint256 _stableInterest,
+    uint256 _assetInterest
+  );
+
   enum AssetTier {
     TOKEN,
     LP
@@ -176,6 +184,14 @@ library LibAV01 {
 
       // update timestamp
       avDs.lastAccrueInterestTimestamps[_vaultToken] = block.timestamp;
+
+      emit LogAccrueInterest(
+        _vaultToken,
+        vaultConfig.stableToken,
+        vaultConfig.assetToken,
+        _stablePendingInterest,
+        _assetPendingInterest
+      );
     }
   }
 

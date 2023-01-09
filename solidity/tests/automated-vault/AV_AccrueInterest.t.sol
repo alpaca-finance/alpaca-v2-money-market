@@ -10,6 +10,14 @@ import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 contract AV_AccrueInterestTest is AV_BaseTest {
+  event LogAccrueInterest(
+    address indexed _vaultToken,
+    address indexed _stableToken,
+    address indexed _assetToken,
+    uint256 _stableInterest,
+    uint256 _assetInterest
+  );
+
   function setUp() public override {
     super.setUp();
 
@@ -186,5 +194,23 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // check last accrued timestamp = now (accrued during withdraw)
     assertEq(tradeFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+  }
+
+  function testCorrectness_WhenAccrueInterest_ShouldEmitEvent() external {
+    address _vaultToken = address(avShareToken);
+
+    vm.expectEmit(true, true, true, false, avDiamond);
+    emit LogAccrueInterest(_vaultToken, address(usdc), address(weth), 0, 0);
+    vm.prank(ALICE);
+    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+
+    vm.warp(block.timestamp + 1);
+
+    mockRouter.setRemoveLiquidityAmountsOut(1.5 ether, 1.5 ether);
+
+    vm.expectEmit(true, true, true, false, avDiamond);
+    emit LogAccrueInterest(_vaultToken, address(usdc), address(weth), 0.05 ether, 0.075 ether);
+    vm.prank(ALICE);
+    tradeFacet.withdraw(_vaultToken, 1 ether, 0);
   }
 }
