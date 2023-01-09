@@ -85,7 +85,6 @@ library LibLYF01 {
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
     uint8 maxNumOfCollatPerSubAccount;
-    uint256 maxPriceStale;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -161,11 +160,14 @@ library LibLYF01 {
     LibDoublyLinkedList.Node[] memory _collats = lyfDs.subAccountCollats[_subAccount].getAll();
 
     uint256 _collatsLength = _collats.length;
-
+    uint256 _tokenPrice;
+    address _collatToken;
+    uint256 _collatAmount;
+    uint256 _actualAmount;
     for (uint256 _i; _i < _collatsLength; ) {
-      address _collatToken = _collats[_i].token;
-      uint256 _collatAmount = _collats[_i].amount;
-      uint256 _actualAmount = _collatAmount;
+      _collatToken = _collats[_i].token;
+      _collatAmount = _collats[_i].amount;
+      _actualAmount = _collatAmount;
 
       // will return address(0) if _collatToken is not ibToken
       address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
@@ -180,7 +182,7 @@ library LibLYF01 {
 
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_actualToken];
 
-      (uint256 _tokenPrice, ) = getPriceUSD(_actualToken, lyfDs);
+      _tokenPrice = getPriceUSD(_actualToken, lyfDs);
 
       // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
@@ -203,10 +205,11 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
+    uint256 _tokenPrice;
     for (uint256 _i; _i < _borrowedLength; ) {
       address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
       TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
-      (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
+      _tokenPrice = getPriceUSD(_debtToken, lyfDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         lyfDs.debtValues[_borrowed[_i].index],
@@ -227,11 +230,13 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-
+    uint256 _tokenPrice;
+    uint256 _borrowedAmount;
+    address _debtToken;
     for (uint256 _i; _i < _borrowedLength; ) {
-      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
-      (uint256 _tokenPrice, ) = getPriceUSD(_debtToken, lyfDs);
-      uint256 _borrowedAmount = LibShareUtil.shareToValue(
+      _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
+      _tokenPrice = getPriceUSD(_debtToken, lyfDs);
+      _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         lyfDs.debtValues[_borrowed[_i].index],
         lyfDs.debtShares[_borrowed[_i].index]
@@ -251,18 +256,11 @@ library LibLYF01 {
     }
   }
 
-  function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs)
-    internal
-    view
-    returns (uint256 _price, uint256 _lastUpdated)
-  {
+  function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256 _price) {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).lpToDollar(1e18, _token);
+      (_price, ) = IAlpacaV2Oracle(lyfDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
-    }
-    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) {
-      revert LibLYF01_PriceStale(_token);
+      (_price, ) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
     }
   }
 
@@ -270,8 +268,8 @@ library LibLYF01 {
     address _ibToken,
     address _token,
     LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256, uint256) {
-    (uint256 _underlyingTokenPrice, uint256 _lastUpdated) = getPriceUSD(_token, lyfDs);
+  ) internal view returns (uint256) {
+    uint256 _underlyingTokenPrice = getPriceUSD(_token, lyfDs);
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
     uint256 _one = 10**IERC20(_ibToken).decimals();
 
@@ -279,7 +277,7 @@ library LibLYF01 {
     uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
 
     uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
-    return (_price, _lastUpdated);
+    return (_price);
   }
 
   // _usedBorrowingPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
