@@ -16,7 +16,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     vm.prank(ALICE);
     tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
 
-    (uint256 _stableDebtValueBefore, uint256 _assetDebtValueBefore) = tradeFacet.getDebtValues(address(avShareToken));
+    (uint256 _stableDebtValueBefore, uint256 _assetDebtValueBefore) = viewFacet.getDebtValues(address(avShareToken));
 
     // after deposit, ref: from test testCorrectness_WhenDepositToken_ShouldWork
     // lpAmountPrice = 2, wethPrice = 1, usdcPrice = 1
@@ -49,7 +49,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     assertEq(usdc.balanceOf(ALICE) - aliceUsdcBefore, 5 ether);
 
     // should repay correctly
-    (uint256 _stableDebtValueAfter, uint256 _assetDebtValueAfter) = tradeFacet.getDebtValues(address(avShareToken));
+    (uint256 _stableDebtValueAfter, uint256 _assetDebtValueAfter) = viewFacet.getDebtValues(address(avShareToken));
     assertEq(_stableDebtValueBefore - _stableDebtValueAfter, 2.5 ether);
     assertEq(_assetDebtValueBefore - _assetDebtValueAfter, 7.5 ether);
 

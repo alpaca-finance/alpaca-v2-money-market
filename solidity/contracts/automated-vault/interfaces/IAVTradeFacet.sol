@@ -31,15 +31,4 @@ interface IAVTradeFacet {
     uint256 _shareAmountIn,
     uint256 _minTokenOut
   ) external;
-
-  function getDebtValues(address _shareToken) external view returns (uint256, uint256);
-
-  function pendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee);
-
-  function getVaultPendingInterest(address _vaultToken)
-    external
-    view
-    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest);
-
-  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256);
 }
