@@ -129,10 +129,7 @@ contract AVTradeFacet is IAVTradeFacet {
   function getDebtValues(address _shareToken) external view returns (uint256, uint256) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
-    return (
-      avDs.vaultDebtValues[_shareToken][_config.stableToken],
-      avDs.vaultDebtValues[_shareToken][_config.assetToken]
-    );
+    return (avDs.vaultDebts[_shareToken][_config.stableToken], avDs.vaultDebts[_shareToken][_config.assetToken]);
   }
 
   function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {

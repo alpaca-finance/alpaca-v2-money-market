@@ -49,8 +49,8 @@ library LibAV01 {
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) lastFeeCollectionTimestamps;
-    // share token => debt token => debt value
-    mapping(address => mapping(address => uint256)) vaultDebtValues;
+    // share token => debt token => debt amount
+    mapping(address => mapping(address => uint256)) vaultDebts;
     mapping(address => uint256) lastAccrueInterestTimestamps;
     uint256 maxPriceStale;
   }
@@ -107,7 +107,7 @@ library LibAV01 {
     address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
     uint256 _totalLPValue = getHandlerTotalLPValue(_handler, _lpToken, avDs);
-    uint256 _totalEquity = _totalLPValue - getVaultTotalDebtValue(_vaultToken, _lpToken, avDs);
+    uint256 _totalEquity = _totalLPValue - getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
     (uint256 _lpTokenPrice, ) = getPriceUSD(_lpToken, avDs);
     // lpValueToRemove = _shareValueToWithdraw * _totalLPValue / _totalEquity
     // lpToRemove = lpValueToRemove / _lpTokenPrice
@@ -123,6 +123,8 @@ library LibAV01 {
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToRemove);
   }
 
+  /// @dev beware that unaccrued pendingInterest affect this calculation
+  /// should call accrueInterest before calling this method to get correct value
   function getShareTokenValue(
     address _shareToken,
     uint256 _amount,
@@ -170,10 +172,10 @@ library LibAV01 {
       );
 
       _stablePendingInterest =
-        (_stableInterestRate * _timeSinceLastAccrual * avDs.vaultDebtValues[_vaultToken][vaultConfig.stableToken]) /
+        (_stableInterestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][vaultConfig.stableToken]) /
         1e18;
       _assetPendingInterest =
-        (_assetInterestRate * _timeSinceLastAccrual * avDs.vaultDebtValues[_vaultToken][vaultConfig.assetToken]) /
+        (_assetInterestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][vaultConfig.assetToken]) /
         1e18;
     }
   }
@@ -195,8 +197,8 @@ library LibAV01 {
     (_stablePendingInterest, _assetPendingInterest) = getVaultPendingInterest(_vaultToken, avDs);
 
     VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
-    avDs.vaultDebtValues[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;
-    avDs.vaultDebtValues[_vaultToken][vaultConfig.assetToken] += _assetPendingInterest;
+    avDs.vaultDebts[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;
+    avDs.vaultDebts[_vaultToken][vaultConfig.assetToken] += _assetPendingInterest;
 
     // update timestamp
     avDs.lastAccrueInterestTimestamps[_vaultToken] = block.timestamp;
@@ -218,7 +220,7 @@ library LibAV01 {
     AVDiamondStorage storage avDs
   ) internal {
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
-    avDs.vaultDebtValues[_shareToken][_token] += _amount;
+    avDs.vaultDebts[_shareToken][_token] += _amount;
   }
 
   function repayMoneyMarket(
@@ -229,7 +231,7 @@ library LibAV01 {
   ) internal {
     IERC20(_token).safeIncreaseAllowance(avDs.moneyMarket, _repayAmount);
     IMoneyMarket(avDs.moneyMarket).nonCollatRepay(address(this), _token, _repayAmount);
-    avDs.vaultDebtValues[_shareToken][_token] -= _repayAmount;
+    avDs.vaultDebts[_shareToken][_token] -= _repayAmount;
   }
 
   function calculateBorrowAmount(
@@ -274,7 +276,8 @@ library LibAV01 {
     _totalLPValue = getTokenInUSD(_lpToken, _lpAmount, avDs);
   }
 
-  function getVaultTotalDebtValue(
+  /// @dev beware that unaccrued pendingInterest affect the result
+  function getVaultTotalDebtInUSD(
     address _vaultToken,
     address _lpToken,
     AVDiamondStorage storage avDs
@@ -282,10 +285,12 @@ library LibAV01 {
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
     _totalDebtValue =
-      getTokenInUSD(_token0, avDs.vaultDebtValues[_vaultToken][_token0], avDs) +
-      getTokenInUSD(_token1, avDs.vaultDebtValues[_vaultToken][_token1], avDs);
+      getTokenInUSD(_token0, avDs.vaultDebts[_vaultToken][_token0], avDs) +
+      getTokenInUSD(_token1, avDs.vaultDebts[_vaultToken][_token1], avDs);
   }
 
+  /// @dev beware that unaccrued pendingInterest affect this calculation
+  /// should call accrueInterest before calling this method to get correct value
   function getEquity(
     address _vaultToken,
     address _handler,
@@ -293,7 +298,7 @@ library LibAV01 {
   ) internal view returns (uint256 _equity) {
     address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
-    uint256 _totalDebtValue = getVaultTotalDebtValue(_vaultToken, _lpToken, avDs);
+    uint256 _totalDebtValue = getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
     uint256 _lpValue = getHandlerTotalLPValue(_handler, _lpToken, avDs);
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
