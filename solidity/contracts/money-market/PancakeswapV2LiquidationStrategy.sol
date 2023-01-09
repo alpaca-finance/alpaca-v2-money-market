@@ -15,12 +15,18 @@ import { IERC20 } from "./interfaces/IERC20.sol";
 contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
-  error PancakeswapV2LiquidationStrategy_InvalidPath();
   error PancakeswapV2LiquidationStrategy_Unauthorized();
+  error PancakeswapV2LiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
+
+  struct SetPathParams {
+    address[] path;
+  }
 
   IPancakeRouter02 internal router;
 
   mapping(address => bool) public callersOk;
+  // tokenIn => tokenOut => path
+  mapping(address => mapping(address => address[])) public paths;
 
   /// @notice require that only allowed callers
   modifier onlyWhitelistedCallers() {
@@ -47,24 +53,45 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     uint256 _repayAmount,
     bytes calldata _data
   ) external onlyWhitelistedCallers {
-    (address[] memory path, uint256 _minReceive) = abi.decode(_data, (address[], uint256));
-    if (path[0] != _collatToken || path[path.length - 1] != _repayToken) {
-      revert PancakeswapV2LiquidationStrategy_InvalidPath();
+    uint256 _minReceive = abi.decode(_data, (uint256));
+    address[] memory _path = paths[_collatToken][_repayToken];
+
+    if (_path.length == 0) {
+      revert PancakeswapV2LiquidationStrategy_PathConfigNotFound(_collatToken, _repayToken);
     }
 
     IERC20(_collatToken).safeApprove(address(router), _collatAmountIn);
 
-    uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, path);
+    uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
     // _amountsIn[0] = collat that is required to swap for _repayAmount
     if (_collatAmountIn >= _amountsIn[0]) {
       // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
-      router.swapTokensForExactTokens(_repayAmount, _collatAmountIn, path, msg.sender, block.timestamp);
+      router.swapTokensForExactTokens(_repayAmount, _collatAmountIn, _path, msg.sender, block.timestamp);
       IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _amountsIn[0]);
     } else {
-      router.swapExactTokensForTokens(_collatAmountIn, _minReceive, path, msg.sender, block.timestamp);
+      router.swapExactTokensForTokens(_collatAmountIn, _minReceive, _path, msg.sender, block.timestamp);
     }
 
     IERC20(_collatToken).safeApprove(address(router), 0);
+  }
+
+  /// @notice Set paths config to be used during swap step in executeLiquidation
+  /// @param _inputs Array of parameters used to set path
+  function setPaths(SetPathParams[] calldata _inputs) external onlyOwner {
+    uint256 _len = _inputs.length;
+    for (uint256 _i = 0; _i < _len; ) {
+      SetPathParams memory _params = _inputs[_i];
+      address[] memory _path = _params.path;
+
+      // sanity check. router will revert if pair doesn't exist
+      router.getAmountsIn(1 ether, _path);
+
+      paths[_path[0]][_path[_path.length - 1]] = _path;
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 
   /// @notice Set callers ok
