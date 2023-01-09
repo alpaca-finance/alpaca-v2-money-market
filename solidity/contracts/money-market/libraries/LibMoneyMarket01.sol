@@ -26,7 +26,6 @@ library LibMoneyMarket01 {
   uint256 internal constant MAX_BPS = 10000;
 
   error LibMoneyMarket01_BadSubAccountId();
-  error LibMoneyMarket01_PriceStale(address);
   error LibMoneyMarket01_InvalidToken(address _token);
   error LibMoneyMarket01_UnsupportedDecimals();
   error LibMoneyMarket01_InvalidAssetTier();
@@ -48,9 +47,9 @@ library LibMoneyMarket01 {
 
   struct TokenConfig {
     LibMoneyMarket01.AssetTier tier;
-    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
+    uint64 to18ConversionFactor;
     uint256 maxCollateral;
     uint256 maxBorrow; // shared global limit
   }
@@ -105,7 +104,6 @@ library LibMoneyMarket01 {
     uint16 repurchaseRewardBps;
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
-    uint256 maxPriceStale;
     uint256 minDebtSize;
     IFeeModel repurchaseFeeModel;
   }
@@ -140,7 +138,7 @@ library LibMoneyMarket01 {
     for (uint256 _i; _i < _collatsLength; ) {
       _collatToken = _collats[_i].token;
 
-      (_tokenPrice, ) = getPriceUSD(_collatToken, moneyMarketDs);
+      _tokenPrice = getPriceUSD(_collatToken, moneyMarketDs);
 
       _underlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
       _tokenConfig = moneyMarketDs.tokenConfigs[_underlyingToken == address(0) ? _collatToken : _underlyingToken];
@@ -184,7 +182,7 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-
+    uint256 _tokenPrice;
     for (uint256 _i; _i < _borrowedLength; ) {
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
 
@@ -192,7 +190,7 @@ library LibMoneyMarket01 {
         _hasIsolateAsset = true;
       }
 
-      (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
+      _tokenPrice = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
 
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
@@ -216,11 +214,11 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.nonCollatAccountDebtValues[_account].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-
+    uint256 _tokenPrice;
     for (uint256 _i = 0; _i < _borrowedLength; ) {
       TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
 
-      (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
+      _tokenPrice = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
 
       _totalUsedBorrowingPower += usedBorrowingPower(_borrowed[_i].amount, _tokenPrice, _tokenConfig.borrowingFactor);
 
@@ -238,9 +236,9 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-
+    uint256 _tokenPrice;
     for (uint256 _i; _i < _borrowedLength; ) {
-      (uint256 _tokenPrice, ) = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
+      _tokenPrice = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
       uint256 _borrowedAmount = LibShareUtil.shareToValue(
         _borrowed[_i].amount,
         moneyMarketDs.overCollatDebtValues[_borrowed[_i].token],
@@ -484,23 +482,21 @@ library LibMoneyMarket01 {
   function getPriceUSD(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256 _price, uint256 _lastUpdated)
+    returns (uint256 _price)
   {
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_token];
     // If the token is ibToken, do an additional shareToValue before pricing
     if (_underlyingToken != address(0)) {
       uint256 _underlyingTokenPrice;
-      (_underlyingTokenPrice, _lastUpdated) = moneyMarketDs.oracle.getTokenPrice(_underlyingToken);
+      (_underlyingTokenPrice, ) = moneyMarketDs.oracle.getTokenPrice(_underlyingToken);
 
       uint256 _totalSupply = IERC20(_token).totalSupply();
       uint256 _totalToken = getTotalTokenWithPendingInterest(_underlyingToken, moneyMarketDs);
 
       _price = LibShareUtil.shareToValue(_underlyingTokenPrice, _totalToken, _totalSupply);
     } else {
-      (_price, _lastUpdated) = moneyMarketDs.oracle.getTokenPrice(_token);
+      (_price, ) = moneyMarketDs.oracle.getTokenPrice(_token);
     }
-
-    if (_lastUpdated < block.timestamp - moneyMarketDs.maxPriceStale) revert LibMoneyMarket01_PriceStale(_token);
   }
 
   function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {
@@ -533,13 +529,13 @@ library LibMoneyMarket01 {
     emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
   }
 
-  function to18ConversionFactor(address _token) internal view returns (uint8) {
+  function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) {
       revert LibMoneyMarket01_UnsupportedDecimals();
     }
     uint256 _conversionFactor = 10**(18 - _decimals);
-    return uint8(_conversionFactor);
+    return uint64(_conversionFactor);
   }
 
   function addCollat(

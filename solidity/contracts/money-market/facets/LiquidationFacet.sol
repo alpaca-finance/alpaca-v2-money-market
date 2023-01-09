@@ -99,7 +99,7 @@ contract LiquidationFacet is ILiquidationFacet {
       vars.repurchaseFeeToProtocol = vars.repayAmountWithFee - vars.repayAmountWihtoutFee;
     }
 
-    (vars.repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+    vars.repayTokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
     // revert if repay > x% of totalUsedBorrowingPower
     {
@@ -114,7 +114,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // calculate payout (collateral + reward)
     {
-      (uint256 _collatTokenPrice, ) = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
+      uint256 _collatTokenPrice = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
       uint256 _repayTokenPriceWithPremium = (vars.repayTokenPrice *
         (LibMoneyMarket01.MAX_BPS + moneyMarketDs.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
@@ -243,7 +243,7 @@ contract LiquidationFacet is ILiquidationFacet {
     {
       uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
       _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
-      (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
+      uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
         _repaidAmount,
         _repayTokenPrice,
@@ -335,7 +335,7 @@ contract LiquidationFacet is ILiquidationFacet {
     {
       uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - vars.repayAmountBefore;
       vars.repaidAmount = _repayAmountFromLiquidation - vars.feeToTreasury;
-      (uint256 _repayTokenPrice, ) = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
+      uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
         vars.repaidAmount,
         _repayTokenPrice,
