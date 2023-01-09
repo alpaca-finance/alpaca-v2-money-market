@@ -13,6 +13,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -106,6 +107,7 @@ library LibMoneyMarket01 {
     uint16 liquidationFeeBps;
     uint256 maxPriceStale;
     uint256 minDebtSize;
+    IFeeModel repurchaseFeeModel;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

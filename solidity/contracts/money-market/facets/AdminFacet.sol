@@ -16,6 +16,7 @@ import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 // ---- Interfaces ---- //
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -37,11 +38,13 @@ contract AdminFacet is IAdminFacet {
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
   event LogSetTreasury(address indexed _treasury);
   event LogSetFees(
-    uint256 lendingFeeBps,
-    uint256 repurchaseRewardBps,
-    uint256 repurchaseFeeBps,
-    uint256 liquidationFeeBps
+    uint256 _lendingFeeBps,
+    uint256 _repurchaseRewardBps,
+    IFeeModel _repurchaseFeeModel,
+    uint256 _repurchaseFeeBps,
+    uint256 _liquidationFeeBps
   );
+  event LogSetRepurchaseFeeModel(IFeeModel indexed _repurchaseFeeModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolConfig(
     address indexed _account,
@@ -268,11 +271,13 @@ contract AdminFacet is IAdminFacet {
   /// @notice Set protocol's fees
   /// @param _newLendingFeeBps The lending fee imposed on interest collected
   /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
+  /// @param _newRepurchaseFeeModel The model to get reward bps given out to repurchaser as a premium on collateral
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
   /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseRewardBps,
+    IFeeModel _newRepurchaseFeeModel,
     uint16 _newRepurchaseFeeBps,
     uint16 _newLiquidationFeeBps
   ) external onlyOwner {
@@ -285,14 +290,36 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidArguments();
     }
 
+    // sanity call
+    _newRepurchaseFeeModel.getFeeBps(0, 0);
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     moneyMarketDs.lendingFeeBps = _newLendingFeeBps;
     moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
+    moneyMarketDs.repurchaseFeeModel = _newRepurchaseFeeModel;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
 
-    emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
+    emit LogSetFees(
+      _newLendingFeeBps,
+      _newRepurchaseRewardBps,
+      _newRepurchaseFeeModel,
+      _newRepurchaseFeeBps,
+      _newLiquidationFeeBps
+    );
+  }
+
+  /// @notice Set the repurchase fee model for a token specifically to over collateralized borrowing
+  /// @param _newRepurchaseFeeModel The contract address of the repurchase fee model
+  function setRepurchaseFeeModel(IFeeModel _newRepurchaseFeeModel) external onlyOwner {
+    // Sanity check
+    _newRepurchaseFeeModel.getFeeBps(0, 0);
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.repurchaseFeeModel = _newRepurchaseFeeModel;
+
+    emit LogSetRepurchaseFeeModel(_newRepurchaseFeeModel);
   }
 
   /// @notice Set the implementation address of interest bearing token

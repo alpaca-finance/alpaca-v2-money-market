@@ -3,6 +3,9 @@ pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
+// ---- Interfaces ---- //
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
+
 interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
@@ -71,9 +74,12 @@ interface IAdminFacet {
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseRewardBps,
+    IFeeModel _newRepurchaseFeeModel,
     uint16 _newRepurchaseFeeBps,
     uint16 _newLiquidationFeeBps
   ) external;
+
+  function setRepurchaseFeeModel(IFeeModel _newRepurchaseFeeModel) external;
 
   function withdrawReserve(
     address _token,
