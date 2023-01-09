@@ -42,7 +42,7 @@ contract AVAdminFacet is IAVAdminFacet {
       )
     );
 
-    // sanity check
+    // sanity check moneyMarket and interestModels
     address _moneyMarket = avDs.moneyMarket;
     LibAV01.getInterestRate(_stableToken, _stableTokenInterestModel, _moneyMarket);
     LibAV01.getInterestRate(_assetToken, _assetTokenInterestModel, _moneyMarket);

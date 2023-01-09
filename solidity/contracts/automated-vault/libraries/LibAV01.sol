@@ -143,9 +143,8 @@ library LibAV01 {
     }
   }
 
-  function getVaultPendingInterest(address _vaultToken, AVDiamondStorage storage avDs)
+  function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs)
     internal
-    view
     returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
   {
     uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
@@ -154,24 +153,42 @@ library LibAV01 {
       VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
       address _moneyMarket = avDs.moneyMarket;
 
-      uint256 _stableInterestRate = getInterestRate(
+      _stablePendingInterest = getTokenPendingInterest(
+        _vaultToken,
+        _moneyMarket,
         vaultConfig.stableToken,
         vaultConfig.stableTokenInterestModel,
-        _moneyMarket
+        _timeSinceLastAccrual,
+        avDs
       );
-      uint256 _assetInterestRate = getInterestRate(
+      _assetPendingInterest = getTokenPendingInterest(
+        _vaultToken,
+        _moneyMarket,
         vaultConfig.assetToken,
         vaultConfig.assetTokenInterestModel,
-        _moneyMarket
+        _timeSinceLastAccrual,
+        avDs
       );
 
-      _stablePendingInterest =
-        (_stableInterestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][vaultConfig.stableToken]) /
-        1e18;
-      _assetPendingInterest =
-        (_assetInterestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][vaultConfig.assetToken]) /
-        1e18;
+      // update debt with interest
+      avDs.vaultDebts[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;
+      avDs.vaultDebts[_vaultToken][vaultConfig.assetToken] += _assetPendingInterest;
+
+      // update timestamp
+      avDs.lastAccrueInterestTimestamps[_vaultToken] = block.timestamp;
     }
+  }
+
+  function getTokenPendingInterest(
+    address _vaultToken,
+    address _moneyMarket,
+    address _token,
+    address _interestRateModel,
+    uint256 _timeSinceLastAccrual,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _pendingInterest) {
+    uint256 _interestRate = getInterestRate(_token, _interestRateModel, _moneyMarket);
+    _pendingInterest = (_interestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][_token]) / 1e18;
   }
 
   function getInterestRate(
@@ -182,20 +199,6 @@ library LibAV01 {
     uint256 _debtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValue(_token);
     uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
     _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
-  }
-
-  function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs)
-    internal
-    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
-  {
-    (_stablePendingInterest, _assetPendingInterest) = getVaultPendingInterest(_vaultToken, avDs);
-
-    VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
-    avDs.vaultDebts[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;
-    avDs.vaultDebts[_vaultToken][vaultConfig.assetToken] += _assetPendingInterest;
-
-    // update timestamp
-    avDs.lastAccrueInterestTimestamps[_vaultToken] = block.timestamp;
   }
 
   function getTokenInUSD(

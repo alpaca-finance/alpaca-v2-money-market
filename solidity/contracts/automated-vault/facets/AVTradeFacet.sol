@@ -155,7 +155,29 @@ contract AVTradeFacet is IAVTradeFacet {
     returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
   {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    (_stablePendingInterest, _assetPendingInterest) = LibAV01.getVaultPendingInterest(_vaultToken, avDs);
+    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
+
+    if (_timeSinceLastAccrual > 0) {
+      LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
+      address _moneyMarket = avDs.moneyMarket;
+
+      _stablePendingInterest = LibAV01.getTokenPendingInterest(
+        _vaultToken,
+        _moneyMarket,
+        vaultConfig.stableToken,
+        vaultConfig.stableTokenInterestModel,
+        _timeSinceLastAccrual,
+        avDs
+      );
+      _assetPendingInterest = LibAV01.getTokenPendingInterest(
+        _vaultToken,
+        _moneyMarket,
+        vaultConfig.assetToken,
+        vaultConfig.assetTokenInterestModel,
+        _timeSinceLastAccrual,
+        avDs
+      );
+    }
   }
 
   // TODO: move to viewFacet
