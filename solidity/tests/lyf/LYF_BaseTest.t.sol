@@ -280,7 +280,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 100e18,
       maxCollateral: 100e18
     });
 
@@ -298,7 +298,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 100e18,
       maxCollateral: 100e18
     });
 
@@ -307,7 +307,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 100e18,
       maxCollateral: 100e18
     });
 
