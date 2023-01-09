@@ -487,7 +487,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenRepurchaseAndRepayTokenAndCollatTokenAreSame_TransferTokenCorrectly() external {
+  function testCorrectness_WhenRepurchaseWithRepayTokenAndCollatTokenAreSameToken_TransferTokenCorrectly() external {
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, 0, address(usdc), 20 ether);
 
@@ -521,7 +521,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // then total debt value should increase by 0.000225624496291200 * 40 = 0.009024979851648
     vm.warp(block.timestamp + 1 days);
 
-    // set price to weth from 1 to 0.8 ether USD
+    // set price to weth from 1 to 0.6 ether USD
     // then alice borrowing power (weth) = 40 * 0.6 * 9000 / 10000 = 21.6 ether USD
     // then alice borrowing power (usdc) = 20 * 1 * 9000 / 10000 = 18 ether USD
     // total = 28.8 + 18 = 46.8 ether USD
@@ -530,7 +530,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(btc), 10 ether);
 
     // bob try repurchase with 15 usdc
-    // eth price = 0.8 USD
+    // eth price = 0.6 USD
     // usdc price = 1 USD
     // reward = 1%
     // repurchase fee = 1%
