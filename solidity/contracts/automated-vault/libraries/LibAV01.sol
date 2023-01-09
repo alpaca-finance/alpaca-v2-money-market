@@ -48,7 +48,6 @@ library LibAV01 {
     mapping(address => uint256) lastFeeCollectionTimestamps;
     // share token => debt token => debt value
     mapping(address => mapping(address => uint256)) vaultDebtValues;
-    uint256 maxPriceStale;
   }
 
   error LibAV01_NoTinyShares();
@@ -135,7 +134,6 @@ library LibAV01 {
     } else {
       (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - avDs.maxPriceStale) revert LibAV01_PriceStale(_token);
   }
 
   function getTokenInUSD(

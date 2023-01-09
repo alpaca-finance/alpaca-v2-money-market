@@ -85,7 +85,6 @@ library LibLYF01 {
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
     uint8 maxNumOfCollatPerSubAccount;
-    uint256 maxPriceStale;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -260,9 +259,6 @@ library LibLYF01 {
       (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).lpToDollar(1e18, _token);
     } else {
       (_price, _lastUpdated) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
-    }
-    if (_lastUpdated < block.timestamp - lyfDs.maxPriceStale) {
-      revert LibLYF01_PriceStale(_token);
     }
   }
 
