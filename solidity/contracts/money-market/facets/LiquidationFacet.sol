@@ -201,13 +201,7 @@ contract LiquidationFacet is ILiquidationFacet {
       paramsForStrategy: _paramsForStrategy
     });
 
-    address _collatUnderlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-    // handle liqudiate ib as collat
-    if (_collatUnderlyingToken != address(0)) {
-      _ibLiquidationCall(_params, _collatUnderlyingToken, moneyMarketDs);
-    } else {
-      _liquidationCall(_params, moneyMarketDs);
-    }
+    _liquidationCall(_params, moneyMarketDs);
   }
 
   function _liquidationCall(
@@ -274,110 +268,6 @@ contract LiquidationFacet is ILiquidationFacet {
       _repaidAmount,
       _collatSold,
       _feeToTreasury
-    );
-  }
-
-  struct InternalIbLiquidationCallLocalVars {
-    uint256 underlyingAmountBefore;
-    uint256 repayAmountBefore;
-    uint256 totalToken;
-    uint256 ibTotalSupply;
-    uint256 actualRepayAmount;
-    uint256 feeToTreasury;
-    uint256 repaidAmount;
-    uint256 underlyingSold;
-    uint256 collatSold;
-  }
-
-  function _ibLiquidationCall(
-    InternalLiquidationCallParams memory params,
-    address _collatUnderlyingToken,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    // withdraw and ib pricing required underlying token interest to be accrued to work correctly
-    LibMoneyMarket01.accrueInterest(_collatUnderlyingToken, moneyMarketDs);
-
-    InternalIbLiquidationCallLocalVars memory vars;
-
-    // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
-    vars.underlyingAmountBefore = IERC20(_collatUnderlyingToken).balanceOf(address(this));
-    vars.repayAmountBefore = IERC20(params.repayToken).balanceOf(address(this));
-    // ok to use getTotalToken here because we just accrued interest
-    vars.totalToken = LibMoneyMarket01.getTotalToken(_collatUnderlyingToken, moneyMarketDs);
-    vars.ibTotalSupply = IERC20(params.collatToken).totalSupply();
-
-    uint256 _underlyingAmountToStrat = LibShareUtil.shareToValue(
-      moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken),
-      vars.totalToken,
-      vars.ibTotalSupply
-    );
-    // if mm has no actual token left, withdraw will fail anyway
-    IERC20(_collatUnderlyingToken).safeTransfer(params.liquidationStrat, _underlyingAmountToStrat);
-
-    // 3. call executeLiquidation on strategy to liquidate underlying token
-    vars.actualRepayAmount = _getActualRepayAmount(
-      params.subAccount,
-      params.repayToken,
-      params.repayAmount,
-      moneyMarketDs
-    );
-    vars.feeToTreasury = (vars.actualRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
-
-    ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
-      _collatUnderlyingToken,
-      params.repayToken,
-      _underlyingAmountToStrat,
-      vars.actualRepayAmount + vars.feeToTreasury,
-      params.paramsForStrategy
-    );
-
-    // 4. check repaid amount, take fees, and update states
-    {
-      uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - vars.repayAmountBefore;
-      vars.repaidAmount = _repayAmountFromLiquidation - vars.feeToTreasury;
-      uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
-      uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
-        vars.repaidAmount,
-        _repayTokenPrice,
-        moneyMarketDs.tokenConfigs[params.repayToken].borrowingFactor
-      );
-      // revert if repay > x% of totalUsedBorrowingPower
-      if (
-        _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) {
-        revert LiquidationFacet_RepayAmountExceedThreshold();
-      }
-    }
-
-    vars.underlyingSold = vars.underlyingAmountBefore - IERC20(_collatUnderlyingToken).balanceOf(address(this));
-
-    // cached ibTotalSupply, totalToken can be used here (after liquidation) because we haven't withdraw ib yet
-    vars.collatSold = LibShareUtil.valueToShare(vars.underlyingSold, vars.ibTotalSupply, vars.totalToken);
-
-    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, vars.feeToTreasury);
-
-    // note: within withdraw perform redundant shareToValue calculation. we can pass amount as param to save gas.
-    LibMoneyMarket01.withdraw(
-      _collatUnderlyingToken,
-      params.collatToken,
-      vars.collatSold,
-      address(this),
-      moneyMarketDs
-    );
-
-    // give priority to fee
-    _reduceDebt(params.subAccount, params.repayToken, vars.repaidAmount, moneyMarketDs);
-    _reduceCollateral(params.subAccount, params.collatToken, vars.collatSold, moneyMarketDs);
-
-    emit LogLiquidateIb(
-      msg.sender,
-      params.liquidationStrat,
-      params.repayToken,
-      params.collatToken,
-      vars.repaidAmount,
-      vars.collatSold,
-      vars.underlyingSold,
-      vars.feeToTreasury
     );
   }
 
