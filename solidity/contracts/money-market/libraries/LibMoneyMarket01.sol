@@ -22,6 +22,8 @@ library LibMoneyMarket01 {
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
+  uint8 internal constant _NOT_ENTERED_LIQUIDATE = 0;
+  uint8 internal constant _ENTERED_LIQUIDATE = 1;
   uint256 internal constant MAX_BPS = 10000;
 
   error LibMoneyMarket01_BadSubAccountId();
@@ -46,9 +48,9 @@ library LibMoneyMarket01 {
 
   struct TokenConfig {
     LibMoneyMarket01.AssetTier tier;
-    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
+    uint64 to18ConversionFactor;
     uint256 maxCollateral;
     uint256 maxBorrow; // shared global limit
   }
@@ -96,6 +98,7 @@ library LibMoneyMarket01 {
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
     // liquidation params
+    uint8 liquidateExec;
     uint16 maxLiquidateBps;
     uint16 liquidationThresholdBps;
     // fees
@@ -527,13 +530,13 @@ library LibMoneyMarket01 {
     emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
   }
 
-  function to18ConversionFactor(address _token) internal view returns (uint8) {
+  function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) {
       revert LibMoneyMarket01_UnsupportedDecimals();
     }
     uint256 _conversionFactor = 10**(18 - _decimals);
-    return uint8(_conversionFactor);
+    return uint64(_conversionFactor);
   }
 
   function addCollat(
