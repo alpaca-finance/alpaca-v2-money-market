@@ -345,7 +345,11 @@ contract ViewFacet is IViewFacet {
     return LibMoneyMarket01.getSubAccount(_account, _subAccountId);
   }
 
-  // TODO: natspec
+  /// @notice Get money market fees
+  /// @param _lendingFeeBps The lending fee imposed on interest collected
+  /// @param _repurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
+  /// @param _repurchaseFeeBps The repurchase fee collected by the protocol
+  /// @param _liquidationFeeBps The liquidation fee collected by the protocol
   function getFeeParams()
     external
     view
