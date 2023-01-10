@@ -79,7 +79,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidation is MoneyMark
     liquidationStrat.executeLiquidation(address(ibWeth), address(btc), 1 ether, 1 ether, abi.encode(0));
   }
 
-  function testCorrectness_IbTokenLiquidationStrat_WhenExecuteLiquidation_ShouldWork() external {
+  function testCorrectness_WhenExecuteIbTokenLiquiationStrat() external {
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(usdc);
@@ -122,9 +122,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidation is MoneyMark
     assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
   }
 
-  function testCorrectness_IbTokenLiquidationStrat_WhenExecuteLiquidationWithIbTokenLessThanRequireAmount_ShouldWork()
-    external
-  {
+  function testCorrectness_WhenExecuteIbTokenLiquiationStrat_ButUnderlyingAmountToSwapLessThanAmountIn() external {
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(usdc);
@@ -166,7 +164,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidation is MoneyMark
     assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
   }
 
-  function testCorrectness_IbTokenLiquidationStrat_WhenExecuteLiquidationWithIbTokenMoreThanRequireAmount_ShouldReturnIbTokenToSender()
+  function testCorrectness_WhenExecuteIbTokenLiquiationStrat_ButUnderlyingAmountToSwapMoreThanAmountIn_ThenIbTokenShouldTransferBackToSender()
     external
   {
     // prepare criteria
