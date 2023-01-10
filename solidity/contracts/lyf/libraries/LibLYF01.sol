@@ -405,7 +405,7 @@ library LibLYF01 {
     return LibFullMath.mulDiv(_debtAmount * _tokenConfig.to18ConversionFactor, _tokenPrice, 1e18) >= lyfDs.minDebtSize;
   }
 
-  function to18ConversionFactor(address _token) internal view returns (uint8) {
+  function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) {
       revert LibLYF01_UnsupportedDecimals();
