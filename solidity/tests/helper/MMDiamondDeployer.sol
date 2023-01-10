@@ -142,7 +142,7 @@ library MMDiamondDeployer {
     selectors[28] = ViewFacet.getMinDebtSize.selector;
     selectors[29] = ViewFacet.getSubAccount.selector;
     selectors[30] = ViewFacet.getFeeParams.selector;
-    selectors[31] = ViewFacet.getRepurchaseFeeModel.selector;
+    selectors[31] = ViewFacet.getRepurchaseRewardModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -253,7 +253,7 @@ library MMDiamondDeployer {
     selectors[16] = AdminFacet.setMinDebtSize.selector;
     selectors[17] = AdminFacet.writeOffSubAccountsDebt.selector;
     selectors[18] = AdminFacet.topUpTokenReserve.selector;
-    selectors[19] = AdminFacet.setRepurchaseFeeModel.selector;
+    selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

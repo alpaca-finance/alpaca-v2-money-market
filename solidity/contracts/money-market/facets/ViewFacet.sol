@@ -363,11 +363,11 @@ contract ViewFacet is IViewFacet {
     _liquidationFeeBps = moneyMarketDs.liquidationFeeBps;
   }
 
-  /// @notice Get the address of repurchase fee model
-  /// @return address of repurchase fee model contract
-  function getRepurchaseFeeModel() external view returns (address) {
+  /// @notice Get the address of repurchase reward model
+  /// @return address of repurchase reward model contract
+  function getRepurchaseRewardModel() external view returns (address) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    return address(moneyMarketDs.repurchaseFeeModel);
+    return address(moneyMarketDs.repurchaseRewardModel);
   }
 }

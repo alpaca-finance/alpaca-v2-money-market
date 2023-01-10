@@ -32,7 +32,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
 
     FixedFeeModel fixedFeeModel = new FixedFeeModel();
-    adminFacet.setRepurchaseFeeModel(fixedFeeModel);
+    adminFacet.setRepurchaseRewardModel(fixedFeeModel);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);

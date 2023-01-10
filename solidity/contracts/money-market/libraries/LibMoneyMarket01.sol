@@ -106,7 +106,7 @@ library LibMoneyMarket01 {
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
     uint256 minDebtSize;
-    IFeeModel repurchaseFeeModel;
+    IFeeModel repurchaseRewardModel;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

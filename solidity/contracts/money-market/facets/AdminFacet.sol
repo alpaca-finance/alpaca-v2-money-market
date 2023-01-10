@@ -43,7 +43,7 @@ contract AdminFacet is IAdminFacet {
     uint256 _repurchaseFeeBps,
     uint256 _liquidationFeeBps
   );
-  event LogSetRepurchaseFeeModel(IFeeModel indexed _repurchaseFeeModel);
+  event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolConfig(
     address indexed _account,
@@ -297,18 +297,18 @@ contract AdminFacet is IAdminFacet {
     emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
-  /// @notice Set the repurchase fee model for a token specifically to over collateralized borrowing
-  /// @param _newRepurchaseFeeModel The contract address of the repurchase fee model
-  function setRepurchaseFeeModel(IFeeModel _newRepurchaseFeeModel) external onlyOwner {
+  /// @notice Set the repurchase reward model for a token specifically to over collateralized borrowing
+  /// @param _newRepurchaseRewardModel The contract address of the repurchase reward model
+  function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external onlyOwner {
     // Sanity check
-    if (LibMoneyMarket01.MAX_REPURCHASE_FEE_BPS < _newRepurchaseFeeModel.getFeeBps(1, 1000)) {
-      revert AdminFacet_ExceedMaxRepurchaseFee();
+    if (LibMoneyMarket01.MAX_REPURCHASE_FEE_BPS < _newRepurchaseRewardModel.getFeeBps(1, 1000)) {
+      revert AdminFacet_ExceedMaxRepurchaseReward();
     }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.repurchaseFeeModel = _newRepurchaseFeeModel;
+    moneyMarketDs.repurchaseRewardModel = _newRepurchaseRewardModel;
 
-    emit LogSetRepurchaseFeeModel(_newRepurchaseFeeModel);
+    emit LogSetRepurchaseRewardModel(_newRepurchaseRewardModel);
   }
 
   /// @notice Set the implementation address of interest bearing token

@@ -114,7 +114,7 @@ contract LiquidationFacet is ILiquidationFacet {
         revert LiquidationFacet_RepayAmountExceedThreshold();
     }
 
-    uint256 _repurchaseRewardBps = moneyMarketDs.repurchaseFeeModel.getFeeBps(
+    uint256 _repurchaseRewardBps = moneyMarketDs.repurchaseRewardModel.getFeeBps(
       vars.totalBorrowingPower,
       vars.usedBorrowingPower
     );

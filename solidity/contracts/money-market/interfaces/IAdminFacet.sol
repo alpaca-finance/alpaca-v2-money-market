@@ -15,7 +15,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidToken(address _token);
   error AdminFacet_InvalidIbTokenImplementation();
   error AdminFacet_SubAccountHealthy(address _subAccount);
-  error AdminFacet_ExceedMaxRepurchaseFee();
+  error AdminFacet_ExceedMaxRepurchaseReward();
 
   struct IbPair {
     address token;
@@ -79,7 +79,7 @@ interface IAdminFacet {
     uint16 _newLiquidationFeeBps
   ) external;
 
-  function setRepurchaseFeeModel(IFeeModel _newRepurchaseFeeModel) external;
+  function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
   function withdrawReserve(
     address _token,
