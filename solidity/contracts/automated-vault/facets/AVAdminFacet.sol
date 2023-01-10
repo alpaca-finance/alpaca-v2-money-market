@@ -7,6 +7,7 @@ import { AVShareToken } from "../AVShareToken.sol";
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -42,10 +43,9 @@ contract AVAdminFacet is IAVAdminFacet {
       )
     );
 
-    // sanity check moneyMarket and interestModels
-    address _moneyMarket = avDs.moneyMarket;
-    LibAV01.getInterestRate(_stableToken, _stableTokenInterestModel, _moneyMarket);
-    LibAV01.getInterestRate(_assetToken, _assetTokenInterestModel, _moneyMarket);
+    // sanity check interestModels
+    IInterestRateModel(_stableTokenInterestModel).getInterestRate(1, 1);
+    IInterestRateModel(_assetTokenInterestModel).getInterestRate(1, 1);
 
     avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
       shareToken: _newShareToken,
@@ -108,16 +108,8 @@ contract AVAdminFacet is IAVAdminFacet {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
     // sanity check
-    LibAV01.getInterestRate(
-      avDs.vaultConfigs[_vaultToken].stableToken,
-      _newStableTokenInterestRateModel,
-      avDs.moneyMarket
-    );
-    LibAV01.getInterestRate(
-      avDs.vaultConfigs[_vaultToken].assetToken,
-      _newAssetTokenInterestRateModel,
-      avDs.moneyMarket
-    );
+    IInterestRateModel(_newStableTokenInterestRateModel).getInterestRate(1, 1);
+    IInterestRateModel(_newAssetTokenInterestRateModel).getInterestRate(1, 1);
 
     avDs.vaultConfigs[_vaultToken].stableTokenInterestModel = _newStableTokenInterestRateModel;
     avDs.vaultConfigs[_vaultToken].assetTokenInterestModel = _newAssetTokenInterestRateModel;

@@ -203,18 +203,10 @@ library LibAV01 {
     uint256 _timeSinceLastAccrual,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _pendingInterest) {
-    uint256 _interestRate = getInterestRate(_token, _interestRateModel, _moneyMarket);
-    _pendingInterest = (_interestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][_token]) / 1e18;
-  }
-
-  function getInterestRate(
-    address _token,
-    address _interestModel,
-    address _moneyMarket
-  ) internal view returns (uint256 _interestRate) {
     uint256 _debtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValue(_token);
     uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
-    _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
+    uint256 _interestRate = IInterestRateModel(_interestRateModel).getInterestRate(_debtValue, _floating);
+    _pendingInterest = (_interestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][_token]) / 1e18;
   }
 
   function getTokenInUSD(
