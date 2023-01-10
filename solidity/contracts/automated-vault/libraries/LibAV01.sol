@@ -60,6 +60,7 @@ library LibAV01 {
     // vault token => debt token => debt amount
     mapping(address => mapping(address => uint256)) vaultDebts;
     mapping(address => uint256) lastAccrueInterestTimestamps;
+    mapping(address => bool) rebalancerOk;
   }
 
   error LibAV01_NoTinyShares();
