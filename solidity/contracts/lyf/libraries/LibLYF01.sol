@@ -44,9 +44,9 @@ library LibLYF01 {
 
   struct TokenConfig {
     LibLYF01.AssetTier tier;
-    uint8 to18ConversionFactor;
     uint16 collateralFactor;
     uint16 borrowingFactor;
+    uint64 to18ConversionFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
   }
@@ -411,7 +411,7 @@ library LibLYF01 {
       revert LibLYF01_UnsupportedDecimals();
     }
     uint256 _conversionFactor = 10**(18 - _decimals);
-    return uint8(_conversionFactor);
+    return uint64(_conversionFactor);
   }
 
   function depositToMasterChef(

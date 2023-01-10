@@ -250,7 +250,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _subAccountId,
     address _token,
     address _lpToken,
-    uint256 _repayAmount
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
@@ -260,7 +260,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
-    uint256 _actualRepayAmount = _repayDebt(_subAccount, _token, _debtShareId, _repayAmount, lyfDs);
+    uint256 _actualRepayAmount = _repayDebtWithShare(
+      _account,
+      _subAccountId,
+      _token,
+      _debtShareId,
+      _debtShareToRepay,
+      lyfDs
+    );
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
@@ -285,19 +292,24 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _subAccountId,
     address _token,
     address _lpToken,
-    uint256 _repayAmount
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (, uint256 _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    (uint256 _debtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
 
     // repay maxmimum debt
-    _repayAmount = _repayAmount > _debtAmount ? _debtAmount : _repayAmount;
+    _debtShareToRepay = _debtShareToRepay > _debtShare ? _debtShare : _debtShareToRepay;
 
-    if (_repayAmount > 0) {
+    if (_debtShareToRepay > 0) {
+      uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
+      uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
+
+      uint256 _repayAmount = LibShareUtil.shareToValue(_debtShareToRepay, _oldDebtValue, _oldDebtShare);
+
       // remove collat as much as possible
       uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
       // remove debt as much as possible
@@ -380,6 +392,25 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
 
     emit LogRepay(_subAccount, _token, _actualRepayAmount);
+  }
+
+  function _repayDebtWithShare(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _debtShareId,
+    uint256 _debtShareToRepay,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualRepayAmount) {
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+
+    (uint256 _oldSubAccountDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+
+    uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
+
+    _actualRepayAmount = _removeDebt(_subAccount, _debtShareId, _oldSubAccountDebtShare, _actualShareToRepay, lyfDs);
+
+    emit LogRepay(_account, _subAccountId, _token, _actualRepayAmount);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
