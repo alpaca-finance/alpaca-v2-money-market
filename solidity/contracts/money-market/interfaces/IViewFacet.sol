@@ -106,4 +106,6 @@ interface IViewFacet {
       uint16 _repurchaseFeeBps,
       uint16 _liquidationFeeBps
     );
+
+  function getRepurchaseFeeModel() external view returns (address);
 }

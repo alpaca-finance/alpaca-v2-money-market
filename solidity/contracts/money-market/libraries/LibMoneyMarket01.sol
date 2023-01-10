@@ -24,6 +24,7 @@ library LibMoneyMarket01 {
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
   uint256 internal constant MAX_BPS = 10000;
+  uint256 internal constant MAX_REPURCHASE_FEE_BPS = 1000;
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_InvalidToken(address _token);

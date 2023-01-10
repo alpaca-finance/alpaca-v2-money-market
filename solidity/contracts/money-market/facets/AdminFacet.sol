@@ -301,7 +301,9 @@ contract AdminFacet is IAdminFacet {
   /// @param _newRepurchaseFeeModel The contract address of the repurchase fee model
   function setRepurchaseFeeModel(IFeeModel _newRepurchaseFeeModel) external onlyOwner {
     // Sanity check
-    _newRepurchaseFeeModel.getFeeBps(0, 0);
+    if (LibMoneyMarket01.MAX_REPURCHASE_FEE_BPS < _newRepurchaseFeeModel.getFeeBps(1, 1000)) {
+      revert AdminFacet_ExceedMaxRepurchaseFee();
+    }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.repurchaseFeeModel = _newRepurchaseFeeModel;

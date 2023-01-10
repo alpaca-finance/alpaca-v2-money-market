@@ -15,6 +15,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidToken(address _token);
   error AdminFacet_InvalidIbTokenImplementation();
   error AdminFacet_SubAccountHealthy(address _subAccount);
+  error AdminFacet_ExceedMaxRepurchaseFee();
 
   struct IbPair {
     address token;
