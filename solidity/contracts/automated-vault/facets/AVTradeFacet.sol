@@ -123,66 +123,9 @@ contract AVTradeFacet is IAVTradeFacet {
     emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _stableTokenToUser);
   }
 
-  // TODO: move to viewFacet
-  function getDebtValues(address _shareToken) external view returns (uint256, uint256) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
-    return (avDs.vaultDebts[_shareToken][_config.stableToken], avDs.vaultDebts[_shareToken][_config.assetToken]);
-  }
-
   function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {
-    IAVShareToken(_shareToken).mint(avDs.treasury, pendingManagementFee(_shareToken));
+    IAVShareToken(_shareToken).mint(avDs.treasury, LibAV01.getPendingManagementFee(_shareToken, avDs));
 
     avDs.lastFeeCollectionTimestamps[_shareToken] = block.timestamp;
-  }
-
-  // TODO: move to viewFacet
-  function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-
-    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
-    _pendingManagementFee =
-      (IERC20(_shareToken).totalSupply() *
-        avDs.vaultConfigs[_shareToken].managementFeePerSec *
-        _secondsFromLastCollection) /
-      1e18;
-  }
-
-  // TODO: move to viewFacet
-  function getVaultPendingInterest(address _vaultToken)
-    external
-    view
-    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
-  {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
-
-    if (_timeSinceLastAccrual > 0) {
-      LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
-      address _moneyMarket = avDs.moneyMarket;
-
-      _stablePendingInterest = LibAV01.getTokenPendingInterest(
-        _vaultToken,
-        _moneyMarket,
-        vaultConfig.stableToken,
-        vaultConfig.stableTokenInterestModel,
-        _timeSinceLastAccrual,
-        avDs
-      );
-      _assetPendingInterest = LibAV01.getTokenPendingInterest(
-        _vaultToken,
-        _moneyMarket,
-        vaultConfig.assetToken,
-        vaultConfig.assetTokenInterestModel,
-        _timeSinceLastAccrual,
-        avDs
-      );
-    }
-  }
-
-  // TODO: move to viewFacet
-  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    return avDs.lastAccrueInterestTimestamps[_vaultToken];
   }
 }

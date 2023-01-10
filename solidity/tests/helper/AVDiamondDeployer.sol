@@ -8,6 +8,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/fa
 import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
 import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
 import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFacet.sol";
+import { AVViewFacet } from "../../contracts/automated-vault/facets/AVViewFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
@@ -29,6 +30,7 @@ library AVDiamondDeployer {
     // Deploy Facets
     deployAdminFacet(_avDiamondCutFacet);
     deployTradeFacet(_avDiamondCutFacet);
+    deployViewFacet(_avDiamondCutFacet);
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
@@ -87,13 +89,9 @@ library AVDiamondDeployer {
   function deployTradeFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
     AVTradeFacet _tradeFacet = new AVTradeFacet();
 
-    bytes4[] memory selectors = new bytes4[](6);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = AVTradeFacet.deposit.selector;
     selectors[1] = AVTradeFacet.withdraw.selector;
-    selectors[2] = AVTradeFacet.getDebtValues.selector;
-    selectors[3] = AVTradeFacet.pendingManagementFee.selector;
-    selectors[4] = AVTradeFacet.getVaultPendingInterest.selector;
-    selectors[5] = AVTradeFacet.getVaultLastAccrueInterestTimestamp.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_tradeFacet),
@@ -103,6 +101,25 @@ library AVDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_tradeFacet, selectors);
+  }
+
+  function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (AVViewFacet, bytes4[] memory) {
+    AVViewFacet _viewFacet = new AVViewFacet();
+
+    bytes4[] memory selectors = new bytes4[](4);
+    selectors[0] = AVViewFacet.getDebtValues.selector;
+    selectors[1] = AVViewFacet.getPendingInterest.selector;
+    selectors[2] = AVViewFacet.getLastAccrueInterestTimestamp.selector;
+    selectors[3] = AVViewFacet.getPendingManagementFee.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_viewFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_viewFacet, selectors);
   }
 
   function buildFacetCut(

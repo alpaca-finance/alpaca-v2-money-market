@@ -317,4 +317,17 @@ library LibAV01 {
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }
+
+  function getPendingManagementFee(address _shareToken, AVDiamondStorage storage avDs)
+    public
+    view
+    returns (uint256 _pendingManagementFee)
+  {
+    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
+    _pendingManagementFee =
+      (IERC20(_shareToken).totalSupply() *
+        avDs.vaultConfigs[_shareToken].managementFeePerSec *
+        _secondsFromLastCollection) /
+      1e18;
+  }
 }
