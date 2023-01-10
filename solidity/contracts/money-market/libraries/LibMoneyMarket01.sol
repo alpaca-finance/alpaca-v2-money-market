@@ -102,7 +102,6 @@ library LibMoneyMarket01 {
     uint16 liquidationThresholdBps;
     // fees
     uint16 lendingFeeBps;
-    uint16 repurchaseRewardBps;
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
     uint256 minDebtSize;

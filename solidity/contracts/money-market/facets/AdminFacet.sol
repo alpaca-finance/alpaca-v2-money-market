@@ -37,12 +37,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
   event LogSetTreasury(address indexed _treasury);
-  event LogSetFees(
-    uint256 _lendingFeeBps,
-    uint256 _repurchaseRewardBps,
-    uint256 _repurchaseFeeBps,
-    uint256 _liquidationFeeBps
-  );
+  event LogSetFees(uint256 _lendingFeeBps, uint256 _repurchaseFeeBps, uint256 _liquidationFeeBps);
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolConfig(
@@ -269,18 +264,15 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Set protocol's fees
   /// @param _newLendingFeeBps The lending fee imposed on interest collected
-  /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
   /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
   function setFees(
     uint16 _newLendingFeeBps,
-    uint16 _newRepurchaseRewardBps,
     uint16 _newRepurchaseFeeBps,
     uint16 _newLiquidationFeeBps
   ) external onlyOwner {
     if (
       _newLendingFeeBps > LibMoneyMarket01.MAX_BPS ||
-      _newRepurchaseRewardBps > LibMoneyMarket01.MAX_BPS ||
       _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
       _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS
     ) {
@@ -290,11 +282,10 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     moneyMarketDs.lendingFeeBps = _newLendingFeeBps;
-    moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
 
-    emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
+    emit LogSetFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
   /// @notice Set the repurchase reward model for a token specifically to over collateralized borrowing

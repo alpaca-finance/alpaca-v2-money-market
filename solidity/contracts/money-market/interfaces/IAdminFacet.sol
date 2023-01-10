@@ -74,7 +74,6 @@ interface IAdminFacet {
 
   function setFees(
     uint16 _newLendingFeeBps,
-    uint16 _newRepurchaseRewardBps,
     uint16 _newRepurchaseFeeBps,
     uint16 _newLiquidationFeeBps
   ) external;
