@@ -34,8 +34,8 @@ contract LendFacet is ILendFacet {
     LibReentrancyGuard.unlock();
   }
 
-  modifier onWithdrawNonReentrant() {
-    LibReentrancyGuard.onWithdrawLock();
+  modifier nonReentrantWithdraw() {
+    LibReentrancyGuard.lockWithdraw();
     _;
     LibReentrancyGuard.unlock();
   }
@@ -68,7 +68,7 @@ contract LendFacet is ILendFacet {
   /// @param _shareAmount The amount of interest bearing token to burn
   function withdraw(address _ibToken, uint256 _shareAmount)
     external
-    onWithdrawNonReentrant
+    nonReentrantWithdraw
     returns (uint256 _withdrawAmount)
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();

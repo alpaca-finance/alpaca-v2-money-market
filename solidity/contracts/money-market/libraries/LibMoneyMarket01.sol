@@ -96,9 +96,9 @@ library LibMoneyMarket01 {
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
     // liquidation params
+    uint8 IN_LIQUIDATE_EXEC;
     uint16 maxLiquidateBps;
     uint16 liquidationThresholdBps;
-    uint8 IN_LIQUIDATE_EXEC;
     // fees
     uint16 lendingFeeBps;
     uint16 repurchaseRewardBps;

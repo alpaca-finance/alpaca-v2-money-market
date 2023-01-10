@@ -48,7 +48,7 @@ library LibReentrancyGuard {
     reentrancyGuardDs.status = _NOT_ENTERED;
   }
 
-  function onWithdrawLock() internal {
+  function lockWithdraw() internal {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
