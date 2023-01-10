@@ -4,12 +4,12 @@ pragma solidity 0.8.17;
 interface IAVViewFacet {
   function getDebtValues(address _shareToken) external view returns (uint256, uint256);
 
-  function getVaultPendingInterest(address _vaultToken)
+  function getPendingInterest(address _vaultToken)
     external
     view
     returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest);
 
-  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256);
+  function getLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256);
 
   function getPendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee);
 }

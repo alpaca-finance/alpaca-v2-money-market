@@ -108,8 +108,8 @@ library AVDiamondDeployer {
 
     bytes4[] memory selectors = new bytes4[](4);
     selectors[0] = AVViewFacet.getDebtValues.selector;
-    selectors[1] = AVViewFacet.getVaultPendingInterest.selector;
-    selectors[2] = AVViewFacet.getVaultLastAccrueInterestTimestamp.selector;
+    selectors[1] = AVViewFacet.getPendingInterest.selector;
+    selectors[2] = AVViewFacet.getLastAccrueInterestTimestamp.selector;
     selectors[3] = AVViewFacet.getPendingManagementFee.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(

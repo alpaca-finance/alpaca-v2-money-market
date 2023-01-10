@@ -14,7 +14,7 @@ contract AVViewFacet is IAVViewFacet {
     return (avDs.vaultDebts[_shareToken][_config.stableToken], avDs.vaultDebts[_shareToken][_config.assetToken]);
   }
 
-  function getVaultPendingInterest(address _vaultToken)
+  function getPendingInterest(address _vaultToken)
     external
     view
     returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
@@ -45,7 +45,7 @@ contract AVViewFacet is IAVViewFacet {
     }
   }
 
-  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256) {
+  function getLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     return avDs.lastAccrueInterestTimestamps[_vaultToken];
   }

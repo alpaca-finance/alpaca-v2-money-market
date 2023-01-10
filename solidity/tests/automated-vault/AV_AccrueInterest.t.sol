@@ -63,7 +63,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     address _vaultToken = address(avShareToken);
 
     // check last accrue timestamp empty state = 0
-    assertEq(viewFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), 0);
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), 0);
 
     vm.prank(ALICE);
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
@@ -71,7 +71,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     uint256 _stablePendingInterest;
     uint256 _assetPendingInterest;
     // check no pending interest immediately after deposit
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0);
     assertEq(_assetPendingInterest, 0);
 
@@ -85,7 +85,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     vm.warp(block.timestamp + 1);
 
     // check pending interest
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0.05 ether);
     assertEq(_assetPendingInterest, 0.075 ether);
 
@@ -93,10 +93,10 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
 
     // check last accrue timestamp = now
-    assertEq(viewFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
 
     // check pending interest should = 0 (accrued during BOB deposit)
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0);
     assertEq(_assetPendingInterest, 0);
 
@@ -108,10 +108,10 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     vm.warp(block.timestamp + 1);
 
     // check last accrue timestamp = last timestamp (no accrual)
-    assertEq(viewFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), block.timestamp - 1);
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp - 1);
 
     // check pending interest should accrue based on debt from last time
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0.105 ether);
     assertEq(_assetPendingInterest, 0.15375 ether);
 
@@ -152,7 +152,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     // check no pending interest
     uint256 _stablePendingInterest;
     uint256 _assetPendingInterest;
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0);
     assertEq(_assetPendingInterest, 0);
 
@@ -164,17 +164,17 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     assertEq(_assetDebtValue, 1.5 ether);
 
     // check last accrued timestamp = now (accrued during deposit)
-    assertEq(viewFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
 
     vm.warp(block.timestamp + 1);
 
     // check pending interest after time passed should increase
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0.05 ether);
     assertEq(_assetPendingInterest, 0.075 ether);
 
     // check last accrued timestamp = previous timestamp (no accrual)
-    assertEq(viewFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), block.timestamp - 1);
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp - 1);
 
     mockRouter.setRemoveLiquidityAmountsOut(1.5 ether, 1.5 ether);
 
@@ -188,12 +188,12 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     assertEq(avShareToken.balanceOf(ALICE), 0);
 
     // check no pending interest (accrued during withdraw)
-    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getVaultPendingInterest(_vaultToken);
+    (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
     assertEq(_stablePendingInterest, 0);
     assertEq(_assetPendingInterest, 0);
 
     // check last accrued timestamp = now (accrued during withdraw)
-    assertEq(viewFacet.getVaultLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
   }
 
   function testCorrectness_WhenAccrueInterest_ShouldEmitEvent() external {
