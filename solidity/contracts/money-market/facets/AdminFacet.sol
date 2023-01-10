@@ -40,7 +40,6 @@ contract AdminFacet is IAdminFacet {
   event LogSetFees(
     uint256 _lendingFeeBps,
     uint256 _repurchaseRewardBps,
-    IFeeModel _repurchaseFeeModel,
     uint256 _repurchaseFeeBps,
     uint256 _liquidationFeeBps
   );
@@ -271,13 +270,11 @@ contract AdminFacet is IAdminFacet {
   /// @notice Set protocol's fees
   /// @param _newLendingFeeBps The lending fee imposed on interest collected
   /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
-  /// @param _newRepurchaseFeeModel The model to get reward bps given out to repurchaser as a premium on collateral
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
   /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseRewardBps,
-    IFeeModel _newRepurchaseFeeModel,
     uint16 _newRepurchaseFeeBps,
     uint16 _newLiquidationFeeBps
   ) external onlyOwner {
@@ -290,24 +287,14 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidArguments();
     }
 
-    // sanity call
-    _newRepurchaseFeeModel.getFeeBps(0, 0);
-
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     moneyMarketDs.lendingFeeBps = _newLendingFeeBps;
     moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
-    moneyMarketDs.repurchaseFeeModel = _newRepurchaseFeeModel;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
 
-    emit LogSetFees(
-      _newLendingFeeBps,
-      _newRepurchaseRewardBps,
-      _newRepurchaseFeeModel,
-      _newRepurchaseFeeBps,
-      _newLiquidationFeeBps
-    );
+    emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
   /// @notice Set the repurchase fee model for a token specifically to over collateralized borrowing

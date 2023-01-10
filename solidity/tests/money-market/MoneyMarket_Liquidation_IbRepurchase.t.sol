@@ -8,6 +8,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 
 // interfaces
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
 
 struct CacheState {
   uint256 collat;
@@ -29,6 +30,9 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(weth), address(tripleSlope6));
     adminFacet.setInterestModel(address(btc), address(tripleSlope6));
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
+
+    FixedFeeModel fixedFeeModel = new FixedFeeModel();
+    adminFacet.setRepurchaseFeeModel(fixedFeeModel);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);
