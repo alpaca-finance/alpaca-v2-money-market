@@ -107,27 +107,25 @@ library LibAV01 {
 
   function withdrawFromHandler(
     address _vaultToken,
-    uint256 _shareValueToWithdraw,
+    uint256 _shareToWithdraw,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
     address _handler = avDs.vaultConfigs[_vaultToken].handler;
     address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
-    uint256 _totalLPValue = getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs);
-    uint256 _totalEquity = _totalLPValue - getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
-    uint256 _lpTokenPrice = getPriceUSD(_lpToken, avDs);
-    // lpValueToRemove = _shareValueToWithdraw * _totalLPValue / _totalEquity
-    // lpToRemove = lpValueToRemove / _lpTokenPrice
-    uint256 _lpToRemove = (((_shareValueToWithdraw * _totalLPValue) / _totalEquity) * 1e18) / _lpTokenPrice;
+    // lpValueToWithdraw = shareToWithdraw * totalLPValue / totalShareSupply ; convert share to lp value
+    // lpToWithdraw = lpValueToWithdraw / lpPrice
+    uint256 _lpToWithdraw = (((_shareToWithdraw * getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs)) /
+      IERC20(_vaultToken).totalSupply()) * 1e18) / getPriceUSD(_lpToken, avDs);
 
     // buffer 0.05% to mitigate impact from price mismatch to other vault depositor
-    // we calculate _lpToRemove and expected amountOut using oracle price
+    // we calculate _lpToWithdraw and expected amountOut using oracle price
     // but real withdraw result is dex price which might diff from oracle price
     // resulting in unfair accounting for entire vault
     // note that this code could be removed later still unsure if this problem will occur in real scenario
-    _lpToRemove = (_lpToRemove * 9995) / 10000;
+    _lpToWithdraw = (_lpToWithdraw * 9995) / 10000;
 
-    (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToRemove);
+    (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
   }
 
   /// @dev beware that unaccrued pendingInterest affect this calculation
@@ -228,14 +226,14 @@ library LibAV01 {
     avDs.vaultDebts[_shareToken][_token] += _amount;
   }
 
-  function repayMoneyMarket(
+  function repayVaultDebt(
     address _shareToken,
     address _token,
     uint256 _repayAmount,
     AVDiamondStorage storage avDs
   ) internal {
-    IERC20(_token).safeIncreaseAllowance(avDs.moneyMarket, _repayAmount);
-    IMoneyMarket(avDs.moneyMarket).nonCollatRepay(address(this), _token, _repayAmount);
+    // IERC20(_token).safeIncreaseAllowance(avDs.moneyMarket, _repayAmount);
+    // IMoneyMarket(avDs.moneyMarket).nonCollatRepay(address(this), _token, _repayAmount);
     avDs.vaultDebts[_shareToken][_token] -= _repayAmount;
   }
 
