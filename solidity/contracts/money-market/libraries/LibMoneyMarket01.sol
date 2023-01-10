@@ -23,6 +23,8 @@ library LibMoneyMarket01 {
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
+  uint8 internal constant _NOT_ENTERED_LIQUIDATE = 0;
+  uint8 internal constant _ENTERED_LIQUIDATE = 1;
   uint256 internal constant MAX_BPS = 10000;
   uint256 internal constant MAX_REPURCHASE_FEE_BPS = 1000;
 
@@ -98,6 +100,7 @@ library LibMoneyMarket01 {
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
     // liquidation params
+    uint8 liquidateExec;
     uint16 maxLiquidateBps;
     uint16 liquidationThresholdBps;
     // fees

@@ -187,6 +187,8 @@ contract LiquidationFacet is ILiquidationFacet {
       revert LiquidationFacet_Unauthorized();
     }
 
+    moneyMarketDs.liquidateExec = LibMoneyMarket01._ENTERED_LIQUIDATE;
+
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
@@ -215,6 +217,8 @@ contract LiquidationFacet is ILiquidationFacet {
     } else {
       _liquidationCall(_params, moneyMarketDs);
     }
+
+    moneyMarketDs.liquidateExec = LibMoneyMarket01._NOT_ENTERED_LIQUIDATE;
   }
 
   function _liquidationCall(
