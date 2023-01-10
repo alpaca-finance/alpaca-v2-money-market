@@ -180,7 +180,7 @@ contract LiquidationFacet is ILiquidationFacet {
       revert LiquidationFacet_Unauthorized();
     }
 
-    moneyMarketDs.IN_LIQUIDATE_EXEC = 1;
+    moneyMarketDs.liquidateExec = LibMoneyMarket01._ENTERED_LIQUIDATE;
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
@@ -211,7 +211,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _liquidationCall(_params, moneyMarketDs);
     }
 
-    moneyMarketDs.IN_LIQUIDATE_EXEC = 0;
+    moneyMarketDs.liquidateExec = LibMoneyMarket01._NOT_ENTERED_LIQUIDATE;
   }
 
   function _liquidationCall(

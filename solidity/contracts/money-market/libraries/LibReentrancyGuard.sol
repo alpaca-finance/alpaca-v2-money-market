@@ -52,7 +52,9 @@ library LibReentrancyGuard {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    if (reentrancyGuardDs.status == _ENTERED && moneyMarketDs.IN_LIQUIDATE_EXEC == 0) {
+    if (
+      reentrancyGuardDs.status == _ENTERED && moneyMarketDs.liquidateExec == LibMoneyMarket01._NOT_ENTERED_LIQUIDATE
+    ) {
       revert LibReentrancyGuard_ReentrantCall();
     }
 
