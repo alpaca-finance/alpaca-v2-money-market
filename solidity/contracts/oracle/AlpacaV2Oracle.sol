@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- External Libraries ---- //
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
+// ---- Libraries ---- //
+import { LibFullMath } from "./libraries/LibFullMath.sol";
+
+// ---- Interfaces ---- //
 import { ILiquidityPair } from "./interfaces/ILiquidityPair.sol";
 import { IAlpacaV2Oracle } from "./interfaces/IAlpacaV2Oracle.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
-
-import { LibFullMath } from "./libraries/LibFullMath.sol";
+import { IRouterLike } from "./interfaces/IRouterLike.sol";
 
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
   using LibFullMath for uint256;
@@ -17,15 +21,30 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
   /// @dev Events
   event LogSetOracle(address indexed _caller, address _newOracle);
 
+  struct Config {
+    address router;
+    address[] path;
+    uint64 maxPriceDiff;
+  }
+
   /// @notice An address of chainlink usd token
   address public usd;
+
+  address public baseStable;
 
   /// @notice a chainLink interface to perform get price
   address public oracle;
 
-  function initialize(address _oracle, address _usd) public initializer {
+  mapping(address => Config) public tokenConfig;
+
+  function initialize(
+    address _oracle,
+    address _baseStable,
+    address _usd
+  ) public initializer {
     OwnableUpgradeable.__Ownable_init();
     oracle = _oracle;
+    baseStable = _baseStable;
     usd = _usd;
   }
 
@@ -58,6 +77,27 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
   /// @param _tokenAddress tokenAddress
   function getTokenPrice(address _tokenAddress) external view returns (uint256 _price, uint256 _lastTimestamp) {
     (_price, _lastTimestamp) = _getTokenPrice(_tokenAddress);
+  }
+
+  /// @notice Check token price from dex and oracle is in the acceptable range
+  /// @param _tokenAddress tokenAddress
+  function _isStable(address _tokenAddress) internal view returns (bool) {
+    uint256[] memory _amounts = IRouterLike(tokenConfig[_tokenAddress].router).getAmountsOut(
+      1e18,
+      tokenConfig[_tokenAddress].path
+    );
+
+    uint256 _dexPrice = _amounts[_amounts.length - 1];
+    (uint256 _oraclePrice, ) = _getTokenPrice(_tokenAddress);
+
+    // TODO: check when baseStable depeg with oracle
+    if (
+      _dexPrice * 10000 > _oraclePrice * tokenConfig[_tokenAddress].maxPriceDiff ||
+      _dexPrice * tokenConfig[_tokenAddress].maxPriceDiff >= _oraclePrice * 10000
+    ) {
+      revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
+    }
+    return true;
   }
 
   function _getTokenPrice(address _tokenAddress) internal view returns (uint256 _price, uint256 _lastTimestamp) {
@@ -137,5 +177,21 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     uint256 _px1 = (_p1 * (2**112)) / 10**(18 - _d1); // in token decimals * 2**112
 
     return (_px0, _px1, _d0, _d1, _olderLastUpdate);
+  }
+
+  function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external onlyOwner {
+    uint256 _len = _tokens.length;
+
+    if (_len != _configs.length) {
+      revert AlpacaV2Oracle_InvalidConfigLength();
+    }
+
+    for (uint256 _i = 0; _i < _len; ) {
+      tokenConfig[_tokens[_i]] = _configs[_i];
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }

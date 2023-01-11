@@ -14,4 +14,6 @@ interface IAlpacaV2Oracle {
   /// @dev Errors
   error AlpacaV2Oracle_InvalidLPAddress();
   error AlpacaV2Oracle_InvalidOracleAddress();
+  error AlpacaV2Oracle_InvalidConfigLength();
+  error AlpacaV2Oracle_PriceTooDeviate(uint256 _dexPrice, uint256 _oraclePrice);
 }
