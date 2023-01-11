@@ -8,7 +8,7 @@ import { PancakeswapV2IbTokenLiquidationStrategy } from "../../../contracts/mone
 import { MockRouter } from "../../mocks/MockRouter.sol";
 import { MockLPToken } from "../../mocks/MockLPToken.sol";
 
-contract PancakeswapV2IbTokenLiquidationStrategy_SetConfigs is MoneyMarket_BaseTest {
+contract PancakeswapV2IbTokenLiquidationStrategy_SetConfigsTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
   MockRouter internal router;
   PancakeswapV2IbTokenLiquidationStrategy internal liquidationStrat;
