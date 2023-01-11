@@ -122,7 +122,7 @@ library LibAV01 {
     // we calculate _lpToWithdraw and expected amountOut using oracle price
     // but real withdraw result is dex price which might diff from oracle price
     // resulting in unfair accounting for entire vault
-    // note that this code could be removed later still unsure if this problem will occur in real scenario
+    // TODO: this code could be removed later. still unsure if this problem will occur in real scenario
     _lpToWithdraw = (_lpToWithdraw * 9995) / 10000;
 
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
@@ -201,7 +201,7 @@ library LibAV01 {
     uint256 _timeSinceLastAccrual,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _pendingInterest) {
-    uint256 _debtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValue(_token);
+    uint256 _debtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValueWithPendingInterest(_token);
     uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
     uint256 _interestRate = IInterestRateModel(_interestRateModel).getInterestRate(_debtValue, _floating);
     _pendingInterest = (_interestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][_token]) / 1e18;

@@ -35,6 +35,7 @@ contract AVAdminFacet is IAVAdminFacet {
 
     string memory _tokenSymbol = IERC20(_lpToken).symbol();
     uint8 _tokenDecimals = IERC20(_lpToken).decimals();
+    // TODO: move string stuff to AVShareToken view function
     _newShareToken = address(
       new AVShareToken(
         string.concat("Automated Vault Share Token ", _tokenSymbol),

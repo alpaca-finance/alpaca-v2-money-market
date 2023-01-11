@@ -42,6 +42,8 @@ interface IViewFacet {
 
   function getGlobalDebtValue(address _token) external view returns (uint256);
 
+  function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256);
+
   function getOverCollatDebtValue(address _token) external view returns (uint256);
 
   function getOverCollatTokenDebtShares(address _token) external view returns (uint256);

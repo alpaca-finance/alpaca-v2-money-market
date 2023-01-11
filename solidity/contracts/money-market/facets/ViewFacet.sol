@@ -117,6 +117,14 @@ contract ViewFacet is IViewFacet {
     return moneyMarketDs.globalDebts[_token];
   }
 
+  /// @notice Get borrowed amount (over and non-collateralized) with pending interest of a token
+  /// @param _token The token that has been borrowed
+  /// @return The total amount of debt with pending interest
+  function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.globalDebts[_token] + LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
+  }
+
   /// @notice Get the total amount of borrowed token via over collat borrowing
   /// @param _token The token that has been borrowed
   /// @return The total amount of over collateralized debt

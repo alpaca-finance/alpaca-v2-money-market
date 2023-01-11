@@ -104,14 +104,17 @@ contract AVTradeFacet is IAVTradeFacet {
       avDs
     );
 
-    if (_shareValueToWithdraw < _minStableTokenOut) {
+    uint256 _stableTokenToUser = (_shareValueToWithdraw * 1e18) /
+      (LibAV01.getPriceUSD(_vaultConfig.stableToken, avDs) *
+        avDs.tokenConfigs[_vaultConfig.stableToken].to18ConversionFactor);
+    if (_stableTokenToUser < _minStableTokenOut) {
       revert AVTradeFacet_TooLittleReceived();
     }
 
     IAVShareToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
-    IERC20(_vaultConfig.stableToken).safeTransfer(msg.sender, _shareValueToWithdraw);
+    IERC20(_vaultConfig.stableToken).safeTransfer(msg.sender, _stableTokenToUser);
 
-    emit LogWithdraw(msg.sender, _vaultToken, _shareToWithdraw, _vaultConfig.stableToken, _shareValueToWithdraw);
+    emit LogWithdraw(msg.sender, _vaultToken, _shareToWithdraw, _vaultConfig.stableToken, _stableTokenToUser);
   }
 
   function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {

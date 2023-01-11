@@ -267,7 +267,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // 5.
     mockRouter.setRemoveLiquidityAmountsOut(3 ether, 3 ether);
-    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+    // uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
     vm.prank(BOB);
     tradeFacet.withdraw(_vaultToken, 2 ether, 0);
 
