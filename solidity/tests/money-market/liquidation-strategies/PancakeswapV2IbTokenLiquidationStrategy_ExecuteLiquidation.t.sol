@@ -115,6 +115,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
       _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
       "ibWeth balance of ALICE"
     );
+    // to check final underlying should be not affected
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatLessThanRepayValue() external {
@@ -162,6 +164,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
       _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
       "ibWeth balance of ALICE"
     );
+    // to check final underlying should be not affected
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatMoreThanRepayValue_ShouldTransferCollatBackToUserCorreclty()
@@ -211,6 +215,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
       _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
       "ibWeth balance of ALICE"
     );
+    // to check final underlying should be not affected
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratAndUnderlyingTokenAndRepayTokenAreSame() external {
