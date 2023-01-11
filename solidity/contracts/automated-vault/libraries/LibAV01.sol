@@ -110,22 +110,20 @@ library LibAV01 {
     uint256 _shareToWithdraw,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
-    address _handler = avDs.vaultConfigs[_vaultToken].handler;
-    address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
+    VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
-    // lpValueToWithdraw = shareToWithdraw * totalLPValue / totalShareSupply ; convert share to lp value
-    // lpToWithdraw = lpValueToWithdraw / lpPrice
-    uint256 _lpToWithdraw = (((_shareToWithdraw * getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs)) /
-      IERC20(_vaultToken).totalSupply()) * 1e18) / getPriceUSD(_lpToken, avDs);
+    address _handler = _vaultConfig.handler;
 
-    // buffer 0.05% to mitigate impact from price mismatch to other vault depositor
-    // we calculate _lpToWithdraw and expected amountOut using oracle price
-    // but real withdraw result is dex price which might diff from oracle price
-    // resulting in unfair accounting for entire vault
-    // TODO: this code could be removed later. still unsure if this problem will occur in real scenario
-    _lpToWithdraw = (_lpToWithdraw * 9995) / 10000;
+    uint256 _lpToWithdraw = (IAVHandler(_handler).totalLpBalance() * _shareToWithdraw) /
+      IERC20(_vaultToken).totalSupply();
 
+    // (token0ReturnAmount, token1ReturnAmount)
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
+
+    address _token0 = ISwapPairLike(_vaultConfig.lpToken).token0();
+    if (_token0 != _vaultConfig.stableToken) {
+      (_stableReturnAmount, _assetReturnAmount) = (_assetReturnAmount, _stableReturnAmount);
+    }
   }
 
   /// @dev beware that unaccrued pendingInterest affect this calculation

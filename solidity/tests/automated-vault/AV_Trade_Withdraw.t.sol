@@ -26,7 +26,6 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     // share to withdraw = 5, then shareValueToRemove = 5 * 10 (equity) / 10 (totalSupply) = 5 USD
     // lpToRemove = (shareValueToRemove * _totalLPValue) / (_totalEquity * lpPrice)
     // lpToRemove = (5 * 30) / (10 * 2) = 7.5
-    // buffer for 5% = 7.5 * 9995 / 10000 = 7.49625
 
     // mock router to return both tokens as 7.5 ether
     mockRouter.setRemoveLiquidityAmountsOut(7.5 ether, 7.5 ether);
@@ -53,8 +52,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     assertEq(_stableDebtValueBefore - _stableDebtValueAfter, 2.5 ether);
     assertEq(_assetDebtValueBefore - _assetDebtValueAfter, 7.5 ether);
 
-    // 15 - 7.49625 = 7.50375
-    assertEq(handler.totalLpBalance(), 7.50375 ether);
+    assertEq(handler.totalLpBalance(), 7.5 ether);
   }
 
   function testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert() external {
