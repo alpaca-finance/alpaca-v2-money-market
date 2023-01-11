@@ -74,20 +74,20 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+    uint256 _token0DebtShareId = lyfDs.debtShareIds[_token0][_lpToken];
+    uint256 _token1DebtShareId = lyfDs.debtShareIds[_token1][_lpToken];
+
+    LibLYF01.accrueInterest(_token0DebtShareId, lyfDs);
+    LibLYF01.accrueInterest(_token1DebtShareId, lyfDs);
 
     // 1. get token from collat (underlying and ib if possible), borrow if not enough
     _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount, lyfDs);
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
     // 2. Check min debt size
-    if (
-      !LibLYF01.checkMinDebtSize(_subAccount, lyfDs.debtShareIds[_token0][_lpToken], lyfDs) ||
-      !LibLYF01.checkMinDebtSize(_subAccount, lyfDs.debtShareIds[_token1][_lpToken], lyfDs)
-    ) {
-      revert LYFFarmFacet_BorrowLessThanMinDebtSize();
-    }
+
+    LibLYF01.validateMinDebtSize(_subAccount, _token0DebtShareId, lyfDs);
+    LibLYF01.validateMinDebtSize(_subAccount, _token1DebtShareId, lyfDs);
 
     // 3. send token to strat
     IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount);
@@ -373,9 +373,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     _actualRepayAmount = _removeDebt(_subAccount, _debtShareId, _oldSubAccountDebtShare, _shareToRemove, lyfDs);
 
-    if (!LibLYF01.checkMinDebtSize(_subAccount, _debtShareId, lyfDs)) {
-      revert LYFFarmFacet_BorrowLessThanMinDebtSize();
-    }
+    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
     emit LogRepay(_subAccount, _token, _actualRepayAmount);
   }
@@ -393,9 +391,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     _actualRepayAmount = _removeDebt(_subAccount, _debtShareId, _oldSubAccountDebtShare, _actualShareToRepay, lyfDs);
 
-    if (!LibLYF01.checkMinDebtSize(_subAccount, _debtShareId, lyfDs)) {
-      revert LYFFarmFacet_BorrowLessThanMinDebtSize();
-    }
+    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
     emit LogRepay(_subAccount, _token, _actualRepayAmount);
   }

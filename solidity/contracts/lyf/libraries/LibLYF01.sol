@@ -35,6 +35,7 @@ library LibLYF01 {
   error LibLYF01_PriceStale(address);
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_NumberOfTokenExceedLimit();
+  error LibLYF01_BorrowLessThanMinDebtSize();
 
   enum AssetTier {
     UNLISTED,
@@ -389,20 +390,23 @@ library LibLYF01 {
     return _totalBorrowingPower >= _totalUsedBorrowingPower;
   }
 
-  function checkMinDebtSize(
+  function validateMinDebtSize(
     address _subAccount,
     uint256 _debtShareId,
     LYFDiamondStorage storage lyfDs
-  ) internal view returns (bool) {
+  ) internal view {
     (uint256 _debtShare, uint256 _debtAmount) = getDebt(_subAccount, _debtShareId, lyfDs);
-    if (_debtShare == 0) {
-      return true;
-    }
+    if (_debtShare != 0) {
+      address _debtToken = lyfDs.debtShareTokens[_debtShareId];
+      uint256 _tokenPrice = getPriceUSD(_debtToken, lyfDs);
 
-    address _debtToken = lyfDs.debtShareTokens[_debtShareId];
-    uint256 _tokenPrice = getPriceUSD(_debtToken, lyfDs);
-    TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
-    return LibFullMath.mulDiv(_debtAmount * _tokenConfig.to18ConversionFactor, _tokenPrice, 1e18) >= lyfDs.minDebtSize;
+      if (
+        LibFullMath.mulDiv(_debtAmount * lyfDs.tokenConfigs[_debtToken].to18ConversionFactor, _tokenPrice, 1e18) <
+        lyfDs.minDebtSize
+      ) {
+        revert LibLYF01_BorrowLessThanMinDebtSize();
+      }
+    }
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint64) {

@@ -236,7 +236,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     // remove 15 lp,
     // repay 15 eth, 15 usdc
-    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
     farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 15 ether, 0 ether, 0 ether);
     vm.stopPrank();
   }
@@ -343,11 +343,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     // min debt size = 20 usd, borrow only 10 usd of weth
-    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
 
     // if one side of the borrowing didn't pass the min debt size should revert
-    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 40 ether, _usdcToAddLP, 0);
 
     vm.stopPrank();
@@ -676,7 +676,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // assume that every coin is 1 dollar and lp = 2 dollar
     vm.startPrank(BOB);
     // should revert as min debt size = 20, repaying 10 would left 10 in the subaccount
-    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
     farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
 
     // should be ok if repay whole debt
@@ -711,7 +711,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     // should revert as min debt size = 20, repaying 10 would left 10 in the subaccount
-    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowLessThanMinDebtSize.selector));
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
     farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
 
     // should be ok if repay whole debt
