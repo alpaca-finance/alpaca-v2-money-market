@@ -41,6 +41,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 usedBorrowingPower;
     uint256 repayAmountWithFee;
     uint256 repurchaseFeeToProtocol;
+    uint256 repurchaseRewardBps;
     uint256 repayAmountWihtoutFee;
     uint256 repayTokenPrice;
   }
@@ -114,7 +115,7 @@ contract LiquidationFacet is ILiquidationFacet {
         revert LiquidationFacet_RepayAmountExceedThreshold();
     }
 
-    uint256 _repurchaseRewardBps = moneyMarketDs.repurchaseRewardModel.getFeeBps(
+    vars.repurchaseRewardBps = moneyMarketDs.repurchaseRewardModel.getFeeBps(
       vars.totalBorrowingPower,
       vars.usedBorrowingPower
     );
@@ -123,8 +124,8 @@ contract LiquidationFacet is ILiquidationFacet {
     {
       uint256 _collatTokenPrice = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
-      uint256 _repayTokenPriceWithPremium = (vars.repayTokenPrice * (LibMoneyMarket01.MAX_BPS + _repurchaseRewardBps)) /
-        LibMoneyMarket01.MAX_BPS;
+      uint256 _repayTokenPriceWithPremium = (vars.repayTokenPrice *
+        (LibMoneyMarket01.MAX_BPS + vars.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
 
       _collatAmountOut =
         (vars.repayAmountWithFee *
@@ -161,7 +162,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _actualRepayAmountWithoutFee,
       _collatAmountOut,
       vars.repurchaseFeeToProtocol,
-      (_collatAmountOut * _repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS
+      (_collatAmountOut * vars.repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS
     );
   }
 
