@@ -22,7 +22,7 @@ import { MockRouter } from "../mocks/MockRouter.sol";
 
 struct CacheState {
   uint256 totalSupply;
-  uint256 mmWethBalance;
+  uint256 mmUnderlyingBalance;
   uint256 treasuryFee;
   uint256 globalDebtValue;
   uint256 collat;
@@ -35,7 +35,7 @@ struct CacheState {
 contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
   MockRouter internal router;
-  PancakeswapV2IbTokenLiquidationStrategy liquidationStrat;
+  PancakeswapV2IbTokenLiquidationStrategy _ibTokenLiquidationStrat;
 
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
@@ -53,12 +53,15 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
     router = new MockRouter(address(wethUsdcLPToken));
 
-    liquidationStrat = new PancakeswapV2IbTokenLiquidationStrategy(address(router), address(moneyMarketDiamond));
+    _ibTokenLiquidationStrat = new PancakeswapV2IbTokenLiquidationStrategy(
+      address(router),
+      address(moneyMarketDiamond)
+    );
 
-    address[] memory _liquidationStrats = new address[](2);
-    _liquidationStrats[0] = address(liquidationStrat);
+    address[] memory _ibTokenLiquidationStrats = new address[](2);
+    _ibTokenLiquidationStrats[0] = address(_ibTokenLiquidationStrat);
 
-    adminFacet.setLiquidationStratsOk(_liquidationStrats, true);
+    adminFacet.setLiquidationStratsOk(_ibTokenLiquidationStrats, true);
 
     address[] memory _liquidationCallers = new address[](2);
     _liquidationCallers[0] = BOB;
@@ -67,7 +70,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
     address[] memory _liquidationExecutors = new address[](1);
     _liquidationExecutors[0] = address(moneyMarketDiamond);
-    liquidationStrat.setCallersOk(_liquidationExecutors, true);
+    _ibTokenLiquidationStrat.setCallersOk(_liquidationExecutors, true);
 
     address[] memory _paths = new address[](2);
     _paths[0] = address(weth);
@@ -77,7 +80,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       memory _setPathsInputs = new PancakeswapV2IbTokenLiquidationStrategy.SetPathParams[](1);
     _setPathsInputs[0] = PancakeswapV2IbTokenLiquidationStrategy.SetPathParams({ path: _paths });
 
-    liquidationStrat.setPaths(_setPathsInputs);
+    _ibTokenLiquidationStrat.setPaths(_setPathsInputs);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);
@@ -124,7 +127,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // mm state before
     CacheState memory _stateBefore = CacheState({
       totalSupply: ibWeth.totalSupply(),
-      mmWethBalance: weth.balanceOf(address(moneyMarketDiamond)),
+      mmUnderlyingBalance: weth.balanceOf(address(moneyMarketDiamond)),
       treasuryFee: MockERC20(_debtToken).balanceOf(treasury),
       globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
       collat: viewFacet.getTotalCollat(_collatToken),
@@ -155,11 +158,12 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     uint256 _fee = 0.15 ether; // 1% of _repayAmountInput
     // in mock router using amountOut as amountIn
     uint256 _expectedIbTokenToWithdraw = _repayAmountInput + _fee;
+    uint256 _expectedUnderlyingWitdrawalAmount = 15.15 ether;
     uint256 _expectedRepayAmountFromStrat = 15.15 ether;
     uint256 _actualRepaidAmount = _expectedRepayAmountFromStrat - _fee;
 
     liquidationFacet.liquidationCall(
-      address(liquidationStrat),
+      address(_ibTokenLiquidationStrat),
       ALICE,
       _subAccountId,
       _debtToken,
@@ -170,7 +174,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       totalSupply: ibWeth.totalSupply(),
-      mmWethBalance: weth.balanceOf(address(moneyMarketDiamond)),
+      mmUnderlyingBalance: weth.balanceOf(address(moneyMarketDiamond)),
       treasuryFee: MockERC20(_debtToken).balanceOf(treasury),
       globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
       collat: viewFacet.getTotalCollat(_collatToken),
@@ -188,7 +192,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       "sub account collatertal"
     );
 
-    assertEq(_stateAfter.debtValue, _stateBefore.debtValue - _actualRepaidAmount, "debt value"); // same as other cases
+    assertEq(_stateAfter.debtValue, _stateBefore.debtValue - _actualRepaidAmount, "debt value");
     assertEq(_stateAfter.debtShare, _stateBefore.debtShare - _actualRepaidAmount, "debt share");
     assertEq(
       _stateAfter.subAccountDebtShare,
@@ -202,7 +206,11 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       _stateBefore.totalSupply - _expectedIbTokenToWithdraw,
       "ibToken totalSupply diff"
     ); // ibWeth repaid + liquidation fee
-    assertEq(_stateAfter.mmWethBalance, _stateBefore.mmWethBalance, "MM underlying balance diff"); // weth repaid + liquidation fee
+    assertEq(
+      _stateAfter.mmUnderlyingBalance,
+      _stateBefore.mmUnderlyingBalance - _expectedUnderlyingWitdrawalAmount,
+      "MM underlying balance should not be affected"
+    );
 
     // globalDebt should equal to debtValue since there is only 1 position
     assertEq(_stateAfter.globalDebtValue, _stateBefore.globalDebtValue - _actualRepaidAmount, "global debt value");
