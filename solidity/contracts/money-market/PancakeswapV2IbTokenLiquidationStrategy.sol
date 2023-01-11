@@ -64,41 +64,39 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
     }
 
-    // _amountsIn[0] = collat that is required to swap for _repayAmount
-    uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
+    uint256 _withdrawalAmount;
+    uint256 _actualAmountToWithdraw;
 
-    // to withdraw
-    {
-      uint256 _requireAmountToWithdraw = LibShareUtil.valueToShare(
-        _amountsIn[0],
-        IERC20(_ibToken).totalSupply(),
-        moneyMarket.getTotalTokenWithPendingInterest(_underlyingToken)
+    if (_underlyingToken == _repayToken) {
+      (_withdrawalAmount, _actualAmountToWithdraw) = _withdrawIbTokenFromMoneyMarket(
+        _ibToken,
+        _underlyingToken,
+        _ibTokenAmountIn,
+        _repayAmount
+      );
+      IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawalAmount);
+    } else {
+      // _amountsIn[0] = collat that is required to swap for _repayAmount
+      uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
+      (_withdrawalAmount, _actualAmountToWithdraw) = _withdrawIbTokenFromMoneyMarket(
+        _ibToken,
+        _underlyingToken,
+        _ibTokenAmountIn,
+        _amountsIn[0]
       );
 
-      uint256 _actualAmountToWithdraw = _ibTokenAmountIn > _requireAmountToWithdraw
-        ? _requireAmountToWithdraw
-        : _ibTokenAmountIn;
-
-      IERC20(_ibToken).safeIncreaseAllowance(address(moneyMarket), _actualAmountToWithdraw);
-      uint256 _withdrawalAmount = moneyMarket.withdraw(_ibToken, _actualAmountToWithdraw);
-
-      if (_underlyingToken == _repayToken) {
-        // if underlying and repay token are same, no need to swap, just returned token to caller
-        IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawalAmount);
+      IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawalAmount);
+      if (_withdrawalAmount >= _amountsIn[0]) {
+        // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
+        router.swapTokensForExactTokens(_repayAmount, _withdrawalAmount, _path, msg.sender, block.timestamp);
       } else {
-        IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawalAmount);
-        if (_withdrawalAmount >= _amountsIn[0]) {
-          // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
-          router.swapTokensForExactTokens(_repayAmount, _withdrawalAmount, _path, msg.sender, block.timestamp);
-        } else {
-          router.swapExactTokensForTokens(_withdrawalAmount, _minReceive, _path, msg.sender, block.timestamp);
-        }
+        router.swapExactTokensForTokens(_withdrawalAmount, _minReceive, _path, msg.sender, block.timestamp);
       }
+    }
 
-      // transfer back if ibToken has in contract
-      if (_ibTokenAmountIn > _actualAmountToWithdraw) {
-        IERC20(_ibToken).safeTransfer(msg.sender, _ibTokenAmountIn - _actualAmountToWithdraw);
-      }
+    // transfer ibToken back to caller when not withdraw All
+    if (_ibTokenAmountIn > _actualAmountToWithdraw) {
+      IERC20(_ibToken).safeTransfer(msg.sender, _ibTokenAmountIn - _actualAmountToWithdraw);
     }
   }
 
@@ -132,5 +130,30 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
         ++_i;
       }
     }
+  }
+
+  /// @notice Internal function to call withdraw from Moneymarket
+  /// @param _ibToken ibToken to withdraw address
+  /// @param _underlyingToken underlyingToken address
+  /// @param _desiredUnderlyingReceive desired underlying amount received
+  /// @param _maxIbTokenAmountIn maximum ibToken amount to withdraw
+  function _withdrawIbTokenFromMoneyMarket(
+    address _ibToken,
+    address _underlyingToken,
+    uint256 _desiredUnderlyingReceive,
+    uint256 _maxIbTokenAmountIn
+  ) internal returns (uint256 _withdrawalAmount, uint256 _actualAmountToWithdraw) {
+    uint256 _estimateAmountToWithdraw = LibShareUtil.valueToShare(
+      _desiredUnderlyingReceive,
+      IERC20(_ibToken).totalSupply(),
+      moneyMarket.getTotalTokenWithPendingInterest(_underlyingToken)
+    );
+
+    _actualAmountToWithdraw = _maxIbTokenAmountIn > _estimateAmountToWithdraw
+      ? _estimateAmountToWithdraw
+      : _maxIbTokenAmountIn;
+
+    IERC20(_ibToken).safeIncreaseAllowance(address(moneyMarket), _actualAmountToWithdraw);
+    _withdrawalAmount = moneyMarket.withdraw(_ibToken, _actualAmountToWithdraw);
   }
 }
