@@ -42,6 +42,7 @@ contract BaseTest is DSTest {
   MockERC20 internal cake;
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal busd;
   MockERC20 internal btc;
   MockERC20 internal opm; // open market token
   address internal usd;
@@ -68,6 +69,7 @@ contract BaseTest is DSTest {
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
+    busd = deployMockErc20("BUSD", "BUSD", 18);
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
@@ -122,8 +124,9 @@ contract BaseTest is DSTest {
   function deployAlpacaV2Oracle(address _oracleMedianizer) internal returns (AlpacaV2Oracle) {
     bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/AlpacaV2Oracle.sol/AlpacaV2Oracle.json"));
     bytes memory _initializer = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address)")),
+      bytes4(keccak256("initialize(address,address,address)")),
       _oracleMedianizer,
+      busd,
       usd
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);

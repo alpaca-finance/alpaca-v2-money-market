@@ -21,12 +21,6 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
   /// @dev Events
   event LogSetOracle(address indexed _caller, address _newOracle);
 
-  struct Config {
-    address router;
-    address[] path;
-    uint64 maxPriceDiff;
-  }
-
   /// @notice An address of chainlink usd token
   address public usd;
 
@@ -81,14 +75,18 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
 
   /// @notice Check token price from dex and oracle is in the acceptable range
   /// @param _tokenAddress tokenAddress
-  function _isStable(address _tokenAddress) internal view returns (bool) {
+  function isStable(address _tokenAddress) external view returns (bool) {
+    (uint256 _price, ) = _getTokenPrice(_tokenAddress);
+    return _isStable(_tokenAddress, _price);
+  }
+
+  function _isStable(address _tokenAddress, uint256 _oraclePrice) internal view returns (bool) {
     uint256[] memory _amounts = IRouterLike(tokenConfig[_tokenAddress].router).getAmountsOut(
       1e18,
       tokenConfig[_tokenAddress].path
     );
 
     uint256 _dexPrice = _amounts[_amounts.length - 1];
-    (uint256 _oraclePrice, ) = _getTokenPrice(_tokenAddress);
 
     // TODO: check when baseStable depeg with oracle
     if (
@@ -102,6 +100,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
 
   function _getTokenPrice(address _tokenAddress) internal view returns (uint256 _price, uint256 _lastTimestamp) {
     (_price, _lastTimestamp) = IPriceOracle(oracle).getPrice(_tokenAddress, usd);
+    _isStable(_tokenAddress, _price);
   }
 
   /// @notice Set oracle
@@ -186,7 +185,13 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
       revert AlpacaV2Oracle_InvalidConfigLength();
     }
 
+    address[] memory _path;
     for (uint256 _i = 0; _i < _len; ) {
+      _path = _configs[_i].path;
+      if (_path[_path.length - 1] != baseStable) {
+        revert AlpacaV2Oracle_InvalidConfigPath();
+      }
+
       tokenConfig[_tokens[_i]] = _configs[_i];
 
       unchecked {
