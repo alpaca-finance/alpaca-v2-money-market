@@ -10,7 +10,6 @@ contract AVInit {
   function init() external {
     LibDiamond.DiamondStorage storage diamondDs = LibDiamond.diamondStorage();
     if (diamondDs.avInitialized != 0) revert AVInit_Initialized();
-    LibAV01.AVDiamondStorage storage ds = LibAV01.avDiamondStorage();
 
     diamondDs.avInitialized = 1;
   }
