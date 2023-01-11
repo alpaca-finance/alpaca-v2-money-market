@@ -77,6 +77,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
       router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
     } else {
+      // transfer all underlying token to repay
       IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawnUnderlyingAmount);
     }
 
@@ -112,6 +113,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     address _repayToken,
     uint256 _repayAmount
   ) internal view returns (uint256 _requiredUnderlyingAmount, bool _needSwap) {
+    // if underlying token is the repay token means we need underlying amount = repay amount
     if (_underlyingToken == _repayToken) {
       _requiredUnderlyingAmount = _repayAmount;
       _needSwap = false;
@@ -122,7 +124,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       }
 
       uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
-      // underlying token to swap
+      // underlying token amount to swap
       _requiredUnderlyingAmount = amountsIn[0];
       _needSwap = true;
     }
