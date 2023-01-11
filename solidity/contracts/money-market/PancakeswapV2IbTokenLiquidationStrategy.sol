@@ -59,11 +59,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   ) external onlyWhitelistedCallers {
     uint256 _minReceive = abi.decode(_data, (uint256));
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
-    address[] memory _path = paths[_underlyingToken][_repayToken];
-    if (_path.length == 0) {
-      revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
-    }
-
     uint256 _withdrawalAmount;
     uint256 _actualAmountToWithdraw;
 
@@ -76,6 +71,11 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       );
       IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawalAmount);
     } else {
+      address[] memory _path = paths[_underlyingToken][_repayToken];
+      if (_path.length == 0) {
+        revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
+      }
+
       // _amountsIn[0] = collat that is required to swap for _repayAmount
       uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
       (_withdrawalAmount, _actualAmountToWithdraw) = _withdrawIbTokenFromMoneyMarket(
