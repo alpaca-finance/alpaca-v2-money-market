@@ -121,7 +121,9 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     assertEq(_assetDebtValue, 1.5 ether + 1.5 ether + 0.075 ether);
   }
 
-  function testCorrectness_WhenAVDepositThenWithdraw_ShouldReturnStableAmountWithInterestSubtracted() external {
+  function testCorrectness_WhenAVDepositThenTimePassAndLPGainProfit_ThenWithdraw_ShouldGetBothTokenBackWithProfitAndInterestSubtracted()
+    external
+  {
     /**
      * scenario
      *
@@ -134,18 +136,26 @@ contract AV_AccrueInterestTest is AV_BaseTest {
      *    - weth borrowed = 1.5 weth
      *    - usdc borrowed = 0.5 usdc
      *
-     * 2. 1 second pass, interest accrue
+     * 2. 1 second pass, pending interest increase
      *    - interest = borrowed * ratePerSec
      *    - weth interest = 1.5 * 0.05 = 0.075 weth
      *    - usdc interest = 0.5 * 0.1 = 0.05 usdc
      *
-     * 3. ALICE withdraw 1 vaultToken, get 0.875 usdc back
-     *    - total interest value = weth interest value + usdc interest value = 0.075 * 1 + 0.05 * 1 = 0.125
-     *    - usdc returned = principal - interest = 1 - 0.125 = 0.875 usdc
-     *    - withdraw less than deposit because no income, pay interest
+     * 3. lp gain profit
+     *    - 1.5 -> 1.6 weth per lp
+     *    - 1.5 -> 1.6 usdc per lp
+     *
+     * 4. ALICE withdraw 1 vaultToken, get 1.05 usdc, 0.025 weth back
+     *    - interest accrued
+     *      - usdc debt = 0.5 + 0.05 = 0.55 usdc
+     *      - weth debt = 1.5 + 0.075 = 1.575 weth
+     *    - token to ALICE = tokenFromHandler - repay
+     *      - usdc to ALICE = 1.6 - 0.55 = 1.05 usdc
+     *      - weth to ALICE = 1.6 - 1.575 = 0.025 weth
      */
     address _vaultToken = address(avShareToken);
 
+    // 1.
     vm.prank(ALICE);
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
 
@@ -166,6 +176,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     // check last accrued timestamp = now (accrued during deposit)
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
 
+    // 2.
     vm.warp(block.timestamp + 1);
 
     // check pending interest after time passed should increase
@@ -176,15 +187,19 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     // check last accrued timestamp = previous timestamp (no accrual)
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp - 1);
 
-    mockRouter.setRemoveLiquidityAmountsOut(1.5 ether, 1.5 ether);
+    // 3.
+    mockRouter.setRemoveLiquidityAmountsOut(1.6 ether, 1.6 ether);
 
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
 
+    // 4.
     vm.prank(ALICE);
     tradeFacet.withdraw(_vaultToken, 1 ether, 0, 0);
 
     // check ALICE's balance
-    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 0.875 ether);
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1.05 ether);
+    assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.025 ether);
     assertEq(avShareToken.balanceOf(ALICE), 0);
 
     // check no pending interest (accrued during withdraw)
@@ -202,9 +217,10 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     /**
      * scenario
      *
-     * 0. params
-     *    - weth interest rate = 0.05 weth per block
-     *    - usdc interest rate = 0.1 usdc per block
+     * 0. starting condition
+     *    - usdc price = 1 usd, weth price = 1 usd
+     *    - usdc interest = 0.1 usdc per 1 usdc borrowed per second
+     *    - weth interest = 0.05 weth per 1 weth borrowed per second
      *
      * 1. ALICE deposit 1 usdc at 3x leverage, get 1 vaultToken back
      *    - desired position value = 3 usdc
@@ -224,21 +240,29 @@ contract AV_AccrueInterestTest is AV_BaseTest {
      *      - ALICE portion = 0.05
      *      - BOB portion = 0.1
      *
-     * 4. ALICE withdraw 1 vaultToken, get back 0.875 usdc
+     * 4. lp gain profit
+     *    - 1.5 -> 1.6 weth per lp
+     *    - 1.5 -> 1.6 usdc per lp
+     *
+     * 5. ALICE withdraw 1 vaultToken, get back 1.05 usdc, 0.025 weth
      *    - interest accrued
      *      - new weth debt = 4.5 + 0.225 = 4.725 weth
      *      - new usdc debt = 1.5 + 0.15 = 1.65 usdc
-     *    - no change in lp, withdraw 1.5 usdc, 1.5 weth from handler
+     *    - no change in lp, withdraw 1.6 usdc, 1.6 weth from handler
      *    - repay weth = 1.5 + 0.075 = 1.575 weth
      *    - repay usdc = 0.5 + 0.05 = 0.55 usdc
-     *    - get usdc back = principal - weth and usdc interest = 1 - (0.075 + 0.05) = 0.875 usdc
+     *    - token to ALICE = tokenFromHandler - repay
+     *      - weth to ALICE = 1.6 - 1.575 = 0.025 weth
+     *      - usdc to ALICE = 1.6 - 0.55 = 1.05 usdc
      *
-     * 5. BOB withdraw 1 vaultToken, get back 1.75 usdc
+     * 6. BOB withdraw 1 vaultToken, get back 2.1 usdc, 0.05 weth
      *    - no interest accrual
-     *    - no change in lp, withdraw 3 usdc, 3 weth from handler
+     *    - no change in lp, withdraw 3.2 usdc, 3.2 weth from handler
      *    - repay weth = 3 + 0.15 = 3.15 weth
      *    - repay usdc = 1 + 0.1 = 1.1 usdc
-     *    - get usdc back = principal - weth and usdc interest = 2 - (0.15 + 0.1) = 1.75 usdc
+     *    - token to BOB = tokenFromHandler - repay
+     *      - weth to BOB = 3.2 - 3.15 = 0.05 weth
+     *      - usdc to BOB = 3.2 - 1.1 = 2.1 usdc
      */
 
     address _vaultToken = address(avShareToken);
@@ -254,8 +278,9 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     vm.warp(block.timestamp + 1);
 
     // 4.
-    mockRouter.setRemoveLiquidityAmountsOut(1.5 ether, 1.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(1.6 ether, 1.6 ether);
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
     tradeFacet.withdraw(_vaultToken, 1 ether, 0, 0);
 
@@ -263,11 +288,13 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     (uint256 _stableDebtValue, uint256 _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_stableDebtValue, 1.65 ether - 0.55 ether);
     assertEq(_assetDebtValue, 4.725 ether - 1.575 ether);
-    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 0.875 ether);
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1.05 ether);
+    assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.025 ether);
 
     // 5.
-    mockRouter.setRemoveLiquidityAmountsOut(3 ether, 3 ether);
-    // uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+    mockRouter.setRemoveLiquidityAmountsOut(3.2 ether, 3.2 ether);
+    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
+    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
     vm.prank(BOB);
     tradeFacet.withdraw(_vaultToken, 2 ether, 0, 0);
 
@@ -275,8 +302,8 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_stableDebtValue, 0);
     assertEq(_assetDebtValue, 0);
-    // TODO: handle surplus usdc left in vault
-    // assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, 1.75 ether);
+    assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, 2.1 ether);
+    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 0.05 ether);
   }
 
   function testCorrectness_WhenDepositThenLPPriceDropThenWithdraw_ProtocolShouldProfitFromInterest() external {
@@ -372,4 +399,6 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     vm.prank(ALICE);
     tradeFacet.withdraw(_vaultToken, 1 ether, 0, 0);
   }
+
+  // TODO: case where tokens returned from lp not enough to cover debt
 }
