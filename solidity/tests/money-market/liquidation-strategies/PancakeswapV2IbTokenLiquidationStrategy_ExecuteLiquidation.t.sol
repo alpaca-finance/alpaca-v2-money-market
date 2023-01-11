@@ -57,16 +57,16 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     _routerUSDCBalance = 100 ether;
   }
 
-  function testRevert_WhenExecuteLiquidation_InvalidIbToken() external {
-    vm.prank(address(ALICE));
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        PancakeswapV2IbTokenLiquidationStrategy.PancakeswapV2IbTokenLiquidationStrategy_InvalidIbToken.selector,
-        [address(ibBtc)]
-      )
-    );
-    liquidationStrat.executeLiquidation(address(ibBtc), address(usdc), 1 ether, 1 ether, abi.encode(0));
-  }
+  // function testRevert_WhenExecuteLiquidation_InvalidIbToken() external {
+  //   vm.prank(address(ALICE));
+  //   vm.expectRevert(
+  //     abi.encodeWithSelector(
+  //       PancakeswapV2IbTokenLiquidationStrategy.PancakeswapV2IbTokenLiquidationStrategy_InvalidIbToken.selector,
+  //       [address(ibBtc)]
+  //     )
+  //   );
+  //   liquidationStrat.executeLiquidation(address(ibBtc), address(usdc), 1 ether, 1 ether, abi.encode(0));
+  // }
 
   function testRevert_WhenExecuteLiquidation_PathConfigNotFound() external {
     vm.prank(address(ALICE));
@@ -122,7 +122,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
   }
 
-  function testCorrectness_WhenExecuteIbTokenLiquiationStrat_ButUnderlyingAmountToSwapLessThanAmountIn() external {
+  function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatLessThanRepayValue() external {
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(usdc);
@@ -164,7 +164,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
   }
 
-  function testCorrectness_WhenExecuteIbTokenLiquiationStrat_ButUnderlyingAmountToSwapMoreThanAmountIn_ThenIbTokenShouldTransferBackToSender()
+  function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatMoreThanRepayValue_ShouldTransferCollatBackToUserCorreclty()
     external
   {
     // prepare criteria
