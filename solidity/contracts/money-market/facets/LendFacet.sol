@@ -34,6 +34,12 @@ contract LendFacet is ILendFacet {
     LibReentrancyGuard.unlock();
   }
 
+  modifier nonReentrantWithdraw() {
+    LibReentrancyGuard.lockWithdraw();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
   /// @notice Deposit a token for lending
   /// @param _token The token to lend
   /// @param _amount The amount to lend
@@ -60,7 +66,11 @@ contract LendFacet is ILendFacet {
   /// @notice Withdraw the lended token by burning the interest bearing token
   /// @param _ibToken The interest bearing token to burn
   /// @param _shareAmount The amount of interest bearing token to burn
-  function withdraw(address _ibToken, uint256 _shareAmount) external nonReentrant returns (uint256 _withdrawAmount) {
+  function withdraw(address _ibToken, uint256 _shareAmount)
+    external
+    nonReentrantWithdraw
+    returns (uint256 _withdrawAmount)
+  {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_ibToken];
