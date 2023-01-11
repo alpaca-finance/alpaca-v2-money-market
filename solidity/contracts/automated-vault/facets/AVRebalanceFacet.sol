@@ -13,6 +13,8 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
+import "solidity/tests/utils/console.sol";
+
 contract AVRebalanceFacet is IAVRebalanceFacet {
   using LibSafeToken for IERC20;
 
@@ -32,25 +34,32 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
     uint256 _currentEquity = LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs);
     // deltaDebt = targetDebt - currentDebt ; targetDebt = currentEquity * (leverage - 1)
     // this line would not overflow int256 since we periodically do retargeting
-    // so real debt should not diverge from target that much
+    // so real debt should not diverge from target that much and cause overflow
     int256 _deltaDebt = int256(_currentEquity * (_vaultConfig.leverageLevel - 1)) -
       int256(LibAV01.getVaultTotalDebtInUSD(_vaultToken, _vaultConfig.lpToken, avDs));
+
+    console.log("_currentEquity", _currentEquity);
+    console.log("totalDebtUSD", LibAV01.getVaultTotalDebtInUSD(_vaultToken, _vaultConfig.lpToken, avDs));
+    console.logInt(_deltaDebt);
 
     if (_deltaDebt > 0) {
       // _deltaDebt > 0 means that the vault has less debt than targeted debt value
       // so we need to borrow more to increase debt to match targeted value
       // borrow both for _deltaDebt / 2 and deposit to handler
-      uint256 _borrowAmount = uint256(_deltaDebt / 2);
-      LibAV01.borrowMoneyMarket(_vaultToken, _vaultConfig.stableToken, _borrowAmount, avDs);
-      LibAV01.borrowMoneyMarket(_vaultToken, _vaultConfig.assetToken, _borrowAmount, avDs);
+      uint256 _borrowValueUSD = uint256(_deltaDebt / 2);
+      uint256 _stableBorrowAmount = LibAV01.usdToTokenAmount(_vaultConfig.stableToken, _borrowValueUSD, avDs);
+      uint256 _assetBorrowAmount = LibAV01.usdToTokenAmount(_vaultConfig.stableToken, _borrowValueUSD, avDs);
+
+      LibAV01.borrowMoneyMarket(_vaultToken, _vaultConfig.stableToken, _stableBorrowAmount, avDs);
+      LibAV01.borrowMoneyMarket(_vaultToken, _vaultConfig.assetToken, _assetBorrowAmount, avDs);
 
       LibAV01.depositToHandler(
         _vaultConfig.handler,
         _vaultToken,
         _vaultConfig.stableToken,
         _vaultConfig.assetToken,
-        _borrowAmount,
-        _borrowAmount,
+        _stableBorrowAmount,
+        _assetBorrowAmount,
         _currentEquity,
         avDs
       );
@@ -60,7 +69,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       // withdraw lp value equal to deltaDebt and repay
       (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
         _vaultToken,
-        uint256(-_deltaDebt),
+        uint256(-_deltaDebt), // TODO: this to vaultShare
         avDs
       );
 

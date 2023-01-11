@@ -10,27 +10,54 @@ import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IA
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 
 contract AV_Rebalance_RetargetTest is AV_BaseTest {
+  event LogRetarget(address indexed _vaultToken, uint256 _equityBefore, uint256 _equityAfter);
+
+  address internal _vaultToken;
+  address internal _lpToken;
+
   function setUp() public override {
     super.setUp();
 
     address[] memory _rebalancers = new address[](1);
     _rebalancers[0] = address(this);
     adminFacet.setRebalancersOk(_rebalancers, true);
+
+    _vaultToken = address(avShareToken);
+    _lpToken = address(wethUsdcLPToken);
   }
 
   function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtPositive_ShouldIncreaseDebtToMatchTarget()
     external
   {
-    vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 1 ether, 0);
+    /**
+     * scenario
+     *
+     * 1) ALICE deposit 1 usdc at 3x leverage, vault borrow 0.5 usdc, 1.5 weth to farm 1.5 lp
+     *    - debtValue = 0.5 * 1 + 1.5 * 1 = 2 usd
+     *
+     * 2) lp profit and value increased, 1 lp = 1.8 weth + 1.8 usdc, vault can be retargeted
+     *    - newLPValue = 1.8 * 1 + 1.8 * 1 = 3.6 usd
+     *    - equity = newLPValue - debtValue = 3.6 - 2 = 1.6 usd
+     *    - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 1.6 * (3 - 1) - 2 = 1.2
+     *
+     * 3) perform retarget
+     *    - borrow usd value = deltaDebt / 2 = 0.6 usd
+     *    - borrow 0.6 usdc
+     *    - borrow 0.6 weth
+     */
 
-    // increase lp price to make deltaDebt positive
-    // original lp price = 2
-    mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 3 ether);
+    // 1)
+    vm.prank(ALICE);
+    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+
+    // 2)
+    // ALICE has 1.5 lp, price = 2.4 would make total lp value = 1.5 * 2.4 = 3.6 usd
+    mockOracle.setLpTokenPrice(_lpToken, 2.4 ether);
 
     // TODO: assert debt before
 
-    rebalanceFacet.retarget(address(avShareToken));
+    // 3)
+    rebalanceFacet.retarget(_vaultToken);
 
     // TODO: assert debt after
   }
@@ -41,35 +68,47 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     /**
      * scenario
      *
-     * 1. ALICE deposit 1 usdc at 3x leverage, vault borrow 0.5 usdc, 1.5 weth to farm 1.5 lp
-     *      - debtValue = 0.5 * 1 - 1.5 * 1 = 2 usd
+     * 1) ALICE deposit 1 usdc at 3x leverage, vault borrow 0.5 usdc, 1.5 weth to farm 1.5 lp
+     *    - debtValue = 0.5 * 1 + 1.5 * 1 = 2 usd
      *
-     * 2. lp price decrease to 1.8 usd, vault can be retargeted
-     *      - equity = lpValue - debtValue = 1.5 * 1.8 - 2 = 0.7 usd
-     *      - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 0.7 * (3 - 1) - 2 = -0.6
+     * 2) lp rekt and value decreased, 1 lp = 1.2 usdc + 1.2 weth, vault can be retargeted
+     *    - newLPValue = 1.2 * 1 + 1.2 * 1 = 2.4 usd
+     *    - equity = newLPValue - debtValue = 2.4 - 2 = 0.4 usd
+     *    - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 0.4 * (3 - 1) - 2 = -1.2
      *
-     * 3. perform retarget
-     *      - withdraw lp value of 0.6 usd, get 0.3 usdc, 0.3 weth
-     *      - repay 0.3 usdc, 0.3 weth debt
+     * 3) perform retarget
+     *    - withdraw lp value of 1.2 usd, get 0.6 usdc, 0.6 weth
+     *    - repay 0.6 usdc, 0.6 weth debt
      */
-    vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 1 ether, 0);
 
-    // decrease lp price to make deltaDebt negative
-    // original lp price = 2
-    mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 1.8 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(0.3 ether, 0.3 ether);
+    // 1)
+    vm.prank(ALICE);
+    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+
+    // 2)
+    // ALICE has 1.5 lp, price = 1.6 would make total lp value = 1.5 * 1.6 = 2.4 usd
+    mockOracle.setLpTokenPrice(_lpToken, 1.6 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(0.6 ether, 0.6 ether);
 
     // TODO: assert debt before
 
-    rebalanceFacet.retarget(address(avShareToken));
+    rebalanceFacet.retarget(_vaultToken);
 
     // TODO: assert debt after
+  }
+
+  function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtEqualToTarget_ShouldDoNothing() external {
+    vm.prank(ALICE);
+    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+
+    vm.expectEmit(true, false, false, false, avDiamond);
+    emit LogRetarget(_vaultToken, 1 ether, 1 ether);
+    rebalanceFacet.retarget(_vaultToken);
   }
 
   function testRevert_WhenNonRebalancerCallRetarget() external {
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IAVRebalanceFacet.AVRebalanceFacet_Unauthorized.selector, ALICE));
-    rebalanceFacet.retarget(address(avShareToken));
+    rebalanceFacet.retarget(_vaultToken);
   }
 }
