@@ -41,7 +41,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     // repay debt amount (token0): 7.5
     uint256 aliceUsdcBefore = usdc.balanceOf(ALICE);
     vm.prank(ALICE);
-    tradeFacet.withdraw(address(avShareToken), 5 ether, 5 ether);
+    tradeFacet.withdraw(address(avShareToken), 5 ether, 0, 0);
 
     assertEq(avShareToken.balanceOf(ALICE), 5 ether);
     // alice should get correct token return amount
@@ -60,7 +60,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
 
     vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_TooLittleReceived.selector));
-    tradeFacet.withdraw(address(avShareToken), 5 ether, type(uint256).max);
+    tradeFacet.withdraw(address(avShareToken), 5 ether, type(uint256).max, 0);
 
     vm.stopPrank();
   }

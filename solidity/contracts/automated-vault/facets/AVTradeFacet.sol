@@ -75,46 +75,57 @@ contract AVTradeFacet is IAVTradeFacet {
   function withdraw(
     address _vaultToken,
     uint256 _shareToWithdraw,
-    uint256 _minStableTokenOut
+    uint256 _minStableTokenOut,
+    uint256 _minAssetTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
+    // 0. accrue interest, mint management fee
     LibAV01.accrueVaultInterest(_vaultToken, avDs);
-
     _mintManagementFeeToTreasury(_vaultToken, avDs);
 
-    // calculate shareValue before withdraw
-    uint256 _shareValueToWithdraw = LibAV01.getVaultTokenValueInUSD(_vaultToken, _shareToWithdraw, avDs);
+    // 1. withdraw from handler
+    (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
+      _vaultToken,
+      _shareToWithdraw,
+      avDs
+    );
 
-    LibAV01.withdrawFromHandler(_vaultToken, _shareToWithdraw, avDs);
+    // TODO: handle case where tokens returned from lp not enough to cover debt
 
-    // repay vault debt
+    // 2. check slippage, repay vault debt
     uint256 _totalShareSupply = IAVShareToken(_vaultToken).totalSupply();
-    LibAV01.repayVaultDebt(
-      _vaultToken,
-      _vaultConfig.stableToken,
-      (avDs.vaultDebts[_vaultToken][_vaultConfig.stableToken] * _shareToWithdraw) / _totalShareSupply,
-      avDs
-    );
-    LibAV01.repayVaultDebt(
-      _vaultToken,
-      _vaultConfig.assetToken,
-      (avDs.vaultDebts[_vaultToken][_vaultConfig.assetToken] * _shareToWithdraw) / _totalShareSupply,
-      avDs
-    );
+    uint256 _stableRepayAmount = (avDs.vaultDebts[_vaultToken][_vaultConfig.stableToken] * _shareToWithdraw) /
+      _totalShareSupply;
+    uint256 _assetRepayAmount = (avDs.vaultDebts[_vaultToken][_vaultConfig.assetToken] * _shareToWithdraw) /
+      _totalShareSupply;
 
-    uint256 _stableTokenToUser = (_shareValueToWithdraw * 1e18) /
-      (LibAV01.getPriceUSD(_vaultConfig.stableToken, avDs) *
-        avDs.tokenConfigs[_vaultConfig.stableToken].to18ConversionFactor);
+    uint256 _stableTokenToUser = _withdrawalStableAmount - _stableRepayAmount;
+    uint256 _assetTokenToUser = _withdrawalAssetAmount - _assetRepayAmount;
     if (_stableTokenToUser < _minStableTokenOut) {
       revert AVTradeFacet_TooLittleReceived();
     }
+    if (_assetTokenToUser < _minAssetTokenOut) {
+      revert AVTradeFacet_TooLittleReceived();
+    }
 
+    LibAV01.repayVaultDebt(_vaultToken, _vaultConfig.stableToken, _stableRepayAmount, avDs);
+    LibAV01.repayVaultDebt(_vaultToken, _vaultConfig.assetToken, _assetRepayAmount, avDs);
+
+    // 3. transfer tokens
     IAVShareToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
     IERC20(_vaultConfig.stableToken).safeTransfer(msg.sender, _stableTokenToUser);
+    IERC20(_vaultConfig.assetToken).safeTransfer(msg.sender, _assetTokenToUser);
 
-    emit LogWithdraw(msg.sender, _vaultToken, _shareToWithdraw, _vaultConfig.stableToken, _stableTokenToUser);
+    emit LogWithdraw(
+      msg.sender,
+      _vaultToken,
+      _shareToWithdraw,
+      _vaultConfig.stableToken,
+      _stableTokenToUser,
+      _assetTokenToUser
+    );
   }
 
   function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {
