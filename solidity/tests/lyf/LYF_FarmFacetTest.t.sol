@@ -196,7 +196,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcDebtValue, 18 ether);
   }
 
-  function testRevert_WhenUserReducePosition_RemainingDebtIsAboveMinDebtSizeShouldRevert() external {
+  function testRevert_WhenUserReducePosition_RemainingDebtIsLessThanMinDebtSizeShouldRevert() external {
     // remove interest for convienice of test
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
