@@ -13,6 +13,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -25,6 +26,7 @@ library LibMoneyMarket01 {
   uint8 internal constant _NOT_ENTERED_LIQUIDATE = 0;
   uint8 internal constant _ENTERED_LIQUIDATE = 1;
   uint256 internal constant MAX_BPS = 10000;
+  uint256 internal constant MAX_REPURCHASE_FEE_BPS = 1000;
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_InvalidToken(address _token);
@@ -103,10 +105,10 @@ library LibMoneyMarket01 {
     uint16 liquidationThresholdBps;
     // fees
     uint16 lendingFeeBps;
-    uint16 repurchaseRewardBps;
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
     uint256 minDebtSize;
+    IFeeModel repurchaseRewardModel;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {

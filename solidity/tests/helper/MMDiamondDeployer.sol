@@ -110,7 +110,7 @@ library MMDiamondDeployer {
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (ViewFacet, bytes4[] memory) {
     ViewFacet _viewFacet = new ViewFacet();
 
-    bytes4[] memory selectors = new bytes4[](32);
+    bytes4[] memory selectors = new bytes4[](33);
     selectors[0] = ViewFacet.getProtocolReserve.selector;
     selectors[1] = ViewFacet.getTokenConfig.selector;
     selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
@@ -143,6 +143,7 @@ library MMDiamondDeployer {
     selectors[29] = ViewFacet.getSubAccount.selector;
     selectors[30] = ViewFacet.getFeeParams.selector;
     selectors[31] = ViewFacet.getGlobalDebtValueWithPendingInterest.selector;
+    selectors[32] = ViewFacet.getRepurchaseRewardModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
@@ -233,7 +234,7 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](19);
+    bytes4[] memory selectors = new bytes4[](20);
     selectors[0] = AdminFacet.openMarket.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
     selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
@@ -253,6 +254,7 @@ library MMDiamondDeployer {
     selectors[16] = AdminFacet.setMinDebtSize.selector;
     selectors[17] = AdminFacet.writeOffSubAccountsDebt.selector;
     selectors[18] = AdminFacet.topUpTokenReserve.selector;
+    selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
