@@ -18,7 +18,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   using LibSafeToken for IERC20;
 
   error PancakeswapV2IbTokenLiquidationStrategy_Unauthorized();
-  error PancakeswapV2IbTokenLiquidationStrategy_InvalidIbToken(address _ibToken);
   error PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
 
   struct SetPathParams {
@@ -48,29 +47,23 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   /// @notice Execute liquidate from collatToken to repayToken
   /// @param _ibToken The source token
   /// @param _repayToken The destination token
-  /// @param _ibTokenIn Available amount of source token to trade
+  /// @param _ibTokenAmountIn Available amount of source token to trade
   /// @param _repayAmount Exact destination token amount
   /// @param _data Extra calldata information
   function executeLiquidation(
     address _ibToken,
     address _repayToken,
-    uint256 _ibTokenIn,
+    uint256 _ibTokenAmountIn,
     uint256 _repayAmount,
     bytes calldata _data
   ) external onlyWhitelistedCallers {
-    // check ib token should open market
-    address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
-    if (_underlyingToken == address(0)) {
-      revert PancakeswapV2IbTokenLiquidationStrategy_InvalidIbToken(_ibToken);
-    }
-
     uint256 _minReceive = abi.decode(_data, (uint256));
+    address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
     address[] memory _path = paths[_underlyingToken][_repayToken];
     if (_path.length == 0) {
       revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
     }
 
-    uint256 _ibTokenBalanceBefore = IERC20(_ibToken).balanceOf(address(this)) - _ibTokenIn;
     // _amountsIn[0] = collat that is required to swap for _repayAmount
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
 
@@ -82,24 +75,30 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
         moneyMarket.getTotalTokenWithPendingInterest(_underlyingToken)
       );
 
-      uint256 _actualAmountToWithdraw = _ibTokenIn > _requireAmountToWithdraw ? _requireAmountToWithdraw : _ibTokenIn;
+      uint256 _actualAmountToWithdraw = _ibTokenAmountIn > _requireAmountToWithdraw
+        ? _requireAmountToWithdraw
+        : _ibTokenAmountIn;
 
       IERC20(_ibToken).safeIncreaseAllowance(address(moneyMarket), _actualAmountToWithdraw);
       uint256 _withdrawalAmount = moneyMarket.withdraw(_ibToken, _actualAmountToWithdraw);
 
-      IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawalAmount);
-      if (_withdrawalAmount >= _amountsIn[0]) {
-        // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
-        router.swapTokensForExactTokens(_repayAmount, _withdrawalAmount, _path, msg.sender, block.timestamp);
+      if (_underlyingToken == _repayToken) {
+        // if underlying and repay token are same, no need to swap, just returned token to caller
+        IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawalAmount);
       } else {
-        router.swapExactTokensForTokens(_withdrawalAmount, _minReceive, _path, msg.sender, block.timestamp);
+        IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawalAmount);
+        if (_withdrawalAmount >= _amountsIn[0]) {
+          // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
+          router.swapTokensForExactTokens(_repayAmount, _withdrawalAmount, _path, msg.sender, block.timestamp);
+        } else {
+          router.swapExactTokensForTokens(_withdrawalAmount, _minReceive, _path, msg.sender, block.timestamp);
+        }
       }
-    }
 
-    // transfer back if ibToken has in contract
-    uint256 _ibTokenBalanceAfter = IERC20(_ibToken).balanceOf(address(this));
-    if (_ibTokenBalanceAfter > _ibTokenBalanceBefore) {
-      IERC20(_ibToken).safeTransfer(msg.sender, _ibTokenBalanceAfter - _ibTokenBalanceBefore);
+      // transfer back if ibToken has in contract
+      if (_ibTokenAmountIn > _actualAmountToWithdraw) {
+        IERC20(_ibToken).safeTransfer(msg.sender, _ibTokenAmountIn - _actualAmountToWithdraw);
+      }
     }
   }
 
