@@ -11,6 +11,7 @@ import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
 
 struct CacheState {
   uint256 collat;
@@ -33,6 +34,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(weth), address(_tripleSlope6));
     adminFacet.setInterestModel(address(btc), address(_tripleSlope6));
     adminFacet.setInterestModel(address(usdc), address(_tripleSlope6));
+
+    FixedFeeModel fixedFeeModel = new FixedFeeModel();
+    adminFacet.setRepurchaseRewardModel(fixedFeeModel);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);
