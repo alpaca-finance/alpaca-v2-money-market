@@ -19,7 +19,7 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 import { MockBadLiquidationStrategy } from "../mocks/MockBadLiquidationStrategy.sol";
 import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
-import { MockRouter } from "../mocks/MockRouter.sol";
+import { MockRouter02 } from "../mocks/MockRouter02.sol";
 
 struct CacheState {
   // general
@@ -38,7 +38,7 @@ struct CacheState {
 
 contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
-  MockRouter internal router;
+  MockRouter02 internal router;
   PancakeswapV2IbTokenLiquidationStrategy _ibTokenLiquidationStrat;
 
   uint256 _aliceSubAccountId = 0;
@@ -57,7 +57,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
     // setup liquidationStrategy
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
-    router = new MockRouter(address(wethUsdcLPToken));
+    router = new MockRouter02(address(wethUsdcLPToken), address(mockOracle));
     usdc.mint(address(router), 100 ether); // prepare for swap
 
     _ibTokenLiquidationStrat = new PancakeswapV2IbTokenLiquidationStrategy(
@@ -148,50 +148,63 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
+    // | ------------------------ |
+    // | TOKEN     | Price (USD)  |
+    // | ------------------------ |
+    // | WETH      | 0.8          |
+    // | USDC      | 1            |
+    // | ------------------------ |
 
-    // Liquitation Facet
-    // |-------------------------------------------------------------------------- |
-    // | #  | Detail                   | Amount                 | Note             |
-    // | -- | ------------------------ | ---------------------- | ---------------- |
-    // | A1 | IB Token Supply          | 40 ether               | IB WETH          |
-    // | A2 | Underlying Total Token   | 41 ether               | WETH             |
-    // | A3 | RepayAmount              | 15 ether               | USDC             |
-    // | A4 | Liquidation Fee          | 0.15 ether             | 1% of A3         |
-    // | A5 | Token Debt Share         | 30 ether               | USDC             |
-    // | A6 | Token Debt Value         | 30 ether               | USDC             |
-    // | A7 | Debt Pending Interest    | 0.0050765511672 ether  | time past 1 day  |
-    // | A8 | Alice Debt Share         | 30 ether               | USDC             |
-    // | ------------------------------------------------------------------------- |
+    // | Liquitation Facet
+    // | -------------------------------------------------------------------------- |
+    // | #   | Detail                   | Amount                 | Note             |
+    // | --- | ------------------------ | ---------------------- | ---------------- |
+    // | A1  | IB Token Supply          | 40 ether               | IB WETH          |
+    // | A2  | Underlying Total Token   | 41 ether               | WETH             |
+    // | A3  | RepayAmount              | 15 ether               | USDC             |
+    // | A4  | Liquidation Fee          | 0.15 ether             | 1% of A3         |
+    // | A5  | Token Debt Share         | 30 ether               | USDC             |
+    // | A6  | Token Debt Value         | 30 ether               | USDC             |
+    // | A7  | Debt Pending Interest    | 0.0050765511672 ether  | time past 1 day  |
+    // | A8  | Alice Debt Share         | 30 ether               | USDC             |
+    // | -------------------------------------------------------------------------- |
 
     // | Liquidation Strat
-    // | ---------------------------------------------------------------------------------------------------------------- |
+    // | ----------------------------------------------------------------------------------------------------------------- |
     // | #   | Detail                             | Amount (ether)        | Note                                           |
     // | --- | ---------------------------------- | --------------------- | ---------------------------------------------- |
     // | B1  | IB Collat                          | 30                    |                                                |
     // | B2  | RepayAmountWithFee                 | 15.15                 | A3 + A4                                        |
-    // | B3  | RequireUnderlyingToSwap            | 15.15                 | amountsIn[0] is same A3 because of mock Router |
+    // | B3  | RequireUnderlyingToSwap            | 18.9375               | amountsIn[0] is same A3 because of mock Router |
     // | B4  | Underlying Token Pending Interest  | 0                     | Underlying Token is not Debt Token             |
     // | B5  | UnderlyingTotalToken with Interest | 41                    | A2 + B4                                        |
-    // | B6  | RequireUnderlyingToSwap in (IB)    | 14.780487804878048780 | B3 * A1 / B5                                   |
-    // | B7  | To Withdraw IbToken                | 14.780487804878048780 | Min(A1, B6)                                    |
-    // | B8  | Underlying Token To Swap           | 15.149999999999999999 | B7 * B5 / A1                                   |
-    // | B9  | Returned IB Token                  | 14.850000000000000001 | if B1 > B7 then B1 - B7 else 0                 |
-    // | B10 | DebtToken from Strat               | 15.149999999999999999 | mock Router amountOut = amountIn (B8)          |
+    // | B6  | RequireUnderlyingToSwap in (IB)    | 18.475609756097560975 | 18.9375 * 40 / 41                              |
+    // |     |                                    |                       | B3 * A1 / B5                                   |
+    // | B7  | To Withdraw IbToken                | 18.475609756097560975 | Min(A1, B6)                                    |
+    // | B8  | Underlying Token To Swap           | 18.937499999999999999 | 18.475609756097560975 * 41 / 40                |
+    // |     |                                    |                       | B7 * B5 / A1                                   |
+    // | B9  | Returned IB Token                  | 11.524390243902439025 | 30 - 18.475609756097560975
+    // |     |                                    |                       | if B1 > B7 then B1 - B7 else 0                 |
+    // | B10 | DebtToken from Strat               | 15.149999999999999999 | 18.937499999999999999 * 0.8 / 1                |
     // | ----------------------------------------------------------------------------------------------------------------- |
 
     // | Summary
     // | ------------------------------------------------------------------------------------
     // | #  | Detail                     | Amount (ether)        | Note
     // | -- | -------------------------- | --------------------- | ------------------------------
-    // | C1 | ActualRepaidAmount         | 14.999999999999999999 | B10 - A4 (keep liquidation fee)
+    // | C1 | ActualRepaidAmount         | 14.999999999999999999 | 15.149999999999999999 - 0.15
+    // |    |                            |                       | B10 - A4 (keep liquidation fee)
     // | C2 | DebtValue with Interest    | 30.0050765511672      | A6 + A7
-    // | C3 | RepaidShare                | 14.997462153866591689 | C1 * A5 / C2
-    // |    |                            |                       | 14.999999999999999999 * 30 / 30.0050765511672
-    // | C4 | Debt Share After Liq       | 15.002537846133408311 | A5 - C3, USDC Share
-    // | C5 | Debt Value After Liq       | 15.000000000000000001 | A6 - C1, USDC
-    // | C6 | Alice Debt Share           | 15.002537846133408311 | A8 - C2
-    // | C7 | Withdrawn IB Token         | 14.780487804878048780 | B7
-    // | C8 | Withdrawn Underlying Token | 15.149999999999999999 | B8
+    // | C3 | RepaidShare                | 14.997462153866591689 | 14.999999999999999999 * 30 / 30.0050765511672
+    // |    |                            |                       | C1 * A5 / C2
+    // | C4 | Debt Share After Liq       | 15.002537846133408311 | 30 - 14.997462153866591689
+    // |    |                            |                       | A5 - C3, USDC Share
+    // | C5 | Debt Value After Liq       | 15.005076551167200001 | 30.0050765511672 - 14.999999999999999999
+    // |    |                            |                       | C2 - C1, USDC
+    // | C6 | Alice Debt Share           | 15.002537846133408311 | 30 - 14.997462153866591689
+    // |    |                            |                       | A8 - C2
+    // | C7 | Withdrawn IB Token         | 18.475609756097560975 | B7
+    // | C8 | Withdrawn Underlying Token | 18.937499999999999999 | B8
 
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -205,8 +218,8 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
     // Expectation
     uint256 _expectedRepaidAmount = 14.999999999999999999 ether; // C1
-    uint256 _expectedIbTokenToWithdraw = 14.780487804878048780 ether; // C7
-    uint256 _expectedUnderlyingWitdrawnAmount = 15.149999999999999999 ether; // C8
+    uint256 _expectedIbTokenToWithdraw = 18.475609756097560975 ether; // C7
+    uint256 _expectedUnderlyingWitdrawnAmount = 18.937499999999999999 ether; // C8
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
