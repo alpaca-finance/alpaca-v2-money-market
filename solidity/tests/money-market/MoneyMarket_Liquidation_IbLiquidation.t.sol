@@ -148,13 +148,13 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
-    
+
     // Liquitation Facet
     // |-------------------------------------------------------------------------- |
     // | #  | Detail                   | Amount                 | Note             |
     // | -- | ------------------------ | ---------------------- | ---------------- |
     // | A1 | IB Token Supply          | 40 ether               | IB WETH          |
-    // | A2 | Underlying Total Token   | 40 ether               | WETH             |     
+    // | A2 | Underlying Total Token   | 40 ether               | WETH             |
     // | A3 | RepayAmount              | 15 ether               | USDC             |
     // | A4 | Liquidation Fee          | 0.15 ether             | 1% of A3         |
     // | A5 | Token Debt Share         | 30 ether               | USDC             |
@@ -163,8 +163,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | A8 | Alice Debt Share         | 30 ether               | USDC             |
     // | ------------------------------------------------------------------------- |
 
- 
-    // | Liquidation Strat                
+    // | Liquidation Strat
     // | ------------------------------------------------------------------------------------------------------ |
     // | #  | Detail                             | Amount      | Note                                           |
     // | -- | ---------------------------------- | ----------- | ---------------------------------------------- |
@@ -178,7 +177,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | B8 | Underlying Token From Strat        | 15.15 ether | should be same as B2                           |
     // | B9 | Returned IB Token                  | 14.85 ether | if B1 > B7 then B1 - B7 else 0                 |
     // | ------------------------------------------------------------------------------------------------------ |
-    
+
     // | Summary
     // | ------------------------------------------------------------------------------------
     // | #  | Detail                     | Amount (ether)        | Note
@@ -192,7 +191,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | C6 | Alice Debt Share           | 15.00253784613340831  | A8 - C2
     // | C7 | Withdrawn IB Token         | 15.15                 | B7
     // | C8 | Withdrawn Underlying Token | 15.15                 | B8
-    
+
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -208,10 +207,9 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     uint256 _expectedUnderlyingWitdrawnAmount = 15.15 ether;
     uint256 _expectedRepaidAmount = 15 ether;
 
-    _assertDebt(ALICE, _aliceSubAccountId,_debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
+    _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    // fee 0.15 usdc = 0.1875 weth
     _assertTreasuryDebtTokenFee(_debtToken, _liquidationFee, _stateBefore);
   }
 
@@ -476,20 +474,21 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
   // TODO: case where diamond has no actual token to transfer to strat
 
-
-  function _cacheState(address _subAccount, address _ibToken, address _underlyingToken, address _debtToken) internal view returns (CacheState memory _state) {
+  function _cacheState(
+    address _subAccount,
+    address _ibToken,
+    address _underlyingToken,
+    address _debtToken
+  ) internal view returns (CacheState memory _state) {
     (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
     _state = CacheState({
-      // general
       mmUnderlyingBalance: IERC20(_underlyingToken).balanceOf(address(moneyMarketDiamond)),
       ibTokenTotalSupply: IERC20(_ibToken).totalSupply(),
       treasuryDebtTokenBalance: MockERC20(_debtToken).balanceOf(treasury),
-      // debt
       globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       subAccountDebtShare: _subAccountDebtShare,
-      // collat
       ibTokenCollat: viewFacet.getTotalCollat(_ibToken),
       subAccountIbTokenCollat: viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken)
     });
@@ -510,14 +509,14 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
 
     assertEq(viewFacet.getOverCollatDebtValue(_debtToken), _debtValueWithInterest - _actualRepaidAmount, "debt value");
     assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), _cache.debtShare - _repaidShare, "debt share");
-    assertEq(
-      _subAccountDebtShare,
-      _cache.subAccountDebtShare - _repaidShare,
-      "sub account debt share"
-    );
+    assertEq(_subAccountDebtShare, _cache.subAccountDebtShare - _repaidShare, "sub account debt share");
 
     // globalDebt should equal to debtValue since there is only 1 position
-    assertEq(viewFacet.getGlobalDebtValue(_debtToken), _globalValueWithInterest - _actualRepaidAmount, "global debt value");
+    assertEq(
+      viewFacet.getGlobalDebtValue(_debtToken),
+      _globalValueWithInterest - _actualRepaidAmount,
+      "global debt value"
+    );
   }
 
   function _assertIbTokenCollatAndTotalSupply(
@@ -526,16 +525,15 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     uint256 _withdrawnIbToken,
     CacheState memory _cache
   ) internal {
-    assertEq(
-      IERC20(_ibToken).totalSupply(),
-      _cache.ibTokenTotalSupply - _withdrawnIbToken,
-      "ibToken totalSupply diff"
-    );
+    assertEq(IERC20(_ibToken).totalSupply(), _cache.ibTokenTotalSupply - _withdrawnIbToken, "ibToken totalSupply diff");
 
     assertEq(viewFacet.getTotalCollat(_ibToken), _cache.ibTokenCollat - _withdrawnIbToken, "collatertal");
-    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken), _cache.subAccountIbTokenCollat - _withdrawnIbToken, "sub account collatertal");
+    assertEq(
+      viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken),
+      _cache.subAccountIbTokenCollat - _withdrawnIbToken,
+      "sub account collatertal"
+    );
   }
-
 
   function _assertWithdrawnUnderlying(
     address _underlyingToken,
