@@ -14,8 +14,6 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import "solidity/tests/utils/console.sol";
-
 library LibAV01 {
   using LibSafeToken for IERC20;
 
@@ -308,9 +306,6 @@ library LibAV01 {
 
     uint256 _lpValue = getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs);
     uint256 _totalDebtValue = getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
-
-    console.log("_lpValue", _lpValue);
-    console.log("_totalDebtValue", _totalDebtValue);
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }

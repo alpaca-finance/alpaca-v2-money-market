@@ -60,10 +60,9 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       // _deltaDebt < 0 means that the vault has more debt that targeted debt value
       // so we need to repay to lessen current debt to match targeted value
       // withdraw lp value equal to deltaDebt and repay
-      address _handler = _vaultConfig.handler;
       (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
         _vaultToken,
-        _handler,
+        _vaultConfig.handler,
         LibAV01.getTokenAmountFromUSDValue(_vaultConfig.lpToken, uint256(-_deltaDebt), avDs),
         avDs
       );
