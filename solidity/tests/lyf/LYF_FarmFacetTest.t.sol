@@ -117,6 +117,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // remove interest for convienice of test
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -154,8 +155,10 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
     mockRouter.setRemoveLiquidityAmountsOut(2.5 ether, 2.5 ether);
 
+    // should at lest left 18 usd as a debt
+    adminFacet.setMinDebtSize(18 ether);
+
     vm.startPrank(BOB);
-    wethUsdcLPToken.approve(address(mockRouter), 5 ether);
     // remove 5 lp,
     // repay 2 eth, 2 usdc
     farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 0.5 ether, 0.5 ether);
@@ -191,6 +194,51 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // start at 20, repay 2, remain 18
     assertEq(_subAccountWethDebtValue, 18 ether);
     assertEq(_subAccountUsdcDebtValue, 18 ether);
+  }
+
+  function testRevert_WhenUserReducePosition_RemainingDebtIsLessThanMinDebtSizeShouldRevert() external {
+    // remove interest for convienice of test
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+
+    // asset collat of subaccount
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
+    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(
+      _bobSubaccount,
+      address(wethUsdcLPToken)
+    );
+
+    assertEq(_subAccountWethCollat, 0 ether);
+    assertEq(_subAccountUsdcCollat, 0 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 40 ether);
+    assertEq(_subAccountLpTokenCollat, 40 ether);
+
+    // mock remove liquidity will return token0: 15 ether and token1: 15 ether
+    mockRouter.setRemoveLiquidityAmountsOut(15 ether, 15 ether);
+    adminFacet.setMinDebtSize(10 ether);
+    vm.startPrank(BOB);
+
+    // remove 15 lp,
+    // repay 15 eth, 15 usdc
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 15 ether, 0 ether, 0 ether);
+    vm.stopPrank();
   }
 
   function testRevert_WhenUserReducePosition_IfSlippedShouldRevert() external {
@@ -280,6 +328,48 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     uint256 mmDebtAmount = IMoneyMarket(moneyMarketDiamond).getNonCollatAccountDebt(address(lyfDiamond), address(weth));
 
     assertEq(debtAmount, mmDebtAmount);
+  }
+
+  function testRevert_WhenAddFarmPosition_BorrowLessThanMinDebtSize_ShouldRevert() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    adminFacet.setMinDebtSize(20 ether);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // min debt size = 20 usd, borrow only 10 usd of weth
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    // if one side of the borrowing didn't pass the min debt size should revert
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 40 ether, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenAddFarmPosition_BorrowMoreThanMinDebtSizeOrNotBorrow_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 30 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    adminFacet.setMinDebtSize(10 ether);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // if there's no borrow, should pass the min
+    // borrow weth 10 ether,  borrow usdc 0 ether
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.stopPrank();
   }
 
   // mix ib + underlying pair with underlying

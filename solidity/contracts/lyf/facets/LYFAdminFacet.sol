@@ -10,6 +10,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
+  event LogSetMinDebtSize(uint256 _newValue);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -87,6 +88,13 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.interestModels[_debtShareId] = _interestModel;
+  }
+
+  function setMinDebtSize(uint256 _newValue) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.minDebtSize = _newValue;
+
+    emit LogSetMinDebtSize(_newValue);
   }
 
   function setReinvestorsOk(address[] memory list, bool _isOk) external onlyOwner {
