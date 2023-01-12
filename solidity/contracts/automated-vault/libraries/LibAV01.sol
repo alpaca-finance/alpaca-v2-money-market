@@ -332,4 +332,9 @@ library LibAV01 {
         _secondsFromLastCollection) /
       1e18;
   }
+
+  function mintManagementFeeToTreasury(address _vaultToken, LibAV01.AVDiamondStorage storage avDs) internal {
+    IAVShareToken(_vaultToken).mint(avDs.treasury, getPendingManagementFee(_vaultToken, avDs));
+    avDs.lastFeeCollectionTimestamps[_vaultToken] = block.timestamp;
+  }
 }

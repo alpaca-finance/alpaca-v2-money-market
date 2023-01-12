@@ -26,8 +26,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
     }
 
     (, uint256 _assetTokenInterest) = LibAV01.accrueVaultInterest(_vaultToken, avDs);
-
-    // TODO: _mintManagementFeeToTreasury
+    LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
     LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
@@ -73,18 +72,13 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
         avDs
       );
 
-      LibAV01.repayMoneyMarket(
+      LibAV01.repayVaultDebt(
         _vaultToken,
         _vaultConfig.stableToken,
         _withdrawalStableAmount - _assetTokenInterest,
         avDs
       );
-      LibAV01.repayMoneyMarket(
-        _vaultToken,
-        _vaultConfig.assetToken,
-        _withdrawalAssetAmount + _assetTokenInterest,
-        avDs
-      );
+      LibAV01.repayVaultDebt(_vaultToken, _vaultConfig.assetToken, _withdrawalAssetAmount + _assetTokenInterest, avDs);
     }
 
     emit LogRetarget(_vaultToken, _currentEquity, LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs));
