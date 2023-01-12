@@ -39,9 +39,17 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       // _deltaDebt > 0 means that the vault has less debt than targeted debt value
       // so we need to borrow more to increase debt to match targeted value
       // borrow both for _deltaDebt / 2 and deposit to handler
-      uint256 _borrowValueUSD = uint256(_deltaDebt / 2);
-      uint256 _stableBorrowAmount = LibAV01.getTokenAmountFromUSDValue(_vaultConfig.stableToken, _borrowValueUSD, avDs);
-      uint256 _assetBorrowAmount = LibAV01.getTokenAmountFromUSDValue(_vaultConfig.stableToken, _borrowValueUSD, avDs);
+      uint256 _stableBorrowValueUSD = uint256(_deltaDebt / 2);
+      uint256 _stableBorrowAmount = LibAV01.getTokenAmountFromUSDValue(
+        _vaultConfig.stableToken,
+        _stableBorrowValueUSD,
+        avDs
+      );
+      uint256 _assetBorrowAmount = LibAV01.getTokenAmountFromUSDValue(
+        _vaultConfig.stableToken,
+        uint256(_deltaDebt) - _stableBorrowValueUSD, // prevent precision loss from _deltaDebt / 2
+        avDs
+      );
 
       LibAV01.borrowMoneyMarket(_vaultToken, _vaultConfig.stableToken, _stableBorrowAmount, avDs);
       LibAV01.borrowMoneyMarket(_vaultToken, _vaultConfig.assetToken, _assetBorrowAmount, avDs);

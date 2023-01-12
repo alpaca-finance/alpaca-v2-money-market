@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { AV_BaseTest, console } from "./AV_BaseTest.t.sol";
+import { AV_BaseTest, console, MockInterestModel, IAVShareToken } from "./AV_BaseTest.t.sol";
 
 // interfaces
 import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
@@ -26,24 +26,20 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     _lpToken = address(wethUsdcLPToken);
   }
 
-  function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtPositive_ShouldIncreaseDebtToMatchTarget()
-    external
-  {
+  function testCorrectness_WhenAVRetarget_WhileDeltaDebtPositive_ShouldIncreaseDebtToMatchTarget() external {
     /**
      * scenario
      *
      * 1) ALICE deposit 1 usdc at 3x leverage, vault borrow 0.5 usdc, 1.5 weth to farm 1.5 lp
      *    - debtValue = 0.5 * 1 + 1.5 * 1 = 2 usd
      *
-     * 2) lp profit and value increased, 1 lp = 1.8 weth + 1.8 usdc, vault can be retargeted
-     *    - newLPValue = 1.8 * 1 + 1.8 * 1 = 3.6 usd
+     * 2) lp profit and value increased to 3.6 usd, vault can be retargeted
      *    - equity = newLPValue - debtValue = 3.6 - 2 = 1.6 usd
      *    - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 1.6 * (3 - 1) - 2 = 1.2
      *
      * 3) perform retarget
-     *    - borrow usd value = deltaDebt / 2 = 0.6 usd
-     *    - borrow 0.6 usdc
-     *    - borrow 0.6 weth
+     *    - borrow usdc = deltaDebt / 2 = 1.2 / 2 = 0.6 usdc
+     *    - borrow weth = deltaDebt - usdc borrow value = 1.2 - 0.6 = 0.6
      */
 
     // 1)
@@ -54,29 +50,54 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     // ALICE has 1.5 lp, price = 2.4 would make total lp value = 1.5 * 2.4 = 3.6 usd
     mockOracle.setLpTokenPrice(_lpToken, 2.4 ether);
 
-    // check debt before retarget
-    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether);
-    assertEq(_assetDebt, 1.5 ether);
-
     // 3)
     rebalanceFacet.retarget(_vaultToken);
 
     // check debt after retarget should increase
-    (_stableDebt, _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_stableDebt, 0.5 ether + 0.6 ether);
     assertEq(_assetDebt, 1.5 ether + 0.6 ether);
-
-    // check other side effects
-    // should accrue interest
-    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
-    // should mint management fee
-    assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
-  function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtNegative_ShouldDecreaseDebtToMatchTarget()
+  function testCorrectness_WhenAVRetarget_WhileDeltaDebtPositiveWithPrecisionLoss_ShouldIncreaseDebtToMatchTarget()
     external
   {
+    MockInterestModel mockInterestModel1 = new MockInterestModel(0);
+    MockInterestModel mockInterestModel2 = new MockInterestModel(0);
+    address _newVaultToken = address(
+      IAVShareToken(
+        adminFacet.openVault(
+          address(wethUsdcLPToken),
+          address(usdc),
+          address(weth),
+          address(handler),
+          4,
+          0,
+          address(mockInterestModel1),
+          address(mockInterestModel2)
+        )
+      )
+    );
+
+    // don't ask where these numbers come from it just happened to make
+    // deltaDebt last decimal digit odd number and cause precision loss during stableBorrowAmount calculation
+    // deltaDebt = 0.666666666666666657
+    // stableBorrowValue and Amount = 0.333333333333333328
+    // assetBorrowValue and Amount = 0.333333333333333329
+    vm.prank(ALICE);
+    tradeFacet.deposit(_newVaultToken, 1.999999999999999999 ether, 0);
+
+    mockOracle.setLpTokenPrice(_lpToken, 2.055555555555555555 ether);
+
+    rebalanceFacet.retarget(_newVaultToken);
+
+    // check debt after retarget should increase
+    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_newVaultToken);
+    assertEq(_stableDebt, 1999999999999999999 + 333333333333333328);
+    assertEq(_assetDebt, 1999999999999999999 * 2 + 333333333333333329);
+  }
+
+  function testCorrectness_WhenAVRetarget_WhileDeltaDebtNegative_ShouldDecreaseDebtToMatchTarget() external {
     /**
      * scenario
      *
@@ -102,27 +123,16 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     mockOracle.setLpTokenPrice(_lpToken, 1.8 ether);
     mockRouter.setRemoveLiquidityAmountsOut(0.3 ether, 0.3 ether);
 
-    // check debt before retarget
-    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether);
-    assertEq(_assetDebt, 1.5 ether);
-
     rebalanceFacet.retarget(_vaultToken);
 
     // check debt after retarget should decrease
-    (_stableDebt, _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_stableDebt, 0.5 ether - 0.3 ether);
     assertEq(_assetDebt, 1.5 ether - 0.3 ether);
-
-    // check other side effects
-    // should accrue interest
-    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
-    // should mint management fee
-    assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
   // TODO: handle case where withdraw more than debt
-  // function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtNegative_WithdrawMoreThanDebtOneSide_ShouldDOWHAT()
+  // function testCorrectness_WhenAVRetarget_WhileDeltaDebtNegative_WithdrawMoreThanDebtOneSide_ShouldDOWHAT()
   //   external
   // {
   //   /**
@@ -143,32 +153,38 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
   //    */
   // }
 
-  function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtEqualToTarget_DebtShouldNotChange() external {
+  function testCorrectness_WhenAVRetarget_WhileDeltaDebtEqualToTarget_DebtShouldNotChange() external {
     vm.prank(ALICE);
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
 
-    // check debt before retarget
-    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether);
-    assertEq(_assetDebt, 1.5 ether);
+    (uint256 _stableDebtBefore, uint256 _assetDebtBefore) = viewFacet.getDebtValues(_vaultToken);
 
     vm.expectEmit(true, false, false, false, avDiamond);
     emit LogRetarget(_vaultToken, 1 ether, 1 ether);
     rebalanceFacet.retarget(_vaultToken);
 
     // check debt after retarget should not change
-    (_stableDebt, _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether);
-    assertEq(_assetDebt, 1.5 ether);
+    (uint256 _stableDebtAfter, uint256 _assetDebtAfter) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebtBefore, _stableDebtAfter);
+    assertEq(_assetDebtBefore, _assetDebtAfter);
+  }
 
-    // check other side effects
+  function testCorrectness_WhenAVRetarget_ShouldAccrueInterestAndMintManagementFee() external {
+    vm.prank(ALICE);
+    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+
+    rebalanceFacet.retarget(_vaultToken);
+
     // should accrue interest
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    (uint256 _stablePendingInterest, uint256 _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
+    assertEq(_stablePendingInterest, 0);
+    assertEq(_assetPendingInterest, 0);
     // should mint management fee
     assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
-  function testRevert_WhenNonRebalancerCallRetarget() external {
+  function testRevert_WhenNonRebalancerCallAVRetarget() external {
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IAVRebalanceFacet.AVRebalanceFacet_Unauthorized.selector, ALICE));
     rebalanceFacet.retarget(_vaultToken);
