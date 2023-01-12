@@ -213,7 +213,7 @@ library LibAV01 {
     _tokenValue = (_amount * avDs.tokenConfigs[_token].to18ConversionFactor * _price) / 1e18;
   }
 
-  function usdToTokenAmount(
+  function getTokenAmountFromUSDValue(
     address _token,
     uint256 _usdValue,
     AVDiamondStorage storage avDs
@@ -231,14 +231,13 @@ library LibAV01 {
     avDs.vaultDebts[_shareToken][_token] += _amount;
   }
 
+  /// @dev doesn't repay money market
   function repayVaultDebt(
     address _shareToken,
     address _token,
     uint256 _repayAmount,
     AVDiamondStorage storage avDs
   ) internal {
-    // IERC20(_token).safeIncreaseAllowance(avDs.moneyMarket, _repayAmount);
-    // IMoneyMarket(avDs.moneyMarket).nonCollatRepay(address(this), _token, _repayAmount);
     avDs.vaultDebts[_shareToken][_token] -= _repayAmount;
   }
 

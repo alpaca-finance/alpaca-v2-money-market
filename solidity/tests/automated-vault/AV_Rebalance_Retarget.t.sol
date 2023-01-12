@@ -54,12 +54,24 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     // ALICE has 1.5 lp, price = 2.4 would make total lp value = 1.5 * 2.4 = 3.6 usd
     mockOracle.setLpTokenPrice(_lpToken, 2.4 ether);
 
-    // TODO: assert debt before
+    // check debt before retarget
+    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebt, 0.5 ether);
+    assertEq(_assetDebt, 1.5 ether);
 
     // 3)
     rebalanceFacet.retarget(_vaultToken);
 
-    // TODO: assert debt after
+    // check debt after retarget should increase
+    (_stableDebt, _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebt, 0.5 ether + 0.6 ether);
+    assertEq(_assetDebt, 1.5 ether + 0.6 ether);
+
+    // check other side effects
+    // should accrue interest
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    // should mint management fee
+    assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
   function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtNegative_ShouldDecreaseDebtToMatchTarget()
@@ -86,15 +98,27 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
 
     // 2)
-    // ALICE has 1.5 lp, price = 1.8 would make total lp value = 1.5 * 1.8 = 2.4 usd
+    // ALICE has 1.5 lp, price = 1.8 would make total lp value = 1.5 * 1.8 = 2.7 usd
     mockOracle.setLpTokenPrice(_lpToken, 1.8 ether);
     mockRouter.setRemoveLiquidityAmountsOut(0.3 ether, 0.3 ether);
 
-    // TODO: assert debt before
+    // check debt before retarget
+    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebt, 0.5 ether);
+    assertEq(_assetDebt, 1.5 ether);
 
     rebalanceFacet.retarget(_vaultToken);
 
-    // TODO: assert debt after
+    // check debt after retarget should decrease
+    (_stableDebt, _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebt, 0.5 ether - 0.3 ether);
+    assertEq(_assetDebt, 1.5 ether - 0.3 ether);
+
+    // check other side effects
+    // should accrue interest
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    // should mint management fee
+    assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
   // TODO: handle case where withdraw more than debt
@@ -119,13 +143,29 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
   //    */
   // }
 
-  function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtEqualToTarget_ShouldDoNothing() external {
+  function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtEqualToTarget_DebtShouldNotChange() external {
     vm.prank(ALICE);
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
+
+    // check debt before retarget
+    (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebt, 0.5 ether);
+    assertEq(_assetDebt, 1.5 ether);
 
     vm.expectEmit(true, false, false, false, avDiamond);
     emit LogRetarget(_vaultToken, 1 ether, 1 ether);
     rebalanceFacet.retarget(_vaultToken);
+
+    // check debt after retarget should not change
+    (_stableDebt, _assetDebt) = viewFacet.getDebtValues(_vaultToken);
+    assertEq(_stableDebt, 0.5 ether);
+    assertEq(_assetDebt, 1.5 ether);
+
+    // check other side effects
+    // should accrue interest
+    assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
+    // should mint management fee
+    assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
   function testRevert_WhenNonRebalancerCallRetarget() external {
