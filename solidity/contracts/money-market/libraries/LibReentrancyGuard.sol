@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// ---- Libraries ---- //
-import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
-
 library LibReentrancyGuard {
   error LibReentrancyGuard_ReentrantCall();
 
@@ -14,14 +11,15 @@ library LibReentrancyGuard {
   bytes32 internal constant REENTRANCY_GUARD_STORAGE_POSITION =
     0xbde06addc2781a1cfde79d9c0dd886b1b91b109df0c6d6db84a609c5b38de1fc;
 
-  uint256 internal constant _NOT_ENTERED = 1;
-  uint256 internal constant _ENTERED = 2;
+  uint128 internal constant _NOT_ENTERED = 1;
+  uint128 internal constant _ENTERED = 2;
 
   // -------------
   //    Storage
   // -------------
   struct ReentrancyGuardDiamondStorage {
-    uint256 status;
+    uint128 status;
+    uint128 liquidateExec;
   }
 
   function reentrancyGuardDiamondStorage()
@@ -50,11 +48,8 @@ library LibReentrancyGuard {
 
   function lockWithdraw() internal {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    if (
-      reentrancyGuardDs.status == _ENTERED && moneyMarketDs.liquidateExec == LibMoneyMarket01._NOT_ENTERED_LIQUIDATE
-    ) {
+    if (reentrancyGuardDs.status == _ENTERED && reentrancyGuardDs.liquidateExec != _ENTERED) {
       revert LibReentrancyGuard_ReentrantCall();
     }
 
