@@ -20,6 +20,8 @@ library LibAV01 {
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
+  uint256 internal constant MAX_BPS = 10000;
+
   event LogAccrueInterest(
     address indexed _vaultToken,
     address indexed _stableToken,
@@ -54,6 +56,7 @@ library LibAV01 {
     address moneyMarket;
     address oracle;
     address treasury;
+    uint16 repurchaseRewardBps;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) lastFeeCollectionTimestamps;

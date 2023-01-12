@@ -130,4 +130,13 @@ contract AVAdminFacet is IAVAdminFacet {
       }
     }
   }
+
+  function setRepurchaseRewardBps(uint16 _newBps) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+    if (_newBps > LibAV01.MAX_BPS) {
+      revert AVAdminFacet_InvalidParams();
+    }
+    avDs.repurchaseRewardBps = _newBps;
+    emit LogSetRepurchaseRewardBps(_newBps);
+  }
 }

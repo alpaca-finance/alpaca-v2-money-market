@@ -28,6 +28,7 @@ interface IAVAdminFacet {
   error AVTradeFacet_InvalidToken(address _token);
   error AVAdminFacet_InvalidShareToken(address _token);
   error AVAdminFacet_InvalidHandler();
+  error AVAdminFacet_InvalidParams();
 
   event LogOpenVault(
     address indexed _caller,
@@ -37,6 +38,7 @@ interface IAVAdminFacet {
     address _shareToken
   );
   event LogSetRebalancerOk(address indexed _rebalancer, bool _isOk);
+  event LogSetRepurchaseRewardBps(uint256 _newBps);
 
   function openVault(
     address _lpToken,
