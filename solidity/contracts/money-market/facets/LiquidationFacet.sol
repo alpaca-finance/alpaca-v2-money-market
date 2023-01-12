@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
@@ -33,6 +34,14 @@ contract LiquidationFacet is ILiquidationFacet {
     LibReentrancyGuard.lock();
     _;
     LibReentrancyGuard.unlock();
+  }
+
+  modifier liquidateExec() {
+    LibReentrancyGuard.ReentrancyGuardDiamondStorage storage reentrancyGuardDs = LibReentrancyGuard
+      .reentrancyGuardDiamondStorage();
+    reentrancyGuardDs.liquidateExec = LibReentrancyGuard._ENTERED;
+    _;
+    reentrancyGuardDs.liquidateExec = LibReentrancyGuard._NOT_ENTERED;
   }
 
   struct RepurchaseLocalVars {
@@ -181,14 +190,12 @@ contract LiquidationFacet is ILiquidationFacet {
     address _collatToken,
     uint256 _repayAmount,
     bytes calldata _paramsForStrategy
-  ) external nonReentrant {
+  ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     if (!moneyMarketDs.liquidationStratOk[_liquidationStrat] || !moneyMarketDs.liquidatorsOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
-
-    moneyMarketDs.liquidateExec = LibMoneyMarket01._ENTERED_LIQUIDATE;
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
@@ -218,8 +225,6 @@ contract LiquidationFacet is ILiquidationFacet {
     } else {
       _liquidationCall(_params, moneyMarketDs);
     }
-
-    moneyMarketDs.liquidateExec = LibMoneyMarket01._NOT_ENTERED_LIQUIDATE;
   }
 
   function _liquidationCall(
