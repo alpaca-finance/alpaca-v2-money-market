@@ -7,6 +7,7 @@ import { AVShareToken } from "../AVShareToken.sol";
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -24,7 +25,9 @@ contract AVAdminFacet is IAVAdminFacet {
     address _assetToken,
     address _handler,
     uint8 _leverageLevel,
-    uint16 _managementFeePerSec
+    uint16 _managementFeePerSec,
+    address _stableTokenInterestModel,
+    address _assetTokenInterestModel
   ) external onlyOwner returns (address _newShareToken) {
     // sanity call
     IAVHandler(_handler).totalLpBalance();
@@ -32,13 +35,18 @@ contract AVAdminFacet is IAVAdminFacet {
 
     string memory _tokenSymbol = IERC20(_lpToken).symbol();
     uint8 _tokenDecimals = IERC20(_lpToken).decimals();
+    // TODO: move string stuff to AVShareToken view function
     _newShareToken = address(
       new AVShareToken(
-        string.concat("Share Token ", _tokenSymbol),
-        string.concat("Share ", _tokenSymbol),
+        string.concat("Automated Vault Share Token ", _tokenSymbol),
+        string.concat("avShare", _tokenSymbol),
         _tokenDecimals
       )
     );
+
+    // sanity check interestModels
+    IInterestRateModel(_stableTokenInterestModel).getInterestRate(1, 1);
+    IInterestRateModel(_assetTokenInterestModel).getInterestRate(1, 1);
 
     avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
       shareToken: _newShareToken,
@@ -47,7 +55,9 @@ contract AVAdminFacet is IAVAdminFacet {
       assetToken: _assetToken,
       handler: _handler,
       leverageLevel: _leverageLevel,
-      managementFeePerSec: _managementFeePerSec
+      managementFeePerSec: _managementFeePerSec,
+      stableTokenInterestModel: _stableTokenInterestModel,
+      assetTokenInterestModel: _assetTokenInterestModel
     });
 
     // todo: register lpToken to tokenConfig
@@ -84,5 +94,25 @@ contract AVAdminFacet is IAVAdminFacet {
   function setTreasury(address _treasury) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     avDs.treasury = _treasury;
+  }
+
+  function setManagementFeePerSec(address _vaultToken, uint16 _newManagementFeePerSec) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+    avDs.vaultConfigs[_vaultToken].managementFeePerSec = _newManagementFeePerSec;
+  }
+
+  function setInterestRateModels(
+    address _vaultToken,
+    address _newStableTokenInterestRateModel,
+    address _newAssetTokenInterestRateModel
+  ) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+
+    // sanity check
+    IInterestRateModel(_newStableTokenInterestRateModel).getInterestRate(1, 1);
+    IInterestRateModel(_newAssetTokenInterestRateModel).getInterestRate(1, 1);
+
+    avDs.vaultConfigs[_vaultToken].stableTokenInterestModel = _newStableTokenInterestRateModel;
+    avDs.vaultConfigs[_vaultToken].assetTokenInterestModel = _newAssetTokenInterestRateModel;
   }
 }

@@ -26,7 +26,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     // then borrowed stable token is 15 - 10 = 5
     // to calculate borrowed asset token, depositedAmount * leverageLevel
     // then borrowed asset token is 15
-    (uint256 _stableDebtValue, uint256 _assetDebtValue) = tradeFacet.getDebtValues(address(avShareToken));
+    (uint256 _stableDebtValue, uint256 _assetDebtValue) = viewFacet.getDebtValues(address(avShareToken));
     assertEq(_stableDebtValue, 5 ether);
     assertEq(_assetDebtValue, 15 ether);
 
@@ -62,7 +62,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
 
     // check vault state
     // BOB deposit same amount as ALICE so everything in vault should double
-    (_stableDebtValue, _assetDebtValue) = tradeFacet.getDebtValues(address(avShareToken));
+    (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(address(avShareToken));
     assertEq(_stableDebtValue, 10 ether);
     assertEq(_assetDebtValue, 30 ether);
     assertEq(handler.totalLpBalance(), 30 ether);
