@@ -110,15 +110,11 @@ library LibAV01 {
 
   function withdrawFromHandler(
     address _vaultToken,
-    uint256 _shareToWithdraw,
+    address _handler,
+    uint256 _lpToWithdraw,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
     VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
-
-    address _handler = _vaultConfig.handler;
-
-    uint256 _lpToWithdraw = (IAVHandler(_handler).totalLpBalance() * _shareToWithdraw) /
-      IERC20(_vaultToken).totalSupply();
 
     // (token0ReturnAmount, token1ReturnAmount)
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);

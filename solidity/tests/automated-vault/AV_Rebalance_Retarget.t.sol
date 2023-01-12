@@ -71,14 +71,14 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
      * 1) ALICE deposit 1 usdc at 3x leverage, vault borrow 0.5 usdc, 1.5 weth to farm 1.5 lp
      *    - debtValue = 0.5 * 1 + 1.5 * 1 = 2 usd
      *
-     * 2) lp rekt and value decreased, 1 lp = 1.2 usdc + 1.2 weth, vault can be retargeted
-     *    - newLPValue = 1.2 * 1 + 1.2 * 1 = 2.4 usd
-     *    - equity = newLPValue - debtValue = 2.4 - 2 = 0.4 usd
-     *    - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 0.4 * (3 - 1) - 2 = -1.2
+     * 2) lp rekt and value decreased, 1 lp = 1.35 usdc + 1.35 weth, vault can be retargeted
+     *    - newLPValue = 1.35 * 1 + 1.35 * 1 = 2.7 usd
+     *    - equity = newLPValue - debtValue = 2.7 - 2 = 0.7 usd
+     *    - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 0.7 * (3 - 1) - 2 = -0.6
      *
      * 3) perform retarget
-     *    - withdraw lp value of 1.2 usd, get 0.6 usdc, 0.6 weth
-     *    - repay 0.6 usdc, 0.6 weth debt
+     *    - withdraw lp value of 0.6 usd, get 0.3 usdc, 0.3 weth
+     *    - repay 0.3 usdc, 0.3 weth debt
      */
 
     // 1)
@@ -86,9 +86,9 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
 
     // 2)
-    // ALICE has 1.5 lp, price = 1.6 would make total lp value = 1.5 * 1.6 = 2.4 usd
-    mockOracle.setLpTokenPrice(_lpToken, 1.6 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(0.6 ether, 0.6 ether);
+    // ALICE has 1.5 lp, price = 1.8 would make total lp value = 1.5 * 1.8 = 2.4 usd
+    mockOracle.setLpTokenPrice(_lpToken, 1.8 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(0.3 ether, 0.3 ether);
 
     // TODO: assert debt before
 
@@ -96,6 +96,28 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
     // TODO: assert debt after
   }
+
+  // TODO: handle case where withdraw more than debt
+  // function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtNegative_WithdrawMoreThanDebtOneSide_ShouldDOWHAT()
+  //   external
+  // {
+  //   /**
+  //    * scenario
+  //    *
+  //    * 1) ALICE deposit 1 usdc at 3x leverage, vault borrow 0.5 usdc, 1.5 weth to farm 1.5 lp
+  //    *    - debtValue = 0.5 * 1 + 1.5 * 1 = 2 usd
+  //    *
+  //    * 2) lp rekt and value decreased, 1 lp = 1.2 usdc + 1.2 weth, vault can be retargeted
+  //    *    - newLPValue = 1.2 * 1 + 1.2 * 1 = 2.4 usd
+  //    *    - equity = newLPValue - debtValue = 2.4 - 2 = 0.4 usd
+  //    *    - deltaDebt = currentEquity * (leverage - 1) - currentDebt = 0.4 * (3 - 1) - 2 = -1.2
+  //    *
+  //    * 3) perform retarget
+  //    *    - withdraw lp value of 1.2 usd, get 0.6 usdc, 0.6 weth
+  //    *    - repay 0.6 weth debt
+  //    *    - can't repay 0.6 usdc because its more than 0.5 usdc debt
+  //    */
+  // }
 
   function testCorrectness_WhenRebalancerCallRetarget_WhileDeltaDebtEqualToTarget_ShouldDoNothing() external {
     vm.prank(ALICE);

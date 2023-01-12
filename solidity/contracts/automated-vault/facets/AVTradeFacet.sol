@@ -6,6 +6,7 @@ import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -95,7 +96,8 @@ contract AVTradeFacet is IAVTradeFacet {
     // 1. withdraw from handler
     (vars.withdrawalStableAmount, vars.withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _vaultToken,
-      _shareToWithdraw,
+      _vaultConfig.handler,
+      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / IERC20(_vaultToken).totalSupply(),
       avDs
     );
 

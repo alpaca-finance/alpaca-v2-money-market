@@ -25,7 +25,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       revert AVRebalanceFacet_Unauthorized(msg.sender);
     }
 
-    (, uint256 _assetTokenInterest) = LibAV01.accrueVaultInterest(_vaultToken, avDs);
+    LibAV01.accrueVaultInterest(_vaultToken, avDs);
     LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
     LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
@@ -66,19 +66,21 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       // _deltaDebt < 0 means that the vault has more debt that targeted debt value
       // so we need to repay to lessen current debt to match targeted value
       // withdraw lp value equal to deltaDebt and repay
+      address _handler = _vaultConfig.handler;
       (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
         _vaultToken,
-        uint256(-_deltaDebt), // TODO: this to vaultShare
+        _handler,
+        LibAV01.usdToTokenAmount(_vaultConfig.lpToken, uint256(-_deltaDebt), avDs),
         avDs
       );
 
-      LibAV01.repayVaultDebt(
-        _vaultToken,
-        _vaultConfig.stableToken,
-        _withdrawalStableAmount - _assetTokenInterest,
-        avDs
-      );
-      LibAV01.repayVaultDebt(_vaultToken, _vaultConfig.assetToken, _withdrawalAssetAmount + _assetTokenInterest, avDs);
+      console.log("stableDebt", avDs.vaultDebts[_vaultToken][_vaultConfig.stableToken]);
+      console.log("assetDebt", avDs.vaultDebts[_vaultToken][_vaultConfig.assetToken]);
+      console.log("_withdrawalStableAmount", _withdrawalStableAmount);
+      console.log("_withdrawalAssetAmount", _withdrawalAssetAmount);
+
+      LibAV01.repayVaultDebt(_vaultToken, _vaultConfig.stableToken, _withdrawalStableAmount, avDs);
+      LibAV01.repayVaultDebt(_vaultToken, _vaultConfig.assetToken, _withdrawalAssetAmount, avDs);
     }
 
     emit LogRetarget(_vaultToken, _currentEquity, LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs));
