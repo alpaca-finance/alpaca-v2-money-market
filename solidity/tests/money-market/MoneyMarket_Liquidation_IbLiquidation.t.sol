@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 // contract
 import { PancakeswapV2IbTokenLiquidationStrategy } from "../../contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";
@@ -21,15 +22,18 @@ import { MockLPToken } from "../mocks/MockLPToken.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
 
 struct CacheState {
-  uint256 totalSupply;
+  // general
   uint256 mmUnderlyingBalance;
-  uint256 treasuryFee;
+  uint256 ibTokenTotalSupply;
+  uint256 treasuryDebtTokenBalance;
+  // debt
   uint256 globalDebtValue;
-  uint256 collat;
-  uint256 subAccountCollat;
-  uint256 debtShare;
   uint256 debtValue;
+  uint256 debtShare;
   uint256 subAccountDebtShare;
+  // collat
+  uint256 ibTokenCollat;
+  uint256 subAccountIbTokenCollat;
 }
 
 contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
@@ -37,12 +41,14 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   MockRouter internal router;
   PancakeswapV2IbTokenLiquidationStrategy _ibTokenLiquidationStrat;
 
-  uint256 _subAccountId = 0;
-  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
+  uint256 _aliceSubAccountId = 0;
+  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _aliceSubAccountId);
   address treasury;
 
   function setUp() public override {
     super.setUp();
+
+    treasury = address(this);
 
     TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(tripleSlope6));
@@ -52,6 +58,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // setup liquidationStrategy
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
     router = new MockRouter(address(wethUsdcLPToken));
+    usdc.mint(address(router), 100 ether); // prepare for swap
 
     _ibTokenLiquidationStrat = new PancakeswapV2IbTokenLiquidationStrategy(
       address(router),
@@ -92,30 +99,43 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     lendFacet.deposit(address(btc), 10 ether);
     vm.stopPrank();
 
+    // alice add ibWETh collat for 40 ether
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 40 ether);
     collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
-    // alice added ib token collat 40 ether
+    // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
-    // alice borrowed 30% of vault then interest should be 0.0617647058676 per year
-    // interest per day = 0.00016921837224
-    borrowFacet.borrow(0, address(usdc), 30 ether);
     vm.stopPrank();
-
-    treasury = address(this);
-
-    usdc.mint(address(router), 100 ether); // prepare for swap
   }
 
   function testCorrectness_WhenPartialLiquidateIbCollateral_ShouldRedeemUnderlyingToPayDebtCorrectly() external {
-    // criteria
-    address _debtToken = address(usdc);
-    address _collatToken = address(ibWeth);
+    // alice borrow 30 USDC
+    vm.prank(ALICE);
+    borrowFacet.borrow(0, address(usdc), 30 ether);
+    // | ALICE  --------------------------|
+    // | TOKEN  | DEBT VALUE | DEBT SHARE |
+    // | usdc   | 30 ether   | 30 ether   |
+    // | global | 30 ether   | 30 ether   |
 
-    // add time 1 day
-    // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-    // vm.warp(block.timestamp + 1 days);
+    // criteria
+    address _ibCollatToken = address(ibWeth);
+    address _underlyingToken = address(weth);
+    address _debtToken = address(usdc);
+    uint256 _repayAmountInput = 15 ether; // reflect with amountIn[0] in strat
+    uint256 _liquidationFee = 0.15 ether; // 1% of _repayAmountInput
+
+    CacheState memory _stateBefore = _cacheState(_aliceSubAccount0, _ibCollatToken, _underlyingToken, _debtToken);
+
+    // Time past for 1 day
+    vm.warp(block.timestamp + 1 days);
+    // | DEBT TOKEN | Borrowed Ratio | interest rate per day |
+    // | usdc       | 30%            | 0.00016921837224      |
+
+    // PendindInterest = BoorowedAmount * InterestRate * Timepast (1 day)
+    // PendindInterest = 30 * 0.00016921837224 = 0.0050765511672
+    uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(_debtToken);
+    assertEq(_pendingInterest, 0.0050765511672 ether, "pending interest for _debtToken");
 
     // increase shareValue of ibWeth by 2.5%
     // would need 18.2926829268... ibWeth to redeem 18.75 weth to repay debt
@@ -124,98 +144,75 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // vm.prank(moneyMarketDiamond);
     // ibWeth.onWithdraw(BOB, BOB, 0, 1 ether);
 
-    // mm state before
-    CacheState memory _stateBefore = CacheState({
-      totalSupply: ibWeth.totalSupply(),
-      mmUnderlyingBalance: weth.balanceOf(address(moneyMarketDiamond)),
-      treasuryFee: MockERC20(_debtToken).balanceOf(treasury),
-      globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
-      collat: viewFacet.getTotalCollat(_collatToken),
-      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
-      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
-      subAccountDebtShare: viewFacet.getOverCollatSubAccountDebtShares(ALICE, 0)[0].amount
-    });
-
-    // dump weth price from 1 USD to 0.8 USD, make position unhealthy
+    // Prepare before liquidation
+    // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
+    
+    // Liquitation Facet
+    // |-------------------------------------------------------------------------- |
+    // | #  | Detail                   | Amount                 | Note             |
+    // | -- | ------------------------ | ---------------------- | ---------------- |
+    // | A1 | IB Token Supply          | 40 ether               | IB WETH          |
+    // | A2 | Underlying Total Token   | 40 ether               | WETH             |     
+    // | A3 | RepayAmount              | 15 ether               | USDC             |
+    // | A4 | Liquidation Fee          | 0.15 ether             | 1% of A3         |
+    // | A5 | Token Debt Share         | 30 ether               | USDC             |
+    // | A6 | Token Debt Value         | 30 ether               | USDC             |
+    // | A7 | Debt Pending Interest    | 0.0050765511672 ether  | time past 1 day  |
+    // | A8 | Alice Debt Share         | 30 ether               | USDC             |
+    // | ------------------------------------------------------------------------- |
 
-    // ibTokenSupply = 40 ether
-    // underlyingTotalToken in MM = 40 ether
-
-    // liquidationStrat parameters
-    // address _ibToken = _collatToken
-    // address _repayToken = _debtToken
-    // uint256 _ibTokenIn = all collat amount = 40 ether
-    // uint256 _repayAmount = _repayAmount + fee = 15 + 0.15 (0.1%) // mockRouter use this as amountIns[0]
-    // bytes calldata _data = 0
-    // calculation
-    // require amount to withdraw = amountIns[0] * ibTokenTotalSupply / underlyingTotalTokenWithInterest
-    // then = 15.15 * 40 / 40 = 15.15 ether
-    // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = Min(40, 15.15) = 15.15 ether
-    uint256 _repayAmountInput = 15 ether; // reflect with amountIn[0] in strat
-    uint256 _fee = 0.15 ether; // 1% of _repayAmountInput
-    // in mock router using amountOut as amountIn
-    uint256 _expectedIbTokenToWithdraw = _repayAmountInput + _fee;
-    uint256 _expectedUnderlyingWitdrawalAmount = 15.15 ether;
-    uint256 _expectedRepayAmountFromStrat = 15.15 ether;
-    uint256 _actualRepaidAmount = _expectedRepayAmountFromStrat - _fee;
-
+ 
+    // | Liquidation Strat                
+    // | ------------------------------------------------------------------------------------------------------ |
+    // | #  | Detail                             | Amount      | Note                                           |
+    // | -- | ---------------------------------- | ----------- | ---------------------------------------------- |
+    // | B1 | IB Collat                          | 30 ether    |                                                |
+    // | B2 | RepayAmountWithFee                 | 15.15 ether | A3 + A4                                        |
+    // | B3 | RequireUnderlyingToSwap            | 15.15 ether | amountsIn[0] is same A3 because of mock Router |
+    // | B4 | Underlying Token Pending Interest  | 0           | Underlying Token is not Debt Token             |
+    // | B5 | UnderlyingTotalToken with Interest | 40 ether    | A2 + B4                                        |
+    // | B6 | RequireUnderlyingToSwap in (IB)    | 15.15 ether | B3 * A1 / B5                                   |
+    // | B7 | To Withdraw IbToken                | 15.15 ether | Min(A1, B6)                                    |
+    // | B8 | Underlying Token From Strat        | 15.15 ether | should be same as B2                           |
+    // | B9 | Returned IB Token                  | 14.85 ether | if B1 > B7 then B1 - B7 else 0                 |
+    // | ------------------------------------------------------------------------------------------------------ |
+    
+    // | Summary
+    // | ------------------------------------------------------------------------------------
+    // | #  | Detail                     | Amount (ether)        | Note
+    // | -- | -------------------------- | --------------------- | ------------------------------
+    // | C1 | ActualRepaidAmount         | 15                    | B8 - A4 (keep liquidation fee)
+    // | C2 | DebtValue with Interest    | 30.0050765511672      | A6 + A7
+    // | C3 | RepaidShare                | 14.997462153866591690 | C1 * A5 / C2
+    // |    |                            |                       | 15 * 30 / 30.0050765511672
+    // | C4 | Debt Share After Liq       | 15.00253784613340831  | A5 - C2, USDC Share
+    // | C5 | Debt Value After Liq       | 15.0050765511672      | C3 - C1, USDC
+    // | C6 | Alice Debt Share           | 15.00253784613340831  | A8 - C2
+    // | C7 | Withdrawn IB Token         | 15.15                 | B7
+    // | C8 | Withdrawn Underlying Token | 15.15                 | B8
+    
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
-      _subAccountId,
+      _aliceSubAccountId,
       _debtToken,
-      _collatToken,
+      _ibCollatToken,
       _repayAmountInput,
       abi.encode(0)
     );
 
-    CacheState memory _stateAfter = CacheState({
-      totalSupply: ibWeth.totalSupply(),
-      mmUnderlyingBalance: weth.balanceOf(address(moneyMarketDiamond)),
-      treasuryFee: MockERC20(_debtToken).balanceOf(treasury),
-      globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
-      collat: viewFacet.getTotalCollat(_collatToken),
-      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
-      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
-      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
-      subAccountDebtShare: viewFacet.getOverCollatSubAccountDebtShares(ALICE, 0)[0].amount
-    });
-    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    // Expectation
+    uint256 _expectedIbTokenToWithdraw = 15.15 ether;
+    uint256 _expectedUnderlyingWitdrawnAmount = 15.15 ether;
+    uint256 _expectedRepaidAmount = 15 ether;
 
-    assertEq(_stateAfter.collat, _stateBefore.collat - _expectedIbTokenToWithdraw, "collatertal");
-    assertEq(
-      _stateAfter.subAccountCollat,
-      _stateBefore.subAccountCollat - _expectedIbTokenToWithdraw,
-      "sub account collatertal"
-    );
-
-    assertEq(_stateAfter.debtValue, _stateBefore.debtValue - _actualRepaidAmount, "debt value");
-    assertEq(_stateAfter.debtShare, _stateBefore.debtShare - _actualRepaidAmount, "debt share");
-    assertEq(
-      _stateAfter.subAccountDebtShare,
-      _stateBefore.subAccountDebtShare - _actualRepaidAmount,
-      "sub account debt share"
-    );
-
-    // check mm state after
-    assertEq(
-      _stateAfter.totalSupply,
-      _stateBefore.totalSupply - _expectedIbTokenToWithdraw,
-      "ibToken totalSupply diff"
-    ); // ibWeth repaid + liquidation fee
-    assertEq(
-      _stateAfter.mmUnderlyingBalance,
-      _stateBefore.mmUnderlyingBalance - _expectedUnderlyingWitdrawalAmount,
-      "MM underlying balance should not be affected"
-    );
-
-    // globalDebt should equal to debtValue since there is only 1 position
-    assertEq(_stateAfter.globalDebtValue, _stateBefore.globalDebtValue - _actualRepaidAmount, "global debt value");
-
-    assertEq(_stateAfter.treasuryFee, _stateBefore.treasuryFee + _fee, "treasury"); // fee 0.15 usdc = 0.1875 weth
+    _assertDebt(ALICE, _aliceSubAccountId,_debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
+    _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
+    _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
+    // fee 0.15 usdc = 0.1875 weth
+    _assertTreasuryDebtTokenFee(_debtToken, _liquidationFee, _stateBefore);
   }
 
   // function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -478,4 +475,85 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   // }
 
   // TODO: case where diamond has no actual token to transfer to strat
+
+
+  function _cacheState(address _subAccount, address _ibToken, address _underlyingToken, address _debtToken) internal view returns (CacheState memory _state) {
+    (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    _state = CacheState({
+      // general
+      mmUnderlyingBalance: IERC20(_underlyingToken).balanceOf(address(moneyMarketDiamond)),
+      ibTokenTotalSupply: IERC20(_ibToken).totalSupply(),
+      treasuryDebtTokenBalance: MockERC20(_debtToken).balanceOf(treasury),
+      // debt
+      globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
+      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      subAccountDebtShare: _subAccountDebtShare,
+      // collat
+      ibTokenCollat: viewFacet.getTotalCollat(_ibToken),
+      subAccountIbTokenCollat: viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken)
+    });
+  }
+
+  function _assertDebt(
+    address _account,
+    uint256 _subAccountId,
+    address _debtToken,
+    uint256 _actualRepaidAmount,
+    uint256 _pendingInterest,
+    CacheState memory _cache
+  ) internal {
+    (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(_account, _subAccountId, _debtToken);
+    uint256 _debtValueWithInterest = _cache.debtValue + _pendingInterest;
+    uint256 _globalValueWithInterest = _cache.globalDebtValue + _pendingInterest;
+    uint256 _repaidShare = (_actualRepaidAmount * _cache.debtShare) / (_debtValueWithInterest);
+
+    assertEq(viewFacet.getOverCollatDebtValue(_debtToken), _debtValueWithInterest - _actualRepaidAmount, "debt value");
+    assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), _cache.debtShare - _repaidShare, "debt share");
+    assertEq(
+      _subAccountDebtShare,
+      _cache.subAccountDebtShare - _repaidShare,
+      "sub account debt share"
+    );
+
+    // globalDebt should equal to debtValue since there is only 1 position
+    assertEq(viewFacet.getGlobalDebtValue(_debtToken), _globalValueWithInterest - _actualRepaidAmount, "global debt value");
+  }
+
+  function _assertIbTokenCollatAndTotalSupply(
+    address _subAccount,
+    address _ibToken,
+    uint256 _withdrawnIbToken,
+    CacheState memory _cache
+  ) internal {
+    assertEq(
+      IERC20(_ibToken).totalSupply(),
+      _cache.ibTokenTotalSupply - _withdrawnIbToken,
+      "ibToken totalSupply diff"
+    );
+
+    assertEq(viewFacet.getTotalCollat(_ibToken), _cache.ibTokenCollat - _withdrawnIbToken, "collatertal");
+    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken), _cache.subAccountIbTokenCollat - _withdrawnIbToken, "sub account collatertal");
+  }
+
+
+  function _assertWithdrawnUnderlying(
+    address _underlyingToken,
+    uint256 _withdrawnAmount,
+    CacheState memory _cache
+  ) internal {
+    assertEq(
+      IERC20(_underlyingToken).balanceOf(address(moneyMarketDiamond)),
+      _cache.mmUnderlyingBalance - _withdrawnAmount,
+      "MM underlying balance should not be affected"
+    );
+  }
+
+  function _assertTreasuryDebtTokenFee(
+    address _debtToken,
+    uint256 _liquidationFee,
+    CacheState memory _cache
+  ) internal {
+    assertEq(MockERC20(_debtToken).balanceOf(treasury), _cache.treasuryDebtTokenBalance + _liquidationFee, "treasury");
+  }
 }
