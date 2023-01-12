@@ -230,8 +230,6 @@ library LibAV01 {
     uint256 _repayAmount,
     AVDiamondStorage storage avDs
   ) internal {
-    // IERC20(_token).safeIncreaseAllowance(avDs.moneyMarket, _repayAmount);
-    // IMoneyMarket(avDs.moneyMarket).nonCollatRepay(address(this), _token, _repayAmount);
     avDs.vaultDebts[_shareToken][_token] -= _repayAmount;
   }
 

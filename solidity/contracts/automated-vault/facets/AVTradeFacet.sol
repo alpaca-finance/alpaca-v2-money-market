@@ -72,6 +72,7 @@ contract AVTradeFacet is IAVTradeFacet {
     emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
   }
 
+  // TODO: discuss code ordering
   struct WithdrawLocalVars {
     uint256 withdrawalStableAmount;
     uint256 withdrawalAssetAmount;
