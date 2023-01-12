@@ -18,6 +18,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
 
   uint256 _routerUSDCBalance;
   uint256 _aliceUSDCBalance = 1000 ether; // minting in BaseTest
+  uint256 _aliceWETHBalance = 1000 ether; // minting in BaseTest
   uint256 _aliceIbTokenBalance;
 
   function setUp() public override {
@@ -57,17 +58,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     _routerUSDCBalance = 100 ether;
   }
 
-  // function testRevert_WhenExecuteLiquidation_InvalidIbToken() external {
-  //   vm.prank(address(ALICE));
-  //   vm.expectRevert(
-  //     abi.encodeWithSelector(
-  //       PancakeswapV2IbTokenLiquidationStrategy.PancakeswapV2IbTokenLiquidationStrategy_InvalidIbToken.selector,
-  //       [address(ibBtc)]
-  //     )
-  //   );
-  //   liquidationStrat.executeLiquidation(address(ibBtc), address(usdc), 1 ether, 1 ether, abi.encode(0));
-  // }
-
   function testRevert_WhenExecuteLiquidation_PathConfigNotFound() external {
     vm.prank(address(ALICE));
     vm.expectRevert(
@@ -93,6 +83,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 1 ether
 
     // mock withdrawal amount
+    uint256 _expectedIbTokenAmountToWithdraw = 1 ether;
     uint256 _expectedWithdrawalAmount = 1 ether;
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
 
@@ -119,7 +110,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     assertEq(usdc.balanceOf(ALICE), _aliceUSDCBalance + _expectedSwapedAmount, "usdc balance of ALICE");
 
     // to check final ibToken should be corrected
-    assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
+    assertEq(
+      ibWeth.balanceOf(ALICE),
+      _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
+      "ibWeth balance of ALICE"
+    );
+    // to check final underlying should be not affected
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatLessThanRepayValue() external {
@@ -136,6 +133,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 0.5 ether
 
     // mock withdrawal amount
+    uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
     uint256 _expectedWithdrawalAmount = 0.5 ether;
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
 
@@ -161,7 +159,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     assertEq(usdc.balanceOf(ALICE), _aliceUSDCBalance + _expectedSwapedAmount, "usdc balance of ALICE");
 
     // to check final ibToken should be corrected
-    assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
+    assertEq(
+      ibWeth.balanceOf(ALICE),
+      _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
+      "ibWeth balance of ALICE"
+    );
+    // to check final underlying should be not affected
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatMoreThanRepayValue_ShouldTransferCollatBackToUserCorreclty()
@@ -180,6 +184,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 0.5 ether
 
     // mock withdrawal amount
+    uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
     uint256 _expectedWithdrawalAmount = 0.5 ether;
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
 
@@ -205,6 +210,57 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     assertEq(usdc.balanceOf(ALICE), _aliceUSDCBalance + _expectedSwapedAmount, "usdc balance of ALICE");
 
     // to check final ibToken should be corrected
-    assertEq(ibWeth.balanceOf(ALICE), _aliceIbTokenBalance - _expectedWithdrawalAmount, "ibWeth balance of ALICE");
+    assertEq(
+      ibWeth.balanceOf(ALICE),
+      _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
+      "ibWeth balance of ALICE"
+    );
+    // to check final underlying should be not affected
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
+  }
+
+  function testCorrectness_WhenExecuteIbTokenLiquiationStratAndUnderlyingTokenAndRepayTokenAreSame() external {
+    // prepare criteria
+    address _ibToken = address(ibWeth);
+    address _debtToken = address(weth);
+    uint256 _ibTokenIn = 1 ether;
+    uint256 _repayAmount = 1 ether; // is amount to withdraw
+    uint256 _minReceive = 0 ether;
+
+    // _ibTokenTotalSupply = 100 ether
+    // _totalTokenWithInterest = 100 ether
+    // _requireAmountToWithdraw = repay amount = 1 ether
+    // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 1 ether
+
+    // mock withdrawal amount
+    uint256 _expectedIbTokenAmountToWithdraw = 1 ether;
+    uint256 _expectedWithdrawalAmount = 1 ether;
+    moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+
+    vm.startPrank(ALICE);
+    // transfer ib token to strat
+    ibWeth.transfer(address(liquidationStrat), _ibTokenIn);
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, abi.encode(_minReceive));
+    vm.stopPrank();
+
+    // nothing left in strat
+    // to check ibToken should not exists on liquidation strat
+    assertEq(ibWeth.balanceOf(address(liquidationStrat)), 0, "ibWeth balance of liquidationStrat");
+    // to check underlyingToken should swap all
+    assertEq(weth.balanceOf(address(liquidationStrat)), 0, "weth balance of liquidationStrat");
+    // to check swapped token should be here
+    assertEq(usdc.balanceOf(address(liquidationStrat)), 0, "usdc balance of liquidationStrat");
+
+    // to check router work correctly (we can remove this assertion because this is for mock)
+    assertEq(usdc.balanceOf(address(router)), _routerUSDCBalance, "usdc balance of router");
+    assertEq(usdc.balanceOf(ALICE), _aliceUSDCBalance, "usdc balance of ALICE");
+
+    // to check final ibToken should be corrected
+    assertEq(
+      ibWeth.balanceOf(ALICE),
+      _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
+      "ibWeth balance of ALICE"
+    );
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance + _expectedWithdrawalAmount, "weth balance of ALICE");
   }
 }
