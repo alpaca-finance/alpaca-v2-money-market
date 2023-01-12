@@ -25,6 +25,9 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     vm.expectRevert("LibDiamond: Must be contract owner");
     adminFacet.setOracle(address(20000));
 
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setMinDebtSize(200 ether);
+
     vm.stopPrank();
   }
 
@@ -46,5 +49,11 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     assertEq(viewFacet.getMaxNumOfToken(), 3); // 3 is set from basetest
     adminFacet.setMaxNumOfToken(10);
     assertEq(viewFacet.getMaxNumOfToken(), 10);
+  }
+
+  function testCorrectness_WhenLYFAdminSetMinDebtSize_ShouldCorrect() external {
+    assertEq(viewFacet.getMinDebtSize(), 0); // 3 is set from basetest
+    adminFacet.setMinDebtSize(200 ether);
+    assertEq(viewFacet.getMinDebtSize(), 200 ether);
   }
 }
