@@ -166,7 +166,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0 shares
      */
 
-    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+    adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
 
     // add ib as collat
     vm.startPrank(ALICE);
