@@ -16,6 +16,8 @@ interface IMoneyMarket {
 
   function getGlobalDebtValue(address _token) external view returns (uint256);
 
+  function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256);
+
   function getDebtForLpToken(address _token) external view returns (uint256, uint256);
 
   function getFloatingBalance(address _token) external view returns (uint256);

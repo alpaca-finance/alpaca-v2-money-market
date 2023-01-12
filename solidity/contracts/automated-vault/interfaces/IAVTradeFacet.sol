@@ -15,7 +15,8 @@ interface IAVTradeFacet {
     address indexed shareToken,
     uint256 burnedAmount,
     address stableToken,
-    uint256 returnedAmount
+    uint256 stableAmountToUser,
+    uint256 assetAmountToUser
   );
 
   error AVTradeFacet_TooLittleReceived();
@@ -29,17 +30,7 @@ interface IAVTradeFacet {
   function withdraw(
     address _shareToken,
     uint256 _shareAmountIn,
-    uint256 _minTokenOut
+    uint256 _minTokenOut,
+    uint256 _minAssetTokenOut
   ) external;
-
-  function getDebtValues(address _shareToken) external view returns (uint256, uint256);
-
-  function pendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee);
-
-  function getVaultPendingInterest(address _vaultToken)
-    external
-    view
-    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest);
-
-  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256);
 }

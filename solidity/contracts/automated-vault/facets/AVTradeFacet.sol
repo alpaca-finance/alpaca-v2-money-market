@@ -72,117 +72,94 @@ contract AVTradeFacet is IAVTradeFacet {
     emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
   }
 
+  struct WithdrawLocalVars {
+    uint256 withdrawalStableAmount;
+    uint256 withdrawalAssetAmount;
+    uint256 totalShareSupply;
+  }
+
   function withdraw(
-    address _shareToken,
+    address _vaultToken,
     uint256 _shareToWithdraw,
-    uint256 _minStableTokenOut
+    uint256 _minStableTokenOut,
+    uint256 _minAssetTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
+    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    WithdrawLocalVars memory vars;
 
-    (, uint256 _totalAssetTokenInterest) = LibAV01.accrueVaultInterest(_shareToken, avDs);
+    // 0. accrue interest, mint management fee
+    LibAV01.accrueVaultInterest(_vaultToken, avDs);
+    _mintManagementFeeToTreasury(_vaultToken, avDs);
 
-    _mintManagementFeeToTreasury(_shareToken, avDs);
-
-    address _stableToken = _vaultConfig.stableToken;
-    uint256 _shareValueToWithdraw = LibAV01.getVaultTokenValueInUSD(_shareToken, _shareToWithdraw, avDs);
-
-    (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
-      _shareToken,
-      _shareValueToWithdraw,
+    // 1. withdraw from handler
+    (vars.withdrawalStableAmount, vars.withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
+      _vaultToken,
+      _shareToWithdraw,
       avDs
     );
 
-    uint256 _stableTokenPrice = LibAV01.getPriceUSD(_stableToken, avDs);
-    uint256 _stableTokenToUser = (_shareValueToWithdraw * 1e18) /
-      (_stableTokenPrice * avDs.tokenConfigs[_stableToken].to18ConversionFactor);
+    // 2. repay vault debt
+    vars.totalShareSupply = IAVShareToken(_vaultToken).totalSupply();
 
-    if (_stableTokenToUser < _minStableTokenOut) {
+    uint256 _stableTokenToUser = _repay(
+      _vaultToken,
+      _vaultConfig.stableToken,
+      (avDs.vaultDebts[_vaultToken][_vaultConfig.stableToken] * _shareToWithdraw) / vars.totalShareSupply,
+      vars.withdrawalStableAmount,
+      _minStableTokenOut,
+      avDs
+    );
+    uint256 _assetTokenToUser = _repay(
+      _vaultToken,
+      _vaultConfig.assetToken,
+      (avDs.vaultDebts[_vaultToken][_vaultConfig.assetToken] * _shareToWithdraw) / vars.totalShareSupply,
+      vars.withdrawalAssetAmount,
+      _minAssetTokenOut,
+      avDs
+    );
+
+    // 3. transfer tokens
+    IAVShareToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
+    IERC20(_vaultConfig.stableToken).safeTransfer(msg.sender, _stableTokenToUser);
+    IERC20(_vaultConfig.assetToken).safeTransfer(msg.sender, _assetTokenToUser);
+
+    emit LogWithdraw(
+      msg.sender,
+      _vaultToken,
+      _shareToWithdraw,
+      _vaultConfig.stableToken,
+      _stableTokenToUser,
+      _assetTokenToUser
+    );
+  }
+
+  function _repay(
+    address _vaultToken,
+    address _token,
+    uint256 _repayAmount,
+    uint256 _tokenAvailable,
+    uint256 _minTokenOut,
+    LibAV01.AVDiamondStorage storage avDs
+  ) internal returns (uint256 _tokenToUser) {
+    if (_tokenAvailable < _repayAmount) {
+      // TODO: handle case where tokens returned from lp not enough to cover debt
+      // should swap other token to missing token
+      _tokenToUser = 0;
+    } else {
+      _tokenToUser = _tokenAvailable - _repayAmount;
+    }
+
+    if (_tokenToUser < _minTokenOut) {
       revert AVTradeFacet_TooLittleReceived();
     }
 
-    // repay to MM
-    // only need to account for _userAssetTokenInterest since stable interest has been accrued
-    uint256 _userAssetTokenInterest = (_totalAssetTokenInterest * 1e18) / IAVShareToken(_shareToken).totalSupply();
-    LibAV01.repayMoneyMarket(
-      _shareToken,
-      _stableToken,
-      _withdrawalStableAmount - _stableTokenToUser - _userAssetTokenInterest,
-      avDs
-    );
-    LibAV01.repayMoneyMarket(
-      _shareToken,
-      _vaultConfig.assetToken,
-      _withdrawalAssetAmount + _userAssetTokenInterest,
-      avDs
-    );
-
-    IAVShareToken(_shareToken).burn(msg.sender, _shareToWithdraw);
-    IERC20(_stableToken).safeTransfer(msg.sender, _stableTokenToUser);
-
-    emit LogWithdraw(msg.sender, _shareToken, _shareToWithdraw, _stableToken, _stableTokenToUser);
-  }
-
-  // TODO: move to viewFacet
-  function getDebtValues(address _shareToken) external view returns (uint256, uint256) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
-    return (avDs.vaultDebts[_shareToken][_config.stableToken], avDs.vaultDebts[_shareToken][_config.assetToken]);
+    LibAV01.repayVaultDebt(_vaultToken, _token, _repayAmount, avDs);
   }
 
   function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {
-    IAVShareToken(_shareToken).mint(avDs.treasury, pendingManagementFee(_shareToken));
+    IAVShareToken(_shareToken).mint(avDs.treasury, LibAV01.getPendingManagementFee(_shareToken, avDs));
 
     avDs.lastFeeCollectionTimestamps[_shareToken] = block.timestamp;
-  }
-
-  // TODO: move to viewFacet
-  function pendingManagementFee(address _shareToken) public view returns (uint256 _pendingManagementFee) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-
-    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
-    _pendingManagementFee =
-      (IERC20(_shareToken).totalSupply() *
-        avDs.vaultConfigs[_shareToken].managementFeePerSec *
-        _secondsFromLastCollection) /
-      1e18;
-  }
-
-  // TODO: move to viewFacet
-  function getVaultPendingInterest(address _vaultToken)
-    external
-    view
-    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
-  {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
-
-    if (_timeSinceLastAccrual > 0) {
-      LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
-      address _moneyMarket = avDs.moneyMarket;
-
-      _stablePendingInterest = LibAV01.getTokenPendingInterest(
-        _vaultToken,
-        _moneyMarket,
-        vaultConfig.stableToken,
-        vaultConfig.stableTokenInterestModel,
-        _timeSinceLastAccrual,
-        avDs
-      );
-      _assetPendingInterest = LibAV01.getTokenPendingInterest(
-        _vaultToken,
-        _moneyMarket,
-        vaultConfig.assetToken,
-        vaultConfig.assetTokenInterestModel,
-        _timeSinceLastAccrual,
-        avDs
-      );
-    }
-  }
-
-  // TODO: move to viewFacet
-  function getVaultLastAccrueInterestTimestamp(address _vaultToken) external view returns (uint256) {
-    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    return avDs.lastAccrueInterestTimestamps[_vaultToken];
   }
 }

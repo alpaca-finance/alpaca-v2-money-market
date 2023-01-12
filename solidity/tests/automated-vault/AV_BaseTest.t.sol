@@ -15,6 +15,7 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
+import { IAVViewFacet } from "../../contracts/automated-vault/interfaces/IAVViewFacet.sol";
 import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
 import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
@@ -39,6 +40,7 @@ abstract contract AV_BaseTest is BaseTest {
   IAVAdminFacet internal adminFacet;
   IAVTradeFacet internal tradeFacet;
   IAVRebalanceFacet internal rebalanceFacet;
+  IAVViewFacet internal viewFacet;
 
   address internal treasury;
 
@@ -58,6 +60,7 @@ abstract contract AV_BaseTest is BaseTest {
     adminFacet = IAVAdminFacet(avDiamond);
     tradeFacet = IAVTradeFacet(avDiamond);
     rebalanceFacet = IAVRebalanceFacet(avDiamond);
+    viewFacet = IAVViewFacet(avDiamond);
 
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 

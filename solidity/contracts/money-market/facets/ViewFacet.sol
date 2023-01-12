@@ -117,6 +117,14 @@ contract ViewFacet is IViewFacet {
     return moneyMarketDs.globalDebts[_token];
   }
 
+  /// @notice Get borrowed amount (over and non-collateralized) with pending interest of a token
+  /// @param _token The token that has been borrowed
+  /// @return The total amount of debt with pending interest
+  function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.globalDebts[_token] + LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
+  }
+
   /// @notice Get the total amount of borrowed token via over collat borrowing
   /// @param _token The token that has been borrowed
   /// @return The total amount of over collateralized debt
@@ -345,21 +353,30 @@ contract ViewFacet is IViewFacet {
     return LibMoneyMarket01.getSubAccount(_account, _subAccountId);
   }
 
-  // TODO: natspec
+  /// @notice Get money market fees
+  /// @param _lendingFeeBps The lending fee imposed on interest collected
+  /// @param _repurchaseFeeBps The repurchase fee collected by the protocol
+  /// @param _liquidationFeeBps The liquidation fee collected by the protocol
   function getFeeParams()
     external
     view
     returns (
       uint16 _lendingFeeBps,
-      uint16 _repurchaseRewardBps,
       uint16 _repurchaseFeeBps,
       uint16 _liquidationFeeBps
     )
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     _lendingFeeBps = moneyMarketDs.lendingFeeBps;
-    _repurchaseRewardBps = moneyMarketDs.repurchaseRewardBps;
     _repurchaseFeeBps = moneyMarketDs.repurchaseFeeBps;
     _liquidationFeeBps = moneyMarketDs.liquidationFeeBps;
+  }
+
+  /// @notice Get the address of repurchase reward model
+  /// @return address of repurchase reward model contract
+  function getRepurchaseRewardModel() external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    return address(moneyMarketDs.repurchaseRewardModel);
   }
 }
