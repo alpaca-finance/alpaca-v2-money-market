@@ -139,6 +139,7 @@ library LibLYF01 {
     // update timestamp
     lyfDs.debtLastAccrueTime[_debtShareId] = block.timestamp;
 
+    // TODO: move emit into if ?
     emit LogAccrueInterest(lyfDs.debtShareTokens[_debtShareId], _pendingInterest, _pendingInterest);
   }
 
