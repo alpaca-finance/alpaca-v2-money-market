@@ -18,9 +18,9 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
   function setUp() public override {
     super.setUp();
 
-    address[] memory _rebalancers = new address[](1);
-    _rebalancers[0] = address(this);
-    adminFacet.setRebalancersOk(_rebalancers, true);
+    address[] memory _operators = new address[](1);
+    _operators[0] = address(this);
+    adminFacet.setOperatorsOk(_operators, true);
 
     _vaultToken = address(avShareToken);
     _lpToken = address(wethUsdcLPToken);
@@ -184,7 +184,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     assertEq(viewFacet.getPendingManagementFee(_vaultToken), 0);
   }
 
-  function testRevert_WhenNonRebalancerCallAVRetarget() external {
+  function testRevert_WhenNonOperatorCallAVRetarget() external {
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IAVRebalanceFacet.AVRebalanceFacet_Unauthorized.selector, ALICE));
     rebalanceFacet.retarget(_vaultToken);

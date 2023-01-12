@@ -116,15 +116,15 @@ contract AVAdminFacet is IAVAdminFacet {
     avDs.vaultConfigs[_vaultToken].assetTokenInterestModel = _newAssetTokenInterestRateModel;
   }
 
-  /// @notice Whitelist/Blacklist the address allowed for rebalancing
-  /// @param _rebalancers an array of rebalancers' address
+  /// @notice Whitelist/Blacklist the address allowed for retargeting and repurchasing
+  /// @param _operators an array of operators' address
   /// @param _isOk a flag to allow or disallow
-  function setRebalancersOk(address[] calldata _rebalancers, bool _isOk) external onlyOwner {
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    uint256 _length = _rebalancers.length;
-    for (uint8 _i; _i < _length; ) {
-      avDs.rebalancerOk[_rebalancers[_i]] = _isOk;
-      emit LogSetRebalancerOk(_rebalancers[_i], _isOk);
+    uint256 _length = _operators.length;
+    for (uint256 _i; _i < _length; ) {
+      avDs.operatorsOk[_operators[_i]] = _isOk;
+      emit LogSetOperatorOk(_operators[_i], _isOk);
       unchecked {
         ++_i;
       }
