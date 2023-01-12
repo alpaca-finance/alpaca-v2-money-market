@@ -41,16 +41,16 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     vm.prank(BOB);
     rebalanceFacet.repurchase(_vaultToken, _tokenToRepay, _amountToRepay);
 
-    uint256 _repurchaseRewardAmount = (_amountToRepay * _repurchaseRewardBps) / 10000;
+    uint256 _amountRepurchaserShouldRecieved = (_amountToRepay * (10000 + _repurchaseRewardBps)) / 10000;
 
     // check BOB balances
     assertEq(_bobUsdcBalanceBefore - usdc.balanceOf(BOB), _amountToRepay);
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, _repurchaseRewardAmount);
+    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, _amountRepurchaserShouldRecieved);
 
     // check vault debts
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_stableDebt, 0.5 ether - _amountToRepay);
-    assertEq(_assetDebt, 1.5 ether + _amountToRepay + _repurchaseRewardAmount);
+    assertEq(_assetDebt, 1.5 ether + _amountRepurchaserShouldRecieved);
   }
 
   function testCorrectness_WhenAVRepurchaseToRepayAsset_ShouldRepayAssetBorrowStableAndPayRewardToCaller() external {
@@ -66,15 +66,15 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     vm.prank(BOB);
     rebalanceFacet.repurchase(_vaultToken, _tokenToRepay, _amountToRepay);
 
-    uint256 _repurchaseRewardAmount = (_amountToRepay * _repurchaseRewardBps) / 10000;
+    uint256 _amountRepurchaserShouldRecieved = (_amountToRepay * (10000 + _repurchaseRewardBps)) / 10000;
 
     // check BOB balances
-    assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, _repurchaseRewardAmount);
+    assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, _amountRepurchaserShouldRecieved);
     assertEq(_bobWethBalanceBefore - weth.balanceOf(BOB), _amountToRepay);
 
     // check vault debts
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether + _amountToRepay + _repurchaseRewardAmount);
+    assertEq(_stableDebt, 0.5 ether + _amountRepurchaserShouldRecieved);
     assertEq(_assetDebt, 1.5 ether - _amountToRepay);
   }
 

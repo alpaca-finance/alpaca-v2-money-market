@@ -111,10 +111,11 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       avDs
     );
     uint256 _repurchaseRewardAmount = (_amountToBorrowForVault * avDs.repurchaseRewardBps) / LibAV01.MAX_BPS;
-    LibAV01.borrowMoneyMarket(_vaultToken, _tokenToBorrow, _amountToBorrowForVault + _repurchaseRewardAmount, avDs);
+    uint256 _amountToRepurchaser = _amountToBorrowForVault + _repurchaseRewardAmount;
+    LibAV01.borrowMoneyMarket(_vaultToken, _tokenToBorrow, _amountToRepurchaser, avDs);
 
     // transfer reward to caller
-    IERC20(_tokenToBorrow).transfer(msg.sender, _repurchaseRewardAmount);
+    IERC20(_tokenToBorrow).transfer(msg.sender, _amountToRepurchaser);
 
     emit LogRepurchase(_vaultToken, _tokenToRepay, _amountToRepay, _amountToBorrowForVault, _repurchaseRewardAmount);
   }
