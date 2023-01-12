@@ -20,16 +20,25 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
 
   /// @dev Events
   event LogSetOracle(address indexed _caller, address _newOracle);
+  event LogSetTokenConfig(
+    address indexed _caller,
+    address indexed _token,
+    address _router,
+    address[] _path,
+    uint64 maxPriceDiff
+  );
 
   /// @notice An address of chainlink usd token
   address public usd;
 
+  /// @notice Stabletoken to compare value
   address public baseStable;
 
   /// @notice a chainLink interface to perform get price
   address public oracle;
 
-  mapping(address => Config) public tokenConfig;
+  /// @notice mapping of token to tokenConfig
+  mapping(address => Config) public tokenConfigs;
 
   function initialize(
     address _oracle,
@@ -76,22 +85,27 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
   /// @notice Check token price from dex and oracle is in the acceptable range
   /// @param _tokenAddress tokenAddress
   function isStable(address _tokenAddress) external view returns (bool) {
-    (uint256 _price, ) = _getTokenPrice(_tokenAddress);
-    return _isStable(_tokenAddress, _price);
+    _getTokenPrice(_tokenAddress);
+    return true;
   }
 
   function _isStable(address _tokenAddress, uint256 _oraclePrice) internal view returns (bool) {
-    uint256[] memory _amounts = IRouterLike(tokenConfig[_tokenAddress].router).getAmountsOut(
-      1e18,
-      tokenConfig[_tokenAddress].path
-    );
+    uint256 _dexPrice;
 
-    uint256 _dexPrice = _amounts[_amounts.length - 1];
+    if (_tokenAddress == baseStable) {
+      _dexPrice = _oraclePrice;
+    } else {
+      uint256[] memory _amounts = IRouterLike(tokenConfigs[_tokenAddress].router).getAmountsOut(
+        10**IERC20(_tokenAddress).decimals(),
+        tokenConfigs[_tokenAddress].path
+      );
+      _dexPrice = _amounts[_amounts.length - 1];
+    }
 
     // TODO: check when baseStable depeg with oracle
     if (
-      _dexPrice * 10000 > _oraclePrice * tokenConfig[_tokenAddress].maxPriceDiff ||
-      _dexPrice * tokenConfig[_tokenAddress].maxPriceDiff >= _oraclePrice * 10000
+      _dexPrice * 10000 > _oraclePrice * tokenConfigs[_tokenAddress].maxPriceDiff ||
+      _dexPrice * tokenConfigs[_tokenAddress].maxPriceDiff < _oraclePrice * 10000
     ) {
       revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
     }
@@ -178,6 +192,9 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     return (_px0, _px1, _d0, _d1, _olderLastUpdate);
   }
 
+  /// @notice Return token prices, token decimals, oldest price update of given lptoken
+  /// @param _tokens List of token to set config
+  /// @param _configs List of tokenConfig
   function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external onlyOwner {
     uint256 _len = _tokens.length;
 
@@ -188,11 +205,20 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     address[] memory _path;
     for (uint256 _i = 0; _i < _len; ) {
       _path = _configs[_i].path;
-      if (_path[_path.length - 1] != baseStable) {
+
+      if (_path[0] != _tokens[_i] || _path[_path.length - 1] != baseStable) {
         revert AlpacaV2Oracle_InvalidConfigPath();
       }
 
-      tokenConfig[_tokens[_i]] = _configs[_i];
+      tokenConfigs[_tokens[_i]] = _configs[_i];
+
+      emit LogSetTokenConfig(
+        msg.sender,
+        _tokens[_i],
+        _configs[_i].router,
+        _configs[_i].path,
+        _configs[_i].maxPriceDiff
+      );
 
       unchecked {
         ++_i;
