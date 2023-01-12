@@ -102,14 +102,23 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     // transfer only amount to repay
+    uint256 _tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
-    moneyMarketDs.reserves[_token] += _amountToRepay;
+    uint256 _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
+    moneyMarketDs.reserves[_token] += _actualAmountToRepay;
 
-    _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _validateRepay(
+      _token,
+      _currentDebtShare,
+      _currentDebtAmount,
+      _actualShareToRepay,
+      _actualAmountToRepay,
+      moneyMarketDs
+    );
 
-    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _actualAmountToRepay, moneyMarketDs);
 
-    emit LogRepay(_account, _subAccountId, _token, _amountToRepay);
+    emit LogRepay(_account, _subAccountId, _token, _actualAmountToRepay);
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral
