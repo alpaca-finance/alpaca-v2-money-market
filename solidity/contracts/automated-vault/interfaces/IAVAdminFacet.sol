@@ -68,4 +68,6 @@ interface IAVAdminFacet {
   ) external;
 
   function setRebalancersOk(address[] calldata _rebalancers, bool _isOk) external;
+
+  function setRepurchaseRewardBps(uint16 _newBps) external;
 }

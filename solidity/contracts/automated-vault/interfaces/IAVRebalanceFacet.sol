@@ -15,4 +15,10 @@ interface IAVRebalanceFacet {
   );
 
   function retarget(address _vaultToken) external;
+
+  function repurchase(
+    address _vaultToken,
+    address _tokenToRepay,
+    uint256 _amountToRepay
+  ) external;
 }

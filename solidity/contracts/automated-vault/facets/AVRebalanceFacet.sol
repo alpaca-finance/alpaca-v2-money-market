@@ -94,7 +94,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
     } else if (_tokenToRepay == _vaultConfig.assetToken) {
       _tokenToBorrow = _vaultConfig.stableToken;
     } else {
-      revert AVRebalanceFacet_InvalidToken(_tokenToBorrow);
+      revert AVRebalanceFacet_InvalidToken(_tokenToRepay);
     }
 
     LibAV01.accrueVaultInterest(_vaultToken, avDs);
