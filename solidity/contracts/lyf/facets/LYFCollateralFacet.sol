@@ -32,7 +32,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     LibReentrancyGuard.unlock();
   }
 
-  // TODO: if token is LP we should deposit to masterchef
   function addCollateral(
     address _account,
     uint256 _subAccountId,
@@ -47,9 +46,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    LibLYF01.addCollat(_subAccount, _token, _amount, ds);
-
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    LibLYF01.addCollat(_subAccount, _token, _amount, ds);
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
