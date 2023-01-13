@@ -8,6 +8,7 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/fa
 import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
 import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
 import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFacet.sol";
+import { AVRebalanceFacet } from "../../contracts/automated-vault/facets/AVRebalanceFacet.sol";
 import { AVViewFacet } from "../../contracts/automated-vault/facets/AVViewFacet.sol";
 
 // initializers
@@ -30,6 +31,7 @@ library AVDiamondDeployer {
     // Deploy Facets
     deployAdminFacet(_avDiamondCutFacet);
     deployTradeFacet(_avDiamondCutFacet);
+    deployRebalanceFacet(_avDiamondCutFacet);
     deployViewFacet(_avDiamondCutFacet);
   }
 
@@ -67,7 +69,7 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](7);
+    bytes4[] memory selectors = new bytes4[](8);
     selectors[0] = AVAdminFacet.openVault.selector;
     selectors[1] = AVAdminFacet.setTokenConfigs.selector;
     selectors[2] = AVAdminFacet.setOracle.selector;
@@ -75,6 +77,7 @@ library AVDiamondDeployer {
     selectors[4] = AVAdminFacet.setTreasury.selector;
     selectors[5] = AVAdminFacet.setManagementFeePerSec.selector;
     selectors[6] = AVAdminFacet.setInterestRateModels.selector;
+    selectors[7] = AVAdminFacet.setOperatorsOk.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -101,6 +104,22 @@ library AVDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_tradeFacet, selectors);
+  }
+
+  function deployRebalanceFacet(DiamondCutFacet diamondCutFacet) internal returns (AVRebalanceFacet, bytes4[] memory) {
+    AVRebalanceFacet _rebalanceFacet = new AVRebalanceFacet();
+
+    bytes4[] memory selectors = new bytes4[](1);
+    selectors[0] = AVRebalanceFacet.retarget.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_rebalanceFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_rebalanceFacet, selectors);
   }
 
   function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (AVViewFacet, bytes4[] memory) {

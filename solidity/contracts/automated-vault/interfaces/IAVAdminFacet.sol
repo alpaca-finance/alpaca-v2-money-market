@@ -36,6 +36,7 @@ interface IAVAdminFacet {
     address _assetToken,
     address _shareToken
   );
+  event LogSetOperatorOk(address indexed _operator, bool _isOk);
 
   function openVault(
     address _lpToken,
@@ -63,4 +64,6 @@ interface IAVAdminFacet {
     address _newStableTokenInterestRateModel,
     address _newAssetTokenInterestRateModel
   ) external;
+
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external;
 }

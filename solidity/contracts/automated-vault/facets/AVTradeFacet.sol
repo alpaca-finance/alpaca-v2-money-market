@@ -6,6 +6,7 @@ import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
 import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
@@ -31,7 +32,7 @@ contract AVTradeFacet is IAVTradeFacet {
 
     LibAV01.accrueVaultInterest(_shareToken, avDs);
 
-    _mintManagementFeeToTreasury(_shareToken, avDs);
+    LibAV01.mintManagementFeeToTreasury(_shareToken, avDs);
 
     LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
     address _stableToken = _vaultConfig.stableToken;
@@ -91,12 +92,13 @@ contract AVTradeFacet is IAVTradeFacet {
 
     // 0. accrue interest, mint management fee
     LibAV01.accrueVaultInterest(_vaultToken, avDs);
-    _mintManagementFeeToTreasury(_vaultToken, avDs);
+    LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
     // 1. withdraw from handler
     (vars.withdrawalStableAmount, vars.withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _vaultToken,
-      _shareToWithdraw,
+      _vaultConfig.handler,
+      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / IERC20(_vaultToken).totalSupply(),
       avDs
     );
 
@@ -156,11 +158,5 @@ contract AVTradeFacet is IAVTradeFacet {
     }
 
     LibAV01.repayVaultDebt(_vaultToken, _token, _repayAmount, avDs);
-  }
-
-  function _mintManagementFeeToTreasury(address _shareToken, LibAV01.AVDiamondStorage storage avDs) internal {
-    IAVShareToken(_shareToken).mint(avDs.treasury, LibAV01.getPendingManagementFee(_shareToken, avDs));
-
-    avDs.lastFeeCollectionTimestamps[_shareToken] = block.timestamp;
   }
 }
