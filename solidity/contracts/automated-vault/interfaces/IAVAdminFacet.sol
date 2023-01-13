@@ -37,8 +37,8 @@ interface IAVAdminFacet {
     address _assetToken,
     address _shareToken
   );
-  event LogSetRebalancerOk(address indexed _rebalancer, bool _isOk);
   event LogSetRepurchaseRewardBps(uint256 _newBps);
+  event LogSetOperatorOk(address indexed _operator, bool _isOk);
 
   function openVault(
     address _lpToken,
@@ -67,7 +67,7 @@ interface IAVAdminFacet {
     address _newAssetTokenInterestRateModel
   ) external;
 
-  function setRebalancersOk(address[] calldata _rebalancers, bool _isOk) external;
-
   function setRepurchaseRewardBps(uint16 _newBps) external;
+
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external;
 }

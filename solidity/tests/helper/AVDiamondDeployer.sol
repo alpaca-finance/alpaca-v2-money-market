@@ -77,7 +77,7 @@ library AVDiamondDeployer {
     selectors[4] = AVAdminFacet.setTreasury.selector;
     selectors[5] = AVAdminFacet.setManagementFeePerSec.selector;
     selectors[6] = AVAdminFacet.setInterestRateModels.selector;
-    selectors[7] = AVAdminFacet.setRebalancersOk.selector;
+    selectors[7] = AVAdminFacet.setOperatorsOk.selector;
     selectors[8] = AVAdminFacet.setRepurchaseRewardBps.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
