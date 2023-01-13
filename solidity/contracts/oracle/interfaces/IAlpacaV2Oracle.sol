@@ -4,8 +4,8 @@ pragma solidity 0.8.17;
 interface IAlpacaV2Oracle {
   struct Config {
     address router;
-    address[] path;
     uint64 maxPriceDiff;
+    address[] path;
   }
 
   /// @dev Set tokenConfig for getting dex price.

@@ -190,7 +190,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     return (_px0, _px1, _d0, _d1, _olderLastUpdate);
   }
 
-  /// @notice Return token prices, token decimals, oldest price update of given lptoken
+  /// @notice Set token configuration
   /// @param _tokens List of token to set config
   /// @param _configs List of tokenConfig
   function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external onlyOwner {
@@ -201,7 +201,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     }
 
     address[] memory _path;
-    for (uint256 _i = 0; _i < _len; ) {
+    for (uint256 _i; _i < _len; ) {
       _path = _configs[_i].path;
 
       if (_path[0] != _tokens[_i] || _path[_path.length - 1] != baseStable) {
