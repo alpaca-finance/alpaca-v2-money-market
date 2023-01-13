@@ -23,16 +23,11 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
     _usdcPath[0] = address(usdc);
     _usdcPath[1] = address(busd);
 
-    address[] memory _busdPath = new address[](1);
-    _busdPath[0] = address(busd);
-
-    address[] memory _tokens = new address[](2);
+    address[] memory _tokens = new address[](1);
     _tokens[0] = address(usdc);
-    _tokens[1] = address(busd);
 
-    IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](2);
+    IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
     _configs[0] = IAlpacaV2Oracle.Config({ router: mockRouter, maxPriceDiff: MAX_PRICE_DIFF, path: _usdcPath });
-    _configs[1] = IAlpacaV2Oracle.Config({ router: mockRouter, maxPriceDiff: MAX_PRICE_DIFF, path: _busdPath });
 
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
 

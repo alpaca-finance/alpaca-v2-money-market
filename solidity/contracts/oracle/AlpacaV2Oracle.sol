@@ -210,7 +210,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     for (uint256 _i; _i < _len; ) {
       _path = _configs[_i].path;
 
-      if (_path[0] != _tokens[_i] || _path[_path.length - 1] != baseStable) {
+      if (_path.length < 2 || _path[0] != _tokens[_i] || _path[_path.length - 1] != baseStable) {
         revert AlpacaV2Oracle_InvalidConfigPath();
       }
 
