@@ -162,8 +162,8 @@ contract LYFViewFacet is ILYFViewFacet {
 
   function getOutstandingBalanceOf(address _token) external view returns (uint256 _reserveAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    if (IERC20(_token).balanceOf(address(this)) > lyfDs.protocolReserves[_token]) {
-      _reserveAmount = IERC20(_token).balanceOf(address(this)) - lyfDs.protocolReserves[_token];
+    if (lyfDs.reserves[_token] > lyfDs.protocolReserves[_token]) {
+      _reserveAmount = lyfDs.reserves[_token] - lyfDs.protocolReserves[_token];
     }
   }
 
