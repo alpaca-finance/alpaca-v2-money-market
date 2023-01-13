@@ -67,6 +67,7 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     address oracle;
+    // collats = amount of collateral token
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -499,6 +500,7 @@ library LibLYF01 {
 
     // deposit lp back to masterChef
     lyfDs.lpAmounts[_lpToken] += _lpReceived;
+    lyfDs.collats[_lpToken] += _lpReceived;
     depositToMasterChef(_lpToken, _lpConfig.masterChef, _lpConfig.poolId, _lpReceived);
 
     // reset pending reward
