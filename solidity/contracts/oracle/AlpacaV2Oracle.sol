@@ -45,6 +45,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
     address _baseStable,
     address _usd
   ) public initializer {
+    if (IERC20(_baseStable).decimals() != 18) {
+      revert AlpacaV2Oracle_InvalidBaseStableTokenDecimal();
+    }
+
     OwnableUpgradeable.__Ownable_init();
     oracle = _oracle;
     baseStable = _baseStable;
@@ -97,9 +101,11 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
       10**IERC20(_tokenAddress).decimals(),
       tokenConfigs[_tokenAddress].path
     );
-    uint256 _dexPrice = _amounts[_amounts.length - 1];
 
-    // TODO: check when baseStable depeg with oracle
+    (uint256 _basePrice, ) = IPriceOracle(oracle).getPrice(baseStable, usd);
+
+    uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
+
     // _dexPrice/_oraclePrice > maxPriceDiff/10000
     // _dexPrice/_oraclePrice < 10000/maxPriceDiff
     if (

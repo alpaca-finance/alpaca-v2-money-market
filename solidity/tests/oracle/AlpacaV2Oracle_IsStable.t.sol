@@ -15,7 +15,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
 
   function setUp() public virtual {
     oracleMedianizer = deployOracleMedianizer();
-    alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer));
+    alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer), address(busd));
 
     // setup token config
 
@@ -35,6 +35,13 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
     _configs[1] = IAlpacaV2Oracle.Config({ router: mockRouter, maxPriceDiff: MAX_PRICE_DIFF, path: _busdPath });
 
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
+
+    // mock price return from OracleMedianizer
+    vm.mockCall(
+      address(oracleMedianizer),
+      abi.encodeWithSelector(OracleMedianizer.getPrice.selector, address(busd), usd),
+      abi.encode(1e18, block.timestamp)
+    );
   }
 
   function testCorrectness_WhenDexAndOraclePriceNotDiff_ShouldReturnTrue() external {
@@ -129,15 +136,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
     alpacaV2Oracle.isStable(address(usdc));
   }
 
-  function testCorrectness_WhenTokenIsBaseStable_ShouldWork() external {
-    uint256 _busdOraclePrice = 1e18;
-    // mock price return from OracleMedianizer
-    vm.mockCall(
-      address(oracleMedianizer),
-      abi.encodeWithSelector(OracleMedianizer.getPrice.selector, address(busd), usd),
-      abi.encode(_busdOraclePrice, block.timestamp)
-    );
-
+  function testCorrectness_WhenTokenIsBaseStable_ShouldWork() external view {
     alpacaV2Oracle.isStable(address(busd));
   }
 

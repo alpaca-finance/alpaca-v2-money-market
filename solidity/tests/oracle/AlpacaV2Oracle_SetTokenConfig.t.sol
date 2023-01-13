@@ -9,7 +9,7 @@ import { IAlpacaV2Oracle } from "../../contracts/oracle/interfaces/IAlpacaV2Orac
 contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
   function setUp() public virtual {
     oracleMedianizer = deployOracleMedianizer();
-    alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer));
+    alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer), address(busd));
   }
 
   function testCorrectness_WhenOwnerSetTokenConfig_ShouldWork() external {

@@ -28,5 +28,6 @@ interface IAlpacaV2Oracle {
   error AlpacaV2Oracle_InvalidOracleAddress();
   error AlpacaV2Oracle_InvalidConfigLength();
   error AlpacaV2Oracle_InvalidConfigPath();
+  error AlpacaV2Oracle_InvalidBaseStableTokenDecimal();
   error AlpacaV2Oracle_PriceTooDeviate(uint256 _dexPrice, uint256 _oraclePrice);
 }
