@@ -65,17 +65,17 @@ contract BaseTest is DSTest {
   constructor() {
     vm.warp(100000);
     // deploy
+    usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
+    nativeToken = deployMockWNative();
+    nativeRelayer = deployMockWNativeRelayer();
+
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
     busd = deployMockErc20("BUSD", "BUSD", 18);
-    usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
-    nativeToken = deployMockWNative();
-
-    nativeRelayer = deployMockWNativeRelayer();
 
     // mint token
     vm.deal(ALICE, 1000 ether);
