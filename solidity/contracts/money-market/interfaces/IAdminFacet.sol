@@ -3,6 +3,9 @@ pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
+// ---- Interfaces ---- //
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
+
 interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
@@ -12,6 +15,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidToken(address _token);
   error AdminFacet_InvalidIbTokenImplementation();
   error AdminFacet_SubAccountHealthy(address _subAccount);
+  error AdminFacet_ExceedMaxRepurchaseReward();
 
   struct IbPair {
     address token;
@@ -70,10 +74,11 @@ interface IAdminFacet {
 
   function setFees(
     uint16 _newLendingFeeBps,
-    uint16 _newRepurchaseRewardBps,
     uint16 _newRepurchaseFeeBps,
     uint16 _newLiquidationFeeBps
   ) external;
+
+  function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
   function withdrawReserve(
     address _token,

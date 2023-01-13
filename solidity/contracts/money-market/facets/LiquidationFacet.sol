@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
@@ -35,11 +36,21 @@ contract LiquidationFacet is ILiquidationFacet {
     LibReentrancyGuard.unlock();
   }
 
+  modifier liquidateExec() {
+    LibReentrancyGuard.ReentrancyGuardDiamondStorage storage reentrancyGuardDs = LibReentrancyGuard
+      .reentrancyGuardDiamondStorage();
+    reentrancyGuardDs.liquidateExec = LibReentrancyGuard._ENTERED;
+    _;
+    reentrancyGuardDs.liquidateExec = LibReentrancyGuard._NOT_ENTERED;
+  }
+
   struct RepurchaseLocalVars {
     address subAccount;
+    uint256 totalBorrowingPower;
     uint256 usedBorrowingPower;
     uint256 repayAmountWithFee;
     uint256 repurchaseFeeToProtocol;
+    uint256 repurchaseRewardBps;
     uint256 repayAmountWihtoutFee;
     uint256 repayTokenPrice;
   }
@@ -70,8 +81,9 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.accrueBorrowedPositionsOf(vars.subAccount, moneyMarketDs);
 
     // revert if position is healthy
+    vars.totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(vars.subAccount, moneyMarketDs);
     (vars.usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(vars.subAccount, moneyMarketDs);
-    if (LibMoneyMarket01.getTotalBorrowingPower(vars.subAccount, moneyMarketDs) >= vars.usedBorrowingPower) {
+    if (vars.totalBorrowingPower >= vars.usedBorrowingPower) {
       revert LiquidationFacet_Healthy();
     }
 
@@ -112,12 +124,17 @@ contract LiquidationFacet is ILiquidationFacet {
         revert LiquidationFacet_RepayAmountExceedThreshold();
     }
 
+    vars.repurchaseRewardBps = moneyMarketDs.repurchaseRewardModel.getFeeBps(
+      vars.totalBorrowingPower,
+      vars.usedBorrowingPower
+    );
+
     // calculate payout (collateral + reward)
     {
       uint256 _collatTokenPrice = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
       uint256 _repayTokenPriceWithPremium = (vars.repayTokenPrice *
-        (LibMoneyMarket01.MAX_BPS + moneyMarketDs.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
+        (LibMoneyMarket01.MAX_BPS + vars.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
 
       _collatAmountOut =
         (vars.repayAmountWithFee *
@@ -154,7 +171,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _actualRepayAmountWithoutFee,
       _collatAmountOut,
       vars.repurchaseFeeToProtocol,
-      (_collatAmountOut * moneyMarketDs.repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS
+      (_collatAmountOut * vars.repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS
     );
   }
 
@@ -173,14 +190,12 @@ contract LiquidationFacet is ILiquidationFacet {
     address _collatToken,
     uint256 _repayAmount,
     bytes calldata _paramsForStrategy
-  ) external nonReentrant {
+  ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     if (!moneyMarketDs.liquidationStratOk[_liquidationStrat] || !moneyMarketDs.liquidatorsOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
-
-    moneyMarketDs.liquidateExec = LibMoneyMarket01._ENTERED_LIQUIDATE;
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
@@ -210,8 +225,6 @@ contract LiquidationFacet is ILiquidationFacet {
     } else {
       _liquidationCall(_params, moneyMarketDs);
     }
-
-    moneyMarketDs.liquidateExec = LibMoneyMarket01._NOT_ENTERED_LIQUIDATE;
   }
 
   function _liquidationCall(

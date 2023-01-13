@@ -14,6 +14,8 @@ interface IAVAdminFacet {
     address lpToken;
     address stableToken;
     address assetToken;
+    address stableTokenInterestModel;
+    address assetTokenInterestModel;
     uint8 leverageLevel;
     uint16 managementFeePerSec;
   }
@@ -34,6 +36,7 @@ interface IAVAdminFacet {
     address _assetToken,
     address _shareToken
   );
+  event LogSetOperatorOk(address indexed _operator, bool _isOk);
 
   function openVault(
     address _lpToken,
@@ -41,7 +44,9 @@ interface IAVAdminFacet {
     address _assetToken,
     address _handler,
     uint8 _leverageLevel,
-    uint16 _managementFeePerSec
+    uint16 _managementFeePerSec,
+    address _stableTokenInterestModel,
+    address _assetTokenInterestModel
   ) external returns (address _newShareToken);
 
   function setTokenConfigs(TokenConfigInput[] calldata configs) external;
@@ -51,4 +56,14 @@ interface IAVAdminFacet {
   function setOracle(address _oracle) external;
 
   function setTreasury(address _treasury) external;
+
+  function setManagementFeePerSec(address _vaultToken, uint16 _newManagementFeePerSec) external;
+
+  function setInterestRateModels(
+    address _vaultToken,
+    address _newStableTokenInterestRateModel,
+    address _newAssetTokenInterestRateModel
+  ) external;
+
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external;
 }

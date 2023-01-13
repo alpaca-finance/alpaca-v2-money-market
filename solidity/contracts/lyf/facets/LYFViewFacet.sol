@@ -152,4 +152,10 @@ contract LYFViewFacet is ILYFViewFacet {
 
     _maxNumOfCollat = lyfDs.maxNumOfCollatPerSubAccount;
   }
+
+  function getMinDebtSize() external view returns (uint256 _minDebtSize) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    _minDebtSize = lyfDs.minDebtSize;
+  }
 }
