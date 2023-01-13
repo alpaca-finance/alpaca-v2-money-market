@@ -10,7 +10,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
 
-contract LYF_CollateralFacetTest is LYF_BaseTest {
+contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
   function setUp() public override {
     super.setUp();
   }
