@@ -94,17 +94,17 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     uint256 _actualShareToRepay = LibFullMath.min(_currentDebtShare, _debtShareToRepay);
-
-    uint256 _amountToRepay = LibShareUtil.shareToValue(
-      _actualShareToRepay,
-      moneyMarketDs.overCollatDebtValues[_token],
-      moneyMarketDs.overCollatDebtShares[_token]
-    );
+    // cache to save gas
+    uint256 _cachedDebtValue = moneyMarketDs.overCollatDebtValues[_token];
+    uint256 _cachedDebtShare = moneyMarketDs.overCollatDebtShares[_token];
+    uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
 
     // transfer only amount to repay
     uint256 _tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
-    uint256 _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualAmountToRepay);
+    _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
+    _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
+
     moneyMarketDs.reserves[_token] += _actualAmountToRepay;
 
     _validateRepay(

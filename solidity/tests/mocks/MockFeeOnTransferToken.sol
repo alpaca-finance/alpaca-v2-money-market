@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { MockERC20 } from "./MockERC20.sol";
 
 contract MockFeeOnTransferToken is MockERC20 {
-  uint256 internal transferFeeBps;
+  uint256 public transferFeeBps;
 
   constructor(
     string memory name,
@@ -16,7 +16,9 @@ contract MockFeeOnTransferToken is MockERC20 {
   }
 
   function transfer(address to, uint256 amount) public virtual override returns (bool) {
-    return super.transfer(to, (amount * (10000 - transferFeeBps)) / 10000);
+    uint256 _fee = (amount * (transferFeeBps)) / 10000;
+    _burn(msg.sender, _fee);
+    return super.transfer(to, amount - _fee);
   }
 
   function transferFrom(
@@ -24,6 +26,12 @@ contract MockFeeOnTransferToken is MockERC20 {
     address to,
     uint256 amount
   ) public virtual override returns (bool) {
-    return super.transferFrom(from, to, (amount * (10000 - transferFeeBps)) / 10000);
+    uint256 _fee = (amount * (transferFeeBps)) / 10000;
+    _burn(from, _fee);
+    return super.transferFrom(from, to, amount - _fee);
+  }
+
+  function setFee(uint256 _newFeeBps) external {
+    transferFeeBps = _newFeeBps;
   }
 }
