@@ -91,7 +91,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
   ) external {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
-    if (!avDs.rebalancerOk[msg.sender]) {
+    if (!avDs.operatorsOk[msg.sender]) {
       revert AVRebalanceFacet_Unauthorized(msg.sender);
     }
 

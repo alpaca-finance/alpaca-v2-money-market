@@ -23,7 +23,7 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     // whitelist BOB as rebalancer
     address[] memory _rebalancers = new address[](1);
     _rebalancers[0] = BOB;
-    adminFacet.setRebalancersOk(_rebalancers, true);
+    adminFacet.setOperatorsOk(_rebalancers, true);
 
     _vaultToken = address(avShareToken);
   }
