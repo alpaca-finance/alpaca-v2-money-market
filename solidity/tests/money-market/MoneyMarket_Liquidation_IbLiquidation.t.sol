@@ -240,99 +240,133 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     _assertTreasuryDebtTokenFee(_debtToken, _expectedLiquidationFee, _stateBefore);
   }
 
-  // function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
-  //   /**
-  //    * todo: simulate if weth has debt, should still correct
-  //    * scenario:
-  //    *
-  //    * 1. 1 usdc/weth, ALICE post 40 ibWeth (value 40 weth) as collateral, borrow 30 usdc
-  //    *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
-  //    *
-  //    * 2. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, increase shareValue of ibWeth by 2.5%, position become liquidatable
-  //    *    - usdc debt has increased to 30.0050765511672 usdc
-  //    *    - now 1 ibWeth = 1.025 weth
-  //    *    - ALICE borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 usd
-  //    *
-  //    * 3. try to liquidate 40 usdc with ibWeth collateral
-  //    *    - entire 30.0050765511672 usdc position should be liquidated
-  //    *
-  //    * 4. should be able to liquidate with 30.0050765511672 usdc repaid and 36.957472337413258535 ibWeth reduced from collateral
-  //    *    - remaining collateral = 41 - 36.957472337413258535 = 3.042527662586741465 ibWeth
-  //    *      - 30.0050765511672 usdc = 37.506345688959 weth = 36.5915567697160975... ibWeth is liquidated
-  //    *      - 30.0050765511672 * 1% = 0.300050765511672 usdc is taken to treasury as liquidation fee
-  //    *    - remaining debt value = 0 usdc
-  //    *    - remaining debt share = 0 shares
-  //    */
+  function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
+    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
 
-  //   adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+    // criteria
+    address _ibCollatToken = address(ibWeth);
+    address _underlyingToken = address(weth);
+    address _debtToken = address(usdc);
+    uint256 _repayAmountInput = 40 ether;
 
-  //   // add ib as collat
-  //   vm.startPrank(ALICE);
-  //   lendFacet.deposit(address(weth), 40 ether);
-  //   collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
-  //   collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
-  //   vm.stopPrank();
+    vm.prank(ALICE);
+    borrowFacet.borrow(0, _debtToken, 30 ether);
+    // | After Alice borrow 30 USDC
+    // | ---------------------------------------------- |
+    // | State                        | AMOUNT (ether)  |
+    // | ---------------------------- | --------------- |
+    // | ALICE USDC Debt Share        | 30              |
+    // | Global USDC Debt Share       | 30              |
+    // | Global USDC Debt Value       | 30              |
+    // | ---------------------------------------------- |
 
-  //   address _debtToken = address(usdc);
-  //   address _collatToken = address(ibWeth);
-  //   uint256 _repayAmount = 40 ether;
+    vm.prank(BOB);
+    borrowFacet.borrow(0, _underlyingToken, 24 ether);
+    // | After BOB borrow 24 WETH
+    // | ---------------------------------------------- |
+    // | State                        | AMOUNT (ether)  |
+    // | ---------------------------- | --------------- |
+    // | BOB WETH Debt Share          | 24              |
+    // | Global WETH Debt Share       | 24              |
+    // | Global WETH Debt Value       | 24              |
+    // | ---------------------------------------------- |
 
-  //   vm.warp(block.timestamp + 1 days);
+    // Time past for 1 day
+    vm.warp(block.timestamp + 1 days);
+    // | After Time past for 1 Day
+    // | -------------------------------------------------------------------- |
+    // | State                        | Interest Rate : Day | Utilization (%) |
+    // | ---------------------------- | ------------------- | --------------- |
+    // | USDC Debt Interate rate      | 0.00016921837224    | 30% (30 : 100)  |
+    // | WETH Debt Interate rate      | 0.00016921837224    | 30% (30 : 100)  |
+    // | -------------------------------------------------------------------- |
 
-  //   // increase shareValue of ibWeth by 2.5%
-  //   // would need 36.5915567697161341463414634... ibWeth to redeem 37.506345688959 weth to repay debt
-  //   vm.prank(BOB);
-  //   lendFacet.deposit(address(weth), 1 ether);
-  //   vm.prank(moneyMarketDiamond);
-  //   ibWeth.onWithdraw(BOB, BOB, 0, 1 ether);
+    // Pending interest formula = Borrowed Amount * Interest Rate
+    // USDC Debt Pending Interest = 30 * 0.00016921837224 = 0.0050765511672
+    // WETH Debt Pending Interest = 24 * 0.00016921837224 = 0.00406124093376
+    uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(_debtToken);
+    assertEq(_pendingInterest, 0.0050765511672 ether, "pending interest for _debtToken");
+    uint256 _underlyingInterest = viewFacet.getGlobalPendingInterest(_underlyingToken);
+    assertEq(_underlyingInterest, 0.00406124093376 ether, "pending interest for _underlyingToken");
 
-  //   // mm state before
-  //   uint256 _totalSupplyIbWethBefore = ibWeth.totalSupply();
-  //   uint256 _totalWethInMMBefore = weth.balanceOf(address(moneyMarketDiamond));
-  //   uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    CacheState memory _stateBefore = _cacheState(_aliceSubAccount0, _ibCollatToken, _underlyingToken, _debtToken);
 
-  //   // set price to weth from 1 to 0.8 ether USD
-  //   // then alice borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 ether USD
-  //   mockOracle.setTokenPrice(address(weth), 8e17);
-  //   mockOracle.setTokenPrice(address(usdc), 1e18);
+    // Prepare before liquidation
+    // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
+    mockOracle.setTokenPrice(_underlyingToken, 8e17);
+    mockOracle.setTokenPrice(_debtToken, 1 ether);
+    // | ------------------------ |
+    // | TOKEN     | Price (USD)  |
+    // | ------------------------ |
+    // | WETH      | 0.8          |
+    // | USDC      | 1            |
+    // | ------------------------ |
 
-  //   liquidationFacet.liquidationCall(
-  //     address(mockLiquidationStrategy),
-  //     ALICE,
-  //     _subAccountId,
-  //     _debtToken,
-  //     _collatToken,
-  //     _repayAmount,
-  //     abi.encode()
-  //   );
+    liquidationFacet.liquidationCall(
+      address(_ibTokenLiquidationStrat),
+      ALICE,
+      _aliceSubAccountId,
+      _debtToken,
+      _ibCollatToken,
+      _repayAmountInput,
+      abi.encode(0)
+    );
 
-  //   CacheState memory _stateAfter = CacheState({
-  //     collat: viewFacet.getTotalCollat(_collatToken),
-  //     subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
-  //     debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
-  //     debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
-  //     subAccountDebtShare: 0
-  //   });
-  //   (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    // | Calculation When Liquidate ALICE Position
+    // | -------------------------------------------------------------------------------- |
+    // | Detail                       | Amount (ether)    | Note                          |
+    // | ---------------------------- | ----------------- | ----------------------------- |
+    // | RepayAmount                  | 40                |                               |
+    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest
+    // | ActualRepayAmount            | 30.0050765511672  | Min(AliceDebtValue, RepayAmount)
+    // | LiquidationFee               | 0.300050765511672 | 1% of ActualRepayAmount
+    // | -------------------------------------------------------------------------------------- |
 
-  //   assertEq(_stateAfter.collat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
-  //   assertEq(_stateAfter.subAccountCollat, 3.042527662586741464 ether); // 3.04252766258674146341... repeat 46341
-  //   assertEq(_stateAfter.debtValue, 0);
-  //   assertEq(_stateAfter.debtShare, 0);
-  //   assertEq(_stateAfter.subAccountDebtShare, 0);
+    // | in Liquidation Strat Calculation
+    // | -------------------------------------------------------------------------------------------------------------- |
+    // | Detail                             | Amount (ether)        | Note                                              |
+    // | ---------------------------------- | --------------------- | ------------------------------------------------- |
+    // | RepayAmountToStrat                 | 30.305127316678872    | ActualRepayAmount + Fee                           |
+    // | RequireUnderlyingToSwap            | 37.88140914584859     | 30.305127316678872 * 1 / 0.8                                   |
+    // |                                    |                       | RepayAmountToStrat * USDC Price / WETH Price      |
+    // | AliceIbTokenCollat (X)             | 40                    |                                                   |
+    // | IB WETH Total Supply               | 80                    |                                                   |
+    // | UnderlyingTotalTokenWithInterest   | 80.00406124093376     | reserve + debt - protocal + interest              |
+    // | RequiredIbTokenToWithdraw (Y)      | 37.879486174351076617 | 37.88140914584859 * 80 / 80.00406124093376                  |
+    // | ActualIbTokenToWithdraw            | 37.879486174351076617 | Min(X, Y)                                         |
+    // | WithdrawUnderlyingToken            | 37.881409145848589999 | 37.879486174351076617 * 80.00406124093376 / 80    |
+    // | ReturnedIBToken                    | 2.120513825648923383  | 40 - 37.879486174351076617                        |
+    // |                                    |                       | if X > Y then X - Y else 0                        |
+    // | RepayTokenFromStrat                | 30.305127316678871999 | 37.881409145848589999 * 0.8 / 1                   |
+    // |                                    |                       | WithdrawUnderlyingToken * WETH Price / USDC Price |
+    // | -------------------------------------------------------------------------------------------------------------- |
 
-  //   // check mm state after
-  //   assertEq(_totalSupplyIbWethBefore - ibWeth.totalSupply(), 36.957472337413258536 ether); // ibWeth repaid + liquidation fee
-  //   assertEq(_totalWethInMMBefore - weth.balanceOf(address(moneyMarketDiamond)), 37.88140914584859 ether); // weth repaid + liquidation fee
+    // | After Execute Strat Calculation
+    // | ------------------------------------------------------------------------------------------------------------- |
+    // | Detail                     | Amount (ether)        | Note                                                     |
+    // | -------------------------- | --------------------- | -------------------------------------------------------- |
+    // | RepaidAmount (ShareValue)  | 30.005076551167199999 | RepayTokenFromStrat - LiquidationFee                     |
+    // | RepaidShare                | 29.999999999999999999 | 30.005076551167199999 * 30 / 30.0050765511672            |
+    // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)   |
+    // | ------------------------------------------------------------------------------------------------------------- |
 
-  //   assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.300050765511672 ether);
-  // }
+    // Expectation
+    uint256 _expectedRepaidAmount = 30.005076551167199999 ether;
+    uint256 _expectedIbTokenToWithdraw = 37.879486174351076617 ether;
+    uint256 _expectedUnderlyingWitdrawnAmount = 37.881409145848589999 ether;
+    uint256 _expectedLiquidationFee = 0.300050765511672 ether;
+
+    _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
+    _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
+    _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
+    _assertTreasuryDebtTokenFee(_debtToken, _expectedLiquidationFee, _stateBefore);
+  }
 
   // function testRevert_WhenLiquidateButMMDoesNotHaveEnoughUnderlyingForLiquidation() external {
   //   vm.startPrank(ALICE);
   //   lendFacet.deposit(address(weth), 40 ether);
   //   collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
-  //   collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+  //   collateralFacet.removeCollateral(_aliceSubAccountId, address(weth), 40 ether);
   //   vm.stopPrank();
 
   //   vm.warp(1 days + 1);
@@ -356,9 +390,9 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   //   // should fail because 11 weth left in mm not enough to liquidate 15 usdc debt
   //   vm.expectRevert("!safeTransfer");
   //   liquidationFacet.liquidationCall(
-  //     address(mockLiquidationStrategy),
+  //     address(_ibTokenLiquidationStrat),
   //     ALICE,
-  //     _subAccountId,
+  //     _aliceSubAccountId,
   //     address(usdc),
   //     address(ibWeth),
   //     15 ether,
