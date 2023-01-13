@@ -316,10 +316,6 @@ library LibLYF01 {
       // update lp global state
       lyfDs.lpShares[_token] += _amountAdded;
       lyfDs.lpAmounts[_token] += _amount;
-
-      // deposit to MasterChef
-      LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
-      depositToMasterChef(_token, _lpConfig.masterChef, _lpConfig.poolId, _amount);
     }
 
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
@@ -352,10 +348,6 @@ library LibLYF01 {
 
         ds.lpShares[_token] -= _amountRemoved;
         ds.lpAmounts[_token] -= _lpValueRemoved;
-
-        // withdraw from MasterChef
-        LPConfig memory _lpConfig = ds.lpConfigs[_token];
-        IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, _lpValueRemoved);
 
         // _amountRemoved used to represent lpShare, we need to return lpValue so re-assign it here
         _amountRemoved = _lpValueRemoved;

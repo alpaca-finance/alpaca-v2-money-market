@@ -10,6 +10,7 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { ILYFCollateralFacet } from "../interfaces/ILYFCollateralFacet.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
 contract LYFCollateralFacet is ILYFCollateralFacet {
   using LibSafeToken for IERC20;
@@ -38,9 +39,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     address _token,
     uint256 _amount
   ) external nonReentrant {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    if (_amount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral) {
+    if (_amount + lyfDs.collats[_token] > lyfDs.tokenConfigs[_token].maxCollateral) {
       revert LYFCollateralFacet_ExceedCollateralLimit();
     }
 
@@ -48,7 +49,11 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
-    LibLYF01.addCollat(_subAccount, _token, _amount, ds);
+    LibLYF01.addCollat(_subAccount, _token, _amount, lyfDs);
+
+    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
+      LibLYF01.depositToMasterChef(_token, lyfDs.lpConfigs[_token].masterChef, lyfDs.lpConfigs[_token].poolId, _amount);
+    }
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }
@@ -58,17 +63,24 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     address _token,
     uint256 _amount
   ) external nonReentrant {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, ds);
+    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
-    uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, ds);
+    uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, lyfDs);
 
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
-    if (!LibLYF01.isSubaccountHealthy(_subAccount, ds)) {
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
+    }
+
+    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
+      IMasterChefLike(lyfDs.lpConfigs[_token].masterChef).withdraw(
+        lyfDs.lpConfigs[_token].poolId,
+        _actualAmountRemoved
+      );
     }
 
     IERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
