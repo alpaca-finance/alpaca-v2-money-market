@@ -2,8 +2,7 @@
 pragma solidity 0.8.17;
 
 // ---- External Libraries ---- //
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ---- Libraries ---- //
 import { LibFullMath } from "./libraries/LibFullMath.sol";
@@ -15,7 +14,7 @@ import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IRouterLike } from "./interfaces/IRouterLike.sol";
 
-contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
+contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
 
   /// @dev Events
@@ -40,16 +39,18 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
   /// @notice mapping of token to tokenConfig
   mapping(address => Config) public tokenConfigs;
 
-  function initialize(
+  constructor(
     address _oracle,
     address _baseStable,
     address _usd
-  ) public initializer {
+  ) {
     if (IERC20(_baseStable).decimals() != 18) {
       revert AlpacaV2Oracle_InvalidBaseStableTokenDecimal();
     }
 
-    OwnableUpgradeable.__Ownable_init();
+    // sanity call
+    IPriceOracle(_oracle).getPrice(_baseStable, _usd);
+
     oracle = _oracle;
     baseStable = _baseStable;
     usd = _usd;
@@ -106,12 +107,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
 
     uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
 
+    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiff;
     // _dexPrice/_oraclePrice > maxPriceDiff/10000
     // _dexPrice/_oraclePrice < 10000/maxPriceDiff
-    if (
-      _dexPrice * 10000 > _oraclePrice * tokenConfigs[_tokenAddress].maxPriceDiff ||
-      _dexPrice * tokenConfigs[_tokenAddress].maxPriceDiff < _oraclePrice * 10000
-    ) {
+    if (_dexPrice * 10000 > _oraclePrice * _maxPriceDiff || _dexPrice * _maxPriceDiff < _oraclePrice * 10000) {
       revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
     }
   }

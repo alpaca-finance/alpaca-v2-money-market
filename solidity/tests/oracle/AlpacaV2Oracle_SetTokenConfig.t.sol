@@ -3,12 +3,22 @@ pragma solidity 0.8.17;
 
 import { BaseTest, console, MockERC20 } from "../base/BaseTest.sol";
 
+import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
+
 // ---- Interfaces ---- //
 import { IAlpacaV2Oracle } from "../../contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 
 contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
   function setUp() public virtual {
     oracleMedianizer = deployOracleMedianizer();
+
+    // mock price return from OracleMedianizer
+    vm.mockCall(
+      address(oracleMedianizer),
+      abi.encodeWithSelector(OracleMedianizer.getPrice.selector, address(busd), usd),
+      abi.encode(1e18, block.timestamp)
+    );
+
     alpacaV2Oracle = deployAlpacaV2Oracle(address(oracleMedianizer), address(busd));
   }
 

@@ -122,15 +122,7 @@ contract BaseTest is DSTest {
   }
 
   function deployAlpacaV2Oracle(address _oracleMedianizer, address _baseStable) internal returns (AlpacaV2Oracle) {
-    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/AlpacaV2Oracle.sol/AlpacaV2Oracle.json"));
-    bytes memory _initializer = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address,address)")),
-      _oracleMedianizer,
-      _baseStable,
-      usd
-    );
-    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
-    return AlpacaV2Oracle(_proxy);
+    return new AlpacaV2Oracle(_oracleMedianizer, _baseStable, usd);
   }
 
   function deployOracleMedianizer() internal returns (OracleMedianizer) {

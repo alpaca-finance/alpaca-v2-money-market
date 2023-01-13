@@ -18,8 +18,7 @@ contract AlpacaV2Oracle_InitializeTest is BaseTest {
 
     oracleMedianizer = deployOracleMedianizer();
 
-    AlpacaV2Oracle _alpacaV2Oracle = new AlpacaV2Oracle();
     vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidBaseStableTokenDecimal.selector));
-    _alpacaV2Oracle.initialize(address(oracleMedianizer), address(aToken), address(usd));
+    new AlpacaV2Oracle(address(oracleMedianizer), address(aToken), address(usd));
   }
 }
