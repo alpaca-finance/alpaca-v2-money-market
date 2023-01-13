@@ -60,6 +60,7 @@ library LibAV01 {
     // vault token => debt token => debt amount
     mapping(address => mapping(address => uint256)) vaultDebts;
     mapping(address => uint256) lastAccrueInterestTimestamps;
+    mapping(address => bool) operatorsOk;
   }
 
   error LibAV01_NoTinyShares();
@@ -107,15 +108,11 @@ library LibAV01 {
 
   function withdrawFromHandler(
     address _vaultToken,
-    uint256 _shareToWithdraw,
+    address _handler,
+    uint256 _lpToWithdraw,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
     VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
-
-    address _handler = _vaultConfig.handler;
-
-    uint256 _lpToWithdraw = (IAVHandler(_handler).totalLpBalance() * _shareToWithdraw) /
-      IERC20(_vaultToken).totalSupply();
 
     // (token0ReturnAmount, token1ReturnAmount)
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
@@ -214,6 +211,14 @@ library LibAV01 {
     _tokenValue = (_amount * avDs.tokenConfigs[_token].to18ConversionFactor * _price) / 1e18;
   }
 
+  function getTokenAmountFromUSDValue(
+    address _token,
+    uint256 _usdValue,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _tokenAmount) {
+    _tokenAmount = ((_usdValue * 1e18) / (getPriceUSD(_token, avDs) * avDs.tokenConfigs[_token].to18ConversionFactor));
+  }
+
   function borrowMoneyMarket(
     address _shareToken,
     address _token,
@@ -224,6 +229,7 @@ library LibAV01 {
     avDs.vaultDebts[_shareToken][_token] += _amount;
   }
 
+  /// @dev doesn't repay money market
   function repayVaultDebt(
     address _shareToken,
     address _token,
@@ -304,16 +310,17 @@ library LibAV01 {
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }
 
-  function getPendingManagementFee(address _shareToken, AVDiamondStorage storage avDs)
-    public
-    view
-    returns (uint256 _pendingManagementFee)
-  {
-    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_shareToken];
-    _pendingManagementFee =
-      (IERC20(_shareToken).totalSupply() *
-        avDs.vaultConfigs[_shareToken].managementFeePerSec *
-        _secondsFromLastCollection) /
-      1e18;
+  function mintManagementFeeToTreasury(address _vaultToken, AVDiamondStorage storage avDs) internal {
+    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_vaultToken];
+
+    if (_secondsFromLastCollection > 0) {
+      uint256 _pendingManagementFee = (IAVShareToken(_vaultToken).totalSupply() *
+        avDs.vaultConfigs[_vaultToken].managementFeePerSec *
+        _secondsFromLastCollection) / 1e18;
+
+      IAVShareToken(_vaultToken).mint(avDs.treasury, _pendingManagementFee);
+
+      avDs.lastFeeCollectionTimestamps[_vaultToken] = block.timestamp;
+    }
   }
 }
