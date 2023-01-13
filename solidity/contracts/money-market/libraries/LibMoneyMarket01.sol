@@ -325,14 +325,13 @@ library LibMoneyMarket01 {
   ) internal view returns (uint256) {
     bytes32 _nonCollatId = getNonCollatId(_account, _token);
     address _interestModel = address(moneyMarketDs.nonCollatInterestModels[_nonCollatId]);
-    console.log(_interestModel);
+
     if (_interestModel == address(0)) {
       return 0;
     }
     uint256 _debtValue = moneyMarketDs.globalDebts[_token];
     uint256 _floating = getFloatingBalance(_token, moneyMarketDs);
-    console.log(_debtValue);
-    console.log(_floating);
+
     return IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
   }
 
