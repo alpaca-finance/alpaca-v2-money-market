@@ -67,6 +67,7 @@ library LibMoneyMarket01 {
     address treasury;
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
+    IFeeModel repurchaseRewardModel;
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) overCollatDebtValues;
@@ -105,7 +106,6 @@ library LibMoneyMarket01 {
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
     uint256 minDebtSize;
-    IFeeModel repurchaseRewardModel;
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
