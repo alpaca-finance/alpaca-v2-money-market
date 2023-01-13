@@ -14,6 +14,8 @@ import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+import { console } from "../../../tests/utils/console.sol";
+
 /// @title LiquidationFacet is dedicated to repurchasing and liquidating
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -220,36 +222,45 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(params.collatToken).safeTransfer(params.liquidationStrat, _subAccountCollatAmount);
 
     // 3. call executeLiquidation on strategy
-    uint256 _actualRepayAmount = _getActualRepayAmount(
+    uint256 _maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
       params.subAccount,
       params.repayToken,
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _feeToTreasury = (_actualRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
+    uint256 _feeToTreasury = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
 
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
       _subAccountCollatAmount,
-      _actualRepayAmount + _feeToTreasury,
+      _maxPossibleRepayAmount + _feeToTreasury,
       params.paramsForStrategy
     );
 
     // 4. check repaid amount, take fees, and update states
     uint256 _repaidAmount;
     {
-      uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-      _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+      uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+      // (actual / expect) * max fee
+      // todo: actual fee
+      // todo: handle actual fee > max fee
+      _feeToTreasury = (_amountFromLiquidationStrat * _feeToTreasury) / (_maxPossibleRepayAmount + _feeToTreasury);
+      _repaidAmount = _amountFromLiquidationStrat - _feeToTreasury;
+
+      console.log("repay", _repaidAmount);
+      console.log("fee", _feeToTreasury);
+
       uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
         _repaidAmount,
         _repayTokenPrice,
         moneyMarketDs.tokenConfigs[params.repayToken].borrowingFactor
       );
-      // revert if repay > x% of totalUsedBorrowingPower
+
+      // revert if repay > maxLiquidateBps/MAX_BPS of totalUsedBorrowingPower
       if (
-        _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
+        _repaidBorrowingPower * LibMoneyMarket01.MAX_BPS > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower)
       ) {
         revert LiquidationFacet_RepayAmountExceedThreshold();
       }
@@ -276,12 +287,12 @@ contract LiquidationFacet is ILiquidationFacet {
   }
 
   /// @dev min(repayAmount, debtValue)
-  function _getActualRepayAmount(
+  function _calculateMaxPossibleRepayAmount(
     address _subAccount,
     address _repayToken,
     uint256 _repayAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _actualRepayAmount) {
+  ) internal view returns (uint256 _maxPossibleRepayAmount) {
     uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
     // for ib debtValue is in ib shares not in underlying
     uint256 _debtValue = LibShareUtil.shareToValue(
@@ -290,7 +301,7 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs.overCollatDebtShares[_repayToken]
     );
 
-    _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
+    _maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
   function _reduceDebt(

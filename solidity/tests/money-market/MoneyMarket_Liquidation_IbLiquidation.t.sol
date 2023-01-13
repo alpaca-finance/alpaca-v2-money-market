@@ -192,13 +192,13 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     );
 
     // | Calculation When Liquidate ALICE Position
-    // | -------------------------------------------------------------------------------- |
-    // | Detail                       | Amount (ether)    | Note                          |
-    // | ---------------------------- | ----------------- | ----------------------------- |
-    // | RepayAmount                  | 15                |                               |
-    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest
-    // | ActualRepayAmount            | 15                | Min(AliceDebtValue, RepayAmount)
-    // | LiquidationFee               | 0.15              | 1% of ActualRepayAmount
+    // | -------------------------------------------------------------------------------------- |
+    // | Detail                       | Amount (ether)    | Note                                |
+    // | ---------------------------- | ----------------- | ----------------------------------- |
+    // | RepayAmount                  | 15                |                                     |
+    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest    |
+    // | ActualRepayAmount            | 15                | Min(AliceDebtValue, RepayAmount)    |
+    // | LiquidationFee               | 0.15              | 1% of ActualRepayAmount             |
     // | -------------------------------------------------------------------------------------- |
 
     // | in Liquidation Strat Calculation
@@ -224,16 +224,17 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | ------------------------------------------------------------------------------------------------------------- |
     // | Detail                     | Amount (ether)        | Note                                                     |
     // | -------------------------- | --------------------- | -------------------------------------------------------- |
-    // | RepaidAmount (ShareValue)  | 14.999999999999999999 | RepayTokenFromStrat - LiquidationFee                     |
-    // | RepaidShare                | 14.997462153866591689 | 14.999999999999999999 * 30 / 30.0050765511672            |
+    // | ActualLiquidationFee       | 0.149999999999999999  | 15.149999999999999999 * 0.15 / 15.15                     |
+    // | RepaidAmount (ShareValue)  | 15                    | RepayTokenFromStrat - ActualLiquidationFee               |
+    // | RepaidShare                | 14.997462153866591690 | 15 * 30 / 30.0050765511672                               |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)   |
     // | ------------------------------------------------------------------------------------------------------------- |
 
     // Expectation
-    uint256 _expectedRepaidAmount = 14.999999999999999999 ether;
+    uint256 _expectedRepaidAmount = 15 ether;
     uint256 _expectedIbTokenToWithdraw = 18.936538676924769296 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 18.937499999999999999 ether;
-    uint256 _expectedLiquidationFee = 0.15 ether;
+    uint256 _expectedLiquidationFee = 0.149999999999999999 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
@@ -314,26 +315,26 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     );
 
     // | Calculation When Liquidate ALICE Position
-    // | -------------------------------------------------------------------------------- |
-    // | Detail                       | Amount (ether)    | Note                          |
-    // | ---------------------------- | ----------------- | ----------------------------- |
-    // | RepayAmount                  | 40                |                               |
-    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest
-    // | ActualRepayAmount            | 30.0050765511672  | Min(AliceDebtValue, RepayAmount)
-    // | LiquidationFee               | 0.300050765511672 | 1% of ActualRepayAmount
-    // | -------------------------------------------------------------------------------------- |
+    // | ----------------------------------------------------------------------------------- |
+    // | Detail                       | Amount (ether)    | Note                             |
+    // | ---------------------------- | ----------------- | -------------------------------- |
+    // | RepayAmount                  | 40                |                                  |
+    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest |
+    // | ActualRepayAmount            | 30.0050765511672  | Min(AliceDebtValue, RepayAmount) |
+    // | LiquidationFee               | 0.300050765511672 | 1% of ActualRepayAmount          |
+    // | ----------------------------------------------------------------------------------- |
 
     // | in Liquidation Strat Calculation
     // | -------------------------------------------------------------------------------------------------------------- |
     // | Detail                             | Amount (ether)        | Note                                              |
     // | ---------------------------------- | --------------------- | ------------------------------------------------- |
     // | RepayAmountToStrat                 | 30.305127316678872    | ActualRepayAmount + Fee                           |
-    // | RequireUnderlyingToSwap            | 37.88140914584859     | 30.305127316678872 * 1 / 0.8                                   |
+    // | RequireUnderlyingToSwap            | 37.88140914584859     | 30.305127316678872 * 1 / 0.8                      |
     // |                                    |                       | RepayAmountToStrat * USDC Price / WETH Price      |
     // | AliceIbTokenCollat (X)             | 40                    |                                                   |
     // | IB WETH Total Supply               | 80                    |                                                   |
     // | UnderlyingTotalTokenWithInterest   | 80.00406124093376     | reserve + debt - protocal + interest              |
-    // | RequiredIbTokenToWithdraw (Y)      | 37.879486174351076617 | 37.88140914584859 * 80 / 80.00406124093376                  |
+    // | RequiredIbTokenToWithdraw (Y)      | 37.879486174351076617 | 37.88140914584859 * 80 / 80.00406124093376        |
     // | ActualIbTokenToWithdraw            | 37.879486174351076617 | Min(X, Y)                                         |
     // | WithdrawUnderlyingToken            | 37.881409145848589999 | 37.879486174351076617 * 80.00406124093376 / 80    |
     // | ReturnedIBToken                    | 2.120513825648923383  | 40 - 37.879486174351076617                        |
@@ -343,19 +344,20 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | -------------------------------------------------------------------------------------------------------------- |
 
     // | After Execute Strat Calculation
-    // | ------------------------------------------------------------------------------------------------------------- |
-    // | Detail                     | Amount (ether)        | Note                                                     |
-    // | -------------------------- | --------------------- | -------------------------------------------------------- |
-    // | RepaidAmount (ShareValue)  | 30.005076551167199999 | RepayTokenFromStrat - LiquidationFee                     |
-    // | RepaidShare                | 29.999999999999999999 | 30.005076551167199999 * 30 / 30.0050765511672            |
-    // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)   |
-    // | ------------------------------------------------------------------------------------------------------------- |
+    // | -------------------------------------------------------------------------------------------------------------------- |
+    // | Detail                     | Amount (ether)        | Note                                                            |
+    // | -------------------------- | --------------------- | --------------------------------------------------------------- |
+    // | ActualLiquidationFee       | 0.300050765511671999  | 30.305127316678871999 / 30.305127316678872 * 0.300050765511672  |
+    // | RepaidAmount (ShareValue)  | 30                    | RepayTokenFromStrat - ActualLiquidationFee                            |
+    // | RepaidShare                | 29.994924307733183381 | 30 * 30 / 30.0050765511672                                      |
+    // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)          |
+    // | -------------------------------------------------------------------------------------------------------------------- |
 
     // Expectation
-    uint256 _expectedRepaidAmount = 30.005076551167199999 ether;
+    uint256 _expectedRepaidAmount = 30 ether;
     uint256 _expectedIbTokenToWithdraw = 37.879486174351076617 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 37.881409145848589999 ether;
-    uint256 _expectedLiquidationFee = 0.300050765511672 ether;
+    uint256 _expectedLiquidationFee = 0.300050765511671999 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
@@ -448,14 +450,14 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     );
 
     // | Calculation When Liquidate ALICE Position
-    // | -------------------------------------------------------------------------------- |
-    // | Detail                       | Amount (ether)    | Note                          |
-    // | ---------------------------- | ----------------- | ----------------------------- |
-    // | RepayAmount                  | 40                |                               |
-    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest
-    // | ActualRepayAmount            | 30.0050765511672  | Min(AliceDebtValue, RepayAmount)
-    // | LiquidationFee               | 0.300050765511672 | 1% of ActualRepayAmount
-    // | -------------------------------------------------------------------------------------- |
+    // | ------------------------------------------------------------------------------------ |
+    // | Detail                       | Amount (ether)    | Note                              |
+    // | ---------------------------- | ----------------- | --------------------------------- |
+    // | RepayAmount                  | 40                |                                   |
+    // | AliceDebtValue               | 30.0050765511672  | ALICE USDC Debt Value + interest  |
+    // | ActualRepayAmount            | 30.0050765511672  | Min(AliceDebtValue, RepayAmount)  |
+    // | LiquidationFee               | 0.300050765511672 | 1% of ActualRepayAmount           |
+    // | ------------------------------------------------------------------------------------ |
 
     // | in Liquidation Strat Calculation
     // | -------------------------------------------------------------------------------------------------------------- |
@@ -477,19 +479,20 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | -------------------------------------------------------------------------------------------------------------- |
 
     // | After Execute Strat Calculation
-    // | ------------------------------------------------------------------------------------------------------------- |
-    // | Detail                     | Amount (ether)        | Note                                                     |
-    // | -------------------------- | --------------------- | -------------------------------------------------------- |
-    // | RepaidAmount (ShareValue)  | 7.700355358581704     | RepayTokenFromStrat - LiquidationFee                     |
-    // | RepaidShare                | 7.699052537443527564  | 7.700355358581704 * 30 / 30.0050765511672                |
-    // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)   |
-    // | ------------------------------------------------------------------------------------------------------------- |
+    // | ---------------------------------------------------------------------------------------------------------------- |
+    // | Detail                     | Amount (ether)        | Note                                                        |
+    // | -------------------------- | --------------------- | ----------------------------------------------------------- |
+    // | ActualLiquidationFee       | 0.079211941822706693  | 8.000406124093376 / 30.305127316678872 * 0.300050765511672  |
+    // | RepaidAmount (ShareValue)  | 7.921194182270669307  | RepayTokenFromStrat - ActualLiquidationFee                        |
+    // | RepaidShare                | 7.919853997468839172  | 7.921194182270669307 * 30 / 30.0050765511672                |
+    // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)      |
+    // | ---------------------------------------------------------------------------------------------------------------- |
 
     // Expectation
-    uint256 _expectedRepaidAmount = 7.700355358581704 ether;
+    uint256 _expectedRepaidAmount = 7.921194182270669307 ether;
     uint256 _expectedIbTokenToWithdraw = 10 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 10.00050765511672 ether;
-    uint256 _expectedLiquidationFee = 0.300050765511672 ether;
+    uint256 _expectedLiquidationFee = 0.079211941822706693 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
@@ -611,6 +614,9 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenLiquidateIbWhileSubAccountIsHealthy() external {
+    vm.prank(ALICE);
+    borrowFacet.borrow(0, address(usdc), 30 ether);
+
     // increase shareValue of ibWeth by 2.5%
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
