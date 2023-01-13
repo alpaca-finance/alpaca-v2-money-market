@@ -362,178 +362,50 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     _assertTreasuryDebtTokenFee(_debtToken, _expectedLiquidationFee, _stateBefore);
   }
 
-  // function testRevert_WhenLiquidateButMMDoesNotHaveEnoughUnderlyingForLiquidation() external {
-  //   vm.startPrank(ALICE);
-  //   lendFacet.deposit(address(weth), 40 ether);
-  //   collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
-  //   collateralFacet.removeCollateral(_aliceSubAccountId, address(weth), 40 ether);
-  //   vm.stopPrank();
+  function testRevert_WhenLiquidateIbWhileSubAccountIsHealthy() external {
+    // increase shareValue of ibWeth by 2.5%
+    // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
+    vm.prank(BOB);
+    lendFacet.deposit(address(weth), 4 ether);
+    vm.prank(moneyMarketDiamond);
+    ibWeth.onWithdraw(BOB, BOB, 0, 4 ether);
+    // set price to weth from 1 to 0.8 ether USD
+    // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
+    mockOracle.setTokenPrice(address(btc), 10 ether);
 
-  //   vm.warp(1 days + 1);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
+    liquidationFacet.liquidationCall(
+      address(_ibTokenLiquidationStrat),
+      ALICE,
+      _aliceSubAccountId,
+      address(usdc),
+      address(ibWeth),
+      1 ether,
+      abi.encode()
+    );
+  }
 
-  //   mockOracle.setTokenPrice(address(weth), 1 ether);
-  //   mockOracle.setTokenPrice(address(usdc), 1 ether);
+  function testRevert_WhenIbLiquidateMoreThanThreshold() external {
+    address _debtToken = address(usdc);
+    address _collatToken = address(ibWeth);
+    uint256 _repayAmount = 30 ether;
 
-  //   vm.startPrank(BOB);
-  //   collateralFacet.addCollateral(BOB, 0, address(usdc), 100 ether);
-  //   borrowFacet.borrow(0, address(weth), 30 ether);
-  //   vm.stopPrank();
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1e18);
 
-  //   vm.prank(BOB);
-  //   lendFacet.deposit(address(weth), 1 ether);
-  //   vm.prank(moneyMarketDiamond);
-  //   ibWeth.onWithdraw(BOB, BOB, 0, 1 ether);
-
-  //   mockOracle.setTokenPrice(address(weth), 8e17);
-  //   // todo: check this
-
-  //   // should fail because 11 weth left in mm not enough to liquidate 15 usdc debt
-  //   vm.expectRevert("!safeTransfer");
-  //   liquidationFacet.liquidationCall(
-  //     address(_ibTokenLiquidationStrat),
-  //     ALICE,
-  //     _aliceSubAccountId,
-  //     address(usdc),
-  //     address(ibWeth),
-  //     15 ether,
-  //     abi.encode()
-  //   );
-  // }
-
-  // function testRevert_WhenLiquidateIbWhileSubAccountIsHealthy() external {
-  //   // add ib as collat
-  //   vm.startPrank(ALICE);
-  //   lendFacet.deposit(address(weth), 40 ether);
-  //   collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
-  //   collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
-  //   vm.stopPrank();
-
-  //   // increase shareValue of ibWeth by 2.5%
-  //   // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
-  //   vm.prank(BOB);
-  //   lendFacet.deposit(address(weth), 4 ether);
-  //   vm.prank(moneyMarketDiamond);
-  //   ibWeth.onWithdraw(BOB, BOB, 0, 4 ether);
-  //   // set price to weth from 1 to 0.8 ether USD
-  //   // since ibWeth collat value increase, alice borrowing power = 44 * 0.8 * 9000 / 10000 = 31.68 ether USD
-  //   mockOracle.setTokenPrice(address(weth), 8e17);
-  //   mockOracle.setTokenPrice(address(usdc), 1e18);
-  //   mockOracle.setTokenPrice(address(btc), 10 ether);
-
-  //   vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
-  //   liquidationFacet.liquidationCall(
-  //     address(mockLiquidationStrategy),
-  //     ALICE,
-  //     _subAccountId,
-  //     address(usdc),
-  //     address(ibWeth),
-  //     1 ether,
-  //     abi.encode()
-  //   );
-  // }
-
-  // function testRevert_WhenIbLiquidateMoreThanThreshold() external {
-  //   vm.startPrank(ALICE);
-  //   lendFacet.deposit(address(weth), 40 ether);
-  //   collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
-  //   collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
-  //   vm.stopPrank();
-
-  //   address _debtToken = address(usdc);
-  //   address _collatToken = address(ibWeth);
-  //   uint256 _repayAmount = 30 ether;
-
-  //   mockOracle.setTokenPrice(address(weth), 8e17);
-  //   mockOracle.setTokenPrice(address(usdc), 1e18);
-
-  //   vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
-  //   liquidationFacet.liquidationCall(
-  //     address(mockLiquidationStrategy),
-  //     ALICE,
-  //     _subAccountId,
-  //     _debtToken,
-  //     _collatToken,
-  //     _repayAmount,
-  //     abi.encode()
-  //   );
-  // }
-
-  // function testCorrectness_WhenIbLiquidateWithDebtAndInterestOnIb_ShouldAccrueInterestAndLiquidate() external {
-  //   /**
-  //    * scenario
-  //    *
-  //    * 1. ALICE add 1.5 ibWeth as collateral, borrow 1 usdc
-  //    *    - borrowing power = 1.5 * 1 * 9000 / 10000 = 1.35
-  //    *    - used borrowing power = 1 * 1 * 10000 / 9000 = 1.111..
-  //    *
-  //    * 2. BOB add 10 usdc as collateral, borrow 0.1 weth
-  //    *
-  //    * 3. 1 second passed, interest accrue on weth 0.001, usdc 0.01
-  //    *    - note that in mm base test had lendingFee set to 0. has to account for if not 0
-  //    *
-  //    * 4. weth price dropped to 0.1 usdc/weth, ALICE position is liquidatable
-  //    *    - ALICE borrowing power = 1.5 * 0.1 * 9000 / 10000 = 0.135
-  //    *
-  //    * 5. liquidate entire position by dumping 1.5 ibWeth to 0.150075 usdc
-  //    *    - ibWeth collateral = 1.5 ibWeth = 1.50075 weth = 0.150075 usdc
-  //    *
-  //    * 6. state after liquidation
-  //    *    - collat = 0
-  //    *    - liquidation fee = 1.01 * 0.01 = 0.0101 usdc
-  //    *    - remaining debt value = 1.01 - (0.150075 - 0.0101) = 0.870025 usdc
-  //    */
-  //   address _collatToken = address(ibWeth);
-  //   address _debtToken = address(usdc);
-
-  //   MockInterestModel _interestModel = new MockInterestModel(0.01 ether);
-  //   adminFacet.setInterestModel(address(weth), address(_interestModel));
-  //   adminFacet.setInterestModel(address(usdc), address(_interestModel));
-
-  //   vm.startPrank(ALICE);
-  //   lendFacet.deposit(address(weth), 2 ether);
-  //   collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 1.5 ether);
-  //   borrowFacet.repay(ALICE, subAccount0, _debtToken, 29 ether);
-  //   collateralFacet.removeCollateral(subAccount0, address(weth), 40 ether);
-  //   vm.stopPrank();
-
-  //   vm.startPrank(BOB);
-  //   collateralFacet.addCollateral(BOB, subAccount0, address(usdc), 10 ether);
-  //   borrowFacet.borrow(subAccount0, address(weth), 0.1 ether);
-  //   vm.stopPrank();
-
-  //   vm.warp(block.timestamp + 1);
-
-  //   assertEq(viewFacet.getGlobalPendingInterest(address(usdc)), 0.01 ether); // from ALICE
-  //   assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0.001 ether); // from BOB
-
-  //   mockOracle.setTokenPrice(address(weth), 0.1 ether);
-
-  //   liquidationFacet.liquidationCall(
-  //     address(mockLiquidationStrategy),
-  //     ALICE,
-  //     _subAccountId,
-  //     _debtToken,
-  //     _collatToken,
-  //     2 ether,
-  //     abi.encode()
-  //   );
-
-  //   // ALICE is rekt
-  //   assertEq(viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken), 0);
-  //   (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
-  //   assertEq(_debtAmount, 0.870025 ether);
-
-  //   // check mm state
-  //   assertEq(viewFacet.getTotalCollat(_collatToken), 0);
-  //   assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 0.870025 ether);
-  //   // accrue weth properly
-  //   assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0);
-  //   assertEq(viewFacet.getDebtLastAccrueTime(address(weth)), block.timestamp);
-  //   assertEq(viewFacet.getTotalToken(address(weth)), 0.50025 ether); // 2.001 - 1.50075
-  //   assertEq(viewFacet.getTotalTokenWithPendingInterest(address(weth)), 0.50025 ether); // 2.001 - 1.50075
-  // }
-
-  // TODO: case where diamond has no actual token to transfer to strat
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
+    liquidationFacet.liquidationCall(
+      address(_ibTokenLiquidationStrat),
+      ALICE,
+      _aliceSubAccountId,
+      _debtToken,
+      _collatToken,
+      _repayAmount,
+      abi.encode()
+    );
+  }
 
   function _cacheState(
     address _subAccount,
