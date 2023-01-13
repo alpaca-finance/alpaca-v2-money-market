@@ -93,9 +93,22 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_wethDebtInterest, 1 ether);
     assertEq(_usdcDebtInterest, 0.5 ether);
 
+    // Reserve should stay the same
+    uint256 _wethReserveBefore = viewFacet.getReserveOf(address(weth));
+    uint256 _usdcReserveBefore = viewFacet.getReserveOf(address(usdc));
+
+    uint256 _wethProtocolReserveBefore = viewFacet.getProtocolReserveOf(address(weth));
+    uint256 _usdcProtocolReserveBefore = viewFacet.getProtocolReserveOf(address(usdc));
+
     farmFacet.accrueInterest(address(weth), address(wethUsdcLPToken));
     farmFacet.accrueInterest(address(usdc), address(wethUsdcLPToken));
 
+    // assert that
+    assertEq(viewFacet.getReserveOf(address(weth)), _wethReserveBefore);
+    assertEq(viewFacet.getReserveOf(address(usdc)), _usdcReserveBefore);
+
+    assertEq(viewFacet.getProtocolReserveOf(address(weth)), _wethProtocolReserveBefore + _wethDebtInterest);
+    assertEq(viewFacet.getProtocolReserveOf(address(usdc)), _usdcProtocolReserveBefore + _usdcDebtInterest);
     (, uint256 _subAccountWethDebtValueAfter) = viewFacet.getSubAccountDebt(
       BOB,
       subAccount0,
