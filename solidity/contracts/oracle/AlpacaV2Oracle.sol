@@ -28,10 +28,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   );
 
   /// @notice An address of chainlink usd token
-  address public usd;
+  address public immutable usd;
 
   /// @notice Stabletoken to compare value
-  address public baseStable;
+  address public immutable baseStable;
 
   /// @notice a chainLink interface to perform get price
   address public oracle;
