@@ -84,8 +84,8 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     // after accure debt share = 20, debt value = 22
     // user repay 5 shares
     // actual repay amount = 5 * 22 / 20 = 5.5 tokens
-    assertEq(_bobDebtShare, 15 ether, "expected debt shares is mismatch"); // 20 - 5 = 15
-    assertEq(_bobDebtValue, 16.5 ether, "expected debt value is mismatch"); // 22 - 5.5 = 16.5
+    assertEq(_bobDebtShare, 15 ether, "expected debt shares mismatch"); // 20 - 5 = 15
+    assertEq(_bobDebtValue, 16.5 ether, "expected debt value mismatch"); // 22 - 5.5 = 16.5
 
     // assert protocol revenue and outstanding balance
     assertEq(viewFacet.getProtocolReserveOf(address(weth)), _wethProtocolReserveBefore + _wethPendingInterest);
