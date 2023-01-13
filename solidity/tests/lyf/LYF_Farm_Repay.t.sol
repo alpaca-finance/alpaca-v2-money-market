@@ -91,8 +91,21 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     assertEq(viewFacet.getProtocolReserveOf(address(weth)), _wethProtocolReserveBefore + _wethPendingInterest);
     // outstanding after should increase by repay amount - interest collected
     // repaying 5.5 ether, 2 of which is an interest, 3.5 left as an outstanding
-    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), _wethOutstandingBefore + 3.5 ether);
+    uint256 _expectedOutstandingAfterRepay = _wethOutstandingBefore + 3.5 ether;
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), _expectedOutstandingAfterRepay);
+    vm.stopPrank();
 
+    // test withdraw reserve
+    vm.prank(ALICE);
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.withdrawReserve(address(weth), address(this), 2 ether);
+
+    adminFacet.withdrawReserve(address(weth), address(this), 2 ether);
+    assertEq(viewFacet.getProtocolReserveOf(address(weth)), 0);
+    // should not change the outstanding since it decrease protocol reserve and increase reverse at the same time
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), _expectedOutstandingAfterRepay);
+
+    vm.startPrank(BOB);
     // 2. repay > debt
     farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
     (_bobDebtShare, _bobDebtValue) = viewFacet.getSubAccountDebt(
