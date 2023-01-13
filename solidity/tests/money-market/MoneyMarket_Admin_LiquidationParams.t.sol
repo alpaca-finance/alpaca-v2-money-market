@@ -18,7 +18,7 @@ contract MoneyMarket_Admin_LiquidationParamsTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenAdminSetLiquidationParams_ShouldWork() external {
     uint16 _maxLiquidateBps = 5000;
-    uint16 _liquidationThresholdBps = 5000;
+    uint16 _liquidationThresholdBps = 11111;
 
     vm.expectEmit(false, false, false, false, moneyMarketDiamond);
     emit LogSetLiquidationParams(_maxLiquidateBps, _liquidationThresholdBps);
@@ -35,7 +35,7 @@ contract MoneyMarket_Admin_LiquidationParamsTest is MoneyMarket_BaseTest {
     adminFacet.setLiquidationParams(uint16(LibMoneyMarket01.MAX_BPS + 1), 0);
 
     vm.expectRevert(IAdminFacet.AdminFacet_InvalidArguments.selector);
-    adminFacet.setLiquidationParams(0, uint16(LibMoneyMarket01.MAX_BPS + 1));
+    adminFacet.setLiquidationParams(0, uint16(LibMoneyMarket01.MAX_BPS - 1));
   }
 
   function testRevert_WhenNonAdminSetLiquidationParams() external {
