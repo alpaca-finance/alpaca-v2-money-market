@@ -64,6 +64,7 @@ library LibAV01 {
     mapping(address => mapping(address => uint256)) vaultDebts;
     mapping(address => uint256) lastAccrueInterestTimestamps;
     mapping(address => bool) operatorsOk;
+    mapping(address => bool) repurchasersOk;
   }
 
   error LibAV01_NoTinyShares();

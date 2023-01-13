@@ -116,7 +116,7 @@ contract AVAdminFacet is IAVAdminFacet {
     avDs.vaultConfigs[_vaultToken].assetTokenInterestModel = _newAssetTokenInterestRateModel;
   }
 
-  /// @notice Whitelist/Blacklist the address allowed for retargeting and repurchasing
+  /// @notice Whitelist/Blacklist the address allowed for retargeting and rebalancing
   /// @param _operators an array of operators' address
   /// @param _isOk a flag to allow or disallow
   function setOperatorsOk(address[] calldata _operators, bool _isOk) external onlyOwner {
@@ -125,6 +125,21 @@ contract AVAdminFacet is IAVAdminFacet {
     for (uint256 _i; _i < _length; ) {
       avDs.operatorsOk[_operators[_i]] = _isOk;
       emit LogSetOperatorOk(_operators[_i], _isOk);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  /// @notice Whitelist/Blacklist the address allowed for repurchasing
+  /// @param _repurchasers an array of repurchaser' address
+  /// @param _isOk a flag to allow or disallow
+  function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+    uint256 _length = _repurchasers.length;
+    for (uint256 _i; _i < _length; ) {
+      avDs.repurchasersOk[_repurchasers[_i]] = _isOk;
+      emit LogSetRepurchaserOk(_repurchasers[_i], _isOk);
       unchecked {
         ++_i;
       }

@@ -91,7 +91,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
   ) external {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
-    if (!avDs.operatorsOk[msg.sender]) {
+    if (!avDs.repurchasersOk[msg.sender]) {
       revert AVRebalanceFacet_Unauthorized(msg.sender);
     }
 
@@ -109,7 +109,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
     LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
     // repay
-    IERC20(_tokenToRepay).transferFrom(msg.sender, address(this), _amountToRepay);
+    IERC20(_tokenToRepay).safeTransferFrom(msg.sender, address(this), _amountToRepay);
     LibAV01.repayVaultDebt(_vaultToken, _tokenToRepay, _amountToRepay, avDs);
 
     // borrow value equal to _amountToRepay in USD + reward
@@ -123,7 +123,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
     LibAV01.borrowMoneyMarket(_vaultToken, _tokenToBorrow, _amountToRepurchaser, avDs);
 
     // transfer reward to caller
-    IERC20(_tokenToBorrow).transfer(msg.sender, _amountToRepurchaser);
+    IERC20(_tokenToBorrow).safeTransfer(msg.sender, _amountToRepurchaser);
 
     emit LogRepurchase(_vaultToken, _tokenToRepay, _amountToRepay, _amountToBorrowForVault, _repurchaseRewardAmount);
   }

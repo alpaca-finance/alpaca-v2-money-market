@@ -20,10 +20,10 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     _repurchaseRewardBps = 100;
     adminFacet.setRepurchaseRewardBps(_repurchaseRewardBps);
 
-    // whitelist BOB as rebalancer
-    address[] memory _rebalancers = new address[](1);
-    _rebalancers[0] = BOB;
-    adminFacet.setOperatorsOk(_rebalancers, true);
+    // whitelist BOB as repurchaser
+    address[] memory _repurchasers = new address[](1);
+    _repurchasers[0] = BOB;
+    adminFacet.setRepurchasersOk(_repurchasers, true);
 
     _vaultToken = address(avShareToken);
   }
@@ -78,14 +78,13 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     assertEq(_assetDebt, 1.5 ether - _amountToRepay);
   }
 
-  function testCorrectness_WhenAVRepurchase_ShouldDoSideEffects() external {
+  function testCorrectness_WhenAVRepurchase_ShouldAccrueInterestAndMintManagementFee() external {
     vm.prank(ALICE);
     tradeFacet.deposit(_vaultToken, 1 ether, 0);
 
     vm.prank(BOB);
     rebalanceFacet.repurchase(_vaultToken, address(usdc), 0.1 ether);
 
-    // check other side effects
     // should accrue interest
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
     // should mint management fee
@@ -99,7 +98,7 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     rebalanceFacet.repurchase(_vaultToken, _invalidToken, 1 ether);
   }
 
-  function testRevert_WhenNonRebalancerCallAVRepurchase() external {
+  function testRevert_WhenNonRepurchaserCallAVRepurchase() external {
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(IAVRebalanceFacet.AVRebalanceFacet_Unauthorized.selector, ALICE));
     rebalanceFacet.repurchase(_vaultToken, address(usdc), 1 ether);

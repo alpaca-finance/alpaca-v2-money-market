@@ -69,7 +69,7 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](9);
+    bytes4[] memory selectors = new bytes4[](10);
     selectors[0] = AVAdminFacet.openVault.selector;
     selectors[1] = AVAdminFacet.setTokenConfigs.selector;
     selectors[2] = AVAdminFacet.setOracle.selector;
@@ -79,6 +79,7 @@ library AVDiamondDeployer {
     selectors[6] = AVAdminFacet.setInterestRateModels.selector;
     selectors[7] = AVAdminFacet.setOperatorsOk.selector;
     selectors[8] = AVAdminFacet.setRepurchaseRewardBps.selector;
+    selectors[9] = AVAdminFacet.setRepurchasersOk.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
