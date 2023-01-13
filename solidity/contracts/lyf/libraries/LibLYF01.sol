@@ -421,11 +421,12 @@ library LibLYF01 {
 
   function depositToMasterChef(
     address _lpToken,
-    LibLYF01.LPConfig memory _lpconfig,
+    address _masterChef,
+    uint256 _poolId,
     uint256 _amount
   ) internal {
-    IERC20(_lpToken).safeIncreaseAllowance(_lpconfig.masterChef, _amount);
-    IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
+    IERC20(_lpToken).safeIncreaseAllowance(_masterChef, _amount);
+    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
   }
 
   function harvest(
@@ -498,7 +499,7 @@ library LibLYF01 {
 
     // deposit lp back to masterChef
     lyfDs.lpAmounts[_lpToken] += _lpReceived;
-    depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
+    depositToMasterChef(_lpToken, _lpConfig.masterChef, _lpConfig.poolId, _lpReceived);
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;
