@@ -206,7 +206,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // 1. check if position is underwater and can be liquidated
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
-    if ((_borrowingPower * LibMoneyMarket01.MAX_BPS) >= _usedBorrowingPower * moneyMarketDs.liquidationThresholdBps) {
+    if ((_usedBorrowingPower * LibMoneyMarket01.MAX_BPS) < _borrowingPower * moneyMarketDs.liquidationThresholdBps) {
       revert LiquidationFacet_Healthy();
     }
 

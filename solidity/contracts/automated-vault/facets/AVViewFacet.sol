@@ -4,6 +4,9 @@ pragma solidity 0.8.17;
 // interfaces
 import { IAVViewFacet } from "../interfaces/IAVViewFacet.sol";
 
+// interfaces
+import { IERC20 } from "../interfaces/IERC20.sol";
+
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
 
@@ -55,8 +58,12 @@ contract AVViewFacet is IAVViewFacet {
     return avDs.lastAccrueInterestTimestamps[_vaultToken];
   }
 
-  function getPendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee) {
+  function getPendingManagementFee(address _vaultToken) external view returns (uint256 _pendingManagementFee) {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    _pendingManagementFee = LibAV01.getPendingManagementFee(_shareToken, avDs);
+    _pendingManagementFee =
+      (IERC20(_vaultToken).totalSupply() *
+        avDs.vaultConfigs[_vaultToken].managementFeePerSec *
+        (block.timestamp - avDs.lastFeeCollectionTimestamps[_vaultToken])) /
+      1e18;
   }
 }
