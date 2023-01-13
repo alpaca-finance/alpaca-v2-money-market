@@ -226,7 +226,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
      *    - remaining debt share = 0
      */
 
-    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+    adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
 
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
@@ -340,7 +340,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
     external
   {
-    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+    adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
 
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
@@ -405,12 +405,14 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
     // there will be precision loss that make it impossible for both side to be equal
     // if we only borrow more it will hit borrow limit before reach equality
 
-    // try to make borrowingPower = usedBorrowingPower * threshold = 32.4
-    // borrow more to increase usedBorrowingPower to 36 ether -> 36 * 0.9 (threshold) = 32.4
+    // try to make usedBorrowingPower / borrowingPower = threshold
+    // borrow more to increase usedBorrowingPower to 36 ether
     borrowFacet.borrow(0, address(usdc), 2.4 ether);
 
-    // decrease price to lower borrowingPower to 32.4
-    mockOracle.setTokenPrice(address(weth), 0.9 ether);
+    // decrease price to lower borrowingPower so that 36 / (40 * Price * 0.9) = 1.1111
+    // Price = 0.900009
+    // add a little bit so it can't be liquidate
+    mockOracle.setTokenPrice(address(weth), 0.9000091 ether);
 
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
