@@ -24,8 +24,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     address indexed _token,
     address _router,
     address[] _path,
-    uint64 maxPriceDiff
+    uint64 maxPriceDiffBps
   );
+
+  uint256 internal constant MAX_BPS = 10000;
 
   /// @notice An address of chainlink usd token
   address public immutable usd;
@@ -107,10 +109,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
     uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
 
-    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiff;
-    // _dexPrice/_oraclePrice > maxPriceDiff/10000
-    // _dexPrice/_oraclePrice < 10000/maxPriceDiff
-    if (_dexPrice * 10000 > _oraclePrice * _maxPriceDiff || _dexPrice * _maxPriceDiff < _oraclePrice * 10000) {
+    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiffBps;
+    // _dexPrice/_oraclePrice > maxPriceDiffBps/10000
+    // _dexPrice/_oraclePrice < 10000/maxPriceDiffBps
+    if (_dexPrice * MAX_BPS > _oraclePrice * _maxPriceDiff || _dexPrice * _maxPriceDiff < _oraclePrice * MAX_BPS) {
       revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
     }
   }
@@ -213,6 +215,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
         revert AlpacaV2Oracle_InvalidConfigPath();
       }
 
+      if (_configs[_i].maxPriceDiffBps < MAX_BPS) {
+        revert AlpacaV2Oracle_InvalidPriceDiffConfig();
+      }
+
       tokenConfigs[_tokens[_i]] = _configs[_i];
 
       emit LogSetTokenConfig(
@@ -220,7 +226,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
         _tokens[_i],
         _configs[_i].router,
         _configs[_i].path,
-        _configs[_i].maxPriceDiff
+        _configs[_i].maxPriceDiffBps
       );
 
       unchecked {

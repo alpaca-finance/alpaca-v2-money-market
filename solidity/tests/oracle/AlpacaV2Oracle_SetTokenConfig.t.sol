@@ -31,7 +31,7 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[1] = address(busd);
 
     IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiff: 10500, path: _usdcPath });
+    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 10500, path: _usdcPath });
 
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
   }
@@ -62,7 +62,7 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[1] = address(btc);
 
     IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiff: 10500, path: _usdcPath });
+    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 10500, path: _usdcPath });
 
     // destination not base stable
     vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidConfigPath.selector));
@@ -74,8 +74,23 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[0] = address(usdc);
     _usdcPath[1] = address(busd);
 
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiff: 10500, path: _usdcPath });
+    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 10500, path: _usdcPath });
     vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidConfigPath.selector));
+    alpacaV2Oracle.setTokenConfig(_tokens, _configs);
+  }
+
+  function testRever_WhenConfigInvalidMaxPriceDiff_ShouldRevert() external {
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(usdc);
+
+    address[] memory _usdcPath = new address[](2);
+    _usdcPath[0] = address(usdc);
+    _usdcPath[1] = address(busd);
+
+    IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
+    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 9999, path: _usdcPath });
+
+    vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidPriceDiffConfig.selector));
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
   }
 }

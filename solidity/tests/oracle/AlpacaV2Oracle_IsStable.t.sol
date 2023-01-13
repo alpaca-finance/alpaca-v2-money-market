@@ -11,7 +11,7 @@ import { IRouterLike } from "../../contracts/oracle/interfaces/IRouterLike.sol";
 
 contract AlpacaV2Oracle_IsStableTest is BaseTest {
   address constant mockRouter = address(6666);
-  uint64 constant MAX_PRICE_DIFF = 10500; // 5%
+  uint64 constant PRICE_DIFF = 10500; // 5%
 
   function setUp() public virtual {
     oracleMedianizer = deployOracleMedianizer();
@@ -34,7 +34,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
     _tokens[0] = address(usdc);
 
     IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
-    _configs[0] = IAlpacaV2Oracle.Config({ router: mockRouter, maxPriceDiff: MAX_PRICE_DIFF, path: _usdcPath });
+    _configs[0] = IAlpacaV2Oracle.Config({ router: mockRouter, maxPriceDiffBps: PRICE_DIFF, path: _usdcPath });
 
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
   }

@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 interface IAlpacaV2Oracle {
   struct Config {
     address router;
-    uint64 maxPriceDiff;
+    uint64 maxPriceDiffBps;
     address[] path;
   }
 
@@ -29,5 +29,6 @@ interface IAlpacaV2Oracle {
   error AlpacaV2Oracle_InvalidConfigLength();
   error AlpacaV2Oracle_InvalidConfigPath();
   error AlpacaV2Oracle_InvalidBaseStableTokenDecimal();
+  error AlpacaV2Oracle_InvalidPriceDiffConfig();
   error AlpacaV2Oracle_PriceTooDeviate(uint256 _dexPrice, uint256 _oraclePrice);
 }
