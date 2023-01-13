@@ -164,19 +164,21 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | ------------------------ |
 
     // | Liquitation Facet
-    // | ------------------------------------------------------------------------- |
-    // | #   | Detail                       | Amount (ether)    | Note             |
-    // | --- | ---------------------------- | ----------------- | ---------------- |
-    // | A1  | IB Token Supply              | 40                | IB WETH          |
-    // | A2  | Underlying Total Token       | 40                | WETH             |
-    // | A3  | RepayAmount                  | 15                | USDC             |
-    // | A4  | Liquidation Fee              | 0.15              | 1% of A3         |
-    // | A5  | Token Debt Share             | 30                | USDC             |
-    // | A6  | Token Debt Value             | 30                | USDC             |
-    // | A7  | Alice Debt Share             | 30                | USDC             |
-    // | A8  | Debt Pending Interest        | 0.0050765511672   | time past 1 day  |
-    // | A9  | Underlying Pending Interest  | 0.00203062046688  | time past 1 day  |
-    // | ------------------------------------------------------------------------- |
+    // | -------------------------------------------------------------------------------------- |
+    // | #   | Detail                       | Amount (ether)    | Note                          |
+    // | --- | ---------------------------- | ----------------- | ----------------------------- |
+    // | A1  | IB Token Supply              | 40                | IB WETH                       |
+    // | A2  | Underlying Total Token       | 40                | WETH                          |
+    // | A3  | RepayAmount                  | 15                | USDC                          |
+    // | A4  | Token Debt Share             | 30                | USDC                          |
+    // | A5  | Token Debt Value             | 30                | USDC                          |
+    // | A6  | Alice Debt Share             | 30                | USDC                          |
+    // | A7  | Debt Pending Interest        | 0.0050765511672   | time past 1 day               |
+    // | A8  | Underlying Pending Interest  | 0.00203062046688  | time past 1 day               |
+    // | A9  | Actual Repay Amount          | 15                | Min(15, 30 + 0.0050765511672) |
+    // |     |                              |                   | Min(A3, A6 + A7)              |
+    // | A10 | Liquidation Fee              | 0.15              | 1% of A3                      |
+    // | -------------------------------------------------------------------------------------- |
 
     // | Liquidation Strat
     // | ----------------------------------------------------------------------------------------------------------------- |
@@ -184,11 +186,11 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | --- | ---------------------------------- | --------------------- | ---------------------------------------------- |
     // | B1  | IB Collat                          | 30                    |                                                |
     // | B2  | RepayAmountWithFee                 | 15.15                 | 15 + 0.15                                      |
-    // |     |                                    |                       | A3 + A4                                        |
+    // |     |                                    |                       | A9 + A10                                       |
     // | B3  | RequireUnderlyingToSwap            | 18.9375               | 15.15 * 1 / 0.8                                |
     // |     |                                    |                       | B2 * DebtTokenPrice / UnderlyingPrice          |
     // | B4  | UnderlyingTotalToken with Interest | 40.00203062046688     | 40 + 0.00203062046688                          |
-    // |     |                                    |                       | A2 + A9                                        |
+    // |     |                                    |                       | A2 + A8                                        |
     // | B5  | RequireUnderlyingToSwap in (IB)    | 18.936538676924769296 | 18.9375 * 40 / 40.00203062046688               |
     // |     |                                    |                       | B3 * A1 / B4                                   |
     // | B6  | To Withdraw IbToken                | 18.936538676924769296 | Min(A1, B5)                                    |
@@ -205,16 +207,16 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | #  | Detail                     | Amount (ether)        | Note
     // | -- | -------------------------- | --------------------- | ------------------------------
     // | C1 | ActualRepaidAmount         | 14.999999999999999999 | 15.149999999999999999 - 0.15
-    // |    |                            |                       | B9 - A4 (keep liquidation fee)
-    // | C2 | DebtValue with Interest    | 30.0050765511672      | A6 + A8
+    // |    |                            |                       | B9 - A10 (keep liquidation fee)
+    // | C2 | DebtValueWithInterest      | 30.0050765511672      | A5 + A7
     // | C3 | RepaidShare                | 14.997462153866591689 | 14.999999999999999999 * 30 / 30.0050765511672
-    // |    |                            |                       | C1 * A5 / C2
+    // |    |                            |                       | C1 * A4 / C2
     // | C4 | Debt Share After Liq       | 15.002537846133408311 | 30 - 14.997462153866591689
-    // |    |                            |                       | A5 - C3, USDC Share
+    // |    |                            |                       | A4 - C3, USDC Share
     // | C5 | Debt Value After Liq       | 15.005076551167200001 | 30.0050765511672 - 14.999999999999999999
     // |    |                            |                       | C2 - C1, USDC
     // | C6 | Alice Debt Share           | 15.002537846133408311 | 30 - 14.997462153866591689
-    // |    |                            |                       | A7 - C2
+    // |    |                            |                       | A6 - C3
     // | C7 | Withdrawn IB Token         | 18.936538676924769296 | B6
     // | C8 | Withdrawn Underlying Token | 18.937499999999999999 | B7
 
