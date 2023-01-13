@@ -84,37 +84,35 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Initializable, OwnableUpgradeable {
 
   /// @notice Check token price from dex and oracle is in the acceptable range
   /// @param _tokenAddress tokenAddress
-  function isStable(address _tokenAddress) external view returns (bool) {
+  function isStable(address _tokenAddress) external view {
     _getTokenPrice(_tokenAddress);
-    return true;
   }
 
-  function _isStable(address _tokenAddress, uint256 _oraclePrice) internal view returns (bool) {
-    uint256 _dexPrice;
-
+  function _validateStability(address _tokenAddress, uint256 _oraclePrice) internal view {
     if (_tokenAddress == baseStable) {
-      _dexPrice = _oraclePrice;
-    } else {
-      uint256[] memory _amounts = IRouterLike(tokenConfigs[_tokenAddress].router).getAmountsOut(
-        10**IERC20(_tokenAddress).decimals(),
-        tokenConfigs[_tokenAddress].path
-      );
-      _dexPrice = _amounts[_amounts.length - 1];
+      return;
     }
 
+    uint256[] memory _amounts = IRouterLike(tokenConfigs[_tokenAddress].router).getAmountsOut(
+      10**IERC20(_tokenAddress).decimals(),
+      tokenConfigs[_tokenAddress].path
+    );
+    uint256 _dexPrice = _amounts[_amounts.length - 1];
+
     // TODO: check when baseStable depeg with oracle
+    // _dexPrice/_oraclePrice > maxPriceDiff/10000
+    // _dexPrice/_oraclePrice < 10000/maxPriceDiff
     if (
       _dexPrice * 10000 > _oraclePrice * tokenConfigs[_tokenAddress].maxPriceDiff ||
       _dexPrice * tokenConfigs[_tokenAddress].maxPriceDiff < _oraclePrice * 10000
     ) {
       revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
     }
-    return true;
   }
 
   function _getTokenPrice(address _tokenAddress) internal view returns (uint256 _price, uint256 _lastTimestamp) {
     (_price, _lastTimestamp) = IPriceOracle(oracle).getPrice(_tokenAddress, usd);
-    _isStable(_tokenAddress, _price);
+    _validateStability(_tokenAddress, _price);
   }
 
   /// @notice Set oracle

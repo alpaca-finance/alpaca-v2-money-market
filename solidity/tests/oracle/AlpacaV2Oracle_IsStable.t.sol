@@ -62,7 +62,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
       abi.encode(_mockAmtOut)
     );
 
-    assertTrue(alpacaV2Oracle.isStable(address(usdc)));
+    alpacaV2Oracle.isStable(address(usdc));
   }
 
   function testRevert_WhenDexPriceTooLow_ShouldRevert() external {
@@ -138,7 +138,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
       abi.encode(_busdOraclePrice, block.timestamp)
     );
 
-    assertTrue(alpacaV2Oracle.isStable(address(busd)));
+    alpacaV2Oracle.isStable(address(busd));
   }
 
   function testRevert_WhenTokenConfigNotSet_ShouldRevert() external {
