@@ -67,7 +67,6 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     address oracle;
-    mapping(address => uint256) reserves;
     mapping(address => uint256) protocolReserves;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;

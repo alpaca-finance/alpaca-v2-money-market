@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 // interfaces
 import { ILYFViewFacet } from "../interfaces/ILYFViewFacet.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 // libraries
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
@@ -159,10 +160,11 @@ contract LYFViewFacet is ILYFViewFacet {
     _minDebtSize = lyfDs.minDebtSize;
   }
 
-  function getReserveOf(address _token) external view returns (uint256 _reserveAmount) {
+  function getOutstandingBalanceOf(address _token) external view returns (uint256 _reserveAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    _reserveAmount = lyfDs.reserves[_token];
+    if (IERC20(_token).balanceOf(address(this)) > lyfDs.protocolReserves[_token]) {
+      _reserveAmount = IERC20(_token).balanceOf(address(this)) - lyfDs.protocolReserves[_token];
+    }
   }
 
   function getProtocolReserveOf(address _token) external view returns (uint256 _protocolReserveAmount) {

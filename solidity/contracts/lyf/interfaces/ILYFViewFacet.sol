@@ -64,7 +64,7 @@ interface ILYFViewFacet {
 
   function getMinDebtSize() external view returns (uint256);
 
-  function getReserveOf(address _token) external view returns (uint256);
+  function getOutstandingBalanceOf(address _token) external view returns (uint256);
 
   function getProtocolReserveOf(address _token) external view returns (uint256);
 }

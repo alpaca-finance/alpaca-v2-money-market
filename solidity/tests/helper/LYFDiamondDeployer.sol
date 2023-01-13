@@ -205,7 +205,7 @@ library LYFDiamondDeployer {
     _selectors[17] = LYFViewFacet.getTotalUsedBorrowingPower.selector;
     _selectors[18] = LYFViewFacet.getMaxNumOfToken.selector;
     _selectors[19] = LYFViewFacet.getMinDebtSize.selector;
-    _selectors[20] = LYFViewFacet.getReserveOf.selector;
+    _selectors[20] = LYFViewFacet.getOutstandingBalanceOf.selector;
     _selectors[21] = LYFViewFacet.getProtocolReserveOf.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
