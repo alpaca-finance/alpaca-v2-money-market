@@ -104,7 +104,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 4. deposit to masterChef
-    LibLYF01.depositToMasterChef(_lpToken, lpConfig, _lpReceived);
+    LibLYF01.depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -131,7 +131,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
@@ -148,13 +148,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount - _token1AmountIn, lyfDs);
 
     // 2. send token to strat
-    IERC20(_token0).safeTransferFrom(msg.sender, lpConfig.strategy, _token0AmountIn);
-    IERC20(_token1).safeTransferFrom(msg.sender, lpConfig.strategy, _token1AmountIn);
-    IERC20(_token0).safeTransfer(lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
-    IERC20(_token1).safeTransfer(lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
+    IERC20(_token0).safeTransferFrom(msg.sender, _lpConfig.strategy, _token0AmountIn);
+    IERC20(_token1).safeTransferFrom(msg.sender, _lpConfig.strategy, _token1AmountIn);
+    IERC20(_token0).safeTransfer(_lpConfig.strategy, _desireToken0Amount - _token0AmountIn);
+    IERC20(_token1).safeTransfer(_lpConfig.strategy, _desireToken1Amount - _token1AmountIn);
 
     // 3. compose lp
-    uint256 _lpReceived = IStrat(lpConfig.strategy).composeLPToken(
+    uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
       _token0,
       _token1,
       _lpToken,
@@ -164,7 +164,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // 4. deposit to masterChef
-    LibLYF01.depositToMasterChef(_lpToken, lpConfig, _lpReceived);
+    LibLYF01.depositToMasterChef(_lpToken, _lpConfig.masterChef, _lpConfig.poolId, _lpReceived);
 
     // 5. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
@@ -193,7 +193,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
-    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
 
     _vars.token0 = ISwapPairLike(_lpToken).token0();
     _vars.token1 = ISwapPairLike(_lpToken).token1();
@@ -208,11 +208,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
 
     // 2. Remove from masterchef staking
-    IMasterChefLike(lpConfig.masterChef).withdraw(lpConfig.poolId, _lpFromCollatRemoval);
+    IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, _lpFromCollatRemoval);
 
-    IERC20(_lpToken).safeTransfer(lpConfig.strategy, _lpFromCollatRemoval);
+    IERC20(_lpToken).safeTransfer(_lpConfig.strategy, _lpFromCollatRemoval);
 
-    (uint256 _token0Return, uint256 _token1Return) = IStrat(lpConfig.strategy).removeLiquidity(_lpToken);
+    (uint256 _token0Return, uint256 _token1Return) = IStrat(_lpConfig.strategy).removeLiquidity(_lpToken);
 
     // slipage check
 
