@@ -57,7 +57,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
@@ -75,7 +75,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address _ibWeth = adminFacet.openMarket(address(weth));
     address _ibUsdc = adminFacet.openMarket(address(usdc));
     address _ibBtc = adminFacet.openMarket(address(btc));
-    address _ibNativeToken = adminFacet.openMarket(address(nativeToken));
+    address _ibNativeToken = adminFacet.openMarket(address(wNativeToken));
 
     adminFacet.openMarket(address(cake));
 
@@ -140,7 +140,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
 
     _inputs[4] = IAdminFacet.TokenConfigInput({
-      token: address(nativeToken),
+      token: address(wNativeToken),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,

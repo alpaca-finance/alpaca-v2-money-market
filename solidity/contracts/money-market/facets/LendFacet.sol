@@ -93,7 +93,7 @@ contract LendFacet is ILendFacet {
     }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    address _nativeToken = moneyMarketDs.nativeToken;
+    address _nativeToken = moneyMarketDs.wNativeToken;
     if (_nativeToken == address(0)) {
       revert LendFacet_InvalidToken(_nativeToken);
     }
@@ -124,10 +124,10 @@ contract LendFacet is ILendFacet {
   function withdrawETH(uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    address _wNativeToken = moneyMarketDs.nativeToken;
+    address _wNativeToken = moneyMarketDs.wNativeToken;
     address _ibWNativeToken = moneyMarketDs.tokenToIbTokens[_wNativeToken];
 
-    address _relayer = moneyMarketDs.nativeRelayer;
+    address _relayer = moneyMarketDs.wNativeRelayer;
     if (_relayer == address(0)) {
       revert LendFacet_InvalidAddress(_relayer);
     }
@@ -141,7 +141,7 @@ contract LendFacet is ILendFacet {
     );
 
     IInterestBearingToken(_ibWNativeToken).onWithdraw(msg.sender, msg.sender, _shareValue, _shareAmount);
-    _safeUnwrap(_wNativeToken, moneyMarketDs.nativeRelayer, msg.sender, _shareValue, moneyMarketDs);
+    _safeUnwrap(_wNativeToken, moneyMarketDs.wNativeRelayer, msg.sender, _shareValue, moneyMarketDs);
 
     emit LogWithdrawETH(msg.sender, _wNativeToken, _ibWNativeToken, _shareAmount, _shareValue);
   }
