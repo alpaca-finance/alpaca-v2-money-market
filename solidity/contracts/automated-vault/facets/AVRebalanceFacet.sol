@@ -83,4 +83,48 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
 
     emit LogRetarget(_vaultToken, _currentEquity, LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs));
   }
+
+  function repurchase(
+    address _vaultToken,
+    address _tokenToRepay,
+    uint256 _amountToRepay
+  ) external {
+    LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
+
+    if (!avDs.repurchasersOk[msg.sender]) {
+      revert AVRebalanceFacet_Unauthorized(msg.sender);
+    }
+
+    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    address _tokenToBorrow;
+    if (_tokenToRepay == _vaultConfig.stableToken) {
+      _tokenToBorrow = _vaultConfig.assetToken;
+    } else if (_tokenToRepay == _vaultConfig.assetToken) {
+      _tokenToBorrow = _vaultConfig.stableToken;
+    } else {
+      revert AVRebalanceFacet_InvalidToken(_tokenToRepay);
+    }
+
+    LibAV01.accrueVaultInterest(_vaultToken, avDs);
+    LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
+
+    // repay
+    IERC20(_tokenToRepay).safeTransferFrom(msg.sender, address(this), _amountToRepay);
+    LibAV01.repayVaultDebt(_vaultToken, _tokenToRepay, _amountToRepay, avDs);
+
+    // borrow value equal to _amountToRepay in USD + reward
+    uint256 _amountToBorrowForVault = LibAV01.getTokenAmountFromUSDValue(
+      _tokenToBorrow,
+      LibAV01.getTokenInUSD(_tokenToRepay, _amountToRepay, avDs),
+      avDs
+    );
+    uint256 _repurchaseRewardAmount = (_amountToBorrowForVault * avDs.repurchaseRewardBps) / LibAV01.MAX_BPS;
+    uint256 _amountToRepurchaser = _amountToBorrowForVault + _repurchaseRewardAmount;
+    LibAV01.borrowMoneyMarket(_vaultToken, _tokenToBorrow, _amountToRepurchaser, avDs);
+
+    // transfer reward to caller
+    IERC20(_tokenToBorrow).safeTransfer(msg.sender, _amountToRepurchaser);
+
+    emit LogRepurchase(_vaultToken, _tokenToRepay, _amountToRepay, _amountToBorrowForVault, _repurchaseRewardAmount);
+  }
 }

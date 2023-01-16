@@ -28,6 +28,7 @@ interface IAVAdminFacet {
   error AVTradeFacet_InvalidToken(address _token);
   error AVAdminFacet_InvalidShareToken(address _token);
   error AVAdminFacet_InvalidHandler();
+  error AVAdminFacet_InvalidParams();
 
   event LogOpenVault(
     address indexed _caller,
@@ -36,7 +37,9 @@ interface IAVAdminFacet {
     address _assetToken,
     address _shareToken
   );
+  event LogSetRepurchaseRewardBps(uint256 _newBps);
   event LogSetOperatorOk(address indexed _operator, bool _isOk);
+  event LogSetRepurchaserOk(address indexed _repurchaser, bool _isOk);
 
   function openVault(
     address _lpToken,
@@ -65,5 +68,9 @@ interface IAVAdminFacet {
     address _newAssetTokenInterestRateModel
   ) external;
 
+  function setRepurchaseRewardBps(uint16 _newBps) external;
+
   function setOperatorsOk(address[] calldata _operators, bool _isOk) external;
+
+  function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external;
 }
