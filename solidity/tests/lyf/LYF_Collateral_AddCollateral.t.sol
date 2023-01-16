@@ -10,7 +10,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
 
-contract LYF_CollateralFacetTest is LYF_BaseTest {
+contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
   function setUp() public override {
     super.setUp();
   }
@@ -119,73 +119,6 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenUserRemoveLYFCollateralMoreThanExistingAmount_ShouldOnlyRemoveTheExisitingAmount() external {
-    vm.startPrank(ALICE);
-    weth.approve(lyfDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
-    vm.stopPrank();
-
-    assertEq(weth.balanceOf(ALICE), 990 ether);
-    assertEq(weth.balanceOf(lyfDiamond), 10 ether);
-
-    vm.prank(ALICE);
-    collateralFacet.removeCollateral(subAccount0, address(weth), 20 ether);
-
-    assertEq(weth.balanceOf(ALICE), 1000 ether);
-    assertEq(weth.balanceOf(lyfDiamond), 0 ether);
-  }
-
-  // todo: this test should has deebt thing to calculate borrowed used power
-  // function testRevert_WhenUserRemoveLYFCollateral_BorrowingPowerLessThanUsedBorrowingPower_ShouldRevert() external {
-  //   // BOB deposit 10 weth
-  //   vm.startPrank(BOB);
-  //   // lendFacet.deposit(address(weth), 10 ether);
-  //   vm.stopPrank();
-
-  //   // alice add collateral 10 weth
-  //   vm.startPrank(ALICE);
-  //   weth.approve(lyfDiamond, 10 ether);
-  //   collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
-  //   vm.stopPrank();
-
-  //   vm.startPrank(ALICE);
-  //   // alice borrow 1 weth
-  //   // borrowFacet.borrow(subAccount0, address(weth), 1 ether);
-
-  //   // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowingPower
-  //   // should revert
-  //   vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_BorrowingPowerTooLow.selector));
-  //   collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether);
-  //   vm.stopPrank();
-  // }
-
-  function testCorrectness_WhenUserRemoveLYFCollateral_ShouldWork() external {
-    uint256 _balanceBefore = weth.balanceOf(ALICE);
-    uint256 _lyfBalanceBefore = weth.balanceOf(lyfDiamond);
-
-    uint256 _addCollateralAmount = 10 ether;
-    uint256 _removeCollateralAmount = _addCollateralAmount;
-
-    // alice add collateral 10 weth
-    vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
-
-    assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
-    assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore + _addCollateralAmount);
-    assertEq(viewFacet.getTokenCollatAmount(address(weth)), _addCollateralAmount);
-
-    vm.prank(ALICE);
-    collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
-
-    // todo: addd extenal function to check borrowing power
-    // uint256 _borrowingPower = borrowFacet.getTotalBorrowingPower(ALICE, subAccount0);
-
-    assertEq(weth.balanceOf(ALICE), _balanceBefore);
-    assertEq(weth.balanceOf(lyfDiamond), _lyfBalanceBefore);
-    // assertEq(_borrowingPower, 0);
-    assertEq(viewFacet.getTokenCollatAmount(address(weth)), 0);
-  }
-
   // Add Collat with ibToken
   function testCorrectness_WhenAddLYFCollateralViaIbToken_ibTokenShouldTransferFromUserToLYF() external {
     // mint ibToken to ALICE
@@ -201,5 +134,61 @@ contract LYF_CollateralFacetTest is LYF_BaseTest {
 
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
     assertEq(ibWeth.balanceOf(lyfDiamond), 10 ether);
+  }
+
+  function testCorrectness_WhenLYFAddCollateralWithLP_ShouldDepositToMasterChef() external {
+    wethUsdcLPToken.mint(ALICE, 10 ether);
+
+    (uint256 _amountInMasterChef, ) = masterChef.userInfo(wethUsdcPoolId, lyfDiamond);
+    assertEq(_amountInMasterChef, 0);
+
+    vm.startPrank(ALICE);
+    wethUsdcLPToken.approve(lyfDiamond, 10 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(wethUsdcLPToken), 10 ether);
+
+    (_amountInMasterChef, ) = masterChef.userInfo(wethUsdcPoolId, lyfDiamond);
+    assertEq(_amountInMasterChef, 10 ether);
+  }
+
+  function testCorrectness_WhenMultipleUsersLYFAddCollateralWithLP_PreviousUserShouldReceivePendingRewards() external {
+    // setup test
+    // mint and approve for setting reward in mockMasterChef
+    // this mock masterChef give out cake rewards, set in LYF_BaseTest
+    cake.mint(address(this), 100000 ether);
+    cake.approve(address(masterChef), type(uint256).max);
+
+    wethUsdcLPToken.mint(ALICE, 10 ether);
+    wethUsdcLPToken.mint(BOB, 10 ether);
+
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _amountToAddCollateral = 10 ether;
+
+    vm.startPrank(ALICE);
+    wethUsdcLPToken.approve(lyfDiamond, _amountToAddCollateral);
+    collateralFacet.addCollateral(ALICE, subAccount0, _lpToken, _amountToAddCollateral);
+    vm.stopPrank();
+
+    // set 1 cake pendingReward for lyfDiamond
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 1 ether);
+
+    // when BOB addCollateral lyf should reinvest pendingReward for previous users aka. ALICE
+    vm.startPrank(BOB);
+    wethUsdcLPToken.approve(lyfDiamond, _amountToAddCollateral);
+    collateralFacet.addCollateral(BOB, subAccount0, _lpToken, _amountToAddCollateral);
+    vm.stopPrank();
+
+    // when ALICE removeCollateral should get principal + reward back = 10 + 0.5
+    // 0.5 LP from dumping reward 1 cake for 1 usdc and let strategy compose into 0.5 LP
+    uint256 _aliceLPBalanceBefore = wethUsdcLPToken.balanceOf(ALICE);
+    vm.prank(ALICE);
+    collateralFacet.removeCollateral(subAccount0, _lpToken, _amountToAddCollateral);
+    // 1 wei precision loss during shareToValue calculation
+    assertEq(wethUsdcLPToken.balanceOf(ALICE) - _aliceLPBalanceBefore, 10.499999999999999999 ether);
+
+    uint256 _bobLPBalanceBefore = wethUsdcLPToken.balanceOf(BOB);
+    vm.prank(BOB);
+    collateralFacet.removeCollateral(subAccount0, _lpToken, _amountToAddCollateral);
+    // 1 wei gain from ALICE's precision loss
+    assertEq(wethUsdcLPToken.balanceOf(BOB) - _bobLPBalanceBefore, 10.000000000000000001 ether);
   }
 }
