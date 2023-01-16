@@ -18,7 +18,8 @@ interface ILiquidationFacet {
     address _collatToken,
     uint256 _amountDebtRepaid,
     uint256 _amountCollatLiquidated,
-    uint256 _feeToTreasury
+    uint256 _feeToTreasury,
+    uint256 _feeToLiquidator
   );
 
   error LiquidationFacet_Unauthorized();
