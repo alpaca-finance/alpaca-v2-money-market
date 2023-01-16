@@ -44,7 +44,7 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     usdc.mint(address(router), 1 ether);
 
     vm.prank(address(moneyMarketDiamond));
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, abi.encode(0));
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, 0);
 
     // nothing left in strat
     assertEq(weth.balanceOf(address(liquidationStrat)), 0);
@@ -68,7 +68,7 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     usdc.mint(address(router), 1 ether);
 
     vm.prank(address(moneyMarketDiamond));
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, _repayAmount, abi.encode(0));
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, _repayAmount, 0);
 
     // injected collat left in strat
     assertEq(weth.balanceOf(address(liquidationStrat)), _injectAmount);
@@ -85,7 +85,7 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     vm.expectRevert(
       abi.encodeWithSelector(PancakeswapV2LiquidationStrategy.PancakeswapV2LiquidationStrategy_Unauthorized.selector)
     );
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, abi.encode(0));
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, 0);
   }
 
   function testRevert_WhenExecuteLiquidationOnNonExistentPath() external {
@@ -100,7 +100,7 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
         _debtToken
       )
     );
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, abi.encode(0));
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, 0);
   }
 
   // TODO: multi-hop integration test with real router

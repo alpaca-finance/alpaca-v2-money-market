@@ -32,7 +32,7 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    bytes calldata /* _data */
+    uint256 /* _minReceive */
   ) external {
     (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
     (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
