@@ -62,8 +62,8 @@ library LibMoneyMarket01 {
 
   // Storage
   struct MoneyMarketDiamondStorage {
-    address nativeToken;
-    address nativeRelayer;
+    address wNativeToken;
+    address wNativeRelayer;
     address treasury;
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;

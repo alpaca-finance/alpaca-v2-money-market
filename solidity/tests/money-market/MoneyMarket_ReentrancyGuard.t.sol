@@ -37,7 +37,7 @@ contract MockAttacker is BaseTest {
 
   function attack() external payable {
     ILendFacet(moneyMarket).depositETH{ value: address(this).balance }();
-    ILendFacet(moneyMarket).withdrawETH(ibWNativeToken, 1 ether);
+    ILendFacet(moneyMarket).withdrawETH(1 ether);
   }
 
   //@dev Fallback function to accept BNB.
