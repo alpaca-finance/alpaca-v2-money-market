@@ -218,15 +218,15 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _maxFeePossible = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
+    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
 
-    uint256 _expectMaxRepayAmount = _maxPossibleRepayAmount + _maxFeePossible;
+    uint256 _expectedMaxRepayAmount = _maxPossibleRepayAmount + _maxPossibleFee;
 
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
       _subAccountCollatAmount,
-      _expectMaxRepayAmount,
+      _expectedMaxRepayAmount,
       params.paramsForStrategy
     );
 
@@ -234,8 +234,8 @@ contract LiquidationFacet is ILiquidationFacet {
     (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
       params,
       _repayAmountBefore,
-      _expectMaxRepayAmount,
-      _maxFeePossible
+      _expectedMaxRepayAmount,
+      _maxPossibleFee
     );
 
     _validateBorrowingPower(params.repayToken, _repaidAmount, params.usedBorrowingPower, moneyMarketDs);
@@ -328,11 +328,11 @@ contract LiquidationFacet is ILiquidationFacet {
   function _calculateActualRepayAmountAndFee(
     InternalLiquidationCallParams memory params,
     uint256 _repayAmountBefore,
-    uint256 _expectMaxRepayAmount,
+    uint256 _expectedMaxRepayAmount,
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
     uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectMaxRepayAmount;
+    _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
     _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
   }
 }
