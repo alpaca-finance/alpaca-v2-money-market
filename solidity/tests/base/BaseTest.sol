@@ -38,7 +38,7 @@ contract BaseTest is DSTest {
 
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-  MockWNative internal nativeToken;
+  MockWNative internal wNativeToken;
   MockERC20 internal cake;
   MockERC20 internal weth;
   MockERC20 internal usdc;
@@ -58,7 +58,7 @@ contract BaseTest is DSTest {
   IAlpacaV2Oracle internal alpacaV2Oracle;
   OracleMedianizer internal oracleMedianizer;
 
-  MockWNativeRelayer nativeRelayer;
+  MockWNativeRelayer wNativeRelayer;
 
   ProxyAdminLike internal proxyAdmin;
 
@@ -66,8 +66,8 @@ contract BaseTest is DSTest {
     vm.warp(100000);
     // deploy
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
-    nativeToken = deployMockWNative();
-    nativeRelayer = deployMockWNativeRelayer();
+    wNativeToken = deployMockWNative();
+    wNativeRelayer = deployMockWNativeRelayer();
 
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
@@ -118,7 +118,7 @@ contract BaseTest is DSTest {
   }
 
   function deployMockWNativeRelayer() internal returns (MockWNativeRelayer) {
-    return new MockWNativeRelayer(address(nativeToken));
+    return new MockWNativeRelayer(address(wNativeToken));
   }
 
   function deployAlpacaV2Oracle(address _oracleMedianizer, address _baseStable) internal returns (AlpacaV2Oracle) {
