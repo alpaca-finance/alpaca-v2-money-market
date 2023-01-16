@@ -723,6 +723,7 @@ library LibMoneyMarket01 {
     ds.globalDebts[_token] += _amount;
   }
 
+  /// @dev safeTransferFrom that revert when not receiving full amount (have fee on transfer)
   function pullExactTokens(
     address _token,
     address _from,

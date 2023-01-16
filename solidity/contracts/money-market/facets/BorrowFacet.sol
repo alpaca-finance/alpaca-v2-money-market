@@ -100,9 +100,11 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
 
     // transfer only amount to repay
-    uint256 _tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+    // didn't use pullExactTokens subroutine because we want to allow repayment on fee on transfer tokens to
+    uint256 _repayTokenBalanceBefore = IERC20(_token).balanceOf(address(this));
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualAmountToRepay);
-    _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
+    // use amount after fee to repay for fee on transfer tokens
+    _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _repayTokenBalanceBefore;
     _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
 
     moneyMarketDs.reserves[_token] += _actualAmountToRepay;
