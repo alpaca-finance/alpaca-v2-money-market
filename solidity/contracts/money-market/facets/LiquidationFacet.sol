@@ -333,7 +333,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
       _repaidAmount,
       _repayTokenPrice,
-      moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor
+      moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor,
+      moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor
     );
     if (_repaidBorrowingPower * LibMoneyMarket01.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
       revert LiquidationFacet_RepayAmountExceedThreshold();
