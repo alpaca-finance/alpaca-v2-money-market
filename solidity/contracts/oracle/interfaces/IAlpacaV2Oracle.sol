@@ -2,6 +2,15 @@
 pragma solidity 0.8.17;
 
 interface IAlpacaV2Oracle {
+  struct Config {
+    address router;
+    uint64 maxPriceDiffBps;
+    address[] path;
+  }
+
+  /// @dev Set tokenConfig for getting dex price.
+  function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external;
+
   /// @dev Return value in USD for the given lpAmount.
   function lpToDollar(uint256 _lpAmount, address _lpToken) external view returns (uint256, uint256);
 
@@ -11,7 +20,15 @@ interface IAlpacaV2Oracle {
   /// @dev Return value of given token in USD.
   function getTokenPrice(address _token) external view returns (uint256, uint256);
 
+  /// @dev Return true if token price is stable.
+  function isStable(address _tokenAddress) external view;
+
   /// @dev Errors
   error AlpacaV2Oracle_InvalidLPAddress();
   error AlpacaV2Oracle_InvalidOracleAddress();
+  error AlpacaV2Oracle_InvalidConfigLength();
+  error AlpacaV2Oracle_InvalidConfigPath();
+  error AlpacaV2Oracle_InvalidBaseStableTokenDecimal();
+  error AlpacaV2Oracle_InvalidPriceDiffConfig();
+  error AlpacaV2Oracle_PriceTooDeviate(uint256 _dexPrice, uint256 _oraclePrice);
 }
