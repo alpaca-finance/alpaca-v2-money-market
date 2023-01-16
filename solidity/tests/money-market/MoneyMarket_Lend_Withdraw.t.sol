@@ -146,7 +146,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
 
     // then withdraw 5
     vm.prank(ALICE);
-    lendFacet.withdrawETH(address(ibWNative), 5 ether);
+    lendFacet.withdrawETH(5 ether);
 
     assertEq(nativeToken.balanceOf(ALICE), 0 ether);
     assertEq(ALICE.balance, 995 ether);
