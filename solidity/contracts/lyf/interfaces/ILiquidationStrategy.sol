@@ -7,6 +7,6 @@ interface ILiquidationStrategy {
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    bytes calldata _data
+    uint256 _minReceive
   ) external;
 }

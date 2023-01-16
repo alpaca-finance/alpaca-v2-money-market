@@ -311,23 +311,14 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
       address(0),
       address(0),
       0,
-      abi.encode()
+      0
     );
   }
 
   function testRevert_WhenCallLiquidateWithAuthorizedStrat_ShouldRevert() external {
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_Unauthorized.selector));
     vm.prank(liquidator);
-    liquidationFacet.liquidationCall(
-      address(0),
-      ALICE,
-      subAccount0,
-      address(0),
-      address(0),
-      address(0),
-      0,
-      abi.encode()
-    );
+    liquidationFacet.liquidationCall(address(0), ALICE, subAccount0, address(0), address(0), address(0), 0, 0);
   }
 
   function testCorrectness_WhenSubAccountWentUnderWater_ShouldBeAbleToLiquidate() external {
@@ -382,7 +373,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
       _collatToken,
       _lpToken,
       _repayAmount,
-      abi.encode()
+      0
     );
     vm.stopPrank();
 
@@ -455,7 +446,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
       _collatToken,
       _lpToken,
       _repayAmount,
-      abi.encode()
+      0
     );
     vm.stopPrank();
 

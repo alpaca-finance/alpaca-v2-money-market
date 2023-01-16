@@ -22,7 +22,7 @@ struct CacheState {
   uint256 subAccountDebtShare;
 }
 
-contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
   MockLiquidationStrategy internal mockLiquidationStrategy;
@@ -116,7 +116,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       15 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -183,7 +183,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       15 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -249,7 +249,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       _repayAmount,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -286,12 +286,12 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
      *
      * 3. try to liquidate usdc debt with 40 weth
      *
-     * 4. should be able to liquidate with 39.6 usdc repaid and 40 weth liquidated
+     * 4. should be able to liquidate with 39.603960396039603961 usdc repaid and 40 weth liquidated
      *    - remaining collateral = 0 weth
      *      - @1 usdc/weth 39.6 usdc = 39.6 weth is liquidated
-     *      - 40 * 1% = 0.4 weth fee to treasury
-     *    - remaining debt value = 80.036099919413504 - 39.6 = 40.436099919413504 usdc
-     *    - remaining debt share = 80 - 39.981958181645606 ~= 40.41786140017084973 shares
+     *      - 39.603960396039603961 * 1% = 0.396039603960396039 weth fee to treasury
+     *    - remaining debt value = 80.036099919413504 - 39.603960396039603961 = 40.432139523373900039 usdc
+     *    - remaining debt share = 80 - 39.586097209550105281 = 40.413902790449894719 shares
      *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 39.6 * 80 / 80.036099919413504 = 39.582138599829150270272757155067956377008065689156955144328424412...
      */
 
@@ -316,7 +316,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       40 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -330,11 +330,11 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
 
     assertEq(_stateAfter.collat, 0);
     assertEq(_stateAfter.subAccountCollat, 0);
-    assertEq(_stateAfter.debtValue, 40.436099919413504 ether);
-    assertEq(_stateAfter.debtShare, 40.41786140017084973 ether);
-    assertEq(_stateAfter.subAccountDebtShare, 40.41786140017084973 ether);
+    assertEq(_stateAfter.debtValue, 40.432139523373900039 ether);
+    assertEq(_stateAfter.debtShare, 40.413902790449894719 ether);
+    assertEq(_stateAfter.subAccountDebtShare, 40.413902790449894719 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury), 0.4 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury), 0.396039603960396039 ether);
   }
 
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
@@ -360,7 +360,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       30 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -376,11 +376,11 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.collat, 0);
     assertEq(_stateAfter.subAccountCollat, 0);
     // bad debt (0 collat with remaining debt)
-    assertEq(_stateAfter.debtValue, 0.005076551167200001 ether); // 30.0050765511672 ether - (30 ether - 1 wei) because collat is enough to cover both debt and fee
-    assertEq(_stateAfter.debtShare, 0.005075692266816620 ether); // wolfram: 30-(30-0.000000000000000001)*Divide[30,30.0050765511672]
-    assertEq(_stateAfter.subAccountDebtShare, 0.005075692266816620 ether);
+    assertEq(_stateAfter.debtValue, 0.005076551167200000 ether); // 30.0050765511672 ether - (30 ether - 1 wei) because collat is enough to cover both debt and fee
+    assertEq(_stateAfter.debtShare, 0.005075692266816619 ether); // wolfram: 30-(30-0.000000000000000001)*Divide[30,30.0050765511672]
+    assertEq(_stateAfter.subAccountDebtShare, 0.005075692266816619 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.3 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.299999999999999999 ether);
   }
 
   function testRevert_WhenLiquidateWhileSubAccountIsHealthy() external {
@@ -392,7 +392,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       address(usdc),
       address(weth),
       1 ether,
-      abi.encode()
+      0
     );
 
     // case borrowingPower == usedBorrowingPower * threshold
@@ -422,35 +422,19 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       address(usdc),
       address(weth),
       1 ether,
-      abi.encode()
+      0
     );
   }
 
   function testRevert_WhenLiquidationStrategyIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
-    liquidationFacet.liquidationCall(
-      address(0),
-      ALICE,
-      _subAccountId,
-      address(usdc),
-      address(weth),
-      1 ether,
-      abi.encode()
-    );
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether, 0);
   }
 
   function testRevert_WhenLiquidationCallerIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     vm.prank(EVE);
-    liquidationFacet.liquidationCall(
-      address(0),
-      ALICE,
-      _subAccountId,
-      address(usdc),
-      address(weth),
-      1 ether,
-      abi.encode()
-    );
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether, 0);
   }
 
   function testRevert_WhenLiquidateMoreThanThreshold() external {
@@ -472,7 +456,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       _repayAmount,
-      abi.encode()
+      0
     );
   }
 }

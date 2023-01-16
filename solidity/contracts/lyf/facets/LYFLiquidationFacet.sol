@@ -30,7 +30,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address collatToken;
     uint256 repayAmount;
     uint256 debtShareId;
-    bytes paramsForStrategy;
+    uint256 minReceive;
   }
 
   uint256 constant REPURCHASE_REWARD_BPS = 100;
@@ -122,7 +122,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _collatToken,
     address _lpToken,
     uint256 _repayAmount,
-    bytes calldata _paramsForStrategy
+    uint256 _minReceive
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
@@ -151,7 +151,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       collatToken: _collatToken,
       repayAmount: _repayAmount,
       debtShareId: _debtShareId,
-      paramsForStrategy: _paramsForStrategy
+      minReceive: _minReceive
     });
 
     address _collatUnderlyingToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
@@ -186,7 +186,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _params.repayToken,
       _collatAmountToStrat,
       _actualRepayAmount + _feeToTreasury,
-      _params.paramsForStrategy
+      _params.minReceive
     );
 
     // 4. check repaid amount, take fees, and update states
@@ -243,7 +243,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _params.repayToken,
       _returnedUnderlyingAmount,
       _actualRepayAmount + _feeToTreasury,
-      _params.paramsForStrategy
+      _params.minReceive
     );
 
     // 4. check repaid amount, take fees, and update states

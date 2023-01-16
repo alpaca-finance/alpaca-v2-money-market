@@ -22,7 +22,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     address[] path;
   }
 
-  IPancakeRouter02 internal router;
+  IPancakeRouter02 internal immutable router;
 
   mapping(address => bool) public callersOk;
   // tokenIn => tokenOut => path
@@ -45,15 +45,14 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _repayToken The destination token
   /// @param _collatAmountIn Available amount of source token to trade
   /// @param _repayAmount Exact destination token amount
-  /// @param _data Extra calldata information
+  /// @param _minReceive Min token receive after swap
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    bytes calldata _data
+    uint256 _minReceive
   ) external onlyWhitelistedCallers {
-    uint256 _minReceive = abi.decode(_data, (uint256));
     address[] memory _path = paths[_collatToken][_repayToken];
 
     if (_path.length == 0) {
@@ -79,7 +78,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _inputs Array of parameters used to set path
   function setPaths(SetPathParams[] calldata _inputs) external onlyOwner {
     uint256 _len = _inputs.length;
-    for (uint256 _i = 0; _i < _len; ) {
+    for (uint256 _i; _i < _len; ) {
       SetPathParams memory _params = _inputs[_i];
       address[] memory _path = _params.path;
 
@@ -99,7 +98,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _isOk An ok flag
   function setCallersOk(address[] calldata _callers, bool _isOk) external onlyOwner {
     uint256 _length = _callers.length;
-    for (uint256 _i = 0; _i < _length; ) {
+    for (uint256 _i; _i < _length; ) {
       callersOk[_callers[_i]] = _isOk;
       unchecked {
         ++_i;
