@@ -94,22 +94,33 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     uint256 _actualShareToRepay = LibFullMath.min(_currentDebtShare, _debtShareToRepay);
-
-    uint256 _amountToRepay = LibShareUtil.shareToValue(
-      _actualShareToRepay,
-      moneyMarketDs.overCollatDebtValues[_token],
-      moneyMarketDs.overCollatDebtShares[_token]
-    );
+    // cache to save gas
+    uint256 _cachedDebtValue = moneyMarketDs.overCollatDebtValues[_token];
+    uint256 _cachedDebtShare = moneyMarketDs.overCollatDebtShares[_token];
+    uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
 
     // transfer only amount to repay
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amountToRepay);
-    moneyMarketDs.reserves[_token] += _amountToRepay;
+    // didn't use pullExactTokens subroutine because we want to allow repayment on fee on transfer tokens to
+    uint256 _repayTokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualAmountToRepay);
+    // use amount after fee to repay for fee on transfer tokens
+    _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _repayTokenBalanceBefore;
+    _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
 
-    _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    moneyMarketDs.reserves[_token] += _actualAmountToRepay;
 
-    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    _validateRepay(
+      _token,
+      _currentDebtShare,
+      _currentDebtAmount,
+      _actualShareToRepay,
+      _actualAmountToRepay,
+      moneyMarketDs
+    );
 
-    emit LogRepay(_account, _subAccountId, _token, _amountToRepay);
+    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _actualAmountToRepay, moneyMarketDs);
+
+    emit LogRepay(_account, _subAccountId, _token, _actualAmountToRepay);
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral

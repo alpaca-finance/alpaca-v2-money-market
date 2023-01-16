@@ -57,7 +57,7 @@ contract LendFacet is ILendFacet {
 
     moneyMarketDs.reserves[_token] += _amount;
 
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
     IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareToMint);
 
     emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
