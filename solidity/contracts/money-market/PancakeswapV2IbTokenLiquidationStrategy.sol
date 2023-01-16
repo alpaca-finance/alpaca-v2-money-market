@@ -25,8 +25,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     address[] path;
   }
 
-  IPancakeRouter02 internal router;
-  IMoneyMarket internal moneyMarket;
+  IPancakeRouter02 internal immutable router;
+  IMoneyMarket internal immutable moneyMarket;
 
   mapping(address => bool) public callersOk;
   // tokenIn => tokenOut => path
@@ -63,15 +63,19 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       revert PancakeswapV2IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
-    uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_underlyingToken, _repayToken, _repayAmount);
-    (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawForMoneyMarket(
+    address[] memory _path = paths[_underlyingToken][_repayToken];
+    if (_path.length == 0) {
+      revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
+    }
+
+    uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_repayAmount, _path);
+    (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawFromMoneyMarket(
       _ibToken,
       _underlyingToken,
       _ibTokenAmountIn,
       _requiredUnderlyingAmount
     );
 
-    address[] memory _path = paths[_underlyingToken][_repayToken];
     IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
     router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
 
@@ -81,7 +85,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     }
   }
 
-  function _withdrawForMoneyMarket(
+  function _withdrawFromMoneyMarket(
     address _ibToken,
     address _underlyingToken,
     uint256 _maxIbTokenToWithdraw,
@@ -93,7 +97,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       _requiredUnderlyingAmount
     );
 
-    // _ibTokenAmountIn is ibTokenAmount that caller send to strat
+    // _maxIbTokenToWithdraw is ibTokenAmount that caller send to strat
     _withdrawnIbTokenAmount = _maxIbTokenToWithdraw > _requiredIbTokenToWithdraw
       ? _requiredIbTokenToWithdraw
       : _maxIbTokenToWithdraw;
@@ -102,16 +106,11 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     _withdrawnUnderlyingAmount = moneyMarket.withdraw(_ibToken, _withdrawnIbTokenAmount);
   }
 
-  function _getRequiredUnderlyingAmount(
-    address _underlyingToken,
-    address _repayToken,
-    uint256 _repayAmount
-  ) internal view returns (uint256 _requiredUnderlyingAmount) {
-    address[] memory _path = paths[_underlyingToken][_repayToken];
-    if (_path.length == 0) {
-      revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
-    }
-
+  function _getRequiredUnderlyingAmount(uint256 _repayAmount, address[] memory _path)
+    internal
+    view
+    returns (uint256 _requiredUnderlyingAmount)
+  {
     uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
     // underlying token amount to swap
     _requiredUnderlyingAmount = amountsIn[0];
@@ -133,7 +132,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   /// @param _inputs Array of parameters used to set path
   function setPaths(SetPathParams[] calldata _inputs) external onlyOwner {
     uint256 _len = _inputs.length;
-    for (uint256 _i = 0; _i < _len; ) {
+    for (uint256 _i; _i < _len; ) {
       SetPathParams memory _params = _inputs[_i];
       address[] memory _path = _params.path;
 
@@ -153,7 +152,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   /// @param _isOk An ok flag
   function setCallersOk(address[] calldata _callers, bool _isOk) external onlyOwner {
     uint256 _length = _callers.length;
-    for (uint256 _i = 0; _i < _length; ) {
+    for (uint256 _i; _i < _length; ) {
       callersOk[_callers[_i]] = _isOk;
       unchecked {
         ++_i;

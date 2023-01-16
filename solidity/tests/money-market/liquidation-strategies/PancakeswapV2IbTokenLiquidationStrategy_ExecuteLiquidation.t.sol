@@ -219,7 +219,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
   }
 
-  function testCorrectness_WhenExecuteIbTokenLiquiationStratAndUnderlyingTokenAndRepayTokenAreSame() external {
+  function testRevert_WhenExecuteIbTokenLiquiationStratAndUnderlyingTokenAndRepayTokenAreSame() external {
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(weth);

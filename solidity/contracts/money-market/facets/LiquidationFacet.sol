@@ -27,7 +27,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address collatToken;
     uint256 repayAmount;
     uint256 usedBorrowingPower;
-    uint256 mintReceive;
+    uint256 minReceive;
     uint256 collatAmountBefore;
     uint256 repayAmountBefore;
     uint256 subAccountCollatAmount;
@@ -212,7 +212,7 @@ contract LiquidationFacet is ILiquidationFacet {
       collatToken: _collatToken,
       repayAmount: _repayAmount,
       usedBorrowingPower: _usedBorrowingPower,
-      mintReceive: _minReceive,
+      minReceive: _minReceive,
       collatAmountBefore: IERC20(_collatToken).balanceOf(address(this)),
       repayAmountBefore: IERC20(_repayToken).balanceOf(address(this)),
       subAccountCollatAmount: moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken)
@@ -235,7 +235,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
+    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
 
     uint256 _expectedMaxRepayAmount = _maxPossibleRepayAmount + _maxPossibleFee;
 
@@ -244,7 +244,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayToken,
       params.subAccountCollatAmount,
       _expectedMaxRepayAmount,
-      params.mintReceive
+      params.minReceive
     );
 
     // 4. check repaid amount, take fees, and update states
