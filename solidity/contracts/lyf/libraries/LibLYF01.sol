@@ -69,6 +69,7 @@ library LibLYF01 {
     address oracle;
     mapping(address => uint256) reserves;
     mapping(address => uint256) protocolReserves;
+    // collats = amount of collateral token
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -434,11 +435,12 @@ library LibLYF01 {
 
   function depositToMasterChef(
     address _lpToken,
-    LibLYF01.LPConfig memory _lpconfig,
+    address _masterChef,
+    uint256 _poolId,
     uint256 _amount
   ) internal {
-    IERC20(_lpToken).safeIncreaseAllowance(_lpconfig.masterChef, _amount);
-    IMasterChefLike(_lpconfig.masterChef).deposit(_lpconfig.poolId, _amount);
+    IERC20(_lpToken).safeIncreaseAllowance(_masterChef, _amount);
+    IMasterChefLike(_masterChef).deposit(_poolId, _amount);
   }
 
   function harvest(
@@ -473,7 +475,7 @@ library LibLYF01 {
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     // convert rewardToken to either token0 or token1
-    uint256 _reinvestAmount = 0;
+    uint256 _reinvestAmount;
     if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
       _reinvestAmount = _rewardAmount;
     } else {
@@ -511,7 +513,8 @@ library LibLYF01 {
 
     // deposit lp back to masterChef
     lyfDs.lpAmounts[_lpToken] += _lpReceived;
-    depositToMasterChef(_lpToken, _lpConfig, _lpReceived);
+    lyfDs.collats[_lpToken] += _lpReceived;
+    depositToMasterChef(_lpToken, _lpConfig.masterChef, _lpConfig.poolId, _lpReceived);
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;
