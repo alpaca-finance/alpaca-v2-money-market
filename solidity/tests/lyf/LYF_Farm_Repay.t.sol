@@ -14,7 +14,7 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_FarmFacetTest is LYF_BaseTest {
+contract LYF_Farm_RepayTest is LYF_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -29,7 +29,6 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserRepay_SubaccountDebtShouldDecrease() external {
-    // remove interest for convienice of test
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
@@ -65,13 +64,12 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // warp time to make share value changed
     // before debt share = 20, debt value = 20
     vm.warp(block.timestamp + 10);
+    uint256 _wethPendingInterest = viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken));
+    uint256 _wethProtocolReserveBefore = viewFacet.getProtocolReserveOf(address(weth));
+    uint256 _wethOutstandingBefore = viewFacet.getOutstandingBalanceOf(address(weth));
 
     // timepast * interest rate * debt value = 10 * 0.01 * 20 = 2
-    assertEq(
-      viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken)),
-      2 ether,
-      "expected interest is not match"
-    );
+    assertEq(_wethPendingInterest, 2 ether, "expected interest is not match");
 
     vm.startPrank(BOB);
     // 1. repay < debt
@@ -86,9 +84,28 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // after accure debt share = 20, debt value = 22
     // user repay 5 shares
     // actual repay amount = 5 * 22 / 20 = 5.5 tokens
-    assertEq(_bobDebtShare, 15 ether, "expected debt shares is mismatch"); // 20 - 5 = 15
-    assertEq(_bobDebtValue, 16.5 ether, "expected debt value is mismatch"); // 22 - 5.5 = 16.5
+    assertEq(_bobDebtShare, 15 ether, "expected debt shares mismatch"); // 20 - 5 = 15
+    assertEq(_bobDebtValue, 16.5 ether, "expected debt value mismatch"); // 22 - 5.5 = 16.5
 
+    // assert protocol revenue and outstanding balance
+    assertEq(viewFacet.getProtocolReserveOf(address(weth)), _wethProtocolReserveBefore + _wethPendingInterest);
+    // outstanding after should increase by repay amount - interest collected
+    // repaying 5.5 ether, 2 of which is an interest, 3.5 left as an outstanding
+    uint256 _expectedOutstandingAfterRepay = _wethOutstandingBefore + 3.5 ether;
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), _expectedOutstandingAfterRepay);
+    vm.stopPrank();
+
+    // test withdraw reserve
+    vm.prank(ALICE);
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.withdrawReserve(address(weth), address(this), 2 ether);
+
+    adminFacet.withdrawReserve(address(weth), address(this), 2 ether);
+    assertEq(viewFacet.getProtocolReserveOf(address(weth)), 0);
+    // should not change the outstanding since it decrease protocol reserve and increase reverse at the same time
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), _expectedOutstandingAfterRepay);
+
+    vm.startPrank(BOB);
     // 2. repay > debt
     farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
     (_bobDebtShare, _bobDebtValue) = viewFacet.getSubAccountDebt(

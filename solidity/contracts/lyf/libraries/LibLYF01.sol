@@ -67,6 +67,8 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     address oracle;
+    mapping(address => uint256) reserves;
+    mapping(address => uint256) protocolReserves;
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
@@ -133,8 +135,9 @@ library LibLYF01 {
   function accrueInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
     uint256 _pendingInterest = pendingInterest(_debtShareId, lyfDs);
     if (_pendingInterest > 0) {
-      // update overcollat debt
+      // update debt
       lyfDs.debtValues[_debtShareId] += _pendingInterest;
+      lyfDs.protocolReserves[lyfDs.debtShareTokens[_debtShareId]] += _pendingInterest;
     }
     // update timestamp
     lyfDs.debtLastAccrueTime[_debtShareId] = block.timestamp;
