@@ -102,15 +102,7 @@ contract LiquidationFacet is ILiquidationFacet {
     vars.repayTokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
     // revert if repay > x% of totalUsedBorrowingPower
-    {
-      uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
-        vars.repayAmountWihtoutFee,
-        vars.repayTokenPrice,
-        moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor
-      );
-      if (_repaidBorrowingPower > (vars.usedBorrowingPower * moneyMarketDs.maxLiquidateBps) / LibMoneyMarket01.MAX_BPS)
-        revert LiquidationFacet_RepayAmountExceedThreshold();
-    }
+    _validateBorrowingPower(_repayToken, vars.repayAmountWihtoutFee, vars.usedBorrowingPower, moneyMarketDs);
 
     // calculate payout (collateral + reward)
     {
@@ -220,45 +212,38 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(params.collatToken).safeTransfer(params.liquidationStrat, _subAccountCollatAmount);
 
     // 3. call executeLiquidation on strategy
-    uint256 _actualRepayAmount = _getActualRepayAmount(
+    uint256 _maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
       params.subAccount,
       params.repayToken,
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _feeToTreasury = (_actualRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
+    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
+
+    uint256 _expectedMaxRepayAmount = _maxPossibleRepayAmount + _maxPossibleFee;
 
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
       _subAccountCollatAmount,
-      _actualRepayAmount + _feeToTreasury,
+      _expectedMaxRepayAmount,
       params.paramsForStrategy
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _repaidAmount;
-    {
-      uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-      _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
-      uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
-      uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
-        _repaidAmount,
-        _repayTokenPrice,
-        moneyMarketDs.tokenConfigs[params.repayToken].borrowingFactor
-      );
-      // revert if repay > x% of totalUsedBorrowingPower
-      if (
-        _repaidBorrowingPower > (moneyMarketDs.maxLiquidateBps * params.usedBorrowingPower) / LibMoneyMarket01.MAX_BPS
-      ) {
-        revert LiquidationFacet_RepayAmountExceedThreshold();
-      }
-    }
+    (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
+      params,
+      _repayAmountBefore,
+      _expectedMaxRepayAmount,
+      _maxPossibleFee
+    );
+
+    _validateBorrowingPower(params.repayToken, _repaidAmount, params.usedBorrowingPower, moneyMarketDs);
 
     uint256 _collatSold = _collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
 
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
-    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
+    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _actualLiquidationFee);
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
@@ -271,17 +256,17 @@ contract LiquidationFacet is ILiquidationFacet {
       params.collatToken,
       _repaidAmount,
       _collatSold,
-      _feeToTreasury
+      _actualLiquidationFee
     );
   }
 
   /// @dev min(repayAmount, debtValue)
-  function _getActualRepayAmount(
+  function _calculateMaxPossibleRepayAmount(
     address _subAccount,
     address _repayToken,
     uint256 _repayAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _actualRepayAmount) {
+  ) internal view returns (uint256 _maxPossibleRepayAmount) {
     uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
     // for ib debtValue is in ib shares not in underlying
     uint256 _debtValue = LibShareUtil.shareToValue(
@@ -290,7 +275,7 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs.overCollatDebtShares[_repayToken]
     );
 
-    _actualRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
+    _maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
   function _reduceDebt(
@@ -321,5 +306,33 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _collatTokenAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
     moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_collatToken, _collatTokenAmount - _amountOut);
     moneyMarketDs.collats[_collatToken] -= _amountOut;
+  }
+
+  function _validateBorrowingPower(
+    address _repayToken,
+    uint256 _repaidAmount,
+    uint256 _usedBorrowingPower,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view {
+    uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
+    uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
+      _repaidAmount,
+      _repayTokenPrice,
+      moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor
+    );
+    if (_repaidBorrowingPower * LibMoneyMarket01.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
+      revert LiquidationFacet_RepayAmountExceedThreshold();
+    }
+  }
+
+  function _calculateActualRepayAmountAndFee(
+    InternalLiquidationCallParams memory params,
+    uint256 _repayAmountBefore,
+    uint256 _expectedMaxRepayAmount,
+    uint256 _maxFeePossible
+  ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
+    uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
+    _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
   }
 }
