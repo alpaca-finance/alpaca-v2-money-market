@@ -22,7 +22,7 @@ struct CacheState {
   uint256 subAccountDebtShare;
 }
 
-contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
   MockLiquidationStrategy internal mockLiquidationStrategy;

@@ -36,7 +36,7 @@ struct CacheState {
   uint256 subAccountIbTokenCollat;
 }
 
-contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
   MockRouter02 internal router;
   PancakeswapV2IbTokenLiquidationStrategy _ibTokenLiquidationStrat;
