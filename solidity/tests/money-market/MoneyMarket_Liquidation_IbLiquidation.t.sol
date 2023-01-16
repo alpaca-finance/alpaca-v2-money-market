@@ -243,29 +243,6 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
-    /**
-     * todo: simulate if weth has debt, should still correct
-     * scenario:
-     *
-     * 1. 1 usdc/weth, ALICE post 40 ibWeth (value 40 weth) as collateral, borrow 30 usdc
-     *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
-     *
-     * 2. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, increase shareValue of ibWeth by 2.5%, position become liquidatable
-     *    - usdc debt has increased to 30.0050765511672 usdc
-     *    - now 1 ibWeth = 1.025 weth
-     *    - ALICE borrowing power = 41 * 0.8 * 9000 / 10000 = 29.52 usd
-     *
-     * 3. try to liquidate 40 usdc with ibWeth collateral
-     *    - entire 30.0050765511672 usdc position should be liquidated
-     *
-     * 4. should be able to liquidate with 30.0050765511672 usdc repaid and 36.957472337413258535 ibWeth reduced from collateral
-     *    - remaining collateral = 41 - 36.957472337413258535 = 3.042527662586741465 ibWeth
-     *      - 30.0050765511672 usdc = 37.506345688959 weth = 36.5915567697160975... ibWeth is liquidated
-     *      - 30.0050765511672 * 1% = 0.300050765511672 usdc is taken to treasury as liquidation fee
-     *    - remaining debt value = 0 usdc
-     *    - remaining debt share = 0 shares
-     */
-
     adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
 
     // criteria
@@ -389,7 +366,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
-    adminFacet.setLiquidationParams(10000, 9000); // allow liquidation of entire subAccount
+    adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
 
     // criteria
     address _ibCollatToken = address(ibWeth);
