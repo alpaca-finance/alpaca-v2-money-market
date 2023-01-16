@@ -43,12 +43,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
   uint256 _aliceSubAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _aliceSubAccountId);
-  address treasury;
 
   function setUp() public override {
     super.setUp();
-
-    treasury = address(this);
 
     TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(tripleSlope6));
@@ -70,9 +67,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     adminFacet.setLiquidationStratsOk(_ibTokenLiquidationStrats, true);
 
-    address[] memory _liquidationCallers = new address[](2);
-    _liquidationCallers[0] = BOB;
-    _liquidationCallers[1] = address(this);
+    address[] memory _liquidationCallers = new address[](1);
+    _liquidationCallers[0] = liquidator;
     adminFacet.setLiquidatorsOk(_liquidationCallers, true);
 
     address[] memory _liquidationExecutors = new address[](1);
@@ -181,6 +177,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -304,6 +301,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -439,6 +437,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -517,6 +516,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(_debtToken, 1 ether);
 
+    vm.prank(liquidator);
     vm.expectRevert(
       abi.encodeWithSelector(
         PancakeswapV2IbTokenLiquidationStrategy
@@ -551,6 +551,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     mockOracle.setTokenPrice(address(btc), 10 ether);
 
+    vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -570,6 +571,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
+    vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),

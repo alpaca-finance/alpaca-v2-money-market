@@ -21,7 +21,6 @@ struct CacheState {
 contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
-  address treasury;
 
   function setUp() public override {
     super.setUp();

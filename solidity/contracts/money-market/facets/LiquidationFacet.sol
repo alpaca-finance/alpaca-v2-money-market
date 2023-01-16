@@ -15,6 +15,8 @@ import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 /// @title LiquidationFacet is dedicated to repurchasing and liquidating
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -264,6 +266,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _collatSold = params.collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
 
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
+    console.log("_feeToLiquidator", _feeToLiquidator);
+    console.log("_feeToTreasury", _feeToTreasury);
     IERC20(params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
     IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
