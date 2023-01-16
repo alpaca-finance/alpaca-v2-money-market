@@ -103,7 +103,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -133,7 +134,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // globalDebt should equal to debtValue since there is only 1 position
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 15.0050765511672 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.15 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore, 0.075 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore, 0.075 ether);
   }
 
   function testCorrectness_InjectedCollatToStrat_ThenPartialLiquidate_ShouldWork() external {

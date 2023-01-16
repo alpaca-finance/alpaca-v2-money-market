@@ -115,7 +115,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     address _collatToken = address(weth);
     uint256 _repurchaseAmount = 0.1 ether;
 
-    uint256 _treasuryBalanceBefore = lateFotToken.balanceOf(address(this));
+    uint256 _treasuryBalanceBefore = lateFotToken.balanceOf(treasury);
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
 
     vm.startPrank(BOB);
@@ -140,6 +140,6 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     assertEq(_debtAmountBefore - _debtAmountAfter, 0.098 ether);
 
     // check fee to treasury = repurchaseFee - transferFee = 0.001 - (0.01 * 0.001) = 0.00099
-    assertEq(lateFotToken.balanceOf(address(this)) - _treasuryBalanceBefore, 0.00099 ether);
+    assertEq(lateFotToken.balanceOf(treasury) - _treasuryBalanceBefore, 0.00099 ether);
   }
 }
