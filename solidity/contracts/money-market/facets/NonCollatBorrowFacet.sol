@@ -143,7 +143,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
-      _tokenConfig.borrowingFactor
+      _tokenConfig.borrowingFactor,
+      _tokenConfig.to18ConversionFactor
     );
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
