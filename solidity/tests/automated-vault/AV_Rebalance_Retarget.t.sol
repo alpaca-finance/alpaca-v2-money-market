@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { AV_BaseTest, console, MockInterestModel, IAVShareToken } from "./AV_BaseTest.t.sol";
+import { AV_BaseTest, console, MockInterestModel, IAVVaultToken } from "./AV_BaseTest.t.sol";
 
 // interfaces
 import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
@@ -65,7 +65,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     MockInterestModel mockInterestModel1 = new MockInterestModel(0);
     MockInterestModel mockInterestModel2 = new MockInterestModel(0);
     address _newVaultToken = address(
-      IAVShareToken(
+      IAVVaultToken(
         adminFacet.openVault(
           address(wethUsdcLPToken),
           address(usdc),

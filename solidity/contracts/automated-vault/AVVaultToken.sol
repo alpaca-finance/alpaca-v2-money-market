@@ -5,9 +5,9 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // interfaces
-import { IAVShareToken } from "./interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "./interfaces/IAVVaultToken.sol";
 
-contract AVShareToken is ERC20, IAVShareToken, Ownable {
+contract AVVaultToken is ERC20, IAVVaultToken, Ownable {
   uint8 private _decimals;
 
   constructor(

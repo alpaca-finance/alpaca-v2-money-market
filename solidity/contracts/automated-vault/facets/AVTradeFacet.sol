@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 // interfaces
 import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
-import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "../interfaces/IAVVaultToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
@@ -68,7 +68,7 @@ contract AVTradeFacet is IAVTradeFacet {
 
     if (_minShareOut > _shareToMint) revert AVTradeFacet_TooLittleReceived();
 
-    IAVShareToken(_vaultToken).mint(msg.sender, _shareToMint);
+    IAVVaultToken(_vaultToken).mint(msg.sender, _shareToMint);
 
     emit LogDeposit(msg.sender, _vaultToken, _stableToken, _stableAmountIn);
   }
@@ -95,16 +95,15 @@ contract AVTradeFacet is IAVTradeFacet {
     LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
     // 1. withdraw from handler
+    vars.totalShareSupply = IAVVaultToken(_vaultToken).totalSupply();
     (vars.withdrawalStableAmount, vars.withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _vaultToken,
       _vaultConfig.handler,
-      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / IERC20(_vaultToken).totalSupply(),
+      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / vars.totalShareSupply,
       avDs
     );
 
     // 2. repay vault debt
-    vars.totalShareSupply = IAVShareToken(_vaultToken).totalSupply();
-
     uint256 _stableTokenToUser = _repay(
       _vaultToken,
       _vaultConfig.stableToken,
@@ -123,7 +122,7 @@ contract AVTradeFacet is IAVTradeFacet {
     );
 
     // 3. transfer tokens
-    IAVShareToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
+    IAVVaultToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
     IERC20(_vaultConfig.stableToken).safeTransfer(msg.sender, _stableTokenToUser);
     IERC20(_vaultConfig.assetToken).safeTransfer(msg.sender, _assetTokenToUser);
 

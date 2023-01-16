@@ -7,7 +7,7 @@ interface IAVTradeFacet {
     address indexed user,
     address indexed vaultToken,
     address stableToken,
-    uint256 amountStableDeposited
+    uint256 stableAmountDeposited
   );
   // todo: add fields
   event LogWithdraw(
@@ -23,14 +23,14 @@ interface IAVTradeFacet {
 
   function deposit(
     address _vaultToken,
-    uint256 _amountIn,
+    uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external;
 
   function withdraw(
     address _vaultToken,
-    uint256 _shareAmountIn,
-    uint256 _minTokenOut,
+    uint256 _shareToWithdraw,
+    uint256 _minStableTokenOut,
     uint256 _minAssetTokenOut
   ) external;
 }

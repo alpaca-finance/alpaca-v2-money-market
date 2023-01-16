@@ -7,7 +7,7 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
-import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "../interfaces/IAVVaultToken.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -318,11 +318,11 @@ library LibAV01 {
     uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_vaultToken];
 
     if (_secondsFromLastCollection > 0) {
-      uint256 _pendingManagementFee = (IAVShareToken(_vaultToken).totalSupply() *
+      uint256 _pendingManagementFee = (IAVVaultToken(_vaultToken).totalSupply() *
         avDs.vaultConfigs[_vaultToken].managementFeePerSec *
         _secondsFromLastCollection) / 1e18;
 
-      IAVShareToken(_vaultToken).mint(avDs.treasury, _pendingManagementFee);
+      IAVVaultToken(_vaultToken).mint(avDs.treasury, _pendingManagementFee);
 
       avDs.lastFeeCollectionTimestamps[_vaultToken] = block.timestamp;
     }
