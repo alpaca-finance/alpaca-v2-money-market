@@ -7,7 +7,7 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
-import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "../interfaces/IAVVaultToken.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
@@ -38,7 +38,7 @@ library LibAV01 {
   struct VaultConfig {
     uint8 leverageLevel;
     uint16 managementFeePerSec;
-    address shareToken;
+    address vaultToken;
     address lpToken;
     address stableToken;
     address assetToken;
@@ -81,7 +81,7 @@ library LibAV01 {
 
   function depositToHandler(
     address _handler,
-    address _shareToken,
+    address _vaultToken,
     address _token0,
     address _token1,
     uint256 _desiredAmount0,
@@ -100,14 +100,14 @@ library LibAV01 {
       0 // min lp amount
     );
 
-    uint256 _equityAfter = getEquity(_shareToken, _handler, avDs);
+    uint256 _equityAfter = getEquity(_vaultToken, _handler, avDs);
     uint256 _equityChanged = _equityAfter - _equityBefore;
 
-    uint256 _totalShareTokenSupply = IERC20(_shareToken).totalSupply();
+    uint256 _totalShareTokenSupply = IERC20(_vaultToken).totalSupply();
 
     _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityBefore);
 
-    if (_totalShareTokenSupply + _shareToMint < 10**(IERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
+    if (_totalShareTokenSupply + _shareToMint < 10**(IERC20(_vaultToken).decimals() - 1)) revert LibAV01_NoTinyShares();
   }
 
   function withdrawFromHandler(
@@ -224,23 +224,23 @@ library LibAV01 {
   }
 
   function borrowMoneyMarket(
-    address _shareToken,
+    address _vaultToken,
     address _token,
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal {
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
-    avDs.vaultDebts[_shareToken][_token] += _amount;
+    avDs.vaultDebts[_vaultToken][_token] += _amount;
   }
 
   /// @dev doesn't repay money market
   function repayVaultDebt(
-    address _shareToken,
+    address _vaultToken,
     address _token,
     uint256 _repayAmount,
     AVDiamondStorage storage avDs
   ) internal {
-    avDs.vaultDebts[_shareToken][_token] -= _repayAmount;
+    avDs.vaultDebts[_vaultToken][_token] -= _repayAmount;
   }
 
   function calculateBorrowAmount(
@@ -318,11 +318,11 @@ library LibAV01 {
     uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_vaultToken];
 
     if (_secondsFromLastCollection > 0) {
-      uint256 _pendingManagementFee = (IAVShareToken(_vaultToken).totalSupply() *
+      uint256 _pendingManagementFee = (IAVVaultToken(_vaultToken).totalSupply() *
         avDs.vaultConfigs[_vaultToken].managementFeePerSec *
         _secondsFromLastCollection) / 1e18;
 
-      IAVShareToken(_vaultToken).mint(avDs.treasury, _pendingManagementFee);
+      IAVVaultToken(_vaultToken).mint(avDs.treasury, _pendingManagementFee);
 
       avDs.lastFeeCollectionTimestamps[_vaultToken] = block.timestamp;
     }

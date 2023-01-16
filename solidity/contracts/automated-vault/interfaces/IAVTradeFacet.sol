@@ -2,17 +2,17 @@
 pragma solidity 0.8.17;
 
 interface IAVTradeFacet {
-  event LogRemoveDebt(address indexed shareToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
+  event LogRemoveDebt(address indexed vaultToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
   event LogDeposit(
     address indexed user,
-    address indexed shareToken,
+    address indexed vaultToken,
     address stableToken,
-    uint256 amountStableDeposited
+    uint256 stableAmountDeposited
   );
   // todo: add fields
   event LogWithdraw(
     address indexed user,
-    address indexed shareToken,
+    address indexed vaultToken,
     uint256 burnedAmount,
     address stableToken,
     uint256 stableAmountToUser,
@@ -22,15 +22,15 @@ interface IAVTradeFacet {
   error AVTradeFacet_TooLittleReceived();
 
   function deposit(
-    address _shareToken,
-    uint256 _amountIn,
+    address _vaultToken,
+    uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external;
 
   function withdraw(
-    address _shareToken,
-    uint256 _shareAmountIn,
-    uint256 _minTokenOut,
+    address _vaultToken,
+    uint256 _shareToWithdraw,
+    uint256 _minStableTokenOut,
     uint256 _minAssetTokenOut
   ) external;
 }

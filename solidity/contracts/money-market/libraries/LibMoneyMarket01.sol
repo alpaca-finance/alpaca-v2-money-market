@@ -7,6 +7,7 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -18,6 +19,7 @@ import { IFeeModel } from "../interfaces/IFeeModel.sol";
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
+  using LibSafeToken for IERC20;
 
   // keccak256("moneymarket.diamond.storage");
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
@@ -35,6 +37,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_BorrowingPowerTooLow();
   error LibMoneyMarket01_NotEnoughToken();
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
+  error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -718,5 +721,18 @@ library LibMoneyMarket01 {
     // update global debt
 
     ds.globalDebts[_token] += _amount;
+  }
+
+  /// @dev safeTransferFrom that revert when not receiving full amount (have fee on transfer)
+  function pullExactTokens(
+    address _token,
+    address _from,
+    uint256 _amount
+  ) internal {
+    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
+    IERC20(_token).safeTransferFrom(_from, address(this), _amount);
+    if (IERC20(_token).balanceOf(address(this)) - _balanceBefore != _amount) {
+      revert LibMoneyMarket01_FeeOnTransferTokensNotSupported();
+    }
   }
 }

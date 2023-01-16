@@ -257,6 +257,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    // update reserves of the token. This will impact the outstanding balance
+    lyfDs.reserves[_token] += _actualRepayAmount;
   }
 
   function reinvest(address _lpToken) external nonReentrant {

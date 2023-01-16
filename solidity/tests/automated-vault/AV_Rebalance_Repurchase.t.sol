@@ -25,7 +25,7 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, true);
 
-    _vaultToken = address(avShareToken);
+    _vaultToken = address(vaultToken);
   }
 
   function testCorrectness_WhenAVRepurchaseToRepayStable_ShouldRepayStableBorrowAssetAndPayRewardToCaller() external {

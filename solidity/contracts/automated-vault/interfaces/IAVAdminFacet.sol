@@ -6,11 +6,11 @@ import { LibAV01 } from "../libraries/LibAV01.sol";
 interface IAVAdminFacet {
   struct ShareTokenPairs {
     address token;
-    address shareToken;
+    address vaultToken;
   }
 
   struct VaultConfigInput {
-    address shareToken;
+    address vaultToken;
     address lpToken;
     address stableToken;
     address assetToken;
@@ -35,7 +35,7 @@ interface IAVAdminFacet {
     address indexed _lpToken,
     address _stableToken,
     address _assetToken,
-    address _shareToken
+    address _vaultToken
   );
   event LogSetRepurchaseRewardBps(uint256 _newBps);
   event LogSetOperatorOk(address indexed _operator, bool _isOk);

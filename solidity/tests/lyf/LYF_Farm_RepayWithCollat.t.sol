@@ -14,7 +14,7 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_FarmFacetTest is LYF_BaseTest {
+contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {

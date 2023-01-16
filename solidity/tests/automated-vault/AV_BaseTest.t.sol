@@ -16,7 +16,7 @@ import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdm
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
 import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
 import { IAVViewFacet } from "../../contracts/automated-vault/interfaces/IAVViewFacet.sol";
-import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "../../contracts/automated-vault/interfaces/IAVVaultToken.sol";
 import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
@@ -45,7 +45,7 @@ abstract contract AV_BaseTest is BaseTest {
   address internal treasury;
 
   IAVHandler internal handler;
-  IAVShareToken internal avShareToken;
+  IAVVaultToken internal vaultToken;
 
   MockRouter internal mockRouter;
   MockLPToken internal wethUsdcLPToken;
@@ -79,7 +79,7 @@ abstract contract AV_BaseTest is BaseTest {
     MockInterestModel mockInterestModel2 = new MockInterestModel(0);
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
-    avShareToken = IAVShareToken(
+    vaultToken = IAVVaultToken(
       adminFacet.openVault(
         address(wethUsdcLPToken),
         address(usdc),

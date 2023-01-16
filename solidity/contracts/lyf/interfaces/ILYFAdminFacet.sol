@@ -46,5 +46,13 @@ interface ILYFAdminFacet {
 
   function setMaxNumOfToken(uint8 _numOfCollat) external;
 
+  function withdrawReserve(
+    address _token,
+    address _to,
+    uint256 _amount
+  ) external;
+
   error LYFAdminFacet_BadDebtShareId();
+  error LYFAdminFacet_ReserveTooLow();
+  error LYFAdminFacet_NotEnoughToken();
 }

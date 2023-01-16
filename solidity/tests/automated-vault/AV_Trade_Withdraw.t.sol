@@ -14,9 +14,9 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
 
   function testCorrectness_WhenWithdrawToken_ShouldWork() external {
     vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
+    tradeFacet.deposit(address(vaultToken), 10 ether, 10 ether);
 
-    (uint256 _stableDebtValueBefore, uint256 _assetDebtValueBefore) = viewFacet.getDebtValues(address(avShareToken));
+    (uint256 _stableDebtValueBefore, uint256 _assetDebtValueBefore) = viewFacet.getDebtValues(address(vaultToken));
 
     // after deposit, ref: from test testCorrectness_WhenDepositToken_ShouldWork
     // lpAmountPrice = 2, wethPrice = 1, usdcPrice = 1
@@ -41,14 +41,14 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     // repay debt amount (token0): 7.5
     uint256 aliceUsdcBefore = usdc.balanceOf(ALICE);
     vm.prank(ALICE);
-    tradeFacet.withdraw(address(avShareToken), 5 ether, 0, 0);
+    tradeFacet.withdraw(address(vaultToken), 5 ether, 0, 0);
 
-    assertEq(avShareToken.balanceOf(ALICE), 5 ether);
+    assertEq(vaultToken.balanceOf(ALICE), 5 ether);
     // alice should get correct token return amount
     assertEq(usdc.balanceOf(ALICE) - aliceUsdcBefore, 5 ether);
 
     // should repay correctly
-    (uint256 _stableDebtValueAfter, uint256 _assetDebtValueAfter) = viewFacet.getDebtValues(address(avShareToken));
+    (uint256 _stableDebtValueAfter, uint256 _assetDebtValueAfter) = viewFacet.getDebtValues(address(vaultToken));
     assertEq(_stableDebtValueBefore - _stableDebtValueAfter, 2.5 ether);
     assertEq(_assetDebtValueBefore - _assetDebtValueAfter, 7.5 ether);
 
@@ -57,10 +57,10 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
 
   function testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert() external {
     vm.startPrank(ALICE);
-    tradeFacet.deposit(address(avShareToken), 10 ether, 10 ether);
+    tradeFacet.deposit(address(vaultToken), 10 ether, 10 ether);
 
     vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_TooLittleReceived.selector));
-    tradeFacet.withdraw(address(avShareToken), 5 ether, type(uint256).max, 0);
+    tradeFacet.withdraw(address(vaultToken), 5 ether, type(uint256).max, 0);
 
     vm.stopPrank();
   }
