@@ -27,7 +27,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address collatToken;
     uint256 repayAmount;
     uint256 usedBorrowingPower;
-    uint256 mintReceive;
+    uint256 minReceive;
   }
 
   modifier nonReentrant() {
@@ -209,7 +209,7 @@ contract LiquidationFacet is ILiquidationFacet {
       collatToken: _collatToken,
       repayAmount: _repayAmount,
       usedBorrowingPower: _usedBorrowingPower,
-      mintReceive: _minReceive
+      minReceive: _minReceive
     });
 
     _liquidationCall(_params, moneyMarketDs);
@@ -242,7 +242,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayToken,
       _subAccountCollatAmount,
       _expectedMaxRepayAmount,
-      params.mintReceive
+      params.minReceive
     );
 
     // 4. check repaid amount, take fees, and update states

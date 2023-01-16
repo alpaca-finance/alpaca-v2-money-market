@@ -63,7 +63,12 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       revert PancakeswapV2IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
-    uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_underlyingToken, _repayToken, _repayAmount);
+    address[] memory _path = paths[_underlyingToken][_repayToken];
+    if (_path.length == 0) {
+      revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
+    }
+
+    uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_repayAmount, _path);
     (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawFromMoneyMarket(
       _ibToken,
       _underlyingToken,
@@ -71,7 +76,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       _requiredUnderlyingAmount
     );
 
-    address[] memory _path = paths[_underlyingToken][_repayToken];
     IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
     router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
 
@@ -93,7 +97,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       _requiredUnderlyingAmount
     );
 
-    // _ibTokenAmountIn is ibTokenAmount that caller send to strat
+    // _maxIbTokenToWithdraw is ibTokenAmount that caller send to strat
     _withdrawnIbTokenAmount = _maxIbTokenToWithdraw > _requiredIbTokenToWithdraw
       ? _requiredIbTokenToWithdraw
       : _maxIbTokenToWithdraw;
@@ -102,16 +106,11 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     _withdrawnUnderlyingAmount = moneyMarket.withdraw(_ibToken, _withdrawnIbTokenAmount);
   }
 
-  function _getRequiredUnderlyingAmount(
-    address _underlyingToken,
-    address _repayToken,
-    uint256 _repayAmount
-  ) internal view returns (uint256 _requiredUnderlyingAmount) {
-    address[] memory _path = paths[_underlyingToken][_repayToken];
-    if (_path.length == 0) {
-      revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
-    }
-
+  function _getRequiredUnderlyingAmount(uint256 _repayAmount, address[] memory _path)
+    internal
+    view
+    returns (uint256 _requiredUnderlyingAmount)
+  {
     uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
     // underlying token amount to swap
     _requiredUnderlyingAmount = amountsIn[0];
