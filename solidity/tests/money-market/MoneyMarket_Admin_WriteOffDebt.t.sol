@@ -76,7 +76,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       100 ether,
-      abi.encode()
+      0
     );
 
     liquidationFacet.liquidationCall(
@@ -86,7 +86,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       100 ether,
-      abi.encode()
+      0
     );
 
     // write off both subaccount debt
@@ -127,7 +127,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       100 ether,
-      abi.encode()
+      0
     );
 
     IAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new IAdminFacet.WriteOffSubAccountDebtInput[](2);

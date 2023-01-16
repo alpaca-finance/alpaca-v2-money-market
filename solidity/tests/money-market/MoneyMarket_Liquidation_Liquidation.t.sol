@@ -116,7 +116,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       15 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -183,7 +183,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       15 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -249,7 +249,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       _repayAmount,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -316,7 +316,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       40 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -360,7 +360,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       30 ether,
-      abi.encode()
+      0
     );
 
     CacheState memory _stateAfter = CacheState({
@@ -392,7 +392,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       address(usdc),
       address(weth),
       1 ether,
-      abi.encode()
+      0
     );
 
     // case borrowingPower == usedBorrowingPower * threshold
@@ -422,35 +422,19 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       address(usdc),
       address(weth),
       1 ether,
-      abi.encode()
+      0
     );
   }
 
   function testRevert_WhenLiquidationStrategyIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
-    liquidationFacet.liquidationCall(
-      address(0),
-      ALICE,
-      _subAccountId,
-      address(usdc),
-      address(weth),
-      1 ether,
-      abi.encode()
-    );
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether, 0);
   }
 
   function testRevert_WhenLiquidationCallerIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     vm.prank(EVE);
-    liquidationFacet.liquidationCall(
-      address(0),
-      ALICE,
-      _subAccountId,
-      address(usdc),
-      address(weth),
-      1 ether,
-      abi.encode()
-    );
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 1 ether, 0);
   }
 
   function testRevert_WhenLiquidateMoreThanThreshold() external {
@@ -472,7 +456,7 @@ contract MoneyMarket_Liquidation_LiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _collatToken,
       _repayAmount,
-      abi.encode()
+      0
     );
   }
 }

@@ -45,15 +45,14 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _repayToken The destination token
   /// @param _collatAmountIn Available amount of source token to trade
   /// @param _repayAmount Exact destination token amount
-  /// @param _data Extra calldata information
+  /// @param _minReceive Min token receive after swap
   function executeLiquidation(
     address _collatToken,
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    bytes calldata _data
+    uint256 _minReceive
   ) external onlyWhitelistedCallers {
-    uint256 _minReceive = abi.decode(_data, (uint256));
     address[] memory _path = paths[_collatToken][_repayToken];
 
     if (_path.length == 0) {

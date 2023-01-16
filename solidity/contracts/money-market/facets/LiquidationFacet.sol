@@ -27,7 +27,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address collatToken;
     uint256 repayAmount;
     uint256 usedBorrowingPower;
-    bytes paramsForStrategy;
+    uint256 mintReceive;
   }
 
   modifier nonReentrant() {
@@ -183,7 +183,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address _repayToken,
     address _collatToken,
     uint256 _repayAmount,
-    bytes calldata _paramsForStrategy
+    uint256 _minReceive
   ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -209,7 +209,7 @@ contract LiquidationFacet is ILiquidationFacet {
       collatToken: _collatToken,
       repayAmount: _repayAmount,
       usedBorrowingPower: _usedBorrowingPower,
-      paramsForStrategy: _paramsForStrategy
+      mintReceive: _minReceive
     });
 
     _liquidationCall(_params, moneyMarketDs);
@@ -242,7 +242,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayToken,
       _subAccountCollatAmount,
       _expectedMaxRepayAmount,
-      params.paramsForStrategy
+      params.mintReceive
     );
 
     // 4. check repaid amount, take fees, and update states
