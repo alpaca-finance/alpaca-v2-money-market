@@ -49,7 +49,7 @@ contract AVAdminFacet is IAVAdminFacet {
     IInterestRateModel(_assetTokenInterestModel).getInterestRate(1, 1);
 
     avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
-      shareToken: _newShareToken,
+      vaultToken: _newShareToken,
       lpToken: _lpToken,
       stableToken: _stableToken,
       assetToken: _assetToken,

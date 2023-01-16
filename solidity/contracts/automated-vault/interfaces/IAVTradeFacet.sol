@@ -2,17 +2,17 @@
 pragma solidity 0.8.17;
 
 interface IAVTradeFacet {
-  event LogRemoveDebt(address indexed shareToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
+  event LogRemoveDebt(address indexed vaultToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
   event LogDeposit(
     address indexed user,
-    address indexed shareToken,
+    address indexed vaultToken,
     address stableToken,
     uint256 amountStableDeposited
   );
   // todo: add fields
   event LogWithdraw(
     address indexed user,
-    address indexed shareToken,
+    address indexed vaultToken,
     uint256 burnedAmount,
     address stableToken,
     uint256 stableAmountToUser,

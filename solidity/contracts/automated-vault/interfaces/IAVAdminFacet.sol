@@ -6,11 +6,11 @@ import { LibAV01 } from "../libraries/LibAV01.sol";
 interface IAVAdminFacet {
   struct ShareTokenPairs {
     address token;
-    address shareToken;
+    address vaultToken;
   }
 
   struct VaultConfigInput {
-    address shareToken;
+    address vaultToken;
     address lpToken;
     address stableToken;
     address assetToken;

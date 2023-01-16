@@ -38,7 +38,7 @@ library LibAV01 {
   struct VaultConfig {
     uint8 leverageLevel;
     uint16 managementFeePerSec;
-    address shareToken;
+    address vaultToken;
     address lpToken;
     address stableToken;
     address assetToken;
