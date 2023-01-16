@@ -127,11 +127,6 @@ contract LendFacet is ILendFacet {
     address _wNativeToken = moneyMarketDs.wNativeToken;
     address _ibWNativeToken = moneyMarketDs.tokenToIbTokens[_wNativeToken];
 
-    address _wNativeRelayer = moneyMarketDs.wNativeRelayer;
-    if (_wNativeRelayer == address(0)) {
-      revert LendFacet_InvalidAddress(_wNativeRelayer);
-    }
-
     LibMoneyMarket01.accrueInterest(_wNativeToken, moneyMarketDs);
 
     uint256 _shareValue = LibShareUtil.shareToValue(
