@@ -66,7 +66,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
         [address(weth), address(btc)]
       )
     );
-    liquidationStrat.executeLiquidation(address(ibWeth), address(btc), 1 ether, 1 ether, abi.encode(0));
+    liquidationStrat.executeLiquidation(address(ibWeth), address(btc), 1 ether, 1 ether, 0);
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStrat() external {
@@ -94,7 +94,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // transfer ib token to strat
     ibWeth.transfer(address(liquidationStrat), _ibTokenIn);
     assertEq(ibWeth.balanceOf(address(liquidationStrat)), _ibTokenIn, "ibWeth balance of liquidationStrat");
-    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, abi.encode(_minReceive));
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, _minReceive);
     vm.stopPrank();
 
     // nothing left in strat
@@ -143,7 +143,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     vm.startPrank(ALICE);
     // transfer ib token to strat
     ibWeth.transfer(address(liquidationStrat), _ibTokenIn);
-    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, abi.encode(_minReceive));
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, _minReceive);
     vm.stopPrank();
 
     // nothing left in strat
@@ -194,7 +194,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     vm.startPrank(ALICE);
     // transfer ib token to strat
     ibWeth.transfer(address(liquidationStrat), _ibTokenIn);
-    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, abi.encode(_minReceive));
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, _minReceive);
     vm.stopPrank();
 
     // nothing left in strat
@@ -242,7 +242,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
           .selector
       )
     );
-    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, abi.encode(_minReceive));
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, _minReceive);
     vm.stopPrank();
   }
 }

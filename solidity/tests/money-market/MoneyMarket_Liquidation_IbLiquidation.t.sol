@@ -188,7 +188,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _ibCollatToken,
       _repayAmountInput,
-      abi.encode(0)
+      0
     );
 
     // | Calculation When Liquidate ALICE Position
@@ -311,7 +311,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _ibCollatToken,
       _repayAmountInput,
-      abi.encode(0)
+      0
     );
 
     // | Calculation When Liquidate ALICE Position
@@ -446,7 +446,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _ibCollatToken,
       _repayAmountInput,
-      abi.encode(0)
+      0
     );
 
     // | Calculation When Liquidate ALICE Position
@@ -531,7 +531,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       _debtToken,
       _ibCollatToken,
       _repayAmountInput,
-      abi.encode(0)
+      0
     );
   }
 
@@ -559,7 +559,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       address(usdc),
       address(ibWeth),
       1 ether,
-      abi.encode(0)
+      0
     );
   }
 
@@ -578,7 +578,7 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
       address(usdc),
       address(ibWeth),
       40 ether,
-      abi.encode(0)
+      0
     );
   }
 
