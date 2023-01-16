@@ -220,7 +220,6 @@ contract LiquidationFacet is ILiquidationFacet {
     );
     uint256 _maxFeePossible = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
 
-    // 4. check repaid amount, take fees, and update states
     uint256 _expectMaxRepayAmount = _maxPossibleRepayAmount + _maxFeePossible;
 
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
@@ -231,6 +230,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.paramsForStrategy
     );
 
+    // 4. check repaid amount, take fees, and update states
     (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
       params,
       _repayAmountBefore,
