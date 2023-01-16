@@ -83,7 +83,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
   function setUp() public virtual {
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
     setUpMM();
 
     adminFacet = LYFAdminFacet(lyfDiamond);
@@ -265,7 +265,7 @@ abstract contract LYF_BaseTest is BaseTest {
     address _ibWeth = mmAdminFacet.openMarket(address(weth));
     address _ibUsdc = mmAdminFacet.openMarket(address(usdc));
     address _ibBtc = mmAdminFacet.openMarket(address(btc));
-    address _ibNativeToken = mmAdminFacet.openMarket(address(nativeToken));
+    address _ibNativeToken = mmAdminFacet.openMarket(address(wNativeToken));
 
     ibWeth = InterestBearingToken(_ibWeth);
     ibUsdc = InterestBearingToken(_ibUsdc);

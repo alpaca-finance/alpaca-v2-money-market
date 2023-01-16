@@ -8,7 +8,7 @@ interface ILendFacet {
 
   function depositETH() external payable;
 
-  function withdrawETH(address _ibWNativeToken, uint256 _shareAmount) external;
+  function withdrawETH(uint256 _shareAmount) external;
 
   error LendFacet_InvalidToken(address _token);
   error LendFacet_InvalidAddress(address _addr);
