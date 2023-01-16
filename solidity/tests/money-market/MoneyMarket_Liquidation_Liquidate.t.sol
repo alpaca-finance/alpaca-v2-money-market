@@ -173,7 +173,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     weth.mint(address(mockLiquidationStrategy), _injectedCollatAmount);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -201,7 +202,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 15.00253784613340831 ether);
     assertEq(_stateAfter.subAccountDebtShare, 15.00253784613340831 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.15 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore, 0.075 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore, 0.075 ether);
   }
 
   function testCorrectness_WhenLiquidateMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -220,7 +222,9 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      * 4. should be able to liquidate with 30.0050765511672 usdc repaid, 37.88140914584859 weth reduced from collateral and 0.300050765511672 usdc to treasury
      *    - remaining collateral = 40 - 37.88140914584859 = 2.11859085415141 weth
      *      - @0.8 usdc/weth 30.0050765511672 usdc = 37.506345688959 weth is liquidated
-     *      - 30.0050765511672 * 1% = 0.300050765511672 usdc is taken to treasury as liquidation fee
+     *      - totalLiquidationFee = 30.0050765511672 * 1% = 0.300050765511672 usdc is taken to treasury as liquidation fee
+     *      - feeToLiquidator = 0.300050765511672 * 5000 / 10000 = 0.150025382755836
+     *      - feeToTreasury = 0.300050765511672 - 0.150025382755836 = 0.150025382755836
      *      - total weth liquidated = 37.506345688959 + 0.300050765511672 = 37.88140914584859
      *    - remaining debt value = 0
      *    - remaining debt share = 0
@@ -240,7 +244,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // MockLiquidationStrategy need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -269,7 +274,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 0);
     assertEq(_stateAfter.subAccountDebtShare, 0);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.300050765511672 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore, 0.150025382755836 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore, 0.150025382755836 ether);
   }
 
   function testCorrectness_WhenLiquidateAllCollateral_ShouldWorkButTreasuryReceiveNoFee() external {
@@ -290,7 +296,9 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      * 4. should be able to liquidate with 39.603960396039603961 usdc repaid and 40 weth liquidated
      *    - remaining collateral = 0 weth
      *      - @1 usdc/weth 39.6 usdc = 39.6 weth is liquidated
-     *      - 39.603960396039603961 * 1% = 0.396039603960396039 weth fee to treasury
+     *      - totalLiquidationFee = 39.603960396039603961 * 1% = 0.396039603960396039
+     *      - feeToLiquidator = 0.396039603960396039 * 5000 / 10000 = 0.198019801980198019
+     *      - feeToTreasury = 0.396039603960396039 - 0.198019801980198019 = 0.19801980198019802
      *    - remaining debt value = 80.036099919413504 - 39.603960396039603961 = 40.432139523373900039 usdc
      *    - remaining debt share = 80 - 39.586097209550105281 = 40.413902790449894719 shares
      *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 39.6 * 80 / 80.036099919413504 = 39.582138599829150270272757155067956377008065689156955144328424412...
@@ -336,7 +344,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 40.413902790449894719 ether);
     assertEq(_stateAfter.subAccountDebtShare, 40.413902790449894719 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury), 0.396039603960396039 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidator), 0.198019801980198019 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury), 0.19801980198019802 ether);
   }
 
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
@@ -353,7 +362,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -383,7 +393,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 0.005075692266816619 ether); // wolfram: 30-(30-0.000000000000000001)*Divide[30,30.0050765511672]
     assertEq(_stateAfter.subAccountDebtShare, 0.005075692266816619 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, 0.299999999999999999 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore, 0.149999999999999999 ether);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore, 0.15 ether);
   }
 
   function testRevert_WhenLiquidateWhileSubAccountIsHealthy() external {
