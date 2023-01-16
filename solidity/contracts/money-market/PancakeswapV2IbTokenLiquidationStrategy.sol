@@ -18,6 +18,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   using LibSafeToken for IERC20;
 
   error PancakeswapV2IbTokenLiquidationStrategy_Unauthorized();
+  error PancakeswapV2IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
   error PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
 
   struct SetPathParams {
@@ -59,12 +60,11 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   ) external onlyWhitelistedCallers {
     uint256 _minReceive = abi.decode(_data, (uint256));
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
+    if (_underlyingToken == _repayToken) {
+      revert PancakeswapV2IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
+    }
 
-    (uint256 _requiredUnderlyingAmount, bool _needSwap) = _getRequiredUnderlyingAmount(
-      _underlyingToken,
-      _repayToken,
-      _repayAmount
-    );
+    uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_underlyingToken, _repayToken, _repayAmount);
     (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawForMoneyMarket(
       _ibToken,
       _underlyingToken,
@@ -72,14 +72,9 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       _requiredUnderlyingAmount
     );
 
-    if (_needSwap) {
-      address[] memory _path = paths[_underlyingToken][_repayToken];
-      IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
-      router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
-    } else {
-      // transfer all underlying token to repay
-      IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawnUnderlyingAmount);
-    }
+    address[] memory _path = paths[_underlyingToken][_repayToken];
+    IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
+    router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
 
     // transfer ibToken back to caller if not withdraw all
     if (_ibTokenAmountIn > _withdrawnIbTokenAmount) {
@@ -112,22 +107,15 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     address _underlyingToken,
     address _repayToken,
     uint256 _repayAmount
-  ) internal view returns (uint256 _requiredUnderlyingAmount, bool _needSwap) {
-    // if underlying token is the repay token means we need underlying amount = repay amount
-    if (_underlyingToken == _repayToken) {
-      _requiredUnderlyingAmount = _repayAmount;
-      _needSwap = false;
-    } else {
-      address[] memory _path = paths[_underlyingToken][_repayToken];
-      if (_path.length == 0) {
-        revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
-      }
-
-      uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
-      // underlying token amount to swap
-      _requiredUnderlyingAmount = amountsIn[0];
-      _needSwap = true;
+  ) internal view returns (uint256 _requiredUnderlyingAmount) {
+    address[] memory _path = paths[_underlyingToken][_repayToken];
+    if (_path.length == 0) {
+      revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
     }
+
+    uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
+    // underlying token amount to swap
+    _requiredUnderlyingAmount = amountsIn[0];
   }
 
   function _convertUnderlyingToIbToken(

@@ -232,35 +232,17 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // _requireAmountToWithdraw = repay amount = 1 ether
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 1 ether
 
-    // mock withdrawal amount
-    uint256 _expectedIbTokenAmountToWithdraw = 1 ether;
-    uint256 _expectedWithdrawalAmount = 1 ether;
-    moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
-
     vm.startPrank(ALICE);
     // transfer ib token to strat
     ibWeth.transfer(address(liquidationStrat), _ibTokenIn);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        PancakeswapV2IbTokenLiquidationStrategy
+          .PancakeswapV2IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken
+          .selector
+      )
+    );
     liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, _repayAmount, abi.encode(_minReceive));
     vm.stopPrank();
-
-    // nothing left in strat
-    // to check ibToken should not exists on liquidation strat
-    assertEq(ibWeth.balanceOf(address(liquidationStrat)), 0, "ibWeth balance of liquidationStrat");
-    // to check underlyingToken should swap all
-    assertEq(weth.balanceOf(address(liquidationStrat)), 0, "weth balance of liquidationStrat");
-    // to check swapped token should be here
-    assertEq(usdc.balanceOf(address(liquidationStrat)), 0, "usdc balance of liquidationStrat");
-
-    // to check router work correctly (we can remove this assertion because this is for mock)
-    assertEq(usdc.balanceOf(address(router)), _routerUSDCBalance, "usdc balance of router");
-    assertEq(usdc.balanceOf(ALICE), _aliceUSDCBalance, "usdc balance of ALICE");
-
-    // to check final ibToken should be corrected
-    assertEq(
-      ibWeth.balanceOf(ALICE),
-      _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw,
-      "ibWeth balance of ALICE"
-    );
-    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance + _expectedWithdrawalAmount, "weth balance of ALICE");
   }
 }
