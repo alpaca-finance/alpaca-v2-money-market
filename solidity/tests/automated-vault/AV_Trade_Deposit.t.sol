@@ -17,7 +17,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     uint256 _usdcBalanceBefore = usdc.balanceOf(ALICE);
 
     vm.prank(ALICE);
-    tradeFacet.deposit(address(avShareToken), _usdcAmountIn, _minShareOut);
+    tradeFacet.deposit(address(vaultToken), _usdcAmountIn, _minShareOut);
 
     // leverage level is 3
     // price of weth and usdc are 1 USD
@@ -26,7 +26,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     // then borrowed stable token is 15 - 10 = 5
     // to calculate borrowed asset token, depositedAmount * leverageLevel
     // then borrowed asset token is 15
-    (uint256 _stableDebtValue, uint256 _assetDebtValue) = viewFacet.getDebtValues(address(avShareToken));
+    (uint256 _stableDebtValue, uint256 _assetDebtValue) = viewFacet.getDebtValues(address(vaultToken));
     assertEq(_stableDebtValue, 5 ether);
     assertEq(_assetDebtValue, 15 ether);
 
@@ -43,7 +43,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     // given shareToMint = equityChange * totalSupply (avToken) / totalEquity
     // in this case is first mint, so shareToMint will be equityChange
     // shareToMint = 10
-    assertEq(avShareToken.balanceOf(ALICE), 10 ether);
+    assertEq(vaultToken.balanceOf(ALICE), 10 ether);
     assertEq(_usdcBalanceBefore - usdc.balanceOf(ALICE), _usdcAmountIn);
 
     // note: for mock router compose LP
@@ -54,15 +54,15 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     _usdcBalanceBefore = usdc.balanceOf(BOB);
 
     vm.prank(BOB);
-    tradeFacet.deposit(address(avShareToken), _usdcAmountIn, _minShareOut);
+    tradeFacet.deposit(address(vaultToken), _usdcAmountIn, _minShareOut);
 
     // check BOB balance
-    assertEq(avShareToken.balanceOf(BOB), 10 ether);
+    assertEq(vaultToken.balanceOf(BOB), 10 ether);
     assertEq(_usdcBalanceBefore - usdc.balanceOf(BOB), _usdcAmountIn);
 
     // check vault state
     // BOB deposit same amount as ALICE so everything in vault should double
-    (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(address(avShareToken));
+    (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(address(vaultToken));
     assertEq(_stableDebtValue, 10 ether);
     assertEq(_assetDebtValue, 30 ether);
     assertEq(handler.totalLpBalance(), 30 ether);
@@ -71,7 +71,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   function testRevert_WhenDepositTokenAndGetTinyShares_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(LibAV01.LibAV01_NoTinyShares.selector));
-    tradeFacet.deposit(address(avShareToken), 0.05 ether, 0.05 ether);
+    tradeFacet.deposit(address(vaultToken), 0.05 ether, 0.05 ether);
     vm.stopPrank();
   }
 
@@ -82,9 +82,9 @@ contract AV_Trade_DepositTest is AV_BaseTest {
 
   //     // exploiter deposit 10 wei usdc, get 10 wei shareToken back
   //     vm.startPrank(ALICE);
-  //     tradeFacet.deposit(address(avShareToken), 10, 10);
+  //     tradeFacet.deposit(address(vaultToken), 10, 10);
 
-  //     assertEq(avShareToken.balanceOf(ALICE), 10);
+  //     assertEq(vaultToken.balanceOf(ALICE), 10);
   //     assertEq(handler.totalLpBalance(), 15);
 
   //     // exploiter direct transfer 1B lp
@@ -98,13 +98,13 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   //     console.log("==========");
   //     usdc.mint(BOB, 1e7 ether);
   //     vm.startPrank(BOB);
-  //     tradeFacet.deposit(address(avShareToken), 1e7 ether, 1e7 ether);
+  //     tradeFacet.deposit(address(vaultToken), 1e7 ether, 1e7 ether);
 
-  //     assertEq(avShareToken.balanceOf(BOB), 1e7 ether);
+  //     assertEq(vaultToken.balanceOf(BOB), 1e7 ether);
 
   //     // user withdraw 1M ibWeth, get 1M weth back
   //     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
-  //     tradeFacet.withdraw(address(avShareToken), 1e7 ether, 1e7 ether);
+  //     tradeFacet.withdraw(address(vaultToken), 1e7 ether, 1e7 ether);
 
   //     assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, 1e7 ether);
   //     vm.stopPrank();
@@ -113,7 +113,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   //     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
 
   //     vm.prank(ALICE);
-  //     tradeFacet.withdraw(address(avShareToken), 10, 10);
+  //     tradeFacet.withdraw(address(vaultToken), 10, 10);
 
   //     assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1);
   //   }

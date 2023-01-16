@@ -23,7 +23,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // address _vaultToken, address _newStableTokenInterestRateModel, address _newAssetTokenInterestRateModel
     adminFacet.setInterestRateModels(
-      address(avShareToken),
+      address(vaultToken),
       address(new MockInterestModel(0.1 ether)),
       address(new MockInterestModel(0.05 ether))
     );
@@ -60,7 +60,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
      *    - weth interest = 3 * 0.05 = 0.15 weth
      *    - usdc interest = 1 * 0.1 = 0.1 usdc
      */
-    address _vaultToken = address(avShareToken);
+    address _vaultToken = address(vaultToken);
 
     // check last accrue timestamp empty state = 0
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), 0);
@@ -153,7 +153,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
      *      - usdc to ALICE = 1.6 - 0.55 = 1.05 usdc
      *      - weth to ALICE = 1.6 - 1.575 = 0.025 weth
      */
-    address _vaultToken = address(avShareToken);
+    address _vaultToken = address(vaultToken);
 
     // 1.
     vm.prank(ALICE);
@@ -200,7 +200,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     // check ALICE's balance
     assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1.05 ether);
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.025 ether);
-    assertEq(avShareToken.balanceOf(ALICE), 0);
+    assertEq(vaultToken.balanceOf(ALICE), 0);
 
     // check no pending interest (accrued during withdraw)
     (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
@@ -265,7 +265,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
      *      - usdc to BOB = 3.2 - 1.1 = 2.1 usdc
      */
 
-    address _vaultToken = address(avShareToken);
+    address _vaultToken = address(vaultToken);
 
     // 1.
     vm.prank(ALICE);
@@ -351,7 +351,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
      *    - weth profit after clear mm debt = 1.575 - 1.5 = 0.075 weth
      */
 
-    address _vaultToken = address(avShareToken);
+    address _vaultToken = address(vaultToken);
 
     // 1.
     vm.prank(ALICE);
@@ -383,7 +383,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
   }
 
   function testCorrectness_WhenAccrueInterest_ShouldEmitEvent() external {
-    address _vaultToken = address(avShareToken);
+    address _vaultToken = address(vaultToken);
 
     vm.expectEmit(true, true, true, false, avDiamond);
     emit LogAccrueInterest(_vaultToken, address(usdc), address(weth), 0, 0);

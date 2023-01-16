@@ -7,6 +7,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 // interfaces
 import { IAVVaultToken } from "./interfaces/IAVVaultToken.sol";
 
+// TODO: discuss usage of Ownable. we only need onlyVault and not other ownership functions Ownable provided
 contract AVVaultToken is ERC20, IAVVaultToken, Ownable {
   uint8 private _decimals;
 

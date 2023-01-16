@@ -45,7 +45,7 @@ abstract contract AV_BaseTest is BaseTest {
   address internal treasury;
 
   IAVHandler internal handler;
-  IAVVaultToken internal avShareToken;
+  IAVVaultToken internal vaultToken;
 
   MockRouter internal mockRouter;
   MockLPToken internal wethUsdcLPToken;
@@ -79,7 +79,7 @@ abstract contract AV_BaseTest is BaseTest {
     MockInterestModel mockInterestModel2 = new MockInterestModel(0);
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
-    avShareToken = IAVVaultToken(
+    vaultToken = IAVVaultToken(
       adminFacet.openVault(
         address(wethUsdcLPToken),
         address(usdc),

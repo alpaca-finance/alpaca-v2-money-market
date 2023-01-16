@@ -22,7 +22,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     _operators[0] = address(this);
     adminFacet.setOperatorsOk(_operators, true);
 
-    _vaultToken = address(avShareToken);
+    _vaultToken = address(vaultToken);
     _lpToken = address(wethUsdcLPToken);
   }
 
