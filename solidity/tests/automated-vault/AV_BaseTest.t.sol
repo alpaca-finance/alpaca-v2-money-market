@@ -14,7 +14,9 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
-import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
+import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
+import { IAVViewFacet } from "../../contracts/automated-vault/interfaces/IAVViewFacet.sol";
+import { IAVVaultToken } from "../../contracts/automated-vault/interfaces/IAVVaultToken.sol";
 import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
@@ -27,6 +29,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
 
 abstract contract AV_BaseTest is BaseTest {
@@ -36,11 +39,13 @@ abstract contract AV_BaseTest is BaseTest {
   // av facets
   IAVAdminFacet internal adminFacet;
   IAVTradeFacet internal tradeFacet;
+  IAVRebalanceFacet internal rebalanceFacet;
+  IAVViewFacet internal viewFacet;
 
   address internal treasury;
 
   IAVHandler internal handler;
-  IAVShareToken internal avShareToken;
+  IAVVaultToken internal vaultToken;
 
   MockRouter internal mockRouter;
   MockLPToken internal wethUsdcLPToken;
@@ -48,12 +53,14 @@ abstract contract AV_BaseTest is BaseTest {
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
     setUpMM();
 
     // set av facets
     adminFacet = IAVAdminFacet(avDiamond);
     tradeFacet = IAVTradeFacet(avDiamond);
+    rebalanceFacet = IAVRebalanceFacet(avDiamond);
+    viewFacet = IAVViewFacet(avDiamond);
 
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 
@@ -67,9 +74,22 @@ abstract contract AV_BaseTest is BaseTest {
     // deploy handler
     handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
 
+    // setup interest rate models
+    MockInterestModel mockInterestModel1 = new MockInterestModel(0);
+    MockInterestModel mockInterestModel2 = new MockInterestModel(0);
+
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
-    avShareToken = IAVShareToken(
-      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(handler), 3, 1)
+    vaultToken = IAVVaultToken(
+      adminFacet.openVault(
+        address(wethUsdcLPToken),
+        address(usdc),
+        address(weth),
+        address(handler),
+        3,
+        0,
+        address(mockInterestModel1),
+        address(mockInterestModel2)
+      )
     );
 
     // approve

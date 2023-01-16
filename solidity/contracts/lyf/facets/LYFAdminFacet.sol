@@ -4,12 +4,18 @@ pragma solidity 0.8.17;
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
+  using LibSafeToken for IERC20;
+
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
+  event LogSetMinDebtSize(uint256 _newValue);
+  event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -89,6 +95,13 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.interestModels[_debtShareId] = _interestModel;
   }
 
+  function setMinDebtSize(uint256 _newValue) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.minDebtSize = _newValue;
+
+    emit LogSetMinDebtSize(_newValue);
+  }
+
   function setReinvestorsOk(address[] memory list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
@@ -131,5 +144,30 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.maxNumOfCollatPerSubAccount = _numOfCollat;
     emit LogSetMaxNumOfToken(_numOfCollat);
+  }
+
+  /// @notice Withdraw the protocol's reserve
+  /// @param _token The token to be withdrawn
+  /// @param _to The destination address
+  /// @param _amount The amount to withdraw
+  function withdrawReserve(
+    address _token,
+    address _to,
+    uint256 _amount
+  ) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    if (_amount > lyfDs.protocolReserves[_token]) {
+      revert LYFAdminFacet_ReserveTooLow();
+    }
+    if (_amount > lyfDs.reserves[_token]) {
+      revert LYFAdminFacet_NotEnoughToken();
+    }
+
+    lyfDs.protocolReserves[_token] -= _amount;
+
+    lyfDs.reserves[_token] -= _amount;
+    IERC20(_token).safeTransfer(_to, _amount);
+
+    emit LogWitdrawReserve(_token, _to, _amount);
   }
 }

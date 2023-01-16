@@ -8,6 +8,8 @@ import { DiamondCutFacet, IDiamondCut } from "../../contracts/automated-vault/fa
 import { DiamondLoupeFacet } from "../../contracts/automated-vault/facets/DiamondLoupeFacet.sol";
 import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
 import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFacet.sol";
+import { AVRebalanceFacet } from "../../contracts/automated-vault/facets/AVRebalanceFacet.sol";
+import { AVViewFacet } from "../../contracts/automated-vault/facets/AVViewFacet.sol";
 
 // initializers
 import { DiamondInit } from "../../contracts/automated-vault/initializers/DiamondInit.sol";
@@ -29,6 +31,8 @@ library AVDiamondDeployer {
     // Deploy Facets
     deployAdminFacet(_avDiamondCutFacet);
     deployTradeFacet(_avDiamondCutFacet);
+    deployRebalanceFacet(_avDiamondCutFacet);
+    deployViewFacet(_avDiamondCutFacet);
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
@@ -65,12 +69,17 @@ library AVDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AVAdminFacet, bytes4[] memory) {
     AVAdminFacet _adminFacet = new AVAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](5);
+    bytes4[] memory selectors = new bytes4[](10);
     selectors[0] = AVAdminFacet.openVault.selector;
     selectors[1] = AVAdminFacet.setTokenConfigs.selector;
     selectors[2] = AVAdminFacet.setOracle.selector;
     selectors[3] = AVAdminFacet.setMoneyMarket.selector;
     selectors[4] = AVAdminFacet.setTreasury.selector;
+    selectors[5] = AVAdminFacet.setManagementFeePerSec.selector;
+    selectors[6] = AVAdminFacet.setInterestRateModels.selector;
+    selectors[7] = AVAdminFacet.setOperatorsOk.selector;
+    selectors[8] = AVAdminFacet.setRepurchaseRewardBps.selector;
+    selectors[9] = AVAdminFacet.setRepurchasersOk.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
@@ -85,11 +94,9 @@ library AVDiamondDeployer {
   function deployTradeFacet(DiamondCutFacet diamondCutFacet) internal returns (AVTradeFacet, bytes4[] memory) {
     AVTradeFacet _tradeFacet = new AVTradeFacet();
 
-    bytes4[] memory selectors = new bytes4[](4);
+    bytes4[] memory selectors = new bytes4[](2);
     selectors[0] = AVTradeFacet.deposit.selector;
     selectors[1] = AVTradeFacet.withdraw.selector;
-    selectors[2] = AVTradeFacet.getDebtValues.selector;
-    selectors[3] = AVTradeFacet.pendingManagementFee.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_tradeFacet),
@@ -99,6 +106,42 @@ library AVDiamondDeployer {
 
     diamondCutFacet.diamondCut(facetCuts, address(0), "");
     return (_tradeFacet, selectors);
+  }
+
+  function deployRebalanceFacet(DiamondCutFacet diamondCutFacet) internal returns (AVRebalanceFacet, bytes4[] memory) {
+    AVRebalanceFacet _rebalanceFacet = new AVRebalanceFacet();
+
+    bytes4[] memory selectors = new bytes4[](2);
+    selectors[0] = AVRebalanceFacet.retarget.selector;
+    selectors[1] = AVRebalanceFacet.repurchase.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_rebalanceFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_rebalanceFacet, selectors);
+  }
+
+  function deployViewFacet(DiamondCutFacet diamondCutFacet) internal returns (AVViewFacet, bytes4[] memory) {
+    AVViewFacet _viewFacet = new AVViewFacet();
+
+    bytes4[] memory selectors = new bytes4[](4);
+    selectors[0] = AVViewFacet.getDebtValues.selector;
+    selectors[1] = AVViewFacet.getPendingInterest.selector;
+    selectors[2] = AVViewFacet.getLastAccrueInterestTimestamp.selector;
+    selectors[3] = AVViewFacet.getPendingManagementFee.selector;
+
+    IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
+      address(_viewFacet),
+      IDiamondCut.FacetCutAction.Add,
+      selectors
+    );
+
+    diamondCutFacet.diamondCut(facetCuts, address(0), "");
+    return (_viewFacet, selectors);
   }
 
   function buildFacetCut(

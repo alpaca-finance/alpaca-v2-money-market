@@ -36,7 +36,7 @@ contract MoneyMarket_InitializeTest is MoneyMarket_BaseTest {
     DiamondCutFacet(moneyMarketDiamond).diamondCut(
       facetCuts,
       address(_initializer),
-      abi.encodeWithSelector(bytes4(keccak256("init(address,address)")), address(nativeToken), address(nativeRelayer))
+      abi.encodeWithSelector(bytes4(keccak256("init(address,address)")), address(wNativeToken), address(wNativeRelayer))
     );
   }
 }

@@ -7,24 +7,26 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
+  using LibSafeToken for IERC20;
 
   // keccak256("moneymarket.diamond.storage");
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
-  uint8 internal constant _NOT_ENTERED_LIQUIDATE = 0;
-  uint8 internal constant _ENTERED_LIQUIDATE = 1;
   uint256 internal constant MAX_BPS = 10000;
+  uint256 internal constant MAX_REPURCHASE_FEE_BPS = 1000;
 
   error LibMoneyMarket01_BadSubAccountId();
   error LibMoneyMarket01_InvalidToken(address _token);
@@ -35,6 +37,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_BorrowingPowerTooLow();
   error LibMoneyMarket01_NotEnoughToken();
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
+  error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -62,11 +65,12 @@ library LibMoneyMarket01 {
 
   // Storage
   struct MoneyMarketDiamondStorage {
-    address nativeToken;
-    address nativeRelayer;
+    address wNativeToken;
+    address wNativeRelayer;
     address treasury;
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
+    IFeeModel repurchaseRewardModel;
     mapping(address => address) tokenToIbTokens;
     mapping(address => address) ibTokenToTokens;
     mapping(address => uint256) overCollatDebtValues;
@@ -98,12 +102,10 @@ library LibMoneyMarket01 {
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
     // liquidation params
-    uint8 liquidateExec;
     uint16 maxLiquidateBps;
     uint16 liquidationThresholdBps;
     // fees
     uint16 lendingFeeBps;
-    uint16 repurchaseRewardBps;
     uint16 repurchaseFeeBps;
     uint16 liquidationFeeBps;
     uint256 minDebtSize;
@@ -719,5 +721,18 @@ library LibMoneyMarket01 {
     // update global debt
 
     ds.globalDebts[_token] += _amount;
+  }
+
+  /// @dev safeTransferFrom that revert when not receiving full amount (have fee on transfer)
+  function pullExactTokens(
+    address _token,
+    address _from,
+    uint256 _amount
+  ) internal {
+    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
+    IERC20(_token).safeTransferFrom(_from, address(this), _amount);
+    if (IERC20(_token).balanceOf(address(this)) - _balanceBefore != _amount) {
+      revert LibMoneyMarket01_FeeOnTransferTokensNotSupported();
+    }
   }
 }

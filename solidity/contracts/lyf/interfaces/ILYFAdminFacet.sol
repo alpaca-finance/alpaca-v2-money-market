@@ -40,9 +40,19 @@ interface ILYFAdminFacet {
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
 
+  function setMinDebtSize(uint256 _newValue) external;
+
   function setReinvestorsOk(address[] memory list, bool _isOk) external;
 
   function setMaxNumOfToken(uint8 _numOfCollat) external;
 
+  function withdrawReserve(
+    address _token,
+    address _to,
+    uint256 _amount
+  ) external;
+
   error LYFAdminFacet_BadDebtShareId();
+  error LYFAdminFacet_ReserveTooLow();
+  error LYFAdminFacet_NotEnoughToken();
 }

@@ -14,7 +14,7 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_FarmFacetTest is LYF_BaseTest {
+contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -106,6 +106,41 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // actual repay amount = 15 * 16.5 / 15 = 16.5 tokens
     assertEq(_bobDebtShare, 0 ether, "still has debt share remaining"); // 15 - 15 = 0
     assertEq(_bobDebtValue, 0 ether, "still has debt value remaining"); // 16.5 - 16.5 = 0
+
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserRepayWithCollat_RemainingDebtBelowMinDebtSize_ShouldRevert() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+
+    adminFacet.setMinDebtSize(20 ether);
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+    vm.startPrank(BOB);
+    // Add collater first to be able to repay with collat
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // should revert as min debt size = 20, repaying 10 would left 10 in the subaccount
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
+
+    // should be ok if repay whole debt
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
+    farmFacet.repayWithCollat(subAccount0, address(usdc), address(wethUsdcLPToken), 20 ether);
 
     vm.stopPrank();
   }
