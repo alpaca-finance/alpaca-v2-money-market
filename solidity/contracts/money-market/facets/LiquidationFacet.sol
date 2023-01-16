@@ -115,10 +115,12 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // revert if repay > x% of totalUsedBorrowingPower
     {
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_repayToken];
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
         vars.repayAmountWihtoutFee,
         vars.repayTokenPrice,
-        moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor
+        _tokenConfig.borrowingFactor,
+        _tokenConfig.to18ConversionFactor
       );
       if (_repaidBorrowingPower > (vars.usedBorrowingPower * moneyMarketDs.maxLiquidateBps) / LibMoneyMarket01.MAX_BPS)
         revert LiquidationFacet_RepayAmountExceedThreshold();
@@ -263,10 +265,12 @@ contract LiquidationFacet is ILiquidationFacet {
       uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
       _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
       uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[params.repayToken];
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
         _repaidAmount,
         _repayTokenPrice,
-        moneyMarketDs.tokenConfigs[params.repayToken].borrowingFactor
+        _tokenConfig.borrowingFactor,
+        _tokenConfig.to18ConversionFactor
       );
       // revert if repay > x% of totalUsedBorrowingPower
       if (
@@ -355,10 +359,12 @@ contract LiquidationFacet is ILiquidationFacet {
       uint256 _repayAmountFromLiquidation = IERC20(params.repayToken).balanceOf(address(this)) - vars.repayAmountBefore;
       vars.repaidAmount = _repayAmountFromLiquidation - vars.feeToTreasury;
       uint256 _repayTokenPrice = LibMoneyMarket01.getPriceUSD(params.repayToken, moneyMarketDs);
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[params.repayToken];
       uint256 _repaidBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
         vars.repaidAmount,
         _repayTokenPrice,
-        moneyMarketDs.tokenConfigs[params.repayToken].borrowingFactor
+        _tokenConfig.borrowingFactor,
+        _tokenConfig.to18ConversionFactor
       );
       // revert if repay > x% of totalUsedBorrowingPower
       if (
