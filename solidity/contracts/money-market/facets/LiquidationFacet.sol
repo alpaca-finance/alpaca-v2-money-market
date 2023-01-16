@@ -213,8 +213,6 @@ contract LiquidationFacet is ILiquidationFacet {
     });
 
     _liquidationCall(_params, moneyMarketDs);
-
-    moneyMarketDs.liquidateExec = LibMoneyMarket01._NOT_ENTERED_LIQUIDATE;
   }
 
   function _liquidationCall(
