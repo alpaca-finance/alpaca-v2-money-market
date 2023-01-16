@@ -22,13 +22,13 @@ interface IAVTradeFacet {
   error AVTradeFacet_TooLittleReceived();
 
   function deposit(
-    address _shareToken,
+    address _vaultToken,
     uint256 _amountIn,
     uint256 _minShareOut
   ) external;
 
   function withdraw(
-    address _shareToken,
+    address _vaultToken,
     uint256 _shareAmountIn,
     uint256 _minTokenOut,
     uint256 _minAssetTokenOut

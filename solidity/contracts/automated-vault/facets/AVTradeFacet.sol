@@ -24,17 +24,17 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function deposit(
-    address _shareToken,
+    address _vaultToken,
     uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
-    LibAV01.accrueVaultInterest(_shareToken, avDs);
+    LibAV01.accrueVaultInterest(_vaultToken, avDs);
 
-    LibAV01.mintManagementFeeToTreasury(_shareToken, avDs);
+    LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
+    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
     address _stableToken = _vaultConfig.stableToken;
     address _assetToken = _vaultConfig.assetToken;
 
@@ -49,15 +49,15 @@ contract AVTradeFacet is IAVTradeFacet {
     // get fund from user
     IERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
 
-    uint256 _equityBefore = LibAV01.getEquity(_shareToken, _vaultConfig.handler, avDs);
+    uint256 _equityBefore = LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs);
 
     // borrow from MM
-    LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
-    LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
+    LibAV01.borrowMoneyMarket(_vaultToken, _stableToken, _stableBorrowAmount, avDs);
+    LibAV01.borrowMoneyMarket(_vaultToken, _assetToken, _assetBorrowAmount, avDs);
 
     uint256 _shareToMint = LibAV01.depositToHandler(
       _vaultConfig.handler,
-      _shareToken,
+      _vaultToken,
       _stableToken,
       _assetToken,
       _stableAmountIn + _stableBorrowAmount,
@@ -68,9 +68,9 @@ contract AVTradeFacet is IAVTradeFacet {
 
     if (_minShareOut > _shareToMint) revert AVTradeFacet_TooLittleReceived();
 
-    IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
+    IAVShareToken(_vaultToken).mint(msg.sender, _shareToMint);
 
-    emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
+    emit LogDeposit(msg.sender, _vaultToken, _stableToken, _stableAmountIn);
   }
 
   // TODO: discuss code ordering

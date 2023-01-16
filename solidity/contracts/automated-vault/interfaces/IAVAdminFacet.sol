@@ -35,7 +35,7 @@ interface IAVAdminFacet {
     address indexed _lpToken,
     address _stableToken,
     address _assetToken,
-    address _shareToken
+    address _vaultToken
   );
   event LogSetRepurchaseRewardBps(uint256 _newBps);
   event LogSetOperatorOk(address indexed _operator, bool _isOk);
