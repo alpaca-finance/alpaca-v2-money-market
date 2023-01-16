@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { MockAlpacaV2Oracle } from "./MockAlpacaV2Oracle.sol";
 
-/// @title FakeRouter - 1:1 swap for all token without fee and price impact
+/// @title FakeRouter - swap with price from oracle
 contract MockRouter02 {
   address public lpToken;
   uint256 public amountAout;

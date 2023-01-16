@@ -233,7 +233,7 @@ contract LiquidationFacet is ILiquidationFacet {
       params.repayAmount,
       moneyMarketDs
     );
-    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
+    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
 
     uint256 _expectedMaxRepayAmount = _maxPossibleRepayAmount + _maxPossibleFee;
 
