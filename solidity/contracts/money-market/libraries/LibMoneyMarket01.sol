@@ -201,7 +201,12 @@ library LibMoneyMarket01 {
         moneyMarketDs.overCollatDebtShares[_borrowed[_i].token]
       );
 
-      _totalUsedBorrowingPower += usedBorrowingPower(_borrowedAmount, _tokenPrice, _tokenConfig.borrowingFactor);
+      _totalUsedBorrowingPower += usedBorrowingPower(
+        _borrowedAmount,
+        _tokenPrice,
+        _tokenConfig.borrowingFactor,
+        _tokenConfig.to18ConversionFactor
+      );
 
       unchecked {
         ++_i;
@@ -223,7 +228,12 @@ library LibMoneyMarket01 {
 
       _tokenPrice = getPriceUSD(_borrowed[_i].token, moneyMarketDs);
 
-      _totalUsedBorrowingPower += usedBorrowingPower(_borrowed[_i].amount, _tokenPrice, _tokenConfig.borrowingFactor);
+      _totalUsedBorrowingPower += usedBorrowingPower(
+        _borrowed[_i].amount,
+        _tokenPrice,
+        _tokenConfig.borrowingFactor,
+        _tokenConfig.to18ConversionFactor
+      );
 
       unchecked {
         ++_i;
@@ -266,9 +276,14 @@ library LibMoneyMarket01 {
   function usedBorrowingPower(
     uint256 _borrowedAmount,
     uint256 _tokenPrice,
-    uint256 _borrowingFactor
+    uint256 _borrowingFactor,
+    uint256 _to18ConversionFactor
   ) internal pure returns (uint256 _usedBorrowingPower) {
-    _usedBorrowingPower = LibFullMath.mulDiv(_borrowedAmount * MAX_BPS, _tokenPrice, 1e18 * uint256(_borrowingFactor));
+    _usedBorrowingPower = LibFullMath.mulDiv(
+      _borrowedAmount * MAX_BPS * _to18ConversionFactor,
+      _tokenPrice,
+      1e18 * uint256(_borrowingFactor)
+    );
   }
 
   function getGlobalPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)

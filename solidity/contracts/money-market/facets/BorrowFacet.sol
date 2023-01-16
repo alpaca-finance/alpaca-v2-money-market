@@ -281,7 +281,8 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _borrowingPowerToBeUsed = LibMoneyMarket01.usedBorrowingPower(
       _amount * _tokenConfig.to18ConversionFactor,
       _tokenPrice,
-      _tokenConfig.borrowingFactor
+      _tokenConfig.borrowingFactor,
+      _tokenConfig.to18ConversionFactor
     );
     uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
 
