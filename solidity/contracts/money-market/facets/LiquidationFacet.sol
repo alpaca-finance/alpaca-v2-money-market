@@ -220,46 +220,44 @@ contract LiquidationFacet is ILiquidationFacet {
     );
     uint256 _maxFeePossible = (_maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / 10000;
 
-    {
-      // 4. check repaid amount, take fees, and update states
-      uint256 _expectMaxRepayAmount = _maxPossibleRepayAmount + _maxFeePossible;
+    // 4. check repaid amount, take fees, and update states
+    uint256 _expectMaxRepayAmount = _maxPossibleRepayAmount + _maxFeePossible;
 
-      ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
-        params.collatToken,
-        params.repayToken,
-        _subAccountCollatAmount,
-        _expectMaxRepayAmount,
-        params.paramsForStrategy
-      );
+    ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
+      params.collatToken,
+      params.repayToken,
+      _subAccountCollatAmount,
+      _expectMaxRepayAmount,
+      params.paramsForStrategy
+    );
 
-      (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
-        params,
-        _repayAmountBefore,
-        _expectMaxRepayAmount,
-        _maxFeePossible
-      );
+    (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
+      params,
+      _repayAmountBefore,
+      _expectMaxRepayAmount,
+      _maxFeePossible
+    );
 
-      _validateBorrowingPower(params.repayToken, _repaidAmount, params.usedBorrowingPower, moneyMarketDs);
+    _validateBorrowingPower(params.repayToken, _repaidAmount, params.usedBorrowingPower, moneyMarketDs);
 
-      uint256 _collatSold = _collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
+    uint256 _collatSold = _collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
 
-      moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
-      IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _actualLiquidationFee);
+    moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
+    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _actualLiquidationFee);
 
-      // give priority to fee
-      _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
-      _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
+    // give priority to fee
+    _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
+    _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
 
-      emit LogLiquidate(
-        msg.sender,
-        params.liquidationStrat,
-        params.repayToken,
-        params.collatToken,
-        _repaidAmount,
-        _collatSold,
-        _actualLiquidationFee
-      );
-    }
+    emit LogLiquidate(
+      msg.sender,
+      params.liquidationStrat,
+      params.repayToken,
+      params.collatToken,
+      _repaidAmount,
+      _collatSold,
+      _actualLiquidationFee
+    );
   }
 
   /// @dev min(repayAmount, debtValue)
