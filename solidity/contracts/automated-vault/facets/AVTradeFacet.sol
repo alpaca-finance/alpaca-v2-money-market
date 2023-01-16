@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 // interfaces
 import { IAVTradeFacet } from "../interfaces/IAVTradeFacet.sol";
-import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "../interfaces/IAVVaultToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IAVHandler } from "../interfaces/IAVHandler.sol";
@@ -24,17 +24,17 @@ contract AVTradeFacet is IAVTradeFacet {
   }
 
   function deposit(
-    address _shareToken,
+    address _vaultToken,
     uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 
-    LibAV01.accrueVaultInterest(_shareToken, avDs);
+    LibAV01.accrueVaultInterest(_vaultToken, avDs);
 
-    LibAV01.mintManagementFeeToTreasury(_shareToken, avDs);
+    LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_shareToken];
+    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
     address _stableToken = _vaultConfig.stableToken;
     address _assetToken = _vaultConfig.assetToken;
 
@@ -49,15 +49,15 @@ contract AVTradeFacet is IAVTradeFacet {
     // get fund from user
     IERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
 
-    uint256 _equityBefore = LibAV01.getEquity(_shareToken, _vaultConfig.handler, avDs);
+    uint256 _equityBefore = LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs);
 
     // borrow from MM
-    LibAV01.borrowMoneyMarket(_shareToken, _stableToken, _stableBorrowAmount, avDs);
-    LibAV01.borrowMoneyMarket(_shareToken, _assetToken, _assetBorrowAmount, avDs);
+    LibAV01.borrowMoneyMarket(_vaultToken, _stableToken, _stableBorrowAmount, avDs);
+    LibAV01.borrowMoneyMarket(_vaultToken, _assetToken, _assetBorrowAmount, avDs);
 
     uint256 _shareToMint = LibAV01.depositToHandler(
       _vaultConfig.handler,
-      _shareToken,
+      _vaultToken,
       _stableToken,
       _assetToken,
       _stableAmountIn + _stableBorrowAmount,
@@ -68,9 +68,9 @@ contract AVTradeFacet is IAVTradeFacet {
 
     if (_minShareOut > _shareToMint) revert AVTradeFacet_TooLittleReceived();
 
-    IAVShareToken(_shareToken).mint(msg.sender, _shareToMint);
+    IAVVaultToken(_vaultToken).mint(msg.sender, _shareToMint);
 
-    emit LogDeposit(msg.sender, _shareToken, _stableToken, _stableAmountIn);
+    emit LogDeposit(msg.sender, _vaultToken, _stableToken, _stableAmountIn);
   }
 
   // TODO: discuss code ordering
@@ -95,16 +95,15 @@ contract AVTradeFacet is IAVTradeFacet {
     LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
     // 1. withdraw from handler
+    vars.totalShareSupply = IAVVaultToken(_vaultToken).totalSupply();
     (vars.withdrawalStableAmount, vars.withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _vaultToken,
       _vaultConfig.handler,
-      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / IERC20(_vaultToken).totalSupply(),
+      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / vars.totalShareSupply,
       avDs
     );
 
     // 2. repay vault debt
-    vars.totalShareSupply = IAVShareToken(_vaultToken).totalSupply();
-
     uint256 _stableTokenToUser = _repay(
       _vaultToken,
       _vaultConfig.stableToken,
@@ -123,7 +122,7 @@ contract AVTradeFacet is IAVTradeFacet {
     );
 
     // 3. transfer tokens
-    IAVShareToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
+    IAVVaultToken(_vaultToken).burn(msg.sender, _shareToWithdraw);
     IERC20(_vaultConfig.stableToken).safeTransfer(msg.sender, _stableTokenToUser);
     IERC20(_vaultConfig.assetToken).safeTransfer(msg.sender, _assetTokenToUser);
 

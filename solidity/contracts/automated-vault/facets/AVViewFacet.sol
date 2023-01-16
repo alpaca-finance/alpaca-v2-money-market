@@ -11,15 +11,15 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { LibAV01 } from "../libraries/LibAV01.sol";
 
 contract AVViewFacet is IAVViewFacet {
-  function getDebtValues(address _shareToken)
+  function getDebtValues(address _vaultToken)
     external
     view
     returns (uint256 _stableDebtValue, uint256 _assetDebtValue)
   {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_shareToken];
-    _stableDebtValue = avDs.vaultDebts[_shareToken][_config.stableToken];
-    _assetDebtValue = avDs.vaultDebts[_shareToken][_config.assetToken];
+    LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_vaultToken];
+    _stableDebtValue = avDs.vaultDebts[_vaultToken][_config.stableToken];
+    _assetDebtValue = avDs.vaultDebts[_vaultToken][_config.assetToken];
   }
 
   function getPendingInterest(address _vaultToken)

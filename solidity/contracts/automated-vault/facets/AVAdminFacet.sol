@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { AVShareToken } from "../AVShareToken.sol";
+import { AVVaultToken } from "../AVVaultToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../interfaces/IAVAdminFacet.sol";
@@ -35,9 +35,9 @@ contract AVAdminFacet is IAVAdminFacet {
 
     string memory _tokenSymbol = IERC20(_lpToken).symbol();
     uint8 _tokenDecimals = IERC20(_lpToken).decimals();
-    // TODO: move string stuff to AVShareToken view function
+    // TODO: move string stuff to AVVaultToken view function
     _newShareToken = address(
-      new AVShareToken(
+      new AVVaultToken(
         string.concat("Automated Vault Share Token ", _tokenSymbol),
         string.concat("avShare", _tokenSymbol),
         _tokenDecimals
@@ -49,7 +49,7 @@ contract AVAdminFacet is IAVAdminFacet {
     IInterestRateModel(_assetTokenInterestModel).getInterestRate(1, 1);
 
     avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
-      shareToken: _newShareToken,
+      vaultToken: _newShareToken,
       lpToken: _lpToken,
       stableToken: _stableToken,
       assetToken: _assetToken,

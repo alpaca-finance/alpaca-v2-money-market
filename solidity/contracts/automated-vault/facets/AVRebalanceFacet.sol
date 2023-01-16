@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 // interfaces
 import { IAVRebalanceFacet } from "../interfaces/IAVRebalanceFacet.sol";
-import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
+import { IAVVaultToken } from "../interfaces/IAVVaultToken.sol";
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
