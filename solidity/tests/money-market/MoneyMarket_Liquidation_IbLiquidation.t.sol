@@ -348,13 +348,13 @@ contract MoneyMarket_Liquidation_IbLiquidationTest is MoneyMarket_BaseTest {
     // | Detail                     | Amount (ether)        | Note                                                            |
     // | -------------------------- | --------------------- | --------------------------------------------------------------- |
     // | ActualLiquidationFee       | 0.300050765511671999  | 30.305127316678871999 / 30.305127316678872 * 0.300050765511672  |
-    // | RepaidAmount (ShareValue)  | 30                    | RepayTokenFromStrat - ActualLiquidationFee                            |
-    // | RepaidShare                | 29.994924307733183381 | 30 * 30 / 30.0050765511672                                      |
+    // | RepaidAmount (ShareValue)  | 30.0050765511672      | RepayTokenFromStrat - ActualLiquidationFee                      |
+    // | RepaidShare                | 30                    | 30.0050765511672 * 30 / 30.0050765511672                        |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)          |
     // | -------------------------------------------------------------------------------------------------------------------- |
 
     // Expectation
-    uint256 _expectedRepaidAmount = 30 ether;
+    uint256 _expectedRepaidAmount = 30.0050765511672 ether;
     uint256 _expectedIbTokenToWithdraw = 37.879486174351076617 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 37.881409145848589999 ether;
     uint256 _expectedLiquidationFee = 0.300050765511671999 ether;
