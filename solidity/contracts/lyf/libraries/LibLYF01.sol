@@ -572,26 +572,46 @@ library LibLYF01 {
     userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
 
-  function removeDebt(
+  function removeDebtByShare(
     address _subAccount,
     uint256 _debtShareId,
-    uint256 _shareToRemove,
+    uint256 _debtShareToRemove,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _removedAmount) {
-    uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-    uint256 _actualShareToRemove = LibFullMath.min(_subAccountDebtShare, _shareToRemove);
+  ) internal returns (uint256 _removedDebtAmount) {
+    uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _actualShareToRemove = LibFullMath.min(_maxDebtShareToRemove, _debtShareToRemove);
+
     if (_actualShareToRemove != 0) {
-      uint256 _currentDebtShare = lyfDs.debtShares[_debtShareId];
-      uint256 _currentDebtValue = lyfDs.debtValues[_debtShareId];
+      _removedDebtAmount = LibShareUtil.shareToValue(
+        _actualShareToRemove,
+        lyfDs.debtValues[_debtShareId],
+        lyfDs.debtShares[_debtShareId]
+      );
 
       // update user debtShare
-      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _subAccountDebtShare - _actualShareToRemove);
-
-      // update over collat debtShare
-      _removedAmount = LibShareUtil.shareToValue(_actualShareToRemove, _currentDebtValue, _currentDebtShare);
+      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(
+        _debtShareId,
+        _maxDebtShareToRemove - _actualShareToRemove
+      );
 
       lyfDs.debtShares[_debtShareId] -= _actualShareToRemove;
-      lyfDs.debtValues[_debtShareId] -= _removedAmount;
+      lyfDs.debtValues[_debtShareId] -= _removedDebtAmount;
     }
+  }
+
+  // try convert debtAmountToRemove to be shareToRemove and call removeDebtByShare
+  function removeDebtByAmount(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _debtAmountToRemove,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _removedDebtShare, uint256 _removedDebtAmount) {
+    _removedDebtShare = LibShareUtil.valueToShare(
+      _debtAmountToRemove,
+      lyfDs.debtShares[_debtShareId],
+      lyfDs.debtValues[_debtShareId]
+    );
+
+    _removedDebtAmount = removeDebtByShare(_subAccount, _debtShareId, _removedDebtShare, lyfDs);
   }
 }

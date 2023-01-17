@@ -353,12 +353,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtAmountToRepay,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualRepayAmount) {
-    uint256 _debtShareToRemove = LibShareUtil.valueToShare(
-      _debtAmountToRepay,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
-    _actualRepayAmount = _repayDebt(_subAccount, _token, _debtShareId, _debtShareToRemove, lyfDs);
+    _actualRepayAmount = LibLYF01.removeDebtByShare(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
+    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
+    emit LogRepay(_subAccount, _token, _actualRepayAmount);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
