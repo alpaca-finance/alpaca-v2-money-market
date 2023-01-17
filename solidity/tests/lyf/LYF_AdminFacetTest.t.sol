@@ -31,17 +31,17 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenAdminSetSebtShareIdThatHasBeenSet_ShouldRevert() external {
+  function testRevert_WhenAdminSetDebtShareIdThatHasBeenSet_ShouldRevert() external {
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
     adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
   }
 
-  function testRevert_WhenAdminSetSebtShareIdForDifferentToken_ShouldRevert() external {
+  function testRevert_WhenAdminSetDebtShareIdForDifferentToken_ShouldRevert() external {
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
     adminFacet.setDebtShareId(address(usdc), address(8888), 1);
   }
 
-  function testCorrectness_WhenAdminSetSebtShareIdForSameToken_ShouldWork() external {
+  function testCorrectness_WhenAdminSetDebtShareIdForSameToken_ShouldWork() external {
     adminFacet.setDebtShareId(address(weth), address(8888), 1);
   }
 

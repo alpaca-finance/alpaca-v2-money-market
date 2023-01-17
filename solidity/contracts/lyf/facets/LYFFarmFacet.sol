@@ -69,14 +69,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
-
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     uint256 _token0DebtShareId = lyfDs.debtShareIds[_token0][_lpToken];
     uint256 _token1DebtShareId = lyfDs.debtShareIds[_token1][_lpToken];
 
+    // accrue existing debt for healthcheck
+    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+
+    // accrue new borrow debt
     LibLYF01.accrueInterest(_token0DebtShareId, lyfDs);
     LibLYF01.accrueInterest(_token1DebtShareId, lyfDs);
 
@@ -103,13 +105,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _minLpReceive
     );
 
-    // 4. deposit to masterChef
+    // 5. deposit to masterChef
     LibLYF01.depositToMasterChef(_lpToken, lpConfig.masterChef, lpConfig.poolId, _lpReceived);
 
-    // 5. add it to collateral
+    // 6. add it to collateral
     LibLYF01.addCollat(_subAccount, _lpToken, _lpReceived, lyfDs);
 
-    // 6. health check on sub account
+    // 7. health check on sub account
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
@@ -225,16 +227,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _repayDebt(_vars.subAccount, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
     _repayDebt(_vars.subAccount, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
+    if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
+
     // 4. Transfer remaining back to user
     if (_amount0Out > 0) {
       IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
     }
     if (_amount1Out > 0) {
       IERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
-    }
-
-    if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
-      revert LYFFarmFacet_BorrowingPowerTooLow();
     }
   }
 
@@ -332,6 +334,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
   }
 
+  /// @dev this method should only be called by addFarmPosition context
+  /// @param _token only underlying token
   function _removeCollatWithIbAndBorrow(
     address _subAccount,
     address _token,
