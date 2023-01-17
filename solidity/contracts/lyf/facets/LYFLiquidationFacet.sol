@@ -403,12 +403,13 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _rewardBps,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
-    address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
+    address _underlyingToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
 
     uint256 _collatTokenPrice;
-    // _collatToken is ibToken
-    if (_actualToken != address(0)) {
-      _collatTokenPrice = LibLYF01.getIbPriceUSD(_collatToken, _actualToken, lyfDs);
+    if (_underlyingToken != address(0)) {
+      // if _collatToken is ibToken convert underlying price to ib price
+      uint256 _underlyingPrice = LibLYF01.getPriceUSD(_underlyingToken, lyfDs);
+      _collatTokenPrice = LibLYF01.convertUnderlyingToIb(_collatToken, _underlyingToken, _underlyingPrice, lyfDs);
     } else {
       // _collatToken is normal ERC20 or LP token
       _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);

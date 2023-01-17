@@ -276,20 +276,15 @@ library LibLYF01 {
     }
   }
 
-  function getIbPriceUSD(
+  function convertUnderlyingToIb(
     address _ibToken,
-    address _token,
+    address _underlyingToken,
+    uint256 _underlyingAmount,
     LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256) {
-    uint256 _underlyingTokenPrice = getPriceUSD(_token, lyfDs);
+  ) internal view returns (uint256 _ibAmount) {
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
-    uint256 _one = 10**IERC20(_ibToken).decimals();
-
-    uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_token);
-    uint256 _ibValue = LibShareUtil.shareToValue(_one, _totalToken, _totalSupply);
-
-    uint256 _price = (_underlyingTokenPrice * _ibValue) / _one;
-    return (_price);
+    uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_underlyingToken);
+    _ibAmount = LibShareUtil.shareToValue(_underlyingAmount, _totalToken, _totalSupply);
   }
 
   // _usedBorrowingPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
