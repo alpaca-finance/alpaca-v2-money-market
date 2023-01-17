@@ -28,6 +28,9 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repayAmount;
     uint256 usedBorrowingPower;
     uint256 minReceive;
+    uint256 collatAmountBefore;
+    uint256 repayAmountBefore;
+    uint256 subAccountCollatAmount;
   }
 
   modifier nonReentrant() {
@@ -209,7 +212,10 @@ contract LiquidationFacet is ILiquidationFacet {
       collatToken: _collatToken,
       repayAmount: _repayAmount,
       usedBorrowingPower: _usedBorrowingPower,
-      minReceive: _minReceive
+      minReceive: _minReceive,
+      collatAmountBefore: IERC20(_collatToken).balanceOf(address(this)),
+      repayAmountBefore: IERC20(_repayToken).balanceOf(address(this)),
+      subAccountCollatAmount: moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken)
     });
 
     _liquidationCall(_params, moneyMarketDs);
@@ -220,11 +226,7 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // 2. send all collats under subaccount to strategy
-    uint256 _collatAmountBefore = IERC20(params.collatToken).balanceOf(address(this));
-    uint256 _repayAmountBefore = IERC20(params.repayToken).balanceOf(address(this));
-    uint256 _subAccountCollatAmount = moneyMarketDs.subAccountCollats[params.subAccount].getAmount(params.collatToken);
-
-    IERC20(params.collatToken).safeTransfer(params.liquidationStrat, _subAccountCollatAmount);
+    IERC20(params.collatToken).safeTransfer(params.liquidationStrat, params.subAccountCollatAmount);
 
     // 3. call executeLiquidation on strategy
     uint256 _maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
@@ -240,7 +242,7 @@ contract LiquidationFacet is ILiquidationFacet {
     ILiquidationStrategy(params.liquidationStrat).executeLiquidation(
       params.collatToken,
       params.repayToken,
-      _subAccountCollatAmount,
+      params.subAccountCollatAmount,
       _expectedMaxRepayAmount,
       params.minReceive
     );
@@ -248,17 +250,23 @@ contract LiquidationFacet is ILiquidationFacet {
     // 4. check repaid amount, take fees, and update states
     (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
       params,
-      _repayAmountBefore,
+      params.repayAmountBefore,
       _expectedMaxRepayAmount,
       _maxPossibleFee
     );
 
+    // 5. split fee between liquidator and treasury
+    uint256 _feeToLiquidator = (_actualLiquidationFee * moneyMarketDs.liquidationRewardBps) / LibMoneyMarket01.MAX_BPS;
+    uint256 _feeToTreasury = _actualLiquidationFee - _feeToLiquidator;
+
     _validateBorrowingPower(params.repayToken, _repaidAmount, params.usedBorrowingPower, moneyMarketDs);
 
-    uint256 _collatSold = _collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
+    uint256 _collatSold = params.collatAmountBefore - IERC20(params.collatToken).balanceOf(address(this));
 
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
-    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _actualLiquidationFee);
+
+    IERC20(params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
+    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);
@@ -271,7 +279,8 @@ contract LiquidationFacet is ILiquidationFacet {
       params.collatToken,
       _repaidAmount,
       _collatSold,
-      _actualLiquidationFee
+      _feeToTreasury,
+      _feeToLiquidator
     );
   }
 

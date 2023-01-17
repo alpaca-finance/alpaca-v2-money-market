@@ -26,6 +26,7 @@ struct CacheState {
   uint256 mmUnderlyingBalance;
   uint256 ibTokenTotalSupply;
   uint256 treasuryDebtTokenBalance;
+  uint256 liquidatorDebtTokenBalance;
   // debt
   uint256 globalDebtValue;
   uint256 debtValue;
@@ -43,12 +44,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
   uint256 _aliceSubAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _aliceSubAccountId);
-  address treasury;
 
   function setUp() public override {
     super.setUp();
-
-    treasury = address(this);
 
     TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(tripleSlope6));
@@ -70,9 +68,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     adminFacet.setLiquidationStratsOk(_ibTokenLiquidationStrats, true);
 
-    address[] memory _liquidationCallers = new address[](2);
-    _liquidationCallers[0] = BOB;
-    _liquidationCallers[1] = address(this);
+    address[] memory _liquidationCallers = new address[](1);
+    _liquidationCallers[0] = liquidator;
     adminFacet.setLiquidatorsOk(_liquidationCallers, true);
 
     address[] memory _liquidationExecutors = new address[](1);
@@ -181,6 +178,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -224,7 +222,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ------------------------------------------------------------------------------------------------------------- |
     // | Detail                     | Amount (ether)        | Note                                                     |
     // | -------------------------- | --------------------- | -------------------------------------------------------- |
-    // | ActualLiquidationFee       | 0.149999999999999999  | 15.149999999999999999 * 0.15 / 15.15                     |
+    // | TotalLiquidationFee        | 0.149999999999999999  | 15.149999999999999999 * 0.15 / 15.15                     |
+    // | FeeToLiquidator            | 0.074999999999999999  | 0.149999999999999999  * 5000 / 10000 = 0.074999999999999999                     |
+    // | FeeToTreasury              | 0.075                 | 0.149999999999999999  - 0.074999999999999999 = 0.075     |
     // | RepaidAmount (ShareValue)  | 15                    | RepayTokenFromStrat - ActualLiquidationFee               |
     // | RepaidShare                | 14.997462153866591690 | 15 * 30 / 30.0050765511672                               |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)   |
@@ -234,12 +234,14 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedRepaidAmount = 15 ether;
     uint256 _expectedIbTokenToWithdraw = 18.936538676924769296 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 18.937499999999999999 ether;
-    uint256 _expectedLiquidationFee = 0.149999999999999999 ether;
+    uint256 _expectedFeeToLiquidator = 0.074999999999999999 ether;
+    uint256 _expectedFeeToTreasury = 0.075 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    _assertTreasuryDebtTokenFee(_debtToken, _expectedLiquidationFee, _stateBefore);
+    _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
+    _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
   }
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -304,6 +306,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -347,7 +350,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | -------------------------------------------------------------------------------------------------------------------- |
     // | Detail                     | Amount (ether)        | Note                                                            |
     // | -------------------------- | --------------------- | --------------------------------------------------------------- |
-    // | ActualLiquidationFee       | 0.300050765511671999  | 30.305127316678871999 / 30.305127316678872 * 0.300050765511672  |
+    // | TotalLiquidationFee        | 0.300050765511671999  | 30.305127316678871999 / 30.305127316678872 * 0.300050765511672  |
+    // | FeeToLiquidator            | 0.150025382755835999  | 0.300050765511671999 * 5000/1000 = 0.150025382755835999         |
+    // | ActualLiquidationFee       | 0.150025382755836000  | 0.300050765511671999 - 0.150025382755835999 = 0.150025382755836 |
     // | RepaidAmount (ShareValue)  | 30.0050765511672      | RepayTokenFromStrat - ActualLiquidationFee                      |
     // | RepaidShare                | 30                    | 30.0050765511672 * 30 / 30.0050765511672                        |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)          |
@@ -357,12 +362,14 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedRepaidAmount = 30.0050765511672 ether;
     uint256 _expectedIbTokenToWithdraw = 37.879486174351076617 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 37.881409145848589999 ether;
-    uint256 _expectedLiquidationFee = 0.300050765511671999 ether;
+    uint256 _expectedLiquidationFeeToLiquidator = 0.150025382755835999 ether;
+    uint256 _expectedLiquidationFeeToTrasury = 0.150025382755836000 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    _assertTreasuryDebtTokenFee(_debtToken, _expectedLiquidationFee, _stateBefore);
+    _assertLiquidatorReward(_debtToken, _expectedLiquidationFeeToLiquidator, _stateBefore);
+    _assertTreasuryFee(_debtToken, _expectedLiquidationFeeToTrasury, _stateBefore);
   }
 
   function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
@@ -439,6 +446,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,
@@ -483,7 +491,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | Detail                     | Amount (ether)        | Note                                                        |
     // | -------------------------- | --------------------- | ----------------------------------------------------------- |
     // | ActualLiquidationFee       | 0.079211941822706693  | 8.000406124093376 / 30.305127316678872 * 0.300050765511672  |
-    // | RepaidAmount (ShareValue)  | 7.921194182270669307  | RepayTokenFromStrat - ActualLiquidationFee                        |
+    // | FeeToLiquidator            | 0.039605970911353346  | 0.079211941822706693 * 5000 /10000 = 0.039605970911353346   |
+    // | FeeToTreasury              | 0.039605970911353347  | 0.079211941822706693 - 0.0396059709113533465 = 0.039605970911353347   |
+    // | RepaidAmount (ShareValue)  | 7.921194182270669307  | RepayTokenFromStrat - ActualLiquidationFee                  |
     // | RepaidShare                | 7.919853997468839172  | 7.921194182270669307 * 30 / 30.0050765511672                |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)      |
     // | ---------------------------------------------------------------------------------------------------------------- |
@@ -492,12 +502,14 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedRepaidAmount = 7.921194182270669307 ether;
     uint256 _expectedIbTokenToWithdraw = 10 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 10.00050765511672 ether;
-    uint256 _expectedLiquidationFee = 0.079211941822706693 ether;
+    uint256 _expectedFeeToLiquidator = 0.039605970911353346 ether;
+    uint256 _expectedFeeToTreasury = 0.039605970911353347 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    _assertTreasuryDebtTokenFee(_debtToken, _expectedLiquidationFee, _stateBefore);
+    _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
+    _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
   }
 
   function testRevert_WhenPartialLiquidateIbCollateral_RepayTokenAndUnderlyingAreSame() external {
@@ -517,6 +529,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(_debtToken, 1 ether);
 
+    vm.prank(liquidator);
     vm.expectRevert(
       abi.encodeWithSelector(
         PancakeswapV2IbTokenLiquidationStrategy
@@ -551,6 +564,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     mockOracle.setTokenPrice(address(btc), 10 ether);
 
+    vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -570,6 +584,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
+    vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -593,6 +608,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       mmUnderlyingBalance: IERC20(_underlyingToken).balanceOf(address(moneyMarketDiamond)),
       ibTokenTotalSupply: IERC20(_ibToken).totalSupply(),
       treasuryDebtTokenBalance: MockERC20(_debtToken).balanceOf(treasury),
+      liquidatorDebtTokenBalance: MockERC20(_debtToken).balanceOf(liquidator),
       globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
@@ -655,11 +671,23 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     );
   }
 
-  function _assertTreasuryDebtTokenFee(
+  function _assertTreasuryFee(
     address _debtToken,
-    uint256 _liquidationFee,
+    uint256 _feeToTreasury,
     CacheState memory _cache
   ) internal {
-    assertEq(MockERC20(_debtToken).balanceOf(treasury), _cache.treasuryDebtTokenBalance + _liquidationFee, "treasury");
+    assertEq(MockERC20(_debtToken).balanceOf(treasury), _cache.treasuryDebtTokenBalance + _feeToTreasury, "treasury");
+  }
+
+  function _assertLiquidatorReward(
+    address _debtToken,
+    uint256 _feeToLiquidator,
+    CacheState memory _cache
+  ) internal {
+    assertEq(
+      MockERC20(_debtToken).balanceOf(liquidator),
+      _cache.liquidatorDebtTokenBalance + _feeToLiquidator,
+      "liquidator reward"
+    );
   }
 }
