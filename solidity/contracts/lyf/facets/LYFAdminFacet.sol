@@ -80,6 +80,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
+    // validate token must not alrready set
+    // validate if token exist but different lp
     if (
       lyfDs.debtShareIds[_token][_lpToken] != 0 ||
       (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token)
