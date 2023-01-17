@@ -227,16 +227,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _repayDebt(_vars.subAccount, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
     _repayDebt(_vars.subAccount, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
+    if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
+
     // 4. Transfer remaining back to user
     if (_amount0Out > 0) {
       IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
     }
     if (_amount1Out > 0) {
       IERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
-    }
-
-    if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
-      revert LYFFarmFacet_BorrowingPowerTooLow();
     }
   }
 
