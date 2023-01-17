@@ -25,7 +25,6 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
-  address treasury;
 
   function setUp() public override {
     super.setUp();
@@ -57,8 +56,6 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // interest per day = 0.00016921837224
     borrowFacet.borrow(0, address(usdc), 30 ether);
     vm.stopPrank();
-
-    treasury = address(this);
   }
 
   function testCorrectness_ShouldRepurchasePassed_TransferTokenCorrectly() external {
