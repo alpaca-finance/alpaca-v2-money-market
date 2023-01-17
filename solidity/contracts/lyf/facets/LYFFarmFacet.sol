@@ -217,15 +217,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     (uint256 _token0Return, uint256 _token1Return) = IStrat(_lpConfig.strategy).removeLiquidity(_lpToken);
 
     // slipage check
-
     if (_token0Return < _amount0Out || _token1Return < _amount1Out) {
       revert LYFFarmFacet_TooLittleReceived();
     }
 
     // 3. Repay debt
-
-    _repayDebt(_vars.subAccount, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
-    _repayDebt(_vars.subAccount, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
+    _repayWithDebtAmount(_vars.subAccount, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
+    _repayWithDebtAmount(_vars.subAccount, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
@@ -255,7 +253,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
-    uint256 _actualRepayAmount = _repayDebtWithShare(_subAccount, _token, _debtShareId, _debtShareToRepay, lyfDs);
+    uint256 _actualRepayAmount = _repayDebt(_subAccount, _token, _debtShareId, _debtShareToRepay, lyfDs);
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
@@ -294,16 +292,17 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // repay maxmimum debt
     _debtShareToRepay = _debtShareToRepay > _debtShare ? _debtShare : _debtShareToRepay;
 
-    if (_debtShareToRepay > 0) {
-      uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
-      uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
+    if (_debtShareToRepay != 0) {
+      uint256 _currentDebtShare = lyfDs.debtShares[_debtShareId];
+      uint256 _currentDebtValue = lyfDs.debtValues[_debtShareId];
 
-      uint256 _repayAmount = LibShareUtil.shareToValue(_debtShareToRepay, _oldDebtValue, _oldDebtShare);
+      uint256 _repayAmount = LibShareUtil.shareToValue(_debtShareToRepay, _currentDebtValue, _currentDebtShare);
 
       // remove collat as much as possible
-      uint256 _collatRemoved = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
+      uint256 _removedCollat = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
+
       // remove debt as much as possible
-      uint256 _actualRepayAmount = _repayDebt(_subAccount, _token, _debtShareId, _collatRemoved, lyfDs);
+      uint256 _actualRepayAmount = _repayWithDebtAmount(_subAccount, _token, _debtShareId, _removedCollat, lyfDs);
 
       emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualRepayAmount);
     }
@@ -339,32 +338,27 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _subAccount,
     address _token,
     uint256 _debtShareId,
-    uint256 _repayAmount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _actualRepayAmount) {
-    uint256 _shareToRemove = LibShareUtil.valueToShare(
-      _repayAmount,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
-
-    _actualRepayAmount = LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToRemove, lyfDs);
-
-    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
-
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
-  }
-
-  function _repayDebtWithShare(
-    address _subAccount,
-    address _token,
-    uint256 _debtShareId,
     uint256 _debtShareToRepay,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualRepayAmount) {
     _actualRepayAmount = LibLYF01.removeDebt(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
     emit LogRepay(_subAccount, _token, _actualRepayAmount);
+  }
+
+  function _repayWithDebtAmount(
+    address _subAccount,
+    address _token,
+    uint256 _debtShareId,
+    uint256 _debtAmountToRepay,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualRepayAmount) {
+    uint256 _debtShareToRemove = LibShareUtil.valueToShare(
+      _debtAmountToRepay,
+      lyfDs.debtShares[_debtShareId],
+      lyfDs.debtValues[_debtShareId]
+    );
+    _actualRepayAmount = _repayDebt(_subAccount, _token, _debtShareId, _debtShareToRemove, lyfDs);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
