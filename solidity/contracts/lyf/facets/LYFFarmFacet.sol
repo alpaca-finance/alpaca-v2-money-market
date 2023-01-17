@@ -399,4 +399,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     emit LogRepay(_subAccount, _token, _actualRepayAmount);
   }
+
+  function accrueInterest(address _token, address _lpToken) external {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    LibLYF01.accrueInterest(_debtShareId, lyfDs);
+  }
 }
