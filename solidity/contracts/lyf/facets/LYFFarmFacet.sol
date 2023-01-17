@@ -69,14 +69,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
-
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     uint256 _token0DebtShareId = lyfDs.debtShareIds[_token0][_lpToken];
     uint256 _token1DebtShareId = lyfDs.debtShareIds[_token1][_lpToken];
 
+    // accrue existing debt for healthcheck
+    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+
+    // accrue new borrow debt
     LibLYF01.accrueInterest(_token0DebtShareId, lyfDs);
     LibLYF01.accrueInterest(_token1DebtShareId, lyfDs);
 
