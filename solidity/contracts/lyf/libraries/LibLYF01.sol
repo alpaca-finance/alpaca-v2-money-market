@@ -577,14 +577,14 @@ library LibLYF01 {
     uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
     uint256 _actualShareToRemove = LibFullMath.min(_subAccountDebtShare, _shareToRemove);
     if (_actualShareToRemove != 0) {
-      uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
-      uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
+      uint256 _currentDebtShare = lyfDs.debtShares[_debtShareId];
+      uint256 _currentDebtValue = lyfDs.debtValues[_debtShareId];
 
       // update user debtShare
       lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _subAccountDebtShare - _actualShareToRemove);
 
       // update over collat debtShare
-      _removedAmount = LibShareUtil.shareToValue(_actualShareToRemove, _oldDebtValue, _oldDebtShare);
+      _removedAmount = LibShareUtil.shareToValue(_actualShareToRemove, _currentDebtValue, _currentDebtShare);
 
       lyfDs.debtShares[_debtShareId] -= _actualShareToRemove;
       lyfDs.debtValues[_debtShareId] -= _removedAmount;
