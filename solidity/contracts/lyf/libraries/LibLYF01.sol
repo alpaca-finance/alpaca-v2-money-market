@@ -567,4 +567,27 @@ library LibLYF01 {
     // update user's debtshare
     userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
+
+  function removeDebt(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _shareToRemove,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _removedAmount) {
+    uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _actualShareToRemove = LibFullMath.min(_subAccountDebtShare, _shareToRemove);
+    if (_actualShareToRemove != 0) {
+      uint256 _oldDebtShare = lyfDs.debtShares[_debtShareId];
+      uint256 _oldDebtValue = lyfDs.debtValues[_debtShareId];
+
+      // update user debtShare
+      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _subAccountDebtShare - _actualShareToRemove);
+
+      // update over collat debtShare
+      _removedAmount = LibShareUtil.shareToValue(_actualShareToRemove, _oldDebtValue, _oldDebtShare);
+
+      lyfDs.debtShares[_debtShareId] -= _actualShareToRemove;
+      lyfDs.debtValues[_debtShareId] -= _removedAmount;
+    }
+  }
 }
