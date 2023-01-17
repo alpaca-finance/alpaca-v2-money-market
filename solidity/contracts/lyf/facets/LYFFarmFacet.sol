@@ -334,6 +334,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
   }
 
+  /// @dev this method should only be called by addFarmPosition context
+  /// @param _token only underlying token
   function _removeCollatWithIbAndBorrow(
     address _subAccount,
     address _token,
