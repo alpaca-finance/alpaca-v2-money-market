@@ -67,6 +67,8 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     address oracle;
+    uint8 maxNumOfCollatPerSubAccount;
+    uint256 minDebtSize;
     mapping(address => uint256) reserves;
     mapping(address => uint256) protocolReserves;
     // collats = amount of collateral token
@@ -88,8 +90,6 @@ library LibLYF01 {
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
-    uint8 maxNumOfCollatPerSubAccount;
-    uint256 minDebtSize;
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
