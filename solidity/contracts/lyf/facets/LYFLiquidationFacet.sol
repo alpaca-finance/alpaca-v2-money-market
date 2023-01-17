@@ -104,7 +104,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     }
 
     // 3. reduce debt
-    _reduceDebt(_subAccount, _debtShareId, _actualDebtToRepurchase, lyfDs);
+    LibLYF01.removeDebtByAmount(_subAccount, _debtShareId, _actualDebtToRepurchase, lyfDs);
     LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
     // 4. transfer
@@ -198,7 +198,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
 
     // give priority to fee
-    _reduceDebt(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
+    LibLYF01.removeDebtByAmount(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
     LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatSold, lyfDs);
 
     emit LogLiquidate(
@@ -254,7 +254,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
 
     // give priority to fee
-    _reduceDebt(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
+    LibLYF01.removeDebtByAmount(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
     // withdraw all ib
     LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatAmount, lyfDs);
     // deposit leftover underlyingToken as collat
@@ -367,7 +367,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     if (_actualAmountToRepay > 0) {
       uint256 _feeToTreasury = (_actualAmountToRepay * LIQUIDATION_FEE_BPS) / 10000;
-      _reduceDebt(_subAccount, _debtShareId, _actualAmountToRepay - _feeToTreasury, lyfDs);
+      LibLYF01.removeDebtByAmount(_subAccount, _debtShareId, _actualAmountToRepay - _feeToTreasury, lyfDs);
       IERC20(_token).safeTransfer(lyfDs.treasury, _feeToTreasury);
     }
 
@@ -426,21 +426,5 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     if (_collatAmountOut > _totalSubAccountCollat) {
       revert LYFLiquidationFacet_InsufficientAmount();
     }
-  }
-
-  function _reduceDebt(
-    address _subAccount,
-    uint256 _debtShareId,
-    uint256 _amountToReduce,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    // calculate number of shares to reduce
-    uint256 _shareToReduce = LibShareUtil.valueToShare(
-      _amountToReduce,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
-
-    LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToReduce, lyfDs);
   }
 }
