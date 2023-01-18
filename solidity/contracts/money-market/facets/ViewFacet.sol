@@ -230,22 +230,6 @@ contract ViewFacet is IViewFacet {
     return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
   }
 
-  /// @notice Get the amount of interest bearing token equivalent to the underlying amount
-  /// @param _token The token used as a collateral
-  /// @param _underlyingAmount The amount of underlying token
-  /// @return _ibShareAmount The amount of interest bearing token
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _ibShareAmount)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
-    (, _ibShareAmount) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _underlyingAmount, moneyMarketDs);
-  }
-
   /// @notice Get the total amount of token that's eligible for lender without pending interest
   /// @param _token The token lended
   /// @return The total amount of token

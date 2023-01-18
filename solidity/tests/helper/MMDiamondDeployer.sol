@@ -127,7 +127,6 @@ library MMDiamondDeployer {
     selectors[13] = ViewFacet.getTotalCollat.selector;
     selectors[14] = ViewFacet.getOverCollatSubAccountCollatAmount.selector;
     selectors[15] = ViewFacet.getTotalToken.selector;
-    selectors[16] = ViewFacet.getIbShareFromUnderlyingAmount.selector;
     selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
     selectors[18] = ViewFacet.getNonCollatAccountDebtValues.selector;
     selectors[19] = ViewFacet.getNonCollatAccountDebt.selector;
