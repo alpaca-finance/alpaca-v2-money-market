@@ -82,9 +82,9 @@ abstract contract LYF_BaseTest is BaseTest {
   uint256 constant reinvestThreshold = 1e18;
 
   function setUp() public virtual {
-    lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
     moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
-    setUpMM();
+    lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
+    setUpMM(moneyMarketDiamond);
 
     adminFacet = LYFAdminFacet(lyfDiamond);
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
@@ -131,8 +131,6 @@ abstract contract LYF_BaseTest is BaseTest {
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
     usdc.mint(address(mockRouter), 1000000 ether);
     weth.mint(address(mockRouter), 1000000 ether);
-
-    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
     ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](8);
@@ -255,8 +253,8 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMaxNumOfToken(3);
   }
 
-  function setUpMM() internal {
-    IAdminFacet mmAdminFacet = IAdminFacet(moneyMarketDiamond);
+  function setUpMM(address _moneyMarketDiamond) internal {
+    IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
 
     // set ib token implementation
     // warning: this one should set before open market
@@ -341,11 +339,11 @@ abstract contract LYF_BaseTest is BaseTest {
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
 
     vm.startPrank(EVE);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
-    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    weth.approve(_moneyMarketDiamond, type(uint256).max);
+    usdc.approve(_moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    ILendFacet(_moneyMarketDiamond).deposit(address(weth), 100 ether);
+    ILendFacet(_moneyMarketDiamond).deposit(address(usdc), 100 ether);
     vm.stopPrank();
 
     // set max num of tokens

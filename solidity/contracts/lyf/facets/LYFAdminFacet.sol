@@ -48,11 +48,6 @@ contract LYFAdminFacet is ILYFAdminFacet {
     }
   }
 
-  function setMoneyMarket(address _moneyMarket) external onlyOwner {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.moneyMarket = _moneyMarket;
-  }
-
   function setLPConfigs(LPConfigInput[] calldata _configs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
