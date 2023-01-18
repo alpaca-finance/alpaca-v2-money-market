@@ -34,7 +34,7 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   error PancakeswapV2Strategy_Reverse();
   error PancakeswapV2Strategy_Unauthorized(address _caller);
 
-  IRouterLike public router;
+  IRouterLike public immutable router;
 
   /// @dev Create a new add two-side optimal strategy instance.
   /// @param _router The PancakeSwap Router smart contract.
