@@ -13,8 +13,18 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
 
-  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
+  event LogSetOracle(address indexed _oracle);
+  event LogSetTokenConfig(address indexed _token, LibLYF01.TokenConfig _config);
+  event LogSetMoneyMarket(address indexed _moneyMarket);
+  event LogSetLPConfig(address indexed _lpToken, LibLYF01.LPConfig _config);
+  event LogSetDebtShareId(address indexed _token, address indexed _lpToken, uint256 _debtShareId);
+  event LogSetDebtInterestModel(uint256 indexed _debtShareId, address _interestModel);
   event LogSetMinDebtSize(uint256 _newValue);
+  event LogSetReinvestorOk(address indexed _reinvester, bool isOk);
+  event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
+  event LogSetLiquidatorsOk(address indexed _liquidator, bool isOk);
+  event LogSetTreasury(address indexed _trasury);
+  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
@@ -25,13 +35,16 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setOracle(address _oracle) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.oracle = _oracle;
+
+    emit LogSetOracle(_oracle);
   }
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _inputLength = _tokenConfigs.length;
+    LibLYF01.TokenConfig memory _tokenConfig;
     for (uint8 _i; _i < _inputLength; ) {
-      LibLYF01.TokenConfig memory _tokenConfig = LibLYF01.TokenConfig({
+      _tokenConfig = LibLYF01.TokenConfig({
         tier: _tokenConfigs[_i].tier,
         collateralFactor: _tokenConfigs[_i].collateralFactor,
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
@@ -42,6 +55,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
       LibLYF01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, lyfDs);
 
+      emit LogSetTokenConfig(_tokenConfigs[_i].token, _tokenConfig);
+
       unchecked {
         ++_i;
       }
@@ -51,14 +66,16 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setMoneyMarket(address _moneyMarket) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.moneyMarket = _moneyMarket;
+    emit LogSetMoneyMarket(_moneyMarket);
   }
 
   function setLPConfigs(LPConfigInput[] calldata _configs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 _len = _configs.length;
+    LibLYF01.LPConfig memory _config;
     for (uint256 _i; _i < _len; ) {
-      lyfDs.lpConfigs[_configs[_i].lpToken] = LibLYF01.LPConfig({
+      _config = LibLYF01.LPConfig({
         strategy: _configs[_i].strategy,
         masterChef: _configs[_i].masterChef,
         router: _configs[_i].router,
@@ -67,6 +84,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
         reinvestThreshold: _configs[_i].reinvestThreshold,
         poolId: _configs[_i].poolId
       });
+
+      lyfDs.lpConfigs[_configs[_i].lpToken] = _config;
+
+      emit LogSetLPConfig(_configs[_i].lpToken, _config);
+
       unchecked {
         ++_i;
       }
@@ -90,11 +112,14 @@ contract LYFAdminFacet is ILYFAdminFacet {
     }
     lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
     lyfDs.debtShareTokens[_debtShareId] = _token;
+
+    emit LogSetDebtShareId(_token, _lpToken, _debtShareId);
   }
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.interestModels[_debtShareId] = _interestModel;
+    emit LogSetDebtInterestModel(_debtShareId, _interestModel);
   }
 
   function setMinDebtSize(uint256 _newValue) external onlyOwner {
@@ -107,8 +132,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setReinvestorsOk(address[] memory list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
+    address _reinvester;
     for (uint8 _i; _i < _length; ) {
-      lyfDs.reinvestorsOk[list[_i]] = _isOk;
+      _reinvester = list[_i];
+      lyfDs.reinvestorsOk[_reinvester] = _isOk;
+
+      emit LogSetReinvestorOk(_reinvester, _isOk);
       unchecked {
         ++_i;
       }
@@ -118,8 +147,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
+    address _liquidationStrat;
     for (uint256 _i; _i < _length; ) {
-      lyfDs.liquidationStratOk[list[_i]] = _isOk;
+      _liquidationStrat = list[_i];
+      lyfDs.liquidationStratOk[_liquidationStrat] = _isOk;
+
+      emit LogSetLiquidationStratOk(_liquidationStrat, _isOk);
       unchecked {
         ++_i;
       }
@@ -129,8 +162,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setLiquidatorsOk(address[] calldata list, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
+    address _liquidator;
     for (uint256 _i; _i < _length; ) {
-      lyfDs.liquidationCallersOk[list[_i]] = _isOk;
+      _liquidator = list[_i];
+      lyfDs.liquidationCallersOk[_liquidator] = _isOk;
+
+      emit LogSetLiquidatorsOk(_liquidator, _isOk);
       unchecked {
         ++_i;
       }
@@ -140,6 +177,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   function setTreasury(address _newTreasury) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.treasury = _newTreasury;
+
+    emit LogSetTreasury(_newTreasury);
   }
 
   function setMaxNumOfToken(uint8 _numOfCollat) external onlyOwner {
