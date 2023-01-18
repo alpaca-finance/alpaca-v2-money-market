@@ -10,6 +10,7 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
@@ -89,6 +90,10 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
   function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    // sanity check
+    IInterestRateModel(_interestModel).getInterestRate(1, 1);
+
     lyfDs.interestModels[_debtShareId] = _interestModel;
   }
 

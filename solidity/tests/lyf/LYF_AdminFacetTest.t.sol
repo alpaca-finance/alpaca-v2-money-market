@@ -6,24 +6,33 @@ import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTes
 // interfaces
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
+import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
+
 contract LYF_AdminFacetTest is LYF_BaseTest {
   function setUp() public override {
     super.setUp();
   }
 
   function testCorrectness_WhenAdminSetPriceOracle_ShouldWork() external {
-    address _oracleAddress = address(20000);
+    address _oracleAddress = address(new MockAlpacaV2Oracle());
 
     adminFacet.setOracle(_oracleAddress);
 
     assertEq(viewFacet.getOracle(), _oracleAddress);
   }
 
+  function testRevert_WhenAdminSetPriceOracleWithInvalidContrac() external {
+    address _oracleAddress = address(8888);
+
+    vm.expectRevert();
+    adminFacet.setOracle(_oracleAddress);
+  }
+
   function testCorrectness_WhenNonAdminSetSomeLYFConfig_ShouldRevert() external {
     vm.startPrank(ALICE);
 
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setOracle(address(20000));
+    adminFacet.setOracle(address(8888));
 
     vm.expectRevert("LibDiamond: Must be contract owner");
     adminFacet.setMinDebtSize(200 ether);
