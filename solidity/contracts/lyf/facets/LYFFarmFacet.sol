@@ -313,7 +313,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (uint256 _currentDebtShare, uint256 _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    (uint256 _currentDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
 
     // min(debtShareToRepay, currentDebtShare)
     uint256 _actualDebtShareToRemove = _debtShareToRepay > _currentDebtShare ? _currentDebtShare : _debtShareToRepay;
