@@ -221,8 +221,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
 
     // 3. Remove debt by repay amount
-    _repayDebtByAmount(_vars.subAccount, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
-    _repayDebtByAmount(_vars.subAccount, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
+    _convertValueToShareAndRepay(_vars.subAccount, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
+    _convertValueToShareAndRepay(_vars.subAccount, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
@@ -252,14 +252,20 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
-    (, uint256 _actualRepayAmount) = _repayDebtByShare(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
+    (uint256 _possibleShareToRepay, uint256 _possibleDebtToRepay) = LibLYF01.geSubAccountMaxPossibleDebtsByShare(
+      _subAccount,
+      _debtShareId,
+      _debtShareToRepay,
+      lyfDs
+    );
+    _repayDebts(_subAccount, _debtShareId, _possibleShareToRepay, _possibleDebtToRepay, lyfDs);
 
     // transfer only amount to repay
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _possibleDebtToRepay);
     // update reserves of the token. This will impact the outstanding balance
-    lyfDs.reserves[_token] += _actualRepayAmount;
+    lyfDs.reserves[_token] += _possibleDebtToRepay;
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, _possibleDebtToRepay);
   }
 
   function reinvest(address _lpToken) external nonReentrant {
@@ -298,9 +304,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
       uint256 _removedCollat = LibLYF01.removeCollateral(_subAccount, _token, _debtToRepay, lyfDs);
 
       // remove debt as much as possible
-      (, uint256 _actualRepayAmount) = _repayDebtByAmount(_subAccount, _debtShareId, _removedCollat, lyfDs);
+      _convertValueToShareAndRepay(_subAccount, _debtShareId, _removedCollat, lyfDs);
 
-      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualRepayAmount);
+      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _removedCollat);
     }
   }
 
@@ -330,37 +336,28 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
   }
 
-  function _repayDebtByAmount(
+  function _convertValueToShareAndRepay(
     address _subAccount,
     uint256 _debtShareId,
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _repaidShare, uint256 _repaidAmount) {
-    (_repaidShare, _repaidAmount) = LibLYF01.geSubAccountMaxPossibleDebtsByValue(
-      _subAccount,
-      _debtShareId,
+  ) internal {
+    uint256 _shareToRepay = LibShareUtil.valueToShare(
       _repayAmount,
-      lyfDs
+      lyfDs.debtShares[_debtShareId],
+      lyfDs.debtValues[_debtShareId]
     );
-    LibLYF01.removeDebts(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
-
-    // validate after remove debt
-    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
+    _repayDebts(_subAccount, _debtShareId, _shareToRepay, _repayAmount, lyfDs);
   }
 
-  function _repayDebtByShare(
+  function _repayDebts(
     address _subAccount,
     uint256 _debtShareId,
-    uint256 _repayShare,
+    uint256 _maxDebtShareToRepay,
+    uint256 _maxDebtValueToRepay,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _repaidShare, uint256 _repaidAmount) {
-    (_repaidShare, _repaidAmount) = LibLYF01.geSubAccountMaxPossibleDebtsByShare(
-      _subAccount,
-      _debtShareId,
-      _repayShare,
-      lyfDs
-    );
-    LibLYF01.removeDebts(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
+  ) internal {
+    LibLYF01.removeDebts(_subAccount, _debtShareId, _maxDebtShareToRepay, _maxDebtValueToRepay, lyfDs);
 
     // validate after remove debt
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
