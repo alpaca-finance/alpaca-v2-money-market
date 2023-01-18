@@ -39,23 +39,26 @@ contract LYFAdminFacet is ILYFAdminFacet {
     emit LogSetOracle(_oracle);
   }
 
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external onlyOwner {
+  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
     uint256 _inputLength = _tokenConfigs.length;
+    address _token;
     LibLYF01.TokenConfig memory _tokenConfig;
-    for (uint8 _i; _i < _inputLength; ) {
+    for (uint256 _i; _i < _inputLength; ) {
+      _token = _tokenConfigs[_i].token;
       _tokenConfig = LibLYF01.TokenConfig({
         tier: _tokenConfigs[_i].tier,
         collateralFactor: _tokenConfigs[_i].collateralFactor,
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
         maxBorrow: _tokenConfigs[_i].maxBorrow,
-        to18ConversionFactor: LibLYF01.to18ConversionFactor(_tokenConfigs[_i].token)
+        to18ConversionFactor: LibLYF01.to18ConversionFactor(_token)
       });
 
-      LibLYF01.setTokenConfig(_tokenConfigs[_i].token, _tokenConfig, lyfDs);
+      lyfDs.tokenConfigs[_token] = _tokenConfig;
 
-      emit LogSetTokenConfig(_tokenConfigs[_i].token, _tokenConfig);
+      emit LogSetTokenConfig(_token, _tokenConfig);
 
       unchecked {
         ++_i;
@@ -74,7 +77,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     uint256 _len = _configs.length;
     LibLYF01.LPConfig memory _config;
+    address _lpToken;
     for (uint256 _i; _i < _len; ) {
+      _lpToken = _configs[_i].lpToken;
       _config = LibLYF01.LPConfig({
         strategy: _configs[_i].strategy,
         masterChef: _configs[_i].masterChef,
@@ -85,9 +90,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
         poolId: _configs[_i].poolId
       });
 
-      lyfDs.lpConfigs[_configs[_i].lpToken] = _config;
+      lyfDs.lpConfigs[_lpToken] = _config;
 
-      emit LogSetLPConfig(_configs[_i].lpToken, _config);
+      emit LogSetLPConfig(_lpToken, _config);
 
       unchecked {
         ++_i;
@@ -133,7 +138,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = list.length;
     address _reinvester;
-    for (uint8 _i; _i < _length; ) {
+    for (uint256 _i; _i < _length; ) {
       _reinvester = list[_i];
       lyfDs.reinvestorsOk[_reinvester] = _isOk;
 
