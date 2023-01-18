@@ -665,7 +665,7 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _totalSupply, uint256 _ibShareAmount) {
     _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
-    uint256 _totalToken = LibMoneyMarket01.getTotalToken(_underlyingToken, moneyMarketDs);
+    uint256 _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_underlyingToken, moneyMarketDs);
     _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
   }
 
