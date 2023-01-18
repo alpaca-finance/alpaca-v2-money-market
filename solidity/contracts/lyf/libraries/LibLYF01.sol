@@ -443,6 +443,8 @@ library LibLYF01 {
 
     // accumulate harvested reward for LP
     lyfDs.pendingRewards[_lpToken] += IERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
+
+    // todo: cut fee here (1)
   }
 
   function reinvest(
@@ -458,7 +460,8 @@ library LibLYF01 {
       return;
     }
 
-    // TODO: extract fee
+    // todo: cut fee here (2)
+    // TODO: extract fee, what we should do
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
