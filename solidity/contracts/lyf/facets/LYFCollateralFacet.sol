@@ -104,8 +104,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_toSubAccount, ds);
-
     LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 
     emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
