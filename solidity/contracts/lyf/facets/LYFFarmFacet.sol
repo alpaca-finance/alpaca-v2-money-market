@@ -306,31 +306,37 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _subAccountId,
     address _token,
     address _lpToken,
-    uint256 _debtToRepay
+    uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (, uint256 _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    (uint256 _currentDebtShare, uint256 _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
 
-    // repay maxmimum debt
-    _debtToRepay = _debtToRepay > _debtAmount ? _debtAmount : _debtToRepay;
+    // min(debtShareToRepay, currentDebtShare)
+    uint256 _actualDebtShareToRemove = _debtShareToRepay > _currentDebtShare ? _currentDebtShare : _debtShareToRepay;
 
-    if (_debtToRepay != 0) {
-      // remove collat as much as possible
-      uint256 _removedCollat = LibLYF01.removeCollateral(_subAccount, _token, _debtToRepay, lyfDs);
+    // find the value of _actual share to repay
+    uint256 _actualDebtToRemove = LibShareUtil.shareToValue(
+      _actualDebtShareToRemove,
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
+    );
 
-      // remove debt as much as possible
-      uint256 _shareToRepay = LibShareUtil.valueToShare(
-        _removedCollat,
-        lyfDs.debtShares[_debtShareId],
-        lyfDs.debtValues[_debtShareId]
-      );
-      _repayDebt(_subAccount, _debtShareId, _shareToRepay, _removedCollat, lyfDs);
+    // if collat is not enough to repay debt, revert
+    if (LibLYF01.getSubAccountCollatAmount(_token) < _actualDebtToRemove) {
+      revert;
+    }
 
-      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _removedCollat);
+    if (_actualDebtShareToRemove != 0) {
+      // remove collat from subaccount
+      LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
+
+      _repayDebt(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
+
+      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
     }
   }
 
