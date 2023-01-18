@@ -64,12 +64,12 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
     // warp time to make share value changed
     // before debt share = 20, debt value = 20
-    vm.warp(block.timestamp + 10);
+    vm.warp(block.timestamp + 25);
 
-    // timepast * interest rate * debt value = 10 * 0.01 * 20 = 2
+    // timepast * interest rate * debt value = 25 * 0.01 * 20 = 5
     assertEq(
       viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken)),
-      2 ether,
+      5 ether,
       "expected interest is not match"
     );
 
@@ -86,14 +86,14 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
       address(wethUsdcLPToken)
     );
 
-    // after accure debt share = 20, debt value = 22
-    // user repay 5 shares
-    // actual repay amount = 5 * 22 / 20 = 5.5 tokens
-    assertEq(_bobDebtShare, 15 ether, "expected debt shares is mismatch"); // 20 - 5 = 15
-    assertEq(_bobDebtValue, 16.5 ether, "expected debt value is mismatch"); // 22 - 5.5 = 16.5
+    // after accure debt share = 20, debt value = 25
+    // user repay 5 ether
+    // actual repay share = 5 * 20 / 25 = 4 ether
+    assertEq(_bobDebtShare, 16 ether, "expected debt shares is mismatch"); // 20 - 4 = 16
+    assertEq(_bobDebtValue, 20 ether, "expected debt value is mismatch"); // 25 - 5 = 20
 
     // 2. repay > debt
-    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 25 ether);
     (_bobDebtShare, _bobDebtValue) = viewFacet.getSubAccountDebt(
       BOB,
       subAccount0,
@@ -101,11 +101,11 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
       address(wethUsdcLPToken)
     );
 
-    // after accure debt share = 15, debt value = 16.5
-    // user repay 20 shares but can pay only 15 (debt share)
-    // actual repay amount = 15 * 16.5 / 15 = 16.5 tokens
-    assertEq(_bobDebtShare, 0 ether, "still has debt share remaining"); // 15 - 15 = 0
-    assertEq(_bobDebtValue, 0 ether, "still has debt value remaining"); // 16.5 - 16.5 = 0
+    // after accure debt share = 16, debt value = 20
+    // user repay 25 ether but can pay only 20 (debt value)
+    // actual repay amount = 20 * 16 / 20 = 16 tokens
+    assertEq(_bobDebtShare, 0 ether, "still has debt share remaining");
+    assertEq(_bobDebtValue, 0 ether, "still has debt value remaining");
 
     vm.stopPrank();
   }
