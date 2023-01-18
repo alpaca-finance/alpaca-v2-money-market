@@ -309,6 +309,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    // todo: check asset tier, if not collat, revert
+
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
@@ -326,8 +328,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
 
     // if collat is not enough to repay debt, revert
-    if (LibLYF01.getSubAccountCollatAmount(_token) < _actualDebtToRemove) {
-      revert;
+    if (lyfDs.subAccountCollats[_subAccount].getAmount(_token) < _actualDebtToRemove) {
+      revert("test"); // todo: custom error
     }
 
     if (_actualDebtShareToRemove != 0) {
