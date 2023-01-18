@@ -70,7 +70,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_debtToken][_lpToken];
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_subAccount, lyfDs);
 
     // 1. check borrowing power
     uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
@@ -133,7 +133,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_repayToken][_lpToken];
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_subAccount, lyfDs);
 
     // 1. check if position is underwater and can be liquidated
     {
@@ -301,7 +301,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     vars.debtShareId0 = lyfDs.debtShareIds[vars.token0][_lpToken];
     vars.debtShareId1 = lyfDs.debtShareIds[vars.token1][_lpToken];
 
-    LibLYF01.accrueAllSubAccountDebtShares(vars.subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(vars.subAccount, lyfDs);
 
     // 0. check borrowing power
     {

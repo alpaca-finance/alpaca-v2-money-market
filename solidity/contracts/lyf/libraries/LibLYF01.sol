@@ -139,7 +139,7 @@ library LibLYF01 {
     emit LogAccrueInterest(lyfDs.debtShareTokens[_debtShareId], _pendingInterest, _pendingInterest);
   }
 
-  function accrueAllSubAccountDebtShares(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
+  function accrueAllDebtSharesOfSubAccount(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
     LibUIntDoublyLinkedList.Node[] memory _debtShares = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _debtShareLength = _debtShares.length;
 

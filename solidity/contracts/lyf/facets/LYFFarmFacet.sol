@@ -76,7 +76,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _token1DebtShareId = lyfDs.debtShareIds[_token1][_lpToken];
 
     // accrue existing debt for healthcheck
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_subAccount, lyfDs);
 
     // accrue new borrow debt
     LibLYF01.accrueInterest(_token0DebtShareId, lyfDs);
@@ -137,7 +137,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_subAccount, lyfDs);
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
@@ -286,7 +286,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     (uint256 _debtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);

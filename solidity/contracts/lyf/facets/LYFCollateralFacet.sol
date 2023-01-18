@@ -67,7 +67,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_subAccount, lyfDs);
 
     uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, lyfDs);
 
@@ -98,7 +98,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_fromSubAccount, ds);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_fromSubAccount, ds);
 
     uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
 
@@ -108,7 +108,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_toSubAccount, ds);
+    LibLYF01.accrueAllDebtSharesOfSubAccount(_toSubAccount, ds);
 
     LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 
