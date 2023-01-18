@@ -167,34 +167,34 @@ library LibLYF01 {
     LibDoublyLinkedList.Node[] memory _collats = lyfDs.subAccountCollats[_subAccount].getAll();
 
     uint256 _collatsLength = _collats.length;
-    uint256 _tokenPrice;
+
     address _collatToken;
-    uint256 _collatAmount;
-    uint256 _actualAmount;
+    address _underlyingToken;
+    uint256 _collatPrice;
+    TokenConfig memory _tokenConfig;
+    address _moneyMarket = lyfDs.moneyMarket;
+
     for (uint256 _i; _i < _collatsLength; ) {
       _collatToken = _collats[_i].token;
-      _collatAmount = _collats[_i].amount;
-      _actualAmount = _collatAmount;
 
-      // will return address(0) if _collatToken is not ibToken
-      address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
-      if (_actualToken == address(0)) {
-        _actualToken = _collatToken;
+      _underlyingToken = IMoneyMarket(_moneyMarket).getTokenFromIbToken(_collatToken);
+      if (_underlyingToken != address(0)) {
+        // if _collatToken is ibToken convert underlying price to ib price
+        _tokenConfig = lyfDs.tokenConfigs[_underlyingToken];
+        _collatPrice =
+          (getPriceUSD(_underlyingToken, lyfDs) *
+            getIbToUnderlyingConversionFactor(_collatToken, _underlyingToken, _moneyMarket)) /
+          1e18;
       } else {
-        uint256 _totalSupply = IERC20(_collatToken).totalSupply();
-        uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_actualToken);
-
-        _actualAmount = LibShareUtil.shareToValue(_collatAmount, _totalToken, _totalSupply);
+        // _collatToken is normal ERC20 or LP token
+        _tokenConfig = lyfDs.tokenConfigs[_collatToken];
+        _collatPrice = getPriceUSD(_collatToken, lyfDs);
       }
 
-      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_actualToken];
-
-      _tokenPrice = getPriceUSD(_actualToken, lyfDs);
-
-      // _totalBorrowingPowerUSDValue += amount * tokenPrice * collateralFactor
+      // _totalBorrowingPowerUSDValue += collatAmount * collatPrice * collateralFactor
       _totalBorrowingPowerUSDValue += LibFullMath.mulDiv(
-        _actualAmount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
-        _tokenPrice,
+        _collats[_i].amount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
+        _collatPrice,
         1e22
       );
 
@@ -276,15 +276,18 @@ library LibLYF01 {
     }
   }
 
-  function convertUnderlyingToIb(
+  /// @dev ex. 1 ib = 1.2 token -> conversionFactor = 1.2
+  /// ibPrice = (underlyingPrice * conversionFactor) / 1e18
+  /// ibAmount = (underlyingAmount * 1e18) / conversionFactor
+  function getIbToUnderlyingConversionFactor(
     address _ibToken,
     address _underlyingToken,
-    uint256 _underlyingAmount,
-    LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _ibAmount) {
+    address _moneyMarket
+  ) internal view returns (uint256 _conversionFactor) {
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
-    uint256 _totalToken = IMoneyMarket(lyfDs.moneyMarket).getTotalTokenWithPendingInterest(_underlyingToken);
-    _ibAmount = LibShareUtil.shareToValue(_underlyingAmount, _totalToken, _totalSupply);
+    uint256 _decimals = IERC20(_ibToken).decimals();
+    uint256 _totalToken = IMoneyMarket(_moneyMarket).getTotalTokenWithPendingInterest(_underlyingToken);
+    _conversionFactor = LibShareUtil.shareToValue(10**_decimals, _totalToken, _totalSupply);
   }
 
   // _usedBorrowingPower += _borrowedAmount * tokenPrice * (10000/ borrowingFactor)
@@ -383,7 +386,8 @@ library LibLYF01 {
     if (_collateralAmountIb > 0) {
       IMoneyMarket moneyMarket = IMoneyMarket(ds.moneyMarket);
 
-      uint256 _removeAmountIb = moneyMarket.getIbShareFromUnderlyingAmount(_token, _removeAmountUnderlying);
+      uint256 _removeAmountIb = (_removeAmountUnderlying * 1e18) /
+        getIbToUnderlyingConversionFactor(_ibToken, _token, ds.moneyMarket);
       uint256 _ibRemoved = _removeAmountIb > _collateralAmountIb ? _collateralAmountIb : _removeAmountIb;
 
       _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);
