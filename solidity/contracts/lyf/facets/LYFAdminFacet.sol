@@ -118,7 +118,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     emit LogSetDebtShareId(_token, _lpToken, _debtShareId);
   }
 
-  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
+  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     // sanity check

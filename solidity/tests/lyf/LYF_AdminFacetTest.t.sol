@@ -7,6 +7,7 @@ import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTes
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 contract LYF_AdminFacetTest is LYF_BaseTest {
   function setUp() public override {
@@ -64,5 +65,20 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     assertEq(viewFacet.getMinDebtSize(), 0); // 3 is set from basetest
     adminFacet.setMinDebtSize(200 ether);
     assertEq(viewFacet.getMinDebtSize(), 200 ether);
+  }
+
+  function testCorrectness_WhenSetDebtInterestModel() external {
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+  }
+
+  function testRevert_WhenSetDebtInterestModel() external {
+    // not passed sanity check
+    vm.expectRevert();
+    adminFacet.setDebtInterestModel(1, address(8888));
+
+    // setter is not owner
+    vm.prank(ALICE);
+    vm.expectRevert("LibDiamond: Must be contract owner");
+    adminFacet.setDebtInterestModel(0, address(8888));
   }
 }
