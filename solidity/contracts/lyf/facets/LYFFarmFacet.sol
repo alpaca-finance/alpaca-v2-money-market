@@ -239,8 +239,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
       lyfDs.debtValues[_vars.debtShareId1]
     );
 
-    _repayDebt(_vars.subAccount, _vars.debtShareId0, _vars.debtShare0ToRepay, _vars.debt0ToRepay, lyfDs);
-    _repayDebt(_vars.subAccount, _vars.debtShareId1, _vars.debtShare1ToRepay, _vars.debt1ToRepay, lyfDs);
+    _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId0, _vars.debtShare0ToRepay, _vars.debt0ToRepay, lyfDs);
+    _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId1, _vars.debtShare1ToRepay, _vars.debt1ToRepay, lyfDs);
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
@@ -278,7 +278,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       lyfDs.debtValues[_debtShareId],
       lyfDs.debtShares[_debtShareId]
     );
-    _repayDebt(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
+    _removeDebtAndValidate(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
@@ -340,7 +340,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       // remove collat from subaccount
       LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
 
-      _repayDebt(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
+      _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
 
       emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
     }
@@ -372,7 +372,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
   }
 
-  function _repayDebt(
+  function _removeDebtAndValidate(
     address _subAccount,
     uint256 _debtShareId,
     uint256 _maxDebtShareToRepay,
