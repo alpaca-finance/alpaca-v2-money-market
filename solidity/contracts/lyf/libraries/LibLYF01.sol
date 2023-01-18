@@ -36,6 +36,7 @@ library LibLYF01 {
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
+  error LibLYF01_TooMuchDebtShareToRemove();
 
   enum AssetTier {
     UNLISTED,
@@ -572,46 +573,66 @@ library LibLYF01 {
     userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
   }
 
-  function removeDebtByShare(
+  function geSubAccountMaxPossibleDebtsByShare(
     address _subAccount,
     uint256 _debtShareId,
-    uint256 _debtShareToRemove,
+    uint256 _desiredDebtShare,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _removedDebtAmount) {
-    uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-    uint256 _actualShareToRemove = LibFullMath.min(_maxDebtShareToRemove, _debtShareToRemove);
+  ) internal view returns (uint256 _possibleDebtShare, uint256 _possibleDebtAmount) {
+    uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
-    if (_actualShareToRemove != 0) {
-      _removedDebtAmount = LibShareUtil.shareToValue(
-        _actualShareToRemove,
-        lyfDs.debtValues[_debtShareId],
-        lyfDs.debtShares[_debtShareId]
+    _possibleDebtShare = _desiredDebtShare > _subAccountDebtShare ? _subAccountDebtShare : _desiredDebtShare;
+
+    _possibleDebtAmount = LibShareUtil.shareToValue(
+      _possibleDebtShare,
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
+    );
+  }
+
+  function geSubAccountMaxPossibleDebtsByValue(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _desiredDebtValue,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _possibleDebtShare, uint256 _possibleDebtAmount) {
+    uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _subAccountDebtValue = LibShareUtil.shareToValue(
+      _subAccountDebtShare,
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
+    );
+
+    if (_desiredDebtValue > _subAccountDebtValue) {
+      _possibleDebtShare = _subAccountDebtShare;
+      _possibleDebtAmount = _subAccountDebtValue;
+    } else {
+      _possibleDebtShare = LibShareUtil.valueToShare(
+        _desiredDebtValue,
+        lyfDs.debtShares[_debtShareId],
+        lyfDs.debtValues[_debtShareId]
       );
-
-      // update user debtShare
-      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(
-        _debtShareId,
-        _maxDebtShareToRemove - _actualShareToRemove
-      );
-
-      lyfDs.debtShares[_debtShareId] -= _actualShareToRemove;
-      lyfDs.debtValues[_debtShareId] -= _removedDebtAmount;
+      _possibleDebtAmount = _desiredDebtValue;
     }
   }
 
-  // try convert debtAmountToRemove to be shareToRemove and call removeDebtByShare
-  function removeDebtByAmount(
+  function removeDebts(
     address _subAccount,
     uint256 _debtShareId,
+    uint256 _debtShareToRemove,
     uint256 _debtAmountToRemove,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _removedDebtShare, uint256 _removedDebtAmount) {
-    _removedDebtShare = LibShareUtil.valueToShare(
-      _debtAmountToRemove,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
+  ) internal {
+    uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
-    _removedDebtAmount = removeDebtByShare(_subAccount, _debtShareId, _removedDebtShare, lyfDs);
+    if (_debtShareToRemove > _maxDebtShareToRemove) {
+      revert LibLYF01_TooMuchDebtShareToRemove();
+    }
+
+    // update user debtShare
+    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _maxDebtShareToRemove - _debtShareToRemove);
+
+    lyfDs.debtShares[_debtShareId] -= _debtShareToRemove;
+    lyfDs.debtValues[_debtShareId] -= _debtAmountToRemove;
   }
 }

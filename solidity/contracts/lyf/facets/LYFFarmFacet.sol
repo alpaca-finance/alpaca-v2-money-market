@@ -252,7 +252,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
-    uint256 _actualRepayAmount = _repayDebtByShare(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
+    (, uint256 _actualRepayAmount) = _repayDebtByShare(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
@@ -298,7 +298,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       uint256 _removedCollat = LibLYF01.removeCollateral(_subAccount, _token, _debtToRepay, lyfDs);
 
       // remove debt as much as possible
-      uint256 _actualRepayAmount = _repayDebtByAmount(_subAccount, _debtShareId, _removedCollat, lyfDs);
+      (, uint256 _actualRepayAmount) = _repayDebtByAmount(_subAccount, _debtShareId, _removedCollat, lyfDs);
 
       emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualRepayAmount);
     }
@@ -335,8 +335,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareId,
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _actualRepayAmount) {
-    (, _actualRepayAmount) = LibLYF01.removeDebtByAmount(_subAccount, _debtShareId, _repayAmount, lyfDs);
+  ) internal returns (uint256 _repaidShare, uint256 _repaidAmount) {
+    (_repaidShare, _repaidAmount) = LibLYF01.geSubAccountMaxPossibleDebtsByValue(
+      _subAccount,
+      _debtShareId,
+      _repayAmount,
+      lyfDs
+    );
+    LibLYF01.removeDebts(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
 
     // validate after remove debt
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
@@ -347,8 +353,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareId,
     uint256 _repayShare,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _actualRepayAmount) {
-    _actualRepayAmount = LibLYF01.removeDebtByShare(_subAccount, _debtShareId, _repayShare, lyfDs);
+  ) internal returns (uint256 _repaidShare, uint256 _repaidAmount) {
+    (_repaidShare, _repaidAmount) = LibLYF01.geSubAccountMaxPossibleDebtsByShare(
+      _subAccount,
+      _debtShareId,
+      _repayShare,
+      lyfDs
+    );
+    LibLYF01.removeDebts(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
 
     // validate after remove debt
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
