@@ -87,7 +87,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _removeCollatWithIbAndBorrow(_subAccount, _token1, _lpToken, _desireToken1Amount, lyfDs);
 
     // 2. Check min debt size
-
     LibLYF01.validateMinDebtSize(_subAccount, _token0DebtShareId, lyfDs);
     LibLYF01.validateMinDebtSize(_subAccount, _token1DebtShareId, lyfDs);
 
@@ -222,11 +221,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
 
     // 3. Remove debt by repay amount
-    LibLYF01.removeDebtByAmount(_vars.subAccount, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
-    LibLYF01.validateMinDebtSize(_vars.subAccount, _vars.debtShareId0, lyfDs);
-
-    LibLYF01.removeDebtByAmount(_vars.subAccount, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
-    LibLYF01.validateMinDebtSize(_vars.subAccount, _vars.debtShareId1, lyfDs);
+    _repayDebtByAmount(_vars.subAccount, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
+    _repayDebtByAmount(_vars.subAccount, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
@@ -256,10 +252,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
-    uint256 _actualRepayAmount = LibLYF01.removeDebtByShare(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
-
-    // validate after remove debt
-    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
+    uint256 _actualRepayAmount = _repayDebtByShare(_subAccount, _debtShareId, _debtShareToRepay, lyfDs);
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
@@ -310,10 +303,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       uint256 _removedCollat = LibLYF01.removeCollateral(_subAccount, _token, _repayAmount, lyfDs);
 
       // remove debt as much as possible
-      (, uint256 _actualRepayAmount) = LibLYF01.removeDebtByAmount(_subAccount, _debtShareId, _removedCollat, lyfDs);
-
-      // validate after remove debt
-      LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
+      uint256 _actualRepayAmount = _repayDebtByAmount(_subAccount, _debtShareId, _removedCollat, lyfDs);
 
       emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualRepayAmount);
     }
@@ -343,6 +333,30 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _desireTokenAmount - _tokenAmountFromCollat - _tokenAmountFromIbCollat,
       lyfDs
     );
+  }
+
+  function _repayDebtByAmount(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _repayAmount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualRepayAmount) {
+    (, _actualRepayAmount) = LibLYF01.removeDebtByAmount(_subAccount, _debtShareId, _repayAmount, lyfDs);
+
+    // validate after remove debt
+    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
+  }
+
+  function _repayDebtByShare(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _repayShare,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _actualRepayAmount) {
+    _actualRepayAmount = LibLYF01.removeDebtByShare(_subAccount, _debtShareId, _repayShare, lyfDs);
+
+    // validate after remove debt
+    LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
