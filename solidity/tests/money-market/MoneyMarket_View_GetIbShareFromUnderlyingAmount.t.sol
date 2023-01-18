@@ -6,7 +6,7 @@ import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
 // mocks
 import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
-contract MoneyMarket_View_getIbShareFromUnderlyingAmount is MoneyMarket_BaseTest {
+contract MoneyMarket_View_getIbShareFromUnderlyingAmountTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
