@@ -84,7 +84,7 @@ contract LYFViewFacet is ILYFViewFacet {
     uint256 _subAccountId,
     address _token,
     address _lpToken
-  ) public view returns (uint256 _debtShare, uint256 _debtAmount) {
+  ) external view returns (uint256 _debtShare, uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
@@ -113,7 +113,7 @@ contract LYFViewFacet is ILYFViewFacet {
     return lyfDs.debtLastAccrueTime[_debtShareId];
   }
 
-  function getPendingInterest(address _token, address _lpToken) public view returns (uint256) {
+  function getPendingInterest(address _token, address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     return LibLYF01.pendingInterest(_debtShareId, lyfDs);
