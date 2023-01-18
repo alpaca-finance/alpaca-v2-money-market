@@ -87,13 +87,13 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     );
 
     // after accure debt share = 20, debt value = 25
-    // user repay 5 ether
-    // actual repay share = 5 * 20 / 25 = 4 ether
-    assertEq(_bobDebtShare, 16 ether, "expected debt shares is mismatch"); // 20 - 4 = 16
-    assertEq(_bobDebtValue, 20 ether, "expected debt value is mismatch"); // 25 - 5 = 20
+    // user repay 5 share
+    // actual repay share = 5 * 25 / 20 = 6.25 ether
+    assertEq(_bobDebtShare, 15 ether, "expected debt shares is mismatch"); // 20 - 5 = 15
+    assertEq(_bobDebtValue, 18.75 ether, "expected debt value is mismatch"); // 25 - 6.25 = 18.75
 
     // 2. repay > debt
-    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 25 ether);
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
     (_bobDebtShare, _bobDebtValue) = viewFacet.getSubAccountDebt(
       BOB,
       subAccount0,
@@ -101,9 +101,9 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
       address(wethUsdcLPToken)
     );
 
-    // after accure debt share = 16, debt value = 20
-    // user repay 25 ether but can pay only 20 (debt value)
-    // actual repay amount = 20 * 16 / 20 = 16 tokens
+    // after accure debt share = 15, debt value = 18.75
+    // user repay 20 share but can pay only 15
+    // actual repay amount = 15 * 18.75 / 15 = 18.75 tokens
     assertEq(_bobDebtShare, 0 ether, "still has debt share remaining");
     assertEq(_bobDebtValue, 0 ether, "still has debt value remaining");
 
@@ -143,5 +143,56 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     farmFacet.repayWithCollat(subAccount0, address(usdc), address(wethUsdcLPToken), 20 ether);
 
     vm.stopPrank();
+  }
+
+  function testRevert_WhenUserRepayMoreThanCollat() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+    uint256 _bobDebtShare;
+    uint256 _bobDebtValue;
+
+    (_bobDebtShare, _bobDebtValue) = viewFacet.getSubAccountDebt(
+      BOB,
+      subAccount0,
+      address(weth),
+      address(wethUsdcLPToken)
+    );
+
+    assertEq(_bobDebtShare, 20 ether, "expected debt share before repay is not match");
+    assertEq(_bobDebtValue, 20 ether, "expected debt value before repay is not match");
+
+    // warp time to make share value changed
+    // before debt share = 20, debt value = 20
+    vm.warp(block.timestamp + 25);
+
+    // timepast * interest rate * debt value = 25 * 0.01 * 20 = 5
+    assertEq(
+      viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken)),
+      5 ether,
+      "expected interest is not match"
+    );
+
+    vm.prank(BOB);
+    // repay without collat amount
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector));
+    farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
   }
 }

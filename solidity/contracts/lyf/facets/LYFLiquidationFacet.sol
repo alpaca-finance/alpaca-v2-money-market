@@ -433,13 +433,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _debtShareId,
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _repaidShare, uint256 _repaidAmount) {
-    (_repaidShare, _repaidAmount) = LibLYF01.geSubAccountMaxPossibleDebtsByShare(
-      _subAccount,
-      _debtShareId,
+  ) internal {
+    uint256 _shareToRepay = LibShareUtil.valueToShare(
       _repayAmount,
-      lyfDs
+      lyfDs.debtShares[_debtShareId],
+      lyfDs.debtValues[_debtShareId]
     );
-    LibLYF01.removeDebt(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
+    LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToRepay, _repayAmount, lyfDs);
   }
 }

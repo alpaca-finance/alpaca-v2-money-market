@@ -271,20 +271,21 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
-    (uint256 _possibleShareToRepay, uint256 _possibleDebtToRepay) = LibLYF01.geSubAccountMaxPossibleDebtsByShare(
-      _subAccount,
-      _debtShareId,
-      _debtShareToRepay,
-      lyfDs
+    uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _actualShareToRepay = LibFullMath.min(_debtShareToRepay, _subAccountDebtShare);
+    uint256 _actualRepayAmount = LibShareUtil.shareToValue(
+      _actualShareToRepay,
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
     );
-    _repayDebt(_subAccount, _debtShareId, _possibleShareToRepay, _possibleDebtToRepay, lyfDs);
+    _repayDebt(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
 
     // transfer only amount to repay
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _possibleDebtToRepay);
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
     // update reserves of the token. This will impact the outstanding balance
-    lyfDs.reserves[_token] += _possibleDebtToRepay;
+    lyfDs.reserves[_token] += _actualRepayAmount;
 
-    emit LogRepay(_subAccount, _token, _possibleDebtToRepay);
+    emit LogRepay(_subAccount, _token, _actualRepayAmount);
   }
 
   function reinvest(address _lpToken) external nonReentrant {
@@ -329,7 +330,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // if collat is not enough to repay debt, revert
     if (lyfDs.subAccountCollats[_subAccount].getAmount(_token) < _actualDebtToRemove) {
-      revert("test"); // todo: custom error
+      revert LYFFarmFacet_CollatNotEnough();
     }
 
     if (_actualDebtShareToRemove != 0) {
