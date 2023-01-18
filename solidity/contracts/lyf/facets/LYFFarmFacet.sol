@@ -310,7 +310,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    // todo: check asset tier, if not collat, revert
+    // check asset tier, if not collat, revert
+    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+      revert LYFFarmFacet_InvalidAssetTier();
+    }
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);

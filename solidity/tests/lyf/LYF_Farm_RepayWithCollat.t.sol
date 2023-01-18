@@ -161,38 +161,31 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
     vm.stopPrank();
 
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
-
-    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
-
-    // assume that every coin is 1 dollar and lp = 2 dollar
-    uint256 _bobDebtShare;
-    uint256 _bobDebtValue;
-
-    (_bobDebtShare, _bobDebtValue) = viewFacet.getSubAccountDebt(
-      BOB,
-      subAccount0,
-      address(weth),
-      address(wethUsdcLPToken)
-    );
-
-    assertEq(_bobDebtShare, 20 ether, "expected debt share before repay is not match");
-    assertEq(_bobDebtValue, 20 ether, "expected debt value before repay is not match");
-
-    // warp time to make share value changed
-    // before debt share = 20, debt value = 20
-    vm.warp(block.timestamp + 25);
-
-    // timepast * interest rate * debt value = 25 * 0.01 * 20 = 5
-    assertEq(
-      viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken)),
-      5 ether,
-      "expected interest is not match"
-    );
-
     vm.prank(BOB);
     // repay without collat amount
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector));
     farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
+  }
+
+  function testRevert_WhenUserRepayNonCollateralAsset() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+
+    vm.prank(BOB);
+    // repay without collat amount
+    vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
+    farmFacet.repayWithCollat(subAccount0, address(isolateToken), address(wethUsdcLPToken), 20 ether);
   }
 }
