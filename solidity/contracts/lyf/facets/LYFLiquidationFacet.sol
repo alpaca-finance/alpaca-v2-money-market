@@ -440,6 +440,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _repayAmount,
       lyfDs
     );
-    LibLYF01.removeDebts(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
+    LibLYF01.removeDebt(_subAccount, _debtShareId, _repaidShare, _repaidAmount, lyfDs);
   }
 }

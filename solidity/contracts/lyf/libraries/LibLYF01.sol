@@ -616,7 +616,7 @@ library LibLYF01 {
     }
   }
 
-  function removeDebts(
+  function removeDebt(
     address _subAccount,
     uint256 _debtShareId,
     uint256 _debtShareToRemove,
