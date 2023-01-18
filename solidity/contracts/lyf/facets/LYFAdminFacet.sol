@@ -13,7 +13,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
 
-  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
+  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
@@ -140,10 +140,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.treasury = _newTreasury;
   }
 
-  function setMaxNumOfToken(uint8 _numOfCollat) external onlyOwner {
+  function setMaxNumOfToken(uint8 _numOfCollat, uint8 _numOfDebt) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.maxNumOfCollatPerSubAccount = _numOfCollat;
-    emit LogSetMaxNumOfToken(_numOfCollat);
+    lyfDs.maxNumOfDebtPerSubAccount = _numOfDebt;
+    emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt);
   }
 
   /// @notice Withdraw the protocol's reserve

@@ -67,7 +67,9 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     address oracle;
+    // maximum number of token in the linked list
     uint8 maxNumOfCollatPerSubAccount;
+    uint8 maxNumOfDebtPerSubAccount;
     uint256 minDebtSize;
     mapping(address => uint256) reserves;
     mapping(address => uint256) protocolReserves;
@@ -555,5 +557,9 @@ library LibLYF01 {
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
+
+    if (userDebtShare.length() > lyfDs.maxNumOfDebtPerSubAccount) {
+      revert LibLYF01_NumberOfTokenExceedLimit();
+    }
   }
 }

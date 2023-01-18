@@ -47,7 +47,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
     assertEq(viewFacet.getMaxNumOfToken(), 3); // 3 is set from basetest
-    adminFacet.setMaxNumOfToken(10);
+    adminFacet.setMaxNumOfToken(10, 10);
     assertEq(viewFacet.getMaxNumOfToken(), 10);
   }
 

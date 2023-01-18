@@ -252,7 +252,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setTreasury(treasury);
 
     // set max num of tokens
-    adminFacet.setMaxNumOfToken(3);
+    adminFacet.setMaxNumOfToken(3, 3);
   }
 
   function setUpMM() internal {
