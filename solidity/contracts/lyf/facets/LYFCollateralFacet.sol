@@ -41,6 +41,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
+    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+      revert LYFCollateralFacet_TokenNotAllowedAsCollateral(_token);
+    }
     if (_amount + lyfDs.collats[_token] > lyfDs.tokenConfigs[_token].maxCollateral) {
       revert LYFCollateralFacet_ExceedCollateralLimit();
     }
@@ -50,10 +53,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     LibLYF01.addCollat(_subAccount, _token, _amount, lyfDs);
-
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
-      LibLYF01.depositToMasterChef(_token, lyfDs.lpConfigs[_token].masterChef, lyfDs.lpConfigs[_token].poolId, _amount);
-    }
 
     emit LogAddCollateral(_subAccount, _token, _amount);
   }

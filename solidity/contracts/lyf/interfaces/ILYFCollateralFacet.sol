@@ -27,4 +27,5 @@ interface ILYFCollateralFacet {
   error LYFCollateralFacet_TooManyCollateralRemoved();
   error LYFCollateralFacet_BorrowingPowerTooLow();
   error LYFCollateralFacet_ExceedCollateralLimit();
+  error LYFCollateralFacet_TokenNotAllowedAsCollateral(address _token);
 }
