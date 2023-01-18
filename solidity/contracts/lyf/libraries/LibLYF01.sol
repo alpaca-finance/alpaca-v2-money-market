@@ -336,8 +336,8 @@ library LibLYF01 {
   ) internal returns (uint256 _amountRemoved) {
     LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
 
-    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
-    if (_collateralAmount > 0) {
+    if (_subAccountCollatList.has(_token)) {
+      uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
       _amountRemoved = _removeAmount > _collateralAmount ? _collateralAmount : _removeAmount;
 
       _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
