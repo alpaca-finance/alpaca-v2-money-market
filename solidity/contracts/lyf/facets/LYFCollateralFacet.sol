@@ -64,6 +64,10 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
+    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
+      revert LYFCollateralFacet_RemoveLPCollateralNotAllowed();
+    }
+
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
@@ -73,13 +77,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
-    }
-
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
-      IMasterChefLike(lyfDs.lpConfigs[_token].masterChef).withdraw(
-        lyfDs.lpConfigs[_token].poolId,
-        _actualAmountRemoved
-      );
     }
 
     IERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
