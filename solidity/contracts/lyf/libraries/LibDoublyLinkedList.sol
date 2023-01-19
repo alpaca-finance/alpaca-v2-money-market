@@ -38,6 +38,10 @@ library LibDoublyLinkedList {
     uint256 amount
   ) internal returns (List storage) {
     // Check
+    // prevent adding empty node
+    if (amount == 0) {
+      return list;
+    }
     if (has(list, addr)) {
       revert LibDoublyLinkedList_Existed();
     }

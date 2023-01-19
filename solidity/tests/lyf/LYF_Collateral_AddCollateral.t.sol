@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LYF_BaseTest } from "./LYF_BaseTest.t.sol";
+import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
@@ -164,5 +164,12 @@ contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
       )
     );
     collateralFacet.addCollateral(ALICE, subAccount0, address(_unlistedToken), 10 ether);
+  }
+
+  function testCorrectness_WhenLYFAddCollateralZeroAmount_ShouldNotAddNewNode() external {
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 0);
+    LibDoublyLinkedList.Node[] memory _subAccountCollats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
+    assertEq(_subAccountCollats.length, 0);
   }
 }

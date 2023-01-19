@@ -336,8 +336,8 @@ library LibLYF01 {
   ) internal returns (uint256 _amountRemoved) {
     LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
 
-    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
-    if (_collateralAmount > 0) {
+    if (_subAccountCollatList.has(_token)) {
+      uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
       _amountRemoved = _removeAmount > _collateralAmount ? _collateralAmount : _removeAmount;
 
       _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
@@ -536,16 +536,15 @@ library LibLYF01 {
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
 
-    if (
-      lyfDs.subAccountDebtShares[_subAccount].getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY
-    ) {
-      lyfDs.subAccountDebtShares[_subAccount].init();
+    if (userDebtShare.getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY) {
+      userDebtShare.init();
     }
 
-    uint256 _totalSupply = lyfDs.debtShares[_debtShareId];
-    uint256 _totalValue = lyfDs.debtValues[_debtShareId];
-
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
+      _amount,
+      lyfDs.debtShares[_debtShareId],
+      lyfDs.debtValues[_debtShareId]
+    );
 
     // update over collat debt
     lyfDs.debtShares[_debtShareId] += _shareToAdd;
