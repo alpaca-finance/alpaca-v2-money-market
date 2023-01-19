@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// libs
+// ---- Libraries ---- //
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
+// ---- Interfaces ---- //
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
@@ -33,6 +35,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   }
 
   function setOracle(address _oracle) external onlyOwner {
+    // sanity check
+    IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.oracle = _oracle;
 
@@ -64,12 +68,6 @@ contract LYFAdminFacet is ILYFAdminFacet {
         ++_i;
       }
     }
-  }
-
-  function setMoneyMarket(address _moneyMarket) external onlyOwner {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.moneyMarket = _moneyMarket;
-    emit LogSetMoneyMarket(_moneyMarket);
   }
 
   function setLPConfigs(LPConfigInput[] calldata _configs) external onlyOwner {
@@ -124,8 +122,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
     emit LogSetDebtShareId(_token, _lpToken, _debtShareId);
   }
 
-  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external {
+  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    // sanity check
+    IInterestRateModel(_interestModel).getInterestRate(1, 1);
+
     lyfDs.interestModels[_debtShareId] = _interestModel;
     emit LogSetDebtInterestModel(_debtShareId, _interestModel);
   }

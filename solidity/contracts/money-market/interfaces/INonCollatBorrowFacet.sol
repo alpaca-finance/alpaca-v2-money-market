@@ -4,14 +4,6 @@ pragma solidity 0.8.17;
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface INonCollatBorrowFacet {
-  function nonCollatBorrow(address _token, uint256 _amount) external;
-
-  function nonCollatRepay(
-    address _account,
-    address _token,
-    uint256 _repayAmount
-  ) external;
-
   // Errors
   error NonCollatBorrowFacet_InvalidToken(address _token);
   error NonCollatBorrowFacet_NotEnoughToken(uint256 _borrowAmount);
@@ -24,4 +16,12 @@ interface INonCollatBorrowFacet {
   error NonCollatBorrowFacet_ExceedBorrowLimit();
   error NonCollatBorrowFacet_ExceedAccountBorrowLimit();
   error NonCollatBorrowFacet_Unauthorized();
+
+  function nonCollatBorrow(address _token, uint256 _amount) external;
+
+  function nonCollatRepay(
+    address _account,
+    address _token,
+    uint256 _repayAmount
+  ) external;
 }

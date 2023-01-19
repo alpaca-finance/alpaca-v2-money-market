@@ -4,6 +4,10 @@ pragma solidity 0.8.17;
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
 interface ILYFAdminFacet {
+  error LYFAdminFacet_BadDebtShareId();
+  error LYFAdminFacet_ReserveTooLow();
+  error LYFAdminFacet_NotEnoughToken();
+
   struct TokenConfigInput {
     address token;
     LibLYF01.AssetTier tier;
@@ -28,8 +32,6 @@ interface ILYFAdminFacet {
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
-  function setMoneyMarket(address _moneyMarket) external;
-
   function setLPConfigs(LPConfigInput[] calldata _configs) external;
 
   function setDebtShareId(
@@ -51,8 +53,4 @@ interface ILYFAdminFacet {
     address _to,
     uint256 _amount
   ) external;
-
-  error LYFAdminFacet_BadDebtShareId();
-  error LYFAdminFacet_ReserveTooLow();
-  error LYFAdminFacet_NotEnoughToken();
 }

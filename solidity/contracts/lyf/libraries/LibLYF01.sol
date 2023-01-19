@@ -108,46 +108,44 @@ library LibLYF01 {
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
-  function pendingInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs)
-    internal
-    view
-    returns (uint256 _pendingInterest)
-  {
-    uint256 _lastAccrueTime = lyfDs.debtLastAccrueTime[_debtShareId];
-    if (block.timestamp > _lastAccrueTime) {
-      uint256 _timePast = block.timestamp - _lastAccrueTime;
-      address _interestModel = address(lyfDs.interestModels[_debtShareId]);
-      if (_interestModel != address(0)) {
-        address _token = lyfDs.debtShareTokens[_debtShareId];
-        uint256 _debtValue = IMoneyMarket(lyfDs.moneyMarket).getGlobalDebtValue(_token);
-        uint256 _floating = IMoneyMarket(lyfDs.moneyMarket).getFloatingBalance(_token);
-        uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
-
-        _pendingInterest = (_interestRate * _timePast * lyfDs.debtValues[_debtShareId]) / 1e18;
-      }
-    }
+  function getDebtSharePendingInterest(
+    address _moneyMarket,
+    address _interestModel,
+    address _token,
+    uint256 _secondsSinceLastAccrual,
+    uint256 _debtShareDebtValue
+  ) internal view returns (uint256 _pendingInterest) {
+    uint256 _mmDebtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValue(_token);
+    uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
+    uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_mmDebtValue, _floating);
+    _pendingInterest = (_interestRate * _secondsSinceLastAccrual * _debtShareDebtValue) / 1e18;
   }
 
-  function accrueInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
-    uint256 _pendingInterest = pendingInterest(_debtShareId, lyfDs);
-    if (_pendingInterest > 0) {
-      // update debt
+  function accrueDebtShareInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
+    uint256 _secondsSinceLastAccrual = block.timestamp - lyfDs.debtLastAccrueTime[_debtShareId];
+    if (_secondsSinceLastAccrual > 0) {
+      uint256 _pendingInterest = getDebtSharePendingInterest(
+        lyfDs.moneyMarket,
+        lyfDs.interestModels[_debtShareId],
+        lyfDs.debtShareTokens[_debtShareId],
+        _secondsSinceLastAccrual,
+        lyfDs.debtValues[_debtShareId]
+      );
+
       lyfDs.debtValues[_debtShareId] += _pendingInterest;
       lyfDs.protocolReserves[lyfDs.debtShareTokens[_debtShareId]] += _pendingInterest;
-    }
-    // update timestamp
-    lyfDs.debtLastAccrueTime[_debtShareId] = block.timestamp;
+      lyfDs.debtLastAccrueTime[_debtShareId] = block.timestamp;
 
-    // TODO: move emit into if ?
-    emit LogAccrueInterest(lyfDs.debtShareTokens[_debtShareId], _pendingInterest, _pendingInterest);
+      emit LogAccrueInterest(lyfDs.debtShareTokens[_debtShareId], _pendingInterest, _pendingInterest);
+    }
   }
 
-  function accrueAllSubAccountDebtShares(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
+  function accrueDebtSharesOf(address _subAccount, LYFDiamondStorage storage lyfDs) internal {
     LibUIntDoublyLinkedList.Node[] memory _debtShares = lyfDs.subAccountDebtShares[_subAccount].getAll();
     uint256 _debtShareLength = _debtShares.length;
 
     for (uint256 _i; _i < _debtShareLength; ) {
-      accrueInterest(_debtShares[_i].index, lyfDs);
+      accrueDebtShareInterest(_debtShares[_i].index, lyfDs);
       unchecked {
         ++_i;
       }
