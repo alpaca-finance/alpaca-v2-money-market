@@ -23,14 +23,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  struct ReducePositionLocalVars {
-    address subAccount;
-    address token0;
-    address token1;
-    uint256 debtShareId0;
-    uint256 debtShareId1;
-  }
-
   event LogRemoveDebt(
     address indexed _subAccount,
     uint256 indexed _debtShareId,
@@ -49,6 +41,14 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareId,
     uint256 _actualRepayAmount
   );
+
+  struct ReducePositionLocalVars {
+    address subAccount;
+    address token0;
+    address token1;
+    uint256 debtShareId0;
+    uint256 debtShareId1;
+  }
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
