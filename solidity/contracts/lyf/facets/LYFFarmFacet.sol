@@ -311,7 +311,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
 
-
     // handle if transfer from has fee
     uint256 _actualReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
 
@@ -364,7 +363,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (uint256 _currentDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     // min(debtShareToRepay, currentDebtShare)
     uint256 _actualDebtShareToRemove = _debtShareToRepay > _currentDebtShare ? _currentDebtShare : _debtShareToRepay;
