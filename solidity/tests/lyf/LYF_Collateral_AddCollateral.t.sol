@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LYF_BaseTest } from "./LYF_BaseTest.t.sol";
+import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
@@ -9,6 +9,9 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
+
+// mocks
+import { MockERC20 } from "../mocks/MockERC20.sol";
 
 contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
   function setUp() public override {
@@ -136,59 +139,37 @@ contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
     assertEq(ibWeth.balanceOf(lyfDiamond), 10 ether);
   }
 
-  function testCorrectness_WhenLYFAddCollateralWithLP_ShouldDepositToMasterChef() external {
+  function testRevert_WhenLYFAddCollateralWithLPToken() external {
     wethUsdcLPToken.mint(ALICE, 10 ether);
-
-    (uint256 _amountInMasterChef, ) = masterChef.userInfo(wethUsdcPoolId, lyfDiamond);
-    assertEq(_amountInMasterChef, 0);
-
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(lyfDiamond, 10 ether);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ILYFCollateralFacet.LYFCollateralFacet_TokenNotAllowedAsCollateral.selector,
+        address(wethUsdcLPToken)
+      )
+    );
     collateralFacet.addCollateral(ALICE, subAccount0, address(wethUsdcLPToken), 10 ether);
-
-    (_amountInMasterChef, ) = masterChef.userInfo(wethUsdcPoolId, lyfDiamond);
-    assertEq(_amountInMasterChef, 10 ether);
   }
 
-  function testCorrectness_WhenMultipleUsersLYFAddCollateralWithLP_PreviousUserShouldReceivePendingRewards() external {
-    // setup test
-    // mint and approve for setting reward in mockMasterChef
-    // this mock masterChef give out cake rewards, set in LYF_BaseTest
-    cake.mint(address(this), 100000 ether);
-    cake.approve(address(masterChef), type(uint256).max);
-
-    wethUsdcLPToken.mint(ALICE, 10 ether);
-    wethUsdcLPToken.mint(BOB, 10 ether);
-
-    address _lpToken = address(wethUsdcLPToken);
-    uint256 _amountToAddCollateral = 10 ether;
-
+  function testRevert_WhenLYFAddCollateralWithUnlisedToken() external {
+    MockERC20 _unlistedToken = new MockERC20("UNLISTED", "UNLISTED", 18);
+    _unlistedToken.mint(ALICE, 10 ether);
     vm.startPrank(ALICE);
-    wethUsdcLPToken.approve(lyfDiamond, _amountToAddCollateral);
-    collateralFacet.addCollateral(ALICE, subAccount0, _lpToken, _amountToAddCollateral);
-    vm.stopPrank();
+    _unlistedToken.approve(lyfDiamond, 10 ether);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        ILYFCollateralFacet.LYFCollateralFacet_TokenNotAllowedAsCollateral.selector,
+        address(_unlistedToken)
+      )
+    );
+    collateralFacet.addCollateral(ALICE, subAccount0, address(_unlistedToken), 10 ether);
+  }
 
-    // set 1 cake pendingReward for lyfDiamond
-    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 1 ether);
-
-    // when BOB addCollateral lyf should reinvest pendingReward for previous users aka. ALICE
-    vm.startPrank(BOB);
-    wethUsdcLPToken.approve(lyfDiamond, _amountToAddCollateral);
-    collateralFacet.addCollateral(BOB, subAccount0, _lpToken, _amountToAddCollateral);
-    vm.stopPrank();
-
-    // when ALICE removeCollateral should get principal + reward back = 10 + 0.5
-    // 0.5 LP from dumping reward 1 cake for 1 usdc and let strategy compose into 0.5 LP
-    uint256 _aliceLPBalanceBefore = wethUsdcLPToken.balanceOf(ALICE);
-    vm.prank(ALICE);
-    collateralFacet.removeCollateral(subAccount0, _lpToken, _amountToAddCollateral);
-    // 1 wei precision loss during shareToValue calculation
-    assertEq(wethUsdcLPToken.balanceOf(ALICE) - _aliceLPBalanceBefore, 10.499999999999999999 ether);
-
-    uint256 _bobLPBalanceBefore = wethUsdcLPToken.balanceOf(BOB);
-    vm.prank(BOB);
-    collateralFacet.removeCollateral(subAccount0, _lpToken, _amountToAddCollateral);
-    // 1 wei gain from ALICE's precision loss
-    assertEq(wethUsdcLPToken.balanceOf(BOB) - _bobLPBalanceBefore, 10.000000000000000001 ether);
+  function testCorrectness_WhenLYFAddCollateralZeroAmount_ShouldNotAddNewNode() external {
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 0);
+    LibDoublyLinkedList.Node[] memory _subAccountCollats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
+    assertEq(_subAccountCollats.length, 0);
   }
 }
