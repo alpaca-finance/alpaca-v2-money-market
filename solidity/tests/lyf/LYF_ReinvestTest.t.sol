@@ -134,7 +134,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(BOB), subAccount0, address(wethUsdcLPToken), _bobLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount
+    );
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
@@ -149,7 +157,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // ALICE deposit another 30 lp
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(ALICE), subAccount0, address(wethUsdcLPToken), _aliceLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount
+    );
     vm.stopPrank();
 
     address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
@@ -182,7 +198,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(BOB), subAccount0, address(wethUsdcLPToken), _bobLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount
+    );
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
@@ -192,7 +216,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // ALICE deposit another 25 lp
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(ALICE), subAccount0, address(wethUsdcLPToken), _aliceLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount
+    );
     vm.stopPrank();
 
     // bob shares = 50
@@ -211,7 +243,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // bob remove 10 shares
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.removeCollateral(subAccount0, address(wethUsdcLPToken), 10 ether);
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 10 ether, 0, 0);
     vm.stopPrank();
 
     // 10 shares = 10 * 85 / 75 = 11.333333333333333333 lpValue
