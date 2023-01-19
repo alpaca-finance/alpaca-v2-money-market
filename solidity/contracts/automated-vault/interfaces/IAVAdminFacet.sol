@@ -4,6 +4,11 @@ pragma solidity 0.8.17;
 import { LibAV01 } from "../libraries/LibAV01.sol";
 
 interface IAVAdminFacet {
+  error AVTradeFacet_InvalidToken(address _token);
+  error AVAdminFacet_InvalidShareToken(address _token);
+  error AVAdminFacet_InvalidHandler();
+  error AVAdminFacet_InvalidParams();
+
   struct ShareTokenPairs {
     address token;
     address vaultToken;
@@ -24,22 +29,6 @@ interface IAVAdminFacet {
     LibAV01.AssetTier tier;
     address token;
   }
-
-  error AVTradeFacet_InvalidToken(address _token);
-  error AVAdminFacet_InvalidShareToken(address _token);
-  error AVAdminFacet_InvalidHandler();
-  error AVAdminFacet_InvalidParams();
-
-  event LogOpenVault(
-    address indexed _caller,
-    address indexed _lpToken,
-    address _stableToken,
-    address _assetToken,
-    address _vaultToken
-  );
-  event LogSetRepurchaseRewardBps(uint256 _newBps);
-  event LogSetOperatorOk(address indexed _operator, bool _isOk);
-  event LogSetRepurchaserOk(address indexed _repurchaser, bool _isOk);
 
   function openVault(
     address _lpToken,

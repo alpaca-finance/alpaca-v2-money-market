@@ -14,6 +14,17 @@ import { LibAV01 } from "../libraries/LibAV01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract AVAdminFacet is IAVAdminFacet {
+  event LogOpenVault(
+    address indexed _caller,
+    address indexed _lpToken,
+    address _stableToken,
+    address _assetToken,
+    address _vaultToken
+  );
+  event LogSetRepurchaseRewardBps(uint256 _newBps);
+  event LogSetOperatorOk(address indexed _operator, bool _isOk);
+  event LogSetRepurchaserOk(address indexed _repurchaser, bool _isOk);
+
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
     _;
