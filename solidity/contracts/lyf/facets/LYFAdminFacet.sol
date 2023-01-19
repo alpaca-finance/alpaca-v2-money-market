@@ -26,7 +26,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
   event LogSetLiquidatorsOk(address indexed _liquidator, bool isOk);
   event LogSetTreasury(address indexed _trasury);
-  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat);
+  event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
   modifier onlyOwner() {
@@ -191,10 +191,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
     emit LogSetTreasury(_newTreasury);
   }
 
-  function setMaxNumOfToken(uint8 _numOfCollat) external onlyOwner {
+  function setMaxNumOfToken(uint8 _numOfCollat, uint8 _numOfDebt) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.maxNumOfCollatPerSubAccount = _numOfCollat;
-    emit LogSetMaxNumOfToken(_numOfCollat);
+    lyfDs.maxNumOfDebtPerSubAccount = _numOfDebt;
+    emit LogSetMaxNumOfToken(_numOfCollat, _numOfDebt);
   }
 
   /// @notice Withdraw the protocol's reserve
