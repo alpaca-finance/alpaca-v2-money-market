@@ -403,23 +403,26 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _rewardBps,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
-    address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
+    address _moneyMarket = lyfDs.moneyMarket;
+    address _underlyingToken = IMoneyMarket(_moneyMarket).getTokenFromIbToken(_collatToken);
 
     uint256 _collatTokenPrice;
-    // _collatToken is ibToken
-    if (_actualToken != address(0)) {
-      _collatTokenPrice = LibLYF01.getIbPriceUSD(_collatToken, _actualToken, lyfDs);
+    if (_underlyingToken != address(0)) {
+      // if _collatToken is ibToken convert underlying price to ib price
+      _collatTokenPrice =
+        (LibLYF01.getPriceUSD(_underlyingToken, lyfDs) *
+          LibLYF01.getIbToUnderlyingConversionFactor(_collatToken, _underlyingToken, _moneyMarket)) /
+        1e18;
+      // _collatTokenPrice = LibLYF01.convertUnderlyingToIb(_collatToken, _underlyingToken, _underlyingPrice, lyfDs);
     } else {
       // _collatToken is normal ERC20 or LP token
       _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);
     }
 
-    LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
-
     // _collatAmountOut = _collatValueInUSD + _rewardInUSD
     _collatAmountOut =
       (_collatValueInUSD * (10000 + _rewardBps) * 1e14) /
-      (_collatTokenPrice * _tokenConfig.to18ConversionFactor);
+      (_collatTokenPrice * lyfDs.tokenConfigs[_collatToken].to18ConversionFactor);
 
     uint256 _totalSubAccountCollat = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 
