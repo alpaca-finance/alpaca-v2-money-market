@@ -260,28 +260,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
   }
 
-  function _getActualDebtToRepay(
-    address _subAccount,
-    uint256 _debtShareId,
-    uint256 _desiredRepayAmount,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _actualShareToRepay, uint256 _actualToRepay) {
-    uint256 _debtValues = lyfDs.debtValues[_debtShareId];
-    uint256 _debtShares = lyfDs.debtValues[_debtShareId];
-
-    // debt share of sub account
-    _actualShareToRepay = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-    // Note: precision loss 1 wei when convert share back to value
-    // debt value of sub account
-    _actualToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _debtValues, _debtShares);
-
-    if (_actualToRepay > _desiredRepayAmount) {
-      _actualToRepay = _desiredRepayAmount;
-      // convert desiredRepayAmount to share
-      _actualShareToRepay = LibShareUtil.valueToShare(_desiredRepayAmount, _debtShares, _debtValues);
-    }
-  }
-
   function repay(
     address _account,
     uint256 _subAccountId,
@@ -431,5 +409,27 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
+  }
+
+  function _getActualDebtToRepay(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _desiredRepayAmount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _actualShareToRepay, uint256 _actualToRepay) {
+    uint256 _debtValues = lyfDs.debtValues[_debtShareId];
+    uint256 _debtShares = lyfDs.debtValues[_debtShareId];
+
+    // debt share of sub account
+    _actualShareToRepay = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    // Note: precision loss 1 wei when convert share back to value
+    // debt value of sub account
+    _actualToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _debtValues, _debtShares);
+
+    if (_actualToRepay > _desiredRepayAmount) {
+      _actualToRepay = _desiredRepayAmount;
+      // convert desiredRepayAmount to share
+      _actualShareToRepay = LibShareUtil.valueToShare(_desiredRepayAmount, _debtShares, _debtValues);
+    }
   }
 }
