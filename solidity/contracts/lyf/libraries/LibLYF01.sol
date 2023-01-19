@@ -518,7 +518,6 @@ library LibLYF01 {
     emit LogReinvest(msg.sender, 0, 0);
   }
 
-  // TODO: stop exec if _debtShareId == 0
   function borrowFromMoneyMarket(
     address _subAccount,
     address _token,
