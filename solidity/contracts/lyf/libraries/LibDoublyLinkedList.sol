@@ -22,96 +22,73 @@ library LibDoublyLinkedList {
     uint256 amount;
   }
 
-  function init(List storage list) internal returns (List storage) {
+  function init(List storage list) internal {
     list.next[START] = END;
     list.prev[END] = START;
-    return list;
   }
 
   function has(List storage list, address addr) internal view returns (bool) {
     return list.next[addr] != EMPTY;
   }
 
-  function add(
-    List storage list,
-    address addr,
-    uint256 amount
-  ) internal returns (List storage) {
-    // Check
-    // prevent adding empty node
-    if (amount == 0) {
-      return list;
-    }
-    if (has(list, addr)) {
-      revert LibDoublyLinkedList_Existed();
-    }
-
-    // Effect
-    list.next[addr] = list.next[START];
-    list.prev[list.next[START]] = addr;
-    list.prev[addr] = START;
-
-    list.next[START] = addr;
-    list.amount[addr] = amount;
-    list.size++;
-
-    return list;
-  }
-
-  function remove(List storage list, address addr) internal returns (List storage) {
-    // Check
-    if (!has(list, addr)) {
-      revert LibDoublyLinkedList_NotExisted();
-    }
-
-    // Effect
-    address prevAddr = list.prev[addr];
-    list.next[prevAddr] = list.next[addr];
-    list.prev[list.next[addr]] = prevAddr;
-
-    // cut the node from current link
-    list.next[addr] = EMPTY;
-    list.prev[addr] = EMPTY;
-
-    list.amount[addr] = 0;
-    list.size--;
-
-    return list;
-  }
-
   function updateOrRemove(
     List storage list,
     address addr,
     uint256 amount
-  ) internal returns (List storage) {
+  ) internal {
+    address nextOfAddr = list.next[addr];
+
     // Check
-    if (!has(list, addr)) {
+    if (nextOfAddr == EMPTY) {
       revert LibDoublyLinkedList_NotExisted();
     }
 
     // Effect
     if (amount == 0) {
-      remove(list, addr);
-    } else {
-      list.amount[addr] = amount;
+      address prevOfAddr = list.prev[addr];
+
+      // cut the node from current link
+      list.next[prevOfAddr] = nextOfAddr;
+      list.prev[nextOfAddr] = prevOfAddr;
+
+      // cut current link from the node
+      list.next[addr] = EMPTY;
+      list.prev[addr] = EMPTY;
+
+      --list.size;
     }
 
-    return list;
+    list.amount[addr] = amount;
   }
 
+  /// @dev adding will put `addr` after `START`
+  /// ex. START <> BTC <> END => START <> addr <> BTC <> END
   function addOrUpdate(
     List storage list,
     address addr,
     uint256 amount
-  ) internal returns (List storage) {
+  ) internal {
     // Check
-    if (!has(list, addr)) {
-      add(list, addr, amount);
-    } else {
-      list.amount[addr] = amount;
+    if (amount == 0) {
+      return;
     }
 
-    return list;
+    // Effect
+    // add `addr` to the link after `START`
+    if (!has(list, addr)) {
+      address nextOfStart = list.next[START];
+      list.next[addr] = nextOfStart;
+      list.prev[nextOfStart] = addr;
+
+      list.prev[addr] = START;
+      list.next[START] = addr;
+
+      unchecked {
+        ++list.size;
+      }
+    }
+
+    list.amount[addr] = amount;
   }
 
   function getAmount(List storage list, address addr) internal view returns (uint256) {
@@ -124,9 +101,12 @@ library LibDoublyLinkedList {
       return nodes;
     }
     address curr = list.next[START];
-    for (uint256 i = 0; curr != END; i++) {
+    for (uint256 i; curr != END; ) {
       nodes[i] = Node({ token: curr, amount: list.amount[curr] });
       curr = list.next[curr];
+      unchecked {
+        ++i;
+      }
     }
     return nodes;
   }
@@ -135,8 +115,8 @@ library LibDoublyLinkedList {
     return list.prev[addr];
   }
 
-  function getNextOf(List storage list, address curr) internal view returns (address) {
-    return list.next[curr];
+  function getNextOf(List storage list, address addr) internal view returns (address) {
+    return list.next[addr];
   }
 
   function length(List storage list) internal view returns (uint256) {
