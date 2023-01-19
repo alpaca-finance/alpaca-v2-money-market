@@ -296,18 +296,36 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.accrueInterest(_debtShareId, lyfDs);
 
-    // remove debt as much as possible
+    // calculate debt as much as possible
     uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
     uint256 _actualShareToRepay = LibFullMath.min(_debtShareToRepay, _subAccountDebtShare);
+
     uint256 _actualRepayAmount = LibShareUtil.shareToValue(
       _actualShareToRepay,
       lyfDs.debtValues[_debtShareId],
       lyfDs.debtShares[_debtShareId]
     );
-    _removeDebtAndValidate(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
+
+    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+
+
+    // handle if transfer from has fee
+    uint256 _actualReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+
+    // if transfer has fee then we should repay debt = we received
+    if (_actualReceived != _actualRepayAmount) {
+      _actualRepayAmount = _actualReceived;
+      _actualShareToRepay = LibShareUtil.valueToShare(
+        _actualRepayAmount,
+        lyfDs.debtShares[_debtShareId],
+        lyfDs.debtValues[_debtShareId]
+      );
+    }
+
+    _removeDebtAndValidate(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
 
     // update reserves of the token. This will impact the outstanding balance
     lyfDs.reserves[_token] += _actualRepayAmount;
@@ -351,7 +369,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // min(debtShareToRepay, currentDebtShare)
     uint256 _actualDebtShareToRemove = _debtShareToRepay > _currentDebtShare ? _currentDebtShare : _debtShareToRepay;
 
-    // find the value of _actual share to repay
+    // convert debtShare to debtAmount
     uint256 _actualDebtToRemove = LibShareUtil.shareToValue(
       _actualDebtShareToRemove,
       lyfDs.debtValues[_debtShareId],
@@ -363,14 +381,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_CollatNotEnough();
     }
 
-    if (_actualDebtShareToRemove != 0) {
-      // remove collat from subaccount
-      LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
+    // remove collat from subaccount
+    LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
 
-      _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
+    _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
 
-      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
-    }
+    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
   }
 
   /// @dev this method should only be called by addFarmPosition context

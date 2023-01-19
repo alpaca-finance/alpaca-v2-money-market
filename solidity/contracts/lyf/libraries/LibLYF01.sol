@@ -36,7 +36,6 @@ library LibLYF01 {
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
-  error LibLYF01_TooMuchDebtShareToRemove();
 
   enum AssetTier {
     UNLISTED,
@@ -569,10 +568,6 @@ library LibLYF01 {
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
     uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-
-    if (_debtShareToRemove > _maxDebtShareToRemove) {
-      revert LibLYF01_TooMuchDebtShareToRemove();
-    }
 
     // update user debtShare
     lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _maxDebtShareToRemove - _debtShareToRemove);
