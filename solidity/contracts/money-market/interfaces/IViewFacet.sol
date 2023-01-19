@@ -67,11 +67,6 @@ interface IViewFacet {
 
   function getTotalToken(address _token) external view returns (uint256);
 
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _shareAmount);
-
   function getTotalTokenWithPendingInterest(address _token) external view returns (uint256);
 
   function getNonCollatAccountDebtValues(address _account) external view returns (LibDoublyLinkedList.Node[] memory);
