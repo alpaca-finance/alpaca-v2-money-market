@@ -105,14 +105,6 @@ library LibLYF01 {
     return address(uint160(primary) ^ uint160(subAccountId));
   }
 
-  function setTokenConfig(
-    address _token,
-    TokenConfig memory _config,
-    LYFDiamondStorage storage lyfDs
-  ) internal {
-    lyfDs.tokenConfigs[_token] = _config;
-  }
-
   function pendingInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs)
     internal
     view
@@ -212,19 +204,20 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-    uint256 _tokenPrice;
+
+    TokenConfig memory _tokenConfig;
+    address _debtToken;
+
     for (uint256 _i; _i < _borrowedLength; ) {
-      address _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
-      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
-      _tokenPrice = getPriceUSD(_debtToken, lyfDs);
-      uint256 _borrowedAmount = LibShareUtil.shareToValue(
-        _borrowed[_i].amount,
-        lyfDs.debtValues[_borrowed[_i].index],
-        lyfDs.debtShares[_borrowed[_i].index]
-      );
+      _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
+      _tokenConfig = lyfDs.tokenConfigs[_debtToken];
       _totalUsedBorrowingPower += usedBorrowingPower(
-        _borrowedAmount,
-        _tokenPrice,
+        LibShareUtil.shareToValue(
+          _borrowed[_i].amount,
+          lyfDs.debtValues[_borrowed[_i].index],
+          lyfDs.debtShares[_borrowed[_i].index]
+        ),
+        getPriceUSD(_debtToken, lyfDs),
         _tokenConfig.borrowingFactor,
         _tokenConfig.to18ConversionFactor
       );
@@ -242,23 +235,19 @@ library LibLYF01 {
     LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
 
     uint256 _borrowedLength = _borrowed.length;
-    uint256 _tokenPrice;
-    uint256 _borrowedAmount;
     address _debtToken;
+
     for (uint256 _i; _i < _borrowedLength; ) {
       _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
-      _tokenPrice = getPriceUSD(_debtToken, lyfDs);
-      _borrowedAmount = LibShareUtil.shareToValue(
-        _borrowed[_i].amount,
-        lyfDs.debtValues[_borrowed[_i].index],
-        lyfDs.debtShares[_borrowed[_i].index]
-      );
 
-      TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_debtToken];
       // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
       _totalBorrowedUSDValue += LibFullMath.mulDiv(
-        _borrowedAmount * _tokenConfig.to18ConversionFactor,
-        _tokenPrice,
+        LibShareUtil.shareToValue(
+          _borrowed[_i].amount,
+          lyfDs.debtValues[_borrowed[_i].index],
+          lyfDs.debtShares[_borrowed[_i].index]
+        ) * lyfDs.tokenConfigs[_debtToken].to18ConversionFactor,
+        getPriceUSD(_debtToken, lyfDs),
         1e18
       );
 
@@ -345,8 +334,8 @@ library LibLYF01 {
   ) internal returns (uint256 _amountRemoved) {
     LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
 
-    uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
-    if (_collateralAmount > 0) {
+    if (_subAccountCollatList.has(_token)) {
+      uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
       _amountRemoved = _removeAmount > _collateralAmount ? _collateralAmount : _removeAmount;
 
       _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
@@ -546,16 +535,15 @@ library LibLYF01 {
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
 
-    if (
-      lyfDs.subAccountDebtShares[_subAccount].getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY
-    ) {
-      lyfDs.subAccountDebtShares[_subAccount].init();
+    if (userDebtShare.getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY) {
+      userDebtShare.init();
     }
 
-    uint256 _totalSupply = lyfDs.debtShares[_debtShareId];
-    uint256 _totalValue = lyfDs.debtValues[_debtShareId];
-
-    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(_amount, _totalSupply, _totalValue);
+    uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
+      _amount,
+      lyfDs.debtShares[_debtShareId],
+      lyfDs.debtValues[_debtShareId]
+    );
 
     // update over collat debt
     lyfDs.debtShares[_debtShareId] += _shareToAdd;
