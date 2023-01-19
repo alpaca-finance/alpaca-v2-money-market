@@ -224,19 +224,21 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_TooLittleReceived();
     }
 
-    // 3. Remove debt by repay amount
-    _vars.debt0ToRepay = _token0Return - _amount0Out;
-    _vars.debt1ToRepay = _token1Return - _amount1Out;
+    uint256 _amount0ToRepay = _token0Return - _amount0Out;
+    uint256 _amount1ToRepay = _token1Return - _amount1Out;
 
-    _vars.debtShare0ToRepay = LibShareUtil.valueToShare(
-      _vars.debt0ToRepay,
-      lyfDs.debtShares[_vars.debtShareId0],
-      lyfDs.debtValues[_vars.debtShareId0]
+    // 3. Remove debt by repay amount
+    (_vars.debtShare0ToRepay, _vars.debt0ToRepay) = _getActualDebtToRepay(
+      _vars.subAccount,
+      _vars.debtShareId0,
+      _amount0ToRepay,
+      lyfDs
     );
-    _vars.debtShare1ToRepay = LibShareUtil.valueToShare(
-      _vars.debt1ToRepay,
-      lyfDs.debtShares[_vars.debtShareId1],
-      lyfDs.debtValues[_vars.debtShareId1]
+    (_vars.debtShare1ToRepay, _vars.debt1ToRepay) = _getActualDebtToRepay(
+      _vars.subAccount,
+      _vars.debtShareId1,
+      _amount1ToRepay,
+      lyfDs
     );
 
     _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId0, _vars.debtShare0ToRepay, _vars.debt0ToRepay, lyfDs);
@@ -246,13 +248,37 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
 
-    // todo: fix bug
+    uint256 _amount0ToTransfer = _token0Return - _vars.debt0ToRepay;
+    uint256 _amount1ToTransfer = _token1Return - _vars.debt1ToRepay;
+
     // 4. Transfer remaining back to user
-    if (_amount0Out > 0) {
-      IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Out);
+    if (_amount0ToTransfer > 0) {
+      IERC20(_vars.token0).safeTransfer(msg.sender, _amount0ToTransfer);
     }
-    if (_amount1Out > 0) {
-      IERC20(_vars.token1).safeTransfer(msg.sender, _amount1Out);
+    if (_amount1ToTransfer > 0) {
+      IERC20(_vars.token1).safeTransfer(msg.sender, _amount1ToTransfer);
+    }
+  }
+
+  function _getActualDebtToRepay(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _desiredRepayAmount,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _actualShareToRepay, uint256 _actualToRepay) {
+    uint256 _debtValues = lyfDs.debtValues[_debtShareId];
+    uint256 _debtShares = lyfDs.debtValues[_debtShareId];
+
+    // debt share of sub account
+    _actualShareToRepay = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    // Note: precision loss 1 wei when convert share back to value
+    // debt value of sub account
+    _actualToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _debtValues, _debtShares);
+
+    if (_actualToRepay > _desiredRepayAmount) {
+      _actualToRepay = _desiredRepayAmount;
+      // convert desiredRepayAmount to share
+      _actualShareToRepay = LibShareUtil.valueToShare(_desiredRepayAmount, _debtShares, _debtValues);
     }
   }
 
@@ -284,6 +310,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // transfer only amount to repay
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
+
 
     // handle if transfer from has fee
     uint256 _actualReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;

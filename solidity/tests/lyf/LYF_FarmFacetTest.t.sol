@@ -210,6 +210,95 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(_subAccountUsdcDebtValue, 18 ether);
   }
 
+  function testCorrectness_WhenUserReducePosition_LefoverTokenShouldReturnToUser2() external {
+    // remove interest for convienice of test
+    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+
+    uint256 _wethToAddLP = 40 ether;
+    uint256 _usdcToAddLP = 40 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.stopPrank();
+
+    masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
+    // asset collat of subaccount
+    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
+    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
+    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(
+      _bobSubaccount,
+      address(wethUsdcLPToken)
+    );
+
+    assertEq(_subAccountWethCollat, 0 ether);
+    assertEq(_subAccountUsdcCollat, 0 ether);
+
+    // assume that every coin is 1 dollar and lp = 2 dollar
+
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 40 ether);
+    assertEq(_subAccountLpTokenCollat, 40 ether);
+
+    // mock remove liquidity will return token0: 30 ether and token1: 30 ether
+    mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
+
+    // should at lest left 10 usd as a debt
+    adminFacet.setMinDebtSize(10 ether);
+
+    uint256 wethBefore = weth.balanceOf(BOB);
+    uint256 usdcBefore = usdc.balanceOf(BOB);
+
+    vm.startPrank(BOB);
+    // remove 5 lp,
+    // repay 25 eth, 25 usdc
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 5 ether, 5 ether);
+    vm.stopPrank();
+
+    assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
+
+    _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
+    _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
+    _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(wethUsdcLPToken));
+
+    // assert subaccount's collat
+    assertEq(_subAccountWethCollat, 0 ether);
+    assertEq(_subAccountUsdcCollat, 0 ether);
+
+    assertEq(_subAccountLpTokenCollat, 35 ether); // starting at 40, remove 5, remain 35
+
+    // assert subaccount's debt
+    // check debt
+    (, uint256 _subAccountWethDebtValue) = viewFacet.getSubAccountDebt(
+      BOB,
+      subAccount0,
+      address(weth),
+      address(wethUsdcLPToken)
+    );
+    (, uint256 _subAccountUsdcDebtValue) = viewFacet.getSubAccountDebt(
+      BOB,
+      subAccount0,
+      address(usdc),
+      address(wethUsdcLPToken)
+    );
+
+    // start at 20, repay 25, remain 0, transfer back 5
+    assertEq(_subAccountWethDebtValue, 0 ether);
+    assertEq(_subAccountUsdcDebtValue, 0 ether);
+
+    assertEq(weth.balanceOf(BOB) - wethBefore, 10 ether, "BOB get WETH back wrong");
+    assertEq(usdc.balanceOf(BOB) - usdcBefore, 10 ether, "BOB get USDC back wrong");
+  }
+
   function testRevert_WhenUserReducePosition_RemainingDebtIsLessThanMinDebtSizeShouldRevert() external {
     // remove interest for convienice of test
     uint256 _wethToAddLP = 40 ether;
