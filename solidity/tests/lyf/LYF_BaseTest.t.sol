@@ -70,7 +70,9 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFViewFacet internal viewFacet;
 
   MockLPToken internal wethUsdcLPToken;
+  MockLPToken internal btcUsdcLPToken;
   uint256 internal wethUsdcPoolId;
+  uint256 internal btcUsdcPoolId;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -115,13 +117,16 @@ abstract contract LYF_BaseTest is BaseTest {
 
     // MASTERCHEF POOLID
     wethUsdcPoolId = 1;
+    btcUsdcPoolId = 2;
 
     // mock LP, Router and Stratgy
-    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+    wethUsdcLPToken = new MockLPToken("MOCK WETH-USDC LP", "MOCK LP", 18, address(weth), address(usdc));
+    btcUsdcLPToken = new MockLPToken("MOCK BTC-USDC LP", "MOCK LP", 18, address(btc), address(usdc));
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
     masterChef.addLendingPool(address(wethUsdcLPToken), wethUsdcPoolId);
+    masterChef.addLendingPool(address(btcUsdcLPToken), btcUsdcPoolId);
 
     addStrat = new PancakeswapV2Strategy(IRouterLike(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);
@@ -129,13 +134,15 @@ abstract contract LYF_BaseTest is BaseTest {
     addStrat.setWhitelistedCallers(stratWhitelistedCallers, true);
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+    btcUsdcLPToken.mint(address(mockRouter), 1000000 ether);
     usdc.mint(address(mockRouter), 1000000 ether);
     weth.mint(address(mockRouter), 1000000 ether);
+    btc.mint(address(mockRouter), 1000000 ether);
 
     adminFacet.setMoneyMarket(address(moneyMarketDiamond));
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](8);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](9);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -174,6 +181,15 @@ abstract contract LYF_BaseTest is BaseTest {
     });
 
     _inputs[4] = ILYFAdminFacet.TokenConfigInput({
+      token: address(btcUsdcLPToken),
+      tier: LibLYF01.AssetTier.LP,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxBorrow: 0,
+      maxCollateral: 10e24
+    });
+
+    _inputs[5] = ILYFAdminFacet.TokenConfigInput({
       token: address(ibUsdc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
@@ -182,7 +198,7 @@ abstract contract LYF_BaseTest is BaseTest {
       maxCollateral: 10e24
     });
 
-    _inputs[5] = ILYFAdminFacet.TokenConfigInput({
+    _inputs[6] = ILYFAdminFacet.TokenConfigInput({
       token: address(btc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
@@ -191,7 +207,7 @@ abstract contract LYF_BaseTest is BaseTest {
       maxCollateral: 100e18
     });
 
-    _inputs[6] = ILYFAdminFacet.TokenConfigInput({
+    _inputs[7] = ILYFAdminFacet.TokenConfigInput({
       token: address(ibBtc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
@@ -200,7 +216,7 @@ abstract contract LYF_BaseTest is BaseTest {
       maxCollateral: 10e24
     });
 
-    _inputs[7] = ILYFAdminFacet.TokenConfigInput({
+    _inputs[8] = ILYFAdminFacet.TokenConfigInput({
       token: address(cake),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
@@ -215,7 +231,7 @@ abstract contract LYF_BaseTest is BaseTest {
     _reinvestPath[0] = address(cake);
     _reinvestPath[1] = address(usdc);
 
-    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
+    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](2);
     lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
       lpToken: address(wethUsdcLPToken),
       strategy: address(addStrat),
@@ -226,6 +242,16 @@ abstract contract LYF_BaseTest is BaseTest {
       rewardToken: address(cake),
       poolId: wethUsdcPoolId
     });
+    lpConfigs[1] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(btcUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      router: address(mockRouter),
+      reinvestPath: _reinvestPath,
+      reinvestThreshold: reinvestThreshold,
+      rewardToken: address(cake),
+      poolId: btcUsdcPoolId
+    });
     adminFacet.setLPConfigs(lpConfigs);
 
     // set oracle for LYF
@@ -235,6 +261,7 @@ abstract contract LYF_BaseTest is BaseTest {
     mockOracle.setTokenPrice(address(btc), 10e18);
     mockOracle.setTokenPrice(address(isolateToken), 1e18);
     mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2e18);
+    mockOracle.setLpTokenPrice(address(btcUsdcLPToken), 5e18);
 
     chainLinkOracle = deployMockChainLinkPriceOracle();
 
@@ -244,15 +271,19 @@ abstract contract LYF_BaseTest is BaseTest {
     // set debt share indexes
     adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
     adminFacet.setDebtShareId(address(usdc), address(wethUsdcLPToken), 2);
+    adminFacet.setDebtShareId(address(btc), address(btcUsdcLPToken), 3);
+    adminFacet.setDebtShareId(address(usdc), address(btcUsdcLPToken), 4);
 
     // set interest model
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
     adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtInterestModel(3, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtInterestModel(4, address(new MockInterestModel(0.05 ether)));
 
     adminFacet.setTreasury(treasury);
 
     // set max num of tokens
-    adminFacet.setMaxNumOfToken(3);
+    adminFacet.setMaxNumOfToken(3, 3);
   }
 
   function setUpMM() internal {
@@ -326,12 +357,12 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(btc),
       maxTokenBorrow: type(uint256).max
     });
-    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
+    _tokenBorrowLimitInputs[3] = IAdminFacet.TokenBorrowLimitInput({
       token: address(cake),
       maxTokenBorrow: type(uint256).max
     });
 
-    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](1);
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: lyfDiamond,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
@@ -343,9 +374,11 @@ abstract contract LYF_BaseTest is BaseTest {
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
+    btc.approve(moneyMarketDiamond, type(uint256).max);
 
     ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(btc), 100 ether);
     vm.stopPrank();
 
     // set max num of tokens

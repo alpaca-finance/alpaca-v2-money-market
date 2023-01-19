@@ -36,6 +36,7 @@ library LibLYF01 {
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
+  error LibLYF01_BadDebtShareId();
 
   enum AssetTier {
     UNLISTED,
@@ -67,7 +68,9 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     address oracle;
+    // maximum number of token in the linked list
     uint8 maxNumOfCollatPerSubAccount;
+    uint8 maxNumOfDebtPerSubAccount;
     uint256 minDebtSize;
     mapping(address => uint256) reserves;
     mapping(address => uint256) protocolReserves;
@@ -396,8 +399,13 @@ library LibLYF01 {
     uint256 _debtShareId,
     LYFDiamondStorage storage lyfDs
   ) internal view {
-    (uint256 _debtShare, uint256 _debtAmount) = getDebt(_subAccount, _debtShareId, lyfDs);
-    if (_debtShare != 0) {
+    // note: precision loss 1 wei when convert share back to value
+    uint256 _debtAmount = LibShareUtil.shareToValue(
+      lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId),
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
+    );
+    if (_debtAmount != 0) {
       address _debtToken = lyfDs.debtShareTokens[_debtShareId];
       uint256 _tokenPrice = getPriceUSD(_debtToken, lyfDs);
 
@@ -509,17 +517,7 @@ library LibLYF01 {
     emit LogReinvest(msg.sender, 0, 0);
   }
 
-  function getDebt(
-    address _subAccount,
-    uint256 _debtShareId,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
-    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-    // Note: precision loss 1 wei when convert share back to value
-    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
-  }
-
-  function borrowFromMoneyMarket(
+  function borrow(
     address _subAccount,
     address _token,
     address _lpToken,
@@ -528,13 +526,21 @@ library LibLYF01 {
   ) internal {
     if (_amount == 0) return;
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-
-    IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
+    if (_debtShareId == 0) {
+      revert LibLYF01_BadDebtShareId();
+    }
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
 
     if (userDebtShare.getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY) {
       userDebtShare.init();
+    }
+
+    // use reserve if it is enough, else borrow from mm entirely
+    if (lyfDs.reserves[_token] - lyfDs.protocolReserves[_token] >= _amount) {
+      lyfDs.reserves[_token] -= _amount;
+    } else {
+      IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
     }
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
@@ -551,5 +557,9 @@ library LibLYF01 {
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
+
+    if (userDebtShare.length() > lyfDs.maxNumOfDebtPerSubAccount) {
+      revert LibLYF01_NumberOfTokenExceedLimit();
+    }
   }
 }
