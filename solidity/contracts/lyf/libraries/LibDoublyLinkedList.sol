@@ -69,6 +69,7 @@ library LibDoublyLinkedList {
     uint256 amount
   ) internal {
     // Check
+    // prevent create empty node
     if (amount == 0) {
       return;
     }

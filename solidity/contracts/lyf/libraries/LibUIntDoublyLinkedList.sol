@@ -22,92 +22,72 @@ library LibUIntDoublyLinkedList {
     uint256 amount;
   }
 
-  function init(List storage list) internal returns (List storage) {
+  function init(List storage list) internal {
     list.next[START] = END;
     list.prev[END] = START;
-    return list;
   }
 
   function has(List storage list, uint256 index) internal view returns (bool) {
     return list.next[index] != EMPTY;
   }
 
-  function add(
-    List storage list,
-    uint256 index,
-    uint256 amount
-  ) internal returns (List storage) {
-    // Check
-    if (has(list, index)) {
-      revert LibUIntDoublyLinkedList_Existed();
-    }
-
-    // Effect
-    list.next[index] = list.next[START];
-    list.prev[list.next[START]] = index;
-    list.prev[index] = START;
-
-    list.next[START] = index;
-    list.amount[index] = amount;
-    list.size++;
-
-    return list;
-  }
-
-  function remove(List storage list, uint256 index) internal returns (List storage) {
-    // Check
-    if (!has(list, index)) {
-      revert LibUIntDoublyLinkedList_NotExisted();
-    }
-
-    // Effect
-    uint256 prevAddr = list.prev[index];
-    list.next[prevAddr] = list.next[index];
-    list.prev[list.next[index]] = prevAddr;
-
-    // cut the node from current link
-    list.next[index] = EMPTY;
-    list.prev[index] = EMPTY;
-
-    list.amount[index] = 0;
-    list.size--;
-
-    return list;
-  }
-
   function updateOrRemove(
     List storage list,
     uint256 index,
     uint256 amount
-  ) internal returns (List storage) {
+  ) internal {
+    uint256 nextOfIndex = list.next[index];
+
     // Check
-    if (!has(list, index)) {
+    if (nextOfIndex == EMPTY) {
       revert LibUIntDoublyLinkedList_NotExisted();
     }
 
     // Effect
     if (amount == 0) {
-      remove(list, index);
-    } else {
-      list.amount[index] = amount;
+      uint256 prevAddr = list.prev[index];
+
+      // cut the node from current link
+      list.next[prevAddr] = nextOfIndex;
+      list.prev[nextOfIndex] = prevAddr;
+
+      // cut current link from the node
+      list.next[index] = EMPTY;
+      list.prev[index] = EMPTY;
+
+      --list.size;
     }
 
-    return list;
+    list.amount[index] = amount;
   }
 
   function addOrUpdate(
     List storage list,
     uint256 index,
     uint256 amount
-  ) internal returns (List storage) {
+  ) internal {
     // Check
-    if (!has(list, index)) {
-      add(list, index, amount);
-    } else {
-      list.amount[index] = amount;
+    // prevent create empty node
+    if (amount == 0) {
+      return;
     }
 
-    return list;
+    // Effect
+    // add `index` to the link after `START`
+    if (!has(list, index)) {
+      uint256 nextOfStart = list.next[START];
+      list.next[index] = nextOfStart;
+      list.prev[nextOfStart] = index;
+
+      list.prev[index] = START;
+      list.next[START] = index;
+
+      unchecked {
+        ++list.size;
+      }
+    }
+
+    list.amount[index] = amount;
   }
 
   function getAmount(List storage list, uint256 index) internal view returns (uint256) {
@@ -120,9 +100,12 @@ library LibUIntDoublyLinkedList {
       return nodes;
     }
     uint256 curr = list.next[START];
-    for (uint256 i = 0; curr != END; i++) {
+    for (uint256 i; curr != END; ) {
       nodes[i] = Node({ index: curr, amount: list.amount[curr] });
       curr = list.next[curr];
+      unchecked {
+        ++i;
+      }
     }
     return nodes;
   }
