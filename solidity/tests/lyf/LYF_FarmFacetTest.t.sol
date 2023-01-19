@@ -12,6 +12,7 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
+import { LibUIntDoublyLinkedList } from "../../contracts/lyf/libraries/LibUIntDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
@@ -635,6 +636,33 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // borrow both weth and usdc
     vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_NumberOfTokenExceedLimit.selector));
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenRepayAndBorrowMoreWithTotalBorrowEqualMaxNumOfDebtPerSubAccount_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _btcToAddLP = 3 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    // allow to borrow 2 tokens
+    adminFacet.setMaxNumOfToken(10, 2);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // borrow weth and usdc
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    // repay all debt
+    farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), type(uint256).max);
+    farmFacet.repay(BOB, subAccount0, address(usdc), address(wethUsdcLPToken), type(uint256).max);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount * 2);
+
+    // borrow btc and usdc
+    farmFacet.addFarmPosition(subAccount0, address(btcUsdcLPToken), _btcToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
   }
 }
