@@ -620,6 +620,29 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     vm.stopPrank();
   }
 
+  function testCorrectness_WhenAddFarmPosition_AndReserveIsMoreThanBorrowedAmount_ShouldBorrowReserve() external {
+    // create leftover reserve by borrow from mm and repay so tokens is left in lyf
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 10 ether);
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 10 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(10 ether, 10 ether);
+    farmFacet.repay(ALICE, subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
+
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 10 ether);
+
+    // next addFarmPosition should use reserve instead of borrowing from mm
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 6 ether, 6 ether, 6 ether);
+    // 6 ether should be borrowed from reserve so 4 left
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
+
+    // next addFarmPosition should not use reserve but borrow more from mm
+    // because amount > reserve
+    uint256 _mmDebtBefore = viewFacet.getMMDebt(address(weth));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 6 ether, 6 ether, 6 ether);
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
+    assertEq(viewFacet.getMMDebt(address(weth)) - _mmDebtBefore, 6 ether);
+  }
+
   function testRevert_WhenUserBorrowMoreThanMaxNumOfDebtPerSubAccount_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
     uint256 _usdcToAddLP = 30 ether;
