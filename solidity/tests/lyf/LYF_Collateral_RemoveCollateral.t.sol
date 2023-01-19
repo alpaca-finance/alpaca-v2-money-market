@@ -81,4 +81,12 @@ contract LYF_Collateral_RemoveCollateralTest is LYF_BaseTest {
     // assertEq(_borrowingPower, 0);
     assertEq(viewFacet.getTokenCollatAmount(address(weth)), 0);
   }
+
+  function testRevert_WhenLYFRemoveCollateralLPToken() external {
+    wethUsdcLPToken.mint(ALICE, 10 ether);
+    vm.startPrank(ALICE);
+    wethUsdcLPToken.approve(lyfDiamond, 10 ether);
+    vm.expectRevert(ILYFCollateralFacet.LYFCollateralFacet_RemoveLPCollateralNotAllowed.selector);
+    collateralFacet.removeCollateral(subAccount0, address(wethUsdcLPToken), 10 ether);
+  }
 }

@@ -206,8 +206,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _vars.debtShareId0 = lyfDs.debtShareIds[_vars.token0][_lpToken];
     _vars.debtShareId1 = lyfDs.debtShareIds[_vars.token1][_lpToken];
 
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(_vars.debtShareId0, lyfDs);
+    LibLYF01.accrueInterest(_vars.debtShareId1, lyfDs);
 
     // 1. Remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
