@@ -18,7 +18,7 @@ import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 import { LYFInit } from "../../contracts/lyf/initializers/LYFInit.sol";
 
 library LYFDiamondDeployer {
-  function deployPoolDiamond() internal returns (address) {
+  function deployPoolDiamond(address _moneyMarket) internal returns (address) {
     // Deploy DimondCutFacet
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
@@ -33,16 +33,35 @@ library LYFDiamondDeployer {
     deployLYFViewFacet(DiamondCutFacet(address(_lyfDiamond)));
 
     initializeDiamond(DiamondCutFacet(address(_lyfDiamond)));
+    initializeLYF(DiamondCutFacet(address(_lyfDiamond)), _moneyMarket);
 
     return (address(_lyfDiamond));
   }
 
   function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
+    // Deploy DiamondInit
+    DiamondInit diamondInitializer = new DiamondInit();
+    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
+
+    // make lib diamond call init
+    diamondCutFacet.diamondCut(
+      facetCuts,
+      address(diamondInitializer),
+      abi.encodeWithSelector(bytes4(keccak256("init()")))
+    );
+  }
+
+  function initializeLYF(DiamondCutFacet diamondCutFacet, address _moneyMarket) internal {
+    // Deploy DiamondInit
     LYFInit _initializer = new LYFInit();
     IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
 
     // make lib diamond call init
-    diamondCutFacet.diamondCut(facetCuts, address(_initializer), abi.encodeWithSelector(bytes4(keccak256("init()"))));
+    diamondCutFacet.diamondCut(
+      facetCuts,
+      address(_initializer),
+      abi.encodeWithSelector(bytes4(keccak256("init(address)")), _moneyMarket)
+    );
   }
 
   function deployDiamondLoupeFacet(DiamondCutFacet diamondCutFacet)
@@ -96,16 +115,15 @@ library LYFDiamondDeployer {
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.setTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
-    selectors[3] = LYFAdminFacet.setMoneyMarket.selector;
-    selectors[4] = LYFAdminFacet.setLPConfigs.selector;
-    selectors[5] = LYFAdminFacet.setDebtShareId.selector;
-    selectors[6] = LYFAdminFacet.setDebtInterestModel.selector;
-    selectors[7] = LYFAdminFacet.setReinvestorsOk.selector;
-    selectors[8] = LYFAdminFacet.setLiquidationStratsOk.selector;
-    selectors[9] = LYFAdminFacet.setLiquidatorsOk.selector;
-    selectors[10] = LYFAdminFacet.setMaxNumOfToken.selector;
-    selectors[11] = LYFAdminFacet.setMinDebtSize.selector;
-    selectors[12] = LYFAdminFacet.withdrawReserve.selector;
+    selectors[3] = LYFAdminFacet.setLPConfigs.selector;
+    selectors[4] = LYFAdminFacet.setDebtShareId.selector;
+    selectors[5] = LYFAdminFacet.setDebtInterestModel.selector;
+    selectors[6] = LYFAdminFacet.setReinvestorsOk.selector;
+    selectors[7] = LYFAdminFacet.setLiquidationStratsOk.selector;
+    selectors[8] = LYFAdminFacet.setLiquidatorsOk.selector;
+    selectors[9] = LYFAdminFacet.setMaxNumOfToken.selector;
+    selectors[10] = LYFAdminFacet.setMinDebtSize.selector;
+    selectors[11] = LYFAdminFacet.withdrawReserve.selector;
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
       IDiamondCut.FacetCutAction.Add,
