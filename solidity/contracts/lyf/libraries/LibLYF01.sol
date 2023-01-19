@@ -68,35 +68,36 @@ library LibLYF01 {
     address moneyMarket;
     address treasury;
     IAlpacaV2Oracle oracle;
-    // maximum number of token in the linked list
-    uint8 maxNumOfCollatPerSubAccount;
-    uint8 maxNumOfDebtPerSubAccount;
-    uint256 minDebtSize;
-    // unutilized token
-    mapping(address => uint256) reserves;
-    // reserve pool
-    mapping(address => uint256) protocolReserves;
+    // ---- protocol parameters ---- //
+    uint8 maxNumOfCollatPerSubAccount; // maximum number of token in the collat linked list
+    uint8 maxNumOfDebtPerSubAccount; // maximum number of token in the debt linked list
+    uint256 minDebtSize; // minimum USD value that debt position must maintain
+    // ---- reserves ---- //
+    mapping(address => uint256) reserves; // track token balance of protocol
+    mapping(address => uint256) protocolReserves; // part of reserves that belongs to protocol
     // collats = amount of collateral token
     mapping(address => uint256) collats;
-    mapping(address => LibDoublyLinkedList.List) subAccountCollats;
-    mapping(address => TokenConfig) tokenConfigs;
-    // token => lpToken => debtShareId
-    mapping(address => mapping(address => uint256)) debtShareIds;
-    mapping(uint256 => address) debtShareTokens;
-    mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares;
-    mapping(uint256 => uint256) debtShares;
-    mapping(uint256 => uint256) debtValues;
-    mapping(uint256 => uint256) debtLastAccrueTime;
-    mapping(address => uint256) lpShares;
-    mapping(address => uint256) lpAmounts;
-    mapping(address => LPConfig) lpConfigs;
-    mapping(uint256 => address) interestModels;
-    // pendingReward for reinvest
-    mapping(address => uint256) pendingRewards;
-    // whitelisted
-    mapping(address => bool) reinvestorsOk;
-    mapping(address => bool) liquidationStratOk;
-    mapping(address => bool) liquidationCallersOk;
+    // ---- subAccounts ---- //
+    mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => linked list of collats
+    mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares; // subAccount => linked list of debtShares
+    // ---- tokens ---- //
+    mapping(address => TokenConfig) tokenConfigs; // arbitrary token => config
+    // ---- debtShareIds ---- //
+    mapping(address => mapping(address => uint256)) debtShareIds; // token => lp token => debt share id
+    mapping(uint256 => address) debtShareTokens; // debtShareId => token
+    mapping(uint256 => uint256) debtShares; // debtShareId => debt share
+    mapping(uint256 => uint256) debtValues; // debtShareId => debt value
+    mapping(uint256 => uint256) debtLastAccrueTime; // debtShareId => last debt accrual timestamp
+    mapping(uint256 => address) interestModels; // debtShareId => interest model
+    // ---- lpTokens ---- //
+    mapping(address => uint256) lpShares; // lpToken => total share that in protocol's control (collat + farm)
+    mapping(address => uint256) lpAmounts; // lpToken => total amount that in protocol's control (collat + farm)
+    mapping(address => LPConfig) lpConfigs; // lpToken => config
+    mapping(address => uint256) pendingRewards; // lpToken => pending reward amount to be reinvested
+    // ---- whitelists ---- //
+    mapping(address => bool) reinvestorsOk; // address that can call reinvest
+    mapping(address => bool) liquidationStratOk; // liquidation strategies that can be called during liquidation process
+    mapping(address => bool) liquidationCallersOk; // address that can initiate liquidation process
   }
 
   function lyfDiamondStorage() internal pure returns (LYFDiamondStorage storage lyfStorage) {
@@ -316,7 +317,7 @@ library LibLYF01 {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
 
-      _amountAdded = LibShareUtil.valueToShareRoundingUp(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
+      _amountAdded = LibShareUtil.valueToShare(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
 
       // update lp global state
       lyfDs.lpShares[_token] += _amountAdded;
