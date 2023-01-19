@@ -113,8 +113,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
     if (
       lyfDs.debtShareIds[_token][_lpToken] != 0 ||
       (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token) ||
-      _debtShareId != 0 ||
-      _debtShareId != type(uint256).max
+      _debtShareId == 0 ||
+      _debtShareId == type(uint256).max
     ) {
       revert LYFAdminFacet_BadDebtShareId();
     }
