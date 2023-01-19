@@ -75,8 +75,8 @@ library LibDoublyLinkedList {
     }
 
     // Effect
-    // add `addr` to the link after `START`
     if (!has(list, addr)) {
+      // add `addr` to the link after `START`
       address nextOfStart = list.next[START];
       list.next[addr] = nextOfStart;
       list.prev[nextOfStart] = addr;
