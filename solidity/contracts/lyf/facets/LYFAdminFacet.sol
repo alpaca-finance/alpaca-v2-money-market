@@ -35,6 +35,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   }
 
   function setOracle(address _oracle) external onlyOwner {
+    // sanity check
     IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.oracle = _oracle;
