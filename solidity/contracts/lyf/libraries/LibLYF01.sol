@@ -519,7 +519,7 @@ library LibLYF01 {
     emit LogReinvest(msg.sender, 0, 0);
   }
 
-  function borrowFromMoneyMarket(
+  function borrow(
     address _subAccount,
     address _token,
     address _lpToken,
@@ -532,12 +532,17 @@ library LibLYF01 {
       revert LibLYF01_BadDebtShareId();
     }
 
-    IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
-
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
 
     if (userDebtShare.getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY) {
       userDebtShare.init();
+    }
+
+    // use reserve if it is enough, else borrow from mm entirely
+    if (lyfDs.reserves[_token] - lyfDs.protocolReserves[_token] >= _amount) {
+      lyfDs.reserves[_token] -= _amount;
+    } else {
+      IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
     }
 
     uint256 _shareToAdd = LibShareUtil.valueToShareRoundingUp(
