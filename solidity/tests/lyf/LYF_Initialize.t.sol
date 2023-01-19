@@ -22,7 +22,7 @@ contract LYF_InitializeTest is LYF_BaseTest {
     DiamondCutFacet(lyfDiamond).diamondCut(
       facetCuts,
       address(_initializer),
-      abi.encodeWithSelector(bytes4(keccak256("init()")))
+      abi.encodeWithSelector(bytes4(keccak256("init(address)")), address(0))
     );
   }
 }
