@@ -107,11 +107,14 @@ contract LYFAdminFacet is ILYFAdminFacet {
   ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    // validate token must not alrready set
+    // validate token must not already set
     // validate if token exist but different lp
+    // _debtShareId can't be 0 or max uint
     if (
       lyfDs.debtShareIds[_token][_lpToken] != 0 ||
-      (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token)
+      (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token) ||
+      _debtShareId == 0 ||
+      _debtShareId == type(uint256).max
     ) {
       revert LYFAdminFacet_BadDebtShareId();
     }
