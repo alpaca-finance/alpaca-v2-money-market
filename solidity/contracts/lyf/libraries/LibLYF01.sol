@@ -36,6 +36,7 @@ library LibLYF01 {
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
+  error LibLYF01_BadDebtShareId();
 
   enum AssetTier {
     UNLISTED,
@@ -527,6 +528,7 @@ library LibLYF01 {
     _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
   }
 
+  // TODO: stop exec if _debtShareId == 0
   function borrowFromMoneyMarket(
     address _subAccount,
     address _token,
@@ -536,6 +538,9 @@ library LibLYF01 {
   ) internal {
     if (_amount == 0) return;
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    if (_debtShareId == 0) {
+      revert LibLYF01_BadDebtShareId();
+    }
 
     IMoneyMarket(lyfDs.moneyMarket).nonCollatBorrow(_token, _amount);
 
