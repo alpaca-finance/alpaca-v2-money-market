@@ -3,7 +3,6 @@ pragma solidity 0.8.17;
 
 // interfaces
 import { ILYFViewFacet } from "../interfaces/ILYFViewFacet.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
@@ -60,7 +59,7 @@ contract LYFViewFacet is ILYFViewFacet {
   function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).getNonCollatAccountDebt(address(this), _token);
+    _debtAmount = lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token);
   }
 
   function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256) {

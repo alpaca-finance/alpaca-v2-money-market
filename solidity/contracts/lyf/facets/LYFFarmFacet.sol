@@ -14,7 +14,6 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
@@ -347,7 +346,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _tokenAmountFromIbCollat = LibLYF01.removeIbCollateral(
       _subAccount,
       _token,
-      IMoneyMarket(lyfDs.moneyMarket).getIbTokenFromToken(_token),
+      lyfDs.moneyMarket.getIbTokenFromToken(_token),
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );

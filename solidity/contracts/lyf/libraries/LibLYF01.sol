@@ -65,7 +65,7 @@ library LibLYF01 {
 
   // Storage
   struct LYFDiamondStorage {
-    address moneyMarket;
+    IMoneyMarket moneyMarket;
     address treasury;
     IAlpacaV2Oracle oracle;
     // ---- protocol parameters ---- //
@@ -114,14 +114,14 @@ library LibLYF01 {
   }
 
   function getDebtSharePendingInterest(
-    address _moneyMarket,
+    IMoneyMarket _moneyMarket,
     address _interestModel,
     address _token,
     uint256 _secondsSinceLastAccrual,
     uint256 _debtShareDebtValue
   ) internal view returns (uint256 _pendingInterest) {
-    uint256 _mmDebtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValue(_token);
-    uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
+    uint256 _mmDebtValue = _moneyMarket.getGlobalDebtValue(_token);
+    uint256 _floating = _moneyMarket.getFloatingBalance(_token);
     uint256 _interestRate = IInterestRateModel(_interestModel).getInterestRate(_mmDebtValue, _floating);
     _pendingInterest = (_interestRate * _secondsSinceLastAccrual * _debtShareDebtValue) / 1e18;
   }
@@ -170,12 +170,12 @@ library LibLYF01 {
     address _underlyingToken;
     uint256 _collatPrice;
     TokenConfig memory _tokenConfig;
-    address _moneyMarket = lyfDs.moneyMarket;
+    IMoneyMarket _moneyMarket = lyfDs.moneyMarket;
 
     for (uint256 _i; _i < _collatsLength; ) {
       _collatToken = _collats[_i].token;
 
-      _underlyingToken = IMoneyMarket(_moneyMarket).getTokenFromIbToken(_collatToken);
+      _underlyingToken = _moneyMarket.getTokenFromIbToken(_collatToken);
       if (_underlyingToken != address(0)) {
         // if _collatToken is ibToken convert underlying price to ib price
         _tokenConfig = lyfDs.tokenConfigs[_underlyingToken];
@@ -277,11 +277,11 @@ library LibLYF01 {
   function getIbToUnderlyingConversionFactor(
     address _ibToken,
     address _underlyingToken,
-    address _moneyMarket
+    IMoneyMarket _moneyMarket
   ) internal view returns (uint256 _conversionFactor) {
     uint256 _totalSupply = IERC20(_ibToken).totalSupply();
     uint256 _decimals = IERC20(_ibToken).decimals();
-    uint256 _totalToken = IMoneyMarket(_moneyMarket).getTotalTokenWithPendingInterest(_underlyingToken);
+    uint256 _totalToken = _moneyMarket.getTotalTokenWithPendingInterest(_underlyingToken);
     _conversionFactor = LibShareUtil.shareToValue(10**_decimals, _totalToken, _totalSupply);
   }
 
