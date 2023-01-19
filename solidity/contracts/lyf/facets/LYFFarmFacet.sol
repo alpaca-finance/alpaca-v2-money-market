@@ -342,7 +342,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // min(debtShareToRepay, currentDebtShare)
     uint256 _actualDebtShareToRemove = _debtShareToRepay > _currentDebtShare ? _currentDebtShare : _debtShareToRepay;
 
-    // find the value of _actual share to repay
+    // convert debtShare to debtAmount
     uint256 _actualDebtToRemove = LibShareUtil.shareToValue(
       _actualDebtShareToRemove,
       lyfDs.debtValues[_debtShareId],
@@ -354,14 +354,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_CollatNotEnough();
     }
 
-    if (_actualDebtShareToRemove != 0) {
-      // remove collat from subaccount
-      LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
+    // remove collat from subaccount
+    LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
 
-      _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
+    _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
 
-      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
-    }
+    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
   }
 
   /// @dev this method should only be called by addFarmPosition context
