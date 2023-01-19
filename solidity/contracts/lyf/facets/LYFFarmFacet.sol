@@ -405,7 +405,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );
-    LibLYF01.borrowFromMoneyMarket(
+    LibLYF01.borrow(
       _subAccount,
       _token,
       _lpToken,
