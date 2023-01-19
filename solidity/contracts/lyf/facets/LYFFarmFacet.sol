@@ -203,8 +203,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _vars.debtShareId0 = lyfDs.debtShareIds[_vars.token0][_lpToken];
     _vars.debtShareId1 = lyfDs.debtShareIds[_vars.token1][_lpToken];
 
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
+    LibLYF01.accrueInterest(_vars.debtShareId0, lyfDs);
+    LibLYF01.accrueInterest(_vars.debtShareId1, lyfDs);
 
     // 1. Remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
@@ -289,7 +289,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (uint256 _debtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     // repay maxmimum debt
     _debtShareToRepay = _debtShareToRepay > _debtShare ? _debtShare : _debtShareToRepay;
@@ -367,7 +367,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualRepayAmount) {
-    (uint256 _oldSubAccountDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _oldSubAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _repayAmount,
@@ -391,7 +391,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareToRepay,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualRepayAmount) {
-    (uint256 _oldSubAccountDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _oldSubAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
 

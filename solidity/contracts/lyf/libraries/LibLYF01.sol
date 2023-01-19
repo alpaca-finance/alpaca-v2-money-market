@@ -399,8 +399,13 @@ library LibLYF01 {
     uint256 _debtShareId,
     LYFDiamondStorage storage lyfDs
   ) internal view {
-    (uint256 _debtShare, uint256 _debtAmount) = getDebt(_subAccount, _debtShareId, lyfDs);
-    if (_debtShare != 0) {
+    // note: precision loss 1 wei when convert share back to value
+    uint256 _debtAmount = LibShareUtil.shareToValue(
+      lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId),
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
+    );
+    if (_debtAmount != 0) {
       address _debtToken = lyfDs.debtShareTokens[_debtShareId];
       uint256 _tokenPrice = getPriceUSD(_debtToken, lyfDs);
 
