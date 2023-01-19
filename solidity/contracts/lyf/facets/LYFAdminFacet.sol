@@ -9,6 +9,7 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IRouterLike } from "../interfaces/IRouterLike.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
@@ -77,9 +78,10 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     uint256 _len = _configs.length;
     LibLYF01.LPConfig memory _config;
-    address _lpToken;
     for (uint256 _i; _i < _len; ) {
-      _lpToken = _configs[_i].lpToken;
+      // sanity check reinvestPath and router
+      IRouterLike(_configs[_i].router).getAmountsIn(1 ether, _configs[_i].reinvestPath);
+
       _config = LibLYF01.LPConfig({
         strategy: _configs[_i].strategy,
         masterChef: _configs[_i].masterChef,
@@ -90,9 +92,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
         poolId: _configs[_i].poolId
       });
 
-      lyfDs.lpConfigs[_lpToken] = _config;
+      lyfDs.lpConfigs[_configs[_i].lpToken] = _config;
 
-      emit LogSetLPConfig(_lpToken, _config);
+      emit LogSetLPConfig(_configs[_i].lpToken, _config);
 
       unchecked {
         ++_i;
