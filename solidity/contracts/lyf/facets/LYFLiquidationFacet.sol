@@ -23,6 +23,49 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
+  uint256 constant REPURCHASE_REWARD_BPS = 100;
+  uint256 constant LIQUIDATION_FEE_BPS = 100;
+
+  event LogRepurchase(
+    address indexed repurchaser,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
+
+  event LogLiquidateIb(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
+  event LogLiquidate(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
+  event LogLiquidateLP(
+    address indexed liquidator,
+    address _account,
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _lpSharesToLiquidate,
+    uint256 _amount0Repaid,
+    uint256 _amount1Repaid,
+    uint256 _remainingAmount0AfterRepay,
+    uint256 _remainingAmount1AfterRepay
+  );
+
   struct InternalLiquidationCallParams {
     address liquidationStrat;
     address subAccount;
@@ -32,9 +75,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 debtShareId;
     uint256 minReceive;
   }
-
-  uint256 constant REPURCHASE_REWARD_BPS = 100;
-  uint256 constant LIQUIDATION_FEE_BPS = 100;
 
   struct LiquidateLPLocalVars {
     address subAccount;

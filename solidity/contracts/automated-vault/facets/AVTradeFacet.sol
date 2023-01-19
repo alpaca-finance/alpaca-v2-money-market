@@ -17,6 +17,23 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 contract AVTradeFacet is IAVTradeFacet {
   using LibSafeToken for IERC20;
 
+  event LogRemoveDebt(address indexed vaultToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
+  event LogDeposit(
+    address indexed user,
+    address indexed vaultToken,
+    address stableToken,
+    uint256 stableAmountDeposited
+  );
+  // todo: add fields
+  event LogWithdraw(
+    address indexed user,
+    address indexed vaultToken,
+    uint256 burnedAmount,
+    address stableToken,
+    uint256 stableAmountToUser,
+    uint256 assetAmountToUser
+  );
+
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
     _;
