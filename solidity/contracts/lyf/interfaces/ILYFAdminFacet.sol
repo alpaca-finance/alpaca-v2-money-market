@@ -14,7 +14,6 @@ interface ILYFAdminFacet {
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;
-    uint256 maxBorrow;
   }
 
   struct LPConfigInput {

@@ -50,7 +50,6 @@ library LibLYF01 {
     uint16 borrowingFactor;
     uint64 to18ConversionFactor;
     uint256 maxCollateral;
-    uint256 maxBorrow;
   }
 
   struct LPConfig {
