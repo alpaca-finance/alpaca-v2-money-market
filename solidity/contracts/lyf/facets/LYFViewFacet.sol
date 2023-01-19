@@ -9,6 +9,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 contract LYFViewFacet is ILYFViewFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
@@ -90,7 +91,8 @@ contract LYFViewFacet is ILYFViewFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
 
-    (_debtShare, _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
   }
 
   function getAllSubAccountDebtShares(address _account, uint256 _subAccountId)
