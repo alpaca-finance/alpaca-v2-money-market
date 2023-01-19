@@ -56,4 +56,28 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     adminFacet.setMinDebtSize(200 ether);
     assertEq(viewFacet.getMinDebtSize(), 200 ether);
   }
+
+  function testCorrectness_SetLPConfigs_ShouldWork() external {
+    address[] memory _reinvestPath = new address[](2);
+    _reinvestPath[0] = address(cake);
+    _reinvestPath[1] = address(usdc);
+
+    ILYFAdminFacet.LPConfigInput[] memory _lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
+    _lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(wethUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      router: address(mockRouter),
+      reinvestPath: _reinvestPath,
+      reinvestThreshold: reinvestThreshold,
+      rewardToken: address(cake),
+      poolId: wethUsdcPoolId
+    });
+
+    adminFacet.setLPConfigs(_lpConfigs);
+
+    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+
+    assertEq(_lpConfig.poolId, _lpConfigs[0].poolId);
+  }
 }
