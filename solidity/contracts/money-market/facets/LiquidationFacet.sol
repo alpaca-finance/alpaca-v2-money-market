@@ -20,6 +20,26 @@ contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibSafeToken for IERC20;
 
+  event LogRepurchase(
+    address indexed repurchaser,
+    address _repayToken,
+    address _collatToken,
+    uint256 _actualRepayAmountWithoutFee,
+    uint256 _collatAmountOut,
+    uint256 _feeToTreasury,
+    uint256 _repurchaseRewardToCaller
+  );
+  event LogLiquidate(
+    address indexed caller,
+    address indexed liquidationStrategy,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountDebtRepaid,
+    uint256 _amountCollatLiquidated,
+    uint256 _feeToTreasury,
+    uint256 _feeToLiquidator
+  );
+
   struct InternalLiquidationCallParams {
     address liquidationStrat;
     address subAccount;
@@ -31,6 +51,17 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 collatAmountBefore;
     uint256 repayAmountBefore;
     uint256 subAccountCollatAmount;
+  }
+
+  struct RepurchaseLocalVars {
+    address subAccount;
+    uint256 totalBorrowingPower;
+    uint256 usedBorrowingPower;
+    uint256 repayAmountWithFee;
+    uint256 repurchaseFeeToProtocol;
+    uint256 repurchaseRewardBps;
+    uint256 repayAmountWihtoutFee;
+    uint256 repayTokenPrice;
   }
 
   modifier nonReentrant() {
@@ -45,17 +76,6 @@ contract LiquidationFacet is ILiquidationFacet {
     reentrancyGuardDs.liquidateExec = LibReentrancyGuard._ENTERED;
     _;
     reentrancyGuardDs.liquidateExec = LibReentrancyGuard._NOT_ENTERED;
-  }
-
-  struct RepurchaseLocalVars {
-    address subAccount;
-    uint256 totalBorrowingPower;
-    uint256 usedBorrowingPower;
-    uint256 repayAmountWithFee;
-    uint256 repurchaseFeeToProtocol;
-    uint256 repurchaseRewardBps;
-    uint256 repayAmountWihtoutFee;
-    uint256 repayTokenPrice;
   }
 
   /// @notice Repurchase the debt token in exchange of a collateral token
