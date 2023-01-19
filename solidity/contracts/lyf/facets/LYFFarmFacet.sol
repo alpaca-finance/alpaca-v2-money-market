@@ -228,13 +228,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _amount1ToRepay = _token1Return - _amount1Out;
 
     // 3. Remove debt by repay amount
-    (_vars.debtShare0ToRepay, _vars.debt0ToRepay) = _getActualRepayDebt(
+    (_vars.debtShare0ToRepay, _vars.debt0ToRepay) = _getActualDebtToRepay(
       _vars.subAccount,
       _vars.debtShareId0,
       _amount0ToRepay,
       lyfDs
     );
-    (_vars.debtShare1ToRepay, _vars.debt1ToRepay) = _getActualRepayDebt(
+    (_vars.debtShare1ToRepay, _vars.debt1ToRepay) = _getActualDebtToRepay(
       _vars.subAccount,
       _vars.debtShareId1,
       _amount1ToRepay,
@@ -248,8 +248,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
 
-    uint256 _amount0ToTransfer = _amount0ToRepay - _vars.debt0ToRepay + _amount0Out;
-    uint256 _amount1ToTransfer = _amount1ToRepay - _vars.debt1ToRepay + _amount1Out;
+    uint256 _amount0ToTransfer = _token0Return - _vars.debt0ToRepay;
+    uint256 _amount1ToTransfer = _token1Return - _vars.debt1ToRepay;
 
     // 4. Transfer remaining back to user
     if (_amount0ToTransfer > 0) {
@@ -260,27 +260,26 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
   }
 
-  function _getActualRepayDebt(
+  function _getActualDebtToRepay(
     address _subAccount,
     uint256 _debtShareId,
-    uint256 _repayAmount,
+    uint256 _desiredRepayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _actualShare, uint256 _actualToRepay) {
-    uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+  ) internal view returns (uint256 _actualShareToRepay, uint256 _actualToRepay) {
+    uint256 _debtValues = lyfDs.debtValues[_debtShareId];
+    uint256 _debtShares = lyfDs.debtValues[_debtShareId];
+
+    // debt share of sub account
+    _actualShareToRepay = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
     // Note: precision loss 1 wei when convert share back to value
-    uint256 _debtValue = LibShareUtil.shareToValue(
-      _debtShare,
-      lyfDs.debtValues[_debtShareId],
-      lyfDs.debtShares[_debtShareId]
-    );
+    // debt value of sub account
+    _actualToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _debtValues, _debtShares);
 
-    _actualToRepay = _repayAmount > _debtValue ? _debtValue : _repayAmount;
-
-    _actualShare = LibShareUtil.valueToShare(
-      _actualToRepay,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
+    if (_actualToRepay > _desiredRepayAmount) {
+      _actualToRepay = _desiredRepayAmount;
+      // convert desiredRepayAmount to share
+      _actualShareToRepay = LibShareUtil.valueToShare(_desiredRepayAmount, _debtShares, _debtValues);
+    }
   }
 
   function repay(
