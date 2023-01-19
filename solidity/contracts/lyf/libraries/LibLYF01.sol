@@ -67,18 +67,20 @@ library LibLYF01 {
   struct LYFDiamondStorage {
     address moneyMarket;
     address treasury;
-    address oracle;
+    IAlpacaV2Oracle oracle;
     // maximum number of token in the linked list
     uint8 maxNumOfCollatPerSubAccount;
     uint8 maxNumOfDebtPerSubAccount;
     uint256 minDebtSize;
+    // unutilized token
     mapping(address => uint256) reserves;
+    // reserve pool
     mapping(address => uint256) protocolReserves;
     // collats = amount of collateral token
     mapping(address => uint256) collats;
     mapping(address => LibDoublyLinkedList.List) subAccountCollats;
     mapping(address => TokenConfig) tokenConfigs;
-    // token => lp token => debt share id
+    // token => lpToken => debtShareId
     mapping(address => mapping(address => uint256)) debtShareIds;
     mapping(uint256 => address) debtShareTokens;
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares;
@@ -89,7 +91,9 @@ library LibLYF01 {
     mapping(address => uint256) lpAmounts;
     mapping(address => LPConfig) lpConfigs;
     mapping(uint256 => address) interestModels;
+    // pendingReward for reinvest
     mapping(address => uint256) pendingRewards;
+    // whitelisted
     mapping(address => bool) reinvestorsOk;
     mapping(address => bool) liquidationStratOk;
     mapping(address => bool) liquidationCallersOk;
@@ -260,9 +264,9 @@ library LibLYF01 {
 
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256 _price) {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, ) = IAlpacaV2Oracle(lyfDs.oracle).lpToDollar(1e18, _token);
+      (_price, ) = lyfDs.oracle.lpToDollar(1e18, _token);
     } else {
-      (_price, ) = IAlpacaV2Oracle(lyfDs.oracle).getTokenPrice(_token);
+      (_price, ) = lyfDs.oracle.getTokenPrice(_token);
     }
   }
 
