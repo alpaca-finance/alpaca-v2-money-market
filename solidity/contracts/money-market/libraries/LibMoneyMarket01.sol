@@ -483,25 +483,6 @@ library LibMoneyMarket01 {
     _floating = moneyMarketDs.reserves[_token];
   }
 
-  // TODO: delete this
-  function setIbPair(
-    address _token,
-    address _ibToken,
-    MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    moneyMarketDs.tokenToIbTokens[_token] = _ibToken;
-    moneyMarketDs.ibTokenToTokens[_ibToken] = _token;
-  }
-
-  // TODO: delete this
-  function setTokenConfig(
-    address _token,
-    TokenConfig memory _config,
-    MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    moneyMarketDs.tokenConfigs[_token] = _config;
-  }
-
   function getPriceUSD(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
