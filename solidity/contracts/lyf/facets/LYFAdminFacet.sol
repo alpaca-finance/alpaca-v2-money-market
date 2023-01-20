@@ -39,7 +39,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     // sanity check
     IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.oracle = _oracle;
+    lyfDs.oracle = IAlpacaV2Oracle(_oracle);
 
     emit LogSetOracle(_oracle);
   }
