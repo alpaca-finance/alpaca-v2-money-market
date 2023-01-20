@@ -75,7 +75,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    // allow token to be removed once its tier change
+    // allow token to be removed if the tier's changed
     if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
       revert LYFCollateralFacet_RemoveLPCollateralNotAllowed();
     }
@@ -112,7 +112,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     LibLYF01.accrueDebtSharesOf(_fromSubAccount, lyfDs);
 
-    uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, lyfDs);
+    uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, lyfDs);
 
     if (!LibLYF01.isSubaccountHealthy(_fromSubAccount, lyfDs)) {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
@@ -120,8 +120,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, lyfDs);
+    LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemoved, lyfDs);
 
-    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _actualAmountRemove);
+    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _actualAmountRemoved);
   }
 }
