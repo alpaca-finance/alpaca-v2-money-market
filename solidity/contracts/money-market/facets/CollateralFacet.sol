@@ -38,9 +38,10 @@ contract CollateralFacet is ICollateralFacet {
   );
 
   event LogTransferCollateral(
-    address indexed _fromSubAccount,
-    address indexed _toSubAccount,
-    address indexed _token,
+    address indexed _account,
+    uint256 indexed _fromSubAccountId,
+    uint256 indexed _toSubAccountId,
+    address _token,
     uint256 _amount
   );
 
@@ -117,6 +118,6 @@ contract CollateralFacet is ICollateralFacet {
     address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
     LibMoneyMarket01.transferCollat(_toSubAccount, _token, _amount, moneyMarketDs);
 
-    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
+    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
 }

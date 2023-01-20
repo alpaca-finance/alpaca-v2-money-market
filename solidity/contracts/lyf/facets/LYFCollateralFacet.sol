@@ -31,9 +31,10 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   );
 
   event LogTransferCollateral(
-    address indexed _fromSubAccount,
-    address indexed _toSubAccount,
-    address indexed _token,
+    address indexed _account,
+    uint256 indexed _fromSubAccountId,
+    uint256 indexed _toSubAccountId,
+    address _token,
     uint256 _amount
   );
 
@@ -116,6 +117,6 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 
-    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
+    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _actualAmountRemove);
   }
 }
