@@ -230,13 +230,15 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     TokenConfig memory _tokenConfig;
+    address _borrowedToken;
 
     for (uint256 _i; _i < _borrowedLength; ) {
-      _tokenConfig = moneyMarketDs.tokenConfigs[_borrowed[_i].token];
+      _borrowedToken = _borrowed[_i].token;
+      _tokenConfig = moneyMarketDs.tokenConfigs[_borrowedToken];
 
       _totalUsedBorrowingPower += usedBorrowingPower(
         _borrowed[_i].amount,
-        getPriceUSD(_borrowed[_i].token, moneyMarketDs),
+        getPriceUSD(_borrowedToken, moneyMarketDs),
         _tokenConfig.borrowingFactor,
         _tokenConfig.to18ConversionFactor
       );
@@ -289,103 +291,93 @@ library LibMoneyMarket01 {
     uint256 _to18ConversionFactor
   ) internal pure returns (uint256 _usedBorrowingPower) {
     _usedBorrowingPower = LibFullMath.mulDiv(
-      _borrowedAmount * MAX_BPS * _to18ConversionFactor,
+      _borrowedAmount * _to18ConversionFactor,
       _tokenPrice,
-      1e18 * _borrowingFactor
+      1e14 * _borrowingFactor // gas savings: 1e14 = 1e18 / MAX_BPS
     );
   }
 
-  // TODO: optimize this
   function getGlobalPendingInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
     returns (uint256 _globalPendingInterest)
   {
-    uint256 _lastAccrueTime = moneyMarketDs.debtLastAccrueTime[_token];
-    if (block.timestamp > _lastAccrueTime) {
-      uint256 _timePast = block.timestamp - _lastAccrueTime;
-
-      // over collat interest
-      if (address(moneyMarketDs.interestModels[_token]) == address(0)) {
-        return 0;
+    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccrueTime[_token];
+    if (block.timestamp > _lastAccrualTimestamp) {
+      uint256 _secondsSinceLastAccrual;
+      unchecked {
+        _secondsSinceLastAccrual = block.timestamp - _lastAccrualTimestamp;
       }
-
-      uint256 _interestRatePerSec = getOverCollatInterestRate(_token, moneyMarketDs);
-
-      _globalPendingInterest = (_interestRatePerSec * _timePast * moneyMarketDs.overCollatDebtValues[_token]) / 1e18;
-
-      // non collat interest
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
+      uint256 _nonCollatInterestAmount;
       for (uint256 _i; _i < _accountLength; ) {
-        address _account = _borrowedAccounts[_i].token;
-
-        uint256 _nonCollatInterestRate = getNonCollatInterestRate(_account, _token, moneyMarketDs);
-
-        _globalPendingInterest += (_nonCollatInterestRate * _timePast * _borrowedAccounts[_i].amount) / 1e18;
-
+        _nonCollatInterestAmount +=
+          (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
+            _borrowedAccounts[_i].amount) /
+          1e18;
         unchecked {
           ++_i;
         }
       }
+      // _globalPendingInterest = (overCollatInterestAmount + nonCollatInterestAmount) * _secondsSinceLastAccrual
+      _globalPendingInterest =
+        (_nonCollatInterestAmount +
+          (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token]) /
+          1e18) *
+        _secondsSinceLastAccrual;
     }
   }
 
-  // TODO: optimize this
   function getOverCollatInterestRate(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
     returns (uint256)
   {
-    address _interestModel = address(moneyMarketDs.interestModels[_token]);
-    if (_interestModel == address(0)) {
+    IInterestRateModel _interestModel = moneyMarketDs.interestModels[_token];
+    if (address(_interestModel) == address(0)) {
       return 0;
     }
-    uint256 _debtValue = moneyMarketDs.globalDebts[_token];
-    uint256 _floating = getFloatingBalance(_token, moneyMarketDs);
-    return IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
+    return _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], getFloatingBalance(_token, moneyMarketDs));
   }
 
-  // TODO: optimize this
   function getNonCollatInterestRate(
     address _account,
     address _token,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256) {
     bytes32 _nonCollatId = getNonCollatId(_account, _token);
-    address _interestModel = address(moneyMarketDs.nonCollatInterestModels[_nonCollatId]);
-    if (_interestModel == address(0)) {
+    IInterestRateModel _interestModel = moneyMarketDs.nonCollatInterestModels[_nonCollatId];
+    if (address(_interestModel) == address(0)) {
       return 0;
     }
-    uint256 _debtValue = moneyMarketDs.globalDebts[_token];
-    uint256 _floating = getFloatingBalance(_token, moneyMarketDs);
-    return IInterestRateModel(_interestModel).getInterestRate(_debtValue, _floating);
+    return _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], getFloatingBalance(_token, moneyMarketDs));
   }
 
-  // TODO: optimize this
   function accrueOverCollatInterest(
     address _token,
     uint256 _timePast,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _overCollatInterest) {
-    _overCollatInterest =
-      (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * moneyMarketDs.overCollatDebtValues[_token]) /
-      1e18;
+    // cache to save gas
+    uint256 _totalDebtValue = moneyMarketDs.overCollatDebtValues[_token];
+    _overCollatInterest = (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * _totalDebtValue) / 1e18;
     // update overcollat debt
-    moneyMarketDs.overCollatDebtValues[_token] += _overCollatInterest;
+    moneyMarketDs.overCollatDebtValues[_token] = _totalDebtValue + _overCollatInterest;
   }
 
-  // TODO: optimize this
   function accrueInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
-    uint256 _lastAccrueTime = moneyMarketDs.debtLastAccrueTime[_token];
-    if (block.timestamp > _lastAccrueTime) {
-      uint256 _timePast = block.timestamp - _lastAccrueTime;
-
-      uint256 _overCollatInterest = accrueOverCollatInterest(_token, _timePast, moneyMarketDs);
-      uint256 _totalNonCollatInterest = accrueNonCollatInterest(_token, _timePast, moneyMarketDs);
+    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccrueTime[_token];
+    if (block.timestamp > _lastAccrualTimestamp) {
+      uint256 _secondsSinceLastAccrual;
+      unchecked {
+        _secondsSinceLastAccrual = block.timestamp - _lastAccrualTimestamp;
+      }
+      uint256 _overCollatInterest = accrueOverCollatInterest(_token, _secondsSinceLastAccrual, moneyMarketDs);
+      uint256 _nonCollatInterest = accrueNonCollatInterest(_token, _secondsSinceLastAccrual, moneyMarketDs);
 
       // update global debt
-      uint256 _totalInterest = (_overCollatInterest + _totalNonCollatInterest);
+      uint256 _totalInterest = _overCollatInterest + _nonCollatInterest;
       moneyMarketDs.globalDebts[_token] += _totalInterest;
 
       // update timestamp
@@ -399,7 +391,6 @@ library LibMoneyMarket01 {
     }
   }
 
-  // TODO: optimize this
   function accrueNonCollatInterest(
     address _token,
     uint256 _timePast,
@@ -419,15 +410,13 @@ library LibMoneyMarket01 {
       _accountInterest =
         (getNonCollatInterestRate(_account, _token, moneyMarketDs) * _timePast * _currentAccountDebt) /
         1e18;
-      {
-        // update non collat debt states
-        _newNonCollatDebtValue = _currentAccountDebt + _accountInterest;
-        // 1. account debt
-        moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _newNonCollatDebtValue);
 
-        // 2. token debt
-        moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(_account, _newNonCollatDebtValue);
-      }
+      // update non collat debt states
+      _newNonCollatDebtValue = _currentAccountDebt + _accountInterest;
+      // 1. account debt
+      moneyMarketDs.nonCollatAccountDebtValues[_account].addOrUpdate(_token, _newNonCollatDebtValue);
+      // 2. token debt
+      moneyMarketDs.nonCollatTokenDebtValues[_token].addOrUpdate(_account, _newNonCollatDebtValue);
 
       _totalNonCollatInterest += _accountInterest;
       unchecked {
@@ -436,7 +425,6 @@ library LibMoneyMarket01 {
     }
   }
 
-  // TODO: optimize this
   function accrueBorrowedPositionsOf(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
     LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
@@ -450,7 +438,6 @@ library LibMoneyMarket01 {
     }
   }
 
-  // TODO: optimize this
   function accrueNonCollatBorrowedPositionsOf(address _account, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
   {
@@ -458,7 +445,7 @@ library LibMoneyMarket01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    for (uint256 _i = 0; _i < _borrowedLength; ) {
+    for (uint256 _i; _i < _borrowedLength; ) {
       accrueInterest(_borrowed[_i].token, moneyMarketDs);
       unchecked {
         ++_i;
