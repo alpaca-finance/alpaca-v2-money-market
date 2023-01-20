@@ -9,12 +9,11 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_NotEnoughToken();
 
   struct TokenConfigInput {
-    address token;
     LibLYF01.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
+    address token;
     uint256 maxCollateral;
-    uint256 maxBorrow;
   }
 
   struct LPConfigInput {

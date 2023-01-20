@@ -168,9 +168,6 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     );
     vm.stopPrank();
 
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-    address _aliceSubaccount = address(uint160(ALICE) ^ uint160(subAccount0));
-
     // To make LP fair pending reward is reinvestd before calcualting alice's share
     // 20 reward token can compose to LP = 10
     // alice deposit another 30 lp
@@ -181,8 +178,8 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // totalShare = 50 + 25 = 75
     assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 90 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 75 ether);
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(wethUsdcLPToken)), 50 ether);
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubaccount, address(wethUsdcLPToken)), 25 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(BOB, subAccount0, address(wethUsdcLPToken)), 50 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(wethUsdcLPToken)), 25 ether);
   }
 
   function testCorrectness_WhenLPCollatRemoved_PendingRewardMoreThanReinvestThreshold_ShouldReinvestToMakeLPFair()

@@ -15,9 +15,9 @@ contract LYFInit {
     // sanity check for MM
     IMoneyMarket(_moneyMarket).getIbTokenFromToken(address(0));
 
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    ds.moneyMarket = _moneyMarket;
+    lyfDs.moneyMarket = IMoneyMarket(_moneyMarket);
 
     diamondDs.lyfInitialized = 1;
   }

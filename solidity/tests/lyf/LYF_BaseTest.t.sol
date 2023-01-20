@@ -147,7 +147,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 100e18
     });
 
@@ -156,7 +155,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 1e24,
       maxCollateral: 10e24
     });
 
@@ -165,7 +163,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 1e24,
       maxCollateral: 10e24
     });
 
@@ -174,7 +171,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 0,
       maxCollateral: 10e24
     });
 
@@ -183,7 +179,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 0,
       maxCollateral: 10e24
     });
 
@@ -192,7 +187,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 1e24,
       maxCollateral: 10e24
     });
 
@@ -201,7 +195,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 100e18
     });
 
@@ -210,7 +203,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 10e24
     });
 
@@ -219,7 +211,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 100e18
     });
 
