@@ -10,6 +10,7 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 contract LYFAdminFacet is ILYFAdminFacet {
@@ -73,23 +74,29 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 _len = _configs.length;
+
     LibLYF01.LPConfig memory _config;
-    address _lpToken;
+    LPConfigInput memory _input;
+
     for (uint256 _i; _i < _len; ) {
-      _lpToken = _configs[_i].lpToken;
+      _input = _configs[_i];
+
+      // sanity check reinvestPath and router
+      IRouterLike(_input.router).getAmountsIn(1 ether, _configs[_i].reinvestPath);
+
       _config = LibLYF01.LPConfig({
-        strategy: _configs[_i].strategy,
-        masterChef: _configs[_i].masterChef,
-        router: _configs[_i].router,
-        rewardToken: _configs[_i].rewardToken,
-        reinvestPath: _configs[_i].reinvestPath,
-        reinvestThreshold: _configs[_i].reinvestThreshold,
-        poolId: _configs[_i].poolId
+        strategy: _input.strategy,
+        masterChef: _input.masterChef,
+        router: _input.router,
+        rewardToken: _input.rewardToken,
+        reinvestPath: _input.reinvestPath,
+        reinvestThreshold: _input.reinvestThreshold,
+        poolId: _input.poolId
       });
 
-      lyfDs.lpConfigs[_lpToken] = _config;
+      lyfDs.lpConfigs[_input.lpToken] = _config;
 
-      emit LogSetLPConfig(_lpToken, _config);
+      emit LogSetLPConfig(_input.lpToken, _config);
 
       unchecked {
         ++_i;
