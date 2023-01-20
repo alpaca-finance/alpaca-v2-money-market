@@ -105,11 +105,11 @@ library LibLYF01 {
     }
   }
 
-  function getSubAccount(address primary, uint256 subAccountId) internal pure returns (address) {
-    if (subAccountId > 255) {
+  function getSubAccount(address _primary, uint256 _subAccountId) internal pure returns (address) {
+    if (_subAccountId > 255) {
       revert LibLYF01_BadSubAccountId();
     }
-    return address(uint160(primary) ^ uint160(subAccountId));
+    return address(uint160(_primary) ^ uint160(_subAccountId));
   }
 
   function getDebtSharePendingInterest(
