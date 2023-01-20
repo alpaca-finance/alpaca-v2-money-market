@@ -20,6 +20,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     address indexed _account,
     uint256 indexed _subAccountId,
     address indexed _token,
+    address _caller,
     uint256 _amount
   );
   event LogRemoveCollateral(
@@ -63,7 +64,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     LibLYF01.addCollat(_subAccount, _token, _amount, lyfDs);
 
-    emit LogAddCollateral(msg.sender, _subAccountId, _token, _amount);
+    emit LogAddCollateral(_account, _subAccountId, _token, msg.sender, _amount);
   }
 
   function removeCollateral(

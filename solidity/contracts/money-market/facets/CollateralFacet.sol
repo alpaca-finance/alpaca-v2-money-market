@@ -23,14 +23,15 @@ contract CollateralFacet is ICollateralFacet {
   using SafeCast for int256;
 
   event LogAddCollateral(
-    address indexed _subAccount,
+    address indexed _account,
     uint256 indexed _subAccountId,
     address indexed _token,
+    address _caller,
     uint256 _amount
   );
 
   event LogRemoveCollateral(
-    address indexed _subAccount,
+    address indexed _account,
     uint256 indexed _subAccountId,
     address indexed _token,
     uint256 _amount
@@ -67,7 +68,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    emit LogAddCollateral(_account, _subAccountId, _token, _amount);
+    emit LogAddCollateral(_account, _subAccountId, _token, msg.sender, _amount);
   }
 
   /// @notice Remove a collateral token from a subaccount
