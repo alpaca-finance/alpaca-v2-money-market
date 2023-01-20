@@ -22,9 +22,19 @@ contract CollateralFacet is ICollateralFacet {
   using SafeCast for uint256;
   using SafeCast for int256;
 
-  event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogAddCollateral(
+    address indexed _subAccount,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _amount
+  );
 
-  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogRemoveCollateral(
+    address indexed _subAccount,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _amount
+  );
 
   event LogTransferCollateral(
     address indexed _fromSubAccount,
@@ -57,7 +67,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    emit LogAddCollateral(_subAccount, _token, _amount);
+    emit LogAddCollateral(_account, _subAccountId, _token, _amount);
   }
 
   /// @notice Remove a collateral token from a subaccount
@@ -79,7 +89,7 @@ contract CollateralFacet is ICollateralFacet {
 
     IERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
-    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
+    emit LogRemoveCollateral(msg.sender, _subAccountId, _token, _removeAmount);
   }
 
   /// @notice Transfer the collateral from one subaccount to another subaccount
