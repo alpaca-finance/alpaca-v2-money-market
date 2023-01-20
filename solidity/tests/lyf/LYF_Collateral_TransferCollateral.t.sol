@@ -51,7 +51,6 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserTransferCollateralBtwSubAccount_ShouldWork() external {
-    address _bobSubAccount0 = LibLYF01.getSubAccount(address(BOB), subAccount0);
     uint256 _transferAmount = 1 ether;
     uint256 _lyfWethCollatBefore;
     uint256 _bobSub0WethCollatBefore;
@@ -66,14 +65,14 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 20 ether);
 
     // before
-    _bobSub0WethCollatBefore = viewFacet.getSubAccountTokenCollatAmount(_bobSubAccount0, address(weth));
+    _bobSub0WethCollatBefore = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
     _lyfWethCollatBefore = viewFacet.getTokenCollatAmount(address(weth));
 
     collateralFacet.transferCollateral(subAccount0, subAccount1, address(weth), _transferAmount);
     vm.stopPrank();
 
     // after
-    _bobSub0WethCollatAfter = viewFacet.getSubAccountTokenCollatAmount(_bobSubAccount0, address(weth));
+    _bobSub0WethCollatAfter = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
 
     _bobSubAccount0collats = viewFacet.getAllSubAccountCollats(BOB, subAccount0);
     _bobSubAccount1collats = viewFacet.getAllSubAccountCollats(BOB, subAccount1);
