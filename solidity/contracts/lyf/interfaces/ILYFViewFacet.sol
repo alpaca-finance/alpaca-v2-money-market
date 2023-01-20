@@ -22,7 +22,11 @@ interface ILYFViewFacet {
 
   function getTokenCollatAmount(address _token) external view returns (uint256);
 
-  function getSubAccountTokenCollatAmount(address _subAccount, address _token) external view returns (uint256);
+  function getSubAccountTokenCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256);
 
   function getMMDebt(address _token) external view returns (uint256);
 
