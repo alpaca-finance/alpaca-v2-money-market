@@ -298,7 +298,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // withdraw all ib
     LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatAmount, lyfDs);
     // deposit leftover underlyingToken as collat
-    LibLYF01.addCollat(_params.subAccount, _collatUnderlyingToken, _returnedUnderlyingAmount - _underlyingSold, lyfDs);
+    LibLYF01.addCollatNoCheckMaxCollatNum(
+      _params.subAccount,
+      _collatUnderlyingToken,
+      _returnedUnderlyingAmount - _underlyingSold,
+      lyfDs
+    );
 
     emit LogLiquidateIb(
       msg.sender,
@@ -414,7 +419,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // add remaining as subAccount collateral
     _remainingAmountAfterRepay = _amountAvailable - _actualAmountToRepay;
     if (_remainingAmountAfterRepay > 0) {
-      LibLYF01.addCollat(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
+      LibLYF01.addCollatNoCheckMaxCollatNum(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
     }
   }
 

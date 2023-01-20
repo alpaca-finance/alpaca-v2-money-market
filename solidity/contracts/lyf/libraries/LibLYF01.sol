@@ -304,6 +304,27 @@ library LibLYF01 {
     uint256 _amount,
     LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _amountAdded) {
+    _amountAdded = _addCollat(_subAccount, _token, _amount, lyfDs);
+    if (lyfDs.subAccountCollats[_subAccount].length() > lyfDs.maxNumOfCollatPerSubAccount) {
+      revert LibLYF01_NumberOfTokenExceedLimit();
+    }
+  }
+
+  function addCollatNoCheckMaxCollatNum(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _amountAdded) {
+    _amountAdded = _addCollat(_subAccount, _token, _amount, lyfDs);
+  }
+
+  function _addCollat(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LYFDiamondStorage storage lyfDs
+  ) private returns (uint256 _amountAdded) {
     // update subaccount state
     LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subAccount];
     if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
@@ -323,11 +344,10 @@ library LibLYF01 {
       lyfDs.lpAmounts[_token] += _amount;
     }
 
+    // update subAccount collat
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
-    if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount) {
-      revert LibLYF01_NumberOfTokenExceedLimit();
-    }
 
+    // update global collat
     lyfDs.collats[_token] += _amount;
   }
 
