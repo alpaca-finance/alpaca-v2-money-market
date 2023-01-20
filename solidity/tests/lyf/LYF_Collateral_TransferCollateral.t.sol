@@ -15,7 +15,7 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     super.setUp();
   }
 
-  function testRevert_WhenUserTransferLpCollateral_ShouldRevert() external {
+  function testRevert_WhenUserTransferNonCollateralTier_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
     uint256 _usdcToAddLP = 30 ether;
     uint256 _wethCollatAmount = 20 ether;
