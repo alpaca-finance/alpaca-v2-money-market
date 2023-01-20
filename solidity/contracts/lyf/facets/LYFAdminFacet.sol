@@ -57,7 +57,6 @@ contract LYFAdminFacet is ILYFAdminFacet {
         collateralFactor: _tokenConfigs[_i].collateralFactor,
         borrowingFactor: _tokenConfigs[_i].borrowingFactor,
         maxCollateral: _tokenConfigs[_i].maxCollateral,
-        maxBorrow: _tokenConfigs[_i].maxBorrow,
         to18ConversionFactor: LibLYF01.to18ConversionFactor(_token)
       });
 
