@@ -22,9 +22,11 @@ library LibUIntDoublyLinkedList {
     uint256 amount;
   }
 
-  function init(List storage list) internal {
-    list.next[START] = END;
-    list.prev[END] = START;
+  function initIfNotExist(List storage list) internal {
+    if (list.next[START] == EMPTY) {
+      list.next[START] = END;
+      list.prev[END] = START;
+    }
   }
 
   function has(List storage list, uint256 index) internal view returns (bool) {
