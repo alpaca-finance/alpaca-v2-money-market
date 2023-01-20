@@ -36,7 +36,13 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _removeDebtAmount
   );
 
-  event LogRepay(address indexed _account, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
+  event LogRepay(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address _token,
+    address _caller,
+    uint256 _actualRepayAmount
+  );
   event LogRepayWithCollat(
     address indexed _account,
     uint256 indexed _subAccountId,
@@ -126,7 +132,7 @@ contract BorrowFacet is IBorrowFacet {
 
     _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _actualAmountToRepay, moneyMarketDs);
 
-    emit LogRepay(_account, _subAccountId, _token, _actualAmountToRepay);
+    emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral

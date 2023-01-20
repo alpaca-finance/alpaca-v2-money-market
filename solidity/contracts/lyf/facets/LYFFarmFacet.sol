@@ -36,7 +36,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _lpAmount
   );
 
-  event LogRepay(address indexed _subAccount, address _token, uint256 _actualRepayAmount);
+  event LogRepay(address indexed _subAccount, address _token, address _caller, uint256 _actualRepayAmount);
 
   event LogRepayWithCollat(
     address indexed _account,
@@ -385,7 +385,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function _repayDebtWithShare(
@@ -403,7 +403,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
