@@ -140,9 +140,10 @@ library LYFDiamondDeployer {
   {
     _collatFacet = new LYFCollateralFacet();
 
-    _selectors = new bytes4[](2);
+    _selectors = new bytes4[](3);
     _selectors[0] = LYFCollateralFacet.addCollateral.selector;
     _selectors[1] = LYFCollateralFacet.removeCollateral.selector;
+    _selectors[2] = LYFCollateralFacet.transferCollateral.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_collatFacet),

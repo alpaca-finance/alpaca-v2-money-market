@@ -42,7 +42,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
-      revert LYFCollateralFacet_TokenNotAllowedAsCollateral(_token);
+      revert LYFCollateralFacet_OnlyCollateralTierAllowed();
     }
     if (_amount + lyfDs.collats[_token] > lyfDs.tokenConfigs[_token].maxCollateral) {
       revert LYFCollateralFacet_ExceedCollateralLimit();
@@ -64,8 +64,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
-      revert LYFCollateralFacet_RemoveLPCollateralNotAllowed();
+    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+      revert LYFCollateralFacet_OnlyCollateralTierAllowed();
     }
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
@@ -90,21 +90,25 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     address _token,
     uint256 _amount
   ) external nonReentrant {
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+      revert LYFCollateralFacet_OnlyCollateralTierAllowed();
+    }
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
 
-    LibLYF01.accrueDebtSharesOf(_fromSubAccount, ds);
+    LibLYF01.accrueDebtSharesOf(_fromSubAccount, lyfDs);
 
-    uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
+    uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, lyfDs);
 
-    if (!LibLYF01.isSubaccountHealthy(_fromSubAccount, ds)) {
+    if (!LibLYF01.isSubaccountHealthy(_fromSubAccount, lyfDs)) {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
     }
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
+    LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, lyfDs);
 
     emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
   }

@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
+
+import { LYF_BaseTest } from "./LYF_BaseTest.t.sol";
+
+// libraries
+import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
+import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+
+// interfaces
+import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
+
+contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
+  function setUp() public override {
+    super.setUp();
+  }
+
+  function testRevert_WhenUserTransferLpCollateral_ShouldRevert() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // borrow weth and usdc
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_OnlyCollateralTierAllowed.selector));
+    collateralFacet.transferCollateral(subAccount0, subAccount1, address(wethUsdcLPToken), 1 ether);
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenUserTransferCollateralBtwSubAccount_ShouldWork() external {
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _transferAmount = 1 ether;
+    LibDoublyLinkedList.Node[] memory _bobSubAccount0collats;
+    LibDoublyLinkedList.Node[] memory _bobSubAccount1collats;
+
+    _bobSubAccount0collats = viewFacet.getAllSubAccountCollats(BOB, subAccount0);
+    _bobSubAccount1collats = viewFacet.getAllSubAccountCollats(BOB, subAccount1);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.transferCollateral(subAccount1, subAccount1, address(weth), _transferAmount);
+    vm.stopPrank();
+
+    _bobSubAccount1collats = viewFacet.getAllSubAccountCollats(BOB, subAccount1);
+
+    assertEq(_bobSubAccount1collats.length, 1);
+    // assertEq(_bobSubAccount1collats[0].amount, _transferAmount);
+  }
+}
