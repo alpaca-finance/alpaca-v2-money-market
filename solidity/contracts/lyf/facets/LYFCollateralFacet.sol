@@ -64,8 +64,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
-      revert LYFCollateralFacet_OnlyCollateralTierAllowed();
+    // allow token to be removed once its tier change
+    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
+      revert LYFCollateralFacet_RemoveLPCollateralNotAllowed();
     }
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);

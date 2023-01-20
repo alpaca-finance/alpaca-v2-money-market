@@ -51,7 +51,7 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserTransferCollateralBtwSubAccount_ShouldWork() external {
-    address _bobSubAccount0 = viewFacet.getSubAccount(address(BOB), subAccount0);
+    address _bobSubAccount0 = LibLYF01.getSubAccount(address(BOB), subAccount0);
     uint256 _transferAmount = 1 ether;
     uint256 _lyfWethCollatBefore;
     uint256 _bobSub0WethCollatBefore;

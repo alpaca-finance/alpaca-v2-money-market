@@ -86,7 +86,7 @@ contract LYF_Collateral_RemoveCollateralTest is LYF_BaseTest {
     wethUsdcLPToken.mint(ALICE, 10 ether);
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(lyfDiamond, 10 ether);
-    vm.expectRevert(ILYFCollateralFacet.LYFCollateralFacet_OnlyCollateralTierAllowed.selector);
+    vm.expectRevert(ILYFCollateralFacet.LYFCollateralFacet_RemoveLPCollateralNotAllowed.selector);
     collateralFacet.removeCollateral(subAccount0, address(wethUsdcLPToken), 10 ether);
   }
 }
