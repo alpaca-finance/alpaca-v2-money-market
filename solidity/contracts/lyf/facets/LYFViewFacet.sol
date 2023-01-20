@@ -51,8 +51,13 @@ contract LYFViewFacet is ILYFViewFacet {
     return ds.collats[_token];
   }
 
-  function getSubAccountTokenCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+  function getSubAccountTokenCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     return ds.subAccountCollats[_subAccount].getAmount(_token);
   }
 

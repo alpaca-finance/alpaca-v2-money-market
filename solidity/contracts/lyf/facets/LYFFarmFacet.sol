@@ -29,12 +29,17 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _removeDebtAmount
   );
 
-  event LogAddFarmPosition(address indexed _subAccount, address indexed _lpToken, uint256 _lpAmount);
+  event LogAddFarmPosition(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _lpToken,
+    uint256 _lpAmount
+  );
 
-  event LogRepay(address indexed _subAccount, address _token, uint256 _actualRepayAmount);
+  event LogRepay(address indexed _subAccount, address _token, address _caller, uint256 _actualRepayAmount);
 
   event LogRepayWithCollat(
-    address indexed _user,
+    address indexed _account,
     uint256 indexed _subAccountId,
     address _token,
     uint256 _debtShareId,
@@ -114,7 +119,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
   function directAddFarmPosition(
@@ -174,7 +179,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
   function reducePosition(
@@ -380,7 +385,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function _repayDebtWithShare(
@@ -398,7 +403,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
