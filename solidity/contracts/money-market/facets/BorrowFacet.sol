@@ -22,7 +22,13 @@ contract BorrowFacet is IBorrowFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
 
-  event LogBorrow(address indexed _subAccount, address indexed _token, uint256 _borrowedAmount, uint256 _debtShare);
+  event LogBorrow(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _borrowedAmount,
+    uint256 _debtShare
+  );
   event LogRemoveDebt(
     address indexed _subAccount,
     address indexed _token,
@@ -30,9 +36,15 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _removeDebtAmount
   );
 
-  event LogRepay(address indexed _user, uint256 indexed _subAccountId, address _token, uint256 _actualRepayAmount);
+  event LogRepay(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address _token,
+    address _caller,
+    uint256 _actualRepayAmount
+  );
   event LogRepayWithCollat(
-    address indexed _user,
+    address indexed _account,
     uint256 indexed _subAccountId,
     address _token,
     uint256 _actualRepayAmount
@@ -69,7 +81,7 @@ contract BorrowFacet is IBorrowFacet {
 
     IERC20(_token).safeTransfer(msg.sender, _amount);
 
-    emit LogBorrow(_subAccount, _token, _amount, _debtShare);
+    emit LogBorrow(msg.sender, _subAccountId, _token, _amount, _debtShare);
   }
 
   /// @notice Repay the debt for the subaccount
@@ -120,7 +132,7 @@ contract BorrowFacet is IBorrowFacet {
 
     _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _actualAmountToRepay, moneyMarketDs);
 
-    emit LogRepay(_account, _subAccountId, _token, _actualAmountToRepay);
+    emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral
