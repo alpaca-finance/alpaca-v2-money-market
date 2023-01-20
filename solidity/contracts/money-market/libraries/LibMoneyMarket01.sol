@@ -65,51 +65,56 @@ library LibMoneyMarket01 {
 
   // Storage
   struct MoneyMarketDiamondStorage {
+    // ---- addresses ---- //
     address wNativeToken;
     address wNativeRelayer;
     address treasury;
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
-    mapping(address => address) tokenToIbTokens;
-    mapping(address => address) ibTokenToTokens;
-    mapping(address => uint256) overCollatDebtValues;
-    mapping(address => uint256) overCollatDebtShares;
-    mapping(address => uint256) globalDebts;
-    mapping(address => uint256) collats;
-    mapping(address => LibDoublyLinkedList.List) subAccountCollats;
-    mapping(address => LibDoublyLinkedList.List) subAccountDebtShares;
-    // account -> list token debt
-    mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues;
-    // token -> debt of each account
-    mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues;
-    // account -> ProtocolConfig
-    mapping(address => ProtocolConfig) protocolConfigs;
-    mapping(address => bool) nonCollatBorrowerOk;
-    mapping(address => TokenConfig) tokenConfigs;
-    mapping(address => uint256) debtLastAccrueTime;
-    mapping(address => IInterestRateModel) interestModels;
-    mapping(bytes32 => IInterestRateModel) nonCollatInterestModels;
-    mapping(address => bool) repurchasersOk;
-    mapping(address => bool) liquidationStratOk;
-    mapping(address => bool) liquidatorsOk;
-    // reserve pool
-    mapping(address => uint256) protocolReserves;
-    // diamond token balances
-    mapping(address => uint256) reserves;
+    // ---- ib tokens ---- //
+    mapping(address => address) tokenToIbTokens; // token address => ibToken address
+    mapping(address => address) ibTokenToTokens; // ibToken address => token address
+    // ---- lending ---- //
+    mapping(address => uint256) globalDebts; // token address => over + non collat debt
+    // ---- over-collateralized lending ---- //
+    mapping(address => uint256) overCollatDebtValues; // borrower address => debt amount in borrowed token
+    mapping(address => uint256) overCollatDebtShares; // borrower address => debt shares
+    mapping(address => uint256) collats; // token address => total collateral of a token
+    mapping(address => IInterestRateModel) interestModels; // token address => over-collat interest model
+    // ---- non-collateralized lending ---- //
+    mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues; // account => list token debt
+    mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues; // token => debt of each account
+    mapping(address => ProtocolConfig) protocolConfigs; // account => ProtocolConfig
+    mapping(bytes32 => IInterestRateModel) nonCollatInterestModels; // nonCollatId => non-collat interest model
+    mapping(address => bool) nonCollatBorrowerOk; // can this address do non collat borrow
+    // ---- subAccounts ---- //
+    mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => list of subAccount's all collateral
+    mapping(address => LibDoublyLinkedList.List) subAccountDebtShares; // subAccount => list of subAccount's all debt
+    // ---- tokens ---- //
+    mapping(address => TokenConfig) tokenConfigs; // token address => config
+    mapping(address => uint256) debtLastAccrueTime; // token address => last interest accrual timestamp, shared between over and non collat
+    // ---- whitelists ---- //
+    mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
+    mapping(address => bool) liquidationStratOk; // liquidation strategies that can be used during liquidation process
+    mapping(address => bool) liquidatorsOk; // allowed to initiate liquidation process
+    // ---- reserves ---- //
+    mapping(address => uint256) protocolReserves; // token address => amount that is reserved for protocol
+    mapping(address => uint256) reserves; // token address => amount that is available in protocol
+    // ---- protocol params ---- //
+    uint256 minDebtSize; // minimum debt that borrower must maintain
     // maximum number of token in the linked list
     uint8 maxNumOfCollatPerSubAccount;
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
     // liquidation params
-    uint16 maxLiquidateBps;
-    uint16 liquidationThresholdBps;
+    uint16 maxLiquidateBps; // maximum portion of debt that is allowed to be repurchased / liquidated per transaction
+    uint16 liquidationThresholdBps; // threshold that allow subAccount to be liquidated if borrowing power goes below threshold
     // fees
-    uint16 lendingFeeBps;
-    uint16 repurchaseFeeBps;
-    uint16 liquidationFeeBps;
-    uint16 liquidationRewardBps;
-    uint256 minDebtSize;
+    uint16 lendingFeeBps; // fee that is charged from lending interest by protocol, goes to protocolReserve
+    uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to treasury
+    uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to treasury
+    uint16 liquidationRewardBps; // reward that is given to liquidators
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
