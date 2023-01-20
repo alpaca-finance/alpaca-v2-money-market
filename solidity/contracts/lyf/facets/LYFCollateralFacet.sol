@@ -16,9 +16,18 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
-
-  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogAddCollateral(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _amount
+  );
+  event LogRemoveCollateral(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _amount
+  );
 
   event LogTransferCollateral(
     address indexed _fromSubAccount,
@@ -54,7 +63,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     LibLYF01.addCollat(_subAccount, _token, _amount, lyfDs);
 
-    emit LogAddCollateral(_subAccount, _token, _amount);
+    emit LogAddCollateral(msg.sender, _subAccountId, _token, _amount);
   }
 
   function removeCollateral(
@@ -81,7 +90,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     IERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
 
-    emit LogRemoveCollateral(_subAccount, _token, _actualAmountRemoved);
+    emit LogRemoveCollateral(msg.sender, _subAccountId, _token, _actualAmountRemoved);
   }
 
   function transferCollateral(
