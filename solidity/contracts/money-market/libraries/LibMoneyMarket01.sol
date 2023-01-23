@@ -332,26 +332,32 @@ library LibMoneyMarket01 {
   function getOverCollatInterestRate(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view
-    returns (uint256)
+    returns (uint256 _interestRate)
   {
     IInterestRateModel _interestModel = moneyMarketDs.interestModels[_token];
     if (address(_interestModel) == address(0)) {
       return 0;
     }
-    return _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], getFloatingBalance(_token, moneyMarketDs));
+    _interestRate = _interestModel.getInterestRate(
+      moneyMarketDs.globalDebts[_token],
+      getFloatingBalance(_token, moneyMarketDs)
+    );
   }
 
   function getNonCollatInterestRate(
     address _account,
     address _token,
     MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256) {
+  ) internal view returns (uint256 _interestRate) {
     bytes32 _nonCollatId = getNonCollatId(_account, _token);
     IInterestRateModel _interestModel = moneyMarketDs.nonCollatInterestModels[_nonCollatId];
     if (address(_interestModel) == address(0)) {
       return 0;
     }
-    return _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], getFloatingBalance(_token, moneyMarketDs));
+    _interestRate = _interestModel.getInterestRate(
+      moneyMarketDs.globalDebts[_token],
+      getFloatingBalance(_token, moneyMarketDs)
+    );
   }
 
   function accrueOverCollatInterest(
