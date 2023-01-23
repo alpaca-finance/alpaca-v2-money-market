@@ -198,6 +198,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     _vars.subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
+    LibLYF01.accrueDebtSharesOf(_vars.subAccount, lyfDs);
+
     if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
