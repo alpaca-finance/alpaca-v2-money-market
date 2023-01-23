@@ -69,7 +69,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenLYFAdminSetMinDebtSize_ShouldCorrect() external {
-    assertEq(viewFacet.getMinDebtSize(), 0); // 3 is set from basetest
+    assertEq(viewFacet.getMinDebtSize(), 0.01 ether); // set from basetest
     adminFacet.setMinDebtSize(200 ether);
     assertEq(viewFacet.getMinDebtSize(), 200 ether);
   }

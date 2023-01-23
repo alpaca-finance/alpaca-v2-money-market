@@ -338,14 +338,15 @@ library LibLYF01 {
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
-      uint256 _lpAmount = lyfDs.lpAmounts[_token];
 
-      if (_lpAmount + _amountAdded > _lpConfig.globalMaxCollatAmount) {
+      if (lyfDs.lpAmounts[_token] + _amountAdded > _lpConfig.globalMaxCollatAmount) {
         revert LibLYF01_LPCollateralExceedLimit();
       }
 
       reinvest(_token, _lpConfig.reinvestThreshold, _lpConfig, lyfDs);
 
+      // cache to save gas
+      uint256 _lpAmount = lyfDs.lpAmounts[_token];
       uint256 _lpShare = lyfDs.lpShares[_token];
 
       _amountAdded = LibShareUtil.valueToShare(_amount, _lpShare, _lpAmount);
@@ -411,8 +412,12 @@ library LibLYF01 {
     if (_collateralAmountIb > 0) {
       IMoneyMarket moneyMarket = IMoneyMarket(ds.moneyMarket);
 
-      uint256 _removeAmountIb = (_removeAmountUnderlying * 1e18) /
-        getIbToUnderlyingConversionFactor(_ibToken, _token, ds.moneyMarket);
+      uint256 _removeAmountIb = LibShareUtil.valueToShare(
+        _removeAmountUnderlying,
+        IERC20(_ibToken).totalSupply(),
+        ds.moneyMarket.getTotalTokenWithPendingInterest(_token)
+      );
+
       uint256 _ibRemoved = _removeAmountIb > _collateralAmountIb ? _collateralAmountIb : _removeAmountIb;
 
       _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);

@@ -147,7 +147,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxCollateral: 10000 ether
+      maxCollateral: 100 ether
     });
 
     _inputs[1] = ILYFAdminFacet.TokenConfigInput({
@@ -155,7 +155,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxCollateral: 10000 ether
+      maxCollateral: 100 ether
     });
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
@@ -275,6 +275,8 @@ abstract contract LYF_BaseTest is BaseTest {
 
     // set max num of tokens
     adminFacet.setMaxNumOfToken(3, 3);
+
+    adminFacet.setMinDebtSize(0.01 ether);
   }
 
   function setUpMM(address _moneyMarketDiamond) internal {
@@ -368,8 +370,9 @@ abstract contract LYF_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     btc.approve(moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 1000 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 1000 ether);
+    // DON'T change these value. Some test cases are tied to deposit balances.
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(btc), 100 ether);
 
     vm.stopPrank();
