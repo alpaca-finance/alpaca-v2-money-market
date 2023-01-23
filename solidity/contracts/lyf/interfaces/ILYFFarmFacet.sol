@@ -5,6 +5,23 @@ import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.so
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
 interface ILYFFarmFacet {
+  // Errors
+  error LYFFarmFacet_InvalidToken(address _token);
+  error LYFFarmFacet_NotEnoughToken(uint256 _borrowAmount);
+  error LYFFarmFacet_BorrowingValueTooHigh(
+    uint256 _totalBorrowingPowerUSDValue,
+    uint256 _totalBorrowedUSDValue,
+    uint256 _borrowingUSDValue
+  );
+  error LYFFarmFacet_InvalidAssetTier();
+  error LYFFarmFacet_ExceedBorrowLimit();
+  error LYFFarmFacet_BadInput();
+  error LYFFarmFacet_Unauthorized();
+  error LYFFarmFacet_InvalidLP();
+  error LYFFarmFacet_BorrowingPowerTooLow();
+  error LYFFarmFacet_TooLittleReceived();
+  error LYFFarmFacet_CollatNotEnough();
+
   function addFarmPosition(
     uint256 _subAccountId,
     address _lpToken,
@@ -49,21 +66,4 @@ interface ILYFFarmFacet {
     uint256 _amount0Out,
     uint256 _amount1Out
   ) external;
-
-  // Errors
-  error LYFFarmFacet_InvalidToken(address _token);
-  error LYFFarmFacet_NotEnoughToken(uint256 _borrowAmount);
-  error LYFFarmFacet_BorrowingValueTooHigh(
-    uint256 _totalBorrowingPowerUSDValue,
-    uint256 _totalBorrowedUSDValue,
-    uint256 _borrowingUSDValue
-  );
-  error LYFFarmFacet_InvalidAssetTier();
-  error LYFFarmFacet_ExceedBorrowLimit();
-  error LYFFarmFacet_BadInput();
-  error LYFFarmFacet_Unauthorized();
-  error LYFFarmFacet_InvalidLP();
-  error LYFFarmFacet_BorrowingPowerTooLow();
-  error LYFFarmFacet_TooLittleReceived();
-  error LYFFarmFacet_CollatNotEnough();
 }

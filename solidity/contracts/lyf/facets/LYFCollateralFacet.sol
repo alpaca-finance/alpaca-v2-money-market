@@ -16,14 +16,25 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
-
-  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogAddCollateral(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    address _caller,
+    uint256 _amount
+  );
+  event LogRemoveCollateral(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _amount
+  );
 
   event LogTransferCollateral(
-    address indexed _fromSubAccount,
-    address indexed _toSubAccount,
-    address indexed _token,
+    address indexed _account,
+    uint256 indexed _fromSubAccountId,
+    uint256 indexed _toSubAccountId,
+    address _token,
     uint256 _amount
   );
 
@@ -41,6 +52,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
+    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+      revert LYFCollateralFacet_TokenNotAllowedAsCollateral(_token);
+    }
     if (_amount + lyfDs.collats[_token] > lyfDs.tokenConfigs[_token].maxCollateral) {
       revert LYFCollateralFacet_ExceedCollateralLimit();
     }
@@ -51,11 +65,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     LibLYF01.addCollat(_subAccount, _token, _amount, lyfDs);
 
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
-      LibLYF01.depositToMasterChef(_token, lyfDs.lpConfigs[_token].masterChef, lyfDs.lpConfigs[_token].poolId, _amount);
-    }
-
-    emit LogAddCollateral(_subAccount, _token, _amount);
+    emit LogAddCollateral(_account, _subAccountId, _token, msg.sender, _amount);
   }
 
   function removeCollateral(
@@ -65,9 +75,13 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
+    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
+      revert LYFCollateralFacet_RemoveLPCollateralNotAllowed();
+    }
+
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     uint256 _actualAmountRemoved = LibLYF01.removeCollateral(_subAccount, _token, _amount, lyfDs);
 
@@ -76,16 +90,9 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
       revert LYFCollateralFacet_BorrowingPowerTooLow();
     }
 
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
-      IMasterChefLike(lyfDs.lpConfigs[_token].masterChef).withdraw(
-        lyfDs.lpConfigs[_token].poolId,
-        _actualAmountRemoved
-      );
-    }
-
     IERC20(_token).safeTransfer(msg.sender, _actualAmountRemoved);
 
-    emit LogRemoveCollateral(_subAccount, _token, _actualAmountRemoved);
+    emit LogRemoveCollateral(msg.sender, _subAccountId, _token, _actualAmountRemoved);
   }
 
   function transferCollateral(
@@ -98,7 +105,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _fromSubAccount = LibLYF01.getSubAccount(msg.sender, _fromSubAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_fromSubAccount, ds);
+    LibLYF01.accrueDebtSharesOf(_fromSubAccount, ds);
 
     uint256 _actualAmountRemove = LibLYF01.removeCollateral(_fromSubAccount, _token, _amount, ds);
 
@@ -108,10 +115,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _toSubAccount = LibLYF01.getSubAccount(msg.sender, _toSubAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_toSubAccount, ds);
-
     LibLYF01.addCollat(_toSubAccount, _token, _actualAmountRemove, ds);
 
-    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _actualAmountRemove);
+    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _actualAmountRemove);
   }
 }

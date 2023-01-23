@@ -14,7 +14,6 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
@@ -23,14 +22,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  struct ReducePositionLocalVars {
-    address subAccount;
-    address token0;
-    address token1;
-    uint256 debtShareId0;
-    uint256 debtShareId1;
-  }
-
   event LogRemoveDebt(
     address indexed _subAccount,
     uint256 indexed _debtShareId,
@@ -38,17 +29,30 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _removeDebtAmount
   );
 
-  event LogAddFarmPosition(address indexed _subAccount, address indexed _lpToken, uint256 _lpAmount);
+  event LogAddFarmPosition(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _lpToken,
+    uint256 _lpAmount
+  );
 
-  event LogRepay(address indexed _subAccount, address _token, uint256 _actualRepayAmount);
+  event LogRepay(address indexed _subAccount, address _token, address _caller, uint256 _actualRepayAmount);
 
   event LogRepayWithCollat(
-    address indexed _user,
+    address indexed _account,
     uint256 indexed _subAccountId,
     address _token,
     uint256 _debtShareId,
     uint256 _actualRepayAmount
   );
+
+  struct ReducePositionLocalVars {
+    address subAccount;
+    address token0;
+    address token1;
+    uint256 debtShareId0;
+    uint256 debtShareId1;
+  }
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -76,11 +80,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _token1DebtShareId = lyfDs.debtShareIds[_token1][_lpToken];
 
     // accrue existing debt for healthcheck
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // accrue new borrow debt
-    LibLYF01.accrueInterest(_token0DebtShareId, lyfDs);
-    LibLYF01.accrueInterest(_token1DebtShareId, lyfDs);
+    LibLYF01.accrueDebtShareInterest(_token0DebtShareId, lyfDs);
+    LibLYF01.accrueDebtShareInterest(_token1DebtShareId, lyfDs);
 
     // 1. get token from collat (underlying and ib if possible), borrow if not enough
     _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount, lyfDs);
@@ -115,7 +119,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
   function directAddFarmPosition(
@@ -137,13 +141,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
+    LibLYF01.accrueDebtShareInterest(lyfDs.debtShareIds[_token0][_lpToken], lyfDs);
+    LibLYF01.accrueDebtShareInterest(lyfDs.debtShareIds[_token1][_lpToken], lyfDs);
 
     // 1. if desired amount exceeds provided amount, get token from collat (underlying and ib if possible), borrow if not enough
     _removeCollatWithIbAndBorrow(_subAccount, _token0, _lpToken, _desireToken0Amount - _token0AmountIn, lyfDs);
@@ -175,7 +179,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
   function reducePosition(
@@ -203,8 +207,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     _vars.debtShareId0 = lyfDs.debtShareIds[_vars.token0][_lpToken];
     _vars.debtShareId1 = lyfDs.debtShareIds[_vars.token1][_lpToken];
 
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token0][_lpToken], lyfDs);
-    LibLYF01.accrueInterest(lyfDs.debtShareIds[_vars.token1][_lpToken], lyfDs);
+    LibLYF01.accrueDebtShareInterest(_vars.debtShareId0, lyfDs);
+    LibLYF01.accrueDebtShareInterest(_vars.debtShareId1, lyfDs);
 
     // 1. Remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(_vars.subAccount, _lpToken, _lpShareAmount, lyfDs);
@@ -251,7 +255,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
 
-    LibLYF01.accrueInterest(_debtShareId, lyfDs);
+    LibLYF01.accrueDebtShareInterest(_debtShareId, lyfDs);
 
     // remove debt as much as possible
     uint256 _actualRepayAmount = _repayDebtWithShare(_subAccount, _token, _debtShareId, _debtShareToRepay, lyfDs);
@@ -285,10 +289,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _subAccountId);
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    (uint256 _debtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     // repay maxmimum debt
     _debtShareToRepay = _debtShareToRepay > _debtShare ? _debtShare : _debtShareToRepay;
@@ -346,11 +350,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _tokenAmountFromIbCollat = LibLYF01.removeIbCollateral(
       _subAccount,
       _token,
-      IMoneyMarket(lyfDs.moneyMarket).getIbTokenFromToken(_token),
+      lyfDs.moneyMarket.getIbTokenFromToken(_token),
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );
-    LibLYF01.borrowFromMoneyMarket(
+    LibLYF01.borrow(
       _subAccount,
       _token,
       _lpToken,
@@ -366,7 +370,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualRepayAmount) {
-    (uint256 _oldSubAccountDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _oldSubAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     uint256 _shareToRemove = LibShareUtil.valueToShare(
       _repayAmount,
@@ -380,7 +384,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function _repayDebtWithShare(
@@ -390,7 +394,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareToRepay,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualRepayAmount) {
-    (uint256 _oldSubAccountDebtShare, ) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    uint256 _oldSubAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     uint256 _actualShareToRepay = LibFullMath.min(_oldSubAccountDebtShare, _debtShareToRepay);
 
@@ -398,12 +402,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function accrueInterest(address _token, address _lpToken) external {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    LibLYF01.accrueInterest(_debtShareId, lyfDs);
+    LibLYF01.accrueDebtShareInterest(_debtShareId, lyfDs);
   }
 }

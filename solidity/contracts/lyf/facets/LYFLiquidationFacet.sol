@@ -23,6 +23,49 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
+  uint256 constant REPURCHASE_REWARD_BPS = 100;
+  uint256 constant LIQUIDATION_FEE_BPS = 100;
+
+  event LogRepurchase(
+    address indexed repurchaser,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
+
+  event LogLiquidateIb(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
+  event LogLiquidate(
+    address indexed liquidator,
+    address _strat,
+    address _repayToken,
+    address _collatToken,
+    uint256 _amountIn,
+    uint256 _amountOut,
+    uint256 _feeToTreasury
+  );
+
+  event LogLiquidateLP(
+    address indexed liquidator,
+    address _account,
+    uint256 _subAccountId,
+    address _lpToken,
+    uint256 _lpSharesToLiquidate,
+    uint256 _amount0Repaid,
+    uint256 _amount1Repaid,
+    uint256 _remainingAmount0AfterRepay,
+    uint256 _remainingAmount1AfterRepay
+  );
+
   struct InternalLiquidationCallParams {
     address liquidationStrat;
     address subAccount;
@@ -32,9 +75,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 debtShareId;
     uint256 minReceive;
   }
-
-  uint256 constant REPURCHASE_REWARD_BPS = 100;
-  uint256 constant LIQUIDATION_FEE_BPS = 100;
 
   struct LiquidateLPLocalVars {
     address subAccount;
@@ -70,7 +110,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_debtToken][_lpToken];
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // 1. check borrowing power
     uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
@@ -133,7 +173,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_repayToken][_lpToken];
 
-    LibLYF01.accrueAllSubAccountDebtShares(_subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // 1. check if position is underwater and can be liquidated
     {
@@ -154,7 +194,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       minReceive: _minReceive
     });
 
-    address _collatUnderlyingToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
+    address _collatUnderlyingToken = lyfDs.moneyMarket.getTokenFromIbToken(_collatToken);
     if (_collatUnderlyingToken != address(0)) {
       _ibLiquidationCall(_params, _collatUnderlyingToken, lyfDs);
     } else {
@@ -220,7 +260,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _collatAmount = lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken);
 
     // withdraw underlyingToken from MM
-    uint256 _returnedUnderlyingAmount = IMoneyMarket(lyfDs.moneyMarket).withdraw(_params.collatToken, _collatAmount);
+    uint256 _returnedUnderlyingAmount = lyfDs.moneyMarket.withdraw(_params.collatToken, _collatAmount);
 
     // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
     uint256 _underlyingAmountBefore = IERC20(_collatUnderlyingToken).balanceOf(address(this));
@@ -301,7 +341,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     vars.debtShareId0 = lyfDs.debtShareIds[vars.token0][_lpToken];
     vars.debtShareId1 = lyfDs.debtShareIds[vars.token1][_lpToken];
 
-    LibLYF01.accrueAllSubAccountDebtShares(vars.subAccount, lyfDs);
+    LibLYF01.accrueDebtSharesOf(vars.subAccount, lyfDs);
 
     // 0. check borrowing power
     {
@@ -403,23 +443,26 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _rewardBps,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
-    address _actualToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
+    IMoneyMarket _moneyMarket = lyfDs.moneyMarket;
+    address _underlyingToken = _moneyMarket.getTokenFromIbToken(_collatToken);
 
     uint256 _collatTokenPrice;
-    // _collatToken is ibToken
-    if (_actualToken != address(0)) {
-      _collatTokenPrice = LibLYF01.getIbPriceUSD(_collatToken, _actualToken, lyfDs);
+    if (_underlyingToken != address(0)) {
+      // if _collatToken is ibToken convert underlying price to ib price
+      _collatTokenPrice =
+        (LibLYF01.getPriceUSD(_underlyingToken, lyfDs) *
+          LibLYF01.getIbToUnderlyingConversionFactor(_collatToken, _underlyingToken, _moneyMarket)) /
+        1e18;
+      // _collatTokenPrice = LibLYF01.convertUnderlyingToIb(_collatToken, _underlyingToken, _underlyingPrice, lyfDs);
     } else {
       // _collatToken is normal ERC20 or LP token
       _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);
     }
 
-    LibLYF01.TokenConfig memory _tokenConfig = lyfDs.tokenConfigs[_collatToken];
-
     // _collatAmountOut = _collatValueInUSD + _rewardInUSD
     _collatAmountOut =
       (_collatValueInUSD * (10000 + _rewardBps) * 1e14) /
-      (_collatTokenPrice * _tokenConfig.to18ConversionFactor);
+      (_collatTokenPrice * lyfDs.tokenConfigs[_collatToken].to18ConversionFactor);
 
     uint256 _totalSubAccountCollat = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
 

@@ -134,7 +134,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(BOB), subAccount0, address(wethUsdcLPToken), _bobLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount
+    );
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
@@ -149,11 +157,16 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // ALICE deposit another 30 lp
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(ALICE), subAccount0, address(wethUsdcLPToken), _aliceLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount
+    );
     vm.stopPrank();
-
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-    address _aliceSubaccount = address(uint160(ALICE) ^ uint160(subAccount0));
 
     // To make LP fair pending reward is reinvestd before calcualting alice's share
     // 20 reward token can compose to LP = 10
@@ -165,8 +178,8 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // totalShare = 50 + 25 = 75
     assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 90 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 75 ether);
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(wethUsdcLPToken)), 50 ether);
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubaccount, address(wethUsdcLPToken)), 25 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(BOB, subAccount0, address(wethUsdcLPToken)), 50 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(wethUsdcLPToken)), 25 ether);
   }
 
   function testCorrectness_WhenLPCollatRemoved_PendingRewardMoreThanReinvestThreshold_ShouldReinvestToMakeLPFair()
@@ -182,7 +195,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(BOB), subAccount0, address(wethUsdcLPToken), _bobLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount,
+      _bobLpAmount
+    );
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
@@ -192,7 +213,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // ALICE deposit another 25 lp
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.addCollateral(address(ALICE), subAccount0, address(wethUsdcLPToken), _aliceLpAmount);
+    farmFacet.directAddFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount,
+      _aliceLpAmount
+    );
     vm.stopPrank();
 
     // bob shares = 50
@@ -211,7 +240,7 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     // bob remove 10 shares
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
-    collateralFacet.removeCollateral(subAccount0, address(wethUsdcLPToken), 10 ether);
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 10 ether, 0, 0);
     vm.stopPrank();
 
     // 10 shares = 10 * 85 / 75 = 11.333333333333333333 lpValue

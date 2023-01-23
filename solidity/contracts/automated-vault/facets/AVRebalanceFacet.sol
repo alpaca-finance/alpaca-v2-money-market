@@ -16,6 +16,15 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 contract AVRebalanceFacet is IAVRebalanceFacet {
   using LibSafeToken for IERC20;
 
+  event LogRetarget(address indexed _vaultToken, uint256 _equityBefore, uint256 _equityAfter);
+  event LogRepurchase(
+    address indexed _vaultToken,
+    address _tokenToRepay,
+    uint256 _amountRepaid,
+    uint256 _amountBorrowedForVault,
+    uint256 _repurchaseReward
+  );
+
   function retarget(address _vaultToken) external {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
 

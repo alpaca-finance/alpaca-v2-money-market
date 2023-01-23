@@ -3,12 +3,13 @@ pragma solidity 0.8.17;
 
 // interfaces
 import { ILYFViewFacet } from "../interfaces/ILYFViewFacet.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+
 // libraries
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 contract LYFViewFacet is ILYFViewFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
@@ -16,7 +17,7 @@ contract LYFViewFacet is ILYFViewFacet {
 
   function getOracle() external view returns (address) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.oracle;
+    return address(lyfDs.oracle);
   }
 
   function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
@@ -50,15 +51,20 @@ contract LYFViewFacet is ILYFViewFacet {
     return ds.collats[_token];
   }
 
-  function getSubAccountTokenCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+  function getSubAccountTokenCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     return ds.subAccountCollats[_subAccount].getAmount(_token);
   }
 
   function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).getNonCollatAccountDebt(address(this), _token);
+    _debtAmount = lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token);
   }
 
   function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256) {
@@ -90,7 +96,8 @@ contract LYFViewFacet is ILYFViewFacet {
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
 
-    (_debtShare, _debtAmount) = LibLYF01.getDebt(_subAccount, _debtShareId, lyfDs);
+    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
   }
 
   function getAllSubAccountDebtShares(address _account, uint256 _subAccountId)
@@ -116,7 +123,14 @@ contract LYFViewFacet is ILYFViewFacet {
   function getPendingInterest(address _token, address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return LibLYF01.pendingInterest(_debtShareId, lyfDs);
+    return
+      LibLYF01.getDebtSharePendingInterest(
+        lyfDs.moneyMarket,
+        lyfDs.interestModels[_debtShareId],
+        lyfDs.debtShareTokens[_debtShareId],
+        block.timestamp - lyfDs.debtLastAccrueTime[_debtShareId],
+        lyfDs.debtValues[_debtShareId]
+      );
   }
 
   function getPendingReward(address _lpToken) external view returns (uint256) {

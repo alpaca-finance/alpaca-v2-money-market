@@ -12,6 +12,7 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
+import { LibUIntDoublyLinkedList } from "../../contracts/lyf/libraries/LibUIntDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_FarmFacetTest is LYF_BaseTest {
@@ -46,11 +47,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
 
     // asset collat of subaccount
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
-    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
+    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(usdc));
     uint256 _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(
-      _bobSubaccount,
+      address(BOB),
+      subAccount0,
       address(wethUsdcLPToken)
     );
 
@@ -148,11 +149,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 10 ether);
     // asset collat of subaccount
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
-    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
+    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(usdc));
     uint256 _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(
-      _bobSubaccount,
+      address(BOB),
+      subAccount0,
       address(wethUsdcLPToken)
     );
 
@@ -179,9 +180,13 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
 
-    _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
-    _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
-    _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(wethUsdcLPToken));
+    _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
+    _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(usdc));
+    _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(
+      address(BOB),
+      subAccount0,
+      address(wethUsdcLPToken)
+    );
 
     // assert subaccount's collat
     assertEq(_subAccountWethCollat, 0 ether);
@@ -225,11 +230,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     // asset collat of subaccount
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
-    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
+    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
+    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(usdc));
     uint256 _subAccountLpTokenCollat = viewFacet.getSubAccountTokenCollatAmount(
-      _bobSubaccount,
+      address(BOB),
+      subAccount0,
       address(wethUsdcLPToken)
     );
 
@@ -406,11 +411,13 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-
     // check collat
-    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(weth));
-    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(ibWeth));
+    uint256 _subAccountWethCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
+    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(
+      address(BOB),
+      subAccount0,
+      address(ibWeth)
+    );
 
     assertEq(_subAccountWethCollat, 0);
     assertEq(_subAccountIbWethCollat, 0);
@@ -449,11 +456,13 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-
     // check collat
-    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(usdc));
-    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(ibWeth));
+    uint256 _subAccountUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(usdc));
+    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(
+      address(BOB),
+      subAccount0,
+      address(ibWeth)
+    );
 
     assertEq(_subAccountUsdcCollat, 0);
     assertEq(_subAccountIbWethCollat, 0);
@@ -493,10 +502,12 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-
     // check collat
-    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(ibWeth));
+    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(
+      address(BOB),
+      subAccount0,
+      address(ibWeth)
+    );
 
     assertEq(_subAccountIbWethCollat, 30 ether); // redeem 30 ibWeth for weth
 
@@ -534,11 +545,17 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
 
-    address _bobSubaccount = address(uint160(BOB) ^ uint160(subAccount0));
-
     // check collat = 0 because all redeemed
-    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(ibWeth));
-    uint256 _subAccountIbUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(_bobSubaccount, address(ibUsdc));
+    uint256 _subAccountIbWethCollat = viewFacet.getSubAccountTokenCollatAmount(
+      address(BOB),
+      subAccount0,
+      address(ibWeth)
+    );
+    uint256 _subAccountIbUsdcCollat = viewFacet.getSubAccountTokenCollatAmount(
+      address(BOB),
+      subAccount0,
+      address(ibUsdc)
+    );
 
     assertEq(_subAccountIbWethCollat, 0);
     assertEq(_subAccountIbUsdcCollat, 0);
@@ -616,6 +633,75 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
       _wethAmountDirect,
       _usdcAmountDirect
     );
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenAddFarmPosition_AndReserveIsMoreThanBorrowedAmount_ShouldBorrowReserve() external {
+    // create leftover reserve by borrow from mm and repay so tokens is left in lyf
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 10 ether);
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 10 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(10 ether, 10 ether);
+    farmFacet.repay(ALICE, subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
+
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 10 ether);
+
+    // next addFarmPosition should use reserve instead of borrowing from mm
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 6 ether, 6 ether, 6 ether);
+    // 6 ether should be borrowed from reserve so 4 left
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
+
+    // next addFarmPosition should not use reserve but borrow more from mm
+    // because amount > reserve
+    uint256 _mmDebtBefore = viewFacet.getMMDebt(address(weth));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 6 ether, 6 ether, 6 ether);
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
+    assertEq(viewFacet.getMMDebt(address(weth)) - _mmDebtBefore, 6 ether);
+  }
+
+  function testRevert_WhenUserBorrowMoreThanMaxNumOfDebtPerSubAccount_ShouldRevert() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    // allow to borrow only 1 token
+    adminFacet.setMaxNumOfToken(10, 1);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // borrow both weth and usdc
+    vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_NumberOfTokenExceedLimit.selector));
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    vm.stopPrank();
+  }
+
+  function testCorrectness_WhenRepayAndBorrowMoreWithTotalBorrowEqualMaxNumOfDebtPerSubAccount_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _btcToAddLP = 3 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    // allow to borrow 2 tokens
+    adminFacet.setMaxNumOfToken(10, 2);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // borrow weth and usdc
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+
+    // repay all debt
+    farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), type(uint256).max);
+    farmFacet.repay(BOB, subAccount0, address(usdc), address(wethUsdcLPToken), type(uint256).max);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount * 2);
+
+    // borrow btc and usdc
+    farmFacet.addFarmPosition(subAccount0, address(btcUsdcLPToken), _btcToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
   }
 }
