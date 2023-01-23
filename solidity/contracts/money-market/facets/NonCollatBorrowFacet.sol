@@ -20,8 +20,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
   event LogNonCollatBorrow(address indexed _account, address indexed _token, uint256 _removeDebtAmount);
   event LogNonCollatRemoveDebt(address indexed _account, address indexed _token, uint256 _removeDebtAmount);
-
-  event LogNonCollatRepay(address indexed _user, address indexed _token, uint256 _actualRepayAmount);
+  event LogNonCollatRepay(address indexed _account, address indexed _token, uint256 _actualRepayAmount);
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();

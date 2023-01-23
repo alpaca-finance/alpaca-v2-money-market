@@ -16,7 +16,6 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_LiquidationFacetTest is LYF_BaseTest {
   uint256 _subAccountId = 0;
-  address _aliceSubAccount0 = LibLYF01.getSubAccount(ALICE, _subAccountId);
   MockLiquidationStrategy internal mockLiquidationStrategy;
   address constant liquidator = address(1000);
 
@@ -95,7 +94,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken),
       10 ether - _wethReceivedFromRepurchase // TODO: account for repurchase fee
     );
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
@@ -147,7 +146,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken),
       4 ether - _btcReceivedFromRepurchase // TODO: account for repurchase fee
     );
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
@@ -210,7 +209,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken),
       15 ether - _ibWethReceivedFromRepurchase, // TODO: account for repurchase fee
       "alice remaining ibWeth collat"
     );
@@ -354,7 +353,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)), 10 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)), 10 ether);
     assertEq(viewFacet.getTotalBorrowingPower(ALICE, subAccount0), 63 ether);
     assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 33.333333333333333333 ether);
 
@@ -378,7 +377,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     // collateral is sold to repay
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)), 0);
 
     // debt reduce
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
@@ -427,7 +426,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
     vm.stopPrank();
 
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _collatToken), 4 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken), 4 ether);
     assertEq(viewFacet.getTotalBorrowingPower(ALICE, subAccount0), 90 ether);
     assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 66.666666666666666666 ether);
 
@@ -451,9 +450,9 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     // collateral is sold to repay
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(ibBtc)), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(ibBtc)), 0);
     // leftover underlying token is add to collateral
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(btc)), 3.495 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(btc)), 3.495 ether);
 
     // debt reduce
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
@@ -507,17 +506,17 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken),
       25 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)),
       15 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
       1 ether,
       "alice remaining usdc collat"
     );
@@ -571,14 +570,14 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
 
     // check alice position
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken), 0, "alice remaining lp collat");
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken), 0, "alice remaining lp collat");
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)),
       40 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
       25 ether,
       "alice remaining usdc collat"
     );
@@ -633,17 +632,17 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken),
       25 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)),
       12 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(_aliceSubAccount0, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
       0,
       "alice remaining usdc collat"
     );

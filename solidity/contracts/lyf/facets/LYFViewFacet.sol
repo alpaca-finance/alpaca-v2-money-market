@@ -3,8 +3,8 @@ pragma solidity 0.8.17;
 
 // interfaces
 import { ILYFViewFacet } from "../interfaces/ILYFViewFacet.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+
 // libraries
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
@@ -17,7 +17,7 @@ contract LYFViewFacet is ILYFViewFacet {
 
   function getOracle() external view returns (address) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    return lyfDs.oracle;
+    return address(lyfDs.oracle);
   }
 
   function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
@@ -51,15 +51,20 @@ contract LYFViewFacet is ILYFViewFacet {
     return ds.collats[_token];
   }
 
-  function getSubAccountTokenCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+  function getSubAccountTokenCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     return ds.subAccountCollats[_subAccount].getAmount(_token);
   }
 
   function getMMDebt(address _token) external view returns (uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    _debtAmount = IMoneyMarket(lyfDs.moneyMarket).getNonCollatAccountDebt(address(this), _token);
+    _debtAmount = lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token);
   }
 
   function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256) {

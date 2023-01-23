@@ -14,7 +14,6 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILYFFarmFacet } from "../interfaces/ILYFFarmFacet.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
-import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
@@ -30,12 +29,17 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _removeDebtAmount
   );
 
-  event LogAddFarmPosition(address indexed _subAccount, address indexed _lpToken, uint256 _lpAmount);
+  event LogAddFarmPosition(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _lpToken,
+    uint256 _lpAmount
+  );
 
-  event LogRepay(address indexed _subAccount, address _token, uint256 _actualRepayAmount);
+  event LogRepay(address indexed _subAccount, address _token, address _caller, uint256 _actualRepayAmount);
 
   event LogRepayWithCollat(
-    address indexed _user,
+    address indexed _account,
     uint256 indexed _subAccountId,
     address _token,
     uint256 _debtShareId,
@@ -118,7 +122,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
   function directAddFarmPosition(
@@ -178,7 +182,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
-    emit LogAddFarmPosition(_subAccount, _lpToken, _lpReceived);
+    emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
   function reducePosition(
@@ -307,7 +311,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // update reserves of the token. This will impact the outstanding balance
     lyfDs.reserves[_token] += _actualRepayAmount;
 
-    emit LogRepay(_subAccount, _token, _actualRepayAmount);
+    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
 
   function reinvest(address _lpToken) external nonReentrant {
@@ -379,7 +383,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _tokenAmountFromIbCollat = LibLYF01.removeIbCollateral(
       _subAccount,
       _token,
-      IMoneyMarket(lyfDs.moneyMarket).getIbTokenFromToken(_token),
+      lyfDs.moneyMarket.getIbTokenFromToken(_token),
       _desireTokenAmount - _tokenAmountFromCollat,
       lyfDs
     );

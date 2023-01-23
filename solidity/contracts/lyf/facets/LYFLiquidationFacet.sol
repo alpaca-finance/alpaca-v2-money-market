@@ -194,7 +194,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       minReceive: _minReceive
     });
 
-    address _collatUnderlyingToken = IMoneyMarket(lyfDs.moneyMarket).getTokenFromIbToken(_collatToken);
+    address _collatUnderlyingToken = lyfDs.moneyMarket.getTokenFromIbToken(_collatToken);
     if (_collatUnderlyingToken != address(0)) {
       _ibLiquidationCall(_params, _collatUnderlyingToken, lyfDs);
     } else {
@@ -260,7 +260,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _collatAmount = lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken);
 
     // withdraw underlyingToken from MM
-    uint256 _returnedUnderlyingAmount = IMoneyMarket(lyfDs.moneyMarket).withdraw(_params.collatToken, _collatAmount);
+    uint256 _returnedUnderlyingAmount = lyfDs.moneyMarket.withdraw(_params.collatToken, _collatAmount);
 
     // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
     uint256 _underlyingAmountBefore = IERC20(_collatUnderlyingToken).balanceOf(address(this));
@@ -443,8 +443,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _rewardBps,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
-    address _moneyMarket = lyfDs.moneyMarket;
-    address _underlyingToken = IMoneyMarket(_moneyMarket).getTokenFromIbToken(_collatToken);
+    IMoneyMarket _moneyMarket = lyfDs.moneyMarket;
+    address _underlyingToken = _moneyMarket.getTokenFromIbToken(_collatToken);
 
     uint256 _collatTokenPrice;
     if (_underlyingToken != address(0)) {
