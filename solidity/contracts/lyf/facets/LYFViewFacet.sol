@@ -186,4 +186,8 @@ contract LYFViewFacet is ILYFViewFacet {
 
     _protocolReserveAmount = lyfDs.protocolReserves[_token];
   }
+
+  function getSubAccount(address _primary, uint256 _subAccountId) external pure returns (address _subAccount) {
+    _subAccount = LibLYF01.getSubAccount(_primary, _subAccountId);
+  }
 }
