@@ -37,6 +37,7 @@ library LibLYF01 {
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
   error LibLYF01_BadDebtShareId();
+  error LibLYF01_LPCollateralExceedLimit();
 
   enum AssetTier {
     UNLISTED,
@@ -60,6 +61,7 @@ library LibLYF01 {
     address[] reinvestPath;
     uint256 poolId;
     uint256 reinvestThreshold;
+    uint256 maxLpAmount;
     uint256 reinvestTreasuryBountyBps;
   }
 
@@ -305,6 +307,27 @@ library LibLYF01 {
     uint256 _amount,
     LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _amountAdded) {
+    _amountAdded = _addCollat(_subAccount, _token, _amount, lyfDs);
+    if (lyfDs.subAccountCollats[_subAccount].length() > lyfDs.maxNumOfCollatPerSubAccount) {
+      revert LibLYF01_NumberOfTokenExceedLimit();
+    }
+  }
+
+  function addCollatWithoutMaxCollatNumCheck(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LYFDiamondStorage storage lyfDs
+  ) internal returns (uint256 _amountAdded) {
+    _amountAdded = _addCollat(_subAccount, _token, _amount, lyfDs);
+  }
+
+  function _addCollat(
+    address _subAccount,
+    address _token,
+    uint256 _amount,
+    LYFDiamondStorage storage lyfDs
+  ) private returns (uint256 _amountAdded) {
     // update subaccount state
     LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subAccount];
     subAccountCollateralList.initIfNotExist();
@@ -314,20 +337,29 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
+      LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
 
-      _amountAdded = LibShareUtil.valueToShare(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
+      if (lyfDs.lpAmounts[_token] + _amountAdded > _lpConfig.maxLpAmount) {
+        revert LibLYF01_LPCollateralExceedLimit();
+      }
+
+      reinvest(_token, _lpConfig.reinvestThreshold, _lpConfig, lyfDs);
+
+      // cache to save gas
+      uint256 _lpAmount = lyfDs.lpAmounts[_token];
+      uint256 _lpShare = lyfDs.lpShares[_token];
+
+      _amountAdded = LibShareUtil.valueToShare(_amount, _lpShare, _lpAmount);
 
       // update lp global state
-      lyfDs.lpShares[_token] += _amountAdded;
-      lyfDs.lpAmounts[_token] += _amount;
+      lyfDs.lpShares[_token] = _lpShare + _amountAdded;
+      lyfDs.lpAmounts[_token] = _lpAmount + _amount;
     }
 
+    // update subAccount collat
     subAccountCollateralList.addOrUpdate(_token, _currentAmount + _amountAdded);
-    if (subAccountCollateralList.length() > lyfDs.maxNumOfCollatPerSubAccount) {
-      revert LibLYF01_NumberOfTokenExceedLimit();
-    }
 
+    // update global collat
     lyfDs.collats[_token] += _amount;
   }
 
@@ -380,8 +412,12 @@ library LibLYF01 {
     if (_collateralAmountIb > 0) {
       IMoneyMarket moneyMarket = IMoneyMarket(ds.moneyMarket);
 
-      uint256 _removeAmountIb = (_removeAmountUnderlying * 1e18) /
-        getIbToUnderlyingConversionFactor(_ibToken, _token, ds.moneyMarket);
+      uint256 _removeAmountIb = LibShareUtil.valueToShare(
+        _removeAmountUnderlying,
+        IERC20(_ibToken).totalSupply(),
+        ds.moneyMarket.getTotalTokenWithPendingInterest(_token)
+      );
+
       uint256 _ibRemoved = _removeAmountIb > _collateralAmountIb ? _collateralAmountIb : _removeAmountIb;
 
       _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);
