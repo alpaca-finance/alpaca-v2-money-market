@@ -314,7 +314,7 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      reinvest(_token, lyfDs.lpConfigs[_token], lyfDs);
+      reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
 
       _amountAdded = LibShareUtil.valueToShare(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
 
@@ -347,7 +347,7 @@ library LibLYF01 {
 
       // If LP token, handle extra step
       if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
-        reinvest(_token, ds.lpConfigs[_token], ds);
+        reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
 
         uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpAmounts[_token], ds.lpShares[_token]);
 
@@ -456,6 +456,7 @@ library LibLYF01 {
 
   function reinvest(
     address _lpToken,
+    uint256 _reinvestThreshold,
     LibLYF01.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
@@ -463,32 +464,35 @@ library LibLYF01 {
 
     uint256 _pendingReward = lyfDs.pendingRewards[_lpToken];
 
-    if (_pendingReward < _lpConfig.reinvestThreshold) {
+    if (_pendingReward < _reinvestThreshold) {
       return;
     }
 
-    // start reinvest
-    // calcualate reinvest bounty
-    uint256 _reinvestBounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS;
-    uint256 _actualPendingReward = _pendingReward - _reinvestBounty;
+    uint256 _reinvestAmount;
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
 
-    // convert rewardToken to either token0 or token1
-    uint256 _reinvestAmount;
-    if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
-      _reinvestAmount = _actualPendingReward;
-    } else {
-      IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _actualPendingReward);
-      uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
-        _actualPendingReward,
-        0,
-        _lpConfig.reinvestPath,
-        address(this),
-        block.timestamp
-      );
-      _reinvestAmount = _amounts[_amounts.length - 1];
+    // calcualate reinvest bounty
+    uint256 _reinvestBounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS;
+
+    {
+      uint256 _actualPendingReward = _pendingReward - _reinvestBounty;
+
+      // convert rewardToken to either token0 or token1
+      if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
+        _reinvestAmount = _actualPendingReward;
+      } else {
+        IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _actualPendingReward);
+        uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
+          _actualPendingReward,
+          0,
+          _lpConfig.reinvestPath,
+          address(this),
+          block.timestamp
+        );
+        _reinvestAmount = _amounts[_amounts.length - 1];
+      }
     }
 
     {
