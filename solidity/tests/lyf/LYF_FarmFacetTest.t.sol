@@ -722,7 +722,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
       poolId: wethUsdcPoolId,
-      maxLpAmount: 10 ether
+      maxLpAmount: 10 ether,
+      reinvestTreasuryBountyBps: 1500
     });
     adminFacet.setLPConfigs(lpConfigs);
 

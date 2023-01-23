@@ -231,7 +231,6 @@ abstract contract LYF_BaseTest is BaseTest {
       reinvestThreshold: reinvestThreshold,
       poolId: wethUsdcPoolId,
       rewardToken: address(cake),
-      poolId: wethUsdcPoolId,
       maxLpAmount: 100 ether,
       reinvestTreasuryBountyBps: 1500
     });
@@ -244,7 +243,6 @@ abstract contract LYF_BaseTest is BaseTest {
       reinvestThreshold: reinvestThreshold,
       poolId: btcUsdcPoolId,
       rewardToken: address(cake),
-      poolId: btcUsdcPoolId,
       maxLpAmount: 100 ether,
       reinvestTreasuryBountyBps: 1500
     });

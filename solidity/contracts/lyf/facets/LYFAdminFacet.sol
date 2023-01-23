@@ -92,7 +92,6 @@ contract LYFAdminFacet is ILYFAdminFacet {
         reinvestPath: _input.reinvestPath,
         poolId: _input.poolId,
         reinvestThreshold: _input.reinvestThreshold,
-        poolId: _input.poolId,
         maxLpAmount: _input.maxLpAmount,
         reinvestTreasuryBountyBps: _input.reinvestTreasuryBountyBps
       });
