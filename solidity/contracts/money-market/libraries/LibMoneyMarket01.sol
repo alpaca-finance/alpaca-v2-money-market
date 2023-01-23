@@ -556,9 +556,7 @@ library LibMoneyMarket01 {
 
     // init list
     LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
-    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      subAccountCollateralList.init();
-    }
+    subAccountCollateralList.initIfNotExist();
 
     // TODO: optimize this
     uint256 _currentCollatAmount = subAccountCollateralList.getAmount(_token);
@@ -609,9 +607,7 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage ds
   ) internal {
     LibDoublyLinkedList.List storage toSubAccountCollateralList = ds.subAccountCollats[_toSubAccount];
-    if (toSubAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      toSubAccountCollateralList.init();
-    }
+    toSubAccountCollateralList.initIfNotExist();
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
     if (toSubAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount) {
@@ -661,9 +657,7 @@ library LibMoneyMarket01 {
   ) internal returns (uint256 _shareToAdd) {
     LibDoublyLinkedList.List storage userDebtShare = ds.subAccountDebtShares[_subAccount];
 
-    if (userDebtShare.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      userDebtShare.init();
-    }
+    userDebtShare.initIfNotExist();
 
     _shareToAdd = LibShareUtil.valueToShareRoundingUp(
       _amount,
@@ -692,16 +686,10 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage ds
   ) internal {
     LibDoublyLinkedList.List storage debtValue = ds.nonCollatAccountDebtValues[_account];
-
-    if (debtValue.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      debtValue.init();
-    }
+    debtValue.initIfNotExist();
 
     LibDoublyLinkedList.List storage tokenDebts = ds.nonCollatTokenDebtValues[_token];
-
-    if (tokenDebts.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      tokenDebts.init();
-    }
+    tokenDebts.initIfNotExist();
 
     // update account debt
     uint256 _newAccountDebt = debtValue.getAmount(_token) + _amount;

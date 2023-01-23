@@ -140,9 +140,10 @@ library LYFDiamondDeployer {
   {
     _collatFacet = new LYFCollateralFacet();
 
-    _selectors = new bytes4[](2);
+    _selectors = new bytes4[](3);
     _selectors[0] = LYFCollateralFacet.addCollateral.selector;
     _selectors[1] = LYFCollateralFacet.removeCollateral.selector;
+    _selectors[2] = LYFCollateralFacet.transferCollateral.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_collatFacet),
@@ -203,7 +204,7 @@ library LYFDiamondDeployer {
   {
     _viewFacet = new LYFViewFacet();
 
-    _selectors = new bytes4[](22);
+    _selectors = new bytes4[](23);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
     _selectors[2] = LYFViewFacet.getLpTokenAmount.selector;
@@ -226,6 +227,7 @@ library LYFDiamondDeployer {
     _selectors[19] = LYFViewFacet.getMinDebtSize.selector;
     _selectors[20] = LYFViewFacet.getOutstandingBalanceOf.selector;
     _selectors[21] = LYFViewFacet.getProtocolReserveOf.selector;
+    _selectors[22] = LYFViewFacet.getSubAccount.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
