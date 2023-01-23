@@ -454,13 +454,11 @@ contract AdminFacet is IAdminFacet {
 
     if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) revert AdminFacet_InvalidToken(_token);
 
-    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    uint256 _actualAmount = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+    uint256 _actualAmountReceived = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _amount);
 
-    moneyMarketDs.reserves[_token] += _actualAmount;
+    moneyMarketDs.reserves[_token] += _actualAmountReceived;
 
-    emit LogTopUpTokenReserve(_token, _actualAmount);
+    emit LogTopUpTokenReserve(_token, _actualAmountReceived);
   }
 
   function _validateTokenConfig(
