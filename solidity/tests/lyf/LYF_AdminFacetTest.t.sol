@@ -86,10 +86,11 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
       masterChef: address(masterChef),
       router: address(mockRouter),
       reinvestPath: _reinvestPath,
-      reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
       poolId: wethUsdcPoolId,
-      maxLpAmount: 1_000 ether
+      maxLpAmount: 1_000 ether,
+      reinvestThreshold: reinvestThreshold,
+      reinvestTreasuryBountyBps: 1500
     });
 
     adminFacet.setLPConfigs(_lpConfigs);
