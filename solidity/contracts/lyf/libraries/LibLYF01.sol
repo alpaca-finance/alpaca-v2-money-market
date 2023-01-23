@@ -315,7 +315,7 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
+      reinvest(_token, lyfDs.lpConfigs[_token], lyfDs);
 
       _amountAdded = LibShareUtil.valueToShare(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
 
@@ -348,7 +348,7 @@ library LibLYF01 {
 
       // If LP token, handle extra step
       if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
-        reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
+        reinvest(_token, ds.lpConfigs[_token], ds);
 
         uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpAmounts[_token], ds.lpShares[_token]);
 
@@ -446,32 +446,31 @@ library LibLYF01 {
     address _lpToken,
     LibLYF01.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
+  ) internal returns (uint256 _pendingReward, uint256 _bounty) {
     uint256 _rewardBefore = IERC20(_lpConfig.rewardToken).balanceOf(address(this));
 
     IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, 0);
 
-    // accumulate harvested reward for LP
-    lyfDs.pendingRewards[_lpToken] += IERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
+    _pendingReward = IERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
+    _bounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS;
 
-    // todo: cut fee here (1)
+    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.treasury, _bounty);
+
+    // accumulate harvested reward for LP
+    lyfDs.pendingRewards[_lpToken] += _pendingReward - _bounty;
   }
 
   function reinvest(
     address _lpToken,
-    uint256 _reinvestThreshold,
     LibLYF01.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
     harvest(_lpToken, _lpConfig, lyfDs);
 
     uint256 _rewardAmount = lyfDs.pendingRewards[_lpToken];
-    if (_rewardAmount < _reinvestThreshold) {
+    if (_rewardAmount < _lpConfig.reinvestThreshold) {
       return;
     }
-
-    // todo: cut fee here (2)
-    // TODO: extract fee, what we should do
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
