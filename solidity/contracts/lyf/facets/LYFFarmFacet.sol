@@ -462,6 +462,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // debt value of sub account
     _actualToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _debtValues, _debtShares);
 
+    // if debt in sub account more than desired repay amount, then repay all of them
     if (_actualToRepay > _desiredRepayAmount) {
       _actualToRepay = _desiredRepayAmount;
       // convert desiredRepayAmount to share

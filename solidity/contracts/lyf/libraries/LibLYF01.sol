@@ -587,10 +587,10 @@ library LibLYF01 {
     uint256 _debtAmountToRemove,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     // update user debtShare
-    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _maxDebtShareToRemove - _debtShareToRemove);
+    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _currentDebtShare - _debtShareToRemove);
 
     lyfDs.debtShares[_debtShareId] -= _debtShareToRemove;
     lyfDs.debtValues[_debtShareId] -= _debtAmountToRemove;
