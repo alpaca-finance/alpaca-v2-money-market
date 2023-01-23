@@ -108,6 +108,7 @@ abstract contract LYF_BaseTest is BaseTest {
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
+    btc.approve(lyfDiamond, type(uint256).max);
     ibWeth.approve(lyfDiamond, type(uint256).max);
     ibUsdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
