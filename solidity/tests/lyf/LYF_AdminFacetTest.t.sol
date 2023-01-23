@@ -89,7 +89,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
       poolId: wethUsdcPoolId,
-      globalMaxCollatAmount: 1_000 ether
+      maxLpAmount: 1_000 ether
     });
 
     adminFacet.setLPConfigs(_lpConfigs);

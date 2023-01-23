@@ -92,7 +92,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
         reinvestPath: _input.reinvestPath,
         reinvestThreshold: _input.reinvestThreshold,
         poolId: _input.poolId,
-        globalMaxCollatAmount: _input.globalMaxCollatAmount
+        maxLpAmount: _input.maxLpAmount
       });
 
       lyfDs.lpConfigs[_input.lpToken] = _config;

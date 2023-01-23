@@ -231,7 +231,7 @@ abstract contract LYF_BaseTest is BaseTest {
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
       poolId: wethUsdcPoolId,
-      globalMaxCollatAmount: 100 ether
+      maxLpAmount: 100 ether
     });
     lpConfigs[1] = ILYFAdminFacet.LPConfigInput({
       lpToken: address(btcUsdcLPToken),
@@ -242,7 +242,7 @@ abstract contract LYF_BaseTest is BaseTest {
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
       poolId: btcUsdcPoolId,
-      globalMaxCollatAmount: 100 ether
+      maxLpAmount: 100 ether
     });
     adminFacet.setLPConfigs(lpConfigs);
 

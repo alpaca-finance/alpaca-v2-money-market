@@ -61,7 +61,7 @@ library LibLYF01 {
     address[] reinvestPath;
     uint256 poolId;
     uint256 reinvestThreshold;
-    uint256 globalMaxCollatAmount;
+    uint256 maxLpAmount;
   }
 
   // Storage
@@ -338,7 +338,7 @@ library LibLYF01 {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
 
-      if (lyfDs.lpAmounts[_token] + _amountAdded > _lpConfig.globalMaxCollatAmount) {
+      if (lyfDs.lpAmounts[_token] + _amountAdded > _lpConfig.maxLpAmount) {
         revert LibLYF01_LPCollateralExceedLimit();
       }
 
