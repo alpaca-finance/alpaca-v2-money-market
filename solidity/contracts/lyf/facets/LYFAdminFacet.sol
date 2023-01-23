@@ -82,7 +82,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
       _input = _configs[_i];
 
       // sanity check reinvestPath and router
-      IRouterLike(_input.router).getAmountsIn(1 ether, _configs[_i].reinvestPath);
+      IRouterLike(_input.router).getAmountsIn(1 ether, _input.reinvestPath);
 
       _config = LibLYF01.LPConfig({
         strategy: _input.strategy,
@@ -91,7 +91,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
         rewardToken: _input.rewardToken,
         reinvestPath: _input.reinvestPath,
         reinvestThreshold: _input.reinvestThreshold,
-        poolId: _input.poolId
+        poolId: _input.poolId,
+        globalMaxCollatAmount: _input.globalMaxCollatAmount
       });
 
       lyfDs.lpConfigs[_input.lpToken] = _config;

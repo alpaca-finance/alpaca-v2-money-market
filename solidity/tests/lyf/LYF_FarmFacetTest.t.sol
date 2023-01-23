@@ -704,4 +704,16 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     farmFacet.addFarmPosition(subAccount0, address(btcUsdcLPToken), _btcToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
   }
+
+  function testRevert_WhenAddFarmPositionExceedLPCollatLimit() external {
+    // lp collat limit is 100 ether
+    weth.mint(BOB, 1000 ether);
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 200 ether);
+    // first add 1 lp is fine
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 1 ether, 1 ether, 1 ether);
+    // 1 + 200 > 100 should revert
+    vm.expectRevert(LibLYF01.LibLYF01_LPCollateralExceedLimit.selector);
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 200 ether, 200 ether, 200 ether);
+  }
 }

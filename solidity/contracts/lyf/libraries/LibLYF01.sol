@@ -37,6 +37,7 @@ library LibLYF01 {
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
   error LibLYF01_BadDebtShareId();
+  error LibLYF01_LPCollateralExceedLimit();
 
   enum AssetTier {
     UNLISTED,
@@ -60,6 +61,7 @@ library LibLYF01 {
     address[] reinvestPath;
     uint256 poolId;
     uint256 reinvestThreshold;
+    uint256 globalMaxCollatAmount;
   }
 
   // Storage
@@ -335,13 +337,22 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
+      LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
+      uint256 _lpAmount = lyfDs.lpAmounts[_token];
 
-      _amountAdded = LibShareUtil.valueToShare(_amount, lyfDs.lpShares[_token], lyfDs.lpAmounts[_token]);
+      if (_lpAmount + _amountAdded > _lpConfig.globalMaxCollatAmount) {
+        revert LibLYF01_LPCollateralExceedLimit();
+      }
+
+      reinvest(_token, _lpConfig.reinvestThreshold, _lpConfig, lyfDs);
+
+      uint256 _lpShare = lyfDs.lpShares[_token];
+
+      _amountAdded = LibShareUtil.valueToShare(_amount, _lpShare, _lpAmount);
 
       // update lp global state
-      lyfDs.lpShares[_token] += _amountAdded;
-      lyfDs.lpAmounts[_token] += _amount;
+      lyfDs.lpShares[_token] = _lpShare + _amountAdded;
+      lyfDs.lpAmounts[_token] = _lpAmount + _amount;
     }
 
     // update subAccount collat

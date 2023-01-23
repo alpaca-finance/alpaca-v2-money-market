@@ -147,7 +147,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxCollateral: 100e18
+      maxCollateral: 10000 ether
     });
 
     _inputs[1] = ILYFAdminFacet.TokenConfigInput({
@@ -155,7 +155,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxCollateral: 10e24
+      maxCollateral: 10000 ether
     });
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
@@ -229,7 +229,8 @@ abstract contract LYF_BaseTest is BaseTest {
       reinvestPath: _reinvestPath,
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
-      poolId: wethUsdcPoolId
+      poolId: wethUsdcPoolId,
+      globalMaxCollatAmount: 100 ether
     });
     lpConfigs[1] = ILYFAdminFacet.LPConfigInput({
       lpToken: address(btcUsdcLPToken),
@@ -239,7 +240,8 @@ abstract contract LYF_BaseTest is BaseTest {
       reinvestPath: _reinvestPath,
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
-      poolId: btcUsdcPoolId
+      poolId: btcUsdcPoolId,
+      globalMaxCollatAmount: 100 ether
     });
     adminFacet.setLPConfigs(lpConfigs);
 
@@ -300,8 +302,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 100e18,
-      maxCollateral: 100e18
+      maxBorrow: 10000 ether,
+      maxCollateral: 10000 ether
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -309,8 +311,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 1e24,
-      maxCollateral: 10e24
+      maxBorrow: 10000 ether,
+      maxCollateral: 10000 ether
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -366,8 +368,8 @@ abstract contract LYF_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     btc.approve(moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), 1000 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 1000 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(btc), 100 ether);
 
     vm.stopPrank();

@@ -88,7 +88,8 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
       reinvestPath: _reinvestPath,
       reinvestThreshold: reinvestThreshold,
       rewardToken: address(cake),
-      poolId: wethUsdcPoolId
+      poolId: wethUsdcPoolId,
+      globalMaxCollatAmount: 1_000 ether
     });
 
     adminFacet.setLPConfigs(_lpConfigs);
@@ -97,7 +98,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
 
     assertEq(_lpConfig.poolId, _lpConfigs[0].poolId);
   }
-  
+
   function testCorrectness_WhenSetDebtInterestModel() external {
     adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
   }

@@ -25,6 +25,7 @@ interface ILYFAdminFacet {
     address[] reinvestPath;
     uint256 reinvestThreshold;
     uint256 poolId;
+    uint256 globalMaxCollatAmount;
   }
 
   function setOracle(address _oracle) external;
