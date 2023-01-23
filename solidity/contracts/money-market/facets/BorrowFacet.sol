@@ -79,6 +79,8 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _debtShare = LibMoneyMarket01.overCollatBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
+    moneyMarketDs.reserves[_token] -= _amount;
+
     IERC20(_token).safeTransfer(msg.sender, _amount);
 
     emit LogBorrow(msg.sender, _subAccountId, _token, _amount, _debtShare);

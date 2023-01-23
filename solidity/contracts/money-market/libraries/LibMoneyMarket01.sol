@@ -525,8 +525,6 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NotEnoughToken();
     }
 
-    moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
-
     // burn ibToken
     IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _withdrawAmount, _shareAmount);
 
@@ -685,9 +683,6 @@ library LibMoneyMarket01 {
     if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
-
-    // update facet token balance
-    ds.reserves[_token] -= _amount;
   }
 
   function nonCollatBorrow(
@@ -722,8 +717,6 @@ library LibMoneyMarket01 {
 
     // update global debt
     ds.globalDebts[_token] += _amount;
-
-    // QUESTION: do we need to reduce reserve here?
   }
 
   /// @dev safeTransferFrom that revert when not receiving full amount (have fee on transfer)
