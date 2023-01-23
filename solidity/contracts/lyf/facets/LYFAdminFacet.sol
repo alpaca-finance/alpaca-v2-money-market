@@ -90,8 +90,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
         router: _input.router,
         rewardToken: _input.rewardToken,
         reinvestPath: _input.reinvestPath,
+        poolId: _input.poolId,
         reinvestThreshold: _input.reinvestThreshold,
-        poolId: _input.poolId
+        reinvestTreasuryBountyBps: _input.reinvestTreasuryBountyBps
       });
 
       lyfDs.lpConfigs[_input.lpToken] = _config;

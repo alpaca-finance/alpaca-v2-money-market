@@ -62,11 +62,15 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     (_lpBalance, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
 
     // lp should increase
-    // total Reward = 3, swap to token0 = 1.5 and token1 = 1.5
-    // lpReceive = 1.5, 30 + 1.5 = 31.5
-    assertEq(_lpBalance, 31.5 ether);
-    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 31.5 ether);
+    // total Reward = 3 reward bouty = 3 * 15 / 100 = 0.45 ether
+    // actual 3 - 0.45 = 2.55 swap to token0 = 1.275 and token1 = 1.275
+    // lpReceive = 1.275, 30 + 1.275 = 31.275
+    assertEq(_lpBalance, 31.275 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 31.275 ether);
     assertEq(viewFacet.getPendingReward(address(wethUsdcLPToken)), 0);
+
+    // treasury should received bounty
+    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(treasury), 0.45 ether);
   }
 
   function testCorrectness_WhenPendingRewardLessThanReinvestThreshold_ShouldSkipReinvest() external {
@@ -170,16 +174,26 @@ contract LYF_ReinvestTest is LYF_BaseTest {
 
     // To make LP fair pending reward is reinvestd before calcualting alice's share
     // 20 reward token can compose to LP = 10
-    // alice deposit another 30 lp
-    // total lpValues = 50 + 10 + 30  = 90
+    // bouty should be 15% of reward = 20 * 15 / 100 = 3 ether
+    // actual reward 17 ether - convert to LP 17 / 2 = 8.5 ether
+    // total lpValues with reward = 50 + 8.5 = 58.5
 
     // bob shares = 50
-    // alice should get 30 * 50 / 60 = 25 shares
-    // totalShare = 50 + 25 = 75
-    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 90 ether);
-    assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 75 ether);
+    // alice should get 30 * 50 / 58.5 = 25.641025641025641025 shares
+    // totalShare = 50 + 25.641025641025641025 = 75.641025641025641025
+
+    // alice deposit another 30 lp
+    // total lpValues = 58.5 + 30  = 88.5
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 88.5 ether);
+    assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 75.641025641025641025 ether);
     assertEq(viewFacet.getSubAccountTokenCollatAmount(BOB, subAccount0, address(wethUsdcLPToken)), 50 ether);
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(wethUsdcLPToken)), 25 ether);
+    assertEq(
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(wethUsdcLPToken)),
+      25.641025641025641025 ether
+    );
+
+    // treasury should received bounty
+    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(treasury), 3 ether);
   }
 
   function testCorrectness_WhenLPCollatRemoved_PendingRewardMoreThanReinvestThreshold_ShouldReinvestToMakeLPFair()
@@ -243,11 +257,17 @@ contract LYF_ReinvestTest is LYF_BaseTest {
     farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 10 ether, 0, 0);
     vm.stopPrank();
 
-    // 10 shares = 10 * 85 / 75 = 11.333333333333333333 lpValue
-    // totalLPValues = 75 + 10 - 11.333333333333333333 = 73.666666666666666667
+    // reward 20, bounty (15%) 3 ether
+    // reward to add liquidity when reinvest = 17 then liquidity receive is 8.5 (17 / 2 (mockRouter))
+    // lp value = 75 + 8.5 = 83.5
+    // 10 shares = 10 * 83.5  / 75 = 11.133333333333333333 lpValue
+    // totalLPValues = 75 + 8.5 - 11.133333333333333333 = 72.366666666666666667
     // totalShares = 65
-    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 73.666666666666666667 ether);
+    assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 72.366666666666666667 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 65 ether);
+
+    // treasury should received bounty
+    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(treasury), 3 ether);
   }
 
   function testRevert_WhenNotReinvestorCallReinvest_ShouldRevert() external {

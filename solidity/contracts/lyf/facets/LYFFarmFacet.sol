@@ -355,7 +355,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_InvalidLP();
     }
 
-    LibLYF01.reinvest(_lpToken, 0, lyfDs.lpConfigs[_lpToken], lyfDs);
+    LibLYF01.reinvest(_lpToken, 0, _lpConfig, lyfDs);
   }
 
   function repayWithCollat(
