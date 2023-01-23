@@ -45,6 +45,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtShareId,
     uint256 _actualRepayAmount
   );
+  event LogReducePosition(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address _token0,
+    address _token1,
+    uint256 _repaidToken0Amount,
+    uint256 _repaidToken1Amount,
+    uint256 _returnedToken0Amount,
+    uint256 _returnedToken1Amount
+  );
 
   struct ReducePositionLocalVars {
     address subAccount;
@@ -268,6 +278,17 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (_amount1ToTransfer > 0) {
       IERC20(_vars.token1).safeTransfer(msg.sender, _amount1ToTransfer);
     }
+
+    emit LogReducePosition(
+      msg.sender,
+      _subAccountId,
+      _vars.token0,
+      _vars.token1,
+      _vars.debt0ToRepay,
+      _vars.debt1ToRepay,
+      _amount0ToTransfer,
+      _amount1ToTransfer
+    );
   }
 
   function repay(
