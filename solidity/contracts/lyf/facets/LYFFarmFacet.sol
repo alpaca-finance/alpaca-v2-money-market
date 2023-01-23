@@ -227,7 +227,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     }
 
     // 3. Repay debt
-
     _repayDebt(_vars.subAccount, _vars.token0, _vars.debtShareId0, _token0Return - _amount0Out, lyfDs);
     _repayDebt(_vars.subAccount, _vars.token1, _vars.debtShareId1, _token1Return - _amount1Out, lyfDs);
 
@@ -279,7 +278,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_InvalidLP();
     }
 
-    LibLYF01.reinvest(_lpToken, 0, lyfDs.lpConfigs[_lpToken], lyfDs);
+    LibLYF01.reinvest(_lpToken, 0, _lpConfig, lyfDs);
   }
 
   function repayWithCollat(

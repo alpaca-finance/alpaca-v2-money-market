@@ -23,8 +23,9 @@ interface ILYFAdminFacet {
     address router;
     address rewardToken;
     address[] reinvestPath;
-    uint256 reinvestThreshold;
     uint256 poolId;
+    uint256 reinvestThreshold;
+    uint256 reinvestTreasuryBountyBps;
   }
 
   function setOracle(address _oracle) external;
