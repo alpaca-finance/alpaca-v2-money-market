@@ -312,7 +312,7 @@ library LibLYF01 {
     }
   }
 
-  function addCollatNoCheckMaxCollatNum(
+  function addCollatWithoutMaxCollatNumCheck(
     address _subAccount,
     address _token,
     uint256 _amount,

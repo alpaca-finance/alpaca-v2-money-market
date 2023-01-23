@@ -298,7 +298,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // withdraw all ib
     LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatAmount, lyfDs);
     // deposit leftover underlyingToken as collat
-    LibLYF01.addCollatNoCheckMaxCollatNum(
+    LibLYF01.addCollatWithoutMaxCollatNumCheck(
       _params.subAccount,
       _collatUnderlyingToken,
       _returnedUnderlyingAmount - _underlyingSold,
@@ -419,7 +419,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // add remaining as subAccount collateral
     _remainingAmountAfterRepay = _amountAvailable - _actualAmountToRepay;
     if (_remainingAmountAfterRepay > 0) {
-      LibLYF01.addCollatNoCheckMaxCollatNum(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
+      LibLYF01.addCollatWithoutMaxCollatNumCheck(_subAccount, _token, _remainingAmountAfterRepay, lyfDs);
     }
   }
 
@@ -458,7 +458,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
         (LibLYF01.getPriceUSD(_underlyingToken, lyfDs) *
           LibLYF01.getIbToUnderlyingConversionFactor(_collatToken, _underlyingToken, _moneyMarket)) /
         1e18;
-      // _collatTokenPrice = LibLYF01.convertUnderlyingToIb(_collatToken, _underlyingToken, _underlyingPrice, lyfDs);
     } else {
       // _collatToken is normal ERC20 or LP token
       _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);
