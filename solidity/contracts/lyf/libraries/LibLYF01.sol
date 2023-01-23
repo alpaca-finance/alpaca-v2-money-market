@@ -60,6 +60,7 @@ library LibLYF01 {
     address[] reinvestPath;
     uint256 poolId;
     uint256 reinvestThreshold;
+    uint256 reinvestTreasuryBountyBps;
   }
 
   // Storage

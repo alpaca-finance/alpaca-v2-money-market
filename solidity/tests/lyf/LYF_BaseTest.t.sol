@@ -228,8 +228,9 @@ abstract contract LYF_BaseTest is BaseTest {
       router: address(mockRouter),
       reinvestPath: _reinvestPath,
       reinvestThreshold: reinvestThreshold,
+      poolId: wethUsdcPoolId,
       rewardToken: address(cake),
-      poolId: wethUsdcPoolId
+      reinvestTreasuryBountyBps: 1500
     });
     lpConfigs[1] = ILYFAdminFacet.LPConfigInput({
       lpToken: address(btcUsdcLPToken),
@@ -238,8 +239,9 @@ abstract contract LYF_BaseTest is BaseTest {
       router: address(mockRouter),
       reinvestPath: _reinvestPath,
       reinvestThreshold: reinvestThreshold,
+      poolId: btcUsdcPoolId,
       rewardToken: address(cake),
-      poolId: btcUsdcPoolId
+      reinvestTreasuryBountyBps: 1500
     });
     adminFacet.setLPConfigs(lpConfigs);
 
