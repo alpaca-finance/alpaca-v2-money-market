@@ -446,18 +446,13 @@ library LibLYF01 {
     address _lpToken,
     LibLYF01.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal returns (uint256 _pendingReward, uint256 _bounty) {
+  ) internal {
     uint256 _rewardBefore = IERC20(_lpConfig.rewardToken).balanceOf(address(this));
 
     IMasterChefLike(_lpConfig.masterChef).withdraw(_lpConfig.poolId, 0);
 
-    _pendingReward = IERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
-    _bounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS;
-
-    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.treasury, _bounty);
-
     // accumulate harvested reward for LP
-    lyfDs.pendingRewards[_lpToken] += _pendingReward - _bounty;
+    lyfDs.pendingRewards[_lpToken] += IERC20(_lpConfig.rewardToken).balanceOf(address(this)) - _rewardBefore;
   }
 
   function reinvest(
@@ -467,10 +462,16 @@ library LibLYF01 {
   ) internal {
     harvest(_lpToken, _lpConfig, lyfDs);
 
-    uint256 _rewardAmount = lyfDs.pendingRewards[_lpToken];
-    if (_rewardAmount < _lpConfig.reinvestThreshold) {
+    uint256 _pendingReward = lyfDs.pendingRewards[_lpToken];
+
+    if (_pendingReward < _lpConfig.reinvestThreshold) {
       return;
     }
+
+    // start reinvest
+    // calcualate reinvest bounty
+    uint256 _reinvestBounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS;
+    uint256 _actualPendingReward = _pendingReward - _reinvestBounty;
 
     address _token0 = ISwapPairLike(_lpToken).token0();
     address _token1 = ISwapPairLike(_lpToken).token1();
@@ -478,11 +479,11 @@ library LibLYF01 {
     // convert rewardToken to either token0 or token1
     uint256 _reinvestAmount;
     if (_lpConfig.rewardToken == _token0 || _lpConfig.rewardToken == _token1) {
-      _reinvestAmount = _rewardAmount;
+      _reinvestAmount = _actualPendingReward;
     } else {
-      IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _rewardAmount);
+      IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _actualPendingReward);
       uint256[] memory _amounts = IRouterLike(_lpConfig.router).swapExactTokensForTokens(
-        _rewardAmount,
+        _actualPendingReward,
         0,
         _lpConfig.reinvestPath,
         address(this),
@@ -491,37 +492,41 @@ library LibLYF01 {
       _reinvestAmount = _amounts[_amounts.length - 1];
     }
 
-    uint256 _token0Amount;
-    uint256 _token1Amount;
-    address _reinvestToken = _lpConfig.reinvestPath[_lpConfig.reinvestPath.length - 1];
+    {
+      // compose LP
+      uint256 _token0Amount;
+      uint256 _token1Amount;
 
-    if (_reinvestToken == _token0) {
-      _token0Amount = _reinvestAmount;
-    } else {
-      _token1Amount = _reinvestAmount;
+      if (_lpConfig.reinvestPath[_lpConfig.reinvestPath.length - 1] == _token0) {
+        _token0Amount = _reinvestAmount;
+        IERC20(_token0).safeTransfer(_lpConfig.strategy, _reinvestAmount);
+      } else {
+        _token1Amount = _reinvestAmount;
+        IERC20(_token1).safeTransfer(_lpConfig.strategy, _reinvestAmount);
+      }
+
+      uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
+        _token0,
+        _token1,
+        _lpToken,
+        _token0Amount,
+        _token1Amount,
+        0
+      );
+
+      // deposit lp back to masterChef
+      lyfDs.lpAmounts[_lpToken] += _lpReceived;
+      lyfDs.collats[_lpToken] += _lpReceived;
+      depositToMasterChef(_lpToken, _lpConfig.masterChef, _lpConfig.poolId, _lpReceived);
     }
 
-    IERC20(_token0).safeTransfer(_lpConfig.strategy, _token0Amount);
-    IERC20(_token1).safeTransfer(_lpConfig.strategy, _token1Amount);
-    uint256 _lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
-      _token0,
-      _token1,
-      _lpToken,
-      _token0Amount,
-      _token1Amount,
-      0
-    );
-
-    // deposit lp back to masterChef
-    lyfDs.lpAmounts[_lpToken] += _lpReceived;
-    lyfDs.collats[_lpToken] += _lpReceived;
-    depositToMasterChef(_lpToken, _lpConfig.masterChef, _lpConfig.poolId, _lpReceived);
+    // transfer bounty to treasury
+    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.treasury, _reinvestBounty);
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;
 
-    // TODO: assign param properly
-    emit LogReinvest(msg.sender, 0, 0);
+    emit LogReinvest(msg.sender, _pendingReward, _reinvestBounty);
   }
 
   function borrow(
