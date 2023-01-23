@@ -578,15 +578,12 @@ library LibLYF01 {
     uint256 _debtAmountToRemove,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    // todo: this code prevent linklist not exists revert, will investigate
-    if (lyfDs.subAccountDebtShares[_subAccount].has(_debtShareId)) {
-      uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _maxDebtShareToRemove = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
-      // update user debtShare
-      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _maxDebtShareToRemove - _debtShareToRemove);
+    // update user debtShare
+    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _maxDebtShareToRemove - _debtShareToRemove);
 
-      lyfDs.debtShares[_debtShareId] -= _debtShareToRemove;
-      lyfDs.debtValues[_debtShareId] -= _debtAmountToRemove;
-    }
+    lyfDs.debtShares[_debtShareId] -= _debtShareToRemove;
+    lyfDs.debtValues[_debtShareId] -= _debtAmountToRemove;
   }
 }

@@ -247,8 +247,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
       lyfDs
     );
 
-    _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId0, _vars.debtShare0ToRepay, _vars.debt0ToRepay, lyfDs);
-    _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId1, _vars.debtShare1ToRepay, _vars.debt1ToRepay, lyfDs);
+    if (_vars.debtShare0ToRepay > 0) {
+      _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId0, _vars.debtShare0ToRepay, _vars.debt0ToRepay, lyfDs);
+    }
+    if (_vars.debtShare1ToRepay > 0) {
+      _removeDebtAndValidate(_vars.subAccount, _vars.debtShareId1, _vars.debtShare1ToRepay, _vars.debt1ToRepay, lyfDs);
+    }
 
     if (!LibLYF01.isSubaccountHealthy(_vars.subAccount, lyfDs)) {
       revert LYFFarmFacet_BorrowingPowerTooLow();
@@ -308,10 +312,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
       );
     }
 
-    _removeDebtAndValidate(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
+    if (_actualRepayAmount > 0) {
+      _removeDebtAndValidate(_subAccount, _debtShareId, _actualShareToRepay, _actualRepayAmount, lyfDs);
 
-    // update reserves of the token. This will impact the outstanding balance
-    lyfDs.reserves[_token] += _actualRepayAmount;
+      // update reserves of the token. This will impact the outstanding balance
+      lyfDs.reserves[_token] += _actualRepayAmount;
+    }
 
     emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
   }
@@ -350,26 +356,29 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
 
     // min(debtShareToRepay, currentDebtShare)
-    uint256 _actualDebtShareToRemove = _debtShareToRepay > _currentDebtShare ? _currentDebtShare : _debtShareToRepay;
+    uint256 _actualDebtShareToRemove = LibFullMath.min(_debtShareToRepay, _currentDebtShare);
 
-    // convert debtShare to debtAmount
-    uint256 _actualDebtToRemove = LibShareUtil.shareToValue(
-      _actualDebtShareToRemove,
-      lyfDs.debtValues[_debtShareId],
-      lyfDs.debtShares[_debtShareId]
-    );
+    // prevent repay 0
+    if (_actualDebtShareToRemove > 0) {
+      // convert debtShare to debtAmount
+      uint256 _actualDebtToRemove = LibShareUtil.shareToValue(
+        _actualDebtShareToRemove,
+        lyfDs.debtValues[_debtShareId],
+        lyfDs.debtShares[_debtShareId]
+      );
 
-    // if collat is not enough to repay debt, revert
-    if (lyfDs.subAccountCollats[_subAccount].getAmount(_token) < _actualDebtToRemove) {
-      revert LYFFarmFacet_CollatNotEnough();
+      // if collat is not enough to repay debt, revert
+      if (lyfDs.subAccountCollats[_subAccount].getAmount(_token) < _actualDebtToRemove) {
+        revert LYFFarmFacet_CollatNotEnough();
+      }
+
+      // remove collat from subaccount
+      LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
+
+      _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
+
+      emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
     }
-
-    // remove collat from subaccount
-    LibLYF01.removeCollateral(_subAccount, _token, _actualDebtToRemove, lyfDs);
-
-    _removeDebtAndValidate(_subAccount, _debtShareId, _actualDebtShareToRemove, _actualDebtToRemove, lyfDs);
-
-    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _debtShareId, _actualDebtToRemove);
   }
 
   /// @dev this method should only be called by addFarmPosition context
@@ -401,11 +410,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function _removeDebtAndValidate(
     address _subAccount,
     uint256 _debtShareId,
-    uint256 _maxDebtShareToRepay,
-    uint256 _maxDebtValueToRepay,
+    uint256 _debtShareToRepay,
+    uint256 _debtValueToRepay,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    LibLYF01.removeDebt(_subAccount, _debtShareId, _maxDebtShareToRepay, _maxDebtValueToRepay, lyfDs);
+    LibLYF01.removeDebt(_subAccount, _debtShareId, _debtShareToRepay, _debtValueToRepay, lyfDs);
 
     // validate after remove debt
     LibLYF01.validateMinDebtSize(_subAccount, _debtShareId, lyfDs);
