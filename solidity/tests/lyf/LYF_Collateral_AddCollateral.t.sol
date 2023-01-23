@@ -143,12 +143,7 @@ contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
     wethUsdcLPToken.mint(ALICE, 10 ether);
     vm.startPrank(ALICE);
     wethUsdcLPToken.approve(lyfDiamond, 10 ether);
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        ILYFCollateralFacet.LYFCollateralFacet_TokenNotAllowedAsCollateral.selector,
-        address(wethUsdcLPToken)
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_OnlyCollateralTierAllowed.selector));
     collateralFacet.addCollateral(ALICE, subAccount0, address(wethUsdcLPToken), 10 ether);
   }
 
@@ -157,12 +152,7 @@ contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
     _unlistedToken.mint(ALICE, 10 ether);
     vm.startPrank(ALICE);
     _unlistedToken.approve(lyfDiamond, 10 ether);
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        ILYFCollateralFacet.LYFCollateralFacet_TokenNotAllowedAsCollateral.selector,
-        address(_unlistedToken)
-      )
-    );
+    vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_OnlyCollateralTierAllowed.selector));
     collateralFacet.addCollateral(ALICE, subAccount0, address(_unlistedToken), 10 ether);
   }
 
