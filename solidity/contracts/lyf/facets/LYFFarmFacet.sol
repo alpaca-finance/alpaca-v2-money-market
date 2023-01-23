@@ -199,8 +199,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _subAccountId,
     address _lpToken,
     uint256 _lpShareAmount,
-    uint256 _amount0Out,
-    uint256 _amount1Out
+    uint256 _minAmount0Out,
+    uint256 _minAmount1Out
   ) external nonReentrant {
     // todo: should revinvest here before anything
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
@@ -236,12 +236,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
     (uint256 _token0Return, uint256 _token1Return) = IStrat(_lpConfig.strategy).removeLiquidity(_lpToken);
 
     // slipage check
-    if (_token0Return < _amount0Out || _token1Return < _amount1Out) {
+    if (_token0Return < _minAmount0Out || _token1Return < _minAmount1Out) {
       revert LYFFarmFacet_TooLittleReceived();
     }
 
-    uint256 _amount0ToRepay = _token0Return - _amount0Out;
-    uint256 _amount1ToRepay = _token1Return - _amount1Out;
+    uint256 _amount0ToRepay = _token0Return - _minAmount0Out;
+    uint256 _amount1ToRepay = _token1Return - _minAmount1Out;
 
     // 3. Remove debt by repay amount
     (_vars.debtShare0ToRepay, _vars.debt0ToRepay) = _getActualDebtToRepay(
