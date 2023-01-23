@@ -268,15 +268,15 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_BorrowingPowerTooLow();
     }
 
-    uint256 _amount0ToTransfer = _token0Return - _vars.debt0ToRepay;
-    uint256 _amount1ToTransfer = _token1Return - _vars.debt1ToRepay;
+    uint256 _amount0Back = _token0Return - _vars.debt0ToRepay;
+    uint256 _amount1Back = _token1Return - _vars.debt1ToRepay;
 
     // 4. Transfer remaining back to user
-    if (_amount0ToTransfer > 0) {
-      IERC20(_vars.token0).safeTransfer(msg.sender, _amount0ToTransfer);
+    if (_amount0Back > 0) {
+      IERC20(_vars.token0).safeTransfer(msg.sender, _amount0Back);
     }
-    if (_amount1ToTransfer > 0) {
-      IERC20(_vars.token1).safeTransfer(msg.sender, _amount1ToTransfer);
+    if (_amount1Back > 0) {
+      IERC20(_vars.token1).safeTransfer(msg.sender, _amount1Back);
     }
 
     emit LogReducePosition(
@@ -286,8 +286,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _vars.token1,
       _vars.debt0ToRepay,
       _vars.debt1ToRepay,
-      _amount0ToTransfer,
-      _amount1ToTransfer
+      _amount0Back,
+      _amount1Back
     );
   }
 
