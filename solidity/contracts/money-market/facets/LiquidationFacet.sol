@@ -167,11 +167,11 @@ contract LiquidationFacet is ILiquidationFacet {
     // transfer tokens
     // in case of fee on transfer tokens, debt would be repaid by amount after transfer fee
     // which won't be able to repurchase entire position
-    uint256 _repayTokenBefore = IERC20(_repayToken).balanceOf(address(this));
-    IERC20(_repayToken).safeTransferFrom(msg.sender, address(this), vars.repayAmountWithFee);
-    uint256 _actualRepayAmountWithoutFee = IERC20(_repayToken).balanceOf(address(this)) -
-      _repayTokenBefore -
-      vars.repurchaseFeeToProtocol;
+    uint256 _actualRepayAmountWithoutFee = LibMoneyMarket01.unsafePullTokens(
+      _repayToken,
+      msg.sender,
+      vars.repayAmountWithFee
+    ) - vars.repurchaseFeeToProtocol;
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
     IERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, vars.repurchaseFeeToProtocol);
 

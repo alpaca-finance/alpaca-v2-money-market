@@ -422,7 +422,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days + 1);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 ether USD
@@ -463,7 +463,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // add time 1 day
     // 0.0004512489926688 is interest rate per day of (80% condition slope)
     // then total debt value of usdc should increase by 0.0004512489926688 * 80 = 0.036099919413504
-    vm.warp(1 days + 1);
+    vm.warp(block.timestamp + 1 days + 1);
 
     // set price to btc from 10 to 0.1 ether USD
     // then alice borrowing power from btc = 100 * 0.1 * 9000 / 10000 = 9 ether USD

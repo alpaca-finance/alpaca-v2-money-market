@@ -93,7 +93,7 @@ contract AdminFacet is IAdminFacet {
     IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
     // todo: tbd
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+    moneyMarketDs.tokenConfigs[_token] = LibMoneyMarket01.TokenConfig({
       tier: LibMoneyMarket01.AssetTier.ISOLATE,
       collateralFactor: 0,
       borrowingFactor: 8500,
@@ -102,8 +102,8 @@ contract AdminFacet is IAdminFacet {
       to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
     });
 
-    LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
-    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
+    moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
+    moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken);
   }
@@ -113,15 +113,17 @@ contract AdminFacet is IAdminFacet {
   function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
-    for (uint8 _i; _i < _inputLength; ) {
-      TokenConfigInput calldata _tokenConfigInput = _tokenConfigInputs[_i];
+    LibMoneyMarket01.TokenConfig memory _tokenConfig;
+    TokenConfigInput calldata _tokenConfigInput;
+    for (uint256 _i; _i < _inputLength; ) {
+      _tokenConfigInput = _tokenConfigInputs[_i];
       _validateTokenConfig(
         _tokenConfigInput.collateralFactor,
         _tokenConfigInput.borrowingFactor,
         _tokenConfigInput.maxCollateral,
         _tokenConfigInput.maxBorrow
       );
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+      _tokenConfig = LibMoneyMarket01.TokenConfig({
         tier: _tokenConfigInput.tier,
         collateralFactor: _tokenConfigInput.collateralFactor,
         borrowingFactor: _tokenConfigInput.borrowingFactor,
@@ -130,7 +132,7 @@ contract AdminFacet is IAdminFacet {
         to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
       });
 
-      LibMoneyMarket01.setTokenConfig(_tokenConfigInput.token, _tokenConfig, moneyMarketDs);
+      moneyMarketDs.tokenConfigs[_tokenConfigInput.token] = _tokenConfig;
 
       emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
 
@@ -195,7 +197,7 @@ contract AdminFacet is IAdminFacet {
   function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _repurchasers.length;
-    for (uint8 _i; _i < _length; ) {
+    for (uint256 _i; _i < _length; ) {
       moneyMarketDs.repurchasersOk[_repurchasers[_i]] = _isOk;
       emit LogSetRepurchaserOk(_repurchasers[_i], _isOk);
       unchecked {
@@ -327,20 +329,21 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _protocolConfigInputs.length;
     ProtocolConfigInput memory _protocolConfigInput;
+    TokenBorrowLimitInput memory _tokenBorrowLimit;
+    LibMoneyMarket01.ProtocolConfig storage protocolConfig;
+    uint256 _tokenBorrowLimitLength;
 
     for (uint256 _i; _i < _length; ) {
       _protocolConfigInput = _protocolConfigInputs[_i];
 
-      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[
-        _protocolConfigInput.account
-      ];
+      protocolConfig = moneyMarketDs.protocolConfigs[_protocolConfigInput.account];
 
       protocolConfig.borrowLimitUSDValue = _protocolConfigInput.borrowLimitUSDValue;
 
       // set limit for each token
-      uint256 _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
+      _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
       for (uint256 _j; _j < _tokenBorrowLimitLength; ) {
-        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
+        _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
 
         emit LogSetProtocolConfig(
@@ -406,9 +409,15 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     uint256 _length = _inputs.length;
-    for (uint256 i = 0; i < _length; ) {
-      address _token = _inputs[i].token;
-      address _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+
+    address _token;
+    address _subAccount;
+    uint256 _shareToRemove;
+    uint256 _amountToRemove;
+
+    for (uint256 i; i < _length; ) {
+      _token = _inputs[i].token;
+      _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
 
       if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
         revert AdminFacet_SubAccountHealthy(_subAccount);
@@ -417,11 +426,7 @@ contract AdminFacet is IAdminFacet {
       LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
       // get all subaccount token debt, calculate to value
-      (uint256 _shareToRemove, uint256 _amountToRemove) = LibMoneyMarket01.getOverCollatDebt(
-        _subAccount,
-        _token,
-        moneyMarketDs
-      );
+      (_shareToRemove, _amountToRemove) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
 
       // update subaccount debtShare
       moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, 0);
@@ -449,10 +454,11 @@ contract AdminFacet is IAdminFacet {
 
     if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) revert AdminFacet_InvalidToken(_token);
 
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    moneyMarketDs.reserves[_token] += _amount;
+    uint256 _actualAmountReceived = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _amount);
 
-    emit LogTopUpTokenReserve(_token, _amount);
+    moneyMarketDs.reserves[_token] += _actualAmountReceived;
+
+    emit LogTopUpTokenReserve(_token, _actualAmountReceived);
   }
 
   function _validateTokenConfig(

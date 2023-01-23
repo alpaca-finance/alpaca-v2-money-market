@@ -79,6 +79,8 @@ contract BorrowFacet is IBorrowFacet {
 
     uint256 _debtShare = LibMoneyMarket01.overCollatBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
+    moneyMarketDs.reserves[_token] -= _amount;
+
     IERC20(_token).safeTransfer(msg.sender, _amount);
 
     emit LogBorrow(msg.sender, _subAccountId, _token, _amount, _debtShare);
@@ -111,12 +113,8 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _cachedDebtShare = moneyMarketDs.overCollatDebtShares[_token];
     uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
 
-    // transfer only amount to repay
-    // didn't use pullExactTokens subroutine because we want to allow repayment on fee on transfer tokens to
-    uint256 _repayTokenBalanceBefore = IERC20(_token).balanceOf(address(this));
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualAmountToRepay);
-    // use amount after fee to repay for fee on transfer tokens
-    _actualAmountToRepay = IERC20(_token).balanceOf(address(this)) - _repayTokenBalanceBefore;
+    // transfer only amount to repay, handle fee on transfer
+    _actualAmountToRepay = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _actualAmountToRepay);
     _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
 
     moneyMarketDs.reserves[_token] += _actualAmountToRepay;
