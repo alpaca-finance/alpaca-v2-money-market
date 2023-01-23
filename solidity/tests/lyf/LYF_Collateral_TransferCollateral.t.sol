@@ -33,6 +33,14 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     vm.stopPrank();
   }
 
+  function testRevert_WhenUserTransferUnlistedTier_ShouldRevert() external {
+    address _unlisted = address(0);
+    vm.startPrank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_OnlyCollateralTierAllowed.selector));
+    collateralFacet.transferCollateral(subAccount0, subAccount1, _unlisted, 1 ether);
+    vm.stopPrank();
+  }
+
   function testRevert_WhenUserTransferCollatMakeSubAccountUnHealthy_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
     uint256 _usdcToAddLP = 30 ether;
@@ -55,11 +63,6 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     uint256 _lyfWethCollatBefore;
     uint256 _bobSub0WethCollatBefore;
     uint256 _bobSub0WethCollatAfter;
-    LibDoublyLinkedList.Node[] memory _bobSubAccount0collats;
-    LibDoublyLinkedList.Node[] memory _bobSubAccount1collats;
-
-    _bobSubAccount0collats = viewFacet.getAllSubAccountCollats(BOB, subAccount0);
-    _bobSubAccount1collats = viewFacet.getAllSubAccountCollats(BOB, subAccount1);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 20 ether);
@@ -74,8 +77,7 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     // after
     _bobSub0WethCollatAfter = viewFacet.getSubAccountTokenCollatAmount(address(BOB), subAccount0, address(weth));
 
-    _bobSubAccount0collats = viewFacet.getAllSubAccountCollats(BOB, subAccount0);
-    _bobSubAccount1collats = viewFacet.getAllSubAccountCollats(BOB, subAccount1);
+    LibDoublyLinkedList.Node[] memory _bobSubAccount1collats = viewFacet.getAllSubAccountCollats(BOB, subAccount1);
 
     // fromSubAccount
     assertEq(_bobSub0WethCollatBefore - _bobSub0WethCollatAfter, _transferAmount);
