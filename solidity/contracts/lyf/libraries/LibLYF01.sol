@@ -105,11 +105,11 @@ library LibLYF01 {
     }
   }
 
-  function getSubAccount(address primary, uint256 subAccountId) internal pure returns (address) {
-    if (subAccountId > 255) {
+  function getSubAccount(address _primary, uint256 _subAccountId) internal pure returns (address) {
+    if (_subAccountId > 255) {
       revert LibLYF01_BadSubAccountId();
     }
-    return address(uint160(primary) ^ uint160(subAccountId));
+    return address(uint160(_primary) ^ uint160(_subAccountId));
   }
 
   function getDebtSharePendingInterest(
@@ -306,9 +306,8 @@ library LibLYF01 {
   ) internal returns (uint256 _amountAdded) {
     // update subaccount state
     LibDoublyLinkedList.List storage subAccountCollateralList = lyfDs.subAccountCollats[_subAccount];
-    if (subAccountCollateralList.getNextOf(LibDoublyLinkedList.START) == LibDoublyLinkedList.EMPTY) {
-      subAccountCollateralList.init();
-    }
+    subAccountCollateralList.initIfNotExist();
+
     uint256 _currentAmount = subAccountCollateralList.getAmount(_token);
 
     _amountAdded = _amount;
@@ -540,9 +539,7 @@ library LibLYF01 {
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
 
-    if (userDebtShare.getNextOf(LibUIntDoublyLinkedList.START) == LibUIntDoublyLinkedList.EMPTY) {
-      userDebtShare.init();
-    }
+    userDebtShare.initIfNotExist();
 
     // use reserve if it is enough, else borrow from mm entirely
     if (lyfDs.reserves[_token] - lyfDs.protocolReserves[_token] >= _amount) {
