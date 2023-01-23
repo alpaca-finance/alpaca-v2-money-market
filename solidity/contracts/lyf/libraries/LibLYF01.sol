@@ -367,9 +367,9 @@ library LibLYF01 {
     address _subAccount,
     address _token,
     uint256 _removeAmount,
-    LYFDiamondStorage storage ds
+    LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _amountRemoved) {
-    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage _subAccountCollatList = lyfDs.subAccountCollats[_subAccount];
 
     if (_subAccountCollatList.has(_token)) {
       uint256 _collateralAmount = _subAccountCollatList.getAmount(_token);
@@ -378,19 +378,23 @@ library LibLYF01 {
       _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
 
       // If LP token, handle extra step
-      if (ds.tokenConfigs[_token].tier == AssetTier.LP) {
-        reinvest(_token, ds.lpConfigs[_token].reinvestThreshold, ds.lpConfigs[_token], ds);
+      if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+        reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
 
-        uint256 _lpValueRemoved = LibShareUtil.shareToValue(_amountRemoved, ds.lpAmounts[_token], ds.lpShares[_token]);
+        uint256 _lpValueRemoved = LibShareUtil.shareToValue(
+          _amountRemoved,
+          lyfDs.lpAmounts[_token],
+          lyfDs.lpShares[_token]
+        );
 
-        ds.lpShares[_token] -= _amountRemoved;
-        ds.lpAmounts[_token] -= _lpValueRemoved;
+        lyfDs.lpShares[_token] -= _amountRemoved;
+        lyfDs.lpAmounts[_token] -= _lpValueRemoved;
 
         // _amountRemoved used to represent lpShare, we need to return lpValue so re-assign it here
         _amountRemoved = _lpValueRemoved;
       }
 
-      ds.collats[_token] -= _amountRemoved;
+      lyfDs.collats[_token] -= _amountRemoved;
     }
   }
 
@@ -610,5 +614,21 @@ library LibLYF01 {
     if (userDebtShare.length() > lyfDs.maxNumOfDebtPerSubAccount) {
       revert LibLYF01_NumberOfTokenExceedLimit();
     }
+  }
+
+  function removeDebt(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _debtShareToRemove,
+    uint256 _debtAmountToRemove,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal {
+    uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+
+    // update user debtShare
+    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _currentDebtShare - _debtShareToRemove);
+
+    lyfDs.debtShares[_debtShareId] -= _debtShareToRemove;
+    lyfDs.debtValues[_debtShareId] -= _debtAmountToRemove;
   }
 }
