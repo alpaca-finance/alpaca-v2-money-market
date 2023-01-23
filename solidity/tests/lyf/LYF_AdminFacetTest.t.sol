@@ -69,7 +69,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenLYFAdminSetMinDebtSize_ShouldCorrect() external {
-    assertEq(viewFacet.getMinDebtSize(), 0); // 3 is set from basetest
+    assertEq(viewFacet.getMinDebtSize(), 0.01 ether); // set from basetest
     adminFacet.setMinDebtSize(200 ether);
     assertEq(viewFacet.getMinDebtSize(), 200 ether);
   }
@@ -88,6 +88,7 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
       reinvestPath: _reinvestPath,
       rewardToken: address(cake),
       poolId: wethUsdcPoolId,
+      maxLpAmount: 1_000 ether,
       reinvestThreshold: reinvestThreshold,
       reinvestTreasuryBountyBps: 1500
     });

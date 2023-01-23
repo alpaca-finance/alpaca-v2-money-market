@@ -5,6 +5,7 @@ import { LYF_BaseTest, MockERC20, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
 import { ILYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
+import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 // mock
@@ -703,5 +704,35 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // borrow btc and usdc
     farmFacet.addFarmPosition(subAccount0, address(btcUsdcLPToken), _btcToAddLP, _usdcToAddLP, 0);
     vm.stopPrank();
+  }
+
+  function testRevert_WhenAddFarmPositionExceedLPCollatLimit() external {
+    // set lp collat limit to 10
+    address[] memory _reinvestPath = new address[](2);
+    _reinvestPath[0] = address(cake);
+    _reinvestPath[1] = address(usdc);
+
+    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
+    lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(wethUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      router: address(mockRouter),
+      reinvestPath: _reinvestPath,
+      reinvestThreshold: reinvestThreshold,
+      rewardToken: address(cake),
+      poolId: wethUsdcPoolId,
+      maxLpAmount: 10 ether,
+      reinvestTreasuryBountyBps: 1500
+    });
+    adminFacet.setLPConfigs(lpConfigs);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 100 ether);
+    // first add 1 lp is fine
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 1 ether, 1 ether, 1 ether);
+    // 1 + 10 > 10 should revert
+    vm.expectRevert(LibLYF01.LibLYF01_LPCollateralExceedLimit.selector);
+    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 10 ether);
   }
 }
