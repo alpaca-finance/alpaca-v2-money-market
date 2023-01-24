@@ -141,6 +141,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       uint256 _maxAmountToRepay = (_currentSubAccountDebtValue * (REPURCHASE_FEE_BPS + LibLYF01.MAX_BPS)) /
         LibLYF01.MAX_BPS;
 
+      console.log("_maxAmountToRepay", _maxAmountToRepay);
+
       _actualAmountToRepay = _desiredAmountToRepay;
 
       // if desired amount > max amount to repay, then repay with max amount
@@ -151,17 +153,22 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     console.log("_actualAmountToRepay", _actualAmountToRepay);
 
+    uint256 _fee = (_actualAmountToRepay * REPURCHASE_FEE_BPS) / (REPURCHASE_FEE_BPS + LibLYF01.MAX_BPS);
+
     // check how much borrowing power reduced after repay with _actualAmountToRepay
     {
       LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
       uint256 _repaidBorrowingPower = LibLYF01.usedBorrowingPower(
-        _actualAmountToRepay,
+        _actualAmountToRepay - _fee,
         LibLYF01.getPriceUSD(_debtToken, lyfDs),
         _debtTokenConfig.borrowingFactor,
         _debtTokenConfig.to18ConversionFactor
       );
       // todo: description
       uint256 _borrowedValue = LibLYF01.getTotalBorrowedUSDValue(_subAccount, lyfDs);
+      console.log("_repaidBorrowingPower", _repaidBorrowingPower);
+      console.log("_borrowedValue", _borrowedValue);
+
       if (_repaidBorrowingPower * LibLYF01.MAX_BPS > _borrowedValue * MAX_LIQUIDATE_BPS) {
         revert LYFLiquidationFacet_RepayDebtValueTooHigh();
       }
@@ -173,11 +180,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
         (LibLYF01.MAX_BPS + REPURCHASE_REWARD_BPS)) / LibLYF01.MAX_BPS;
 
       console.log("_repayTokenPriceWithPremium", _repayTokenPriceWithPremium);
+      uint256 _collatValueInUSD = (_actualAmountToRepay *
+        _repayTokenPriceWithPremium *
+        lyfDs.tokenConfigs[_debtToken].to18ConversionFactor) / 1e18;
 
-      _collatAmountOut =
-        ((_actualAmountToRepay * _repayTokenPriceWithPremium * lyfDs.tokenConfigs[_debtToken].to18ConversionFactor) /
-          LibLYF01.getPriceUSD(_collatToken, lyfDs)) *
-        lyfDs.tokenConfigs[_collatToken].to18ConversionFactor;
+      _collatAmountOut = _calculateCollatOut(_subAccount, _collatToken, _collatValueInUSD, lyfDs);
 
       if (_minCollatOut > _collatAmountOut) {
         revert LYFLiquidationFacet_TooLittleReceived();
@@ -188,29 +195,25 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       }
     }
 
-    console.log("_collatAmountOut", _collatAmountOut);
-
     // pull token and use that to repay without fee
     // collat out calculate from repay with fee and premium
 
     // transfer
-    uint256 _fee = (_actualAmountToRepay * REPURCHASE_FEE_BPS) / (REPURCHASE_FEE_BPS + LibLYF01.MAX_BPS);
-    uint256 _x = _actualAmountToRepay - _fee;
 
-    console.log("_x", _x);
+    console.log("_x", _actualAmountToRepay - _fee);
     console.log("_fee", _fee);
 
-    IERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _x);
+    IERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _actualAmountToRepay - _fee);
     IERC20(_debtToken).safeTransferFrom(msg.sender, lyfDs.treasury, _fee);
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
     // reduce debt with repaid amount
-    if (_x > 0) {
-      _removeDebtByAmount(_subAccount, _debtShareId, _x, lyfDs);
+    if (_actualAmountToRepay - _fee > 0) {
+      _removeDebtByAmount(_subAccount, _debtShareId, _actualAmountToRepay - _fee, lyfDs);
     }
     LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
-    emit LogRepurchase(msg.sender, _debtToken, _collatToken, _x, _collatAmountOut);
+    emit LogRepurchase(msg.sender, _debtToken, _collatToken, _actualAmountToRepay - _fee, _collatAmountOut);
   }
 
   function liquidationCall(
@@ -505,11 +508,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     _actualToRepay = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
-  function _calculateCollat(
+  function _calculateCollatOut(
     address _subAccount,
     address _collatToken,
-    uint256 _collatValueInUSD,
-    uint256 _rewardBps,
+    uint256 _collatValueInUSD, // usd that want to convert to collat amount
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
     IMoneyMarket _moneyMarket = lyfDs.moneyMarket;
@@ -529,10 +531,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // _collatAmountOut = _collatValueInUSD + _rewardInUSD
     _collatAmountOut =
-      (_collatValueInUSD * (10000 + _rewardBps) * 1e14) /
+      (_collatValueInUSD * 1e18) /
       (_collatTokenPrice * lyfDs.tokenConfigs[_collatToken].to18ConversionFactor);
 
     uint256 _totalSubAccountCollat = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
+    console.log("_collatAmountOut", _collatAmountOut);
 
     if (_collatAmountOut > _totalSubAccountCollat) {
       revert LYFLiquidationFacet_InsufficientAmount();
