@@ -18,8 +18,6 @@ import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import { console } from "../../../tests/utils/console.sol";
-
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -36,7 +34,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _repayToken,
     address _collatToken,
     uint256 _amountIn,
-    uint256 _amountOut
+    uint256 _amountOut,
+    uint256 _fee
   );
 
   event LogLiquidateIb(
@@ -107,11 +106,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address _debtToken,
     address _collatToken,
     address _lpToken,
-    uint256 _desiredAmountToRepay,
+    uint256 _desiredRepayAmountWithFee,
     uint256 _minCollatOut
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtShareId = lyfDs.debtShareIds[_debtToken][_lpToken];
 
@@ -119,99 +117,68 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // health check sub account borrowing power
+    (, uint256 _borrowedValue) = _checkPositionHealthOf(_subAccount, LibLYF01.MAX_BPS, lyfDs);
+
+    // get max repay amount possible could repay
+    (uint256 _actualRepayAmountWithFee, uint256 _actualFee) = _getActualRepayAmountWithFee(
+      _subAccount,
+      _debtShareId,
+      _desiredRepayAmountWithFee,
+      lyfDs
+    );
+
     {
-      uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-      uint256 _borrowedValue = LibLYF01.getTotalBorrowedUSDValue(_subAccount, lyfDs);
-      if (_borrowingPower > _borrowedValue) {
-        revert LYFLiquidationFacet_Healthy();
-      }
-    }
-
-    // maximum amount to repay is sub account debt value
-    uint256 _actualAmountToRepay = _desiredAmountToRepay;
-    {
-      uint256 _currentSubAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-      uint256 _currentSubAccountDebtValue = LibShareUtil.shareToValue(
-        _currentSubAccountDebtShare,
-        lyfDs.debtValues[_debtShareId],
-        lyfDs.debtShares[_debtShareId]
-      );
-
-      // calculate debt value with fee is max possible that caller can repay
-      uint256 _maxAmountToRepay = (_currentSubAccountDebtValue * (REPURCHASE_FEE_BPS + LibLYF01.MAX_BPS)) /
-        LibLYF01.MAX_BPS;
-
-      console.log("_maxAmountToRepay", _maxAmountToRepay);
-
-      _actualAmountToRepay = _desiredAmountToRepay;
-
-      // if desired amount > max amount to repay, then repay with max amount
-      if (_desiredAmountToRepay > _maxAmountToRepay) {
-        _actualAmountToRepay = _maxAmountToRepay;
-      }
-    }
-
-    console.log("_actualAmountToRepay", _actualAmountToRepay);
-
-    uint256 _fee = (_actualAmountToRepay * REPURCHASE_FEE_BPS) / (REPURCHASE_FEE_BPS + LibLYF01.MAX_BPS);
-
-    // check how much borrowing power reduced after repay with _actualAmountToRepay
-    {
+      // check how much borrowing power reduced after repay (without fee)
       LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
+      uint256 _repayTokenPrice = LibLYF01.getPriceUSD(_debtToken, lyfDs);
       uint256 _repaidBorrowingPower = LibLYF01.usedBorrowingPower(
-        _actualAmountToRepay - _fee,
-        LibLYF01.getPriceUSD(_debtToken, lyfDs),
+        _actualRepayAmountWithFee - _actualFee,
+        _repayTokenPrice,
         _debtTokenConfig.borrowingFactor,
         _debtTokenConfig.to18ConversionFactor
       );
-      // todo: description
-      uint256 _borrowedValue = LibLYF01.getTotalBorrowedUSDValue(_subAccount, lyfDs);
-      console.log("_repaidBorrowingPower", _repaidBorrowingPower);
-      console.log("_borrowedValue", _borrowedValue);
 
       if (_repaidBorrowingPower * LibLYF01.MAX_BPS > _borrowedValue * MAX_LIQUIDATE_BPS) {
         revert LYFLiquidationFacet_RepayDebtValueTooHigh();
       }
+
+      _collatAmountOut = _calculateCollatForRepurchaser(
+        _subAccount,
+        _collatToken,
+        (_actualRepayAmountWithFee * _repayTokenPrice * _debtTokenConfig.to18ConversionFactor) / 1e18, // repaid with fee in USD
+        _minCollatOut,
+        lyfDs
+      );
     }
 
+    // transfer tokens
+    // in case of fee on transfer tokens, debt would be repaid by amount after transfer fee
+    // which won't be able to repurchase entire position
     {
-      // repurchaser should receive collat amount base on repaid value + premium
-      uint256 _repayTokenPriceWithPremium = (LibLYF01.getPriceUSD(_debtToken, lyfDs) *
-        (LibLYF01.MAX_BPS + REPURCHASE_REWARD_BPS)) / LibLYF01.MAX_BPS;
+      uint256 _actualReceivedRepayAmountWithoutFee = LibLYF01.unsafePullTokens(
+        _debtToken,
+        msg.sender,
+        _actualRepayAmountWithFee
+      ) - _actualFee;
 
-      console.log("_repayTokenPriceWithPremium", _repayTokenPriceWithPremium);
-      uint256 _collatValueInUSD = (_actualAmountToRepay *
-        _repayTokenPriceWithPremium *
-        lyfDs.tokenConfigs[_debtToken].to18ConversionFactor) / 1e18;
+      IERC20(_debtToken).safeTransfer(lyfDs.treasury, _actualFee);
+      IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
-      _collatAmountOut = _calculateCollatOut(_subAccount, _collatToken, _collatValueInUSD, lyfDs);
-
-      if (_minCollatOut > _collatAmountOut) {
-        revert LYFLiquidationFacet_TooLittleReceived();
+      // update debt, collateral for sub account
+      if (_actualReceivedRepayAmountWithoutFee > 0) {
+        _removeDebtByAmount(_subAccount, _debtShareId, _actualReceivedRepayAmountWithoutFee, lyfDs);
       }
+      LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
-      if (_collatAmountOut > lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken)) {
-        revert LYFLiquidationFacet_InsufficientAmount();
-      }
+      emit LogRepurchase(
+        msg.sender,
+        _debtToken,
+        _collatToken,
+        _actualReceivedRepayAmountWithoutFee,
+        _collatAmountOut,
+        _actualFee
+      );
     }
-
-    // pull token and use that to repay without fee
-    // collat out calculate from repay with fee and premium
-
-    // transfer
-    uint256 _actualReceivedRepayAmount = LibLYF01.unsafePullTokens(_debtToken, msg.sender, _actualAmountToRepay);
-    console.log("_x", _actualReceivedRepayAmount - _fee);
-    console.log("_fee", _fee);
-    IERC20(_debtToken).safeTransfer(lyfDs.treasury, _fee);
-    IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-
-    // reduce debt with repaid amount
-    if (_actualReceivedRepayAmount - _fee > 0) {
-      _removeDebtByAmount(_subAccount, _debtShareId, _actualReceivedRepayAmount - _fee, lyfDs);
-    }
-    LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
-
-    emit LogRepurchase(msg.sender, _debtToken, _collatToken, _actualReceivedRepayAmount - _fee, _collatAmountOut);
   }
 
   function liquidationCall(
@@ -236,13 +203,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // 1. check if position is underwater and can be liquidated
-    {
-      uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-      if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
-        revert LYFLiquidationFacet_Healthy();
-      }
-    }
+    // todo: threshold
+    _checkPositionHealthOf(_subAccount, 9000, lyfDs);
 
     InternalLiquidationCallParams memory _params = InternalLiquidationCallParams({
       liquidationStrat: _liquidationStrat,
@@ -413,13 +375,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.accrueDebtSharesOf(vars.subAccount, lyfDs);
 
     // 0. check borrowing power
-    {
-      uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
-      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(vars.subAccount, lyfDs);
-      if ((_borrowingPower * 10000) > _usedBorrowingPower * 9000) {
-        revert LYFLiquidationFacet_Healthy();
-      }
-    }
+    // todo: threshold
+    _checkPositionHealthOf(vars.subAccount, 9000, lyfDs);
 
     // 1. remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(vars.subAccount, _lpToken, _lpSharesToLiquidate, lyfDs);
@@ -506,10 +463,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     _actualToRepay = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
-  function _calculateCollatOut(
+  function _calculateCollatForRepurchaser(
     address _subAccount,
     address _collatToken,
-    uint256 _collatValueInUSD, // usd that want to convert to collat amount
+    uint256 _repaidAmountWithFeeUSD,
+    uint256 _minReceive,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _collatAmountOut) {
     IMoneyMarket _moneyMarket = lyfDs.moneyMarket;
@@ -526,17 +484,22 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       // _collatToken is normal ERC20 or LP token
       _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);
     }
+    uint256 _exectReceiveUSD = (_repaidAmountWithFeeUSD * (REPURCHASE_REWARD_BPS + LibLYF01.MAX_BPS)) /
+      LibLYF01.MAX_BPS;
 
     // _collatAmountOut = _collatValueInUSD + _rewardInUSD
     _collatAmountOut =
-      (_collatValueInUSD * 1e18) /
+      (_exectReceiveUSD * 1e18) /
       (_collatTokenPrice * lyfDs.tokenConfigs[_collatToken].to18ConversionFactor);
 
     uint256 _totalSubAccountCollat = lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken);
-    console.log("_collatAmountOut", _collatAmountOut);
 
     if (_collatAmountOut > _totalSubAccountCollat) {
       revert LYFLiquidationFacet_InsufficientAmount();
+    }
+
+    if (_minReceive > _collatAmountOut) {
+      revert LYFLiquidationFacet_TooLittleReceived();
     }
   }
 
@@ -553,5 +516,41 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
 
     LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToRepay, _repayAmount, lyfDs);
+  }
+
+  function _checkPositionHealthOf(
+    address _subAccount,
+    uint256 thresholdBps,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _borrowingPower, uint256 _borrowedValue) {
+    _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+    _borrowedValue = LibLYF01.getTotalBorrowedUSDValue(_subAccount, lyfDs);
+    if (_borrowingPower * LibLYF01.MAX_BPS > _borrowedValue * thresholdBps) {
+      revert LYFLiquidationFacet_Healthy();
+    }
+  }
+
+  function _getActualRepayAmountWithFee(
+    address _subAccount,
+    uint256 _debtShareId,
+    uint256 _desiredRepayAmountWithFee,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view returns (uint256 _actualRepayAmountWithFee, uint256 _actualFee) {
+    uint256 _maxRepayShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _maxRepayAmount = LibShareUtil.shareToValue(
+      _maxRepayShare,
+      lyfDs.debtValues[_debtShareId],
+      lyfDs.debtShares[_debtShareId]
+    );
+    _actualFee = (_maxRepayAmount * REPURCHASE_FEE_BPS) / LibLYF01.MAX_BPS;
+    // set actual as maximum possible to repay
+    _actualRepayAmountWithFee = _maxRepayAmount + _actualFee;
+
+    // if desired repay amount is less than maximum repay amount,
+    // then re calculate actual repay amount and fee by desired amount
+    if (_desiredRepayAmountWithFee < _actualRepayAmountWithFee) {
+      _actualFee = (_actualFee * _desiredRepayAmountWithFee) / _actualRepayAmountWithFee;
+      _actualRepayAmountWithFee = _desiredRepayAmountWithFee;
+    }
   }
 }
