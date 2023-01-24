@@ -93,7 +93,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares; // subAccount => list of subAccount's all debt
     // ---- tokens ---- //
     mapping(address => TokenConfig) tokenConfigs; // token address => config
-    mapping(address => uint256) debtLastAccrueAt; // token address => last interest accrual timestamp, shared between over and non collat
+    mapping(address => uint256) debtLastAccruedAt; // token address => last interest accrual timestamp, shared between over and non collat
     // ---- whitelists ---- //
     mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
     mapping(address => bool) liquidationStratOk; // liquidation strategies that can be used during liquidation process
@@ -302,7 +302,7 @@ library LibMoneyMarket01 {
     view
     returns (uint256 _globalPendingInterest)
   {
-    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccrueAt[_token];
+    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
     if (block.timestamp > _lastAccrualTimestamp) {
       uint256 _secondsSinceLastAccrual;
       unchecked {
@@ -373,7 +373,7 @@ library LibMoneyMarket01 {
   }
 
   function accrueInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
-    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccrueAt[_token];
+    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
     if (block.timestamp > _lastAccrualTimestamp) {
       uint256 _secondsSinceLastAccrual;
       unchecked {
@@ -387,7 +387,7 @@ library LibMoneyMarket01 {
       moneyMarketDs.globalDebts[_token] += _totalInterest;
 
       // update timestamp
-      moneyMarketDs.debtLastAccrueAt[_token] = block.timestamp;
+      moneyMarketDs.debtLastAccruedAt[_token] = block.timestamp;
 
       // book protocol's revenue
       uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;

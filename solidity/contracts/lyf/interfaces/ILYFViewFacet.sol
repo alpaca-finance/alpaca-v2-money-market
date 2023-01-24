@@ -30,6 +30,8 @@ interface ILYFViewFacet {
 
   function getMMDebt(address _token) external view returns (uint256);
 
+  function getDebtPoolIdOf(address _token, address _lpToken) external view returns (uint256);
+
   function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYF01.DebtPoolInfo memory);
 
   function getDebtPoolTotalValue(uint256 _debtPoolId) external view returns (uint256);
@@ -48,9 +50,9 @@ interface ILYFViewFacet {
     view
     returns (LibUIntDoublyLinkedList.Node[] memory);
 
-  function getDebtPoolLastAccrueAt(address _token, address _lpToken) external view returns (uint256);
+  function getDebtPoolLastAccruedAt(uint256 _debtPoolId) external view returns (uint256);
 
-  function getPendingInterest(address _token, address _lpToken) external view returns (uint256);
+  function getDebtPoolPendingInterest(uint256 _debtPoolId) external view returns (uint256);
 
   function getPendingReward(address _lpToken) external view returns (uint256);
 

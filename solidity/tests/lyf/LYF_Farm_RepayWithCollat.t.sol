@@ -67,11 +67,8 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     vm.warp(block.timestamp + 25);
 
     // timepast * interest rate * debt value = 25 * 0.01 * 20 = 5
-    assertEq(
-      viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken)),
-      5 ether,
-      "expected interest is not match"
-    );
+    uint256 _wethUsdcLPDebtPoolId = viewFacet.getDebtPoolIdOf(address(weth), address(wethUsdcLPToken));
+    assertEq(viewFacet.getDebtPoolPendingInterest(_wethUsdcLPDebtPoolId), 5 ether, "expected interest is not match");
 
     vm.startPrank(BOB);
     // add more collat for repay

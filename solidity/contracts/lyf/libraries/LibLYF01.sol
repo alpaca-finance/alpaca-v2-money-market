@@ -70,7 +70,7 @@ library LibLYF01 {
     address interestModel;
     uint256 totalShare;
     uint256 totalValue;
-    uint256 lastAccrueAt;
+    uint256 lastAccruedAt;
   }
 
   // Storage
@@ -135,7 +135,7 @@ library LibLYF01 {
   function accrueDebtPoolInterest(uint256 _debtPoolId, LYFDiamondStorage storage lyfDs) internal {
     // uint256 _secondsSinceLastAccrual = block.timestamp - lyfDs.debtLastAccrueTime[_debtPoolId];
     DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
-    uint256 _secondsSinceLastAccrual = block.timestamp - debtPoolInfo.lastAccrueAt;
+    uint256 _secondsSinceLastAccrual = block.timestamp - debtPoolInfo.lastAccruedAt;
     if (_secondsSinceLastAccrual > 0) {
       uint256 _pendingInterest = getDebtPoolPendingInterest(
         lyfDs.moneyMarket,
@@ -147,7 +147,7 @@ library LibLYF01 {
 
       debtPoolInfo.totalValue += _pendingInterest;
       lyfDs.protocolReserves[debtPoolInfo.token] += _pendingInterest;
-      debtPoolInfo.lastAccrueAt = block.timestamp;
+      debtPoolInfo.lastAccruedAt = block.timestamp;
 
       emit LogAccrueInterest(debtPoolInfo.token, _pendingInterest, _pendingInterest);
     }

@@ -74,7 +74,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
 
-    uint256 _actualAccrueTime = viewFacet.getDebtLastAccrueAt(address(weth));
+    uint256 _actualAccrueTime = viewFacet.getDebtLastAccruedAt(address(weth));
     assertEq(_actualAccrueTime, block.timestamp);
   }
 
@@ -164,7 +164,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
-    assertEq(viewFacet.getDebtLastAccrueAt(address(weth)), block.timestamp);
+    assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), block.timestamp);
 
     // assert BOB
     (, uint256 _bobActualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
@@ -200,7 +200,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
   function testCorrectness_WhenUserCallDeposit_InterestShouldAccrue() external {
     uint256 _timeStampBefore = block.timestamp;
     uint256 _secondPassed = 10;
-    assertEq(viewFacet.getDebtLastAccrueAt(address(weth)), _timeStampBefore);
+    assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore);
 
     vm.warp(block.timestamp + _secondPassed);
 
@@ -209,7 +209,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     lendFacet.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
-    assertEq(viewFacet.getDebtLastAccrueAt(address(weth)), _timeStampBefore + _secondPassed);
+    assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore + _secondPassed);
   }
 
   function testCorrectness_WhenUserCallWithdraw_InterestShouldAccrue() external {
@@ -219,14 +219,14 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     lendFacet.deposit(address(weth), 10 ether);
 
-    assertEq(viewFacet.getDebtLastAccrueAt(address(weth)), _timeStampBefore);
+    assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore);
 
     vm.warp(block.timestamp + _secondPassed);
 
     vm.prank(ALICE);
     lendFacet.withdraw(address(ibWeth), 10 ether);
 
-    assertEq(viewFacet.getDebtLastAccrueAt(address(weth)), _timeStampBefore + _secondPassed);
+    assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore + _secondPassed);
   }
 
   function testCorrectness_WhenMMUseTripleSlopeInterestModel_InterestShouldAccrueCorrectly() external {
@@ -266,7 +266,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _aliceBalanceAfter = usdc.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _borrowAmount);
-    assertEq(viewFacet.getDebtLastAccrueAt(address(usdc)), block.timestamp);
+    assertEq(viewFacet.getDebtLastAccruedAt(address(usdc)), block.timestamp);
 
     // assert BOB
     (, uint256 _bobActualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(usdc));
@@ -355,7 +355,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
     assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
 
-    uint256 _actualAccrueTime = viewFacet.getDebtLastAccrueAt(address(weth));
+    uint256 _actualAccrueTime = viewFacet.getDebtLastAccruedAt(address(weth));
     assertEq(_actualAccrueTime, block.timestamp);
   }
 
@@ -407,7 +407,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobNonCollatDebt, _expectedNonDebtAmount);
     assertEq(_tokenCollatDebt, _expectedNonDebtAmount);
 
-    uint256 _actualAccrueTime = viewFacet.getDebtLastAccrueAt(address(weth));
+    uint256 _actualAccrueTime = viewFacet.getDebtLastAccruedAt(address(weth));
     assertEq(_actualAccrueTime, block.timestamp);
 
     // total token without lending fee = 54000000000000000000

@@ -84,8 +84,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
     vm.warp(block.timestamp + 1);
 
-    uint256 _wethDebtInterest = viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken));
-    uint256 _usdcDebtInterest = viewFacet.getPendingInterest(address(usdc), address(wethUsdcLPToken));
+    uint256 _wethUsdcDebtPoolId = viewFacet.getDebtPoolIdOf(address(weth), address(wethUsdcLPToken));
+    uint256 _usdcWethDebtPoolId = viewFacet.getDebtPoolIdOf(address(usdc), address(wethUsdcLPToken));
+
+    uint256 _wethDebtInterest = viewFacet.getDebtPoolPendingInterest(_wethUsdcDebtPoolId);
+    uint256 _usdcDebtInterest = viewFacet.getDebtPoolPendingInterest(_usdcWethDebtPoolId);
 
     // interest model for weth is 0.1 ether per sec
     // interest model for usdc is 0.05 ether per sec
