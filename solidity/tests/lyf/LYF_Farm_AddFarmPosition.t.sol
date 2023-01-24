@@ -307,7 +307,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
   }
 
   function testRevert_WhenAddFarmPositionBorrowingPowerDecrease_ShouldFailHealthCheck() public {
-    // omit usdc in test for brevity
+    // omit usdc in this test for brevity
     mockOracle.setTokenPrice(address(weth), 1 ether);
     mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2 ether);
 
@@ -382,7 +382,104 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     farmFacet.newAddFarmPosition(_input);
   }
 
-  //   function testCorrectness_WhenAddFarmPosition_ShouldBorrowMMIfReserveNotEnough() public {
+  function testCorrectness_WhenAddFarmPosition_ShouldBorrowMMIfReserveNotEnough() public {
+    // omit usdc in this test for brevity
+    // create leftover reserve by borrow from mm and repay so tokens is left in lyf
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 10 ether);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: 10 ether,
+      desireToken1Amount: 0,
+      token0ToBorrow: 10 ether,
+      token1ToBorrow: 0,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
+    farmFacet.repay(ALICE, subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
 
-  //   }
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 10 ether);
+
+    // next addFarmPosition should use reserve instead of borrowing from mm
+    _input.desireToken0Amount = 6 ether;
+    _input.token0ToBorrow = 6 ether;
+    farmFacet.newAddFarmPosition(_input);
+    // 6 ether should be borrowed from reserve so 4 left
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
+
+    // next addFarmPosition should not use reserve but borrow more from mm
+    // because desiredAmount > reserve
+    uint256 _mmDebtBefore = viewFacet.getMMDebt(address(weth));
+    farmFacet.newAddFarmPosition(_input);
+    assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
+    assertEq(viewFacet.getMMDebt(address(weth)) - _mmDebtBefore, 6 ether);
+  }
+
+  function testRevert_WhenUserBorrowMoreThanMaxNumOfDebtPerSubAccount() public {
+    // allow to borrow only 1 token
+    adminFacet.setMaxNumOfToken(10, 1);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 2 ether);
+
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: 1 ether,
+      desireToken1Amount: 1 ether,
+      token0ToBorrow: 1 ether,
+      token1ToBorrow: 1 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    // revert because try to borrow 2 tokens
+    vm.expectRevert(LibLYF01.LibLYF01_NumberOfTokenExceedLimit.selector);
+    farmFacet.newAddFarmPosition(_input);
+  }
+
+  function testCorrectness_WhenRepayAndBorrowMoreWithTotalBorrowEqualMaxNumOfDebtPerSubAccount_ShouldWork() external {
+    uint256 _wethToAddLP = 30 ether;
+    uint256 _usdcToAddLP = 30 ether;
+    uint256 _btcToAddLP = 3 ether;
+    uint256 _wethCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = 20 ether;
+
+    // allow to borrow 2 tokens
+    adminFacet.setMaxNumOfToken(10, 2);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+
+    // borrow weth and usdc
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
+
+    // repay all debt
+    farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), type(uint256).max);
+    farmFacet.repay(BOB, subAccount0, address(usdc), address(wethUsdcLPToken), type(uint256).max);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount * 2);
+
+    // borrow btc and usdc
+    _input.lpToken = address(btcUsdcLPToken);
+    _input.desireToken0Amount = _btcToAddLP;
+    _input.desireToken1Amount = _usdcToAddLP;
+    _input.token0ToBorrow = _btcToAddLP;
+    _input.token1ToBorrow = _usdcToAddLP;
+    farmFacet.newAddFarmPosition(_input);
+  }
 }
