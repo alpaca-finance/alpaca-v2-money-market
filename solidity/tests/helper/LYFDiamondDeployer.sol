@@ -213,12 +213,12 @@ library LYFDiamondDeployer {
     _selectors[5] = LYFViewFacet.getTokenCollatAmount.selector;
     _selectors[6] = LYFViewFacet.getSubAccountTokenCollatAmount.selector;
     _selectors[7] = LYFViewFacet.getMMDebt.selector;
-    _selectors[8] = LYFViewFacet.getDebtForLpToken.selector;
-    _selectors[9] = LYFViewFacet.getTokenDebtValue.selector;
-    _selectors[10] = LYFViewFacet.getTokenDebtShare.selector;
+    _selectors[8] = LYFViewFacet.getDebtPoolInfo.selector;
+    _selectors[9] = LYFViewFacet.getDebtPoolTotalValue.selector;
+    _selectors[10] = LYFViewFacet.getDebtPoolTotalShare.selector;
     _selectors[11] = LYFViewFacet.getSubAccountDebt.selector;
     _selectors[12] = LYFViewFacet.getAllSubAccountDebtShares.selector;
-    _selectors[13] = LYFViewFacet.getDebtLastAccrueTime.selector;
+    _selectors[13] = LYFViewFacet.getDebtPoolLastAccrueAt.selector;
     _selectors[14] = LYFViewFacet.getPendingInterest.selector;
     _selectors[15] = LYFViewFacet.getPendingReward.selector;
     _selectors[16] = LYFViewFacet.getTotalBorrowingPower.selector;

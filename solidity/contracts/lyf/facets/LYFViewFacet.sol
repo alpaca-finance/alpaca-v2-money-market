@@ -67,22 +67,18 @@ contract LYFViewFacet is ILYFViewFacet {
     _debtAmount = lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token);
   }
 
-  function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256) {
+  function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYF01.DebtPoolInfo memory) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
-    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
-    return (debtPoolInfo.totalShare, debtPoolInfo.totalValue);
+    return lyfDs.debtPoolInfos[_debtPoolId];
   }
 
-  function getTokenDebtValue(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolTotalValue(uint256 _debtPoolId) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
     return lyfDs.debtPoolInfos[_debtPoolId].totalValue;
   }
 
-  function getTokenDebtShare(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolTotalShare(uint256 _debtPoolId) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
     return lyfDs.debtPoolInfos[_debtPoolId].totalShare;
   }
 
@@ -116,7 +112,7 @@ contract LYFViewFacet is ILYFViewFacet {
     return subAccountDebtShares.getAll();
   }
 
-  function getDebtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolLastAccrueAt(address _token, address _lpToken) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
     return lyfDs.debtPoolInfos[_debtPoolId].lastAccrueAt;
