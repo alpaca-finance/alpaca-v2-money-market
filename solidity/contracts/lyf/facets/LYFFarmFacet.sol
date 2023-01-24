@@ -46,6 +46,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _actualRepayAmount
   );
 
+  struct NewAddFarmPositionLocalVars {
+    uint256 amount0ToRemoveCollat;
+    uint256 amount1ToRemoveCollat;
+    uint256 token0AmountFromCollat;
+    uint256 token1AmountFromCollat;
+    uint256 token0AmountFromIbCollat;
+    uint256 token1AmountFromIbCollat;
+    uint256 lpReceived;
+  }
+
   struct ReducePositionLocalVars {
     address subAccount;
     address token0;
@@ -58,6 +68,110 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibReentrancyGuard.lock();
     _;
     LibReentrancyGuard.unlock();
+  }
+
+  function newAddFarmPosition(ILYFFarmFacet.AddFarmPositionInput calldata _input) external nonReentrant {
+    if (
+      _input.desireToken0Amount < _input.token0ToBorrow + _input.token0AmountIn ||
+      _input.desireToken1Amount < _input.token1ToBorrow + _input.token1AmountIn
+    ) {
+      revert LYFFarmFacet_BadInput();
+    }
+
+    // prepare data
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_input.lpToken];
+    NewAddFarmPositionLocalVars memory _vars;
+    address _subAccount = LibLYF01.getSubAccount(msg.sender, _input.subAccountId);
+    address _token0 = ISwapPairLike(_input.lpToken).token0();
+    address _token1 = ISwapPairLike(_input.lpToken).token1();
+    uint256 _token0DebtShareId = lyfDs.debtShareIds[_token0][_input.lpToken];
+    uint256 _token1DebtShareId = lyfDs.debtShareIds[_token1][_input.lpToken];
+
+    // accrue existing debt to correctly account for interest during health check
+    LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
+
+    // accrue debt that is going to be borrowed which is not yet in subAccount
+    LibLYF01.accrueDebtShareInterest(_token0DebtShareId, lyfDs);
+    LibLYF01.accrueDebtShareInterest(_token1DebtShareId, lyfDs);
+
+    // borrow and validate min debt size
+    LibLYF01.borrow(_subAccount, _token0, _input.lpToken, _input.token0ToBorrow, lyfDs);
+    LibLYF01.borrow(_subAccount, _token1, _input.lpToken, _input.token1ToBorrow, lyfDs);
+
+    LibLYF01.validateMinDebtSize(_subAccount, _token0DebtShareId, lyfDs);
+    LibLYF01.validateMinDebtSize(_subAccount, _token1DebtShareId, lyfDs);
+
+    // transfer user tokens to strategy to prepare for lp composition
+    // TODO: use pull token
+    IERC20(_token0).safeTransferFrom(msg.sender, _lpConfig.strategy, _input.token0AmountIn);
+    IERC20(_token1).safeTransferFrom(msg.sender, _lpConfig.strategy, _input.token1AmountIn);
+
+    // calculate collat amount to remove
+    unchecked {
+      _vars.amount0ToRemoveCollat = _input.desireToken0Amount - _input.token0ToBorrow - _input.token0AmountIn;
+      _vars.amount1ToRemoveCollat = _input.desireToken1Amount - _input.token1ToBorrow - _input.token1AmountIn;
+    }
+
+    // remove normal collat first
+    _vars.token0AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token0, _vars.amount0ToRemoveCollat, lyfDs);
+    _vars.token1AmountFromCollat = LibLYF01.removeCollateral(_subAccount, _token1, _vars.amount1ToRemoveCollat, lyfDs);
+
+    // remove ib collat if normal collat removed not satisfy desired collat amount
+    _vars.token0AmountFromIbCollat = LibLYF01.removeIbCollateral(
+      _subAccount,
+      _token0,
+      lyfDs.moneyMarket.getIbTokenFromToken(_token0),
+      _vars.amount0ToRemoveCollat - _vars.token0AmountFromCollat,
+      lyfDs
+    );
+    _vars.token1AmountFromIbCollat = LibLYF01.removeIbCollateral(
+      _subAccount,
+      _token1,
+      lyfDs.moneyMarket.getIbTokenFromToken(_token1),
+      _vars.amount1ToRemoveCollat - _vars.token1AmountFromCollat,
+      lyfDs
+    );
+
+    // revert if amount from collat removal less than desired collat amount
+    unchecked {
+      if (
+        _vars.amount0ToRemoveCollat > _vars.token0AmountFromCollat + _vars.token0AmountFromIbCollat ||
+        _vars.amount1ToRemoveCollat > _vars.token1AmountFromCollat + _vars.token1AmountFromIbCollat
+      ) {
+        revert LYFFarmFacet_CollatNotEnough();
+      }
+    }
+
+    // send token to strat to prepare for lp composition
+    // total amount sent to strategy = amountIn + amountBorrowed + amountCollatRemoved = desiredAmount
+    IERC20(_token0).safeTransfer(_lpConfig.strategy, _input.token0ToBorrow + _vars.amount0ToRemoveCollat);
+    IERC20(_token1).safeTransfer(_lpConfig.strategy, _input.token1ToBorrow + _vars.amount1ToRemoveCollat);
+
+    // compose lp
+    _vars.lpReceived = IStrat(_lpConfig.strategy).composeLPToken(
+      _token0,
+      _token1,
+      _input.lpToken,
+      _input.desireToken0Amount,
+      _input.desireToken1Amount,
+      _input.minLpReceive
+    );
+
+    // deposit to masterChef
+    LibLYF01.depositToMasterChef(_input.lpToken, _lpConfig.masterChef, _lpConfig.poolId, _vars.lpReceived);
+
+    // add lp received from composition back to collateral
+    LibLYF01.addCollat(_subAccount, _input.lpToken, _vars.lpReceived, lyfDs);
+
+    // health check
+    // revert in case that lp collateralFactor is less than removed collateral's
+    // or debt exceed borrowing power by borrowing too much
+    if (!LibLYF01.isSubaccountHealthy(_subAccount, lyfDs)) {
+      revert LYFFarmFacet_BorrowingPowerTooLow();
+    }
+
+    emit LogAddFarmPosition(msg.sender, _input.subAccountId, _input.lpToken, _vars.lpReceived);
   }
 
   function addFarmPosition(
