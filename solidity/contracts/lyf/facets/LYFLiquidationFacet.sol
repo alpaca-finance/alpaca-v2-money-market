@@ -117,7 +117,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // health check sub account borrowing power
-    _checkPositionHealthOf(_subAccount, LibLYF01.MAX_BPS, lyfDs);
+    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+    uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
+    if (_borrowingPower > _usedBorrowingPower) {
+      revert LYFLiquidationFacet_Healthy();
+    }
 
     // get max repay amount possible could repay
     (uint256 _actualRepayAmountWithFee, uint256 _actualFee) = _getActualRepayAmountWithFee(
@@ -137,7 +141,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
         _debtTokenConfig.borrowingFactor,
         _debtTokenConfig.to18ConversionFactor
       );
-      uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
 
       if (_repaidBorrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * MAX_LIQUIDATE_BPS) {
         revert LYFLiquidationFacet_RepayDebtValueTooHigh();
@@ -205,7 +208,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // 1. check if position is underwater and can be liquidated
     // todo: threshold
-    _checkPositionHealthOf(_subAccount, 9000, lyfDs);
+    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+    uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
+    if (_borrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
+      revert LYFLiquidationFacet_Healthy();
+    }
 
     InternalLiquidationCallParams memory _params = InternalLiquidationCallParams({
       liquidationStrat: _liquidationStrat,
@@ -377,7 +384,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // 0. check borrowing power
     // todo: threshold
-    _checkPositionHealthOf(vars.subAccount, 9000, lyfDs);
+    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
+    uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(vars.subAccount, lyfDs);
+    if (_borrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
+      revert LYFLiquidationFacet_Healthy();
+    }
 
     // 1. remove LP collat
     uint256 _lpFromCollatRemoval = LibLYF01.removeCollateral(vars.subAccount, _lpToken, _lpSharesToLiquidate, lyfDs);
@@ -517,18 +528,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
 
     LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToRepay, _repayAmount, lyfDs);
-  }
-
-  function _checkPositionHealthOf(
-    address _subAccount,
-    uint256 thresholdBps,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view {
-    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-    uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-    if (_borrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * thresholdBps) {
-      revert LYFLiquidationFacet_Healthy();
-    }
   }
 
   function _getActualRepayAmountWithFee(
