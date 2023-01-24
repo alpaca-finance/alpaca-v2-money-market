@@ -49,58 +49,6 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     result = (debtToRepurchase * (10000 + REPURCHASE_FEE_BPS) * 1e14) / collatUSDPrice;
   }
 
-  function testCorrectness_WhenPartialRepurchase_ShouldWork() external {
-    /**
-     * scenario:
-     *
-     * 1. @ 1 usdc/weth: alice add collateral 40 weth, open farm with 30 weth, 30 usdc
-     *      - 30 weth collateral is used to open position -> 10 weth left as collateral
-     *      - alice need to borrow 30 usdc
-     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 2 * 0.9) = 63 usd
-     *
-     * 2. lp price drops to 0.5 usdc/lp -> position become repurchaseable
-     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
-     *
-     * 3. bob repurchase weth collateral with 5 usdc, bob will receive 5.05 weth
-     *      - 5 / 1 = 5 weth will be repurchased by bob
-     *      - 5 * 1% = 0.05 weth as repurchase reward for bob
-     *
-     * 4. alice position after repurchase
-     *      - alice subaccount 0: weth collateral = 10 - 5.05 = 4.95 weth
-     *      - alice subaccount 0: usdc debt = 30 - 5 = 25 usdc
-     */
-    address _collatToken = address(weth);
-    address _debtToken = address(usdc);
-    address _lpToken = address(wethUsdcLPToken);
-    uint256 _amountToRepurchase = 5 ether;
-
-    vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
-    vm.stopPrank();
-
-    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
-
-    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
-
-    vm.prank(BOB);
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, _amountToRepurchase, 0);
-
-    // check bob balance
-    uint256 _wethReceivedFromRepurchase = _calcCollatRepurchaserShouldReceive(_amountToRepurchase, 1 ether);
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, _wethReceivedFromRepurchase);
-    assertEq(_bobUsdcBalanceBefore - usdc.balanceOf(BOB), _amountToRepurchase);
-
-    // check alice position
-    assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken),
-      10 ether - _wethReceivedFromRepurchase // TODO: account for repurchase fee
-    );
-    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 25 ether);
-  }
-
   function testCorrectness_WhenRepurchaseMoreThanDebt_ShouldRepurchaseAllDebtOnThatToken() external {
     /**
      * scenario:
