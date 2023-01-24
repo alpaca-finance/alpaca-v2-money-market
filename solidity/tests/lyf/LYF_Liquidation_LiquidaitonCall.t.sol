@@ -15,13 +15,10 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 // libraries
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_LiquidationFacetTest is LYF_BaseTest {
+contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
   uint256 _subAccountId = 0;
   MockLiquidationStrategy internal mockLiquidationStrategy;
   address constant liquidator = address(1000);
-
-  uint256 constant REPURCHASE_REWARD_BPS = 100;
-  uint256 constant REPURCHASE_FEE_BPS = 100;
 
   function setUp() public override {
     super.setUp();
@@ -42,6 +39,7 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     usdc.approve(lyfDiamond, type(uint256).max);
   }
 
+<<<<<<< HEAD:solidity/tests/lyf/LYF_LiquidationFacetTest.t.sol
   function _calcCollatRepurchaserShouldReceive(uint256 debtToRepurchase, uint256 collatUSDPrice)
     internal
     pure
@@ -377,6 +375,8 @@ contract LYF_LiquidationFacetTest is LYF_BaseTest {
     );
   }
 
+=======
+>>>>>>> main:solidity/tests/lyf/LYF_Liquidation_LiquidaitonCall.t.sol
   function testRevert_WhenUnauthorizedUserCallLiquidate_ShouldRevert() external {
     vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_Unauthorized.selector));
     liquidationFacet.liquidationCall(

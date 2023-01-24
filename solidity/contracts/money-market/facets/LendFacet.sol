@@ -83,6 +83,8 @@ contract LendFacet is ILendFacet {
 
     _withdrawAmount = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, msg.sender, moneyMarketDs);
 
+    moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
+
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
   }
 

@@ -11,7 +11,7 @@ import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_ReinvestTest is LYF_BaseTest {
+contract LYF_Farm_ReinvestTest is LYF_BaseTest {
   function setUp() public override {
     super.setUp();
 
