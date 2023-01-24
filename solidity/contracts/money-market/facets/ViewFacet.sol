@@ -96,9 +96,9 @@ contract ViewFacet is IViewFacet {
   /// @notice Get the timestamp of latest interest collection on a token
   /// @param _token The token that has collected the interest
   /// @return timestamp of accrual time
-  function getDebtLastAccrueTime(address _token) external view returns (uint256) {
+  function getDebtLastAccrueAt(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtLastAccrueTime[_token];
+    return moneyMarketDs.debtLastAccrueAt[_token];
   }
 
   /// @notice Get pending interest of borrowed token include both over and non collateralized
