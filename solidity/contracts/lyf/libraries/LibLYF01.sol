@@ -610,10 +610,8 @@ library LibLYF01 {
     debtPoolInfo.totalShare += _shareToAdd;
     debtPoolInfo.totalValue += _amount;
 
-    uint256 _newShareAmount = userDebtShare.getAmount(_debtPoolId) + _shareToAdd;
-
     // update user's debtshare
-    userDebtShare.addOrUpdate(_debtPoolId, _newShareAmount);
+    userDebtShare.addOrUpdate(_debtPoolId, userDebtShare.getAmount(_debtPoolId) + _shareToAdd);
 
     if (userDebtShare.length() > lyfDs.maxNumOfDebtPerSubAccount) {
       revert LibLYF01_NumberOfTokenExceedLimit();
