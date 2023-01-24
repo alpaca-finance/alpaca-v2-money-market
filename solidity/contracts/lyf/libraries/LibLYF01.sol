@@ -450,18 +450,17 @@ library LibLYF01 {
       _debtPooInfo.totalValue,
       _debtPooInfo.totalShare
     );
-    if (_debtAmount != 0) {
-      uint256 _tokenPrice = getPriceUSD(_debtPooInfo.token, lyfDs);
 
-      if (
-        LibFullMath.mulDiv(
-          _debtAmount * lyfDs.tokenConfigs[_debtPooInfo.token].to18ConversionFactor,
-          _tokenPrice,
-          1e18
-        ) < lyfDs.minDebtSize
-      ) {
-        revert LibLYF01_BorrowLessThanMinDebtSize();
-      }
+    if (
+      _debtAmount != 0 &&
+      LibFullMath.mulDiv(
+        _debtAmount * lyfDs.tokenConfigs[_debtPooInfo.token].to18ConversionFactor,
+        getPriceUSD(_debtPooInfo.token, lyfDs),
+        1e18
+      ) <
+      lyfDs.minDebtSize
+    ) {
+      revert LibLYF01_BorrowLessThanMinDebtSize();
     }
   }
 
