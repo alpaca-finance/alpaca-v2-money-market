@@ -117,10 +117,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
     // health check sub account borrowing power
-    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
     uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-    if (_borrowingPower > _usedBorrowingPower) {
-      revert LYFLiquidationFacet_Healthy();
+    {
+      uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+      if (_borrowingPower > _usedBorrowingPower) {
+        revert LYFLiquidationFacet_Healthy();
+      }
     }
 
     // get max repay amount possible could repay
@@ -165,14 +167,15 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
         _actualRepayAmountWithFee
       ) - _actualFee;
 
-      IERC20(_debtToken).safeTransfer(lyfDs.treasury, _actualFee);
-      IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-
       // update debt, collateral for sub account
       if (_actualReceivedRepayAmountWithoutFee > 0) {
         _removeDebtByAmount(_subAccount, _debtShareId, _actualReceivedRepayAmountWithoutFee, lyfDs);
       }
       LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
+
+      // transfer tokens out
+      IERC20(_debtToken).safeTransfer(lyfDs.treasury, _actualFee);
+      IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
       emit LogRepurchase(
         msg.sender,
