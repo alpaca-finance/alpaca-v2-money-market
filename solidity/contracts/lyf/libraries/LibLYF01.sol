@@ -36,7 +36,7 @@ library LibLYF01 {
   error LibLYF01_UnsupportedDecimals();
   error LibLYF01_NumberOfTokenExceedLimit();
   error LibLYF01_BorrowLessThanMinDebtSize();
-  error LibLYF01_BadDebtShareId();
+  error LibLYF01_BadDebtPoolId();
   error LibLYF01_LPCollateralExceedLimit();
 
   enum AssetTier {
@@ -119,7 +119,7 @@ library LibLYF01 {
     return address(uint160(_primary) ^ uint160(_subAccountId));
   }
 
-  function getDebtSharePendingInterest(
+  function getDebtPoolPendingInterest(
     IMoneyMarket _moneyMarket,
     address _interestModel,
     address _token,
@@ -137,7 +137,7 @@ library LibLYF01 {
     DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _secondsSinceLastAccrual = block.timestamp - debtPoolInfo.lastAccrueAt;
     if (_secondsSinceLastAccrual > 0) {
-      uint256 _pendingInterest = getDebtSharePendingInterest(
+      uint256 _pendingInterest = getDebtPoolPendingInterest(
         lyfDs.moneyMarket,
         debtPoolInfo.interestModel,
         debtPoolInfo.token,
@@ -585,7 +585,7 @@ library LibLYF01 {
     if (_amount == 0) return;
     uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
     if (_debtPoolId == 0) {
-      revert LibLYF01_BadDebtShareId();
+      revert LibLYF01_BadDebtPoolId();
     }
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];

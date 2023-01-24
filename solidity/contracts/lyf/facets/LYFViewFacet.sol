@@ -127,7 +127,7 @@ contract LYFViewFacet is ILYFViewFacet {
     uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
     LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     return
-      LibLYF01.getDebtSharePendingInterest(
+      LibLYF01.getDebtPoolPendingInterest(
         lyfDs.moneyMarket,
         debtPoolInfo.interestModel,
         debtPoolInfo.token,
