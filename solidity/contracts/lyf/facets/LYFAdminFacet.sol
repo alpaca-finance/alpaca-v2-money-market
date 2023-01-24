@@ -20,8 +20,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetTokenConfig(address indexed _token, LibLYF01.TokenConfig _config);
   event LogSetMoneyMarket(address indexed _moneyMarket);
   event LogSetLPConfig(address indexed _lpToken, LibLYF01.LPConfig _config);
-  event LogSetDebtShareId(address indexed _token, address indexed _lpToken, uint256 _debtShareId);
-  event LogSetDebtInterestModel(uint256 indexed _debtShareId, address _interestModel);
+  event LogSetDebtPoolId(address indexed _token, address indexed _lpToken, uint256 _debtPoolId);
+  event LogSetDebtPoolInterestModel(uint256 indexed _debtPoolId, address _interestModel);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetReinvestorOk(address indexed _reinvester, bool isOk);
   event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
@@ -106,38 +106,40 @@ contract LYFAdminFacet is ILYFAdminFacet {
     }
   }
 
-  function setDebtShareId(
+  function setDebtPoolId(
     address _token,
     address _lpToken,
-    uint256 _debtShareId
+    uint256 _debtPoolId
   ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     // validate token must not already set
     // validate if token exist but different lp
-    // _debtShareId can't be 0 or max uint
+    // _debtPoolId can't be 0 or max uint
     if (
-      lyfDs.debtShareIds[_token][_lpToken] != 0 ||
-      (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token) ||
-      _debtShareId == 0 ||
-      _debtShareId == type(uint256).max
+      lyfDs.debtPoolIds[_token][_lpToken] != 0 ||
+      (debtPoolInfo.token != address(0) && debtPoolInfo.token != _token) ||
+      _debtPoolId == 0 ||
+      _debtPoolId == type(uint256).max
     ) {
-      revert LYFAdminFacet_BadDebtShareId();
+      revert LYFAdminFacet_BadDebtPoolId();
     }
-    lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
-    lyfDs.debtShareTokens[_debtShareId] = _token;
+    lyfDs.debtPoolIds[_token][_lpToken] = _debtPoolId;
+    debtPoolInfo.token = _token;
 
-    emit LogSetDebtShareId(_token, _lpToken, _debtShareId);
+    emit LogSetDebtPoolId(_token, _lpToken, _debtPoolId);
   }
 
-  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external onlyOwner {
+  function setDebtPoolInterestModel(uint256 _debtPoolId, address _interestModel) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     // sanity check
     IInterestRateModel(_interestModel).getInterestRate(1, 1);
 
-    lyfDs.interestModels[_debtShareId] = _interestModel;
-    emit LogSetDebtInterestModel(_debtShareId, _interestModel);
+    lyfDs.debtPoolInfos[_debtPoolId].interestModel = _interestModel;
+
+    emit LogSetDebtPoolInterestModel(_debtPoolId, _interestModel);
   }
 
   function setMinDebtSize(uint256 _newValue) external onlyOwner {

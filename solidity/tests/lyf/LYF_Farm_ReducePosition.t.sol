@@ -32,8 +32,8 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserReducePosition_LefoverTokenShouldReturnToUser() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
 
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
@@ -115,8 +115,8 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserReducePosition_LefoverTokenShouldReturnToUser2() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
 
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
@@ -249,8 +249,8 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
   function testRevert_WhenUserReducePosition_IfSlippedShouldRevert() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -281,8 +281,8 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
   function testRevert_WhenUserReducePosition_IfResultedInUnhealthyStateShouldRevert() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
