@@ -39,7 +39,18 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -139,7 +150,18 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
     vm.stopPrank();
 
     // assume that every coin is 1 dollar and lp = 2 dollar

@@ -36,24 +36,6 @@ interface ILYFFarmFacet {
 
   function newAddFarmPosition(AddFarmPositionInput calldata _input) external;
 
-  function addFarmPosition(
-    uint256 _subAccountId,
-    address _lpToken,
-    uint256 _desireToken0Amount,
-    uint256 _desireToken1Amount,
-    uint256 _minLpReceive
-  ) external;
-
-  function directAddFarmPosition(
-    uint256 _subAccountId,
-    address _lpToken,
-    uint256 _desireToken0Amount,
-    uint256 _desireToken1Amount,
-    uint256 _minLpReceive,
-    uint256 _token0AmountIn,
-    uint256 _token1AmountIn
-  ) external;
-
   function repay(
     address _account,
     uint256 _subAccountId,

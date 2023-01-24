@@ -9,6 +9,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 
 contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
   function setUp() public override {
@@ -26,7 +27,18 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
     // borrow weth and usdc
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_OnlyCollateralTierAllowed.selector));
     collateralFacet.transferCollateral(subAccount0, subAccount1, address(wethUsdcLPToken), 1 ether);
@@ -51,7 +63,18 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(btc), _btcCollatAmount);
 
     // borrow weth and usdc
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.expectRevert(abi.encodeWithSelector(ILYFCollateralFacet.LYFCollateralFacet_BorrowingPowerTooLow.selector));
     collateralFacet.transferCollateral(subAccount0, subAccount1, address(btc), _btcCollatAmount);
