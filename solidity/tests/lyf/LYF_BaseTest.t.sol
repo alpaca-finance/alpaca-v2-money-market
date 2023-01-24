@@ -263,16 +263,16 @@ abstract contract LYF_BaseTest is BaseTest {
     IAdminFacet(lyfDiamond).setOracle(address(mockOracle));
 
     // set debt share indexes
-    adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
-    adminFacet.setDebtShareId(address(usdc), address(wethUsdcLPToken), 2);
-    adminFacet.setDebtShareId(address(btc), address(btcUsdcLPToken), 3);
-    adminFacet.setDebtShareId(address(usdc), address(btcUsdcLPToken), 4);
+    adminFacet.setDebtPoolId(address(weth), address(wethUsdcLPToken), 1);
+    adminFacet.setDebtPoolId(address(usdc), address(wethUsdcLPToken), 2);
+    adminFacet.setDebtPoolId(address(btc), address(btcUsdcLPToken), 3);
+    adminFacet.setDebtPoolId(address(usdc), address(btcUsdcLPToken), 4);
 
     // set interest model
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
-    adminFacet.setDebtInterestModel(3, address(new MockInterestModel(0.05 ether)));
-    adminFacet.setDebtInterestModel(4, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.1 ether)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(3, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(0.05 ether)));
 
     adminFacet.setTreasury(treasury);
 

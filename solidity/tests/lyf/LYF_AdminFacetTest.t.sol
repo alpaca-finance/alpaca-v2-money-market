@@ -41,25 +41,25 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     vm.stopPrank();
   }
 
-  function testRevert_WhenAdminSetDebtShareIdThatHasBeenSet_ShouldRevert() external {
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
+  function testRevert_WhenAdminsetDebtPoolIdThatHasBeenSet_ShouldRevert() external {
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(weth), address(wethUsdcLPToken), 1);
   }
 
-  function testRevert_WhenAdminSetDebtShareIdForDifferentToken_ShouldRevert() external {
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(usdc), address(8888), 1);
+  function testRevert_WhenAdminsetDebtPoolIdForDifferentToken_ShouldRevert() external {
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(usdc), address(8888), 1);
   }
 
-  function testCorrectness_WhenAdminSetDebtShareIdForSameToken_ShouldWork() external {
-    adminFacet.setDebtShareId(address(weth), address(8888), 1);
+  function testCorrectness_WhenAdminsetDebtPoolIdForSameToken_ShouldWork() external {
+    adminFacet.setDebtPoolId(address(weth), address(8888), 1);
   }
 
   function testRevert_WhenAdminSetInvalidDebtShareId() external {
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(usdc), address(8888), 0);
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(usdc), address(8888), type(uint256).max);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(usdc), address(8888), 0);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(usdc), address(8888), type(uint256).max);
   }
 
   function testCorrectness_WhenLYFAdminSetMaxNumOfToken_ShouldCorrect() external {
@@ -100,18 +100,18 @@ contract LYF_AdminFacetTest is LYF_BaseTest {
     assertEq(_lpConfig.poolId, _lpConfigs[0].poolId);
   }
 
-  function testCorrectness_WhenSetDebtInterestModel() external {
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+  function testCorrectness_WhensetDebtPoolInterestModel() external {
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
   }
 
-  function testRevert_WhenSetDebtInterestModel() external {
+  function testRevert_WhensetDebtPoolInterestModel() external {
     // not passed sanity check
     vm.expectRevert();
-    adminFacet.setDebtInterestModel(1, address(8888));
+    adminFacet.setDebtPoolInterestModel(1, address(8888));
 
     // setter is not owner
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setDebtInterestModel(0, address(8888));
+    adminFacet.setDebtPoolInterestModel(0, address(8888));
   }
 }

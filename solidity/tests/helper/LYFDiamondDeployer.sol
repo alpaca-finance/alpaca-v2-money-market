@@ -116,8 +116,8 @@ library LYFDiamondDeployer {
     selectors[1] = LYFAdminFacet.setTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
     selectors[3] = LYFAdminFacet.setLPConfigs.selector;
-    selectors[4] = LYFAdminFacet.setDebtShareId.selector;
-    selectors[5] = LYFAdminFacet.setDebtInterestModel.selector;
+    selectors[4] = LYFAdminFacet.setDebtPoolId.selector;
+    selectors[5] = LYFAdminFacet.setDebtPoolInterestModel.selector;
     selectors[6] = LYFAdminFacet.setReinvestorsOk.selector;
     selectors[7] = LYFAdminFacet.setLiquidationStratsOk.selector;
     selectors[8] = LYFAdminFacet.setLiquidatorsOk.selector;

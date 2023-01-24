@@ -92,9 +92,9 @@ library LibLYF01 {
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares; // subAccount => linked list of debtShares
     // ---- tokens ---- //
     mapping(address => TokenConfig) tokenConfigs; // arbitrary token => config
-    // ---- debtShareIds ---- //
-    mapping(address => mapping(address => uint256)) debtShareIds; // token => lp token => debt share id
-    mapping(uint256 => DebtPoolInfo) debtPoolInfos; // debtShareId => DebtPoolInfo
+    // ---- debtPools ---- //
+    mapping(address => mapping(address => uint256)) debtPoolIds; // token => lp token => debtPoolId
+    mapping(uint256 => DebtPoolInfo) debtPoolInfos; // debtPoolId => DebtPoolInfo
     // ---- lpTokens ---- //
     mapping(address => uint256) lpShares; // lpToken => total share that in protocol's control (collat + farm)
     mapping(address => uint256) lpAmounts; // lpToken => total amount that in protocol's control (collat + farm)
@@ -132,9 +132,9 @@ library LibLYF01 {
     _pendingInterest = (_interestRate * _secondsSinceLastAccrual * _debtShareDebtValue) / 1e18;
   }
 
-  function accrueDebtShareInterest(uint256 _debtShareId, LYFDiamondStorage storage lyfDs) internal {
-    // uint256 _secondsSinceLastAccrual = block.timestamp - lyfDs.debtLastAccrueTime[_debtShareId];
-    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtShareId];
+  function accrueDebtPoolInterest(uint256 _debtPoolId, LYFDiamondStorage storage lyfDs) internal {
+    // uint256 _secondsSinceLastAccrual = block.timestamp - lyfDs.debtLastAccrueTime[_debtPoolId];
+    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _secondsSinceLastAccrual = block.timestamp - debtPoolInfo.lastAccrueAt;
     if (_secondsSinceLastAccrual > 0) {
       uint256 _pendingInterest = getDebtSharePendingInterest(
@@ -158,7 +158,7 @@ library LibLYF01 {
     uint256 _debtShareLength = _debtShares.length;
 
     for (uint256 _i; _i < _debtShareLength; ) {
-      accrueDebtShareInterest(_debtShares[_i].index, lyfDs);
+      accrueDebtPoolInterest(_debtShares[_i].index, lyfDs);
       unchecked {
         ++_i;
       }
@@ -440,13 +440,13 @@ library LibLYF01 {
 
   function validateMinDebtSize(
     address _subAccount,
-    uint256 _debtShareId,
+    uint256 _debtPoolId,
     LYFDiamondStorage storage lyfDs
   ) internal view {
     // note: precision loss 1 wei when convert share back to value
-    DebtPoolInfo memory _debtPooInfo = lyfDs.debtPoolInfos[_debtShareId];
+    DebtPoolInfo memory _debtPooInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _debtAmount = LibShareUtil.shareToValue(
-      lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId),
+      lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId),
       _debtPooInfo.totalValue,
       _debtPooInfo.totalShare
     );
@@ -583,13 +583,13 @@ library LibLYF01 {
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
     if (_amount == 0) return;
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    if (_debtShareId == 0) {
+    uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
+    if (_debtPoolId == 0) {
       revert LibLYF01_BadDebtShareId();
     }
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
-    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtShareId];
+    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     userDebtShare.initIfNotExist();
 
@@ -610,10 +610,10 @@ library LibLYF01 {
     debtPoolInfo.totalShare += _shareToAdd;
     debtPoolInfo.totalValue += _amount;
 
-    uint256 _newShareAmount = userDebtShare.getAmount(_debtShareId) + _shareToAdd;
+    uint256 _newShareAmount = userDebtShare.getAmount(_debtPoolId) + _shareToAdd;
 
     // update user's debtshare
-    userDebtShare.addOrUpdate(_debtShareId, _newShareAmount);
+    userDebtShare.addOrUpdate(_debtPoolId, _newShareAmount);
 
     if (userDebtShare.length() > lyfDs.maxNumOfDebtPerSubAccount) {
       revert LibLYF01_NumberOfTokenExceedLimit();
@@ -622,17 +622,17 @@ library LibLYF01 {
 
   function removeDebt(
     address _subAccount,
-    uint256 _debtShareId,
+    uint256 _debtPoolId,
     uint256 _debtShareToRemove,
     uint256 _debtAmountToRemove,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    uint256 _currentDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
 
     // update user debtShare
-    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtShareId, _currentDebtShare - _debtShareToRemove);
+    lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtPoolId, _currentDebtShare - _debtShareToRemove);
 
-    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtShareId];
+    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     debtPoolInfo.totalShare -= _debtShareToRemove;
     debtPoolInfo.totalValue -= _debtAmountToRemove;
   }
