@@ -631,4 +631,15 @@ library LibLYF01 {
     lyfDs.debtShares[_debtShareId] -= _debtShareToRemove;
     lyfDs.debtValues[_debtShareId] -= _debtAmountToRemove;
   }
+
+  /// @dev safeTransferFrom that return actual amount received
+  function unsafePullTokens(
+    address _token,
+    address _from,
+    uint256 _amount
+  ) internal returns (uint256 _actualAmountReceived) {
+    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
+    IERC20(_token).safeTransferFrom(_from, address(this), _amount);
+    _actualAmountReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+  }
 }

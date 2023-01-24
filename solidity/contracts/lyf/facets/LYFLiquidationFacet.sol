@@ -199,21 +199,19 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // collat out calculate from repay with fee and premium
 
     // transfer
-
-    console.log("_x", _actualAmountToRepay - _fee);
+    uint256 _actualReceivedRepayAmount = LibLYF01.unsafePullTokens(_debtToken, msg.sender, _actualAmountToRepay);
+    console.log("_x", _actualReceivedRepayAmount - _fee);
     console.log("_fee", _fee);
-
-    IERC20(_debtToken).safeTransferFrom(msg.sender, address(this), _actualAmountToRepay - _fee);
-    IERC20(_debtToken).safeTransferFrom(msg.sender, lyfDs.treasury, _fee);
+    IERC20(_debtToken).safeTransfer(lyfDs.treasury, _fee);
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
     // reduce debt with repaid amount
-    if (_actualAmountToRepay - _fee > 0) {
-      _removeDebtByAmount(_subAccount, _debtShareId, _actualAmountToRepay - _fee, lyfDs);
+    if (_actualReceivedRepayAmount - _fee > 0) {
+      _removeDebtByAmount(_subAccount, _debtShareId, _actualReceivedRepayAmount - _fee, lyfDs);
     }
     LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
-    emit LogRepurchase(msg.sender, _debtToken, _collatToken, _actualAmountToRepay - _fee, _collatAmountOut);
+    emit LogRepurchase(msg.sender, _debtToken, _collatToken, _actualReceivedRepayAmount - _fee, _collatAmountOut);
   }
 
   function liquidationCall(
