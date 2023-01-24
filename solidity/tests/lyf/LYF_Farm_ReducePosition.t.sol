@@ -44,7 +44,18 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -127,7 +138,18 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -203,7 +225,6 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
   }
 
   function testRevert_WhenUserReducePosition_RemainingDebtIsLessThanMinDebtSizeShouldRevert() external {
-    // remove interest for convienice of test
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -213,7 +234,18 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -248,9 +280,6 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
   }
 
   function testRevert_WhenUserReducePosition_IfSlippedShouldRevert() external {
-    // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -260,7 +289,18 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -280,9 +320,6 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
   }
 
   function testRevert_WhenUserReducePosition_IfResultedInUnhealthyStateShouldRevert() external {
-    // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -292,7 +329,18 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desireToken0Amount: _wethToAddLP,
+      desireToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.newAddFarmPosition(_input);
 
     vm.stopPrank();
 
