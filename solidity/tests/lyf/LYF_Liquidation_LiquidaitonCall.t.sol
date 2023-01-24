@@ -14,7 +14,7 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 // libraries
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_LiquidationFacetTest is LYF_BaseTest {
+contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
   uint256 _subAccountId = 0;
   MockLiquidationStrategy internal mockLiquidationStrategy;
   address constant liquidator = address(1000);
