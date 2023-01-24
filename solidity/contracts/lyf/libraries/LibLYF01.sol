@@ -235,6 +235,36 @@ library LibLYF01 {
     }
   }
 
+  function getTotalBorrowedUSDValue(address _subAccount, LYFDiamondStorage storage lyfDs)
+    internal
+    view
+    returns (uint256 _totalBorrowedUSDValue)
+  {
+    LibUIntDoublyLinkedList.Node[] memory _borrowed = lyfDs.subAccountDebtShares[_subAccount].getAll();
+
+    uint256 _borrowedLength = _borrowed.length;
+    address _debtToken;
+
+    for (uint256 _i; _i < _borrowedLength; ) {
+      _debtToken = lyfDs.debtShareTokens[_borrowed[_i].index];
+
+      // _totalBorrowedUSDValue += _borrowedAmount * tokenPrice
+      _totalBorrowedUSDValue += LibFullMath.mulDiv(
+        LibShareUtil.shareToValue(
+          _borrowed[_i].amount,
+          lyfDs.debtValues[_borrowed[_i].index],
+          lyfDs.debtShares[_borrowed[_i].index]
+        ) * lyfDs.tokenConfigs[_debtToken].to18ConversionFactor,
+        getPriceUSD(_debtToken, lyfDs),
+        1e18
+      );
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256 _price) {
     if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
       (_price, ) = lyfDs.oracle.lpToDollar(1e18, _token);
