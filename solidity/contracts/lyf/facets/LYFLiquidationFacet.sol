@@ -437,13 +437,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualToRepay) {
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtShareId];
     uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
     // Note: precision loss 1 wei when convert share back to value
-    uint256 _debtValue = LibShareUtil.shareToValue(
-      _debtShare,
-      lyfDs.debtValues[_debtShareId],
-      lyfDs.debtShares[_debtShareId]
-    );
+    uint256 _debtValue = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
 
     _actualToRepay = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
@@ -488,11 +485,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    uint256 _shareToRepay = LibShareUtil.valueToShare(
-      _repayAmount,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtShareId];
+    uint256 _shareToRepay = LibShareUtil.valueToShare(_repayAmount, debtPoolInfo.totalShare, debtPoolInfo.totalValue);
 
     LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToRepay, _repayAmount, lyfDs);
   }

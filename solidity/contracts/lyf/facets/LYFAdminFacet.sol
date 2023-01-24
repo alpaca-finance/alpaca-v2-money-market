@@ -112,20 +112,21 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _debtShareId
   ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtShareId];
 
     // validate token must not already set
     // validate if token exist but different lp
     // _debtShareId can't be 0 or max uint
     if (
       lyfDs.debtShareIds[_token][_lpToken] != 0 ||
-      (lyfDs.debtShareTokens[_debtShareId] != address(0) && lyfDs.debtShareTokens[_debtShareId] != _token) ||
+      (debtPoolInfo.token != address(0) && debtPoolInfo.token != _token) ||
       _debtShareId == 0 ||
       _debtShareId == type(uint256).max
     ) {
       revert LYFAdminFacet_BadDebtShareId();
     }
     lyfDs.debtShareIds[_token][_lpToken] = _debtShareId;
-    lyfDs.debtShareTokens[_debtShareId] = _token;
+    debtPoolInfo.token = _token;
 
     emit LogSetDebtShareId(_token, _lpToken, _debtShareId);
   }
@@ -136,7 +137,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
     // sanity check
     IInterestRateModel(_interestModel).getInterestRate(1, 1);
 
-    lyfDs.interestModels[_debtShareId] = _interestModel;
+    lyfDs.debtPoolInfos[_debtShareId].interestModel = _interestModel;
+
     emit LogSetDebtInterestModel(_debtShareId, _interestModel);
   }
 
