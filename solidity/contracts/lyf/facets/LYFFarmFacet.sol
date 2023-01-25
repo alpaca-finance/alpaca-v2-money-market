@@ -317,15 +317,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
       debtPoolInfo.totalShare
     );
 
-    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
+    // transfer repay amount, allow fee on transfer tokens
+    uint256 _actualReceived = LibLYF01.unsafePullTokens(_token, msg.sender, _actualRepayAmount);
 
-    // transfer only amount to repay
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _actualRepayAmount);
-
-    // handle if transfer from has fee
-    uint256 _actualReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
-
-    // if transfer has fee then we should repay debt = we received
+    // repay by amount received if received less than expected aka. transfer has fee
     if (_actualReceived != _actualRepayAmount) {
       _actualRepayAmount = _actualReceived;
       _actualShareToRepay = LibShareUtil.valueToShare(

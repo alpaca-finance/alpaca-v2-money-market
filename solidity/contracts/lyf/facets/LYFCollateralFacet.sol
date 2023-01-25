@@ -61,7 +61,8 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
 
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    // revert if amount received != expected amount (_amount)
+    LibLYF01.pullExactTokens(_token, msg.sender, _amount);
 
     LibLYF01.addCollat(_subAccount, _token, _amount, lyfDs);
 
