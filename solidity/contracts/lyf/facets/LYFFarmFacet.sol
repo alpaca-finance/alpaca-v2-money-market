@@ -22,13 +22,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogRemoveDebt(
-    address indexed _subAccount,
-    uint256 indexed _debtPoolId,
-    uint256 _removeDebtShare,
-    uint256 _removeDebtAmount
-  );
-
   event LogAddFarmPosition(
     address indexed _account,
     uint256 indexed _subAccountId,
@@ -36,7 +29,13 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _lpAmount
   );
 
-  event LogRepay(address indexed _subAccount, address _token, address _caller, uint256 _actualRepayAmount);
+  event LogRepay(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address _token,
+    address _caller,
+    uint256 _actualRepayAmount
+  );
 
   event LogRepayWithCollat(
     address indexed _account,
@@ -294,31 +293,34 @@ contract LYFFarmFacet is ILYFFarmFacet {
   function repay(
     address _account,
     uint256 _subAccountId,
-    address _token,
+    address _debtToken,
     address _lpToken,
     uint256 _debtShareToRepay
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
+    uint256 _debtPoolId = lyfDs.debtPoolIds[_debtToken][_lpToken];
 
+    // must use storage because interest accrual increase totalValue
     LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
+    // only need to accrue debtPool that is being repaid
     LibLYF01.accrueDebtPoolInterest(_debtPoolId, lyfDs);
 
-    // calculate debt as much as possible
-    uint256 _subAccountDebtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
-    uint256 _actualShareToRepay = LibFullMath.min(_debtShareToRepay, _subAccountDebtShare);
-
+    // cap repay to max debt
+    uint256 _actualShareToRepay = LibFullMath.min(
+      _debtShareToRepay,
+      lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId)
+    );
     uint256 _actualRepayAmount = LibShareUtil.shareToValue(
       _actualShareToRepay,
       debtPoolInfo.totalValue,
       debtPoolInfo.totalShare
     );
 
-    // transfer repay amount, allow fee on transfer tokens
-    uint256 _actualReceived = LibLYF01.unsafePullTokens(_token, msg.sender, _actualRepayAmount);
+    // transfer repay amount in, allow fee on transfer tokens
+    uint256 _actualReceived = LibLYF01.unsafePullTokens(_debtToken, msg.sender, _actualRepayAmount);
 
     // repay by amount received if received less than expected aka. transfer has fee
     if (_actualReceived != _actualRepayAmount) {
@@ -334,10 +336,10 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _removeDebtAndValidate(_subAccount, _debtPoolId, _actualShareToRepay, _actualRepayAmount, lyfDs);
 
       // update reserves of the token. This will impact the outstanding balance
-      lyfDs.reserves[_token] += _actualRepayAmount;
+      lyfDs.reserves[_debtToken] += _actualRepayAmount;
     }
 
-    emit LogRepay(_subAccount, _token, msg.sender, _actualRepayAmount);
+    emit LogRepay(_account, _subAccountId, _debtToken, msg.sender, _actualRepayAmount);
   }
 
   function reinvest(address _lpToken) external nonReentrant {
