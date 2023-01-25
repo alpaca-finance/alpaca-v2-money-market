@@ -95,7 +95,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: 30 ether,
       desireToken1Amount: 30 ether,
-      token0ToBorrow: 30 ether,
+      token0ToBorrow: 0,
       token1ToBorrow: 30 ether,
       token0AmountIn: 0,
       token1AmountIn: 0
@@ -260,7 +260,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: 30 ether,
       desireToken1Amount: 30 ether,
-      token0ToBorrow: 30 ether,
+      token0ToBorrow: 0,
       token1ToBorrow: 30 ether,
       token0AmountIn: 0,
       token1AmountIn: 0
@@ -336,7 +336,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: 30 ether,
       desireToken1Amount: 30 ether,
-      token0ToBorrow: 30 ether,
+      token0ToBorrow: 0,
       token1ToBorrow: 30 ether,
       token0AmountIn: 0,
       token1AmountIn: 0
@@ -408,7 +408,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: 30 ether,
       desireToken1Amount: 30 ether,
-      token0ToBorrow: 30 ether,
+      token0ToBorrow: 0,
       token1ToBorrow: 30 ether,
       token0AmountIn: 0,
       token1AmountIn: 0

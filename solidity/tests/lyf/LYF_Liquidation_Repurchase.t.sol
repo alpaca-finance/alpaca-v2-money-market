@@ -65,7 +65,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: 30 ether,
       desireToken1Amount: 30 ether,
-      token0ToBorrow: 30 ether,
+      token0ToBorrow: 0,
       token1ToBorrow: 30 ether,
       token0AmountIn: 0,
       token1AmountIn: 0
@@ -119,7 +119,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     address _lpToken = address(wethUsdcLPToken);
     uint256 _amountToRepurchase = 40 ether;
 
-    vm.prank(ALICE);
+    vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
@@ -133,6 +133,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       token1AmountIn: 0
     });
     farmFacet.newAddFarmPosition(_input);
+    vm.stopPrank();
 
     uint256 _bobBtcBalanceBefore = btc.balanceOf(BOB);
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
@@ -201,7 +202,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: 30 ether,
       desireToken1Amount: 30 ether,
-      token0ToBorrow: 30 ether,
+      token0ToBorrow: 0,
       token1ToBorrow: 30 ether,
       token0AmountIn: 0,
       token1AmountIn: 0

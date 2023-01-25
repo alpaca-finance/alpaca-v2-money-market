@@ -35,7 +35,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: _desiredWeth,
       desireToken1Amount: _desiredUsdc,
-      token0ToBorrow: 0,
+      token0ToBorrow: _desiredWeth - _wethAmountDirect,
       token1ToBorrow: 0,
       token0AmountIn: _wethAmountDirect,
       token1AmountIn: _usdcAmountDirect
@@ -90,7 +90,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       minLpReceive: 0,
       desireToken0Amount: _desiredWeth,
       desireToken1Amount: _desiredUsdc,
-      token0ToBorrow: 0,
+      token0ToBorrow: _desiredWeth - _wethAmountDirect,
       token1ToBorrow: 0,
       token0AmountIn: _wethAmountDirect,
       token1AmountIn: _usdcAmountDirect
@@ -157,7 +157,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     masterChef.setReward(_lpConfig.poolId, lyfDiamond, 20 ether);
 
     // ALICE deposit another 30 lp
-    vm.prank(ALICE);
+    vm.startPrank(ALICE);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
     _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
@@ -171,6 +171,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       token1AmountIn: _aliceLpAmount
     });
     farmFacet.newAddFarmPosition(_input);
+    vm.stopPrank();
 
     // To make LP fair pending reward is reinvestd before calcualting alice's share
     // 20 reward token can compose to LP = 10
