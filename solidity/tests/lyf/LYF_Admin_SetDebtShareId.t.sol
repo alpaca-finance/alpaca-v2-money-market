@@ -12,23 +12,23 @@ contract LYF_Admin_SetDebtShareIdTest is LYF_BaseTest {
   }
 
   function testRevert_WhenAdminSetDebtShareIdThatHasBeenSet_ShouldRevert() external {
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(weth), address(wethUsdcLPToken), 1);
   }
 
   function testRevert_WhenAdminSetDebtShareIdForDifferentToken_ShouldRevert() external {
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(usdc), address(8888), 1);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(usdc), address(8888), 1);
   }
 
   function testCorrectness_WhenAdminSetDebtShareIdForSameToken_ShouldWork() external {
-    adminFacet.setDebtShareId(address(weth), address(8888), 1);
+    adminFacet.setDebtPoolId(address(weth), address(8888), 1);
   }
 
   function testRevert_WhenAdminSetInvalidDebtShareId() external {
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(usdc), address(8888), 0);
-    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtShareId.selector);
-    adminFacet.setDebtShareId(address(usdc), address(8888), type(uint256).max);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(usdc), address(8888), 0);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_BadDebtPoolId.selector);
+    adminFacet.setDebtPoolId(address(usdc), address(8888), type(uint256).max);
   }
 }

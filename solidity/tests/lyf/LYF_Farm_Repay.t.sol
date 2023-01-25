@@ -29,7 +29,7 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserRepay_SubaccountDebtShouldDecrease() external {
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
 
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
@@ -75,7 +75,8 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     // warp time to make share value changed
     // before debt share = 20, debt value = 20
     vm.warp(block.timestamp + 10);
-    uint256 _wethPendingInterest = viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken));
+    uint256 _wethUsdcLPDebtPoolId = viewFacet.getDebtPoolIdOf(address(weth), address(wethUsdcLPToken));
+    uint256 _wethPendingInterest = viewFacet.getDebtPoolPendingInterest(_wethUsdcLPDebtPoolId);
     uint256 _wethProtocolReserveBefore = viewFacet.getProtocolReserveOf(address(weth));
     uint256 _wethOutstandingBefore = viewFacet.getOutstandingBalanceOf(address(weth));
 

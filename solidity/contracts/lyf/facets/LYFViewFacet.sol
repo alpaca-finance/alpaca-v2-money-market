@@ -67,22 +67,24 @@ contract LYFViewFacet is ILYFViewFacet {
     _debtAmount = lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token);
   }
 
-  function getDebtForLpToken(address _token, address _lpToken) external view returns (uint256, uint256) {
+  function getDebtPoolIdOf(address _token, address _lpToken) external view returns (uint256 _debtPoolId) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return (lyfDs.debtShares[_debtShareId], lyfDs.debtValues[_debtShareId]);
+    _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
   }
 
-  function getTokenDebtValue(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYF01.DebtPoolInfo memory) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtValues[_debtShareId];
+    return lyfDs.debtPoolInfos[_debtPoolId];
   }
 
-  function getTokenDebtShare(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolTotalValue(uint256 _debtPoolId) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtShares[_debtShareId];
+    return lyfDs.debtPoolInfos[_debtPoolId].totalValue;
+  }
+
+  function getDebtPoolTotalShare(uint256 _debtPoolId) external view returns (uint256) {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    return lyfDs.debtPoolInfos[_debtPoolId].totalShare;
   }
 
   function getSubAccountDebt(
@@ -94,10 +96,11 @@ contract LYFViewFacet is ILYFViewFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
+    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
-    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
-    _debtAmount = LibShareUtil.shareToValue(_debtShare, lyfDs.debtValues[_debtShareId], lyfDs.debtShares[_debtShareId]);
+    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
   }
 
   function getAllSubAccountDebtShares(address _account, uint256 _subAccountId)
@@ -114,22 +117,21 @@ contract LYFViewFacet is ILYFViewFacet {
     return subAccountDebtShares.getAll();
   }
 
-  function getDebtLastAccrueTime(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolLastAccruedAt(uint256 _debtPoolId) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
-    return lyfDs.debtLastAccrueTime[_debtShareId];
+    return lyfDs.debtPoolInfos[_debtPoolId].lastAccruedAt;
   }
 
-  function getPendingInterest(address _token, address _lpToken) external view returns (uint256) {
+  function getDebtPoolPendingInterest(uint256 _debtPoolId) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    uint256 _debtShareId = lyfDs.debtShareIds[_token][_lpToken];
+    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     return
-      LibLYF01.getDebtSharePendingInterest(
+      LibLYF01.getDebtPoolPendingInterest(
         lyfDs.moneyMarket,
-        lyfDs.interestModels[_debtShareId],
-        lyfDs.debtShareTokens[_debtShareId],
-        block.timestamp - lyfDs.debtLastAccrueTime[_debtShareId],
-        lyfDs.debtValues[_debtShareId]
+        debtPoolInfo.interestModel,
+        debtPoolInfo.token,
+        block.timestamp - debtPoolInfo.lastAccruedAt,
+        debtPoolInfo.totalValue
       );
   }
 

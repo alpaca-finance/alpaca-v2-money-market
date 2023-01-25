@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
 interface ILYFAdminFacet {
-  error LYFAdminFacet_BadDebtShareId();
+  error LYFAdminFacet_BadDebtPoolId();
   error LYFAdminFacet_ReserveTooLow();
   error LYFAdminFacet_NotEnoughToken();
 
@@ -35,13 +35,13 @@ interface ILYFAdminFacet {
 
   function setLPConfigs(LPConfigInput[] calldata _configs) external;
 
-  function setDebtShareId(
+  function setDebtPoolId(
     address _token,
     address _lpToken,
-    uint256 _debtShareId
+    uint256 _debtPoolId
   ) external;
 
-  function setDebtInterestModel(uint256 _debtShareId, address _interestModel) external;
+  function setDebtPoolInterestModel(uint256 _debtPoolId, address _interestModel) external;
 
   function setMinDebtSize(uint256 _newValue) external;
 

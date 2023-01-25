@@ -115,8 +115,8 @@ library LYFDiamondDeployer {
     selectors[1] = LYFAdminFacet.setTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
     selectors[3] = LYFAdminFacet.setLPConfigs.selector;
-    selectors[4] = LYFAdminFacet.setDebtShareId.selector;
-    selectors[5] = LYFAdminFacet.setDebtInterestModel.selector;
+    selectors[4] = LYFAdminFacet.setDebtPoolId.selector;
+    selectors[5] = LYFAdminFacet.setDebtPoolInterestModel.selector;
     selectors[6] = LYFAdminFacet.setReinvestorsOk.selector;
     selectors[7] = LYFAdminFacet.setLiquidationStratsOk.selector;
     selectors[8] = LYFAdminFacet.setLiquidatorsOk.selector;
@@ -203,7 +203,7 @@ library LYFDiamondDeployer {
   {
     _viewFacet = new LYFViewFacet();
 
-    _selectors = new bytes4[](23);
+    _selectors = new bytes4[](24);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
     _selectors[2] = LYFViewFacet.getLpTokenAmount.selector;
@@ -212,13 +212,13 @@ library LYFDiamondDeployer {
     _selectors[5] = LYFViewFacet.getTokenCollatAmount.selector;
     _selectors[6] = LYFViewFacet.getSubAccountTokenCollatAmount.selector;
     _selectors[7] = LYFViewFacet.getMMDebt.selector;
-    _selectors[8] = LYFViewFacet.getDebtForLpToken.selector;
-    _selectors[9] = LYFViewFacet.getTokenDebtValue.selector;
-    _selectors[10] = LYFViewFacet.getTokenDebtShare.selector;
+    _selectors[8] = LYFViewFacet.getDebtPoolInfo.selector;
+    _selectors[9] = LYFViewFacet.getDebtPoolTotalValue.selector;
+    _selectors[10] = LYFViewFacet.getDebtPoolTotalShare.selector;
     _selectors[11] = LYFViewFacet.getSubAccountDebt.selector;
     _selectors[12] = LYFViewFacet.getAllSubAccountDebtShares.selector;
-    _selectors[13] = LYFViewFacet.getDebtLastAccrueTime.selector;
-    _selectors[14] = LYFViewFacet.getPendingInterest.selector;
+    _selectors[13] = LYFViewFacet.getDebtPoolLastAccruedAt.selector;
+    _selectors[14] = LYFViewFacet.getDebtPoolPendingInterest.selector;
     _selectors[15] = LYFViewFacet.getPendingReward.selector;
     _selectors[16] = LYFViewFacet.getTotalBorrowingPower.selector;
     _selectors[17] = LYFViewFacet.getTotalUsedBorrowingPower.selector;
@@ -227,6 +227,7 @@ library LYFDiamondDeployer {
     _selectors[20] = LYFViewFacet.getOutstandingBalanceOf.selector;
     _selectors[21] = LYFViewFacet.getProtocolReserveOf.selector;
     _selectors[22] = LYFViewFacet.getSubAccount.selector;
+    _selectors[23] = LYFViewFacet.getDebtPoolIdOf.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),
