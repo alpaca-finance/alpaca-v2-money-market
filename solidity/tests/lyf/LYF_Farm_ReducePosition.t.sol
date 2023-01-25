@@ -45,14 +45,14 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP,
       token1ToBorrow: _usdcToAddLP,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
@@ -107,14 +107,14 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP,
       token1ToBorrow: _usdcToAddLP,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
@@ -176,14 +176,14 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP - _wethCollatAmount,
       token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // mock remove liquidity will return token0: 15 ether and token1: 15 ether
@@ -212,14 +212,14 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP,
       token1ToBorrow: _usdcToAddLP,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -252,14 +252,14 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP,
       token1ToBorrow: _usdcToAddLP,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     vm.stopPrank();
 

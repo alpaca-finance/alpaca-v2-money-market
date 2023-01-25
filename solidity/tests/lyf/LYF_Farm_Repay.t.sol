@@ -44,14 +44,14 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP - _wethCollatAmount,
       token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
@@ -152,14 +152,14 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP - _wethCollatAmount,
       token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // assume that every coin is 1 dollar and lp = 2 dollar

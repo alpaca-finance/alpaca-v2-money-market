@@ -33,14 +33,14 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _desiredWeth,
-      desireToken1Amount: _desiredUsdc,
+      desiredToken0Amount: _desiredWeth,
+      desiredToken1Amount: _desiredUsdc,
       token0ToBorrow: _desiredWeth - _wethAmountDirect,
       token1ToBorrow: 0,
       token0AmountIn: _wethAmountDirect,
       token1AmountIn: _usdcAmountDirect
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     (uint256 _lpBalance, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
 
@@ -88,14 +88,14 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _desiredWeth,
-      desireToken1Amount: _desiredUsdc,
+      desiredToken0Amount: _desiredWeth,
+      desiredToken1Amount: _desiredUsdc,
       token0ToBorrow: _desiredWeth - _wethAmountDirect,
       token1ToBorrow: 0,
       token0AmountIn: _wethAmountDirect,
       token1AmountIn: _usdcAmountDirect
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     (uint256 _lpBalance, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
 
@@ -114,7 +114,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
 
     //BOB add more LP to subaccount
     vm.prank(BOB);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     // no reinvest, pending reward not reset
     assertGt(viewFacet.getPendingReward(address(wethUsdcLPToken)), 0);
@@ -137,14 +137,14 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _bobLpAmount,
-      desireToken0Amount: _bobLpAmount,
-      desireToken1Amount: _bobLpAmount,
+      desiredToken0Amount: _bobLpAmount,
+      desiredToken1Amount: _bobLpAmount,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: _bobLpAmount,
       token1AmountIn: _bobLpAmount
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
@@ -163,14 +163,14 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _aliceLpAmount,
-      desireToken0Amount: _aliceLpAmount,
-      desireToken1Amount: _aliceLpAmount,
+      desiredToken0Amount: _aliceLpAmount,
+      desiredToken1Amount: _aliceLpAmount,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: _aliceLpAmount,
       token1AmountIn: _aliceLpAmount
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // To make LP fair pending reward is reinvestd before calcualting alice's share
@@ -214,14 +214,14 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _bobLpAmount,
-      desireToken0Amount: _bobLpAmount,
-      desireToken1Amount: _bobLpAmount,
+      desiredToken0Amount: _bobLpAmount,
+      desiredToken1Amount: _bobLpAmount,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: _bobLpAmount,
       token1AmountIn: _bobLpAmount
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // BOB frist deposit lp, lpShare = lpValue = depositAmount = 50
@@ -235,14 +235,14 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _aliceLpAmount,
-      desireToken0Amount: _aliceLpAmount,
-      desireToken1Amount: _aliceLpAmount,
+      desiredToken0Amount: _aliceLpAmount,
+      desiredToken1Amount: _aliceLpAmount,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: _aliceLpAmount,
       token1AmountIn: _aliceLpAmount
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // bob shares = 50

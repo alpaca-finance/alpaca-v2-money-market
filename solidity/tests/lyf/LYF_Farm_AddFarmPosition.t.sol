@@ -35,8 +35,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
   function _testAddFarmSuccess(
     string memory testcaseName,
     address user,
-    uint256 desireToken0Amount,
-    uint256 desireToken1Amount,
+    uint256 desiredToken0Amount,
+    uint256 desiredToken1Amount,
     uint256 token0ToBorrow,
     uint256 token1ToBorrow,
     uint256 token0AmountIn,
@@ -54,8 +54,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: desireToken0Amount,
-      desireToken1Amount: desireToken1Amount,
+      desiredToken0Amount: desiredToken0Amount,
+      desiredToken1Amount: desiredToken1Amount,
       token0ToBorrow: token0ToBorrow,
       token1ToBorrow: token1ToBorrow,
       token0AmountIn: token0AmountIn,
@@ -63,7 +63,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     });
 
     vm.prank(user);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     // check debt
     (, stateBefore.wethDebtAmount) = viewFacet.getSubAccountDebt(
@@ -94,7 +94,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     );
 
     // check collat
-    uint256 _wethToRemove = desireToken0Amount - token0ToBorrow - token0AmountIn;
+    uint256 _wethToRemove = desiredToken0Amount - token0ToBorrow - token0AmountIn;
     uint256 _actualWethRemoved = LibFullMath.min(_wethToRemove, stateBefore.wethCollat);
     assertEq(
       stateBefore.wethCollat - viewFacet.getSubAccountTokenCollatAmount(user, subAccount0, address(weth)),
@@ -103,7 +103,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     );
     assertEq(
       stateBefore.usdcCollat - viewFacet.getSubAccountTokenCollatAmount(user, subAccount0, address(usdc)),
-      desireToken1Amount - token1ToBorrow - token1AmountIn,
+      desiredToken1Amount - token1ToBorrow - token1AmountIn,
       string.concat(testcaseName, ": usdc collat")
     );
     assertEq(
@@ -113,7 +113,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     );
     assertEq(
       viewFacet.getSubAccountTokenCollatAmount(user, subAccount0, address(wethUsdcLPToken)) - stateBefore.lpCollat,
-      (desireToken0Amount + desireToken1Amount) / 2, // mockRouter return this
+      (desiredToken0Amount + desiredToken1Amount) / 2, // mockRouter return this
       string.concat(testcaseName, ": lp collat")
     );
   }
@@ -200,8 +200,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1 ether,
-      desireToken1Amount: 1 ether,
+      desiredToken0Amount: 1 ether,
+      desiredToken1Amount: 1 ether,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: 1 ether,
@@ -209,7 +209,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     });
 
     vm.prank(ALICE);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
     (uint256 _depositedLP, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
@@ -221,8 +221,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1,
-      desireToken1Amount: 0,
+      desiredToken0Amount: 1,
+      desiredToken1Amount: 0,
       token0ToBorrow: 1,
       token1ToBorrow: 0,
       token0AmountIn: 1,
@@ -231,7 +231,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     vm.prank(ALICE);
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_BadInput.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 
   function testRevert_WhenAddFarmPositionNotEnoughCollat_ShouldFailCollatAmountCheck() public {
@@ -239,8 +239,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1 ether,
-      desireToken1Amount: 0,
+      desiredToken0Amount: 1 ether,
+      desiredToken1Amount: 0,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: 0,
@@ -251,13 +251,13 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     // no collat
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     // only normal collat but not enough
     uint256 snapshot = vm.snapshot();
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 0.5 ether);
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.revertTo(snapshot);
 
     // only ib collat but not enough
@@ -265,7 +265,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     moneyMarket.deposit(address(weth), 1 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 0.5 ether);
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.revertTo(snapshot);
 
     // not enough normal and ib collat
@@ -274,14 +274,14 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     moneyMarket.deposit(address(weth), 1 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 0.5 ether);
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     vm.revertTo(snapshot);
 
     // enough collat for token0 but not for token1
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
-    _input.desireToken1Amount = 1 ether;
+    _input.desiredToken1Amount = 1 ether;
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 
   function testRevert_WhenAddFarmPositionBorrowLessThanMinDebtSize_ShouldFailMinDebtSizeCheck() public {
@@ -292,8 +292,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1 ether,
-      desireToken1Amount: 0,
+      desiredToken0Amount: 1 ether,
+      desiredToken1Amount: 0,
       token0ToBorrow: 0.4 ether,
       token1ToBorrow: 0,
       token0AmountIn: 0,
@@ -303,7 +303,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     vm.prank(ALICE);
     // minDebtSize 0.5 USD, borrow weth value 0.4 USD
     vm.expectRevert(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 
   function testRevert_WhenAddFarmPositionBorrowingPowerDecrease_ShouldFailHealthCheck() public {
@@ -332,8 +332,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1 ether,
-      desireToken1Amount: 0,
+      desiredToken0Amount: 1 ether,
+      desiredToken1Amount: 0,
       token0ToBorrow: 1 ether,
       token1ToBorrow: 0,
       token0AmountIn: 0,
@@ -343,9 +343,9 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 0.35 ether);
     // create debt
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
-    _input.desireToken0Amount = 0.35 ether;
+    _input.desiredToken0Amount = 0.35 ether;
     _input.token0ToBorrow = 0;
     // borrowing power = amount * collatFactor * price
     // total borrowing power before = weth + lp = 0.35 * 0.9 * 1 + 0.5 * 0.8 * 2 = 1.115 USD
@@ -353,7 +353,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     // used borrowing power = amount / borrowingFactor * price = 1 / 0.9 * 1 = 1.111.. USD
     // borrowing power after < used borrowing power should revert
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_BorrowingPowerTooLow.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 
   function testRevert_WhenAddFarmPositionUsedBorrowingPowerIncrease_ShouldFailHealthCheck() public {
@@ -361,8 +361,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1 ether,
-      desireToken1Amount: 0,
+      desiredToken0Amount: 1 ether,
+      desiredToken1Amount: 0,
       token0ToBorrow: 1 ether,
       token1ToBorrow: 0,
       token0AmountIn: 0,
@@ -374,12 +374,12 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     // borrow only
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_BorrowingPowerTooLow.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     // borrow + collat
     _input.token0ToBorrow = 0.9 ether;
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_BorrowingPowerTooLow.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 
   function testCorrectness_WhenAddFarmPosition_ShouldBorrowMMIfReserveNotEnough() public {
@@ -391,29 +391,29 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 10 ether,
-      desireToken1Amount: 0,
+      desiredToken0Amount: 10 ether,
+      desiredToken1Amount: 0,
       token0ToBorrow: 10 ether,
       token1ToBorrow: 0,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     farmFacet.repay(ALICE, subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
 
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 10 ether);
 
     // next addFarmPosition should use reserve instead of borrowing from mm
-    _input.desireToken0Amount = 6 ether;
+    _input.desiredToken0Amount = 6 ether;
     _input.token0ToBorrow = 6 ether;
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     // 6 ether should be borrowed from reserve so 4 left
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
 
     // next addFarmPosition should not use reserve but borrow more from mm
     // because desiredAmount > reserve
     uint256 _mmDebtBefore = viewFacet.getMMDebt(address(weth));
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
     assertEq(viewFacet.getMMDebt(address(weth)) - _mmDebtBefore, 6 ether);
   }
@@ -429,8 +429,8 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: 1 ether,
-      desireToken1Amount: 1 ether,
+      desiredToken0Amount: 1 ether,
+      desiredToken1Amount: 1 ether,
       token0ToBorrow: 1 ether,
       token1ToBorrow: 1 ether,
       token0AmountIn: 0,
@@ -438,7 +438,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     });
     // revert because try to borrow 2 tokens
     vm.expectRevert(LibLYF01.LibLYF01_NumberOfTokenExceedLimit.selector);
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 
   function testCorrectness_WhenRepayAndBorrowMoreWithTotalBorrowEqualMaxNumOfDebtPerSubAccount_ShouldWork() external {
@@ -460,14 +460,14 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP,
       token1ToBorrow: _usdcToAddLP,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     // repay all debt
     farmFacet.repay(BOB, subAccount0, address(weth), address(wethUsdcLPToken), type(uint256).max);
@@ -476,10 +476,10 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     // borrow btc and usdc
     _input.lpToken = address(btcUsdcLPToken);
-    _input.desireToken0Amount = _btcToAddLP;
-    _input.desireToken1Amount = _usdcToAddLP;
+    _input.desiredToken0Amount = _btcToAddLP;
+    _input.desiredToken1Amount = _usdcToAddLP;
     _input.token0ToBorrow = _btcToAddLP;
     _input.token1ToBorrow = _usdcToAddLP;
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
   }
 }

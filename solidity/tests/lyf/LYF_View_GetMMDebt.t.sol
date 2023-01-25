@@ -26,14 +26,14 @@ contract LYF_Farm_GetMMDebtTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
-      desireToken0Amount: _wethToAddLP,
-      desireToken1Amount: _usdcToAddLP,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
       token0ToBorrow: _wethToAddLP,
       token1ToBorrow: _usdcToAddLP,
       token0AmountIn: 0,
       token1AmountIn: 0
     });
-    farmFacet.newAddFarmPosition(_input);
+    farmFacet.addFarmPosition(_input);
 
     vm.stopPrank();
 

@@ -90,7 +90,7 @@ library LYFDiamondDeployer {
     LYFFarmFacet _farmFacet = new LYFFarmFacet();
 
     bytes4[] memory selectors = new bytes4[](6);
-    selectors[0] = LYFFarmFacet.newAddFarmPosition.selector;
+    selectors[0] = LYFFarmFacet.addFarmPosition.selector;
     selectors[1] = LYFFarmFacet.repay.selector;
     selectors[2] = LYFFarmFacet.accrueInterest.selector;
     selectors[3] = LYFFarmFacet.reducePosition.selector;
