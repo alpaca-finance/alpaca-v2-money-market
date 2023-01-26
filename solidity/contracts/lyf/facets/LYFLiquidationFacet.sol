@@ -84,8 +84,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address subAccount;
     address token0;
     address token1;
-    uint256 debtShareId0;
-    uint256 debtShareId1;
+    uint256 debtPoolId0;
+    uint256 debtPoolId1;
     uint256 token0Return;
     uint256 token1Return;
     uint256 actualAmount0ToRepay;
@@ -111,7 +111,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    uint256 _debtShareId = lyfDs.debtShareIds[_debtToken][_lpToken];
+    uint256 _debtPoolId = lyfDs.debtPoolIds[_debtToken][_lpToken];
 
     // accrue interest for all debt tokens which are under subaccount
     LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
@@ -205,7 +205,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     }
 
     address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    uint256 _debtShareId = lyfDs.debtShareIds[_repayToken][_lpToken];
+    uint256 _debtPoolId = lyfDs.debtPoolIds[_repayToken][_lpToken];
 
     LibLYF01.accrueDebtSharesOf(_subAccount, lyfDs);
 
@@ -223,7 +223,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       repayToken: _repayToken,
       collatToken: _collatToken,
       repayAmount: _repayAmount,
-      debtShareId: _debtShareId,
+      debtShareId: _debtPoolId,
       minReceive: _minReceive
     });
 
@@ -380,8 +380,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     vars.token0 = ISwapPairLike(_lpToken).token0();
     vars.token1 = ISwapPairLike(_lpToken).token1();
 
-    vars.debtShareId0 = lyfDs.debtShareIds[vars.token0][_lpToken];
-    vars.debtShareId1 = lyfDs.debtShareIds[vars.token1][_lpToken];
+    vars.debtPoolId0 = lyfDs.debtPoolIds[vars.token0][_lpToken];
+    vars.debtPoolId1 = lyfDs.debtPoolIds[vars.token1][_lpToken];
 
     LibLYF01.accrueDebtSharesOf(vars.subAccount, lyfDs);
 
@@ -406,7 +406,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // 3. repay what we can and add remaining to collat
     (vars.actualAmount0ToRepay, vars.remainingAmount0AfterRepay) = _repayAndAddRemainingToCollat(
       vars.subAccount,
-      vars.debtShareId0,
+      vars.debtPoolId0,
       vars.token0,
       _amount0ToRepay,
       vars.token0Return,
@@ -414,7 +414,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
     (vars.actualAmount1ToRepay, vars.remainingAmount1AfterRepay) = _repayAndAddRemainingToCollat(
       vars.subAccount,
-      vars.debtShareId1,
+      vars.debtPoolId1,
       vars.token1,
       _amount1ToRepay,
       vars.token1Return,
@@ -436,19 +436,19 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
   function _repayAndAddRemainingToCollat(
     address _subAccount,
-    uint256 _debtShareId,
+    uint256 _debtPoolId,
     address _token,
     uint256 _amountToRepay,
     uint256 _amountAvailable,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualAmountToRepay, uint256 _remainingAmountAfterRepay) {
     // repay what we can
-    _actualAmountToRepay = _getActualRepayAmount(_subAccount, _debtShareId, _amountToRepay, lyfDs);
+    _actualAmountToRepay = _getActualRepayAmount(_subAccount, _debtPoolId, _amountToRepay, lyfDs);
     _actualAmountToRepay = _actualAmountToRepay > _amountAvailable ? _amountAvailable : _actualAmountToRepay;
 
     if (_actualAmountToRepay > 0) {
       uint256 _feeToTreasury = (_actualAmountToRepay * LIQUIDATION_FEE_BPS) / 10000;
-      _removeDebtByAmount(_subAccount, _debtShareId, _actualAmountToRepay - _feeToTreasury, lyfDs);
+      _removeDebtByAmount(_subAccount, _debtPoolId, _actualAmountToRepay - _feeToTreasury, lyfDs);
       // transfer fee to treasury
       IERC20(_token).safeTransfer(lyfDs.treasury, _feeToTreasury);
     }
@@ -463,17 +463,14 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   /// @dev min(amountToRepurchase, debtValue)
   function _getActualRepayAmount(
     address _subAccount,
-    uint256 _debtShareId,
+    uint256 _debtPoolId,
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualToRepay) {
-    uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     // Note: precision loss 1 wei when convert share back to value
-    uint256 _debtValue = LibShareUtil.shareToValue(
-      _debtShare,
-      lyfDs.debtValues[_debtShareId],
-      lyfDs.debtShares[_debtShareId]
-    );
+    uint256 _debtValue = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
 
     _actualToRepay = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
@@ -520,17 +517,14 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
   function _removeDebtByAmount(
     address _subAccount,
-    uint256 _debtShareId,
+    uint256 _debtPoolId,
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    uint256 _shareToRepay = LibShareUtil.valueToShare(
-      _repayAmount,
-      lyfDs.debtShares[_debtShareId],
-      lyfDs.debtValues[_debtShareId]
-    );
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    uint256 _shareToRepay = LibShareUtil.valueToShare(_repayAmount, debtPoolInfo.totalShare, debtPoolInfo.totalValue);
 
-    LibLYF01.removeDebt(_subAccount, _debtShareId, _shareToRepay, _repayAmount, lyfDs);
+    LibLYF01.removeDebt(_subAccount, _debtPoolId, _shareToRepay, _repayAmount, lyfDs);
   }
 
   function _getActualRepayAmountWithFee(

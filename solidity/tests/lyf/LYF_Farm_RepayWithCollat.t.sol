@@ -30,7 +30,7 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserRepayWithCollat_SubaccountShouldDecreased() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -67,11 +67,8 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     vm.warp(block.timestamp + 25);
 
     // timepast * interest rate * debt value = 25 * 0.01 * 20 = 5
-    assertEq(
-      viewFacet.getPendingInterest(address(weth), address(wethUsdcLPToken)),
-      5 ether,
-      "expected interest is not match"
-    );
+    uint256 _wethUsdcLPDebtPoolId = viewFacet.getDebtPoolIdOf(address(weth), address(wethUsdcLPToken));
+    assertEq(viewFacet.getDebtPoolPendingInterest(_wethUsdcLPDebtPoolId), 5 ether, "expected interest is not match");
 
     vm.startPrank(BOB);
     // add more collat for repay
@@ -112,8 +109,8 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserRepayWithCollat_RemainingDebtBelowMinDebtSize_ShouldRevert() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
 
     adminFacet.setMinDebtSize(20 ether);
     uint256 _wethToAddLP = 40 ether;
@@ -147,7 +144,7 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
   function testRevert_WhenUserRepayMoreThanCollat() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -169,7 +166,7 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
   function testRevert_WhenUserRepayNonCollateralAsset() external {
     // remove interest for convienice of test
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.01 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;

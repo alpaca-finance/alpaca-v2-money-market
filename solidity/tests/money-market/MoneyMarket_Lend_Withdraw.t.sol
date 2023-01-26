@@ -195,7 +195,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
 
     // check mm state
     assertEq(viewFacet.getGlobalPendingInterest(_token), 0);
-    assertEq(viewFacet.getDebtLastAccrueTime(_token), block.timestamp);
+    assertEq(viewFacet.getDebtLastAccruedAt(_token), block.timestamp);
     assertEq(viewFacet.getTotalToken(_token), 1.809 ether);
     assertEq(viewFacet.getTotalTokenWithPendingInterest(_token), 1.809 ether);
   }

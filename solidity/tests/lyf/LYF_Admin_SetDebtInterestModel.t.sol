@@ -14,17 +14,17 @@ contract LYF_Admin_SetDebtInterestModelTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenSetDebtInterestModel() external {
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
   }
 
   function testRevert_WhenSetDebtInterestModel() external {
     // not passed sanity check
     vm.expectRevert();
-    adminFacet.setDebtInterestModel(1, address(8888));
+    adminFacet.setDebtPoolInterestModel(1, address(8888));
 
     // setter is not owner
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setDebtInterestModel(0, address(8888));
+    adminFacet.setDebtPoolInterestModel(0, address(8888));
   }
 }
