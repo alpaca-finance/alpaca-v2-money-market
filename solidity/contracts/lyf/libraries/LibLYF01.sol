@@ -38,6 +38,7 @@ library LibLYF01 {
   error LibLYF01_BorrowLessThanMinDebtSize();
   error LibLYF01_BadDebtPoolId();
   error LibLYF01_LPCollateralExceedLimit();
+  error LibLYF01_FeeOnTransferTokensNotSupported();
 
   enum AssetTier {
     UNLISTED,
@@ -632,6 +633,19 @@ library LibLYF01 {
     DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     debtPoolInfo.totalShare -= _debtShareToRemove;
     debtPoolInfo.totalValue -= _debtAmountToRemove;
+  }
+
+  /// @dev safeTransferFrom that revert when not receiving full amount (have fee on transfer)
+  function pullExactTokens(
+    address _token,
+    address _from,
+    uint256 _amount
+  ) internal {
+    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
+    IERC20(_token).safeTransferFrom(_from, address(this), _amount);
+    if (IERC20(_token).balanceOf(address(this)) - _balanceBefore != _amount) {
+      revert LibLYF01_FeeOnTransferTokensNotSupported();
+    }
   }
 
   /// @dev safeTransferFrom that return actual amount received
