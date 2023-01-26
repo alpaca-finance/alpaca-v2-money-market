@@ -128,7 +128,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // get max repay amount possible could repay
     (uint256 _actualRepayAmountWithFee, uint256 _actualFee) = _getActualRepayAmountWithFee(
       _subAccount,
-      _debtShareId,
+      _debtPoolId,
       _desiredRepayAmountWithFee,
       lyfDs
     );
@@ -169,7 +169,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
       // update debt, collateral for sub account
       if (_actualReceivedRepayAmountWithoutFee > 0) {
-        _removeDebtByAmount(_subAccount, _debtShareId, _actualReceivedRepayAmountWithoutFee, lyfDs);
+        _removeDebtByAmount(_subAccount, _debtPoolId, _actualReceivedRepayAmountWithoutFee, lyfDs);
       }
       LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
@@ -529,15 +529,16 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
   function _getActualRepayAmountWithFee(
     address _subAccount,
-    uint256 _debtShareId,
+    uint256 _debtPoolId,
     uint256 _desiredRepayAmountWithFee,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualRepayAmountWithFee, uint256 _actualFee) {
-    uint256 _maxRepayShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtShareId);
+    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    uint256 _maxRepayShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     uint256 _maxRepayAmount = LibShareUtil.shareToValue(
       _maxRepayShare,
-      lyfDs.debtValues[_debtShareId],
-      lyfDs.debtShares[_debtShareId]
+      debtPoolInfo.totalValue,
+      debtPoolInfo.totalShare
     );
     _actualFee = (_maxRepayAmount * REPURCHASE_FEE_BPS) / LibLYF01.MAX_BPS;
     // set actual as maximum possible to repay
