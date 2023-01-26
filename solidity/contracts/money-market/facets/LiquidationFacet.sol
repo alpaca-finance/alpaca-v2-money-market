@@ -93,6 +93,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // question: should we check this thing?
     if (!moneyMarketDs.repurchasersOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
@@ -151,10 +152,11 @@ contract LiquidationFacet is ILiquidationFacet {
       uint256 _repayTokenPriceWithPremium = (vars.repayTokenPrice *
         (LibMoneyMarket01.MAX_BPS + vars.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
 
+      // 100(18) * 120 * 1 /
       _collatAmountOut =
         (vars.repayAmountWithFee *
           _repayTokenPriceWithPremium *
-          moneyMarketDs.tokenConfigs[_collatToken].to18ConversionFactor) /
+          moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor) /
         (_collatTokenPrice * moneyMarketDs.tokenConfigs[_collatToken].to18ConversionFactor);
 
       // revert if subAccount collat is not enough to cover desired repay amount
