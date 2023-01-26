@@ -119,8 +119,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // health check sub account borrowing power
     uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
     {
-      uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
-      if (_borrowingPower > _usedBorrowingPower) {
+      uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+      if (_totalBorrowingPower > _usedBorrowingPower) {
         revert LYFLiquidationFacet_Healthy();
       }
     }
@@ -211,9 +211,9 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // 1. check if position is underwater and can be liquidated
     // todo: threshold
-    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
+    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
     uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-    if (_borrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
+    if (_totalBorrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
       revert LYFLiquidationFacet_Healthy();
     }
 
@@ -387,9 +387,9 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     // 0. check borrowing power
     // todo: threshold
-    uint256 _borrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
+    uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
     uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(vars.subAccount, lyfDs);
-    if (_borrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
+    if (_totalBorrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
       revert LYFLiquidationFacet_Healthy();
     }
 
@@ -510,7 +510,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       revert LYFLiquidationFacet_InsufficientAmount();
     }
 
-    if (_minReceive > _collatAmountOut) {
+    if (_collatAmountOut < _minReceive) {
       revert LYFLiquidationFacet_TooLittleReceived();
     }
   }
