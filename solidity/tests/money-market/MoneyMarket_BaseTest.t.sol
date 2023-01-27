@@ -34,7 +34,7 @@ import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-import { LibMoneyMarketDeployment } from "../../deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;

@@ -23,7 +23,7 @@ import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.s
 // libraries
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-import { LibMoneyMarketDeployment } from "../../deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";

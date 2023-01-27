@@ -2,19 +2,19 @@
 pragma solidity 0.8.17;
 
 // core
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
+import { MoneyMarketDiamond } from "../../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
-import { ViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
-import { LendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { CollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { BorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { NonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { LiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-import { OwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
+import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
+import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
+import { ViewFacet } from "../../../contracts/money-market/facets/ViewFacet.sol";
+import { LendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
+import { CollateralFacet } from "../../../contracts/money-market/facets/CollateralFacet.sol";
+import { BorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { NonCollatBorrowFacet } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
+import { AdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { LiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { OwnershipFacet } from "../../../contracts/money-market/facets/OwnershipFacet.sol";
 
 library LibMoneyMarketDeployment {
   struct FacetAddresses {

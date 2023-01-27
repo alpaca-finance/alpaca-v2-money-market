@@ -52,7 +52,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 
 // helper
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
-import { LibMoneyMarketDeployment } from "../../deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // oracle
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";

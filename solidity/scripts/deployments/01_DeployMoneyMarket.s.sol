@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { Script, console } from "solidity/tests/utils/Script.sol";
 import "solidity/tests/utils/StdJson.sol";
 
-import { LibMoneyMarketDeployment } from "../libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "./libraries/LibMoneyMarketDeployment.sol";
 
 contract DeployMoneyMarket is Script {
   using stdJson for string;

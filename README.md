@@ -18,7 +18,7 @@
 ### Money market
 
 ```bash
-forge script solidity/deployments/scripts/DeployMoneyMarket.s.sol
+forge script solidity/scripts/deployments/01_DeployMoneyMarket.s.sol
 ```
 
 This command will dry run locally (not deployed yet)
