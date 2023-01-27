@@ -155,9 +155,9 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    uint256 _mmTokenBalnce = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    uint256 _mmTokenBalance = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
 
-    if (_mmTokenBalnce < _borrowAmount) {
+    if (_mmTokenBalance < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
