@@ -89,7 +89,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // collat debt share should be = 60
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollat(_collatToken),
-      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
@@ -133,7 +133,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollat(_collatToken),
-      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
