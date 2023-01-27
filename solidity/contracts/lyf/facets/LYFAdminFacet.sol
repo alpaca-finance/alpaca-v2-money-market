@@ -168,7 +168,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @notice Set the list of callers allow for reinvest function
   /// @param _reinvestors Array of address to allow or disallow
   /// @param _isOk A flag to allow or disallow
-  function setReinvestorsOk(address[] memory _reinvestors, bool _isOk) external onlyOwner {
+  function setReinvestorsOk(address[] calldata _reinvestors, bool _isOk) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _length = _reinvestors.length;
     address _reinvester;
