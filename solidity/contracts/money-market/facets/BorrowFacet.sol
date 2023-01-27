@@ -289,7 +289,7 @@ contract BorrowFacet is IBorrowFacet {
 
     // check used borrowing power after borrow exceed total borrowing power
     uint256 _borrowingPowerToBeUsed = LibMoneyMarket01.usedBorrowingPower(
-      _amount * _tokenConfig.to18ConversionFactor,
+      _amount,
       _tokenPrice,
       _tokenConfig.borrowingFactor,
       _tokenConfig.to18ConversionFactor
