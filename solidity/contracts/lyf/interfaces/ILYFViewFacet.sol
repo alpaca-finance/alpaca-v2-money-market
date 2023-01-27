@@ -66,7 +66,7 @@ interface ILYFViewFacet {
     view
     returns (uint256 _totalBorrowedUSDValue);
 
-  function getMaxNumOfToken() external view returns (uint8);
+  function getMaxNumOfToken() external view returns (uint8, uint8);
 
   function getMinDebtSize() external view returns (uint256);
 
