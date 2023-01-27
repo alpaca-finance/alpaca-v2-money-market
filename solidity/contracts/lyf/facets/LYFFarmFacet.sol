@@ -103,7 +103,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.accrueDebtPoolInterest(_token1DebtPoolId, lyfDs);
 
     // prepare and send desired tokens to strategy for lp composition
-    _prepareDesiredAmountAndSendToStrat(
+    _prepareTokenToComposeLP(
       _subAccount,
       _token0,
       _token0DebtPoolId,
@@ -114,7 +114,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _input.token0AmountIn,
       lyfDs
     );
-    _prepareDesiredAmountAndSendToStrat(
+    _prepareTokenToComposeLP(
       _subAccount,
       _token1,
       _token1DebtPoolId,
@@ -152,7 +152,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogAddFarmPosition(msg.sender, _input.subAccountId, _input.lpToken, _lpReceived);
   }
 
-  function _prepareDesiredAmountAndSendToStrat(
+  function _prepareTokenToComposeLP(
     address _subAccount,
     address _token,
     uint256 _debtPoolId,
@@ -167,11 +167,6 @@ contract LYFFarmFacet is ILYFFarmFacet {
     if (_amountToBorrow != 0) {
       LibLYF01.borrow(_subAccount, _token, _lpToken, _amountToBorrow, lyfDs);
       LibLYF01.validateMinDebtSize(_subAccount, _debtPoolId, lyfDs);
-    }
-
-    // transfer user supplied part to strategy to prepare for lp composition
-    if (_suppliedAmount != 0) {
-      IERC20(_token).safeTransferFrom(msg.sender, _lpStrat, _suppliedAmount);
     }
 
     // calculate collat amount to remove
@@ -202,9 +197,19 @@ contract LYFFarmFacet is ILYFFarmFacet {
       }
     }
 
-    // send borrowed tokens and collat removed to strat for lp composition
-    // total amount sent to strategy = amountIn + amountBorrowed + amountCollatRemoved = desiredAmount
-    IERC20(_token).safeTransfer(_lpStrat, _amountToBorrow + _amountToRemoveCollat);
+    // send tokens to strat for lp composition
+    // transfer user supplied part
+    if (_suppliedAmount != 0) {
+      IERC20(_token).safeTransferFrom(msg.sender, _lpStrat, _suppliedAmount);
+    }
+    // transfer borrowed + collat removed part
+    uint256 _amountToStrat;
+    unchecked {
+      _amountToStrat = _amountToBorrow + _amountToRemoveCollat;
+    }
+    if (_amountToStrat != 0) {
+      IERC20(_token).safeTransfer(_lpStrat, _amountToStrat);
+    }
   }
 
   function reducePosition(
