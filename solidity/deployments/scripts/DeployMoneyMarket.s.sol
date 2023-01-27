@@ -2,16 +2,32 @@
 pragma solidity 0.8.17;
 
 import { Script, console } from "solidity/tests/utils/Script.sol";
+import "solidity/tests/utils/StdJson.sol";
 
 import { LibMoneyMarketDeployment } from "../libraries/LibMoneyMarketDeployment.sol";
 
 contract DeployMoneyMarket is Script {
+  using stdJson for string;
+
+  struct DeploymentConfig {
+    address wNativeAddress;
+    address wNativeRelayer;
+  }
+
   function run() public {
+    string memory configFilePath = string.concat(
+      vm.projectRoot(),
+      string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME"))
+    );
+    string memory configJson = vm.readFile(configFilePath);
+    DeploymentConfig memory config = abi.decode(configJson.parseRaw("deploymentConfig"), (DeploymentConfig));
+
     vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
     (address moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
-      .deployMoneyMarket(address(1), address(2));
+      .deployMoneyMarket(config.wNativeAddress, config.wNativeRelayer);
     vm.stopBroadcast();
 
+    // write deployed addresses to json
     // NOTE: can't specify order of keys
     string memory moneyMarketKey = "moneyMarket";
     vm.serializeAddress(moneyMarketKey, "MoneyMarket", moneyMarket);
@@ -29,6 +45,7 @@ contract DeployMoneyMarket is Script {
     string memory facetsObject = vm.serializeAddress(facetsKey, "OwnershipFacet", facetAddresses.ownershipFacet);
     string memory finalJson = vm.serializeString(moneyMarketKey, "Facets", facetsObject);
 
+    // this will overwrite existing json
     vm.writeJson(finalJson, "deployedAddresses.json");
   }
 }

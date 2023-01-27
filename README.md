@@ -11,7 +11,8 @@
 ### Prerequisite
 
 - Have Foundry installed
-- Setup `.env` with `DEPLOYER_PRIVATE_KEY` and `RPC_URL`
+- Setup deployment config file in `./configs/[filename].json`
+- Setup `.env` with `DEPLOYER_PRIVATE_KEY`, `RPC_URL`, and `DEPLOYMENT_CONFIG_FILENAME`
 - Load `.env` with command `source .env`
 
 ### Money market

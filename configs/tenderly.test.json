@@ -1,0 +1,6 @@
+{
+  "deploymentConfig": {
+    "wNativeAddress": "0x8bF059FDb54A13150A112d86439120D7755e068A",
+    "wNativeRelayer": "0x8bF059FDb54A13150A112d86439120D7755e068A"
+  }
+}
