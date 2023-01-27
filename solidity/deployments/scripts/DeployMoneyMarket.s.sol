@@ -7,7 +7,7 @@ import { LibMoneyMarketDeployment } from "../libraries/LibMoneyMarketDeployment.
 
 contract DeployMoneyMarket is Script {
   function run() public {
-    vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+    vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
     (address moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
       .deployMoneyMarket(address(1), address(2));
     vm.stopBroadcast();
@@ -29,6 +29,6 @@ contract DeployMoneyMarket is Script {
     string memory facetsObject = vm.serializeAddress(facetsKey, "OwnershipFacet", facetAddresses.ownershipFacet);
     string memory finalJson = vm.serializeString(moneyMarketKey, "Facets", facetsObject);
 
-    vm.writeJson(finalJson, "test.json");
+    vm.writeJson(finalJson, "deployedAddresses.json");
   }
 }
