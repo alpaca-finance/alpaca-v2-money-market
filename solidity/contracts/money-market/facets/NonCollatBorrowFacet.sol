@@ -91,7 +91,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _valueToRemove,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    // update user debtShare
+    // update account debt values
     moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _oldAccountDebtValue - _valueToRemove);
 
     uint256 _oldTokenDebt = moneyMarketDs.nonCollatTokenDebtValues[_token].getAmount(_account);
