@@ -5,6 +5,7 @@ import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
 import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 // mocks
@@ -66,7 +67,18 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 0,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
@@ -131,7 +143,18 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 0,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
@@ -192,7 +215,18 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 0,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
@@ -234,7 +268,18 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 20 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 30 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     vm.prank(liquidator);
