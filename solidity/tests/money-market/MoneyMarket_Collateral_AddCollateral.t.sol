@@ -144,7 +144,6 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(moneyMarketDiamond), 10 ether);
 
     // check account ib token collat
-    address _aliceSubaccount0 = address(uint160(ALICE) ^ uint160(0));
-    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubaccount0, address(ibWeth)), 10 ether);
+    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, address(ibWeth)), 10 ether);
   }
 }

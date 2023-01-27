@@ -165,7 +165,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _underlyingInterest = viewFacet.getGlobalPendingInterest(_underlyingToken);
     assertEq(_underlyingInterest, 0.00406124093376 ether, "pending interest for _underlyingToken");
 
-    CacheState memory _stateBefore = _cacheState(_aliceSubAccount0, _ibCollatToken, _underlyingToken, _debtToken);
+    CacheState memory _stateBefore = _cacheState(ALICE, subAccount0, _ibCollatToken, _underlyingToken, _debtToken);
 
     // Prepare before liquidation
     // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
@@ -238,7 +238,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedFeeToTreasury = 0.075 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
-    _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
+    _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
     _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
@@ -293,7 +293,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _underlyingInterest = viewFacet.getGlobalPendingInterest(_underlyingToken);
     assertEq(_underlyingInterest, 0.00406124093376 ether, "pending interest for _underlyingToken");
 
-    CacheState memory _stateBefore = _cacheState(_aliceSubAccount0, _ibCollatToken, _underlyingToken, _debtToken);
+    CacheState memory _stateBefore = _cacheState(ALICE, subAccount0, _ibCollatToken, _underlyingToken, _debtToken);
 
     // Prepare before liquidation
     // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
@@ -366,7 +366,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedLiquidationFeeToTrasury = 0.150025382755836000 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
-    _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
+    _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
     _assertLiquidatorReward(_debtToken, _expectedLiquidationFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedLiquidationFeeToTrasury, _stateBefore);
@@ -433,7 +433,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _underlyingInterest = viewFacet.getGlobalPendingInterest(_underlyingToken);
     assertEq(_underlyingInterest, 0.00406124093376 ether, "pending interest for _underlyingToken");
 
-    CacheState memory _stateBefore = _cacheState(_aliceSubAccount0, _ibCollatToken, _underlyingToken, _debtToken);
+    CacheState memory _stateBefore = _cacheState(ALICE, subAccount0, _ibCollatToken, _underlyingToken, _debtToken);
 
     // Prepare before liquidation
     // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
@@ -506,7 +506,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedFeeToTreasury = 0.039605970911353347 ether;
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
-    _assertIbTokenCollatAndTotalSupply(_aliceSubAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
+    _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
     _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
@@ -598,7 +598,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
   }
 
   function _cacheState(
-    address _subAccount,
+    address _account,
+    uint256 _subAccountId,
     address _ibToken,
     address _underlyingToken,
     address _debtToken
@@ -614,7 +615,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       subAccountDebtShare: _subAccountDebtShare,
       ibTokenCollat: viewFacet.getTotalCollat(_ibToken),
-      subAccountIbTokenCollat: viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken)
+      subAccountIbTokenCollat: viewFacet.getOverCollatSubAccountCollatAmount(_account, _subAccountId, _ibToken)
     });
   }
 
@@ -644,7 +645,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
   }
 
   function _assertIbTokenCollatAndTotalSupply(
-    address _subAccount,
+    address _account,
+    uint256 _subAccountId,
     address _ibToken,
     uint256 _withdrawnIbToken,
     CacheState memory _cache
@@ -653,7 +655,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     assertEq(viewFacet.getTotalCollat(_ibToken), _cache.ibTokenCollat - _withdrawnIbToken, "collatertal");
     assertEq(
-      viewFacet.getOverCollatSubAccountCollatAmount(_subAccount, _ibToken),
+      viewFacet.getOverCollatSubAccountCollatAmount(_account, _subAccountId, _ibToken),
       _cache.subAccountIbTokenCollat - _withdrawnIbToken,
       "sub account collatertal"
     );

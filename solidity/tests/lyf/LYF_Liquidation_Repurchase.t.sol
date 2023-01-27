@@ -5,6 +5,7 @@ import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
 // interfaces
 import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
+import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 // mocks
@@ -56,7 +57,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 0,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
@@ -116,7 +128,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 60 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 30 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     uint256 _bobBtcBalanceBefore = btc.balanceOf(BOB);
@@ -161,7 +184,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
     assertEq(_aliceUsdcDebtValue, 0 ether, "alice debt remaining");
     (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
-    assertEq(_aliceWethDebtValue, 60 ether);
+    assertEq(_aliceWethDebtValue, 30 ether);
 
     // treasury reward check
     assertEq(usdc.balanceOf(treasury), _actualFee, "treasury received repaid fee");
@@ -191,7 +214,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _ibCollat, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 0,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     uint256 _bobIbWethBalanceBefore = ibWeth.balanceOf(BOB);
@@ -246,7 +280,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 30 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     vm.prank(BOB);
@@ -263,7 +308,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
     // open farm with 29 weth, 31 usdc borrowed
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 29 ether, 31 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 29 ether,
+      desiredToken1Amount: 31 ether,
+      token0ToBorrow: 29 ether,
+      token1ToBorrow: 31 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
@@ -283,7 +339,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
     // open farm with 29 weth, 31 usdc borrowed
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 40 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 30 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
@@ -303,7 +370,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-    farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 30 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
