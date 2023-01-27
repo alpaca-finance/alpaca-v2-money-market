@@ -8,6 +8,7 @@ interface ILYFLiquidationFacet {
   error LYFLiquidationFacet_InsufficientAmount();
   error LYFLiquidationFacet_TooLittleReceived();
   error LYFLiquidationFacet_InvalidAssetTier();
+  error LYFLiquidationFacet_RepayAmountExceedThreshold();
 
   function repurchase(
     address _account,

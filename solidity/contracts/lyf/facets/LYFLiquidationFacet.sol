@@ -70,6 +70,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address repayToken;
     address collatToken;
     uint256 repayAmount;
+    uint256 usedBorrowingPower;
     uint256 debtShareId;
     uint256 minReceive;
     uint256 collatAmountBefore;
@@ -220,6 +221,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       repayToken: _repayToken,
       collatToken: _collatToken,
       repayAmount: _repayAmount,
+      usedBorrowingPower: _usedBorrowingPower,
       debtShareId: _debtPoolId,
       minReceive: _minReceive,
       collatAmountBefore: IERC20(_collatToken).balanceOf(address(this)),
@@ -276,6 +278,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     console.log("[C]:_liquidationCall:_collatSold", _collatSold);
     console.log("[C]:_liquidationCall:_repaidAmount", _repaidAmount);
     lyfDs.reserves[_params.repayToken] += _repaidAmount;
+
+    _validateBorrowingPower(_params.repayToken, _repaidAmount, _params.usedBorrowingPower, lyfDs);
 
     IERC20(_params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
     IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
@@ -494,6 +498,26 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     if (_desiredRepayAmountWithFee < _actualRepayAmountWithFee) {
       _actualFee = (_actualFee * _desiredRepayAmountWithFee) / _actualRepayAmountWithFee;
       _actualRepayAmountWithFee = _desiredRepayAmountWithFee;
+    }
+  }
+
+  function _validateBorrowingPower(
+    address _repayToken,
+    uint256 _repaidAmount,
+    uint256 _usedBorrowingPower,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view {
+    uint256 _repayTokenPrice = LibLYF01.getPriceUSD(_repayToken, lyfDs);
+    uint256 _repaidBorrowingPower = LibLYF01.usedBorrowingPower(
+      _repaidAmount,
+      _repayTokenPrice,
+      lyfDs.tokenConfigs[_repayToken].borrowingFactor,
+      lyfDs.tokenConfigs[_repayToken].to18ConversionFactor
+    );
+    console.log("[C]_validateBorrowingPower:_repaidBorrowingPower", _repaidBorrowingPower);
+    console.log("[C]_validateBorrowingPower:_usedBorrowingPower", _usedBorrowingPower);
+    if (_repaidBorrowingPower * LibLYF01.MAX_BPS > (_usedBorrowingPower * MAX_LIQUIDATE_BPS)) {
+      revert LYFLiquidationFacet_RepayAmountExceedThreshold();
     }
   }
 
