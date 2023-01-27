@@ -16,7 +16,7 @@ import { AdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { LiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { OwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
 
-library LibMoneyMarketDeployer {
+library LibMoneyMarketDeployment {
   struct FacetAddresses {
     address diamondCutFacet;
     address diamondLoupeFacet;
