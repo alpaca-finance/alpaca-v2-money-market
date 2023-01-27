@@ -17,7 +17,6 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
   uint256 _subAccountId = 0;
   MockLiquidationStrategy internal mockLiquidationStrategy;
-  address constant liquidator = address(1000);
 
   uint256 constant REPURCHASE_REWARD_BPS = 100;
   uint256 constant REPURCHASE_FEE_BPS = 100;
