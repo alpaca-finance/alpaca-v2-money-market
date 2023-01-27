@@ -17,8 +17,8 @@ import { LiquidationFacet } from "../../contracts/money-market/facets/Liquidatio
 import { OwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
 
 // initializers
-import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
-import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
+// import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
+// import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
 
 library MMDiamondDeployer {
   function deployPoolDiamond(address _nativeToken, address _nativeRelayer) internal returns (address) {
@@ -26,53 +26,53 @@ library MMDiamondDeployer {
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
     // Deploy Money Market
-    MoneyMarketDiamond _moneyMarketDiamond = new MoneyMarketDiamond(address(this), address(diamondCutFacet));
+    // MoneyMarketDiamond _moneyMarketDiamond = new MoneyMarketDiamond(address(this), address(diamondCutFacet));
 
-    deployDiamondLoupeFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployLendFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployCollateralFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployOwnershipFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
-    deployViewFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployDiamondLoupeFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployLendFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployCollateralFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployNonCollatBorrowFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployAdminFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployLiquidationFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployOwnershipFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // deployViewFacet(DiamondCutFacet(address(_moneyMarketDiamond)));
 
-    initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
-    initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
+    // initializeDiamond(DiamondCutFacet(address(_moneyMarketDiamond)));
+    // initializeMoneyMarket(DiamondCutFacet(address(_moneyMarketDiamond)), _nativeToken, _nativeRelayer);
 
-    return (address(_moneyMarketDiamond));
+    // return (address(_moneyMarketDiamond));
   }
 
-  function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
-    // Deploy DiamondInit
-    DiamondInit diamondInitializer = new DiamondInit();
-    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
+  // function initializeDiamond(DiamondCutFacet diamondCutFacet) internal {
+  //   // Deploy DiamondInit
+  //   DiamondInit diamondInitializer = new DiamondInit();
+  //   IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
 
-    // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(diamondInitializer),
-      abi.encodeWithSelector(bytes4(keccak256("init()")))
-    );
-  }
+  //   // make lib diamond call init
+  //   diamondCutFacet.diamondCut(
+  //     facetCuts,
+  //     address(diamondInitializer),
+  //     abi.encodeWithSelector(bytes4(keccak256("init()")))
+  //   );
+  // }
 
-  function initializeMoneyMarket(
-    DiamondCutFacet diamondCutFacet,
-    address _nativeToken,
-    address _nativeRelayer
-  ) internal {
-    // Deploy DiamondInit
-    MoneyMarketInit _initializer = new MoneyMarketInit();
-    IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
+  // function initializeMoneyMarket(
+  //   DiamondCutFacet diamondCutFacet,
+  //   address _nativeToken,
+  //   address _nativeRelayer
+  // ) internal {
+  //   // Deploy DiamondInit
+  //   MoneyMarketInit _initializer = new MoneyMarketInit();
+  //   IDiamondCut.FacetCut[] memory facetCuts = new IDiamondCut.FacetCut[](0);
 
-    // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(_initializer),
-      abi.encodeWithSelector(bytes4(keccak256("init(address,address)")), _nativeToken, _nativeRelayer)
-    );
-  }
+  //   // make lib diamond call init
+  //   diamondCutFacet.diamondCut(
+  //     facetCuts,
+  //     address(_initializer),
+  //     abi.encodeWithSelector(bytes4(keccak256("init(address,address)")), _nativeToken, _nativeRelayer)
+  //   );
+  // }
 
   function buildFacetCut(
     address facet,
