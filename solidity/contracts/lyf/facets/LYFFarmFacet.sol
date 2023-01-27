@@ -17,6 +17,7 @@ import { IStrat } from "../interfaces/IStrat.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+/// @title LYFFarmFacet is dedicated to managing leveraged farming positions
 contract LYFFarmFacet is ILYFFarmFacet {
   using LibSafeToken for IERC20;
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
@@ -194,6 +195,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogAddFarmPosition(msg.sender, _subAccountId, _lpToken, _lpReceived);
   }
 
+  /// @notice Partially or fully close the position
+  /// @param _subAccountId The index of subaccount
+  /// @param _lpToken The LP token that associated with the position
+  /// @param _lpShareAmount The share amount of LP to be removed
+  /// @param _minAmount0Out The minimum expected return amount of token0 to the user
+  /// @param _minAmount1Out The minimum expected return amount of token1 to the user
   function reducePosition(
     uint256 _subAccountId,
     address _lpToken,
@@ -290,6 +297,12 @@ contract LYFFarmFacet is ILYFFarmFacet {
     );
   }
 
+  /// @notice Repay the underlying debt of the position from the user's wallet
+  ///@param _account The main account to repay to
+  ///@param _subAccountId The index of subaccount
+  ///@param _debtToken The token to repay
+  ///@param _lpToken The associated lp for the position
+  ///@param _debtShareToRepay The amount of share of debt to be repaied
   function repay(
     address _account,
     uint256 _subAccountId,
@@ -342,6 +355,8 @@ contract LYFFarmFacet is ILYFFarmFacet {
     emit LogRepay(_account, _subAccountId, _debtToken, msg.sender, _actualRepayAmount);
   }
 
+  /// @notice Compound the reward from Yield Farming
+  /// @param _lpToken The lpToken that yield the reward token
   function reinvest(address _lpToken) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
@@ -357,6 +372,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
     LibLYF01.reinvest(_lpToken, 0, _lpConfig, lyfDs);
   }
 
+  /// @notice Repay the underlying debt of the position from the subaccount's collateral
+  ///@param _subAccountId The index of subaccount
+  ///@param _token The token to repay
+  ///@param _lpToken The associated lp for the position
+  ///@param _debtShareToRepay The amount of share of debt to be repaied
   function repayWithCollat(
     uint256 _subAccountId,
     address _token,
