@@ -222,12 +222,17 @@ contract ViewFacet is IViewFacet {
   }
 
   /// @notice Get the amount of collateral token under the subaccount
-  /// @param _subAccount The derived subaccount
+  /// @param _account The user address
+  /// @param _subAccountId The id of subAccount
   /// @param _token The token used as a collateral
   /// @return The amount of collateral
-  function getOverCollatSubAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+  function getOverCollatSubAccountCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
+    return moneyMarketDs.subAccountCollats[LibMoneyMarket01.getSubAccount(_account, _subAccountId)].getAmount(_token);
   }
 
   /// @notice Get the total amount of token that's eligible for lender without pending interest
