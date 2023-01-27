@@ -63,7 +63,11 @@ interface IViewFacet {
 
   function getTotalCollat(address _token) external view returns (uint256);
 
-  function getOverCollatSubAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
+  function getOverCollatSubAccountCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256);
 
   function getTotalToken(address _token) external view returns (uint256);
 
