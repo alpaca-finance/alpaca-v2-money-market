@@ -71,55 +71,44 @@ contract DeployMoneyMarket is Script {
     // write deployed addresses to json
     // NOTE: can't specify order of keys
 
-    // steps
-    // 1. define object key
-    // 2. serialize addresses
-    // 3. on final address, save to object string
-    // 4. serialize object string to top-level key
-
     // money market
-    string memory topLevelKey = "TopLevel";
-    vm.serializeAddress(topLevelKey, "MoneyMarketDiamond", address(moneyMarket));
+    string memory moneyMarketJson = "MoneyMarket";
+    moneyMarketJson.serialize("MoneyMarketDiamond", address(moneyMarket));
 
     // facets
-    string memory facetsKey = "FacetAddresses";
-    vm.serializeAddress(facetsKey, "DiamondCutFacet", facetAddresses.diamondCutFacet);
-    vm.serializeAddress(facetsKey, "DiamondLoupeFacet", facetAddresses.diamondLoupeFacet);
-    vm.serializeAddress(facetsKey, "ViewFacet", facetAddresses.viewFacet);
-    vm.serializeAddress(facetsKey, "LendFacet", facetAddresses.lendFacet);
-    vm.serializeAddress(facetsKey, "CollateralFacet", facetAddresses.collateralFacet);
-    vm.serializeAddress(facetsKey, "BorrowFacet", facetAddresses.borrowFacet);
-    vm.serializeAddress(facetsKey, "NonCollatBorrowFacet", facetAddresses.nonCollatBorrowFacet);
-    vm.serializeAddress(facetsKey, "AdminFacet", facetAddresses.adminFacet);
-    vm.serializeAddress(facetsKey, "LiquidationFacet", facetAddresses.liquidationFacet);
-    string memory facetsObject = vm.serializeAddress(facetsKey, "OwnershipFacet", facetAddresses.ownershipFacet);
-    vm.serializeString(topLevelKey, facetsKey, facetsObject);
+    string memory facetsJson = "Facets";
+    facetsJson.serialize("DiamondCutFacet", facetAddresses.diamondCutFacet);
+    facetsJson.serialize("DiamondLoupeFacet", facetAddresses.diamondLoupeFacet);
+    facetsJson.serialize("ViewFacet", facetAddresses.viewFacet);
+    facetsJson.serialize("LendFacet", facetAddresses.lendFacet);
+    facetsJson.serialize("CollateralFacet", facetAddresses.collateralFacet);
+    facetsJson.serialize("BorrowFacet", facetAddresses.borrowFacet);
+    facetsJson.serialize("NonCollatBorrowFacet", facetAddresses.nonCollatBorrowFacet);
+    facetsJson.serialize("AdminFacet", facetAddresses.adminFacet);
+    facetsJson.serialize("LiquidationFacet", facetAddresses.liquidationFacet);
+    facetsJson = facetsJson.serialize("OwnershipFacet", facetAddresses.ownershipFacet);
+    moneyMarketJson.serialize("Facets", facetsJson);
 
     // interest rate models
-    string memory interestRateModelsKey = "InterestRateModels";
-    string memory interestRateModelsObject = vm.serializeAddress(
-      interestRateModelsKey,
-      "InterestRateModel1",
-      interestRateModel1
-    );
-    vm.serializeString(topLevelKey, interestRateModelsKey, interestRateModelsObject);
+    string memory interestRateModelsJson = "InterestRateModels";
+    interestRateModelsJson = interestRateModelsJson.serialize("InterestRateModel1", interestRateModel1);
+    moneyMarketJson.serialize("InterestRateModels", interestRateModelsJson);
 
     // liquidation strategies
-    string memory liquidationStrategiesKey = "LiquidationStrategies";
-    vm.serializeAddress(liquidationStrategiesKey, "PancakeswapV2LiquidationStrategy", pancakeswapV2LiquidationStrategy);
-    string memory liquidationStrategiesObject = vm.serializeAddress(
-      liquidationStrategiesKey,
+    string memory liquidationStrategiesJson = "LiquidationStrategies";
+    liquidationStrategiesJson.serialize("PancakeswapV2LiquidationStrategy", pancakeswapV2LiquidationStrategy);
+    liquidationStrategiesJson = liquidationStrategiesJson.serialize(
       "PancakeswapV2IbTokenLiquidationStrategy",
       pancakeswapV2IbTokenLiquidationStrategy
     );
-    vm.serializeString(topLevelKey, liquidationStrategiesKey, liquidationStrategiesObject);
+    moneyMarketJson.serialize("LiquidationStrategies", liquidationStrategiesJson);
 
     // fee models
-    string memory feeModelsKey = "FeeModels";
-    string memory feeModelsObject = vm.serializeAddress(feeModelsKey, "FeeModel1", feeModel1);
-    string memory finalJson = vm.serializeString(topLevelKey, feeModelsKey, feeModelsObject);
+    string memory feeModelsJson = "FeeModels";
+    feeModelsJson = feeModelsJson.serialize("FeeModel1", feeModel1);
+    moneyMarketJson = moneyMarketJson.serialize("FeeModels", feeModelsJson);
 
-    // this will overwrite MoneyMarket key
-    vm.writeJson(finalJson, configFilePath, ".MoneyMarket");
+    // this will overwrite MoneyMarket key in config file
+    moneyMarketJson.write(configFilePath, ".MoneyMarket");
   }
 }
