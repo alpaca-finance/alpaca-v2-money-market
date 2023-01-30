@@ -88,14 +88,11 @@ contract BaseTest is DSTest {
     opm = deployMockErc20("OPM Token", "OPM", 9);
     alpaca = deployMockErc20("ALPACA TOKEN", "ALPACA", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
-    nativeToken = deployMockWNative();
 
     debtToken1 = deployMockErc20("Debt Token 1", "DTOKEN1", 18);
 
     rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
     rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 18);
-    
-    nativeRelayer = deployMockWNativeRelayer();
 
     // mint token
     vm.deal(ALICE, 1000 ether);
