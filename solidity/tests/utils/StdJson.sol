@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.9.0;
 
 pragma experimental ABIEncoderV2;
 
-import { VmSafe } from "./Vm.sol";
+import { VmSafe } from "./VM.sol";
 
 // Helpers for parsing and writing JSON files
 // To parse:
