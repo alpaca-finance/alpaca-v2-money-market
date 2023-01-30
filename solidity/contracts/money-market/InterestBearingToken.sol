@@ -15,6 +15,10 @@ import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 
+/// @title InterestBearingToken is ERC20 Token that represent the share in AF2.0
+/// Money Market's lending token.
+/// @dev PLEASE DO NOT INTEGRATE DIRECTLY WITH THIS CONTRACT AS A ERC4626 STANDARD
+/// As it does not support most of interface functions e.g. mint / withdraw
 contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   address private _asset;
   IMoneyMarket private _moneyMarket;
