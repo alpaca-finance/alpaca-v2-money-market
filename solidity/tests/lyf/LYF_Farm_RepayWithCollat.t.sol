@@ -40,7 +40,18 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP - _wethCollatAmount,
+      token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
 
     vm.stopPrank();
 
@@ -108,11 +119,8 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserRepayWithCollat_RemainingDebtBelowMinDebtSize_ShouldRevert() external {
-    // remove interest for convienice of test
-    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
-
     adminFacet.setMinDebtSize(20 ether);
+
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -122,11 +130,21 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
-    vm.stopPrank();
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP - _wethCollatAmount,
+      token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    vm.startPrank(BOB);
+
     // Add collater first to be able to repay with collat
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
@@ -138,13 +156,9 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     // should be ok if repay whole debt
     farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
     farmFacet.repayWithCollat(subAccount0, address(usdc), address(wethUsdcLPToken), 20 ether);
-
-    vm.stopPrank();
   }
 
   function testRevert_WhenUserRepayMoreThanCollat() external {
-    // remove interest for convienice of test
-    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = 40 ether;
     uint256 _wethCollatAmount = 20 ether;
@@ -154,11 +168,19 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP - _wethCollatAmount,
+      token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
 
-    vm.stopPrank();
-
-    vm.prank(BOB);
     // repay without collat amount
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector));
     farmFacet.repayWithCollat(subAccount0, address(weth), address(wethUsdcLPToken), 20 ether);
@@ -176,11 +198,19 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP,
+      token1ToBorrow: _usdcToAddLP,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
 
-    vm.stopPrank();
-
-    vm.prank(BOB);
     // repay without collat amount
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_InvalidAssetTier.selector));
     farmFacet.repayWithCollat(subAccount0, address(isolateToken), address(wethUsdcLPToken), 20 ether);

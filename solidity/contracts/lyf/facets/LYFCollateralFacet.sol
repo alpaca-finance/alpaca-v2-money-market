@@ -12,6 +12,7 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 
+/// @title LYFCollateralFacet is dedicated to management of collateral under the subaccount
 contract LYFCollateralFacet is ILYFCollateralFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -44,6 +45,11 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     LibReentrancyGuard.unlock();
   }
 
+  /// @notice Supply a collateral to the subaccount to be borrowed against
+  /// @param _account The main address of the account
+  /// @param _subAccountId The index to derive the subaccount
+  /// @param _token The collateral token to provide
+  /// @param _amount The amount of collateral to provide
   function addCollateral(
     address _account,
     uint256 _subAccountId,
@@ -69,6 +75,10 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     emit LogAddCollateral(_account, _subAccountId, _token, msg.sender, _amount);
   }
 
+  /// @notice Remove the collateral from the subaccount
+  /// @param _subAccountId The index to dereive the subaccount
+  /// @param _token The collateral token to be removed
+  /// @param _amount The amount of collateral to be removed
   function removeCollateral(
     uint256 _subAccountId,
     address _token,
@@ -97,6 +107,10 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     emit LogRemoveCollateral(msg.sender, _subAccountId, _token, _actualAmountRemoved);
   }
 
+  /// @notice Transfer collateral from a subaccount to another subaccount of the same owner
+  /// @param _fromSubAccountId The source subaccount ID
+  /// @param _toSubAccountId The destination subaccount ID
+  /// @param _amount The amount of collateral to transfer
   function transferCollateral(
     uint256 _fromSubAccountId,
     uint256 _toSubAccountId,
