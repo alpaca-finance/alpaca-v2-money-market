@@ -1,6 +1,31 @@
 {
-  "deploymentConfig": {
+  "DeploymentConfig": {
     "wNativeAddress": "0x8bF059FDb54A13150A112d86439120D7755e068A",
     "wNativeRelayer": "0x8bF059FDb54A13150A112d86439120D7755e068A"
+  },
+  "MoneyMarket": {
+    "InterestRateModels": {
+      "InterestRateModel1": "0xd3988230C9cBf7676008E8B808998d33A25ac55A"
+    },
+    "FeeModels": {
+      "FeeModel1": "0xB5f80cBF84c682ee5580A6561A5CD89B7a4013eA"
+    },
+    "MoneyMarketDiamond": "0xCF0d60Be731B872a5d67b0Ce83bcA94cFdCE9C68",
+    "LiquidationStrategies": {
+      "PancakeswapV2LiquidationStrategy": "0xeDDC4Ce39dbDf46a4B702A881b56f7996CCbDEbe",
+      "PancakeswapV2IbTokenLiquidationStrategy": "0xd288F244cFcD0722E4d2D1964e49FE577A02CD9b"
+    },
+    "FacetAddresses": {
+      "LendFacet": "0x4a16b8Cc896456c4CE065774bAaDFDedd8131660",
+      "NonCollatBorrowFacet": "0x05786c29Ef1B6e2e5e7820474946E47b493a5768",
+      "ViewFacet": "0x4CDeFC0B2a54e89bEC78cf0Cb1e93c1d14864f29",
+      "OwnershipFacet": "0x901686C727Bf90C20f32273939402f39489BA0C2",
+      "LiquidationFacet": "0x1Ac3eDe36b62EE646d7bace71F51C597e85eDcE3",
+      "DiamondCutFacet": "0xDB072A6c22833ffbDCb6B6b94804f82D0F725c37",
+      "CollateralFacet": "0x258987189C757D63Bf15f90b45D11DE0d3A8181c",
+      "DiamondLoupeFacet": "0x30b920df2805432f4202E1C4b02a168787e37F19",
+      "BorrowFacet": "0x8bF059FDb54A13150A112d86439120D7755e068A",
+      "AdminFacet": "0x12Cdaa3FE340f78984Da0cE3D9B3B7033C40441B"
+    }
   }
 }

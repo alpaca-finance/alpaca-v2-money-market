@@ -19,20 +19,20 @@ interface IMoneyMarket is IAdminFacet, IViewFacet {}
 contract DeployMoneyMarket is Script {
   using stdJson for string;
 
+  uint256 internal deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+  string internal configFilePath =
+    string.concat(vm.projectRoot(), string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
+
   struct DeploymentConfig {
     address wNativeAddress;
     address wNativeRelayer;
   }
 
   function run() public {
-    string memory configFilePath = string.concat(
-      vm.projectRoot(),
-      string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME"))
-    );
     string memory configJson = vm.readFile(configFilePath);
-    DeploymentConfig memory config = abi.decode(configJson.parseRaw("deploymentConfig"), (DeploymentConfig));
+    DeploymentConfig memory config = abi.decode(configJson.parseRaw("DeploymentConfig"), (DeploymentConfig));
 
-    vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
+    vm.startBroadcast(deployerPrivateKey);
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
       .deployMoneyMarket(config.wNativeAddress, config.wNativeRelayer);
@@ -71,15 +71,15 @@ contract DeployMoneyMarket is Script {
     // write deployed addresses to json
     // NOTE: can't specify order of keys
 
-    // money market is top level key
-    string memory topLevelKey = "TopLevel";
-    vm.serializeAddress(topLevelKey, "MoneyMarketDiamond", address(moneyMarket));
-
     // steps
     // 1. define object key
     // 2. serialize addresses
     // 3. on final address, save to object string
-    // 4. serialize object string to money market key
+    // 4. serialize object string to top-level key
+
+    // money market
+    string memory topLevelKey = "TopLevel";
+    vm.serializeAddress(topLevelKey, "MoneyMarketDiamond", address(moneyMarket));
 
     // facets
     string memory facetsKey = "FacetAddresses";
@@ -119,7 +119,7 @@ contract DeployMoneyMarket is Script {
     string memory feeModelsObject = vm.serializeAddress(feeModelsKey, "FeeModel1", feeModel1);
     string memory finalJson = vm.serializeString(topLevelKey, feeModelsKey, feeModelsObject);
 
-    // this will overwrite existing json
-    vm.writeJson(finalJson, "deployedAddresses.json");
+    // this will overwrite MoneyMarket key
+    vm.writeJson(finalJson, configFilePath, ".MoneyMarket");
   }
 }
