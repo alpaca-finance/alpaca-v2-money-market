@@ -99,14 +99,21 @@ contract BaseTest is DSTest {
     isolateToken.mint(BOB, 1000 ether);
 
     _setupProxyAdmin();
+
+    vm.label(DEPLOYER, "DEPLOYER");
+    vm.label(ALICE, "ALICE");
+    vm.label(BOB, "BOB");
+    vm.label(CAT, "CAT");
+    vm.label(EVE, "EVE");
   }
 
   function deployMockErc20(
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) internal returns (MockERC20) {
-    return new MockERC20(name, symbol, decimals);
+  ) internal returns (MockERC20 mockERC20) {
+    mockERC20 = new MockERC20(name, symbol, decimals);
+    vm.label(address(mockERC20), symbol);
   }
 
   function deployMockWNative() internal returns (MockWNative) {

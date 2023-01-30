@@ -22,23 +22,19 @@ interface ILYFFarmFacet {
   error LYFFarmFacet_TooLittleReceived();
   error LYFFarmFacet_CollatNotEnough();
 
-  function addFarmPosition(
-    uint256 _subAccountId,
-    address _lpToken,
-    uint256 _desireToken0Amount,
-    uint256 _desireToken1Amount,
-    uint256 _minLpReceive
-  ) external;
+  struct AddFarmPositionInput {
+    uint256 subAccountId;
+    address lpToken;
+    uint256 minLpReceive;
+    uint256 desiredToken0Amount;
+    uint256 desiredToken1Amount;
+    uint256 token0ToBorrow;
+    uint256 token1ToBorrow;
+    uint256 token0AmountIn;
+    uint256 token1AmountIn;
+  }
 
-  function directAddFarmPosition(
-    uint256 _subAccountId,
-    address _lpToken,
-    uint256 _desireToken0Amount,
-    uint256 _desireToken1Amount,
-    uint256 _minLpReceive,
-    uint256 _token0AmountIn,
-    uint256 _token1AmountIn
-  ) external;
+  function addFarmPosition(AddFarmPositionInput calldata _input) external;
 
   function repay(
     address _account,

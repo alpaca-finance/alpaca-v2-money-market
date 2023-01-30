@@ -91,7 +91,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _valueToRemove,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    // update user debtShare
+    // update account debt values
     moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _oldAccountDebtValue - _valueToRemove);
 
     uint256 _oldTokenDebt = moneyMarketDs.nonCollatTokenDebtValues[_token].getAmount(_account);
@@ -140,7 +140,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowLimitUSDValue;
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
-      _amount * _tokenConfig.to18ConversionFactor,
+      _amount,
       _tokenPrice,
       _tokenConfig.borrowingFactor,
       _tokenConfig.to18ConversionFactor
@@ -155,9 +155,9 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    uint256 _mmTokenBalnce = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
+    uint256 _mmTokenBalance = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
 
-    if (_mmTokenBalnce < _borrowAmount) {
+    if (_mmTokenBalance < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 

@@ -60,7 +60,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repayAmountWithFee;
     uint256 repurchaseFeeToProtocol;
     uint256 repurchaseRewardBps;
-    uint256 repayAmountWihtoutFee;
+    uint256 repayAmountWithoutFee;
     uint256 repayTokenPrice;
   }
 
@@ -122,23 +122,23 @@ contract LiquidationFacet is ILiquidationFacet {
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         // repayAmountWithFee = _currentDebtAmount + fee
         vars.repayAmountWithFee = _maxAmountRepurchaseable;
-        // repayAmountWihtoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
+        // repayAmountWithoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
         // calculate like this so we can close entire debt without dust
-        vars.repayAmountWihtoutFee = (vars.repayAmountWithFee * _currentDebtAmount) / _maxAmountRepurchaseable;
+        vars.repayAmountWithoutFee = (vars.repayAmountWithFee * _currentDebtAmount) / _maxAmountRepurchaseable;
       } else {
         vars.repayAmountWithFee = _desiredRepayAmount;
-        vars.repayAmountWihtoutFee =
+        vars.repayAmountWithoutFee =
           (_desiredRepayAmount * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps)) /
           LibMoneyMarket01.MAX_BPS;
       }
 
-      vars.repurchaseFeeToProtocol = vars.repayAmountWithFee - vars.repayAmountWihtoutFee;
+      vars.repurchaseFeeToProtocol = vars.repayAmountWithFee - vars.repayAmountWithoutFee;
     }
 
     vars.repayTokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
     // revert if repay > x% of totalUsedBorrowingPower
-    _validateBorrowingPower(_repayToken, vars.repayAmountWihtoutFee, vars.usedBorrowingPower, moneyMarketDs);
+    _validateBorrowingPower(_repayToken, vars.repayAmountWithoutFee, vars.usedBorrowingPower, moneyMarketDs);
 
     vars.repurchaseRewardBps = moneyMarketDs.repurchaseRewardModel.getFeeBps(
       vars.totalBorrowingPower,
