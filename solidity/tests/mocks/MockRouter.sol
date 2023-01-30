@@ -146,19 +146,25 @@ contract MockRouter {
   )
     external
     returns (
-      uint256 amountA,
-      uint256 amountB,
-      uint256 liquidity
+      uint256 _amountA,
+      uint256 _amountB,
+      uint256 _liquidity
     )
   {
-    amountA = amountADesired;
-    amountB = amountBDesired;
-    liquidity = (amountADesired + amountBDesired) / 2;
+    _amountA = amountADesired;
+    _amountB = amountBDesired;
+
+    {
+      uint256 _normalizedTokenA = amountADesired * 10**(18 - IERC20(tokenA).decimals());
+      uint256 _normalizedTokenB = amountBDesired * 10**(18 - IERC20(tokenB).decimals());
+
+      _liquidity = (_normalizedTokenA + _normalizedTokenB) / 2;
+    }
 
     IERC20Upgradeable(tokenA).safeTransferFrom(msg.sender, address(this), amountADesired);
 
     IERC20Upgradeable(tokenB).safeTransferFrom(msg.sender, address(this), amountBDesired);
 
-    IERC20Upgradeable(lpToken).safeTransfer(msg.sender, liquidity);
+    IERC20Upgradeable(lpToken).safeTransfer(msg.sender, _liquidity);
   }
 }

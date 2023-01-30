@@ -33,13 +33,15 @@ contract MockLPToken is ERC20 {
 
   function getReserves()
     external
-    pure
+    view
     returns (
       uint256,
       uint256,
       uint256
     )
   {
-    return (1e30, 1e30, 0);
+    uint256 _token0Decimal = ERC20(token0).decimals();
+    uint256 _token1Decimal = ERC20(token1).decimals();
+    return (1e30 / 10**(18 - _token0Decimal), 1e30 / 10**(18 - _token1Decimal), 0);
   }
 }

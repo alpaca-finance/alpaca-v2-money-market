@@ -136,7 +136,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
     btcUsdcLPToken.mint(address(mockRouter), 1000000 ether);
-    usdc.mint(address(mockRouter), 1000000 ether);
+    usdc.mint(address(mockRouter), normalizeEther(1000000 ether, usdcDecimal));
     weth.mint(address(mockRouter), 1000000 ether);
     btc.mint(address(mockRouter), 1000000 ether);
 
@@ -156,7 +156,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxCollateral: 100 ether
+      maxCollateral: normalizeEther(100 ether, usdcDecimal)
     });
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
@@ -188,7 +188,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxCollateral: 10e24
+      maxCollateral: normalizeEther(10e24, usdcDecimal)
     });
 
     _inputs[6] = ILYFAdminFacet.TokenConfigInput({
