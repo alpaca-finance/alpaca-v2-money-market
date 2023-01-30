@@ -54,7 +54,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
   function setUp() public virtual {
     // moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarket(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);

@@ -53,7 +53,10 @@ abstract contract AV_BaseTest is BaseTest {
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarket(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
     setUpMM();
 
     // set av facets

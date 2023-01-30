@@ -21,8 +21,6 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import "solidity/tests/utils/console.sol";
-
 /// @title AdminFacet is dedicated to protocol parameter configuration
 contract AdminFacet is IAdminFacet {
   using LibSafeToken for IERC20;
@@ -319,9 +317,7 @@ contract AdminFacet is IAdminFacet {
   /// @param _newImplementation The address of interest bearing contract
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // sanity check
-    console.log("ok");
-    IInterestBearingToken(_newImplementation).decimals();
+    // sanity check    IInterestBearingToken(_newImplementation).decimals();
     moneyMarketDs.ibTokenImplementation = _newImplementation;
     emit LogSetIbTokenImplementation(_newImplementation);
   }

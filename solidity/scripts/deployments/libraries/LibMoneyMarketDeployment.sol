@@ -30,7 +30,7 @@ library LibMoneyMarketDeployment {
     address ownershipFacet;
   }
 
-  function deployMoneyMarket(address _nativeToken, address _nativeRelayer)
+  function deployMoneyMarketDiamond(address _nativeToken, address _nativeRelayer)
     internal
     returns (address, FacetAddresses memory)
   {

@@ -84,7 +84,10 @@ abstract contract LYF_BaseTest is BaseTest {
   uint256 constant reinvestThreshold = 1e18;
 
   function setUp() public virtual {
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarket(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
     setUpMM(moneyMarketDiamond);
 
