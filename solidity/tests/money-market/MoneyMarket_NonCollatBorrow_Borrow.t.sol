@@ -20,7 +20,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     super.setUp();
 
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
-    mockToken.mint(ALICE, 1000 ether);
+    mockToken.mint(ALICE, normalizeEther(1000 ether, mockToken.decimals()));
 
     adminFacet.setNonCollatBorrowerOk(ALICE, true);
     adminFacet.setNonCollatBorrowerOk(BOB, true);
@@ -35,7 +35,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
-    uint256 _borrowAmount = 10 ether;
+    uint256 _borrowAmount = normalizeEther(10 ether, wethDecimal);
 
     // BOB Borrow _borrowAmount
     vm.startPrank(BOB);
@@ -72,18 +72,18 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserNonCollatBorrowTooMuchTokePerSubAccount() external {
     vm.startPrank(BOB);
-    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 1 ether);
-    nonCollatBorrowFacet.nonCollatBorrow(address(btc), 1 ether);
-    nonCollatBorrowFacet.nonCollatBorrow(address(usdc), 1 ether);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), normalizeEther(1 ether, wethDecimal));
+    nonCollatBorrowFacet.nonCollatBorrow(address(btc), normalizeEther(1 ether, btcDecimal));
+    nonCollatBorrowFacet.nonCollatBorrow(address(usdc), normalizeEther(1 ether, usdcDecimal));
 
     // now maximum is 3 token per account, when try borrow 4th token should revert
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
-    nonCollatBorrowFacet.nonCollatBorrow(address(cake), 1 ether);
+    nonCollatBorrowFacet.nonCollatBorrow(address(cake), normalizeEther(1 ether, cakeDecimal));
     vm.stopPrank();
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
-    uint256 _borrowAmount = 10 ether;
+    uint256 _borrowAmount = normalizeEther(10 ether, mockToken.decimals());
     vm.startPrank(BOB);
     vm.expectRevert(
       abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_InvalidToken.selector, address(mockToken))
@@ -93,8 +93,8 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserBorrowMultipleTokens_ListShouldUpdate() external {
-    uint256 _aliceBorrowAmount = 10 ether;
-    uint256 _aliceBorrowAmount2 = 20 ether;
+    uint256 _aliceBorrowAmount = normalizeEther(10 ether, wethDecimal);
+    uint256 _aliceBorrowAmount2 = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
@@ -133,7 +133,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
-    uint256 _aliceBorrowAmount = 30 ether;
+    uint256 _aliceBorrowAmount = normalizeEther(30 ether, wethDecimal);
 
     vm.startPrank(ALICE);
 
@@ -160,13 +160,13 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.startPrank(CAT);
 
     vm.expectRevert(abi.encodeWithSelector(INonCollatBorrowFacet.NonCollatBorrowFacet_Unauthorized.selector));
-    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 10 ether);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), normalizeEther(10 ether, wethDecimal));
     vm.stopPrank();
   }
 
   function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount() external {
-    uint256 _bobDepositAmount = 10 ether;
-    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _bobDepositAmount = normalizeEther(10 ether, wethDecimal);
+    uint256 _aliceBorrowAmount = normalizeEther(10 ether, wethDecimal);
 
     vm.startPrank(ALICE);
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _aliceBorrowAmount);
@@ -182,8 +182,8 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenProtocolBorrowMoreThanLimitPower_ShouldRevert() external {
-    uint256 _aliceBorrowAmount = 10 ether;
-    uint256 _aliceBorrowLimit = 10 ether;
+    uint256 _aliceBorrowAmount = normalizeEther(10 ether, wethDecimal);
+    uint256 _aliceBorrowLimit = normalizeEther(10 ether, wethDecimal);
 
     uint256 _expectBorrowingPower = (_aliceBorrowAmount * 10000) / 9000;
 
@@ -210,7 +210,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenProtocolBorrowMoreThanTokenGlobalLimit_ShouldRevert() external {
-    uint256 _wethGlobalLimit = 10 ether;
+    uint256 _wethGlobalLimit = normalizeEther(10 ether, wethDecimal);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -218,7 +218,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
-      maxCollateral: 100 ether
+      maxCollateral: normalizeEther(100 ether, wethDecimal)
     });
     adminFacet.setTokenConfigs(_inputs);
 
@@ -229,7 +229,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserBorrowUpToTokenGlobalLimit_ThenProtocolBorrowSameToken_ShouldRevert() external {
-    uint256 _wethGlobalLimit = 10 ether;
+    uint256 _wethGlobalLimit = normalizeEther(10 ether, wethDecimal);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -255,8 +255,8 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenProtocolBorrowMoreThanTokenAccountLimit_ShouldRevert() external {
-    uint256 _aliceWethAccountLimit = 5 ether;
-    uint256 _bobWethAccountLimit = 4 ether;
+    uint256 _aliceWethAccountLimit = normalizeEther(5 ether, wethDecimal);
+    uint256 _bobWethAccountLimit = normalizeEther(4 ether, wethDecimal);
 
     IAdminFacet.TokenBorrowLimitInput[] memory _aliceTokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](
       1
