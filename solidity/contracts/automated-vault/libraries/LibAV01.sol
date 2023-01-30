@@ -1,24 +1,34 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 // libraries
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
+import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
-import { IAVShareToken } from "../interfaces/IAVShareToken.sol";
-import { IAVPancakeSwapHandler } from "../interfaces/IAVPancakeSwapHandler.sol";
+import { IAVVaultToken } from "../interfaces/IAVVaultToken.sol";
+import { IAVHandler } from "../interfaces/IAVHandler.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
+import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { ISwapPairLike } from "../interfaces/ISwapPairLike.sol";
+import { IERC20 } from "../interfaces/IERC20.sol";
 
 library LibAV01 {
-  using SafeERC20 for ERC20;
+  using LibSafeToken for IERC20;
 
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
+
+  uint256 internal constant MAX_BPS = 10000;
+
+  event LogAccrueInterest(
+    address indexed _vaultToken,
+    address indexed _stableToken,
+    address indexed _assetToken,
+    uint256 _stableInterest,
+    uint256 _assetInterest
+  );
 
   enum AssetTier {
     TOKEN,
@@ -28,28 +38,33 @@ library LibAV01 {
   struct VaultConfig {
     uint8 leverageLevel;
     uint16 managementFeePerSec;
-    address shareToken;
+    address vaultToken;
     address lpToken;
     address stableToken;
     address assetToken;
+    address stableTokenInterestModel;
+    address assetTokenInterestModel;
     address handler;
   }
 
   struct TokenConfig {
     AssetTier tier;
-    uint8 to18ConversionFactor;
-    uint256 maxToleranceExpiredSecond;
+    uint64 to18ConversionFactor;
   }
 
   struct AVDiamondStorage {
     address moneyMarket;
     address oracle;
     address treasury;
+    uint16 repurchaseRewardBps;
     mapping(address => VaultConfig) vaultConfigs;
     mapping(address => TokenConfig) tokenConfigs;
     mapping(address => uint256) lastFeeCollectionTimestamps;
-    // share token => debt token => debt value
-    mapping(address => mapping(address => uint256)) vaultDebtValues;
+    // vault token => debt token => debt amount
+    mapping(address => mapping(address => uint256)) vaultDebts;
+    mapping(address => uint256) lastAccrueInterestTimestamps;
+    mapping(address => bool) operatorsOk;
+    mapping(address => bool) repurchasersOk;
   }
 
   error LibAV01_NoTinyShares();
@@ -58,28 +73,26 @@ library LibAV01 {
   error LibAV01_PriceStale(address _token);
   error LibAV01_UnsupportedDecimals();
 
-  function getStorage() internal pure returns (AVDiamondStorage storage ds) {
+  function avDiamondStorage() internal pure returns (AVDiamondStorage storage ds) {
     assembly {
       ds.slot := AV_STORAGE_POSITION
     }
   }
 
   function depositToHandler(
-    address _shareToken,
+    address _handler,
+    address _vaultToken,
     address _token0,
     address _token1,
     uint256 _desiredAmount0,
     uint256 _desiredAmount1,
+    uint256 _equityBefore,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _shareToMint) {
-    address _handler = avDs.vaultConfigs[_shareToken].handler;
+    IERC20(_token0).safeTransfer(_handler, _desiredAmount0);
+    IERC20(_token1).safeTransfer(_handler, _desiredAmount1);
 
-    ERC20(_token0).safeTransfer(_handler, _desiredAmount0);
-    ERC20(_token1).safeTransfer(_handler, _desiredAmount1);
-
-    uint256 _equityBefore = _getEquity(_shareToken, _handler, avDs);
-
-    IAVPancakeSwapHandler(_handler).onDeposit(
+    IAVHandler(_handler).onDeposit(
       _token0,
       _token1,
       _desiredAmount0,
@@ -87,55 +100,147 @@ library LibAV01 {
       0 // min lp amount
     );
 
-    uint256 _equityAfter = _getEquity(_shareToken, _handler, avDs);
+    uint256 _equityAfter = getEquity(_vaultToken, _handler, avDs);
     uint256 _equityChanged = _equityAfter - _equityBefore;
 
-    uint256 _totalShareTokenSupply = ERC20(_shareToken).totalSupply();
+    uint256 _totalShareTokenSupply = IERC20(_vaultToken).totalSupply();
 
-    _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityAfter);
+    _shareToMint = LibShareUtil.valueToShare(_equityChanged, _totalShareTokenSupply, _equityBefore);
 
-    if (_totalShareTokenSupply + _shareToMint < 10**(ERC20(_shareToken).decimals() - 1)) revert LibAV01_NoTinyShares();
+    if (_totalShareTokenSupply + _shareToMint < 10**(IERC20(_vaultToken).decimals() - 1)) revert LibAV01_NoTinyShares();
   }
 
-  function withdraw(
-    address _shareToken,
-    uint256 _shareAmountIn,
-    uint256 _minTokenOut,
+  function withdrawFromHandler(
+    address _vaultToken,
+    address _handler,
+    uint256 _lpToWithdraw,
     AVDiamondStorage storage avDs
-  ) internal {
-    VaultConfig memory vaultConfig = avDs.vaultConfigs[_shareToken];
+  ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
+    VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
-    // TODO: calculate amountOut with equity value
-    // TODO: get token back from handler
-    // TODO: handle slippage
+    // (token0ReturnAmount, token1ReturnAmount)
+    (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
 
-    IAVShareToken(_shareToken).burn(msg.sender, _shareAmountIn);
-    ERC20(vaultConfig.stableToken).safeTransfer(msg.sender, _minTokenOut);
+    address _token0 = ISwapPairLike(_vaultConfig.lpToken).token0();
+    if (_token0 != _vaultConfig.stableToken) {
+      (_stableReturnAmount, _assetReturnAmount) = (_assetReturnAmount, _stableReturnAmount);
+    }
+  }
+
+  /// @dev beware that unaccrued pendingInterest affect this calculation
+  /// should call accrueInterest before calling this method to get correct value
+  function getVaultTokenValueInUSD(
+    address _vaultToken,
+    uint256 _amount,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _shareValue) {
+    uint256 _currentEquity = getEquity(_vaultToken, avDs.vaultConfigs[_vaultToken].handler, avDs);
+    uint256 _totalShareTokenSupply = IERC20(_vaultToken).totalSupply();
+    _shareValue = LibShareUtil.shareToValue(_amount, _currentEquity, _totalShareTokenSupply);
   }
 
   /// @dev return price in 1e18
-  function getPriceUSD(address _token, AVDiamondStorage storage avDs)
-    internal
-    view
-    returns (uint256 _price, uint256 _lastUpdated)
-  {
+  function getPriceUSD(address _token, AVDiamondStorage storage avDs) internal view returns (uint256 _price) {
     if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
+      (_price, ) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
     } else {
-      (_price, _lastUpdated) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
+      (_price, ) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
     }
-    if (_lastUpdated < block.timestamp - avDs.tokenConfigs[_token].maxToleranceExpiredSecond)
-      revert LibAV01_PriceStale(_token);
+  }
+
+  function accrueVaultInterest(address _vaultToken, AVDiamondStorage storage avDs)
+    internal
+    returns (uint256 _stablePendingInterest, uint256 _assetPendingInterest)
+  {
+    uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
+
+    if (_timeSinceLastAccrual > 0) {
+      VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
+      address _moneyMarket = avDs.moneyMarket;
+
+      _stablePendingInterest = getTokenPendingInterest(
+        _vaultToken,
+        _moneyMarket,
+        vaultConfig.stableToken,
+        vaultConfig.stableTokenInterestModel,
+        _timeSinceLastAccrual,
+        avDs
+      );
+      _assetPendingInterest = getTokenPendingInterest(
+        _vaultToken,
+        _moneyMarket,
+        vaultConfig.assetToken,
+        vaultConfig.assetTokenInterestModel,
+        _timeSinceLastAccrual,
+        avDs
+      );
+
+      // update debt with interest
+      avDs.vaultDebts[_vaultToken][vaultConfig.stableToken] += _stablePendingInterest;
+      avDs.vaultDebts[_vaultToken][vaultConfig.assetToken] += _assetPendingInterest;
+
+      // update timestamp
+      avDs.lastAccrueInterestTimestamps[_vaultToken] = block.timestamp;
+
+      emit LogAccrueInterest(
+        _vaultToken,
+        vaultConfig.stableToken,
+        vaultConfig.assetToken,
+        _stablePendingInterest,
+        _assetPendingInterest
+      );
+    }
+  }
+
+  function getTokenPendingInterest(
+    address _vaultToken,
+    address _moneyMarket,
+    address _token,
+    address _interestRateModel,
+    uint256 _timeSinceLastAccrual,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _pendingInterest) {
+    uint256 _debtValue = IMoneyMarket(_moneyMarket).getGlobalDebtValueWithPendingInterest(_token);
+    uint256 _floating = IMoneyMarket(_moneyMarket).getFloatingBalance(_token);
+    uint256 _interestRate = IInterestRateModel(_interestRateModel).getInterestRate(_debtValue, _floating);
+    _pendingInterest = (_interestRate * _timeSinceLastAccrual * avDs.vaultDebts[_vaultToken][_token]) / 1e18;
+  }
+
+  function getTokenInUSD(
+    address _token,
+    uint256 _amount,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _tokenValue) {
+    uint256 _price = getPriceUSD(_token, avDs);
+    _tokenValue = (_amount * avDs.tokenConfigs[_token].to18ConversionFactor * _price) / 1e18;
+  }
+
+  function getTokenAmountFromUSDValue(
+    address _token,
+    uint256 _usdValue,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _tokenAmount) {
+    _tokenAmount = ((_usdValue * 1e18) / (getPriceUSD(_token, avDs) * avDs.tokenConfigs[_token].to18ConversionFactor));
   }
 
   function borrowMoneyMarket(
-    address _shareToken,
+    address _vaultToken,
     address _token,
     uint256 _amount,
     AVDiamondStorage storage avDs
   ) internal {
     IMoneyMarket(avDs.moneyMarket).nonCollatBorrow(_token, _amount);
-    avDs.vaultDebtValues[_shareToken][_token] += _amount;
+    avDs.vaultDebts[_vaultToken][_token] += _amount;
+  }
+
+  /// @dev doesn't repay money market
+  function repayVaultDebt(
+    address _vaultToken,
+    address _token,
+    uint256 _repayAmount,
+    AVDiamondStorage storage avDs
+  ) internal {
+    avDs.vaultDebts[_vaultToken][_token] -= _repayAmount;
   }
 
   function calculateBorrowAmount(
@@ -145,8 +250,8 @@ library LibAV01 {
     uint8 _leverageLevel,
     LibAV01.AVDiamondStorage storage avDs
   ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    (uint256 _stablePrice, ) = getPriceUSD(_stableToken, avDs);
-    (uint256 _assetPrice, ) = getPriceUSD(_assetToken, avDs);
+    uint256 _stablePrice = getPriceUSD(_stableToken, avDs);
+    uint256 _assetPrice = getPriceUSD(_assetToken, avDs);
 
     uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
 
@@ -164,40 +269,62 @@ library LibAV01 {
       (_assetPrice * avDs.tokenConfigs[_assetToken].to18ConversionFactor);
   }
 
-  function to18ConversionFactor(address _token) internal view returns (uint8) {
-    uint256 _decimals = ERC20(_token).decimals();
+  function to18ConversionFactor(address _token) internal view returns (uint64) {
+    uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) revert LibAV01_UnsupportedDecimals();
     uint256 _conversionFactor = 10**(18 - _decimals);
-    return uint8(_conversionFactor);
+    return uint64(_conversionFactor);
   }
 
-  function _getEquity(
-    address _shareToken,
+  function getHandlerTotalLPValueInUSD(
+    address _handler,
+    address _lpToken,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _totalLPValueUSD) {
+    uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
+    _totalLPValueUSD = getTokenInUSD(_lpToken, _lpAmount, avDs);
+  }
+
+  /// @dev beware that unaccrued pendingInterest affect the result
+  function getVaultTotalDebtInUSD(
+    address _vaultToken,
+    address _lpToken,
+    AVDiamondStorage storage avDs
+  ) internal view returns (uint256 _totalDebtValue) {
+    address _token0 = ISwapPairLike(_lpToken).token0();
+    address _token1 = ISwapPairLike(_lpToken).token1();
+    _totalDebtValue =
+      getTokenInUSD(_token0, avDs.vaultDebts[_vaultToken][_token0], avDs) +
+      getTokenInUSD(_token1, avDs.vaultDebts[_vaultToken][_token1], avDs);
+  }
+
+  /// @dev beware that unaccrued pendingInterest affect this calculation
+  /// should call accrueInterest before calling this method to get correct value
+  /// @return _equity totalHandlerLPValueInUSD - stableTokenDebtValueInUSD - assetTokenDebtValueInUSD
+  function getEquity(
+    address _vaultToken,
     address _handler,
     AVDiamondStorage storage avDs
   ) internal view returns (uint256 _equity) {
-    VaultConfig memory _shareTokenConfig = avDs.vaultConfigs[_shareToken];
-    ISwapPairLike _lpToken = ISwapPairLike(_shareTokenConfig.lpToken);
-    address _token0 = _lpToken.token0();
-    address _token1 = _lpToken.token1();
-    uint256 _lpAmount = IAVPancakeSwapHandler(_handler).totalLpBalance();
+    address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
-    uint256 _token0DebtValue = _getDebtValueInUSD(_token0, avDs.vaultDebtValues[_shareToken][_token0], avDs);
-    uint256 _token1DebtValue = _getDebtValueInUSD(_token1, avDs.vaultDebtValues[_shareToken][_token1], avDs);
-    uint256 _totalDebtValue = _token0DebtValue + _token1DebtValue;
-    (uint256 _lpTokenPrice, ) = getPriceUSD(address(_lpToken), avDs);
-    uint256 _lpValue = (_lpAmount * _lpTokenPrice) / 1e18;
+    uint256 _lpValue = getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs);
+    uint256 _totalDebtValue = getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
   }
 
-  function _getDebtValueInUSD(
-    address _token,
-    uint256 _amount,
-    AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _debtValue) {
-    TokenConfig memory _config = avDs.tokenConfigs[_token];
-    (uint256 tokenPrice, ) = getPriceUSD(_token, avDs);
-    _debtValue = (_amount * _config.to18ConversionFactor * tokenPrice) / 1e18;
+  function mintManagementFeeToTreasury(address _vaultToken, AVDiamondStorage storage avDs) internal {
+    uint256 _secondsFromLastCollection = block.timestamp - avDs.lastFeeCollectionTimestamps[_vaultToken];
+
+    if (_secondsFromLastCollection > 0) {
+      uint256 _pendingManagementFee = (IAVVaultToken(_vaultToken).totalSupply() *
+        avDs.vaultConfigs[_vaultToken].managementFeePerSec *
+        _secondsFromLastCollection) / 1e18;
+
+      IAVVaultToken(_vaultToken).mint(avDs.treasury, _pendingManagementFee);
+
+      avDs.lastFeeCollectionTimestamps[_vaultToken] = block.timestamp;
+    }
   }
 }

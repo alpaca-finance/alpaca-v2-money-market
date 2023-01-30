@@ -3,12 +3,19 @@ pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 
+// ---- Interfaces ---- //
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
+
 interface IAdminFacet {
   // errors
   error AdminFacet_PoolIsAlreadyAdded();
   error AdminFacet_InvalidAddress();
-  error AdminFacet_BadBps();
   error AdminFacet_ReserveTooLow();
+  error AdminFacet_InvalidArguments();
+  error AdminFacet_InvalidToken(address _token);
+  error AdminFacet_InvalidIbTokenImplementation();
+  error AdminFacet_SubAccountHealthy(address _subAccount);
+  error AdminFacet_ExceedMaxRepurchaseReward();
 
   struct IbPair {
     address token;
@@ -22,7 +29,6 @@ interface IAdminFacet {
     uint16 borrowingFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
-    uint256 maxToleranceExpiredSecond;
   }
 
   struct ProtocolConfigInput {
@@ -36,17 +42,17 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
-  function setTokenToIbTokens(IbPair[] memory _ibPair) external;
+  struct WriteOffSubAccountDebtInput {
+    address account;
+    uint256 subAccountId;
+    address token;
+  }
 
-  function tokenToIbTokens(address _token) external view returns (address);
-
-  function ibTokenToTokens(address _ibToken) external view returns (address);
+  function openMarket(address _token) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
-  function setNonCollatBorrower(address _borrower, bool _isOk) external;
-
-  function tokenConfigs(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
+  function setNonCollatBorrowerOk(address _borrower, bool _isOk) external;
 
   function setInterestModel(address _token, address model) external;
 
@@ -56,7 +62,7 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
-  function setLiquidationCallersOk(address[] calldata list, bool _isOk) external;
+  function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
   function setTreasury(address newTreasury) external;
 
@@ -67,13 +73,13 @@ interface IAdminFacet {
   ) external;
 
   function setFees(
-    uint256 _newLendingFeeBps,
-    uint256 _newRepurchaseRewardBps,
-    uint256 _newRepurchaseFeeBps,
-    uint256 _newLiquidationFeeBps
+    uint16 _newLendingFeeBps,
+    uint16 _newRepurchaseFeeBps,
+    uint16 _newLiquidationFeeBps,
+    uint16 _newLiquidationRewardBps
   ) external;
 
-  function getProtocolReserve(address _token) external view returns (uint256 _reserve);
+  function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
   function withdrawReserve(
     address _token,
@@ -81,5 +87,21 @@ interface IAdminFacet {
     uint256 _amount
   ) external;
 
+  function setIbTokenImplementation(address _newImplementation) external;
+
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
+
+  function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external;
+
+  function setMaxNumOfToken(
+    uint8 _numOfCollat,
+    uint8 _numOfDebt,
+    uint8 _numOfNonCollatDebt
+  ) external;
+
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
+
+  function topUpTokenReserve(address _token, uint256 _amount) external;
+
+  function setMinDebtSize(uint256 _newValue) external;
 }

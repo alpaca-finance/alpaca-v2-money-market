@@ -38,6 +38,9 @@ library LibDiamond {
     mapping(bytes4 => bool) supportedInterfaces;
     // owner of the contract
     address contractOwner;
+    address pendingOwner;
+    uint8 diamondInitialized;
+    uint8 moneyMarketInitialized;
   }
 
   function diamondStorage() internal pure returns (DiamondStorage storage ds) {
@@ -56,8 +59,17 @@ library LibDiamond {
     emit OwnershipTransferred(previousOwner, _newOwner);
   }
 
+  function setPendingOwner(address _newPendingOwner) internal {
+    DiamondStorage storage ds = diamondStorage();
+    ds.pendingOwner = _newPendingOwner;
+  }
+
   function contractOwner() internal view returns (address contractOwner_) {
     contractOwner_ = diamondStorage().contractOwner;
+  }
+
+  function pendingOwner() internal view returns (address pendingOwner_) {
+    pendingOwner_ = diamondStorage().pendingOwner;
   }
 
   function enforceIsContractOwner() internal view {

@@ -11,7 +11,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
 import { LibReentrancyGuard } from "../../contracts/money-market/libraries/LibReentrancyGuard.sol";
 
-contract MoneyMarket_LendFacetTest is MoneyMarket_BaseTest {
+contract MoneyMarket_ReentrancyGuardTest is MoneyMarket_BaseTest {
   MockAttacker attacker;
 
   function setUp() public override {
@@ -37,7 +37,7 @@ contract MockAttacker is BaseTest {
 
   function attack() external payable {
     ILendFacet(moneyMarket).depositETH{ value: address(this).balance }();
-    ILendFacet(moneyMarket).withdrawETH(ibWNativeToken, 1 ether);
+    ILendFacet(moneyMarket).withdrawETH(1 ether);
   }
 
   //@dev Fallback function to accept BNB.

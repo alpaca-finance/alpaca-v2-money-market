@@ -45,8 +45,7 @@ contract SetTokenConfig is Script {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 10000e18,
-      maxCollateral: 30000e18,
-      maxToleranceExpiredSecond: 604800
+      maxCollateral: 30000e18
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -55,8 +54,7 @@ contract SetTokenConfig is Script {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 10000e18,
-      maxCollateral: 30000e18,
-      maxToleranceExpiredSecond: 604800
+      maxCollateral: 30000e18
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -65,8 +63,7 @@ contract SetTokenConfig is Script {
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 10000e18,
-      maxCollateral: 30000e18,
-      maxToleranceExpiredSecond: 604800
+      maxCollateral: 30000e18
     });
 
     adminFacet.setTokenConfigs(_inputs);
