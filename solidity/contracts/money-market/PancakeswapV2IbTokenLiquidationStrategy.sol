@@ -10,6 +10,7 @@ import { LibShareUtil } from "./libraries/LibShareUtil.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
+import { IInterestBearingToken } from "./interfaces/IInterestBearingToken.sol";
 import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
@@ -91,11 +92,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     uint256 _maxIbTokenToWithdraw,
     uint256 _requiredUnderlyingAmount
   ) internal returns (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) {
-    uint256 _requiredIbTokenToWithdraw = _convertUnderlyingToIbToken(
-      _ibToken,
-      _underlyingToken,
-      _requiredUnderlyingAmount
-    );
+    // uint256 _requiredIbTokenToWithdraw = _convertUnderlyingToIbToken(
+    //   _ibToken,
+    //   _underlyingToken,
+    //   _requiredUnderlyingAmount
+    // );
+
+    uint256 _requiredIbTokenToWithdraw = IInterestBearingToken(_ibToken).convertToShares(_requiredUnderlyingAmount);
 
     // _maxIbTokenToWithdraw is ibTokenAmount that caller send to strat
     _withdrawnIbTokenAmount = _maxIbTokenToWithdraw > _requiredIbTokenToWithdraw
