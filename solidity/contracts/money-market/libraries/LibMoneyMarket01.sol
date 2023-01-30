@@ -16,6 +16,8 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
 
+import { console } from "../../../tests/utils/console.sol";
+
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
@@ -303,6 +305,7 @@ library LibMoneyMarket01 {
     returns (uint256 _globalPendingInterest)
   {
     uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
+    console.log("pending interest", _lastAccrualTimestamp);
     if (block.timestamp > _lastAccrualTimestamp) {
       uint256 _secondsSinceLastAccrual;
       unchecked {
@@ -316,6 +319,8 @@ library LibMoneyMarket01 {
           (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
             _borrowedAccounts[_i].amount) /
           1e18;
+
+        console.log("_nonCollatInterestAmountPerSec", _nonCollatInterestAmountPerSec);
         unchecked {
           ++_i;
         }
@@ -326,6 +331,8 @@ library LibMoneyMarket01 {
           (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token]) /
           1e18) *
         _secondsSinceLastAccrual;
+
+      console.log("_globalPendingInterest", _globalPendingInterest);
     }
   }
 
@@ -335,13 +342,17 @@ library LibMoneyMarket01 {
     returns (uint256 _interestRate)
   {
     IInterestRateModel _interestModel = moneyMarketDs.interestModels[_token];
+    console.log("interest model");
     if (address(_interestModel) == address(0)) {
       return 0;
     }
+    console.log("global value", moneyMarketDs.globalDebts[_token]);
+    console.log("floating value", getFloatingBalance(_token, moneyMarketDs));
     _interestRate = _interestModel.getInterestRate(
       moneyMarketDs.globalDebts[_token],
       getFloatingBalance(_token, moneyMarketDs)
     );
+    console.log("interest model RATE", _interestRate);
   }
 
   function getNonCollatInterestRate(
@@ -367,7 +378,10 @@ library LibMoneyMarket01 {
   ) internal returns (uint256 _overCollatInterest) {
     // cache to save gas
     uint256 _totalDebtValue = moneyMarketDs.overCollatDebtValues[_token];
+    console.log("_totalDebtValue", _totalDebtValue);
     _overCollatInterest = (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * _totalDebtValue) / 1e18;
+    console.log("_overCollatInterest", _overCollatInterest);
+    console.log("final", _totalDebtValue + _overCollatInterest);
     // update overcollat debt
     moneyMarketDs.overCollatDebtValues[_token] = _totalDebtValue + _overCollatInterest;
   }
@@ -382,6 +396,8 @@ library LibMoneyMarket01 {
       uint256 _overCollatInterest = accrueOverCollatInterest(_token, _secondsSinceLastAccrual, moneyMarketDs);
       uint256 _nonCollatInterest = accrueNonCollatInterest(_token, _secondsSinceLastAccrual, moneyMarketDs);
 
+      console.log("_overCollatInterest", _overCollatInterest);
+      console.log("_nonCollatInterest", _nonCollatInterest);
       // update global debt
       uint256 _totalInterest = _overCollatInterest + _nonCollatInterest;
       moneyMarketDs.globalDebts[_token] += _totalInterest;
@@ -437,6 +453,7 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     for (uint256 _i; _i < _borrowedLength; ) {
+      console.log("borrowed token index: ", _i);
       accrueInterest(_borrowed[_i].token, moneyMarketDs);
       unchecked {
         ++_i;

@@ -19,7 +19,7 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
 
-    FixedInterestRateModel model = new FixedInterestRateModel();
+    FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
     TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(model));
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));

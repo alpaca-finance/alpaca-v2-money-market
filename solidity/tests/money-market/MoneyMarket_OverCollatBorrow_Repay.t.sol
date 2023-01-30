@@ -19,13 +19,13 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     // set interest to make sure that repay work correclty with share
-    FixedInterestRateModel model = new FixedInterestRateModel();
+    FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
     adminFacet.setInterestModel(address(weth), address(model));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 20 ether);
-    lendFacet.deposit(address(usdc), 20 ether);
-    lendFacet.deposit(address(isolateToken), 20 ether);
+    lendFacet.deposit(address(weth), normalizeEther(20 ether, wethDecimal));
+    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
 
     uint256 _aliceBorrowAmount = 10 ether;

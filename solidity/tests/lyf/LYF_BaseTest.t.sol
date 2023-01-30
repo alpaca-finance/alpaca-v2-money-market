@@ -269,17 +269,17 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setDebtPoolId(address(usdc), address(btcUsdcLPToken), 4);
 
     // set interest model
-    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.1 ether)));
-    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0.05 ether)));
-    adminFacet.setDebtPoolInterestModel(3, address(new MockInterestModel(0.05 ether)));
-    adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(normalizeEther(0.1 ether, 18)))); // lptoken decimal
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(normalizeEther(0.05 ether, 18)))); // lptoken decimal
+    adminFacet.setDebtPoolInterestModel(3, address(new MockInterestModel(normalizeEther(0.05 ether, 18)))); // lptoken decimal
+    adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(normalizeEther(0.05 ether, 18)))); // lptoken decimal
 
     adminFacet.setTreasury(treasury);
 
     // set max num of tokens
     adminFacet.setMaxNumOfToken(3, 3);
 
-    adminFacet.setMinDebtSize(0.01 ether);
+    adminFacet.setMinDebtSize(normalizeEther(0.01 ether, usdDecimal));
   }
 
   function setUpMM(address _moneyMarketDiamond) internal {
@@ -299,6 +299,11 @@ abstract contract LYF_BaseTest is BaseTest {
     ibBtc = InterestBearingToken(_ibBtc);
     ibWNative = InterestBearingToken(_ibNativeToken);
 
+    ibWethDecimal = ibWeth.decimals();
+    ibUsdcDecimal = ibUsdc.decimals();
+    ibBtcDecimal = ibBtc.decimals();
+    ibWNativeDecimal = ibWNative.decimals();
+
     mmAdminFacet.setNonCollatBorrowerOk(lyfDiamond, true);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
@@ -307,8 +312,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 10000 ether,
-      maxCollateral: 10000 ether
+      maxBorrow: normalizeEther(10000 ether, wethDecimal),
+      maxCollateral: normalizeEther(10000 ether, wethDecimal)
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -316,8 +321,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 10000 ether,
-      maxCollateral: 10000 ether
+      maxBorrow: normalizeEther(10000 ether, usdcDecimal),
+      maxCollateral: normalizeEther(10000 ether, usdcDecimal)
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -325,8 +330,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 100e18,
-      maxCollateral: 100e18
+      maxBorrow: normalizeEther(100 ether, btcDecimal),
+      maxCollateral: normalizeEther(100 ether, btcDecimal)
     });
 
     _inputs[3] = IAdminFacet.TokenConfigInput({
@@ -334,8 +339,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 100e18,
-      maxCollateral: 100e18
+      maxBorrow: normalizeEther(100 ether, cakeDecimal),
+      maxCollateral: normalizeEther(100 ether, cakeDecimal)
     });
 
     mmAdminFacet.setTokenConfigs(_inputs);
@@ -374,9 +379,9 @@ abstract contract LYF_BaseTest is BaseTest {
     btc.approve(moneyMarketDiamond, type(uint256).max);
 
     // DON'T change these value. Some test cases are tied to deposit balances.
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(btc), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(weth), normalizeEther(100 ether, wethDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(address(btc), normalizeEther(100 ether, btcDecimal));
 
     vm.stopPrank();
 

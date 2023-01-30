@@ -89,7 +89,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
      *    - alice's total ibWeth = 14.878048780487804878
      */
 
-    FixedInterestRateModel model = new FixedInterestRateModel();
+    FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
     adminFacet.setInterestModel(address(weth), address(model));
     borrowFacet.accrueInterest(address(weth));
 

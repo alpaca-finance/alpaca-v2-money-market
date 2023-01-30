@@ -52,23 +52,23 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     adminFacet.setLiquidatorsOk(_liquidationCallers, true);
 
     vm.startPrank(DEPLOYER);
-    mockOracle.setTokenPrice(address(btc), 10 ether);
+    mockOracle.setTokenPrice(address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(address(usdc), 100 ether);
-    lendFacet.deposit(address(btc), 10 ether);
+    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    lendFacet.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), 40 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
     // alice borrowed 30% of vault then interest should be 0.0617647058676 per year
     // interest per day = 0.00016921837224
-    borrowFacet.borrow(0, address(usdc), 30 ether);
+    borrowFacet.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
   }
 

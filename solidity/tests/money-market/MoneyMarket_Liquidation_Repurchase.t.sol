@@ -43,8 +43,8 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(address(usdc), 100 ether);
-    lendFacet.deposit(address(btc), 10 ether);
+    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    lendFacet.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);

@@ -16,6 +16,10 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
+import { IERC20 } from "../interfaces/IERC20.sol";
+
+import { console } from "../utils/console.sol";
+
 /// @title FakeRouter - 1:1 swap for all token without fee and price impact
 contract MockRouter {
   using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -59,8 +63,15 @@ contract MockRouter {
     uint256 /*deadline*/
   ) external returns (uint256[] memory amounts) {
     amounts = getAmountsOut(amountIn, path);
+
+    uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(path[0]).decimals());
+    uint256 _normalizedAmountOut = _normalizedAmountIn / 10**(18 - IERC20(path[path.length - 1]).decimals());
+
+    console.log("amountin", _normalizedAmountIn);
+    console.log("amountout", _normalizedAmountOut);
+
     IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
-    IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, amountIn);
+    IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, _normalizedAmountOut);
   }
 
   function swapTokensForExactTokens(
@@ -71,15 +82,26 @@ contract MockRouter {
     uint256 /*deadline*/
   ) external returns (uint256[] memory amounts) {
     amounts = getAmountsIn(amountOut, path);
-    IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), amountOut);
+
+    uint256 _normalizedAmountOut = amountOut * 10**(18 - IERC20(path[path.length - 1]).decimals());
+    uint256 _normalizedAmountIn = _normalizedAmountOut / 10**(18 - IERC20(path[0]).decimals());
+
+    console.log("amountin", _normalizedAmountIn);
+    console.log("amountout", _normalizedAmountOut);
+
+    IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), _normalizedAmountIn);
     IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, amountOut);
   }
 
-  function getAmountsIn(uint256 amountOut, address[] memory path) public pure returns (uint256[] memory amounts) {
+  function getAmountsIn(uint256 amountOut, address[] memory path) public view returns (uint256[] memory amounts) {
     amounts = new uint256[](path.length);
-    for (uint256 i = 0; i < path.length; i++) {
-      amounts[i] = amountOut;
-    }
+    uint256 _normalizedAmountOut = amountOut * 10**(18 - IERC20(path[path.length - 1]).decimals());
+
+    uint256 _normalizedAmountIn = _normalizedAmountOut;
+
+    amounts[0] = _normalizedAmountIn / 10**(18 - IERC20(path[0]).decimals());
+    amounts[1] = _normalizedAmountOut / 10**(18 - IERC20(path[path.length - 1]).decimals());
+
     return amounts;
   }
 

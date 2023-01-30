@@ -32,6 +32,7 @@ contract MockMoneyMarket is IMoneyMarket {
   function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue) {
     _shareValue = _withdrawalAmount;
     IERC20(_ibToken).transferFrom(msg.sender, address(this), _shareAmount);
+    // underlying token
     IERC20(_ibToTokens[_ibToken]).transfer(msg.sender, _shareValue);
   }
 }
