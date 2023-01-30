@@ -8,6 +8,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 
 // interfaces
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
 
 struct CacheState {
   uint256 collat;
@@ -20,7 +21,6 @@ struct CacheState {
 contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
-  address treasury;
 
   function setUp() public override {
     super.setUp();
@@ -29,6 +29,9 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(weth), address(tripleSlope6));
     adminFacet.setInterestModel(address(btc), address(tripleSlope6));
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
+
+    FixedFeeModel fixedFeeModel = new FixedFeeModel();
+    adminFacet.setRepurchaseRewardModel(fixedFeeModel);
 
     vm.startPrank(DEPLOYER);
     mockOracle.setTokenPrice(address(btc), 10 ether);
@@ -49,8 +52,6 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // interest per day = 0.00016921837224
     borrowFacet.borrow(0, address(usdc), 30 ether);
     vm.stopPrank();
-
-    treasury = address(this);
   }
 
   // ib repurchase tests
@@ -88,13 +89,14 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // collat debt share should be = 60
     CacheState memory _stateBefore = CacheState({
       collat: viewFacet.getTotalCollat(_collatToken),
-      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
 
     // add time 1 day
     // then total debt value should increase by 0.0033843674448 * 60 = 0.20306204668800000
@@ -112,8 +114,9 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // reward = 1%
     // repurchase fee = 1%
     // timestamp increased by 1 day, debt value should increased to 60.20306204668800000
-    // feeAmount = 15 * 0.01 = 0.15
-    uint256 _expectedFee = 0.15 ether;
+    // RepuschaseFee = 15 * 0.01 = 0.15
+
+    uint256 _expectedFeeToTreasury = 0.15 ether;
     vm.prank(BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, 15 ether);
 
@@ -130,7 +133,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollat(_collatToken),
-      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(_aliceSubAccount0, _collatToken),
+      subAccountCollat: viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, _collatToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
@@ -154,6 +157,6 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, 45.155024085320448158 ether);
     assertEq(_stateAfter.subAccountDebtShare, 45.155024085320448158 ether);
     vm.stopPrank();
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
+    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore, _expectedFeeToTreasury);
   }
 }

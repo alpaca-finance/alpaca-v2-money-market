@@ -70,7 +70,9 @@ abstract contract LYF_BaseTest is BaseTest {
   ILYFViewFacet internal viewFacet;
 
   MockLPToken internal wethUsdcLPToken;
+  MockLPToken internal btcUsdcLPToken;
   uint256 internal wethUsdcPoolId;
+  uint256 internal btcUsdcPoolId;
 
   MockChainLinkPriceOracle chainLinkOracle;
 
@@ -82,9 +84,9 @@ abstract contract LYF_BaseTest is BaseTest {
   uint256 constant reinvestThreshold = 1e18;
 
   function setUp() public virtual {
-    lyfDiamond = LYFDiamondDeployer.deployPoolDiamond();
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
-    setUpMM();
+    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
+    lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
+    setUpMM(moneyMarketDiamond);
 
     adminFacet = LYFAdminFacet(lyfDiamond);
     collateralFacet = ILYFCollateralFacet(lyfDiamond);
@@ -106,6 +108,7 @@ abstract contract LYF_BaseTest is BaseTest {
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(lyfDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
+    btc.approve(lyfDiamond, type(uint256).max);
     ibWeth.approve(lyfDiamond, type(uint256).max);
     ibUsdc.approve(lyfDiamond, type(uint256).max);
     vm.stopPrank();
@@ -115,13 +118,16 @@ abstract contract LYF_BaseTest is BaseTest {
 
     // MASTERCHEF POOLID
     wethUsdcPoolId = 1;
+    btcUsdcPoolId = 2;
 
     // mock LP, Router and Stratgy
-    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+    wethUsdcLPToken = new MockLPToken("MOCK WETH-USDC LP", "MOCK LP", 18, address(weth), address(usdc));
+    btcUsdcLPToken = new MockLPToken("MOCK BTC-USDC LP", "MOCK LP", 18, address(btc), address(usdc));
 
     mockRouter = new MockRouter(address(wethUsdcLPToken));
 
     masterChef.addLendingPool(address(wethUsdcLPToken), wethUsdcPoolId);
+    masterChef.addLendingPool(address(btcUsdcLPToken), btcUsdcPoolId);
 
     addStrat = new PancakeswapV2Strategy(IRouterLike(address(mockRouter)));
     address[] memory stratWhitelistedCallers = new address[](1);
@@ -129,21 +135,20 @@ abstract contract LYF_BaseTest is BaseTest {
     addStrat.setWhitelistedCallers(stratWhitelistedCallers, true);
 
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+    btcUsdcLPToken.mint(address(mockRouter), 1000000 ether);
     usdc.mint(address(mockRouter), 1000000 ether);
     weth.mint(address(mockRouter), 1000000 ether);
-
-    adminFacet.setMoneyMarket(address(moneyMarketDiamond));
+    btc.mint(address(mockRouter), 1000000 ether);
 
     // set token config
-    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](8);
+    ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](9);
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxCollateral: 100 ether
     });
 
     _inputs[1] = ILYFAdminFacet.TokenConfigInput({
@@ -151,8 +156,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 1e24,
-      maxCollateral: 10e24
+      maxCollateral: 100 ether
     });
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
@@ -160,7 +164,6 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 1e24,
       maxCollateral: 10e24
     });
 
@@ -169,43 +172,46 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 0,
       maxCollateral: 10e24
     });
 
     _inputs[4] = ILYFAdminFacet.TokenConfigInput({
-      token: address(ibUsdc),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      token: address(btcUsdcLPToken),
+      tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
       borrowingFactor: 0,
-      maxBorrow: 1e24,
       maxCollateral: 10e24
     });
 
     _inputs[5] = ILYFAdminFacet.TokenConfigInput({
+      token: address(ibUsdc),
+      tier: LibLYF01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 0,
+      maxCollateral: 10e24
+    });
+
+    _inputs[6] = ILYFAdminFacet.TokenConfigInput({
       token: address(btc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 100e18
     });
 
-    _inputs[6] = ILYFAdminFacet.TokenConfigInput({
+    _inputs[7] = ILYFAdminFacet.TokenConfigInput({
       token: address(ibBtc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 10e24
     });
 
-    _inputs[7] = ILYFAdminFacet.TokenConfigInput({
+    _inputs[8] = ILYFAdminFacet.TokenConfigInput({
       token: address(cake),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
       maxCollateral: 100e18
     });
 
@@ -215,7 +221,7 @@ abstract contract LYF_BaseTest is BaseTest {
     _reinvestPath[0] = address(cake);
     _reinvestPath[1] = address(usdc);
 
-    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](1);
+    ILYFAdminFacet.LPConfigInput[] memory lpConfigs = new ILYFAdminFacet.LPConfigInput[](2);
     lpConfigs[0] = ILYFAdminFacet.LPConfigInput({
       lpToken: address(wethUsdcLPToken),
       strategy: address(addStrat),
@@ -223,8 +229,22 @@ abstract contract LYF_BaseTest is BaseTest {
       router: address(mockRouter),
       reinvestPath: _reinvestPath,
       reinvestThreshold: reinvestThreshold,
+      poolId: wethUsdcPoolId,
       rewardToken: address(cake),
-      poolId: wethUsdcPoolId
+      maxLpAmount: 100 ether,
+      reinvestTreasuryBountyBps: 1500
+    });
+    lpConfigs[1] = ILYFAdminFacet.LPConfigInput({
+      lpToken: address(btcUsdcLPToken),
+      strategy: address(addStrat),
+      masterChef: address(masterChef),
+      router: address(mockRouter),
+      reinvestPath: _reinvestPath,
+      reinvestThreshold: reinvestThreshold,
+      poolId: btcUsdcPoolId,
+      rewardToken: address(cake),
+      maxLpAmount: 100 ether,
+      reinvestTreasuryBountyBps: 1500
     });
     adminFacet.setLPConfigs(lpConfigs);
 
@@ -235,6 +255,7 @@ abstract contract LYF_BaseTest is BaseTest {
     mockOracle.setTokenPrice(address(btc), 10e18);
     mockOracle.setTokenPrice(address(isolateToken), 1e18);
     mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2e18);
+    mockOracle.setLpTokenPrice(address(btcUsdcLPToken), 5e18);
 
     chainLinkOracle = deployMockChainLinkPriceOracle();
 
@@ -242,21 +263,27 @@ abstract contract LYF_BaseTest is BaseTest {
     IAdminFacet(lyfDiamond).setOracle(address(mockOracle));
 
     // set debt share indexes
-    adminFacet.setDebtShareId(address(weth), address(wethUsdcLPToken), 1);
-    adminFacet.setDebtShareId(address(usdc), address(wethUsdcLPToken), 2);
+    adminFacet.setDebtPoolId(address(weth), address(wethUsdcLPToken), 1);
+    adminFacet.setDebtPoolId(address(usdc), address(wethUsdcLPToken), 2);
+    adminFacet.setDebtPoolId(address(btc), address(btcUsdcLPToken), 3);
+    adminFacet.setDebtPoolId(address(usdc), address(btcUsdcLPToken), 4);
 
     // set interest model
-    adminFacet.setDebtInterestModel(1, address(new MockInterestModel(0.1 ether)));
-    adminFacet.setDebtInterestModel(2, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.1 ether)));
+    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(3, address(new MockInterestModel(0.05 ether)));
+    adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(0.05 ether)));
 
     adminFacet.setTreasury(treasury);
 
     // set max num of tokens
-    adminFacet.setMaxNumOfToken(3);
+    adminFacet.setMaxNumOfToken(3, 3);
+
+    adminFacet.setMinDebtSize(0.01 ether);
   }
 
-  function setUpMM() internal {
-    IAdminFacet mmAdminFacet = IAdminFacet(moneyMarketDiamond);
+  function setUpMM(address _moneyMarketDiamond) internal {
+    IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
 
     // set ib token implementation
     // warning: this one should set before open market
@@ -265,7 +292,7 @@ abstract contract LYF_BaseTest is BaseTest {
     address _ibWeth = mmAdminFacet.openMarket(address(weth));
     address _ibUsdc = mmAdminFacet.openMarket(address(usdc));
     address _ibBtc = mmAdminFacet.openMarket(address(btc));
-    address _ibNativeToken = mmAdminFacet.openMarket(address(nativeToken));
+    address _ibNativeToken = mmAdminFacet.openMarket(address(wNativeToken));
 
     ibWeth = InterestBearingToken(_ibWeth);
     ibUsdc = InterestBearingToken(_ibUsdc);
@@ -280,8 +307,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxBorrow: 10000 ether,
+      maxCollateral: 10000 ether
     });
 
     _inputs[1] = IAdminFacet.TokenConfigInput({
@@ -289,8 +316,8 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 1e24,
-      maxCollateral: 10e24
+      maxBorrow: 10000 ether,
+      maxCollateral: 10000 ether
     });
 
     _inputs[2] = IAdminFacet.TokenConfigInput({
@@ -298,7 +325,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 100e18,
       maxCollateral: 100e18
     });
 
@@ -307,7 +334,7 @@ abstract contract LYF_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
+      maxBorrow: 100e18,
       maxCollateral: 100e18
     });
 
@@ -326,12 +353,12 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(btc),
       maxTokenBorrow: type(uint256).max
     });
-    _tokenBorrowLimitInputs[2] = IAdminFacet.TokenBorrowLimitInput({
+    _tokenBorrowLimitInputs[3] = IAdminFacet.TokenBorrowLimitInput({
       token: address(cake),
       maxTokenBorrow: type(uint256).max
     });
 
-    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](2);
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](1);
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: lyfDiamond,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
@@ -341,11 +368,16 @@ abstract contract LYF_BaseTest is BaseTest {
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
 
     vm.startPrank(EVE);
+
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
+    btc.approve(moneyMarketDiamond, type(uint256).max);
 
+    // DON'T change these value. Some test cases are tied to deposit balances.
     ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
     ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(btc), 100 ether);
+
     vm.stopPrank();
 
     // set max num of tokens

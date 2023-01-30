@@ -9,7 +9,9 @@ library LibShareUtil {
     uint256 _totalValue,
     uint256 _totalShare
   ) internal pure returns (uint256) {
-    if (_totalShare == 0) return _shareAmount;
+    if (_totalShare == 0) {
+      return _shareAmount;
+    }
     return LibFullMath.mulDiv(_shareAmount, _totalValue, _totalShare);
   }
 
@@ -18,7 +20,9 @@ library LibShareUtil {
     uint256 _totalShare,
     uint256 _totalValue
   ) internal pure returns (uint256) {
-    if (_totalShare == 0) return _tokenAmount;
+    if (_totalShare == 0) {
+      return _tokenAmount;
+    }
     return LibFullMath.mulDiv(_tokenAmount, _totalShare, _totalValue);
   }
 

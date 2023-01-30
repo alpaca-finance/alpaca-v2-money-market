@@ -168,8 +168,6 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserHaveNotBorrow_ShouldAbleToBorrowIsolateAsset() external {
-    vm.warp(86401);
-
     uint256 _bobIsolateBorrowAmount = 5 ether;
     uint256 _bobCollateralAmount = 10 ether;
 
@@ -181,8 +179,6 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserAlreadyBorrowIsloateToken_ShouldRevertIfTryToBorrowDifferentToken() external {
-    vm.warp(86401);
-
     uint256 _bobIsloateBorrowAmount = 5 ether;
     uint256 _bobCollateralAmount = 20 ether;
 

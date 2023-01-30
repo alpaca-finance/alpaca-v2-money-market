@@ -22,14 +22,26 @@ contract CollateralFacet is ICollateralFacet {
   using SafeCast for uint256;
   using SafeCast for int256;
 
-  event LogAddCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogAddCollateral(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    address _caller,
+    uint256 _amount
+  );
 
-  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogRemoveCollateral(
+    address indexed _account,
+    uint256 indexed _subAccountId,
+    address indexed _token,
+    uint256 _amount
+  );
 
   event LogTransferCollateral(
-    address indexed _fromSubAccount,
-    address indexed _toSubAccount,
-    address indexed _token,
+    address indexed _account,
+    uint256 indexed _fromSubAccountId,
+    uint256 indexed _toSubAccountId,
+    address _token,
     uint256 _amount
   );
 
@@ -53,11 +65,11 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
 
-    emit LogAddCollateral(_subAccount, _token, _amount);
+    emit LogAddCollateral(_account, _subAccountId, _token, msg.sender, _amount);
   }
 
   /// @notice Remove a collateral token from a subaccount
@@ -79,7 +91,7 @@ contract CollateralFacet is ICollateralFacet {
 
     IERC20(_token).safeTransfer(msg.sender, _removeAmount);
 
-    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
+    emit LogRemoveCollateral(msg.sender, _subAccountId, _token, _removeAmount);
   }
 
   /// @notice Transfer the collateral from one subaccount to another subaccount
@@ -93,7 +105,9 @@ contract CollateralFacet is ICollateralFacet {
     address _token,
     uint256 _amount
   ) external nonReentrant {
-    if (_fromSubAccountId == _toSubAccountId) revert CollateralFacet_NoSelfTransfer();
+    if (_fromSubAccountId == _toSubAccountId) {
+      revert CollateralFacet_NoSelfTransfer();
+    }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -104,6 +118,6 @@ contract CollateralFacet is ICollateralFacet {
     address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
     LibMoneyMarket01.transferCollat(_toSubAccount, _token, _amount, moneyMarketDs);
 
-    emit LogTransferCollateral(_fromSubAccount, _toSubAccount, _token, _amount);
+    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
 }

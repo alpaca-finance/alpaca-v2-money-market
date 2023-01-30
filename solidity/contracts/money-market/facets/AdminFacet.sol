@@ -11,10 +11,12 @@ import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // ---- Interfaces ---- //
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IFeeModel } from "../interfaces/IFeeModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
@@ -36,11 +38,12 @@ contract AdminFacet is IAdminFacet {
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
   event LogSetTreasury(address indexed _treasury);
   event LogSetFees(
-    uint256 lendingFeeBps,
-    uint256 repurchaseRewardBps,
-    uint256 repurchaseFeeBps,
-    uint256 liquidationFeeBps
+    uint256 _lendingFeeBps,
+    uint256 _repurchaseFeeBps,
+    uint256 _liquidationFeeBps,
+    uint256 _liquidationRewardBps
   );
+  event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolConfig(
     address indexed _account,
@@ -51,6 +54,13 @@ contract AdminFacet is IAdminFacet {
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
+  event LogWriteOffSubAccountDebt(
+    address indexed subAccount,
+    address indexed token,
+    uint256 debtShareWrittenOff,
+    uint256 debtValueWrittenOff
+  );
+  event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetMinDebtSize(uint256 _newValue);
 
   modifier onlyOwner() {
@@ -69,7 +79,9 @@ contract AdminFacet is IAdminFacet {
   /// @return _newIbToken The address of interest bearing token created for this market
   function openMarket(address _token) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (moneyMarketDs.ibTokenImplementation == address(0)) revert AdminFacet_InvalidIbTokenImplementation();
+    if (moneyMarketDs.ibTokenImplementation == address(0)) {
+      revert AdminFacet_InvalidIbTokenImplementation();
+    }
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 
@@ -81,7 +93,7 @@ contract AdminFacet is IAdminFacet {
     IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
     // todo: tbd
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+    moneyMarketDs.tokenConfigs[_token] = LibMoneyMarket01.TokenConfig({
       tier: LibMoneyMarket01.AssetTier.ISOLATE,
       collateralFactor: 0,
       borrowingFactor: 8500,
@@ -90,8 +102,8 @@ contract AdminFacet is IAdminFacet {
       to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
     });
 
-    LibMoneyMarket01.setIbPair(_token, _newIbToken, moneyMarketDs);
-    LibMoneyMarket01.setTokenConfig(_token, _tokenConfig, moneyMarketDs);
+    moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
+    moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken);
   }
@@ -101,15 +113,17 @@ contract AdminFacet is IAdminFacet {
   function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
-    for (uint8 _i; _i < _inputLength; ) {
-      TokenConfigInput calldata _tokenConfigInput = _tokenConfigInputs[_i];
+    LibMoneyMarket01.TokenConfig memory _tokenConfig;
+    TokenConfigInput calldata _tokenConfigInput;
+    for (uint256 _i; _i < _inputLength; ) {
+      _tokenConfigInput = _tokenConfigInputs[_i];
       _validateTokenConfig(
         _tokenConfigInput.collateralFactor,
         _tokenConfigInput.borrowingFactor,
         _tokenConfigInput.maxCollateral,
         _tokenConfigInput.maxBorrow
       );
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+      _tokenConfig = LibMoneyMarket01.TokenConfig({
         tier: _tokenConfigInput.tier,
         collateralFactor: _tokenConfigInput.collateralFactor,
         borrowingFactor: _tokenConfigInput.borrowingFactor,
@@ -118,7 +132,7 @@ contract AdminFacet is IAdminFacet {
         to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
       });
 
-      LibMoneyMarket01.setTokenConfig(_tokenConfigInput.token, _tokenConfig, moneyMarketDs);
+      moneyMarketDs.tokenConfigs[_tokenConfigInput.token] = _tokenConfig;
 
       emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
 
@@ -183,7 +197,7 @@ contract AdminFacet is IAdminFacet {
   function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _repurchasers.length;
-    for (uint8 _i; _i < _length; ) {
+    for (uint256 _i; _i < _length; ) {
       moneyMarketDs.repurchasersOk[_repurchasers[_i]] = _isOk;
       emit LogSetRepurchaserOk(_repurchasers[_i], _isOk);
       unchecked {
@@ -243,7 +257,9 @@ contract AdminFacet is IAdminFacet {
     if (_amount > moneyMarketDs.protocolReserves[_token]) {
       revert AdminFacet_ReserveTooLow();
     }
-    if (_amount > moneyMarketDs.reserves[_token]) revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    if (_amount > moneyMarketDs.reserves[_token]) {
+      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
 
     moneyMarketDs.protocolReserves[_token] -= _amount;
 
@@ -255,30 +271,46 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Set protocol's fees
   /// @param _newLendingFeeBps The lending fee imposed on interest collected
-  /// @param _newRepurchaseRewardBps The reward bps given out to repurchaser as a premium on collateral
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
-  /// @param _newLiquidationFeeBps The liquidation fee collected by the protocol
+  /// @param _newLiquidationFeeBps The total fee from liquidation
+  /// @param _newLiquidationRewardBps The fee collected by liquidator
   function setFees(
     uint16 _newLendingFeeBps,
-    uint16 _newRepurchaseRewardBps,
     uint16 _newRepurchaseFeeBps,
-    uint16 _newLiquidationFeeBps
+    uint16 _newLiquidationFeeBps,
+    uint16 _newLiquidationRewardBps
   ) external onlyOwner {
     if (
       _newLendingFeeBps > LibMoneyMarket01.MAX_BPS ||
-      _newRepurchaseRewardBps > LibMoneyMarket01.MAX_BPS ||
       _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
-      _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS
-    ) revert AdminFacet_InvalidArguments();
+      _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS ||
+      _newLiquidationRewardBps > LibMoneyMarket01.MAX_BPS
+    ) {
+      revert AdminFacet_InvalidArguments();
+    }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     moneyMarketDs.lendingFeeBps = _newLendingFeeBps;
-    moneyMarketDs.repurchaseRewardBps = _newRepurchaseRewardBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+    moneyMarketDs.liquidationRewardBps = _newLiquidationRewardBps;
 
-    emit LogSetFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
+    emit LogSetFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newLiquidationRewardBps);
+  }
+
+  /// @notice Set the repurchase reward model for a token specifically to over collateralized borrowing
+  /// @param _newRepurchaseRewardModel The contract address of the repurchase reward model
+  function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external onlyOwner {
+    // Sanity check
+    if (LibMoneyMarket01.MAX_REPURCHASE_FEE_BPS < _newRepurchaseRewardModel.getFeeBps(1, 1000)) {
+      revert AdminFacet_ExceedMaxRepurchaseReward();
+    }
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.repurchaseRewardModel = _newRepurchaseRewardModel;
+
+    emit LogSetRepurchaseRewardModel(_newRepurchaseRewardModel);
   }
 
   /// @notice Set the implementation address of interest bearing token
@@ -297,20 +329,21 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _protocolConfigInputs.length;
     ProtocolConfigInput memory _protocolConfigInput;
+    TokenBorrowLimitInput memory _tokenBorrowLimit;
+    LibMoneyMarket01.ProtocolConfig storage protocolConfig;
+    uint256 _tokenBorrowLimitLength;
 
     for (uint256 _i; _i < _length; ) {
       _protocolConfigInput = _protocolConfigInputs[_i];
 
-      LibMoneyMarket01.ProtocolConfig storage protocolConfig = moneyMarketDs.protocolConfigs[
-        _protocolConfigInput.account
-      ];
+      protocolConfig = moneyMarketDs.protocolConfigs[_protocolConfigInput.account];
 
       protocolConfig.borrowLimitUSDValue = _protocolConfigInput.borrowLimitUSDValue;
 
       // set limit for each token
-      uint256 _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
+      _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
       for (uint256 _j; _j < _tokenBorrowLimitLength; ) {
-        TokenBorrowLimitInput memory _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
+        _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
 
         emit LogSetProtocolConfig(
@@ -334,8 +367,10 @@ contract AdminFacet is IAdminFacet {
   /// @param _newLiquidationThreshold The threshold that need to reach to allow liquidation
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold > LibMoneyMarket01.MAX_BPS)
+    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold < LibMoneyMarket01.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
+    }
+
     moneyMarketDs.maxLiquidateBps = _newMaxLiquidateBps;
     moneyMarketDs.liquidationThresholdBps = _newLiquidationThreshold;
 
@@ -368,6 +403,64 @@ contract AdminFacet is IAdminFacet {
     emit LogSetMinDebtSize(_newValue);
   }
 
+  /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
+  /// @param _inputs An array of input. Each should contain account, subAccountId, and token to write off for
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    uint256 _length = _inputs.length;
+
+    address _token;
+    address _subAccount;
+    uint256 _shareToRemove;
+    uint256 _amountToRemove;
+
+    for (uint256 i; i < _length; ) {
+      _token = _inputs[i].token;
+      _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+
+      if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
+        revert AdminFacet_SubAccountHealthy(_subAccount);
+      }
+
+      LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
+      // get all subaccount token debt, calculate to value
+      (_shareToRemove, _amountToRemove) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+
+      // update subaccount debtShare
+      moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_token, 0);
+
+      // update over collat debtShare
+      moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
+      moneyMarketDs.overCollatDebtValues[_token] -= _amountToRemove;
+
+      // update global debt
+      moneyMarketDs.globalDebts[_token] -= _amountToRemove;
+
+      emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
+
+      unchecked {
+        ++i;
+      }
+    }
+  }
+
+  /// @notice Transfer token to diamond to increase token reserves
+  /// @param _token token to increase reserve for
+  /// @param _amount amount to transfer to diamond and increase reserve
+  function topUpTokenReserve(address _token, uint256 _amount) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) revert AdminFacet_InvalidToken(_token);
+
+    uint256 _actualAmountReceived = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _amount);
+
+    moneyMarketDs.reserves[_token] += _actualAmountReceived;
+
+    emit LogTopUpTokenReserve(_token, _actualAmountReceived);
+  }
+
   function _validateTokenConfig(
     uint256 collateralFactor,
     uint256 borrowingFactor,
@@ -375,11 +468,15 @@ contract AdminFacet is IAdminFacet {
     uint256 maxBorrow
   ) internal pure {
     // factors should not greater than MAX_BPS
-    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS)
+    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
-
+    }
     // prevent user add collat or borrow too much
-    if (maxCollateral > 1e40) revert AdminFacet_InvalidArguments();
-    if (maxBorrow > 1e40) revert AdminFacet_InvalidArguments();
+    if (maxCollateral > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
+    if (maxBorrow > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
   }
 }

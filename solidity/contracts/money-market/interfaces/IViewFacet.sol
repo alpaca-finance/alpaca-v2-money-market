@@ -36,11 +36,13 @@ interface IViewFacet {
 
   function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256);
 
-  function getDebtLastAccrueTime(address _token) external view returns (uint256);
+  function getDebtLastAccruedAt(address _token) external view returns (uint256);
 
   function getGlobalPendingInterest(address _token) external view returns (uint256);
 
   function getGlobalDebtValue(address _token) external view returns (uint256);
+
+  function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256);
 
   function getOverCollatDebtValue(address _token) external view returns (uint256);
 
@@ -61,14 +63,13 @@ interface IViewFacet {
 
   function getTotalCollat(address _token) external view returns (uint256);
 
-  function getOverCollatSubAccountCollatAmount(address _subAccount, address _token) external view returns (uint256);
+  function getOverCollatSubAccountCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256);
 
   function getTotalToken(address _token) external view returns (uint256);
-
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _shareAmount);
 
   function getTotalTokenWithPendingInterest(address _token) external view returns (uint256);
 
@@ -93,5 +94,19 @@ interface IViewFacet {
       uint8
     );
 
+  function getSubAccount(address _account, uint256 _subAccountId) external pure returns (address);
+
   function getMinDebtSize() external view returns (uint256);
+
+  function getFeeParams()
+    external
+    view
+    returns (
+      uint16 _lendingFeeBps,
+      uint16 _repurchaseFeeBps,
+      uint16 _liquidationFeeBps,
+      uint16 _liquidationRewardBps
+    );
+
+  function getRepurchaseRewardModel() external view returns (address);
 }

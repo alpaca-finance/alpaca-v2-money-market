@@ -14,8 +14,10 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
 import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
-import { IAVShareToken } from "../../contracts/automated-vault/interfaces/IAVShareToken.sol";
-import { IAVPancakeSwapHandler } from "../../contracts/automated-vault/interfaces/IAVPancakeSwapHandler.sol";
+import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
+import { IAVViewFacet } from "../../contracts/automated-vault/interfaces/IAVViewFacet.sol";
+import { IAVVaultToken } from "../../contracts/automated-vault/interfaces/IAVVaultToken.sol";
+import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
@@ -27,6 +29,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 import { MockLPToken } from "../mocks/MockLPToken.sol";
+import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { MockRouter } from "../mocks/MockRouter.sol";
 
 abstract contract AV_BaseTest is BaseTest {
@@ -36,23 +39,28 @@ abstract contract AV_BaseTest is BaseTest {
   // av facets
   IAVAdminFacet internal adminFacet;
   IAVTradeFacet internal tradeFacet;
+  IAVRebalanceFacet internal rebalanceFacet;
+  IAVViewFacet internal viewFacet;
 
   address internal treasury;
 
-  IAVPancakeSwapHandler internal handler;
-  IAVShareToken internal avShareToken;
+  IAVHandler internal handler;
+  IAVVaultToken internal vaultToken;
 
+  MockRouter internal mockRouter;
   MockLPToken internal wethUsdcLPToken;
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
     setUpMM();
 
     // set av facets
     adminFacet = IAVAdminFacet(avDiamond);
     tradeFacet = IAVTradeFacet(avDiamond);
+    rebalanceFacet = IAVRebalanceFacet(avDiamond);
+    viewFacet = IAVViewFacet(avDiamond);
 
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 
@@ -60,15 +68,28 @@ abstract contract AV_BaseTest is BaseTest {
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
 
     // setup router
-    MockRouter mockRouter = new MockRouter(address(wethUsdcLPToken));
+    mockRouter = new MockRouter(address(wethUsdcLPToken));
     wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    handler = IAVPancakeSwapHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
+    handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
+
+    // setup interest rate models
+    MockInterestModel mockInterestModel1 = new MockInterestModel(0);
+    MockInterestModel mockInterestModel2 = new MockInterestModel(0);
 
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
-    avShareToken = IAVShareToken(
-      adminFacet.openVault(address(wethUsdcLPToken), address(usdc), address(weth), address(handler), 3, 1)
+    vaultToken = IAVVaultToken(
+      adminFacet.openVault(
+        address(wethUsdcLPToken),
+        address(usdc),
+        address(weth),
+        address(handler),
+        3,
+        0,
+        address(mockInterestModel1),
+        address(mockInterestModel2)
+      )
     );
 
     // approve
@@ -106,6 +127,12 @@ abstract contract AV_BaseTest is BaseTest {
     // set treasury
     treasury = address(this);
     adminFacet.setTreasury(treasury);
+
+    // set avHandler whitelist
+    address[] memory _callersOk = new address[](2);
+    _callersOk[0] = address(this);
+    _callersOk[1] = address(avDiamond);
+    handler.setWhitelistedCallers(_callersOk, true);
   }
 
   function setUpMM() internal {

@@ -2,29 +2,18 @@
 pragma solidity 0.8.17;
 
 interface IAVTradeFacet {
-  event LogRemoveDebt(address indexed shareToken, uint256 debtShareRemoved, uint256 debtValueRemoved);
-  event LogDeposit(
-    address indexed user,
-    address indexed shareToken,
-    address stableToken,
-    uint256 amountStableDeposited
-  );
-
   error AVTradeFacet_TooLittleReceived();
 
   function deposit(
-    address _shareToken,
-    uint256 _amountIn,
+    address _vaultToken,
+    uint256 _stableAmountIn,
     uint256 _minShareOut
   ) external;
 
   function withdraw(
-    address _shareToken,
-    uint256 _shareAmountIn,
-    uint256 _minTokenOut
+    address _vaultToken,
+    uint256 _shareToWithdraw,
+    uint256 _minStableTokenOut,
+    uint256 _minAssetTokenOut
   ) external;
-
-  function getDebtValues(address _shareToken) external view returns (uint256, uint256);
-
-  function pendingManagementFee(address _shareToken) external view returns (uint256 _pendingManagementFee);
 }

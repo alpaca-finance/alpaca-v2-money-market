@@ -44,6 +44,8 @@ import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
+  address internal treasury = address(666);
+  address internal liquidator = address(667);
 
   IViewFacet internal viewFacet;
   IAdminFacet internal adminFacet;
@@ -57,7 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(nativeToken), address(nativeRelayer));
+    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
@@ -75,7 +77,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address _ibWeth = adminFacet.openMarket(address(weth));
     address _ibUsdc = adminFacet.openMarket(address(usdc));
     address _ibBtc = adminFacet.openMarket(address(btc));
-    address _ibNativeToken = adminFacet.openMarket(address(nativeToken));
+    address _ibNativeToken = adminFacet.openMarket(address(wNativeToken));
 
     adminFacet.openMarket(address(cake));
 
@@ -140,7 +142,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
 
     _inputs[4] = IAdminFacet.TokenConfigInput({
-      token: address(nativeToken),
+      token: address(wNativeToken),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -203,17 +205,19 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setOracle(address(mockOracle));
 
     // set repurchases ok
-    address[] memory _repurchasers = new address[](1);
+    address[] memory _repurchasers = new address[](2);
     _repurchasers[0] = BOB;
+    _repurchasers[1] = ALICE;
     adminFacet.setRepurchasersOk(_repurchasers, true);
 
-    adminFacet.setTreasury(address(this));
+    adminFacet.setTreasury(treasury);
 
-    // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseRewardBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
-    adminFacet.setFees(0, 100, 100, 100);
+    // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newLiquidationRewardBps);
+    // _newLiquidationRewardBps = 5000 => 50% of fee goes to liquidator
+    adminFacet.setFees(0, 100, 100, 5000);
 
-    // set liquidation params: maxLiquidate 50%, liquidationThreshold 90%
-    adminFacet.setLiquidationParams(5000, 9000);
+    // set liquidation params: maxLiquidate 50%, liquidationThreshold 111.11%
+    adminFacet.setLiquidationParams(5000, 11111);
 
     // set max num of token
     adminFacet.setMaxNumOfToken(3, 3, 3);

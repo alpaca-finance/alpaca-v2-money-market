@@ -11,14 +11,15 @@ library LibReentrancyGuard {
   bytes32 internal constant REENTRANCY_GUARD_STORAGE_POSITION =
     0xbde06addc2781a1cfde79d9c0dd886b1b91b109df0c6d6db84a609c5b38de1fc;
 
-  uint256 internal constant _NOT_ENTERED = 1;
-  uint256 internal constant _ENTERED = 2;
+  uint128 internal constant _NOT_ENTERED = 1;
+  uint128 internal constant _ENTERED = 2;
 
   // -------------
   //    Storage
   // -------------
   struct ReentrancyGuardDiamondStorage {
-    uint256 status;
+    uint128 status;
+    uint128 liquidateExec;
   }
 
   function reentrancyGuardDiamondStorage()
@@ -33,7 +34,9 @@ library LibReentrancyGuard {
 
   function lock() internal {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
-    if (reentrancyGuardDs.status == _ENTERED) revert LibReentrancyGuard_ReentrantCall();
+    if (reentrancyGuardDs.status == _ENTERED) {
+      revert LibReentrancyGuard_ReentrantCall();
+    }
 
     reentrancyGuardDs.status = _ENTERED;
   }
@@ -41,5 +44,15 @@ library LibReentrancyGuard {
   function unlock() internal {
     ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
     reentrancyGuardDs.status = _NOT_ENTERED;
+  }
+
+  function lockWithdraw() internal {
+    ReentrancyGuardDiamondStorage storage reentrancyGuardDs = reentrancyGuardDiamondStorage();
+
+    if (reentrancyGuardDs.status == _ENTERED && reentrancyGuardDs.liquidateExec != _ENTERED) {
+      revert LibReentrancyGuard_ReentrantCall();
+    }
+
+    reentrancyGuardDs.status = _ENTERED;
   }
 }

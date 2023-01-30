@@ -34,7 +34,7 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   error PancakeswapV2Strategy_Reverse();
   error PancakeswapV2Strategy_Unauthorized(address _caller);
 
-  IRouterLike public router;
+  IRouterLike public immutable router;
 
   /// @dev Create a new add two-side optimal strategy instance.
   /// @param _router The PancakeSwap Router smart contract.
@@ -122,9 +122,13 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     address[] memory path = new address[](2);
     (path[0], path[1]) = isReversed ? (_token1, _token0) : (_token0, _token1);
     // 4. Swap according to path
-    if (swapAmt > 0) router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
+    if (swapAmt > 0) {
+      router.swapExactTokensForTokens(swapAmt, 0, path, address(this), block.timestamp);
+    }
     // 5. Mint more LP tokens and return all LP tokens to the sender.
-    (, , uint256 moreLPAmount) = router.addLiquidity(
+    uint256 _lpBalanceBefore = lpToken.balanceOf(address(this));
+
+    router.addLiquidity(
       _token0,
       _token1,
       IERC20(_token0).balanceOf(address(this)),
@@ -134,11 +138,12 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
       address(this),
       block.timestamp
     );
-    if (moreLPAmount < _minLPAmount) {
+
+    _lpRecieved = lpToken.balanceOf(address(this)) - _lpBalanceBefore;
+
+    if (_lpRecieved < _minLPAmount) {
       revert PancakeswapV2Strategy_TooLittleReceived();
     }
-    // return parameter
-    _lpRecieved = lpToken.balanceOf(address(this));
 
     if (!lpToken.transfer(msg.sender, _lpRecieved)) {
       revert PancakeswapV2Strategy_TransferFailed();
@@ -161,10 +166,13 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     address _token0 = IPancakePair(_lpToken).token0();
     address _token1 = IPancakePair(_lpToken).token1();
 
+    uint256 _token0BalanceBefore = IERC20(_token0).balanceOf(address(this));
+    uint256 _token1BalanceBefore = IERC20(_token1).balanceOf(address(this));
+
     router.removeLiquidity(_token0, _token1, _lpToRemove, 0, 0, address(this), block.timestamp);
 
-    _token0Return = IERC20(_token0).balanceOf(address(this));
-    _token1Return = IERC20(_token1).balanceOf(address(this));
+    _token0Return = IERC20(_token0).balanceOf(address(this)) - _token0BalanceBefore;
+    _token1Return = IERC20(_token1).balanceOf(address(this)) - _token1BalanceBefore;
 
     IERC20(_token0).safeTransfer(msg.sender, _token0Return);
     IERC20(_token1).safeTransfer(msg.sender, _token1Return);

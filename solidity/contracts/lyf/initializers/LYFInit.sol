@@ -3,16 +3,21 @@ pragma solidity 0.8.17;
 
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
 contract LYFInit {
   error LYFInit_Initialized();
 
-  function init() external {
+  function init(address _moneyMarket) external {
     LibDiamond.DiamondStorage storage diamondDs = LibDiamond.diamondStorage();
     if (diamondDs.lyfInitialized != 0) revert LYFInit_Initialized();
-    LibLYF01.LYFDiamondStorage storage ds = LibLYF01.lyfDiamondStorage();
 
-    ds.maxPriceStale = 86400;
+    // sanity check for MM
+    IMoneyMarket(_moneyMarket).getIbTokenFromToken(address(0));
+
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    lyfDs.moneyMarket = IMoneyMarket(_moneyMarket);
 
     diamondDs.lyfInitialized = 1;
   }

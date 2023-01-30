@@ -96,9 +96,9 @@ contract ViewFacet is IViewFacet {
   /// @notice Get the timestamp of latest interest collection on a token
   /// @param _token The token that has collected the interest
   /// @return timestamp of accrual time
-  function getDebtLastAccrueTime(address _token) external view returns (uint256) {
+  function getDebtLastAccruedAt(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.debtLastAccrueTime[_token];
+    return moneyMarketDs.debtLastAccruedAt[_token];
   }
 
   /// @notice Get pending interest of borrowed token include both over and non collateralized
@@ -115,6 +115,14 @@ contract ViewFacet is IViewFacet {
   function getGlobalDebtValue(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.globalDebts[_token];
+  }
+
+  /// @notice Get borrowed amount (over and non-collateralized) with pending interest of a token
+  /// @param _token The token that has been borrowed
+  /// @return The total amount of debt with pending interest
+  function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.globalDebts[_token] + LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
   }
 
   /// @notice Get the total amount of borrowed token via over collat borrowing
@@ -214,28 +222,17 @@ contract ViewFacet is IViewFacet {
   }
 
   /// @notice Get the amount of collateral token under the subaccount
-  /// @param _subAccount The derived subaccount
+  /// @param _account The user address
+  /// @param _subAccountId The id of subAccount
   /// @param _token The token used as a collateral
   /// @return The amount of collateral
-  function getOverCollatSubAccountCollatAmount(address _subAccount, address _token) external view returns (uint256) {
+  function getOverCollatSubAccountCollatAmount(
+    address _account,
+    uint256 _subAccountId,
+    address _token
+  ) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
-  }
-
-  /// @notice Get the amount of interest bearing token equivalent to the underlying amount
-  /// @param _token The token used as a collateral
-  /// @param _underlyingAmount The amount of underlying token
-  /// @return _ibShareAmount The amount of interest bearing token
-  function getIbShareFromUnderlyingAmount(address _token, uint256 _underlyingAmount)
-    external
-    view
-    returns (uint256 _ibShareAmount)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
-
-    (, _ibShareAmount) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _underlyingAmount, moneyMarketDs);
+    return moneyMarketDs.subAccountCollats[LibMoneyMarket01.getSubAccount(_account, _subAccountId)].getAmount(_token);
   }
 
   /// @notice Get the total amount of token that's eligible for lender without pending interest
@@ -331,9 +328,47 @@ contract ViewFacet is IViewFacet {
     _maxNumOfOverCollatDebt = moneyMarketDs.maxNumOfDebtPerNonCollatAccount;
   }
 
+  /// @notice Get the minimum debt size that subaccount must maintain during borrow and repay
   function getMinDebtSize() external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return moneyMarketDs.minDebtSize;
+  }
+
+  /// @notice Get subaccount address by perform bitwise XOR on target address and subaccount id
+  /// @param _account Target address to get subaccount from
+  /// @param _subAccountId  Subaccount id of target address, value must be between 0 and 255 inclusive
+  function getSubAccount(address _account, uint256 _subAccountId) external pure returns (address) {
+    return LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+  }
+
+  /// @notice Get money market fees
+  /// @param _lendingFeeBps The lending fee imposed on interest collected
+  /// @param _repurchaseFeeBps The repurchase fee collected by the protocol
+  /// @param _liquidationFeeBps The total fee from liquidation
+  /// @param _liquidationRewardBps The fee collected by liquidator
+  function getFeeParams()
+    external
+    view
+    returns (
+      uint16 _lendingFeeBps,
+      uint16 _repurchaseFeeBps,
+      uint16 _liquidationFeeBps,
+      uint16 _liquidationRewardBps
+    )
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _lendingFeeBps = moneyMarketDs.lendingFeeBps;
+    _repurchaseFeeBps = moneyMarketDs.repurchaseFeeBps;
+    _liquidationFeeBps = moneyMarketDs.liquidationFeeBps;
+    _liquidationRewardBps = moneyMarketDs.liquidationRewardBps;
+  }
+
+  /// @notice Get the address of repurchase reward model
+  /// @return address of repurchase reward model contract
+  function getRepurchaseRewardModel() external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    return address(moneyMarketDs.repurchaseRewardModel);
   }
 }

@@ -43,10 +43,11 @@ contract BaseTest is DSTest {
 
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-  MockWNative internal nativeToken;
+  MockWNative internal wNativeToken;
   MockERC20 internal cake;
   MockERC20 internal weth;
   MockERC20 internal usdc;
+  MockERC20 internal busd;
   MockERC20 internal btc;
   MockERC20 internal opm; // open market token
   MockERC20 internal alpaca;
@@ -68,18 +69,22 @@ contract BaseTest is DSTest {
   IAlpacaV2Oracle internal alpacaV2Oracle;
   OracleMedianizer internal oracleMedianizer;
 
-  MockWNativeRelayer nativeRelayer;
+  MockWNativeRelayer wNativeRelayer;
 
   ProxyAdminLike internal proxyAdmin;
 
   constructor() {
     vm.warp(100000);
     // deploy
+    usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
+    wNativeToken = deployMockWNative();
+    wNativeRelayer = deployMockWNativeRelayer();
+
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 18);
-    usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
+    busd = deployMockErc20("BUSD", "BUSD", 18);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     alpaca = deployMockErc20("ALPACA TOKEN", "ALPACA", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
@@ -116,14 +121,21 @@ contract BaseTest is DSTest {
     // miniFL
 
     _setupProxyAdmin();
+
+    vm.label(DEPLOYER, "DEPLOYER");
+    vm.label(ALICE, "ALICE");
+    vm.label(BOB, "BOB");
+    vm.label(CAT, "CAT");
+    vm.label(EVE, "EVE");
   }
 
   function deployMockErc20(
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) internal returns (MockERC20) {
-    return new MockERC20(name, symbol, decimals);
+  ) internal returns (MockERC20 mockERC20) {
+    mockERC20 = new MockERC20(name, symbol, decimals);
+    vm.label(address(mockERC20), symbol);
   }
 
   function deployMockWNative() internal returns (MockWNative) {
@@ -135,7 +147,7 @@ contract BaseTest is DSTest {
   }
 
   function deployMockWNativeRelayer() internal returns (MockWNativeRelayer) {
-    return new MockWNativeRelayer(address(nativeToken));
+    return new MockWNativeRelayer(address(wNativeToken));
   }
 
   function deployMiniFL(address _rewardToken, uint256 _rewardPerSec) internal returns (MiniFL) {
@@ -176,6 +188,10 @@ contract BaseTest is DSTest {
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return AlpacaV2Oracle(_proxy);
+  }
+
+  function deployAlpacaV2Oracle(address _oracleMedianizer, address _baseStable) internal returns (AlpacaV2Oracle) {
+    return new AlpacaV2Oracle(_oracleMedianizer, _baseStable, usd);
   }
 
   function deployOracleMedianizer() internal returns (OracleMedianizer) {
