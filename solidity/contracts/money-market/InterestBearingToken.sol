@@ -116,11 +116,11 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   function convertToShares(uint256 assets) public view override returns (uint256 shares) {
-    return LibShareUtil.valueToShare(assets, totalSupply(), _moneyMarket.getTotalToken(_asset));
+    return LibShareUtil.valueToShare(assets, totalSupply(), _moneyMarket.getTotalTokenWithPendingInterest(_asset));
   }
 
   function convertToAssets(uint256 shares) public view override returns (uint256 assets) {
-    return LibShareUtil.shareToValue(shares, _moneyMarket.getTotalToken(_asset), totalSupply());
+    return LibShareUtil.shareToValue(shares, _moneyMarket.getTotalTokenWithPendingInterest(_asset), totalSupply());
   }
 
   function previewDeposit(uint256 assets) external view override returns (uint256 shares) {
