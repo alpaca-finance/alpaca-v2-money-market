@@ -16,7 +16,7 @@ import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLink
 import { LibUIntDoublyLinkedList } from "../../contracts/lyf/libraries/LibUIntDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
-contract LYF_FarmFacetTest is LYF_BaseTest {
+contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -56,11 +56,11 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
       address(wethUsdcLPToken)
     );
 
-    assertEq(_subAccountWethCollat, 0 ether, "eth collat");
-    assertEq(_subAccountUsdcCollat, 0 ether, "usdc collat");
+    assertEq(_subAccountWethCollat, 0, "eth collat");
+    assertEq(_subAccountUsdcCollat, 0, "usdc collat");
 
     // assume that every coin is 1 dollar and lp = 2 dollar
-    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0 ether);
+    assertEq(wethUsdcLPToken.balanceOf(lyfDiamond), 0);
     assertEq(wethUsdcLPToken.balanceOf(address(masterChef)), 30 ether);
     assertEq(_subAccountLpTokenCollat, 30 ether);
 
@@ -79,8 +79,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
       address(wethUsdcLPToken)
     );
 
-    assertEq(_subAccountWethDebtValue, 10 ether);
-    assertEq(_subAccountUsdcDebtValue, normalizeEther(10 ether, usdcDecimal));
+    assertEq(_subAccountWethDebtValue, 10 ether, "weth debt value");
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(10 ether, usdcDecimal), "usdc debt value");
 
     vm.warp(block.timestamp + 1);
 
@@ -95,8 +95,8 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // given time past is 1 and weth debt and usdc debt are 10 ether
     // then weth pending interest should be 0.1 * 1 * 10 = 1 ether
     // and usdc pending interest should be 0.05 * 1 * 10 = 0.5 ether
-    assertEq(_wethDebtInterest, 1 ether);
-    assertEq(_usdcDebtInterest, normalizeEther(0.5 ether, usdcDecimal));
+    assertEq(_wethDebtInterest, 1 ether, "weth debt interest");
+    assertEq(_usdcDebtInterest, normalizeEther(0.5 ether, usdcDecimal), "usdc debt interest");
 
     // Reserve should stay the same
     uint256 _wethReserveBefore = viewFacet.getOutstandingBalanceOf(address(weth));
@@ -127,15 +127,21 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
       address(wethUsdcLPToken)
     );
 
-    assertEq(_subAccountWethDebtValueAfter, 10 ether + _wethDebtInterest);
-    assertEq(_subAccountUsdcDebtValueAfter, normalizeEther(10 ether + _usdcDebtInterest, usdcDecimal));
+    console.log("s", _usdcDebtInterest);
+
+    assertEq(_subAccountWethDebtValueAfter, 10 ether + _wethDebtInterest, "weth debt value (after)");
+    assertEq(
+      _subAccountUsdcDebtValueAfter,
+      normalizeEther(10 ether, usdcDecimal) + _usdcDebtInterest,
+      "usdc debt value (after)"
+    );
   }
 
   function testRevert_WhenAddFarmPosition_BorrowLessThanMinDebtSize_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     adminFacet.setMinDebtSize(20 ether);
 
@@ -156,9 +162,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenAddFarmPosition_BorrowMoreThanMinDebtSizeOrNotBorrow_ShouldWork() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethCollatAmount = 30 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     adminFacet.setMinDebtSize(10 ether);
 
@@ -178,9 +184,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     external
   {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
     uint256 _wethToIbWeth = 10 ether;
     uint256 _ibWethCollatAmount = 10 ether;
 
@@ -216,14 +222,14 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     );
 
     assertEq(_subAccountWethDebtValue, 0);
-    assertEq(_subAccountUsdcDebtValue, 10 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(10 ether, usdcDecimal));
   }
 
   // ib pair with underlying
   function testCorrectness_WhenUserAddFarmPositionUsingIbInsteadOfUnderlying_ShouldWork() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
     uint256 _ibWethCollatAmount = 30 ether;
 
     vm.startPrank(BOB);
@@ -257,17 +263,17 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     );
 
     assertEq(_subAccountWethDebtValue, 0);
-    assertEq(_subAccountUsdcDebtValue, 10 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(10 ether, usdcDecimal));
   }
 
   // pure 1-sided ib
   function testCorrectness_WhenUserAddFarmPositionWithOnlyIbCollat_ShouldBeAbleToBorrowUsingIbAsCollat() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _ibWethCollatAmount = 60 ether;
 
     vm.startPrank(EVE);
-    IMoneyMarket(moneyMarketDiamond).deposit(address(usdc), 10 ether);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(usdc), normalizeEther(10 ether, usdcDecimal));
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -297,15 +303,15 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     );
 
     assertEq(_subAccountWethDebtValue, 0); // use ib no need to borrow
-    assertEq(_subAccountUsdcDebtValue, 30 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(30 ether, usdcDecimal));
   }
 
   // ib pair with ib
   function testCorrectness_WhenUserAddFarmPositionBothSideIb_ShouldWork() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _ibWethCollatAmount = 30 ether;
-    uint256 _ibUsdcCollatAmount = 30 ether;
+    uint256 _ibUsdcCollatAmount = normalizeEther(30 ether, ibUsdcDecimal);
 
     vm.startPrank(BOB);
     IMoneyMarket(moneyMarketDiamond).deposit(address(weth), _ibWethCollatAmount);
@@ -343,9 +349,9 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserDirectAddFarmPositionNormally_ShouldWork() external {
     uint256 _desiredWeth = 30 ether;
-    uint256 _desiredUsdc = 30 ether;
+    uint256 _desiredUsdc = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethAmountDirect = 20 ether;
-    uint256 _usdcAmountDirect = 30 ether;
+    uint256 _usdcAmountDirect = normalizeEther(30 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     farmFacet.directAddFarmPosition(
@@ -360,7 +366,7 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     vm.stopPrank();
 
     assertEq(weth.balanceOf(BOB), 980 ether);
-    assertEq(usdc.balanceOf(BOB), 970 ether);
+    assertEq(usdc.balanceOf(BOB), normalizeEther(970 ether, usdcDecimal));
 
     (, uint256 _subAccountWethDebtValue) = viewFacet.getSubAccountDebt(
       BOB,
@@ -376,14 +382,14 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     );
 
     assertEq(_subAccountWethDebtValue, 10 ether);
-    assertEq(_subAccountUsdcDebtValue, 0 ether);
+    assertEq(_subAccountUsdcDebtValue, 0);
   }
 
   function testCorrectness_WhenUserDirectAddFarmPositionProvidedAmountGreaterThanDesired_ShouldRevert() external {
     uint256 _desiredWeth = 30 ether;
-    uint256 _desiredUsdc = 30 ether;
+    uint256 _desiredUsdc = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethAmountDirect = 20 ether;
-    uint256 _usdcAmountDirect = 40 ether;
+    uint256 _usdcAmountDirect = normalizeEther(40 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BadInput.selector));
@@ -403,30 +409,48 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     // create leftover reserve by borrow from mm and repay so tokens is left in lyf
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 10 ether);
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 10 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(10 ether, 10 ether);
+    farmFacet.addFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      10 ether,
+      normalizeEther(10 ether, usdcDecimal),
+      10 ether
+    );
+    mockRouter.setRemoveLiquidityAmountsOut(10 ether, normalizeEther(10 ether, usdcDecimal));
     farmFacet.repay(ALICE, subAccount0, address(weth), address(wethUsdcLPToken), 10 ether);
 
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 10 ether);
 
     // next addFarmPosition should use reserve instead of borrowing from mm
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 6 ether, 6 ether, 6 ether);
+    farmFacet.addFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      6 ether,
+      normalizeEther(6 ether, usdcDecimal),
+      6 ether
+    );
     // 6 ether should be borrowed from reserve so 4 left
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
 
     // next addFarmPosition should not use reserve but borrow more from mm
     // because amount > reserve
     uint256 _mmDebtBefore = viewFacet.getMMDebt(address(weth));
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 6 ether, 6 ether, 6 ether);
+    farmFacet.addFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      6 ether,
+      normalizeEther(6 ether, usdcDecimal),
+      6 ether
+    );
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), 4 ether);
     assertEq(viewFacet.getMMDebt(address(weth)) - _mmDebtBefore, 6 ether);
   }
 
   function testRevert_WhenUserBorrowMoreThanMaxNumOfDebtPerSubAccount_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     // allow to borrow only 1 token
     adminFacet.setMaxNumOfToken(10, 1);
@@ -443,10 +467,10 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
 
   function testCorrectness_WhenRepayAndBorrowMoreWithTotalBorrowEqualMaxNumOfDebtPerSubAccount_ShouldWork() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _btcToAddLP = 3 ether;
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     // allow to borrow 2 tokens
     adminFacet.setMaxNumOfToken(10, 2);
@@ -492,9 +516,21 @@ contract LYF_FarmFacetTest is LYF_BaseTest {
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 100 ether);
     // first add 1 lp is fine
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 1 ether, 1 ether, 1 ether);
+    farmFacet.addFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      1 ether
+    );
     // 1 + 10 > 10 should revert
     vm.expectRevert(LibLYF01.LibLYF01_LPCollateralExceedLimit.selector);
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), 10 ether, 10 ether, 10 ether);
+    farmFacet.addFarmPosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      10 ether,
+      normalizeEther(10 ether, usdcDecimal),
+      10 ether
+    );
   }
 }
