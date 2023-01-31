@@ -164,7 +164,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(ibWeth),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 
@@ -172,7 +172,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(wethUsdcLPToken),
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 
@@ -180,7 +180,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(btcUsdcLPToken),
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 
@@ -188,7 +188,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(ibUsdc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 

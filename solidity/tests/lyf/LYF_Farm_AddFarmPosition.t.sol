@@ -323,7 +323,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       token: address(wethUsdcLPToken),
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 8000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 100 ether
     });
     adminFacet.setTokenConfigs(_tokenConfigInputs);
