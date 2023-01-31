@@ -36,7 +36,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetRepurchaserOk(address indexed _account, bool isOk);
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
-  event LogSetTreasury(address indexed _treasury);
+  event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(
     uint256 _lendingFeeBps,
     uint256 _repurchaseFeeBps,
@@ -238,10 +238,10 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
-  function setTreasury(address _treasury) external onlyOwner {
+  function setLiquidationTreasury(address _treasury) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.treasury = _treasury;
-    emit LogSetTreasury(_treasury);
+    moneyMarketDs.liquidationTreasury = _treasury;
+    emit LogSetLiquidationTreasury(_treasury);
   }
 
   /// @notice Withdraw the protocol's reserve

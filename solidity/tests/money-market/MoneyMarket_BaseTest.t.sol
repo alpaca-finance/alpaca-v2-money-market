@@ -44,7 +44,7 @@ import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
-  address internal treasury = address(666);
+  address internal liquidationTreasury = address(666);
   address internal liquidator = address(667);
 
   IViewFacet internal viewFacet;
@@ -210,7 +210,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _repurchasers[1] = ALICE;
     adminFacet.setRepurchasersOk(_repurchasers, true);
 
-    adminFacet.setTreasury(treasury);
+    adminFacet.setLiquidationTreasury(liquidationTreasury);
 
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newLiquidationRewardBps);
     // _newLiquidationRewardBps = 5000 => 50% of fee goes to liquidator

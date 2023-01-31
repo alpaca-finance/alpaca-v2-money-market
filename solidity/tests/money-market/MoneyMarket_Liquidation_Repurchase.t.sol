@@ -78,7 +78,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     // add time 1 day
     // then total debt value should increase by 0.00016921837224 * 30 = 0.0050765511672
@@ -141,7 +141,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 15.1550765511672 ether);
     vm.stopPrank();
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
@@ -171,7 +171,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     // add time 1 day
     // 0.00016921837224 is interest rate per day of (30% condition slope)
@@ -251,7 +251,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_btcState.debtValue, 3.00050765511672 ether);
     assertEq(_btcState.debtShare, 3 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThanDebtTokenAmount_TransferTokenCorrectly() external {
@@ -281,7 +281,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     // set price to weth from 1 to 0.8 ether USD
     // then alice borrowing power = 80 * 0.8 * 9000 / 10000 = 57.6 ether USD
@@ -367,7 +367,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_btcState.debtValue, 5.001410153102144 ether);
     assertEq(_btcState.debtShare, 5 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
   }
 
   function testRevert_ShouldRevertIfSubAccountIsHealthy() external {
@@ -516,7 +516,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
-    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     // add time 1 day
     // then total debt value should increase by 0.000225624496291200 * 40 = 0.009024979851648
@@ -578,6 +578,6 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // globalDebt should equal to debtValue since there is only 1 position
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 25.159024979851648 ether);
 
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryFeeBefore, _expectedFee);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
   }
 }
