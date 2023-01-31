@@ -74,6 +74,11 @@ library LibLYF01 {
     uint256 lastAccruedAt;
   }
 
+  struct RewardConversionConfig {
+    address router;
+    address[] path;
+  }
+
   // Storage
   struct LYFDiamondStorage {
     IMoneyMarket moneyMarket;
@@ -87,8 +92,8 @@ library LibLYF01 {
     // ---- reserves ---- //
     mapping(address => uint256) reserves; // track token balance of protocol
     mapping(address => uint256) protocolReserves; // part of reserves that belongs to protocol
-    // collats = amount of collateral token
-    mapping(address => uint256) collats;
+    mapping(address => uint256) collats; // collats = amount of collateral token
+    mapping(address => RewardConversionConfig) rewardConversionConfigs; // rewardToken => RewardConversionConfig
     // ---- subAccounts ---- //
     mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => linked list of collats
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares; // subAccount => linked list of debtShares
