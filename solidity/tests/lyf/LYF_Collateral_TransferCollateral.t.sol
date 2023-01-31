@@ -112,4 +112,10 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
     // global
     assertEq(_lyfWethCollatBefore - viewFacet.getTokenCollatAmount(address(weth)), 0);
   }
+
+  function testRevert_TransferCollatBtwSameSubAccount() external {
+    vm.prank(BOB);
+    vm.expectRevert(ILYFCollateralFacet.LYFCollateralFacet_SelfCollatTransferNotAllowed.selector);
+    collateralFacet.transferCollateral(subAccount0, subAccount0, address(weth), 1 ether);
+  }
 }
