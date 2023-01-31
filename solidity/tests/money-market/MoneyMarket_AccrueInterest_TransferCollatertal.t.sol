@@ -28,7 +28,7 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     vm.startPrank(ALICE);
     lendFacet.deposit(address(weth), 50 ether);
     lendFacet.deposit(address(btc), 100 ether);
-    lendFacet.deposit(address(usdc), 20 ether);
+    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
     lendFacet.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
@@ -37,21 +37,22 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     external
   {
     // ALICE add collateral
-    uint256 _borrowAmount = 10 ether;
+    uint256 _wethBorrowAmount = 10 ether;
+    uint256 _usdcBorrowAmount = normalizeEther(10 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _borrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _borrowAmount * 2);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
     vm.stopPrank();
 
     // BOB borrow
     vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), _borrowAmount);
-    borrowFacet.borrow(subAccount0, address(usdc), _borrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _wethBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     // time past
-    vm.warp(block.timestamp + 10);
+    vm.warp(block.timestamp + 100);
 
     vm.startPrank(ALICE);
     // transfer collateral will trigger accrue interest on all borrowed token
@@ -62,11 +63,11 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
     (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
 
-    assertGt(_aliceActualWethDebtAmount, _borrowAmount);
-    assertGt(_aliceActualUSDCDebtAmount, _borrowAmount);
+    assertGt(_aliceActualWethDebtAmount, _wethBorrowAmount);
+    assertGt(_aliceActualUSDCDebtAmount, _usdcBorrowAmount);
 
     //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _borrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _borrowAmount);
+    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _wethBorrowAmount);
+    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _usdcBorrowAmount);
   }
 }
