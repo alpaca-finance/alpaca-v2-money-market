@@ -97,7 +97,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       ? _requiredIbTokenToWithdraw
       : _maxIbTokenToWithdraw;
 
-    IERC20(_ibToken).safeIncreaseAllowance(address(moneyMarket), _withdrawnIbTokenAmount);
     _withdrawnUnderlyingAmount = moneyMarket.withdraw(_ibToken, _withdrawnIbTokenAmount);
   }
 

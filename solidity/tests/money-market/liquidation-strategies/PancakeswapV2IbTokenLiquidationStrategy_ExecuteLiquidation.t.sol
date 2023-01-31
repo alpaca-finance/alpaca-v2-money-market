@@ -48,8 +48,10 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
 
     liquidationStrat.setPaths(_setPathsInputs);
 
-    vm.prank(address(moneyMarketDiamond));
+    vm.startPrank(address(moneyMarketDiamond));
     ibWeth.onDeposit(ALICE, 0, 100 ether);
+    ibWeth.transferOwnership(address(moneyMarket));
+    vm.stopPrank();
     _aliceIbTokenBalance = 100 ether;
 
     weth.mint(address(moneyMarket), 100 ether); // mint to mm to trafer to strat
