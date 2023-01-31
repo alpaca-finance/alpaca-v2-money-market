@@ -9,6 +9,7 @@ import { MockRouter } from "../../mocks/MockRouter.sol";
 import { MockLPToken } from "../../mocks/MockLPToken.sol";
 import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
+import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
 
 contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
@@ -87,6 +88,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     uint256 _expectedWithdrawalAmount = 1 ether;
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
 
+    // mock convert to share function
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 1 ether),
+      abi.encode(1 ether)
+    );
+
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = _repayAmount;
 
@@ -136,6 +144,12 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
     uint256 _expectedWithdrawalAmount = 0.5 ether;
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+    // mock convert to share function
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 1 ether),
+      abi.encode(1 ether)
+    );
 
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = 0.5 ether;
@@ -186,7 +200,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // mock withdrawal amount
     uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
     uint256 _expectedWithdrawalAmount = 0.5 ether;
+    // mock convert to share function
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 0.5 ether),
+      abi.encode(0.5 ether)
+    );
 
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = 0.5 ether;
