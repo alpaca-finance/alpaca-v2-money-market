@@ -66,7 +66,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), 0);
 
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     uint256 _stablePendingInterest;
     uint256 _assetPendingInterest;
@@ -79,18 +79,18 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     uint256 _assetDebtValue;
     // check borrowed debt from ALICE
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebtValue, 0.5 ether);
+    assertEq(_stableDebtValue, normalizeEther(0.5 ether, usdcDecimal));
     assertEq(_assetDebtValue, 1.5 ether);
 
     vm.warp(block.timestamp + 1);
 
     // check pending interest
     (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
-    assertEq(_stablePendingInterest, 0.05 ether);
+    assertEq(_stablePendingInterest, normalizeEther(0.05 ether, usdcDecimal));
     assertEq(_assetPendingInterest, 0.075 ether);
 
     vm.prank(BOB);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     // check last accrue timestamp = now
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
@@ -102,7 +102,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // check borrowed debt from ALICE + BOB + accrued from ALICE
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebtValue, 0.5 ether + 0.5 ether + 0.05 ether);
+    assertEq(_stableDebtValue, normalizeEther(0.5 ether + 0.5 ether + 0.05 ether, usdcDecimal));
     assertEq(_assetDebtValue, 1.5 ether + 1.5 ether + 0.075 ether);
 
     vm.warp(block.timestamp + 1);
@@ -112,12 +112,12 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // check pending interest should accrue based on debt from last time
     (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
-    assertEq(_stablePendingInterest, 0.105 ether);
+    assertEq(_stablePendingInterest, normalizeEther(0.105 ether, usdcDecimal));
     assertEq(_assetPendingInterest, 0.15375 ether);
 
     // check debt should not changed from last time
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebtValue, 0.5 ether + 0.5 ether + 0.05 ether);
+    assertEq(_stableDebtValue, normalizeEther(0.5 ether + 0.5 ether + 0.05 ether, usdcDecimal));
     assertEq(_assetDebtValue, 1.5 ether + 1.5 ether + 0.075 ether);
   }
 
@@ -157,7 +157,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // 1.
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     // check no pending interest
     uint256 _stablePendingInterest;
@@ -170,7 +170,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     uint256 _stableDebtValue;
     uint256 _assetDebtValue;
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebtValue, 0.5 ether);
+    assertEq(_stableDebtValue, normalizeEther(0.5 ether, usdcDecimal));
     assertEq(_assetDebtValue, 1.5 ether);
 
     // check last accrued timestamp = now (accrued during deposit)
@@ -181,14 +181,14 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // check pending interest after time passed should increase
     (_stablePendingInterest, _assetPendingInterest) = viewFacet.getPendingInterest(_vaultToken);
-    assertEq(_stablePendingInterest, 0.05 ether);
+    assertEq(_stablePendingInterest, normalizeEther(0.05 ether, usdcDecimal));
     assertEq(_assetPendingInterest, 0.075 ether);
 
     // check last accrued timestamp = previous timestamp (no accrual)
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp - 1);
 
     // 3.
-    mockRouter.setRemoveLiquidityAmountsOut(1.6 ether, 1.6 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(1.6 ether, usdcDecimal), 1.6 ether);
 
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
@@ -198,7 +198,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     tradeFacet.withdraw(_vaultToken, 1 ether, 0, 0);
 
     // check ALICE's balance
-    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1.05 ether);
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, normalizeEther(1.05 ether, usdcDecimal));
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.025 ether);
     assertEq(vaultToken.balanceOf(ALICE), 0);
 
@@ -269,16 +269,16 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // 1.
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
     // 2.
     vm.prank(BOB);
-    tradeFacet.deposit(_vaultToken, 2 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(2 ether, usdcDecimal), 0);
 
     // 3.
     vm.warp(block.timestamp + 1);
 
     // 4.
-    mockRouter.setRemoveLiquidityAmountsOut(1.6 ether, 1.6 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(1.6 ether, usdcDecimal), 1.6 ether);
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
@@ -286,13 +286,13 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // check ALICE
     (uint256 _stableDebtValue, uint256 _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebtValue, 1.65 ether - 0.55 ether);
+    assertEq(_stableDebtValue, normalizeEther(1.65 ether - 0.55 ether, usdcDecimal));
     assertEq(_assetDebtValue, 4.725 ether - 1.575 ether);
-    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 1.05 ether);
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, normalizeEther(1.05 ether, usdcDecimal));
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.025 ether);
 
     // 5.
-    mockRouter.setRemoveLiquidityAmountsOut(3.2 ether, 3.2 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(3.2 ether, usdcDecimal), 3.2 ether);
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
     vm.prank(BOB);
@@ -302,7 +302,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_stableDebtValue, 0);
     assertEq(_assetDebtValue, 0);
-    assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, 2.1 ether);
+    assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, normalizeEther(2.1 ether, usdcDecimal));
     assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 0.05 ether);
   }
 
@@ -355,13 +355,13 @@ contract AV_AccrueInterestTest is AV_BaseTest {
 
     // 1.
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     // 2.
     vm.warp(block.timestamp + 1);
 
     // 3.
-    mockRouter.setRemoveLiquidityAmountsOut(2 ether, 1 ether); // (weth, usdc)
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(1 ether, usdcDecimal), 2 ether); // (usdc, weth)
 
     // 4.
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
@@ -371,11 +371,11 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     tradeFacet.withdraw(_vaultToken, 1 ether, 0, 0);
 
     // check ALICE state
-    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 0.45 ether);
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, normalizeEther(0.45 ether, usdcDecimal));
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.425 ether);
 
     // check vault state
-    assertEq(usdc.balanceOf(avDiamond), 0.55 ether);
+    assertEq(usdc.balanceOf(avDiamond), normalizeEther(0.55 ether, usdcDecimal));
     assertEq(weth.balanceOf(avDiamond), 1.575 ether);
     (uint256 _usdcDebt, uint256 _wethDebt) = viewFacet.getDebtValues(_vaultToken);
     assertEq(_usdcDebt, 0);
@@ -388,14 +388,20 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     vm.expectEmit(true, true, true, false, avDiamond);
     emit LogAccrueInterest(_vaultToken, address(usdc), address(weth), 0, 0);
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     vm.warp(block.timestamp + 1);
 
-    mockRouter.setRemoveLiquidityAmountsOut(1.5 ether, 1.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(1.5 ether, usdcDecimal), 1.5 ether);
 
     vm.expectEmit(true, true, true, false, avDiamond);
-    emit LogAccrueInterest(_vaultToken, address(usdc), address(weth), 0.05 ether, 0.075 ether);
+    emit LogAccrueInterest(
+      _vaultToken,
+      address(usdc),
+      address(weth),
+      normalizeEther(0.05 ether, usdcDecimal),
+      0.075 ether
+    );
     vm.prank(ALICE);
     tradeFacet.withdraw(_vaultToken, 1 ether, 0, 0);
   }
