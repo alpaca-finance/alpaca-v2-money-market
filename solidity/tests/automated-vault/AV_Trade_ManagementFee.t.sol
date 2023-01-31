@@ -19,7 +19,7 @@ contract AV_Trade_ManagementFeeTest is AV_BaseTest {
     assertEq(viewFacet.getPendingManagementFee(address(vaultToken)), 0); // totalSupply(vaultToken) = 0
 
     vm.prank(ALICE);
-    tradeFacet.deposit(address(vaultToken), 1 ether, 1 ether);
+    tradeFacet.deposit(address(vaultToken), normalizeEther(1 ether, usdcDecimal), 1 ether);
     assertEq(viewFacet.getPendingManagementFee(address(vaultToken)), 0);
 
     // time pass = 2 seconds
@@ -31,7 +31,7 @@ contract AV_Trade_ManagementFeeTest is AV_BaseTest {
     assertEq(viewFacet.getPendingManagementFee(address(vaultToken)), 0);
 
     vm.prank(ALICE);
-    tradeFacet.deposit(address(vaultToken), 1 ether, 1 ether);
+    tradeFacet.deposit(address(vaultToken), normalizeEther(1 ether, usdcDecimal), 1 ether);
 
     assertEq(viewFacet.getPendingManagementFee(address(vaultToken)), 0); // fee was collected during deposit, so no more pending fee in the same block
     assertEq(vaultToken.balanceOf(treasury), 0);
@@ -39,7 +39,7 @@ contract AV_Trade_ManagementFeeTest is AV_BaseTest {
     vm.warp(block.timestamp + 2);
     assertEq(viewFacet.getPendingManagementFee(address(vaultToken)), 2);
 
-    mockRouter.setRemoveLiquidityAmountsOut(1 ether, 1 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(1 ether, usdcDecimal), 1 ether);
     vm.prank(ALICE);
     tradeFacet.withdraw(address(vaultToken), 1 ether, 0, 0);
 
