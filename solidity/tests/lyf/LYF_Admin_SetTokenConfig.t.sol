@@ -37,9 +37,14 @@ contract LYF_Admin_SetTokenConfigsTest is LYF_BaseTest {
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
     adminFacet.setTokenConfigs(_inputs);
 
-    // invalid borrowingFactor
+    // invalid borrowingFactor (exceed max bps)
     _inputs[0].collateralFactor = 9000;
     _inputs[0].borrowingFactor = uint16(LibLYF01.MAX_BPS) + 1;
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
+    adminFacet.setTokenConfigs(_inputs);
+
+    // invalid borrowingFactor (equal zero)
+    _inputs[0].borrowingFactor = 0;
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
     adminFacet.setTokenConfigs(_inputs);
 

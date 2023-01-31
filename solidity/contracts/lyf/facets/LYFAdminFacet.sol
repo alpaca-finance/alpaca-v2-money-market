@@ -64,6 +64,10 @@ contract LYFAdminFacet is ILYFAdminFacet {
       ) {
         revert LYFAdminFacet_InvalidArguments();
       }
+      // borrowingFactor can't be zero otherwise will cause divide by zero error
+      if (_tokenConfigInput.borrowingFactor == 0) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
       // prevent user add collat or borrow too much
       if (_tokenConfigInput.maxCollateral > 1e40) {
         revert LYFAdminFacet_InvalidArguments();
