@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
@@ -150,8 +150,6 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     // usdc debt value should increase by 1 ether
 
     (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
-    console.log("_debtShare", _debtShare);
-    console.log("pending interest", viewFacet.getGlobalPendingInterest(address(usdc)));
     vm.prank(ALICE);
     // debt share = 10, debt value = 11
     borrowFacet.repayWithCollat(subAccount0, address(usdc), normalizeEther(10 ether, usdcDecimal));
