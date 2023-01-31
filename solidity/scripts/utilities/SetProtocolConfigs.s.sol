@@ -8,7 +8,7 @@ contract SetProtocolConfigsScript is BaseUtilsScript {
   function _run() internal override {
     _startDeployerBroadcast();
 
-    console.log("set non-collat protocol configs");
+    //---- inputs ----//
     IAdminFacet.TokenBorrowLimitInput[] memory tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](1);
     tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({ token: address(0), maxTokenBorrow: 30e18 });
 
@@ -19,7 +19,10 @@ contract SetProtocolConfigsScript is BaseUtilsScript {
       borrowLimitUSDValue: 1e30
     });
 
+    //---- execution ----//
     moneyMarket.setProtocolConfigs(protocolConfigInputs);
+
+    console.log("set non-collat protocol configs");
 
     _stopBroadcast();
   }

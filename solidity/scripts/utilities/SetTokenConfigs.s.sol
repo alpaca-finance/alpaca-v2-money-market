@@ -12,6 +12,7 @@ contract SetTokenConfigsScript is BaseUtilsScript {
   function _run() internal override {
     _startDeployerBroadcast();
 
+    //---- inputs ----//
     IAdminFacet.TokenConfigInput[] memory tokenConfigInputs = new IAdminFacet.TokenConfigInput[](1);
     tokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
       token: mockTokenForLocalRun,
@@ -21,7 +22,10 @@ contract SetTokenConfigsScript is BaseUtilsScript {
       maxBorrow: 30e18,
       maxCollateral: 100e18
     });
+
+    //---- execution ----//
     moneyMarket.setTokenConfigs(tokenConfigInputs);
+
     console.log("set config for", tokenConfigInputs.length, "tokens");
     for (uint256 i; i < tokenConfigInputs.length; i++) {
       console.log(" ", IERC20(tokenConfigInputs[i].token).symbol());

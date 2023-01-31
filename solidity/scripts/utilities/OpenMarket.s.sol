@@ -15,8 +15,11 @@ contract OpenMarketScript is BaseUtilsScript {
     _startDeployerBroadcast();
 
     // NOTE: must set ibTokenImplementation before
-    // address underlyingToken = address(0);
+
+    //---- inputs ----//
     address underlyingToken = mockTokenForLocalRun;
+
+    //---- execution ----//
     address newIbToken = moneyMarket.openMarket(underlyingToken);
     console.log("openMarket for", underlyingToken);
 

@@ -3,16 +3,19 @@ pragma solidity 0.8.17;
 
 import "./BaseUtilsScript.sol";
 
-contract SetMoneyMarketConfigsScript is BaseUtilsScript {
+contract WithdrawReserveScript is BaseUtilsScript {
   address internal mockTokenForLocalRun;
 
   function _run() internal override {
     _startDeployerBroadcast();
 
+    //---- inputs ----//
     // address tokenToWithdraw = address(0);
     address tokenToWithdraw = mockTokenForLocalRun;
     address withdrawTo = deployerAddress;
     uint256 amountToWithdraw = 0;
+
+    //---- execution ----//
     moneyMarket.withdrawReserve(tokenToWithdraw, withdrawTo, amountToWithdraw);
 
     console.log("withdrawReserve");

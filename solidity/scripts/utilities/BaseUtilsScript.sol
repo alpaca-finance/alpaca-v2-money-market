@@ -42,7 +42,7 @@ abstract contract BaseUtilsScript is Script {
   }
 
   //
-  /// setups
+  // setups
   //
 
   /// @dev setUp for actual script runs, use deployed mm address
@@ -73,7 +73,7 @@ abstract contract BaseUtilsScript is Script {
   }
 
   //
-  /// utilities
+  // utilities
   //
 
   function _getConfig() internal returns (MoneyMarketConfig memory) {
