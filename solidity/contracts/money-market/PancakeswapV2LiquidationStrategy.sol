@@ -63,9 +63,9 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
 
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
     // _amountsIn[0] = collat that is required to swap for _repayAmount
-    if (_collatAmountIn >= _amountsIn[0]) {
-      // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
-      router.swapTokensForExactTokens(_repayAmount, _collatAmountIn, _path, msg.sender, block.timestamp);
+    if (_collatAmountIn > _amountsIn[0]) {
+      router.swapExactTokensForTokens(_amountsIn[0], _minReceive, _path, msg.sender, block.timestamp);
+      // transfer remaining back to caller
       IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _amountsIn[0]);
     } else {
       router.swapExactTokensForTokens(_collatAmountIn, _minReceive, _path, msg.sender, block.timestamp);
