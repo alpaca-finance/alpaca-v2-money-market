@@ -317,7 +317,8 @@ contract AdminFacet is IAdminFacet {
   /// @param _newImplementation The address of interest bearing contract
   function setIbTokenImplementation(address _newImplementation) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // sanity check    IInterestBearingToken(_newImplementation).decimals();
+    // sanity check
+    IInterestBearingToken(_newImplementation).decimals();
     moneyMarketDs.ibTokenImplementation = _newImplementation;
     emit LogSetIbTokenImplementation(_newImplementation);
   }
