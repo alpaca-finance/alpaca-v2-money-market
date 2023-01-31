@@ -64,14 +64,17 @@ contract MockRouter {
   ) external returns (uint256[] memory amounts) {
     amounts = getAmountsOut(amountIn, path);
 
-    uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(path[0]).decimals());
-    uint256 _normalizedAmountOut = _normalizedAmountIn / 10**(18 - IERC20(path[path.length - 1]).decimals());
+    address _tokenIn = path[0];
+    address _tokenOut = path[path.length - 1];
+
+    uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(_tokenIn).decimals());
+    uint256 _normalizedAmountOut = _normalizedAmountIn / 10**(18 - IERC20(_tokenOut).decimals());
 
     console.log("amountin", _normalizedAmountIn);
     console.log("amountout", _normalizedAmountOut);
 
-    IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
-    IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, _normalizedAmountOut);
+    IERC20Upgradeable(_tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+    IERC20Upgradeable(_tokenOut).safeTransfer(to, _normalizedAmountOut);
   }
 
   function swapTokensForExactTokens(
@@ -105,11 +108,16 @@ contract MockRouter {
     return amounts;
   }
 
-  function getAmountsOut(uint256 amountIn, address[] memory path) public pure returns (uint256[] memory amounts) {
+  function getAmountsOut(uint256 amountIn, address[] memory path) public view returns (uint256[] memory amounts) {
     amounts = new uint256[](path.length);
-    for (uint256 i = 0; i < path.length; i++) {
-      amounts[i] = amountIn;
-    }
+
+    uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(path[0]).decimals());
+
+    uint256 _normalizedAmountOut = _normalizedAmountIn;
+
+    amounts[0] = _normalizedAmountIn / 10**(18 - IERC20(path[0]).decimals());
+    amounts[1] = _normalizedAmountOut / 10**(18 - IERC20(path[path.length - 1]).decimals());
+
     return amounts;
   }
 
@@ -129,6 +137,7 @@ contract MockRouter {
   ) public returns (uint256 amountA, uint256 amountB) {
     amountA = amountAout;
     amountB = amountBout;
+
     IERC20Upgradeable(lpToken).safeTransferFrom(msg.sender, address(this), liquidity);
     IERC20Upgradeable(tokenA).safeTransfer(to, amountAout);
     IERC20Upgradeable(tokenB).safeTransfer(to, amountBout);
