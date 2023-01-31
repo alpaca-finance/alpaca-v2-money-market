@@ -14,7 +14,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
 
   function testCorrectness_WhenWithdrawToken_ShouldWork() external {
     vm.prank(ALICE);
-    tradeFacet.deposit(address(vaultToken), 10 ether, 10 ether);
+    tradeFacet.deposit(address(vaultToken), normalizeEther(10 ether, usdcDecimal), 10 ether);
 
     (uint256 _stableDebtValueBefore, uint256 _assetDebtValueBefore) = viewFacet.getDebtValues(address(vaultToken));
 
@@ -28,7 +28,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
     // lpToRemove = (5 * 30) / (10 * 2) = 7.5
 
     // mock router to return both tokens as 7.5 ether
-    mockRouter.setRemoveLiquidityAmountsOut(7.5 ether, 7.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(7.5 ether, usdcDecimal), 7.5 ether);
 
     // after withdraw
     // equity should change a bit
@@ -45,11 +45,11 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
 
     assertEq(vaultToken.balanceOf(ALICE), 5 ether);
     // alice should get correct token return amount
-    assertEq(usdc.balanceOf(ALICE) - aliceUsdcBefore, 5 ether);
+    assertEq(usdc.balanceOf(ALICE) - aliceUsdcBefore, normalizeEther(5 ether, usdcDecimal));
 
     // should repay correctly
     (uint256 _stableDebtValueAfter, uint256 _assetDebtValueAfter) = viewFacet.getDebtValues(address(vaultToken));
-    assertEq(_stableDebtValueBefore - _stableDebtValueAfter, 2.5 ether);
+    assertEq(_stableDebtValueBefore - _stableDebtValueAfter, normalizeEther(2.5 ether, usdcDecimal));
     assertEq(_assetDebtValueBefore - _assetDebtValueAfter, 7.5 ether);
 
     assertEq(handler.totalLpBalance(), 7.5 ether);
@@ -57,7 +57,7 @@ contract AV_Trade_WithdrawalTest is AV_BaseTest {
 
   function testRevert_WhenWithdrawAndReturnedLessThanExpectation_ShouldRevert() external {
     vm.startPrank(ALICE);
-    tradeFacet.deposit(address(vaultToken), 10 ether, 10 ether);
+    tradeFacet.deposit(address(vaultToken), normalizeEther(10 ether, usdcDecimal), 10 ether);
 
     vm.expectRevert(abi.encodeWithSelector(IAVTradeFacet.AVTradeFacet_TooLittleReceived.selector));
     tradeFacet.withdraw(address(vaultToken), 5 ether, type(uint256).max, 0);

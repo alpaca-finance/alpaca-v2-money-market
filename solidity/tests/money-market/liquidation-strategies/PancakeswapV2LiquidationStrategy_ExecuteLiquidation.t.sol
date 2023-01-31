@@ -40,18 +40,28 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     address _collatToken = address(weth);
     address _debtToken = address(usdc);
 
-    weth.mint(address(liquidationStrat), 1 ether);
-    usdc.mint(address(router), 1 ether);
+    weth.mint(address(liquidationStrat), normalizeEther(1 ether, wethDecimal));
+    usdc.mint(address(router), normalizeEther(1 ether, usdcDecimal));
 
     vm.prank(address(moneyMarketDiamond));
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, 0);
+    liquidationStrat.executeLiquidation(
+      _collatToken,
+      _debtToken,
+      normalizeEther(1 ether, wethDecimal),
+      normalizeEther(1 ether, usdcDecimal),
+      0
+    );
 
     // nothing left in strat
-    assertEq(weth.balanceOf(address(liquidationStrat)), 0);
-    assertEq(usdc.balanceOf(address(liquidationStrat)), 0);
+    assertEq(weth.balanceOf(address(liquidationStrat)), 0, "weth balance of strat");
+    assertEq(usdc.balanceOf(address(liquidationStrat)), 0, "usdc balance of strat");
 
-    assertEq(usdc.balanceOf(address(moneyMarketDiamond)), 1 ether);
-    assertEq(usdc.balanceOf(address(router)), 0);
+    assertEq(
+      usdc.balanceOf(address(moneyMarketDiamond)),
+      normalizeEther(1 ether, usdcDecimal),
+      "usdc balance of money market"
+    );
+    assertEq(usdc.balanceOf(address(router)), 0, "usdc balance of router");
   }
 
   function testCorrectness_WhenInjectCollatToStrat_ExecuteLiquidation_ShouldTransferCollatAmountBackCorrectly()
@@ -60,22 +70,26 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     address _collatToken = address(weth);
     address _debtToken = address(usdc);
 
-    uint256 _collatAmount = 1 ether;
-    uint256 _repayAmount = 1 ether;
+    uint256 _collatAmount = normalizeEther(1 ether, wethDecimal);
+    uint256 _repayAmount = normalizeEther(1 ether, usdcDecimal);
 
-    uint256 _injectAmount = 1 ether;
+    uint256 _injectAmount = normalizeEther(1 ether, wethDecimal);
     weth.mint(address(liquidationStrat), _collatAmount + _injectAmount);
-    usdc.mint(address(router), 1 ether);
+    usdc.mint(address(router), normalizeEther(1 ether, usdcDecimal));
 
     vm.prank(address(moneyMarketDiamond));
     liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, _repayAmount, 0);
 
     // injected collat left in strat
-    assertEq(weth.balanceOf(address(liquidationStrat)), _injectAmount);
-    assertEq(usdc.balanceOf(address(liquidationStrat)), 0);
+    assertEq(weth.balanceOf(address(liquidationStrat)), _injectAmount, "weth balance of strat");
+    assertEq(usdc.balanceOf(address(liquidationStrat)), 0, "usdc balance of strat");
 
-    assertEq(usdc.balanceOf(address(moneyMarketDiamond)), 1 ether);
-    assertEq(usdc.balanceOf(address(router)), 0);
+    assertEq(
+      usdc.balanceOf(address(moneyMarketDiamond)),
+      normalizeEther(1 ether, usdcDecimal),
+      "usdc balance of money market"
+    );
+    assertEq(usdc.balanceOf(address(router)), 0, "usdc balance of router");
   }
 
   function testRevert_WhenNotOkCallersCallExecuteLiquidation_ShouldRevert() external {
@@ -85,7 +99,13 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     vm.expectRevert(
       abi.encodeWithSelector(PancakeswapV2LiquidationStrategy.PancakeswapV2LiquidationStrategy_Unauthorized.selector)
     );
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, 0);
+    liquidationStrat.executeLiquidation(
+      _collatToken,
+      _debtToken,
+      normalizeEther(1 ether, wethDecimal),
+      normalizeEther(1 ether, usdcDecimal),
+      0
+    );
   }
 
   function testRevert_WhenExecuteLiquidationOnNonExistentPath() external {
@@ -100,7 +120,13 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
         _debtToken
       )
     );
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, 1 ether, 1 ether, 0);
+    liquidationStrat.executeLiquidation(
+      _collatToken,
+      _debtToken,
+      normalizeEther(1 ether, usdcDecimal),
+      normalizeEther(1 ether, wethDecimal),
+      0
+    );
   }
 
   // TODO: multi-hop integration test with real router

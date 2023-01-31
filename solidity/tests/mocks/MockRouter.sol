@@ -16,6 +16,8 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
+import { IERC20 } from "../interfaces/IERC20.sol";
+
 /// @title FakeRouter - 1:1 swap for all token without fee and price impact
 contract MockRouter {
   using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -59,8 +61,15 @@ contract MockRouter {
     uint256 /*deadline*/
   ) external returns (uint256[] memory amounts) {
     amounts = getAmountsOut(amountIn, path);
-    IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
-    IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, amountIn);
+
+    address _tokenIn = path[0];
+    address _tokenOut = path[path.length - 1];
+
+    uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(_tokenIn).decimals());
+    uint256 _normalizedAmountOut = _normalizedAmountIn / 10**(18 - IERC20(_tokenOut).decimals());
+
+    IERC20Upgradeable(_tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
+    IERC20Upgradeable(_tokenOut).safeTransfer(to, _normalizedAmountOut);
   }
 
   function swapTokensForExactTokens(
@@ -71,23 +80,36 @@ contract MockRouter {
     uint256 /*deadline*/
   ) external returns (uint256[] memory amounts) {
     amounts = getAmountsIn(amountOut, path);
-    IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), amountOut);
+
+    uint256 _normalizedAmountOut = amountOut * 10**(18 - IERC20(path[path.length - 1]).decimals());
+    uint256 _normalizedAmountIn = _normalizedAmountOut / 10**(18 - IERC20(path[0]).decimals());
+
+    IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), _normalizedAmountIn);
     IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, amountOut);
   }
 
-  function getAmountsIn(uint256 amountOut, address[] memory path) public pure returns (uint256[] memory amounts) {
+  function getAmountsIn(uint256 amountOut, address[] memory path) public view returns (uint256[] memory amounts) {
     amounts = new uint256[](path.length);
-    for (uint256 i = 0; i < path.length; i++) {
-      amounts[i] = amountOut;
-    }
+    uint256 _normalizedAmountOut = amountOut * 10**(18 - IERC20(path[path.length - 1]).decimals());
+
+    uint256 _normalizedAmountIn = _normalizedAmountOut;
+
+    amounts[0] = _normalizedAmountIn / 10**(18 - IERC20(path[0]).decimals());
+    amounts[1] = _normalizedAmountOut / 10**(18 - IERC20(path[path.length - 1]).decimals());
+
     return amounts;
   }
 
-  function getAmountsOut(uint256 amountIn, address[] memory path) public pure returns (uint256[] memory amounts) {
+  function getAmountsOut(uint256 amountIn, address[] memory path) public view returns (uint256[] memory amounts) {
     amounts = new uint256[](path.length);
-    for (uint256 i = 0; i < path.length; i++) {
-      amounts[i] = amountIn;
-    }
+
+    uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(path[0]).decimals());
+
+    uint256 _normalizedAmountOut = _normalizedAmountIn;
+
+    amounts[0] = _normalizedAmountIn / 10**(18 - IERC20(path[0]).decimals());
+    amounts[1] = _normalizedAmountOut / 10**(18 - IERC20(path[path.length - 1]).decimals());
+
     return amounts;
   }
 
@@ -107,6 +129,7 @@ contract MockRouter {
   ) public returns (uint256 amountA, uint256 amountB) {
     amountA = amountAout;
     amountB = amountBout;
+
     IERC20Upgradeable(lpToken).safeTransferFrom(msg.sender, address(this), liquidity);
     IERC20Upgradeable(tokenA).safeTransfer(to, amountAout);
     IERC20Upgradeable(tokenB).safeTransfer(to, amountBout);
@@ -124,19 +147,25 @@ contract MockRouter {
   )
     external
     returns (
-      uint256 amountA,
-      uint256 amountB,
-      uint256 liquidity
+      uint256 _amountA,
+      uint256 _amountB,
+      uint256 _liquidity
     )
   {
-    amountA = amountADesired;
-    amountB = amountBDesired;
-    liquidity = (amountADesired + amountBDesired) / 2;
+    _amountA = amountADesired;
+    _amountB = amountBDesired;
+
+    {
+      uint256 _normalizedTokenA = amountADesired * 10**(18 - IERC20(tokenA).decimals());
+      uint256 _normalizedTokenB = amountBDesired * 10**(18 - IERC20(tokenB).decimals());
+
+      _liquidity = (_normalizedTokenA + _normalizedTokenB) / 2;
+    }
 
     IERC20Upgradeable(tokenA).safeTransferFrom(msg.sender, address(this), amountADesired);
 
     IERC20Upgradeable(tokenB).safeTransferFrom(msg.sender, address(this), amountBDesired);
 
-    IERC20Upgradeable(lpToken).safeTransfer(msg.sender, liquidity);
+    IERC20Upgradeable(lpToken).safeTransfer(msg.sender, _liquidity);
   }
 }
