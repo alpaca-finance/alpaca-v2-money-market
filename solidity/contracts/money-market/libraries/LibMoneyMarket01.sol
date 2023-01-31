@@ -303,6 +303,7 @@ library LibMoneyMarket01 {
     returns (uint256 _globalPendingInterest)
   {
     uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
+
     if (block.timestamp > _lastAccrualTimestamp) {
       uint256 _secondsSinceLastAccrual;
       unchecked {
@@ -310,22 +311,22 @@ library LibMoneyMarket01 {
       }
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
-      uint256 _nonCollatInterestAmountPerSec;
+      uint256 _nonCollatInterestPerSec;
       for (uint256 _i; _i < _accountLength; ) {
-        _nonCollatInterestAmountPerSec +=
-          (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
-            _borrowedAccounts[_i].amount) /
-          1e18;
+        _nonCollatInterestPerSec += (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
+          _borrowedAccounts[_i].amount);
+
         unchecked {
           ++_i;
         }
       }
+
       // _globalPendingInterest = (nonCollatInterestAmountPerSec + overCollatInterestAmountPerSec) * _secondsSinceLastAccrual
       _globalPendingInterest =
-        (_nonCollatInterestAmountPerSec +
-          (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token]) /
-          1e18) *
-        _secondsSinceLastAccrual;
+        ((_nonCollatInterestPerSec +
+          (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token])) *
+          _secondsSinceLastAccrual) /
+        1e18;
     }
   }
 
@@ -368,6 +369,7 @@ library LibMoneyMarket01 {
     // cache to save gas
     uint256 _totalDebtValue = moneyMarketDs.overCollatDebtValues[_token];
     _overCollatInterest = (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * _totalDebtValue) / 1e18;
+
     // update overcollat debt
     moneyMarketDs.overCollatDebtValues[_token] = _totalDebtValue + _overCollatInterest;
   }

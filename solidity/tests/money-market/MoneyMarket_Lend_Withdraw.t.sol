@@ -174,16 +174,16 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     address _token = address(usdc);
 
     vm.prank(ALICE);
-    lendFacet.deposit(_token, 2 ether);
+    lendFacet.deposit(_token, normalizeEther(2 ether, usdcDecimal));
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(subAccount0, _token, 1 ether);
+    borrowFacet.borrow(subAccount0, _token, normalizeEther(1 ether, usdcDecimal));
     vm.stopPrank();
 
     vm.warp(block.timestamp + 1);
 
-    assertEq(viewFacet.getGlobalPendingInterest(_token), 0.01 ether);
+    assertEq(viewFacet.getGlobalPendingInterest(_token), normalizeEther(0.01 ether, usdcDecimal));
 
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
 
@@ -192,15 +192,15 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(ibUsdc.convertToShares(0.201 ether), 0.2 ether);
 
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibUsdc), 0.2 ether);
+    lendFacet.withdraw(address(ibUsdc), normalizeEther(0.2 ether, ibUsdcDecimal));
 
     // check ALICE state
-    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, 0.201 ether);
+    assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, normalizeEther(0.201 ether, usdcDecimal));
 
     // check mm state
     assertEq(viewFacet.getGlobalPendingInterest(_token), 0);
     assertEq(viewFacet.getDebtLastAccruedAt(_token), block.timestamp);
-    assertEq(viewFacet.getTotalToken(_token), 1.809 ether);
-    assertEq(viewFacet.getTotalTokenWithPendingInterest(_token), 1.809 ether);
+    assertEq(viewFacet.getTotalToken(_token), normalizeEther(1.809 ether, usdcDecimal));
+    assertEq(viewFacet.getTotalTokenWithPendingInterest(_token), normalizeEther(1.809 ether, usdcDecimal));
   }
 }

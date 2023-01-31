@@ -11,7 +11,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   }
 
   function testCorrectness_WhenDepositToken_ShouldWork() external {
-    uint256 _usdcAmountIn = 10 ether;
+    uint256 _usdcAmountIn = normalizeEther(10 ether, usdcDecimal);
     uint256 _minShareOut = 10 ether;
 
     uint256 _usdcBalanceBefore = usdc.balanceOf(ALICE);
@@ -27,7 +27,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     // to calculate borrowed asset token, depositedAmount * leverageLevel
     // then borrowed asset token is 15
     (uint256 _stableDebtValue, uint256 _assetDebtValue) = viewFacet.getDebtValues(address(vaultToken));
-    assertEq(_stableDebtValue, 5 ether);
+    assertEq(_stableDebtValue, normalizeEther(5 ether, usdcDecimal));
     assertEq(_assetDebtValue, 15 ether);
 
     // equity change
@@ -63,7 +63,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
     // check vault state
     // BOB deposit same amount as ALICE so everything in vault should double
     (_stableDebtValue, _assetDebtValue) = viewFacet.getDebtValues(address(vaultToken));
-    assertEq(_stableDebtValue, 10 ether);
+    assertEq(_stableDebtValue, normalizeEther(10 ether, usdcDecimal));
     assertEq(_assetDebtValue, 30 ether);
     assertEq(handler.totalLpBalance(), 30 ether);
   }
@@ -71,7 +71,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   function testRevert_WhenDepositTokenAndGetTinyShares_ShouldRevert() external {
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(LibAV01.LibAV01_NoTinyShares.selector));
-    tradeFacet.deposit(address(vaultToken), 0.05 ether, 0.05 ether);
+    tradeFacet.deposit(address(vaultToken), normalizeEther(0.05 ether, usdcDecimal), 0.05 ether);
     vm.stopPrank();
   }
 
@@ -88,8 +88,8 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   //     assertEq(handler.totalLpBalance(), 15);
 
   //     // exploiter direct transfer 1B lp
-  //     wethUsdcLPToken.mint(ALICE, 1e10 ether);
-  //     wethUsdcLPToken.transfer(address(handler), 1e10 ether);
+  //     usdcWethLPToken.mint(ALICE, 1e10 ether);
+  //     usdcWethLPToken.transfer(address(handler), 1e10 ether);
   //     vm.stopPrank();
 
   //     assertEq(handler.totalLpBalance(), 15);
