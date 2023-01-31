@@ -196,7 +196,7 @@ contract BaseTest is DSTest {
     return ProxyAdminLike(address(_address));
   }
 
-  function normalizeEther(uint256 _ether, uint256 _decimal) internal pure returns (uint256 _nomalizedEther) {
-    _nomalizedEther = _ether / 10**(18 - _decimal);
+  function normalizeEther(uint256 _ether, uint256 _decimal) internal pure returns (uint256 _normalizedEther) {
+    _normalizedEther = _ether / 10**(18 - _decimal);
   }
 }

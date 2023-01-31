@@ -311,13 +311,10 @@ library LibMoneyMarket01 {
       }
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
-      uint256 _nonCollatInterest;
+      uint256 _nonCollatInterestPerSec;
       for (uint256 _i; _i < _accountLength; ) {
-        _nonCollatInterest +=
-          (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
-            _secondsSinceLastAccrual *
-            _borrowedAccounts[_i].amount) /
-          1e18;
+        _nonCollatInterestPerSec += (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
+          _borrowedAccounts[_i].amount);
 
         unchecked {
           ++_i;
@@ -325,11 +322,11 @@ library LibMoneyMarket01 {
       }
 
       // _globalPendingInterest = (nonCollatInterestAmountPerSec + overCollatInterestAmountPerSec) * _secondsSinceLastAccrual
-      _globalPendingInterest = (_nonCollatInterest +
-        (getOverCollatInterestRate(_token, moneyMarketDs) *
-          _secondsSinceLastAccrual *
-          moneyMarketDs.overCollatDebtValues[_token]) /
-        1e18);
+      _globalPendingInterest =
+        ((_nonCollatInterestPerSec +
+          (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token])) *
+          _secondsSinceLastAccrual) /
+        1e18;
     }
   }
 
