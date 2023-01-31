@@ -573,12 +573,28 @@ library LibLYF01 {
     }
 
     // transfer bounty to treasury
-    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
+    RewardConversionConfig memory _swapConfig = lyfDs.rewardConversionConfigs[_lpConfig.rewardToken];
+    if (_lpConfig.rewardToken == _swapConfig.path[_swapConfig.path.length - 1]) {
+      // just transfer if reward and desired token are the same
+      IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
+    } else {
+      // swap if different token
+      IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _reinvestBounty);
+      uint256[] memory _amounts = IRouterLike(_swapConfig.router).swapExactTokensForTokens(
+        _reinvestBounty,
+        0,
+        _swapConfig.path,
+        lyfDs.revenueTreasury,
+        block.timestamp
+      );
+      // re-assign _reinvestBounty with amountOut in desired token for logging
+      _reinvestBounty = _amounts[_amounts.length - 1];
+    }
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;
 
-    emit LogReinvest(msg.sender, _pendingReward, _reinvestBounty);
+    emit LogReinvest(lyfDs.revenueTreasury, _pendingReward, _reinvestBounty);
   }
 
   function borrow(

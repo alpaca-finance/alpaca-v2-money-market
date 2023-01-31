@@ -6,6 +6,7 @@ import { LYF_BaseTest, MockERC20, console } from "./LYF_BaseTest.t.sol";
 // interfaces
 import { ILYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
+import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
@@ -71,8 +72,12 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 31.275 ether);
     assertEq(viewFacet.getPendingReward(address(wethUsdcLPToken)), 0);
 
-    // treasury should received bounty
-    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(revenueTreasury), 0.45 ether);
+    // treasury should received bounty in token specified in rewardConversionConfig
+    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+      _lpConfig.rewardToken
+    );
+    address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
+    assertEq(MockERC20(_desiredRewardToken).balanceOf(revenueTreasury), 0.45 ether);
   }
 
   function testCorrectness_WhenPendingRewardLessThanReinvestThreshold_ShouldSkipReinvest() external {
@@ -193,8 +198,12 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       25.641025641025641025 ether
     );
 
-    // treasury should received bounty
-    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(revenueTreasury), 3 ether);
+    // treasury should received bounty in token specified in rewardConversionConfig
+    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+      _lpConfig.rewardToken
+    );
+    address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
+    assertEq(MockERC20(_desiredRewardToken).balanceOf(revenueTreasury), 3 ether);
   }
 
   function testCorrectness_WhenLPCollatRemoved_PendingRewardMoreThanReinvestThreshold_ShouldReinvestToMakeLPFair()
@@ -273,12 +282,72 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     assertEq(viewFacet.getLpTokenAmount(address(wethUsdcLPToken)), 72.366666666666666667 ether);
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 65 ether);
 
-    // treasury should received bounty
-    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(revenueTreasury), 3 ether);
+    // treasury should received bounty in token specified in rewardConversionConfig
+    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+      _lpConfig.rewardToken
+    );
+    address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
+    assertEq(MockERC20(_desiredRewardToken).balanceOf(revenueTreasury), 3 ether);
   }
 
   function testRevert_WhenNotReinvestorCallReinvest_ShouldRevert() external {
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_Unauthorized.selector));
     farmFacet.reinvest(address(wethUsdcLPToken));
+  }
+
+  function testCorrectness_WhenReinvest_ShouldSwapRewardToDesiredTokenAndSendToRevenueTreasury() external {
+    // allow ALICE to reinvest
+    address[] memory _reinvestors = new address[](1);
+    _reinvestors[0] = ALICE;
+    adminFacet.setReinvestorsOk(_reinvestors, true);
+
+    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+
+    uint256 _rewardAmount = 3 ether;
+    cake.mint(address(this), _rewardAmount);
+    cake.approve(address(masterChef), _rewardAmount);
+    masterChef.setReward(_lpConfig.poolId, lyfDiamond, _rewardAmount);
+
+    vm.prank(ALICE);
+    farmFacet.reinvest(address(wethUsdcLPToken));
+
+    // case reward and desired are different token
+    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+      _lpConfig.rewardToken
+    );
+    address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
+    assertEq(
+      MockERC20(_desiredRewardToken).balanceOf(revenueTreasury),
+      (_rewardAmount * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS
+    );
+
+    // case reward and desired are the same token
+    address[] memory _rewardConversionPath = new address[](2);
+    _rewardConversionPath[0] = address(cake);
+    _rewardConversionPath[1] = address(cake);
+
+    ILYFAdminFacet.SetRewardConversionConfigInput[]
+      memory _rewardConversionConfigInputs = new ILYFAdminFacet.SetRewardConversionConfigInput[](1);
+    _rewardConversionConfigInputs[0] = ILYFAdminFacet.SetRewardConversionConfigInput({
+      rewardToken: address(cake),
+      router: address(mockRouter),
+      path: _rewardConversionPath
+    });
+
+    adminFacet.setRewardConversionConfigs(_rewardConversionConfigInputs);
+
+    cake.mint(address(this), _rewardAmount);
+    cake.approve(address(masterChef), _rewardAmount);
+    masterChef.setReward(_lpConfig.poolId, lyfDiamond, _rewardAmount);
+
+    vm.prank(ALICE);
+    farmFacet.reinvest(address(wethUsdcLPToken));
+
+    _rewardConversionConfig = viewFacet.getRewardConversionConfig(_lpConfig.rewardToken);
+    _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
+    assertEq(
+      MockERC20(_desiredRewardToken).balanceOf(revenueTreasury),
+      (_rewardAmount * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS
+    );
   }
 }
