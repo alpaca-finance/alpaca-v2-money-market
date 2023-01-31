@@ -17,9 +17,9 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
 
   function testRevert_WhenUserTransferNonCollateralTier_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -43,7 +43,7 @@ contract LYF_Collateral_TransferCollateralTest is LYF_BaseTest {
 
   function testRevert_WhenUserTransferCollatMakeSubAccountUnHealthy_ShouldRevert() external {
     uint256 _wethToAddLP = 30 ether;
-    uint256 _usdcToAddLP = 30 ether;
+    uint256 _usdcToAddLP = normalizeEther(30 ether, usdcDecimal);
     uint256 _btcCollatAmount = 100 ether;
     btc.mint(BOB, _btcCollatAmount);
 
