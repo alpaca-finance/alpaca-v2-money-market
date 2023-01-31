@@ -47,18 +47,23 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     _liquidationExecutors[0] = address(lyfDiamond);
     _ibTokenLiquidationStrat.setCallersOk(_liquidationExecutors, true);
 
-    address[] memory _paths = new address[](2);
-    _paths[0] = address(btc);
-    _paths[1] = address(usdc);
+    address[] memory _btcUsdcPaths = new address[](2);
+    _btcUsdcPaths[0] = address(btc);
+    _btcUsdcPaths[1] = address(usdc);
+
+    address[] memory _wethUsdcPths = new address[](2);
+    _wethUsdcPths[0] = address(weth);
+    _wethUsdcPths[1] = address(usdc);
 
     PancakeswapV2IbTokenLiquidationStrategy.SetPathParams[]
-      memory _setPathsInputs = new PancakeswapV2IbTokenLiquidationStrategy.SetPathParams[](1);
-    _setPathsInputs[0] = PancakeswapV2IbTokenLiquidationStrategy.SetPathParams({ path: _paths });
+      memory _setPathsInputs = new PancakeswapV2IbTokenLiquidationStrategy.SetPathParams[](2);
+    _setPathsInputs[0] = PancakeswapV2IbTokenLiquidationStrategy.SetPathParams({ path: _btcUsdcPaths });
+    _setPathsInputs[1] = PancakeswapV2IbTokenLiquidationStrategy.SetPathParams({ path: _wethUsdcPths });
 
     _ibTokenLiquidationStrat.setPaths(_setPathsInputs);
   }
 
-  function testCorrectness_WhenSubAccountWentUnderWaterWithIbCollat_ShouldBeAbleToLiquidateIbCollat() external {
+  function testCorrectness_WhenSubAccountWentUnderWaterWithIbCollat_ShouldBeAbleToPartialLiquidateIbCollat() external {
     /*
      * scenario:
      *
@@ -120,7 +125,6 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     uint256 _usdcOutStandingBefore = viewFacet.getOutstandingBalanceOf(address(usdc));
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
-    console.log("[T]Before liquidationCall");
     vm.startPrank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -132,7 +136,6 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
       _repayAmount,
       0
     );
-    console.log("[T]After liquidationCall");
     vm.stopPrank();
 
     // ibBtc collateral is sold to repay
@@ -149,5 +152,94 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, 0.025 ether);
     // treasury get fee
     assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.025 ether);
+  }
+
+  function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
+    /*
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth: alice add collateral 20 ibWeth, open farm with 30 weth, 30 usdc
+     *      - alice need to borrow 30 weth and 30 usdc
+     *      - alice total borrowing power = (20 * 1 * 0.9) + (30 * 2 * 0.9) = 72 usd
+     *      - alice used borrowing power = (30 * 1)/0.9 + (30 * 1)/0.9 = 66.666666666666666666 usd
+     *
+     * 2. lp price drops to 0.5 usdc/lp -> position become liquidatable
+     *      - alice total borrowing power = (4 * 10 * 0.9) + (30 * 0.5 * 0.9) = 49.5 usd
+     *
+     * 3. liquidator liquidate alice position
+     *      - liquidator wants to repay 30 USDC, but only 20 ibWeth remains as collat
+     *      - withdraw 20 weth and swap to 20 USDC
+     *      - actualLiquidationFee = 20 * 0.3 / 30.3 = 0.198019801980198019
+     *      - actualRepay = 20 - 0.198019801980198019 = 19.801980198019801981
+     *
+     * 4. alice position after liquidate
+     *      - alice subaccount 0: ibWeth collateral = 0 ibWeth
+     *      - alice subaccount 0: usdc debt = 30 - 19.801980198019801981 = 10.198019801980198019 usdc
+     *      - lyf USDC outstanding should increase by repaid amount = 10.198019801980198019 USDC
+     * 5. Fee
+     *      - totalFee = 0.198019801980198019
+     *      - 50% goes to liquidator = 0.198019801980198019 * 5000 / 10000 = 0.0990099009900990095
+     *      - treasury get = 0.198019801980198019 -  0.0990099009900990095 = 0.0990099009900990095
+     */
+
+    // criteria
+    address _collatToken = address(ibWeth);
+    address _debtToken = address(usdc);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _repayAmount = 30 ether;
+
+    vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 20 ether);
+
+    ibBtc.approve(lyfDiamond, type(uint256).max);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 20 ether);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 30 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
+    vm.stopPrank();
+
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _liquidatorUsdcBalanceBefore = usdc.balanceOf(liquidator);
+    uint256 _usdcOutStandingBefore = viewFacet.getOutstandingBalanceOf(address(usdc));
+
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
+
+    vm.startPrank(liquidator);
+    liquidationFacet.liquidationCall(
+      address(_ibTokenLiquidationStrat),
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      _repayAmount,
+      0
+    );
+    vm.stopPrank();
+
+    // ibBtc collateral is sold to repay
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(ibWeth)), 0 ether);
+
+    // debt reduce
+    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
+    assertEq(_aliceUsdcDebtValue, 10.198019801980198019 ether);
+
+    // LYF outstanding
+    assertEq(viewFacet.getOutstandingBalanceOf(address(usdc)) - _usdcOutStandingBefore, 10.198019801980198019 ether);
+
+    // // liquidator get fee
+    // assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, 0.0990099009900990095 ether);
+    // // treasury get fee
+    // assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.0990099009900990095 ether);
   }
 }

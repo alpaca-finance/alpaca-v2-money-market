@@ -73,36 +73,93 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     liquidationFacet.liquidationCall(address(0), ALICE, subAccount0, address(0), address(0), address(0), 0, 0);
   }
 
-  // function testRevert_WhenLiquidateMoreThanThreshold() external {
-  //   address _debtToken = address(usdc);
-  //   address _collatToken = address(weth);
-  //   address _lpToken = address(wethUsdcLPToken);
-  //   uint256 _repayAmount = 30 ether;
+  function testRevert_WhenLiquidateWhileSubAccountIsHealthy() external {
+    /**
+     * scenario:
+     *
+     * 1. @ 1 usdc/weth: alice add collateral 40 weth, open farm with 30 weth, 30 usdc
+     *      - 30 weth collateral is used to open position -> 10 weth left as collateral
+     *      - alice need to borrow 30 usdc
+     *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 2 * 0.9) = 63 usd
+     *      - alice used borrowing power = (30 * 1)/0.9 = 33.333333333333333333 usd
+     **/
+    address _collatToken = address(weth);
+    address _debtToken = address(usdc);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _repayAmount = 10 ether;
 
-  //   vm.startPrank(ALICE);
-  //   collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
-  //   farmFacet.addFarmPosition(subAccount0, _lpToken, 30 ether, 30 ether, 0);
-  //   vm.stopPrank();
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 0,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
+    vm.stopPrank();
 
-  //   mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
+    vm.startPrank(liquidator);
+    vm.expectRevert(abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_Healthy.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      _repayAmount,
+      0
+    );
+    vm.stopPrank();
+  }
 
-  //   // alice has 40 weth collat, 30 usdc debt
-  //   // liquidate 30 usdc debt should fail because liquidatedBorrowingPower > maxLiquidateBps * totalUsedBorrowingPower
-  //   vm.prank(liquidator);
-  //   vm.expectRevert(
-  //     abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_RepayAmountExceedThreshold.selector)
-  //   );
-  //   liquidationFacet.liquidationCall(
-  //     address(mockLiquidationStrategy),
-  //     ALICE,
-  //     _subAccountId,
-  //     _debtToken,
-  //     _collatToken,
-  //     _lpToken,
-  //     _repayAmount,
-  //     0
-  //   );
-  // }
+  function testRevert_WhenLiquidateMoreThanThreshold() external {
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+    address _lpToken = address(wethUsdcLPToken);
+    uint256 _repayAmount = type(uint256).max;
+
+    vm.startPrank(ALICE);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: 30 ether,
+      token0ToBorrow: 20 ether,
+      token1ToBorrow: 30 ether,
+      token0AmountIn: 10 ether,
+      token1AmountIn: 0 ether
+    });
+    farmFacet.addFarmPosition(_input);
+    vm.stopPrank();
+
+    mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
+
+    // alice has 40 weth collat, 30 usdc debt, 20 weth debt
+    // repay 30 usdc should fail since repay more than 50% of useBorrowingPower
+    vm.prank(liquidator);
+    vm.expectRevert(
+      abi.encodeWithSelector(ILYFLiquidationFacet.LYFLiquidationFacet_RepayAmountExceedThreshold.selector)
+    );
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      _repayAmount,
+      0
+    );
+  }
 
   function testCorrectness_WhenSubAccountWentUnderWater_ShouldBeAbleToLiquidate() external {
     /**
