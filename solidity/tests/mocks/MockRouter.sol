@@ -18,8 +18,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import { console } from "../utils/console.sol";
-
 /// @title FakeRouter - 1:1 swap for all token without fee and price impact
 contract MockRouter {
   using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -70,9 +68,6 @@ contract MockRouter {
     uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(_tokenIn).decimals());
     uint256 _normalizedAmountOut = _normalizedAmountIn / 10**(18 - IERC20(_tokenOut).decimals());
 
-    console.log("amountin", _normalizedAmountIn);
-    console.log("amountout", _normalizedAmountOut);
-
     IERC20Upgradeable(_tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
     IERC20Upgradeable(_tokenOut).safeTransfer(to, _normalizedAmountOut);
   }
@@ -88,9 +83,6 @@ contract MockRouter {
 
     uint256 _normalizedAmountOut = amountOut * 10**(18 - IERC20(path[path.length - 1]).decimals());
     uint256 _normalizedAmountIn = _normalizedAmountOut / 10**(18 - IERC20(path[0]).decimals());
-
-    console.log("amountin", _normalizedAmountIn);
-    console.log("amountout", _normalizedAmountOut);
 
     IERC20Upgradeable(path[0]).safeTransferFrom(msg.sender, address(this), _normalizedAmountIn);
     IERC20Upgradeable(path[path.length - 1]).safeTransfer(to, amountOut);

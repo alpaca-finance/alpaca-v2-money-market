@@ -12,8 +12,6 @@ import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
 import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 
-import { console } from "../../tests/utils/console.sol";
-
 contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
@@ -61,14 +59,11 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
       revert PancakeswapV2LiquidationStrategy_PathConfigNotFound(_collatToken, _repayToken);
     }
 
-    console.log("_collatAmountIn", _collatAmountIn);
-    console.log("_repayAmount", _repayAmount);
     IERC20(_collatToken).safeApprove(address(router), _collatAmountIn);
 
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
     // _amountsIn[0] = collat that is required to swap for _repayAmount
     if (_collatAmountIn >= _amountsIn[0]) {
-      console.log("_amountsIn[0]", _amountsIn[0]);
       // swapTokensForExactTokens will fail if _collatAmountIn is not enough to swap for _repayAmount during low liquidity period
       router.swapTokensForExactTokens(_repayAmount, _collatAmountIn, _path, msg.sender, block.timestamp);
       IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _amountsIn[0]);

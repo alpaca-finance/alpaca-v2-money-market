@@ -16,8 +16,6 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import { console } from "../../../tests/utils/console.sol";
-
 /// @title BorrowFacet is dedicated to over collateralized borrowing and repayment
 contract BorrowFacet is IBorrowFacet {
   using LibSafeToken for IERC20;
@@ -144,7 +142,6 @@ contract BorrowFacet is IBorrowFacet {
     address _token,
     uint256 _debtShareToRepay
   ) external nonReentrant {
-    console.log("repay with collat");
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
@@ -163,9 +160,6 @@ contract BorrowFacet is IBorrowFacet {
       _token,
       moneyMarketDs
     );
-
-    console.log("_currentDebtShare", _currentDebtShare);
-    console.log("_currentDebtAmount", _currentDebtAmount);
 
     uint256 _actualShareToRepay = LibFullMath.min(
       _debtShareToRepay,
