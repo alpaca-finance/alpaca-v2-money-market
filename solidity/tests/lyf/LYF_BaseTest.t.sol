@@ -61,6 +61,7 @@ abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
   address internal moneyMarketDiamond;
   address internal treasury = address(888);
+  address internal revenueTreasury = address(889);
 
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
@@ -275,6 +276,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(0.05 ether)));
 
     adminFacet.setTreasury(treasury);
+    adminFacet.setRevenueTreasury(revenueTreasury);
 
     // set max num of tokens
     adminFacet.setMaxNumOfToken(3, 3);

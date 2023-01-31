@@ -72,7 +72,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     assertEq(viewFacet.getPendingReward(address(wethUsdcLPToken)), 0);
 
     // treasury should received bounty
-    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(treasury), 0.45 ether);
+    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(revenueTreasury), 0.45 ether);
   }
 
   function testCorrectness_WhenPendingRewardLessThanReinvestThreshold_ShouldSkipReinvest() external {
@@ -194,7 +194,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     );
 
     // treasury should received bounty
-    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(treasury), 3 ether);
+    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(revenueTreasury), 3 ether);
   }
 
   function testCorrectness_WhenLPCollatRemoved_PendingRewardMoreThanReinvestThreshold_ShouldReinvestToMakeLPFair()
@@ -274,7 +274,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 65 ether);
 
     // treasury should received bounty
-    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(treasury), 3 ether);
+    assertEq(MockERC20(_lpConfig.rewardToken).balanceOf(revenueTreasury), 3 ether);
   }
 
   function testRevert_WhenNotReinvestorCallReinvest_ShouldRevert() external {

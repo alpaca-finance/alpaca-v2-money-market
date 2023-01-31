@@ -123,6 +123,7 @@ library LYFDiamondDeployer {
     selectors[9] = LYFAdminFacet.setMaxNumOfToken.selector;
     selectors[10] = LYFAdminFacet.setMinDebtSize.selector;
     selectors[11] = LYFAdminFacet.withdrawReserve.selector;
+    selectors[12] = LYFAdminFacet.setRevenueTreasury.selector;
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
       IDiamondCut.FacetCutAction.Add,

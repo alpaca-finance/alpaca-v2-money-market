@@ -79,6 +79,7 @@ library LibLYF01 {
     IMoneyMarket moneyMarket;
     IAlpacaV2Oracle oracle;
     address treasury;
+    address revenueTreasury;
     // ---- protocol parameters ---- //
     uint8 maxNumOfCollatPerSubAccount; // maximum number of token in the collat linked list
     uint8 maxNumOfDebtPerSubAccount; // maximum number of token in the debt linked list
@@ -567,7 +568,7 @@ library LibLYF01 {
     }
 
     // transfer bounty to treasury
-    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.treasury, _reinvestBounty);
+    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;

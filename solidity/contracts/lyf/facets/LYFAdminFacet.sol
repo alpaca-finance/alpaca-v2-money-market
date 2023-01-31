@@ -27,7 +27,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetReinvestorOk(address indexed _reinvester, bool isOk);
   event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
   event LogSetLiquidatorsOk(address indexed _liquidator, bool isOk);
-  event LogSetTreasury(address indexed _trasury);
+  event LogSetTreasury(address indexed _treasury);
+  event LogSetRevenueTreasury(address indexed _trasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
@@ -240,6 +241,15 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.treasury = _newTreasury;
 
     emit LogSetTreasury(_newTreasury);
+  }
+
+  /// @notice Set the address that will keep the reinvest bounty
+  /// @param _newTreasury new revenue treasury address
+  function setRevenueTreasury(address _newTreasury) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.revenueTreasury = _newTreasury;
+
+    emit LogSetRevenueTreasury(_newTreasury);
   }
 
   /// @notice Set the maximum number of token in various lists
