@@ -95,7 +95,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     );
     // start at 40, repay 2, remain 38
     assertEq(_subAccountWethDebtValue, 38 ether);
-    assertEq(_subAccountUsdcDebtValue, 38 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(38 ether, usdcDecimal));
   }
 
   function testCorrectness02_WhenUserReducePosition_LefoverTokenShouldReturnToUser() external {
@@ -167,7 +167,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
     // debt start at 40, get 30, repay 25, remain 15, transfer back 5
     assertEq(_subAccountWethDebtValue, 15 ether);
-    assertEq(_subAccountUsdcDebtValue, 15 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(15 ether, usdcDecimal));
 
     assertEq(weth.balanceOf(BOB) - wethBefore, 5 ether, "BOB get WETH back wrong");
     assertEq(usdc.balanceOf(BOB) - usdcBefore, normalizeEther(5 ether, usdcDecimal), "BOB get USDC back wrong");
