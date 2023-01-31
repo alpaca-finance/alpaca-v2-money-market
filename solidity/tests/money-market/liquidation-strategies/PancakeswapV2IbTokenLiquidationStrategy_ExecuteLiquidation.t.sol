@@ -9,6 +9,7 @@ import { MockRouter } from "../../mocks/MockRouter.sol";
 import { MockLPToken } from "../../mocks/MockLPToken.sol";
 import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
+import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
 
 contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
@@ -50,9 +51,11 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
 
     liquidationStrat.setPaths(_setPathsInputs);
 
-    vm.prank(address(moneyMarketDiamond));
-    ibWeth.onDeposit(ALICE, 0, normalizeEther(100 ether, ibWethDecimal));
-    _aliceIbTokenBalance = normalizeEther(100 ether, ibWethDecimal);
+    vm.startPrank(address(moneyMarketDiamond));
+    ibWeth.onDeposit(ALICE, 0, 100 ether);
+    ibWeth.transferOwnership(address(moneyMarket));
+    vm.stopPrank();
+    _aliceIbTokenBalance = 100 ether;
 
     weth.mint(address(moneyMarket), normalizeEther(100 ether, wethDecimal)); // mint to mm to trafer to strat
     // moneyMarket.setWithdrawalAmount(1 ether);
@@ -95,6 +98,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     uint256 _expectedIbTokenAmountToWithdraw = normalizeEther(1 ether, ibWethDecimal);
     uint256 _expectedWithdrawalAmount = normalizeEther(1 ether, wethDecimal);
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+
+    // mock convert to share function
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 1 ether),
+      abi.encode(1 ether)
+    );
 
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = _repayAmount;
@@ -146,6 +156,12 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     uint256 _expectedIbTokenAmountToWithdraw = normalizeEther(0.5 ether, ibWethDecimal);
     uint256 _expectedWithdrawalAmount = normalizeEther(0.5 ether, wethDecimal);
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+    // mock convert to share function
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 1 ether),
+      abi.encode(1 ether)
+    );
 
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = normalizeEther(0.5 ether, usdcDecimal);
@@ -194,9 +210,15 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 0.5 ether
 
     // mock withdrawal amount
-    uint256 _expectedIbTokenAmountToWithdraw = normalizeEther(0.5 ether, ibWethDecimal);
-    uint256 _expectedWithdrawalAmount = normalizeEther(0.5 ether, wethDecimal);
+    uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
+    uint256 _expectedWithdrawalAmount = 0.5 ether;
+    // mock convert to share function
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 0.5 ether),
+      abi.encode(0.5 ether)
+    );
 
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = normalizeEther(0.5 ether, usdcDecimal);
