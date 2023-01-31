@@ -112,7 +112,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 25 ether, "alice debt remaining");
 
     // treasury reward check
-    assertEq(usdc.balanceOf(treasury), _fee, "treasury received repaid fee");
+    assertEq(usdc.balanceOf(liquidationTreasury), _fee, "treasury received repaid fee");
   }
 
   function testCorrectness_WhenRepurchaseMoreThanDebt_ShouldRepurchaseAllDebtOnThatToken() external {
@@ -188,7 +188,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     assertEq(_aliceWethDebtValue, 30 ether);
 
     // treasury reward check
-    assertEq(usdc.balanceOf(treasury), _actualFee, "treasury received repaid fee");
+    assertEq(usdc.balanceOf(liquidationTreasury), _actualFee, "treasury received repaid fee");
   }
 
   function testCorrectness_WhenPartialRepurchaseIb_ShouldWork() external {
@@ -270,7 +270,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 25 ether, "alice debt remaining");
 
     // treasury reward check
-    assertEq(usdc.balanceOf(treasury), _fee, "treasury received repaid fee");
+    assertEq(usdc.balanceOf(liquidationTreasury), _fee, "treasury received repaid fee");
   }
 
   function testRevert_WhenRepurchaseHealthySubAccount() external {

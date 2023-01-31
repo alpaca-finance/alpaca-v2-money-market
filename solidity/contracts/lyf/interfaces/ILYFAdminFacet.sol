@@ -55,4 +55,8 @@ interface ILYFAdminFacet {
     address _to,
     uint256 _amount
   ) external;
+
+  function setLiquidationTreasury(address _newTreasury) external;
+
+  function setRevenueTreasury(address _newTreasury) external;
 }

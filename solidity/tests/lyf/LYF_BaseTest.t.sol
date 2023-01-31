@@ -60,7 +60,7 @@ import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
   address internal moneyMarketDiamond;
-  address internal treasury = address(888);
+  address internal liquidationTreasury = address(888);
   address internal revenueTreasury = address(889);
 
   LYFAdminFacet internal adminFacet;
@@ -275,7 +275,7 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setDebtPoolInterestModel(3, address(new MockInterestModel(0.05 ether)));
     adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(0.05 ether)));
 
-    adminFacet.setTreasury(treasury);
+    adminFacet.setLiquidationTreasury(liquidationTreasury);
     adminFacet.setRevenueTreasury(revenueTreasury);
 
     // set max num of tokens

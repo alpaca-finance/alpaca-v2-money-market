@@ -27,8 +27,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetReinvestorOk(address indexed _reinvester, bool isOk);
   event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
   event LogSetLiquidatorsOk(address indexed _liquidator, bool isOk);
-  event LogSetTreasury(address indexed _treasury);
-  event LogSetRevenueTreasury(address indexed _trasury);
+  event LogSetLiquidationTreasury(address indexed _treasury);
+  event LogSetRevenueTreasury(address indexed _treasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
@@ -239,11 +239,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
   /// @notice Set the address that will keep the liqudation's fee
   /// @param _newTreasury The destination address
-  function setTreasury(address _newTreasury) external onlyOwner {
+  function setLiquidationTreasury(address _newTreasury) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.treasury = _newTreasury;
+    lyfDs.liquidationTreasury = _newTreasury;
 
-    emit LogSetTreasury(_newTreasury);
+    emit LogSetLiquidationTreasury(_newTreasury);
   }
 
   /// @notice Set the address that will keep the reinvest bounty

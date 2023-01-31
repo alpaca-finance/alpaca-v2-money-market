@@ -109,7 +109,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
 
     usdc.mint(liquidator, 10000 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     vm.startPrank(liquidator);
@@ -134,7 +134,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 20.1 ether);
 
     // treasury get fee
-    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.1 ether);
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.1 ether);
   }
 
   function testCorrectness_WhenSubAccountWentUnderWaterWithIbCollat_ShouldBeAbleToLiquidateIbCollat() external {
@@ -193,7 +193,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
 
     usdc.mint(liquidator, 10000 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     vm.startPrank(liquidator);
@@ -220,7 +220,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 25.0 ether);
 
     // // treasury get fee
-    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.05 ether);
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.05 ether);
   }
 
   // LP liquidation test
@@ -271,7 +271,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
@@ -298,7 +298,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 26.04 ether, "alice remaining usdc debt");
 
     // check treasury
-    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.04 ether);
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.04 ether);
   }
 
   function testCorrectness_WhenLiquidateLPMoreThanCollateral_ShouldLiquidateAllLP() external {
@@ -347,7 +347,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
@@ -370,7 +370,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 25.05 ether, "alice remaining usdc debt");
 
     // check treasury
-    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.05 ether);
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.05 ether);
   }
 
   function testCorrectness_WhenLiquidateLPButReceiveTokensLessThanRepayAmount_ShouldWork() external {
@@ -419,7 +419,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     mockRouter.setRemoveLiquidityAmountsOut(2 ether, 2 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
@@ -446,7 +446,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_aliceUsdcDebtValue, 28.02 ether, "alice remaining usdc debt");
 
     // check treasury
-    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.02 ether);
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.02 ether);
   }
 
   function testRevert_WhenLiquidateLPOnHealthySubAccount() external {
