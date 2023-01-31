@@ -30,6 +30,7 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserRepay_SubaccountDebtShouldDecrease() external {
     adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
+
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
@@ -39,8 +40,18 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
-
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP - _wethCollatAmount,
+      token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     masterChef.setReward(wethUsdcPoolId, lyfDiamond, 10 ether);
@@ -126,11 +137,8 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
   }
 
   function testCorrectness_WhenUserRepay_RemainingDebtBelowMinDebtSize_ShouldRevert() external {
-    // remove interest for convienice of test
-    adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0)));
-    adminFacet.setDebtPoolInterestModel(2, address(new MockInterestModel(0)));
-
     adminFacet.setMinDebtSize(20 ether);
+
     uint256 _wethToAddLP = 40 ether;
     uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
@@ -140,7 +148,18 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
 
-    farmFacet.addFarmPosition(subAccount0, address(wethUsdcLPToken), _wethToAddLP, _usdcToAddLP, 0);
+    ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: address(wethUsdcLPToken),
+      minLpReceive: 0,
+      desiredToken0Amount: _wethToAddLP,
+      desiredToken1Amount: _usdcToAddLP,
+      token0ToBorrow: _wethToAddLP - _wethCollatAmount,
+      token1ToBorrow: _usdcToAddLP - _usdcCollatAmount,
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
     // assume that every coin is 1 dollar and lp = 2 dollar

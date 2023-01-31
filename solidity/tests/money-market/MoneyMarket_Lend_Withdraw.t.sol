@@ -187,6 +187,10 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
 
     uint256 _aliceUsdcBalanceBefore = usdc.balanceOf(ALICE);
 
+    // check ib functions
+    assertEq(ibUsdc.convertToAssets(0.2 ether), 0.201 ether);
+    assertEq(ibUsdc.convertToShares(0.201 ether), 0.2 ether);
+
     vm.prank(ALICE);
     lendFacet.withdraw(address(ibUsdc), normalizeEther(0.2 ether, ibUsdcDecimal));
 
