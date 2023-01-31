@@ -94,10 +94,13 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _len = _lpConfigInputs.length;
 
     LibLYF01.LPConfig memory _config;
-    LPConfigInput memory _input;
+    LPConfigInput calldata _input;
 
     for (uint256 _i; _i < _len; ) {
       _input = _lpConfigInputs[_i];
+      if (_input.reinvestTreasuryBountyBps > LibLYF01.MAX_BPS) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
 
       // sanity check reinvestPath and router
       IRouterLike(_input.router).getAmountsIn(1 ether, _input.reinvestPath);
