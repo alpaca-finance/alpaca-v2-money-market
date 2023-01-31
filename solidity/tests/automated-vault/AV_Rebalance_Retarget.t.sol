@@ -44,7 +44,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
     // 1)
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     // 2)
     // ALICE has 1.5 lp, price = 2.4 would make total lp value = 1.5 * 2.4 = 3.6 usd
@@ -55,7 +55,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
     // check debt after retarget should increase
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether + 0.6 ether);
+    assertEq(_stableDebt, normalizeEther(0.5 ether + 0.6 ether, usdcDecimal));
     assertEq(_assetDebt, 1.5 ether + 0.6 ether);
   }
 
@@ -81,11 +81,11 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
     // don't ask where these numbers come from it just happened to make
     // deltaDebt last decimal digit odd number and cause precision loss during stableBorrowAmount calculation
-    // deltaDebt = 0.666666666666666657
-    // stableBorrowValue and Amount = 0.333333333333333328
-    // assetBorrowValue and Amount = 0.333333333333333329
+    // deltaDebt = 0.666666333333333324
+    // stableBorrowValue and Amount = 0.333333
+    // assetBorrowValue and Amount = 0.333333166666666662
     vm.prank(ALICE);
-    tradeFacet.deposit(_newVaultToken, 1.999999999999999999 ether, 0);
+    tradeFacet.deposit(_newVaultToken, normalizeEther(1.999999 ether, usdcDecimal), 0);
 
     mockOracle.setLpTokenPrice(_lpToken, 2.055555555555555555 ether);
 
@@ -93,8 +93,8 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
     // check debt after retarget should increase
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_newVaultToken);
-    assertEq(_stableDebt, 1999999999999999999 + 333333333333333328);
-    assertEq(_assetDebt, 1999999999999999999 * 2 + 333333333333333329);
+    assertEq(_stableDebt, 1999999 + 333333);
+    assertEq(_assetDebt, 1.999999 ether * 2 + 0.333333166666666662 ether);
   }
 
   function testCorrectness_WhenAVRetarget_WhileDeltaDebtNegative_ShouldDecreaseDebtToMatchTarget() external {
@@ -116,18 +116,18 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
     // 1)
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     // 2)
     // ALICE has 1.5 lp, price = 1.8 would make total lp value = 1.5 * 1.8 = 2.7 usd
     mockOracle.setLpTokenPrice(_lpToken, 1.8 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(0.3 ether, 0.3 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(0.3 ether, usdcDecimal), 0.3 ether);
 
     rebalanceFacet.retarget(_vaultToken);
 
     // check debt after retarget should decrease
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether - 0.3 ether);
+    assertEq(_stableDebt, normalizeEther(0.2 ether, usdcDecimal));
     assertEq(_assetDebt, 1.5 ether - 0.3 ether);
   }
 
@@ -155,12 +155,12 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
   function testCorrectness_WhenAVRetarget_WhileDeltaDebtEqualToTarget_DebtShouldNotChange() external {
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     (uint256 _stableDebtBefore, uint256 _assetDebtBefore) = viewFacet.getDebtValues(_vaultToken);
 
     vm.expectEmit(true, false, false, false, avDiamond);
-    emit LogRetarget(_vaultToken, 1 ether, 1 ether);
+    emit LogRetarget(_vaultToken, normalizeEther(1 ether, usdcDecimal), 1 ether);
     rebalanceFacet.retarget(_vaultToken);
 
     // check debt after retarget should not change
@@ -171,7 +171,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
 
   function testCorrectness_WhenAVRetarget_ShouldAccrueInterestAndMintManagementFee() external {
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     rebalanceFacet.retarget(_vaultToken);
 
