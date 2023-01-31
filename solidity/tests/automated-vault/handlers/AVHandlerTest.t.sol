@@ -18,7 +18,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     handler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 0);
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
-    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 10 ether);
+    assertEq(usdcWethLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
     assertEq(handler.totalLpBalance(), 10 ether);
   }
@@ -32,7 +32,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     handler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 1000 ether);
 
     // check no liquidity come to handler
-    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 0 ether);
+    assertEq(usdcWethLPToken.balanceOf(address(handler)), 0 ether);
   }
 
   function testCorrectness_WhenWithdraw_CallerShouldGetFundsCorrectly() external {
@@ -42,7 +42,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     handler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 0);
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
-    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 10 ether);
+    assertEq(usdcWethLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
     assertEq(handler.totalLpBalance(), 10 ether);
 
@@ -56,7 +56,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     // note: the amounts out is from mock
     assertEq(_token0Out, 5 ether);
     assertEq(_token1Out, 5 ether);
-    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 5 ether);
+    assertEq(usdcWethLPToken.balanceOf(address(handler)), 5 ether);
     assertEq(handler.totalLpBalance(), 5 ether);
 
     // caller should got funds
@@ -71,7 +71,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     handler.onDeposit(address(weth), address(usdc), 10 ether, 10 ether, 0);
 
     // mock router is amount0 + amount1 / 2 = (10 + 10) / 2 = 10 ether;
-    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 10 ether);
+    assertEq(usdcWethLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
     assertEq(handler.totalLpBalance(), 10 ether);
 
@@ -86,7 +86,7 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     // note: the amounts out is from mock
     assertEq(_token0Out, 5 ether);
     assertEq(_token1Out, 5 ether);
-    assertEq(wethUsdcLPToken.balanceOf(address(handler)), 5 ether);
+    assertEq(usdcWethLPToken.balanceOf(address(handler)), 5 ether);
     assertEq(handler.totalLpBalance(), 5 ether);
 
     // caller should got funds

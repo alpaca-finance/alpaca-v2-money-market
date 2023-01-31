@@ -11,7 +11,7 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   }
 
   function testCorrectness_WhenDepositToken_ShouldWork() external {
-    uint256 _usdcAmountIn = 10 ether;
+    uint256 _usdcAmountIn = normalizeEther(10 ether, usdcDecimal);
     uint256 _minShareOut = 10 ether;
 
     uint256 _usdcBalanceBefore = usdc.balanceOf(ALICE);
@@ -88,8 +88,8 @@ contract AV_Trade_DepositTest is AV_BaseTest {
   //     assertEq(handler.totalLpBalance(), 15);
 
   //     // exploiter direct transfer 1B lp
-  //     wethUsdcLPToken.mint(ALICE, 1e10 ether);
-  //     wethUsdcLPToken.transfer(address(handler), 1e10 ether);
+  //     usdcWethLPToken.mint(ALICE, 1e10 ether);
+  //     usdcWethLPToken.transfer(address(handler), 1e10 ether);
   //     vm.stopPrank();
 
   //     assertEq(handler.totalLpBalance(), 15);

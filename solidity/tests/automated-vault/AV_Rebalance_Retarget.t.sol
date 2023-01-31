@@ -23,7 +23,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     adminFacet.setOperatorsOk(_operators, true);
 
     _vaultToken = address(vaultToken);
-    _lpToken = address(wethUsdcLPToken);
+    _lpToken = address(usdcWethLPToken);
   }
 
   function testCorrectness_WhenAVRetarget_WhileDeltaDebtPositive_ShouldIncreaseDebtToMatchTarget() external {
@@ -67,7 +67,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
     address _newVaultToken = address(
       IAVVaultToken(
         adminFacet.openVault(
-          address(wethUsdcLPToken),
+          address(usdcWethLPToken),
           address(usdc),
           address(weth),
           address(handler),

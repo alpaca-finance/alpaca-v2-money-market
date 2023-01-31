@@ -29,7 +29,7 @@ contract AV_AccrueInterestTest is AV_BaseTest {
     );
 
     weth.mint(address(mockRouter), 100 ether);
-    usdc.mint(address(mockRouter), 100 ether);
+    usdc.mint(address(mockRouter), normalizeEther(100 ether, usdcDecimal));
   }
 
   function testCorrectness_WhenAVDepositSubsequentlyAndTimePast_InterestShouldIncreaseAndAccrued() external {
