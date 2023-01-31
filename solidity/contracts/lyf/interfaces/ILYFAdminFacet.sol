@@ -7,6 +7,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_BadDebtPoolId();
   error LYFAdminFacet_ReserveTooLow();
   error LYFAdminFacet_NotEnoughToken();
+  error LYFAdminFacet_InvalidArguments();
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;

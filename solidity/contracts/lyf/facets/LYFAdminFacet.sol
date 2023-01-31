@@ -53,21 +53,32 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 _inputLength = _tokenConfigInputs.length;
-    address _token;
     LibLYF01.TokenConfig memory _tokenConfig;
+    TokenConfigInput calldata _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
-      _token = _tokenConfigInputs[_i].token;
+      _tokenConfigInput = _tokenConfigInputs[_i];
+      // factors should not greater than MAX_BPS
+      if (
+        _tokenConfigInput.collateralFactor > LibLYF01.MAX_BPS || _tokenConfigInput.borrowingFactor > LibLYF01.MAX_BPS
+      ) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+      // prevent user add collat or borrow too much
+      if (_tokenConfigInput.maxCollateral > 1e40) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+
       _tokenConfig = LibLYF01.TokenConfig({
-        tier: _tokenConfigInputs[_i].tier,
-        collateralFactor: _tokenConfigInputs[_i].collateralFactor,
-        borrowingFactor: _tokenConfigInputs[_i].borrowingFactor,
-        maxCollateral: _tokenConfigInputs[_i].maxCollateral,
-        to18ConversionFactor: LibLYF01.to18ConversionFactor(_token)
+        tier: _tokenConfigInput.tier,
+        collateralFactor: _tokenConfigInput.collateralFactor,
+        borrowingFactor: _tokenConfigInput.borrowingFactor,
+        maxCollateral: _tokenConfigInput.maxCollateral,
+        to18ConversionFactor: LibLYF01.to18ConversionFactor(_tokenConfigInput.token)
       });
 
-      lyfDs.tokenConfigs[_token] = _tokenConfig;
+      lyfDs.tokenConfigs[_tokenConfigInput.token] = _tokenConfig;
 
-      emit LogSetTokenConfig(_token, _tokenConfig);
+      emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
 
       unchecked {
         ++_i;
