@@ -102,6 +102,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
       if (_input.reinvestTreasuryBountyBps > LibLYF01.MAX_BPS) {
         revert LYFAdminFacet_InvalidArguments();
       }
+      if (_input.rewardToken != _input.reinvestPath[0]) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
 
       // sanity check reinvestPath and router
       IRouterLike(_input.router).getAmountsIn(1 ether, _input.reinvestPath);
