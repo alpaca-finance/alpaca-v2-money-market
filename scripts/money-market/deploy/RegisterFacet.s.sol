@@ -159,7 +159,7 @@ contract RegisterFacet is Script {
     selectors[5] = AdminFacet.setRepurchasersOk.selector;
     selectors[6] = AdminFacet.setLiquidationStratsOk.selector;
     selectors[7] = AdminFacet.setLiquidatorsOk.selector;
-    selectors[8] = AdminFacet.setTreasury.selector;
+    selectors[8] = AdminFacet.setLiquidationTreasury.selector;
     selectors[9] = AdminFacet.setNonCollatInterestModel.selector;
     selectors[10] = AdminFacet.setFees.selector;
     selectors[11] = AdminFacet.withdrawProtocolReserve.selector;

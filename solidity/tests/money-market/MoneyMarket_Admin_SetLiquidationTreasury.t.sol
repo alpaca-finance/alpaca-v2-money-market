@@ -9,26 +9,26 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 
-contract MoneyMarket_Admin_SetTreasuryTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Admin_SetLiquidationTreasuryTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
   }
 
-  function testRevert_WhenNonAdminSetTreasury_ShouldRevert() external {
+  function testRevert_WhenNonAdminSetLiquidationTreasury_ShouldRevert() external {
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setTreasury(address(1));
+    adminFacet.setLiquidationTreasury(address(1));
   }
 
-  function testRevert_WhenAdminSetTreasuryWithZeroAddress_ShouldRevert() external {
+  function testRevert_WhenAdminSetLiquidationTreasuryWithZeroAddress_ShouldRevert() external {
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidAddress.selector));
-    adminFacet.setTreasury(address(0));
+    adminFacet.setLiquidationTreasury(address(0));
   }
 
-  function testCorrectness_WhenAdminSetTreasury_ShouldWork() external {
+  function testCorrectness_WhenAdminSetLiquidationTreasury_ShouldWork() external {
     address _mockTreasuryAddress = address(1);
-    adminFacet.setTreasury(_mockTreasuryAddress);
+    adminFacet.setLiquidationTreasury(_mockTreasuryAddress);
 
-    // viewFacet.getl
+    assertEq(viewFacet.getLiquidationTreasury(), _mockTreasuryAddress);
   }
 }
