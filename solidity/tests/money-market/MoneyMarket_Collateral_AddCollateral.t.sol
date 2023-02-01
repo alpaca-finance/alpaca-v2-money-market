@@ -20,7 +20,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
 
     usdc.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(usdc), 10 ether);
+    collateralFacet.addCollateral(ALICE, 0, address(usdc), normalizeEther(10 ether, usdcDecimal));
 
     btc.approve(moneyMarketDiamond, 10 ether);
     collateralFacet.addCollateral(ALICE, 0, address(btc), 10 ether);
@@ -43,52 +43,52 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserAddMultipleCollaterals_ListShouldUpdate() external {
-    uint256 _aliceCollateralAmount = 10 ether;
-    uint256 _aliceCollateralAmount2 = 20 ether;
+    uint256 _aliceWethCollatAmount = 10 ether;
+    uint256 _aliceUsdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
 
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceWethCollatAmount);
     vm.stopPrank();
 
     LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 1);
-    assertEq(collats[0].amount, _aliceCollateralAmount);
+    assertEq(collats[0].amount, _aliceWethCollatAmount);
 
     vm.startPrank(ALICE);
 
     // list will be add at the front of linkList
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceUsdcCollatAmount);
     vm.stopPrank();
 
     collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
-    assertEq(collats[0].amount, _aliceCollateralAmount2);
-    assertEq(collats[1].amount, _aliceCollateralAmount);
+    assertEq(collats[0].amount, _aliceUsdcCollatAmount);
+    assertEq(collats[1].amount, _aliceWethCollatAmount);
 
     // Alice try to update weth collateral
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceWethCollatAmount);
     vm.stopPrank();
 
     collats = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
     assertEq(collats.length, 2);
-    assertEq(collats[0].amount, _aliceCollateralAmount2);
-    assertEq(collats[1].amount, _aliceCollateralAmount * 2, "updated weth");
+    assertEq(collats[0].amount, _aliceUsdcCollatAmount);
+    assertEq(collats[1].amount, _aliceWethCollatAmount * 2, "updated weth");
   }
 
   function testCorrectness_WhenUserAddMultipleCollaterals_TotalBorrowingPowerShouldBeCorrect() external {
-    uint256 _aliceCollateralAmount = 10 ether;
-    uint256 _aliceCollateralAmount2 = 20 ether;
+    uint256 _aliceWethCollatAmount = 10 ether;
+    uint256 _aliceUsdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
 
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollateralAmount);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceWethCollatAmount);
 
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceCollateralAmount2);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _aliceUsdcCollatAmount);
     vm.stopPrank();
 
     uint256 _aliceBorrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);

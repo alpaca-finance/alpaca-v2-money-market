@@ -30,10 +30,10 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
 
   function testCorrectness_WhenAVRepurchaseToRepayStable_ShouldRepayStableBorrowAssetAndPayRewardToCaller() external {
     address _tokenToRepay = address(usdc);
-    uint256 _amountToRepay = 0.1 ether;
+    uint256 _amountToRepay = normalizeEther(0.1 ether, usdcDecimal);
 
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
@@ -41,16 +41,18 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     vm.prank(BOB);
     rebalanceFacet.repurchase(_vaultToken, _tokenToRepay, _amountToRepay);
 
-    uint256 _amountRepurchaserShouldRecieved = (_amountToRepay * (10000 + _repurchaseRewardBps)) / 10000;
+    // repay 0.1 usdc, with reward 1%, should receive weth as 0.101 usdc
+    // to convert 0.101 usdc * 1 usd / 1 usd = 0.101 weth
+    uint256 _amountRepurchaserShouldRecieved = 0.101 ether;
 
     // check BOB balances
-    assertEq(_bobUsdcBalanceBefore - usdc.balanceOf(BOB), _amountToRepay);
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, _amountRepurchaserShouldRecieved);
+    assertEq(_bobUsdcBalanceBefore - usdc.balanceOf(BOB), _amountToRepay, "usdc balance");
+    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, _amountRepurchaserShouldRecieved, "weth balance");
 
     // check vault debts
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether - _amountToRepay);
-    assertEq(_assetDebt, 1.5 ether + _amountRepurchaserShouldRecieved);
+    assertEq(_stableDebt, normalizeEther(0.5 ether, usdcDecimal) - _amountToRepay, "usdc debt");
+    assertEq(_assetDebt, 1.5 ether + _amountRepurchaserShouldRecieved, "weth debt");
   }
 
   function testCorrectness_WhenAVRepurchaseToRepayAsset_ShouldRepayAssetBorrowStableAndPayRewardToCaller() external {
@@ -58,7 +60,7 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     uint256 _amountToRepay = 0.1 ether;
 
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
@@ -66,7 +68,9 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
     vm.prank(BOB);
     rebalanceFacet.repurchase(_vaultToken, _tokenToRepay, _amountToRepay);
 
-    uint256 _amountRepurchaserShouldRecieved = (_amountToRepay * (10000 + _repurchaseRewardBps)) / 10000;
+    // repay 0.1 weth, with reward 1%, should receive usdc as 0.101 weth
+    // to convert 0.101 weth * 1 usd / 1 usd = 0.101 usdc
+    uint256 _amountRepurchaserShouldRecieved = normalizeEther(0.101 ether, usdcDecimal);
 
     // check BOB balances
     assertEq(usdc.balanceOf(BOB) - _bobUsdcBalanceBefore, _amountRepurchaserShouldRecieved);
@@ -74,16 +78,16 @@ contract AV_Rebalance_RepurchaseTest is AV_BaseTest {
 
     // check vault debts
     (uint256 _stableDebt, uint256 _assetDebt) = viewFacet.getDebtValues(_vaultToken);
-    assertEq(_stableDebt, 0.5 ether + _amountRepurchaserShouldRecieved);
+    assertEq(_stableDebt, normalizeEther(0.5 ether, usdcDecimal) + _amountRepurchaserShouldRecieved);
     assertEq(_assetDebt, 1.5 ether - _amountToRepay);
   }
 
   function testCorrectness_WhenAVRepurchase_ShouldAccrueInterestAndMintManagementFee() external {
     vm.prank(ALICE);
-    tradeFacet.deposit(_vaultToken, 1 ether, 0);
+    tradeFacet.deposit(_vaultToken, normalizeEther(1 ether, usdcDecimal), 0);
 
     vm.prank(BOB);
-    rebalanceFacet.repurchase(_vaultToken, address(usdc), 0.1 ether);
+    rebalanceFacet.repurchase(_vaultToken, address(usdc), normalizeEther(0.1 ether, usdcDecimal));
 
     // should accrue interest
     assertEq(viewFacet.getLastAccrueInterestTimestamp(_vaultToken), block.timestamp);
