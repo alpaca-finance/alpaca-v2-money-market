@@ -147,7 +147,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 accAlpacaPerShare = pool.accAlpacaPerShare;
     uint256 stakedBalance = stakingToken[_pid].balanceOf(address(this));
     if (block.timestamp > pool.lastRewardTime && stakedBalance != 0) {
-      uint256 timePast = block.timestamp - pool.lastRewardTime;
+      uint256 timePast;
+      unchecked {
+        timePast = block.timestamp - pool.lastRewardTime;
+      }
+
       uint256 alpacaReward = (timePast * alpacaPerSecond * pool.allocPoint) / totalAllocPoint;
       accAlpacaPerShare = accAlpacaPerShare + ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance);
     }
@@ -163,7 +167,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (block.timestamp > pool.lastRewardTime) {
       uint256 stakedBalance = stakingToken[pid].balanceOf(address(this));
       if (stakedBalance > 0) {
-        uint256 timePast = block.timestamp - pool.lastRewardTime;
+        uint256 timePast;
+        unchecked {
+          timePast = block.timestamp - pool.lastRewardTime;
+        }
         uint256 alpacaReward = (timePast * alpacaPerSecond * pool.allocPoint) / totalAllocPoint;
         pool.accAlpacaPerShare =
           pool.accAlpacaPerShare +

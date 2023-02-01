@@ -72,6 +72,10 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     OwnableUpgradeable.__Ownable_init();
     ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
 
+    // sanity check
+    _rewardToken.totalSupply();
+    IMiniFL(_miniFL).stakingToken(0);
+
     name = _name;
     miniFL = _miniFL;
     rewardToken = _rewardToken;
@@ -209,7 +213,10 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _accRewardPerShare = _poolInfo.accRewardPerShare;
     uint256 _stakedBalance = IMiniFL(miniFL).stakingToken(_pid).balanceOf(miniFL);
     if (block.timestamp > _poolInfo.lastRewardTime && _stakedBalance != 0) {
-      uint256 _timePast = block.timestamp - _poolInfo.lastRewardTime;
+      uint256 _timePast;
+      unchecked {
+        _timePast = block.timestamp - _poolInfo.lastRewardTime;
+      }
       uint256 _rewards = (_timePast * rewardPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
       _accRewardPerShare = _accRewardPerShare + ((_rewards * ACC_REWARD_PRECISION) / _stakedBalance);
     }
@@ -237,7 +244,10 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (block.timestamp > _poolInfo.lastRewardTime) {
       uint256 _stakedBalance = IMiniFL(miniFL).stakingToken(_pid).balanceOf(miniFL);
       if (_stakedBalance > 0) {
-        uint256 _timePast = block.timestamp - _poolInfo.lastRewardTime;
+        uint256 _timePast;
+        unchecked {
+          _timePast = block.timestamp - _poolInfo.lastRewardTime;
+        }
         uint256 _rewards = (_timePast * rewardPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
         _poolInfo.accRewardPerShare =
           _poolInfo.accRewardPerShare +
