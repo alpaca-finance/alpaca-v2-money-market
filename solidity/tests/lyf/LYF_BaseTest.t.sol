@@ -60,7 +60,8 @@ import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 abstract contract LYF_BaseTest is BaseTest {
   address internal lyfDiamond;
   address internal moneyMarketDiamond;
-  address internal treasury = address(888);
+  address internal liquidationTreasury = address(888);
+  address internal revenueTreasury = address(889);
 
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
@@ -166,7 +167,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(ibWeth),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 
@@ -174,7 +175,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(wethUsdcLPToken),
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 
@@ -182,7 +183,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(btcUsdcLPToken),
       tier: LibLYF01.AssetTier.LP,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: 10e24
     });
 
@@ -190,7 +191,7 @@ abstract contract LYF_BaseTest is BaseTest {
       token: address(ibUsdc),
       tier: LibLYF01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
-      borrowingFactor: 0,
+      borrowingFactor: 1,
       maxCollateral: normalizeEther(10e24, usdcDecimal)
     });
 
@@ -277,7 +278,8 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setDebtPoolInterestModel(3, address(new MockInterestModel(normalizeEther(0.05 ether, 18)))); // lptoken decimal
     adminFacet.setDebtPoolInterestModel(4, address(new MockInterestModel(normalizeEther(0.05 ether, 18)))); // lptoken decimal
 
-    adminFacet.setTreasury(treasury);
+    adminFacet.setLiquidationTreasury(liquidationTreasury);
+    adminFacet.setRevenueTreasury(revenueTreasury);
 
     // set max num of tokens
     adminFacet.setMaxNumOfToken(3, 3);
