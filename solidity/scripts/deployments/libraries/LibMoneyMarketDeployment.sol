@@ -203,7 +203,7 @@ library LibMoneyMarketDeployment {
     _selectors[6] = AdminFacet.setNonCollatInterestModel.selector;
     _selectors[7] = AdminFacet.setLiquidationStratsOk.selector;
     _selectors[8] = AdminFacet.setLiquidatorsOk.selector;
-    _selectors[9] = AdminFacet.setTreasury.selector;
+    _selectors[9] = AdminFacet.setLiquidationTreasury.selector;
     _selectors[10] = AdminFacet.setFees.selector;
     _selectors[11] = AdminFacet.withdrawReserve.selector;
     _selectors[12] = AdminFacet.setProtocolConfigs.selector;
