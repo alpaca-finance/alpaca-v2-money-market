@@ -502,9 +502,9 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
-      desiredToken1Amount: 1 ether,
+      desiredToken1Amount: normalizeEther(1 ether, usdcDecimal),
       token0ToBorrow: 1 ether,
-      token1ToBorrow: 1 ether,
+      token1ToBorrow: normalizeEther(1 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -525,7 +525,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
-    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcCollatAmount);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), normalizeEther(_usdcCollatAmount, usdcDecimal));
 
     // borrow weth and usdc
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
@@ -533,9 +533,9 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
-      desiredToken1Amount: _usdcToAddLP,
+      desiredToken1Amount: normalizeEther(_usdcToAddLP, usdcDecimal),
       token0ToBorrow: _wethToAddLP,
-      token1ToBorrow: _usdcToAddLP,
+      token1ToBorrow: normalizeEther(_usdcToAddLP, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -549,9 +549,9 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     // borrow btc and usdc
     _input.lpToken = address(btcUsdcLPToken);
     _input.desiredToken0Amount = _btcToAddLP;
-    _input.desiredToken1Amount = _usdcToAddLP;
+    _input.desiredToken1Amount = normalizeEther(_usdcToAddLP, usdcDecimal);
     _input.token0ToBorrow = _btcToAddLP;
-    _input.token1ToBorrow = _usdcToAddLP;
+    _input.token1ToBorrow = normalizeEther(_usdcToAddLP, usdcDecimal);
     farmFacet.addFarmPosition(_input);
   }
 }
