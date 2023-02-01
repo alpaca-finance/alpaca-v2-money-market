@@ -24,6 +24,8 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
+import "solidity/tests/utils/console.sol";
+
 contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
   using LibSafeToken for IERC20;
 
@@ -116,7 +118,12 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     bool isReversed;
     {
       (uint256 r0, uint256 r1, ) = lpToken.getReserves();
+      console.log("r0", r0);
+      console.log("r1", r1);
+      console.log("_token0Amount", _token0Amount);
+      console.log("_token1Amount", _token1Amount);
       (swapAmt, isReversed) = optimalDeposit(_token0Amount, _token1Amount, r0, r1);
+      console.log("swapAmt", swapAmt);
     }
     // 3. Convert between BaseToken and farming tokens
     address[] memory path = new address[](2);
@@ -127,6 +134,9 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     }
     // 5. Mint more LP tokens and return all LP tokens to the sender.
     uint256 _lpBalanceBefore = lpToken.balanceOf(address(this));
+
+    console.log("token0Balance", IERC20(_token0).balanceOf(address(this)));
+    console.log("token1Balance", IERC20(_token1).balanceOf(address(this)));
 
     router.addLiquidity(
       _token0,
@@ -140,6 +150,8 @@ contract PancakeswapV2Strategy is IStrat, Ownable, ReentrancyGuard {
     );
 
     _lpRecieved = lpToken.balanceOf(address(this)) - _lpBalanceBefore;
+
+    console.log(_lpRecieved);
 
     if (_lpRecieved < _minLPAmount) {
       revert PancakeswapV2Strategy_TooLittleReceived();

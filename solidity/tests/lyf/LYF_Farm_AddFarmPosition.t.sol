@@ -113,7 +113,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     );
     assertEq(
       viewFacet.getSubAccountTokenCollatAmount(user, subAccount0, address(wethUsdcLPToken)) - stateBefore.lpCollat,
-      (desiredToken0Amount + desiredToken1Amount) / 2, // mockRouter return this
+      (desiredToken0Amount + desiredToken1Amount * 10**(18 - usdcDecimal)) / 2, // mockRouter return this
       string.concat(testcaseName, ": lp collat")
     );
   }
@@ -122,32 +122,59 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     uint256 snapshot = vm.snapshot();
 
     // only wallet
-    _testAddFarmSuccess("only wallet", ALICE, 1 ether, 1 ether, 0, 0, 1 ether, 1 ether);
+    _testAddFarmSuccess(
+      "only wallet",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0,
+      0,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal)
+    );
     vm.revertTo(snapshot);
 
     // only borrow
     snapshot = vm.snapshot();
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
-    _testAddFarmSuccess("only borrow", ALICE, 1 ether, 1 ether, 1 ether, 1 ether, 0, 0);
+    _testAddFarmSuccess(
+      "only borrow",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0,
+      0
+    );
     vm.revertTo(snapshot);
 
     // only normal collat
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 1 ether);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), 1 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
     vm.stopPrank();
-    _testAddFarmSuccess("only normal collat", ALICE, 1 ether, 1 ether, 0, 0, 0, 0);
+    _testAddFarmSuccess("only normal collat", ALICE, 1 ether, normalizeEther(1 ether, usdcDecimal), 0, 0, 0, 0);
     vm.revertTo(snapshot);
 
-    // only ib collat
+    // ib collat + wallet
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
     moneyMarket.deposit(address(weth), 1 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 1 ether);
     vm.stopPrank();
-    _testAddFarmSuccess("only ib collat", ALICE, 1 ether, 0, 0, 0, 0, 0);
+    _testAddFarmSuccess(
+      "ib collat + wallet",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0,
+      normalizeEther(1 ether, usdcDecimal),
+      0,
+      0
+    );
     vm.revertTo(snapshot);
 
     // normal + ib collat
@@ -157,41 +184,86 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     moneyMarket.deposit(address(weth), 0.5 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 0.5 ether);
     vm.stopPrank();
-    _testAddFarmSuccess("normal + ib collat", ALICE, 1 ether, 0, 0, 0, 0, 0);
+    _testAddFarmSuccess(
+      "normal + ib collat",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0,
+      0,
+      0,
+      normalizeEther(1 ether, usdcDecimal)
+    );
     vm.revertTo(snapshot);
 
     // wallet + borrow
     snapshot = vm.snapshot();
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
-    _testAddFarmSuccess("wallet + borrow", ALICE, 1 ether, 1 ether, 0.5 ether, 0.5 ether, 0.5 ether, 0.5 ether);
+    _testAddFarmSuccess(
+      "wallet + borrow",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal),
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal)
+    );
     vm.revertTo(snapshot);
 
     // wallet + collat
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 1 ether);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), 1 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
     vm.stopPrank();
-    _testAddFarmSuccess("wallet + collat", ALICE, 1 ether, 1 ether, 0.5 ether, 0.5 ether, 0.5 ether, 0.5 ether);
+    _testAddFarmSuccess(
+      "wallet + collat",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal),
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal)
+    );
     vm.revertTo(snapshot);
 
     // borrow + collat
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 1 ether);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), 1 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
     vm.stopPrank();
-    _testAddFarmSuccess("borrow + collat", ALICE, 1 ether, 1 ether, 0.5 ether, 0.5 ether, 0, 0);
+    _testAddFarmSuccess(
+      "borrow + collat",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal),
+      0,
+      0
+    );
     vm.revertTo(snapshot);
 
     // wallet + borrow + collat
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 1 ether);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), 1 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
     vm.stopPrank();
-    _testAddFarmSuccess("borrow + collat", ALICE, 1 ether, 1 ether, 0.5 ether, 0.5 ether, 0.1 ether, 0.1 ether);
+    _testAddFarmSuccess(
+      "wallet + borrow + collat",
+      ALICE,
+      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal),
+      0.1 ether,
+      normalizeEther(0.1 ether, usdcDecimal)
+    );
     vm.revertTo(snapshot);
   }
 
@@ -201,11 +273,11 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
-      desiredToken1Amount: 1 ether,
+      desiredToken1Amount: normalizeEther(1 ether, usdcDecimal),
       token0ToBorrow: 0,
       token1ToBorrow: 0,
       token0AmountIn: 1 ether,
-      token1AmountIn: 1 ether
+      token1AmountIn: normalizeEther(1 ether, usdcDecimal)
     });
 
     vm.prank(ALICE);

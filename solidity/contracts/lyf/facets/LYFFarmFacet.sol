@@ -17,6 +17,8 @@ import { IStrat } from "../interfaces/IStrat.sol";
 import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+import "solidity/tests/utils/console.sol";
+
 /// @title LYFFarmFacet is dedicated to managing leveraged farming positions
 contract LYFFarmFacet is ILYFFarmFacet {
   using LibSafeToken for IERC20;
@@ -190,6 +192,9 @@ contract LYFFarmFacet is ILYFFarmFacet {
         lyfDs
       );
 
+      // console.log(_amountToRemoveCollat);
+      // console.log(_tokenAmountFromIbCollat);
+
       // revert if amount from collat removal less than desired collat amount
       unchecked {
         if (_amountToRemoveCollat > _tokenAmountFromCollat + _tokenAmountFromIbCollat) {
@@ -201,6 +206,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     // send tokens to strat for lp composition
     // transfer user supplied part
     if (_suppliedAmount != 0) {
+      console.log("_suppliedAmount", _suppliedAmount);
       IERC20(_token).safeTransferFrom(msg.sender, _lpStrat, _suppliedAmount);
     }
     // transfer borrowed + collat removed part
@@ -209,6 +215,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       _amountToStrat = _amountToBorrow + _amountToRemoveCollat;
     }
     if (_amountToStrat != 0) {
+      console.log("_amountToStrat", _amountToStrat);
       IERC20(_token).safeTransfer(_lpStrat, _amountToStrat);
     }
   }

@@ -36,7 +36,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     _liquidators[0] = address(liquidator);
     adminFacet.setLiquidatorsOk(_liquidators, true);
 
-    usdc.mint(address(mockLiquidationStrategy), 1000 ether);
+    usdc.mint(address(mockLiquidationStrategy), normalizeEther(1000 ether, usdcDecimal));
 
     vm.prank(liquidator);
     usdc.approve(lyfDiamond, type(uint256).max);
@@ -63,9 +63,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 0,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -81,8 +81,8 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
      */
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
-    uint256 _amountToRepurchase = 5 ether;
-    uint256 _fee = 0.05 ether; // (1%)
+    uint256 _amountToRepurchase = normalizeEther(5 ether, usdcDecimal);
+    uint256 _fee = normalizeEther(0.05 ether, usdcDecimal); // (1%)
     uint256 _amountToRepurchaseWithFee = _amountToRepurchase + _fee;
     /*
      * 3. bob repurchase weth collateral with 5.05 usdc (including fee), bob will receive 5.05 weth
@@ -109,7 +109,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       "alice collat remaining"
     );
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 25 ether, "alice debt remaining");
+    assertEq(_aliceUsdcDebtValue, normalizeEther(25 ether, usdcDecimal), "alice debt remaining");
 
     // treasury reward check
     assertEq(usdc.balanceOf(liquidationTreasury), _fee, "treasury received repaid fee");
@@ -134,9 +134,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -167,10 +167,18 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
      */
 
     vm.prank(BOB);
-    liquidationFacet.repurchase(ALICE, subAccount0, _debtToken, _collatToken, _lpToken, 40.4 ether, 0);
+    liquidationFacet.repurchase(
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      normalizeEther(50 ether, usdcDecimal),
+      0
+    );
     // alice debt has only 30 ether
-    uint256 _actualRepaidAmount = 30 ether;
-    uint256 _actualFee = 0.3 ether;
+    uint256 _actualRepaidAmount = normalizeEther(30 ether, usdcDecimal);
+    uint256 _actualFee = normalizeEther(0.3 ether, usdcDecimal);
 
     // check bob balance
     assertEq(btc.balanceOf(BOB) - _bobBtcBalanceBefore, 3.0603 ether, "bob received collat amount");
@@ -183,7 +191,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       "alice btc collat remaining"
     );
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 0 ether, "alice debt remaining");
+    assertEq(_aliceUsdcDebtValue, 0, "alice debt remaining");
     (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 30 ether);
 
@@ -220,9 +228,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 0,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -239,8 +247,8 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
      */
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
 
-    uint256 _amountToRepurchase = 5 ether;
-    uint256 _fee = 0.05 ether; // (1%)
+    uint256 _amountToRepurchase = normalizeEther(5 ether, usdcDecimal);
+    uint256 _fee = normalizeEther(0.05 ether, usdcDecimal); // (1%)
     uint256 _amountToRepurchaseWithFee = _amountToRepurchase + _fee;
     /**
      * 3. bob repurchase weth collateral with 5.05 usdc (including fee), bob will receive 5.05 weth
@@ -267,7 +275,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       "alice ib collat remaining"
     );
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 25 ether, "alice debt remaining");
+    assertEq(_aliceUsdcDebtValue, normalizeEther(25 ether, usdcDecimal), "alice debt remaining");
 
     // treasury reward check
     assertEq(usdc.balanceOf(liquidationTreasury), _fee, "treasury received repaid fee");
@@ -277,7 +285,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     address _collatToken = address(weth);
     address _debtToken = address(usdc);
     address _lpToken = address(wethUsdcLPToken);
-    uint256 _amountToRepurchase = 5 ether;
+    uint256 _amountToRepurchase = normalizeEther(5 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
@@ -286,9 +294,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -304,7 +312,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     address _collatToken = address(btc);
     address _debtToken = address(usdc);
     address _lpToken = address(wethUsdcLPToken);
-    uint256 _amountToRepurchase = 40 ether;
+    uint256 _amountToRepurchase = normalizeEther(40 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
@@ -314,9 +322,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 29 ether,
-      desiredToken1Amount: 31 ether,
+      desiredToken1Amount: normalizeEther(31 ether, usdcDecimal),
       token0ToBorrow: 29 ether,
-      token1ToBorrow: 31 ether,
+      token1ToBorrow: normalizeEther(31 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -335,7 +343,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     address _collatToken = address(btc);
     address _debtToken = address(usdc);
     address _lpToken = address(wethUsdcLPToken);
-    uint256 _amountToRepurchase = 20.2 ether;
+    uint256 _amountToRepurchase = normalizeEther(20.2 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
@@ -345,9 +353,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -367,7 +375,7 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     address _collatToken = address(weth);
     address _debtToken = address(usdc);
     address _lpToken = address(wethUsdcLPToken);
-    uint256 _amountToRepurchase = 5 ether;
+    uint256 _amountToRepurchase = normalizeEther(5 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
@@ -376,9 +384,9 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });

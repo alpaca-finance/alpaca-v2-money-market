@@ -40,7 +40,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
   }
 
   function testCorrectness_WhenDexAndOraclePriceNotDiff_ShouldReturnTrue() external {
-    uint256 _usdcOraclePrice = 1e18;
+    uint256 _usdcOraclePrice = normalizeEther(1 ether, usdDecimal);
 
     // mock price return from OracleMedianizer
     vm.mockCall(
@@ -60,7 +60,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
 
     vm.mockCall(
       address(mockRouter),
-      abi.encodeWithSelector(IRouterLike.getAmountsOut.selector, 1e18, _usdcPath),
+      abi.encodeWithSelector(IRouterLike.getAmountsOut.selector, normalizeEther(1 ether, usdcDecimal), _usdcPath),
       abi.encode(_mockAmtOut)
     );
 
@@ -68,8 +68,8 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
   }
 
   function testRevert_WhenDexPriceTooLow_ShouldRevert() external {
-    uint256 _usdcOraclePrice = 1e18;
-    uint256 _usdcDexPrice = 9.5e17;
+    uint256 _usdcOraclePrice = normalizeEther(1 ether, usdDecimal);
+    uint256 _usdcDexPrice = normalizeEther(0.95 ether, usdDecimal);
 
     // mock price return from OracleMedianizer
     vm.mockCall(
@@ -89,7 +89,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
 
     vm.mockCall(
       address(mockRouter),
-      abi.encodeWithSelector(IRouterLike.getAmountsOut.selector, 1e18, _usdcPath),
+      abi.encodeWithSelector(IRouterLike.getAmountsOut.selector, normalizeEther(1 ether, usdcDecimal), _usdcPath),
       abi.encode(_mockAmtOut)
     );
 
@@ -100,8 +100,8 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
   }
 
   function testRevert_WhenDexPriceTooHigh_ShouldRevert() external {
-    uint256 _usdcOraclePrice = 1e18;
-    uint256 _usdcDexPrice = 1.05e18 + 1;
+    uint256 _usdcOraclePrice = normalizeEther(1 ether, usdDecimal);
+    uint256 _usdcDexPrice = normalizeEther(1.05 ether + 1, usdDecimal);
 
     // mock price return from OracleMedianizer
     vm.mockCall(
@@ -121,7 +121,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
 
     vm.mockCall(
       address(mockRouter),
-      abi.encodeWithSelector(IRouterLike.getAmountsOut.selector, 1e18, _usdcPath),
+      abi.encodeWithSelector(IRouterLike.getAmountsOut.selector, normalizeEther(1 ether, usdcDecimal), _usdcPath),
       abi.encode(_mockAmtOut)
     );
 
@@ -136,7 +136,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
   }
 
   function testRevert_WhenTokenConfigNotSet_ShouldRevert() external {
-    uint256 _btcOraclePrice = 1e18;
+    uint256 _btcOraclePrice = normalizeEther(1 ether, usdDecimal);
     // mock price return from OracleMedianizer
     vm.mockCall(
       address(oracleMedianizer),
