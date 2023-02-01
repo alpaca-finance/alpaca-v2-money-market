@@ -242,7 +242,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @param _token The token to be withdrawn
   /// @param _to The destination address
   /// @param _amount The amount to withdraw
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount

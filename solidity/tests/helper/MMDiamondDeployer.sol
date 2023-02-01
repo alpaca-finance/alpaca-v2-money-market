@@ -245,7 +245,7 @@ library MMDiamondDeployer {
     selectors[8] = AdminFacet.setLiquidatorsOk.selector;
     selectors[9] = AdminFacet.setTreasury.selector;
     selectors[10] = AdminFacet.setFees.selector;
-    selectors[11] = AdminFacet.withdrawReserve.selector;
+    selectors[11] = AdminFacet.withdrawProtocolReserve.selector;
     selectors[12] = AdminFacet.setProtocolConfigs.selector;
     selectors[13] = AdminFacet.setIbTokenImplementation.selector;
     selectors[14] = AdminFacet.setLiquidationParams.selector;

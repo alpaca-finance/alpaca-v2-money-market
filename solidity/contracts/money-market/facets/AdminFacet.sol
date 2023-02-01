@@ -239,7 +239,12 @@ contract AdminFacet is IAdminFacet {
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
   function setTreasury(address _treasury) external onlyOwner {
+    if (_treasury == address(0)) {
+      revert AdminFacet_InvalidAddress();
+    }
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
     moneyMarketDs.treasury = _treasury;
     emit LogSetTreasury(_treasury);
   }
@@ -248,7 +253,7 @@ contract AdminFacet is IAdminFacet {
   /// @param _token The token to be withdrawn
   /// @param _to The destination address
   /// @param _amount The amount to withdraw
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount

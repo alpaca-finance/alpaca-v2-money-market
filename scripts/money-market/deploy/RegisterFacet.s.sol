@@ -162,7 +162,7 @@ contract RegisterFacet is Script {
     selectors[8] = AdminFacet.setTreasury.selector;
     selectors[9] = AdminFacet.setNonCollatInterestModel.selector;
     selectors[10] = AdminFacet.setFees.selector;
-    selectors[11] = AdminFacet.withdrawReserve.selector;
+    selectors[11] = AdminFacet.withdrawProtocolReserve.selector;
     selectors[12] = AdminFacet.setIbTokenImplementation.selector;
     selectors[13] = AdminFacet.setProtocolConfigs.selector;
 
