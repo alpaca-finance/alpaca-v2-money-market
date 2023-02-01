@@ -255,7 +255,7 @@ abstract contract LYF_BaseTest is BaseTest {
     // set reward conversion configs
     address[] memory _rewardConversionPath = new address[](2);
     _rewardConversionPath[0] = address(cake);
-    _rewardConversionPath[1] = address(usdc);
+    _rewardConversionPath[1] = address(cake);
 
     ILYFAdminFacet.SetRewardConversionConfigInput[]
       memory _rewardConversionConfigInputs = new ILYFAdminFacet.SetRewardConversionConfigInput[](1);

@@ -343,23 +343,10 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     cake.approve(address(masterChef), _rewardAmount);
     masterChef.setReward(_lpConfig.poolId, lyfDiamond, _rewardAmount);
 
-    vm.prank(ALICE);
-    farmFacet.reinvest(address(wethUsdcLPToken));
-
     // case reward and desired are different token
-    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
-      _lpConfig.rewardToken
-    );
-    address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
-    assertEq(
-      MockERC20(_desiredRewardToken).balanceOf(revenueTreasury),
-      (_rewardAmount * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS
-    );
-
-    // case reward and desired are the same token
     address[] memory _rewardConversionPath = new address[](2);
     _rewardConversionPath[0] = address(cake);
-    _rewardConversionPath[1] = address(cake);
+    _rewardConversionPath[1] = address(usdc);
 
     ILYFAdminFacet.SetRewardConversionConfigInput[]
       memory _rewardConversionConfigInputs = new ILYFAdminFacet.SetRewardConversionConfigInput[](1);
@@ -369,6 +356,22 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       path: _rewardConversionPath
     });
 
+    adminFacet.setRewardConversionConfigs(_rewardConversionConfigInputs);
+
+    vm.prank(ALICE);
+    farmFacet.reinvest(address(wethUsdcLPToken));
+
+    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+      _lpConfig.rewardToken
+    );
+    address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
+    assertEq(
+      MockERC20(_desiredRewardToken).balanceOf(revenueTreasury),
+      (normalizeEther(_rewardAmount, usdcDecimal) * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS
+    );
+
+    // case reward and desired are the same token
+    _rewardConversionPath[1] = address(cake);
     adminFacet.setRewardConversionConfigs(_rewardConversionConfigInputs);
 
     cake.mint(address(this), _rewardAmount);
