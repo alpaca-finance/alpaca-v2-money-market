@@ -6,6 +6,7 @@ import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC
 import { MiniFL_BaseTest } from "./MiniFL_BaseTest.t.sol";
 
 // interfaces
+import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 import { IRewarder } from "../../contracts/miniFL/interfaces/IRewarder.sol";
 
@@ -35,8 +36,15 @@ contract MiniFL_SetPoolRewarders is MiniFL_BaseTest {
     assertEq(miniFL.rewarders(dtokenPoolID, 0), address(rewarder1));
   }
 
-  function testRevert_WhenSetBadRewarder() external {
-    IRewarder _newRewarder = deployRewarder("BAD Rewarder", address(123), address(rewardToken1), alpacaMaximumReward);
+  function testRevert_WhenSetRewarderWithWrongMiniFL() external {
+    MiniFL otherMiniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
+
+    IRewarder _newRewarder = deployRewarder(
+      "NewRewarder",
+      address(otherMiniFL),
+      address(rewardToken1),
+      alpacaMaximumReward
+    );
 
     address[] memory _poolDebtTokenRewarders = new address[](2);
     _poolDebtTokenRewarders[0] = address(_newRewarder);

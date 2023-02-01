@@ -74,7 +74,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // sanity check
     _rewardToken.totalSupply();
-    IMiniFL(_miniFL).stakingToken(0);
+    IMiniFL(_miniFL).poolLength();
 
     name = _name;
     miniFL = _miniFL;

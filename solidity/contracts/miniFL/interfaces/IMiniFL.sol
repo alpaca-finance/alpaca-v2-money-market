@@ -11,5 +11,7 @@ interface IMiniFL {
   error MiniFL_InvalidArguments();
   error MiniFL_BadRewarder();
 
+  function poolLength() external view returns (uint256);
+
   function stakingToken(uint256 _pid) external view returns (IERC20Upgradeable);
 }
