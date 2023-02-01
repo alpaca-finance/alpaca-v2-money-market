@@ -25,7 +25,7 @@ contract MiniFL_AddPool is MiniFL_BaseTest {
     assertEq(miniFL.totalAllocPoint(), 150);
   }
 
-  function testRevert_WhenAddSuplicatedStakingTokenPool() external {
+  function testRevert_WhenAddDuplicatedStakingTokenPool() external {
     miniFL.addPool(100, IERC20Upgradeable(address(weth)), false, false);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_DuplicatePool.selector));
     miniFL.addPool(100, IERC20Upgradeable(address(weth)), false, false);

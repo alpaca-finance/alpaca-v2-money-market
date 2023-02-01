@@ -109,7 +109,7 @@ contract BaseTest is DSTest {
     debtToken1 = deployMockErc20("Debt Token 1", "DTOKEN1", 18);
 
     rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
-    rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 18);
+    rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 6);
 
     cakeDecimal = cake.decimals();
     wethDecimal = weth.decimals();

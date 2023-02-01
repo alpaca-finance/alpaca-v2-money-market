@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { SafeCastUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import { IMiniFL } from "./interfaces/IMiniFL.sol";
 import { IRewarder } from "./interfaces/IRewarder.sol";
@@ -58,6 +58,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogSetName(string name);
   event LogSetMaxRewardPerSecond(uint256 maxRewardPerSecond);
 
+  modifier onlyFL() {
+    if (msg.sender != miniFL) revert Rewarder1_NotFL();
+    _;
+  }
+
   function initialize(
     string calldata _name,
     address _miniFL,
@@ -76,9 +81,8 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function onDeposit(
     uint256 _pid,
     address _user,
-    uint256, /* _alpacaAmount */
     uint256 _newAmount
-  ) external override nonReentrant onlyFL {
+  ) external override onlyFL {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_user];
 
@@ -93,21 +97,25 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function onWithdraw(
     uint256 _pid,
     address _user,
-    uint256, /* _alpacaAmount */
     uint256 _newAmount
-  ) external override nonReentrant onlyFL {
+  ) external override onlyFL {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_user];
 
-    uint256 _amount = 0;
-    if (user.amount >= _newAmount) {
+    uint256 _currentAmount = user.amount;
+    if (_currentAmount >= _newAmount) {
       // Handling normal case; When onDeposit call before onWithdraw
-      _amount = user.amount - _newAmount;
+      uint256 _withdrawAmount;
+      unchecked {
+        _withdrawAmount = _currentAmount - _newAmount;
+      }
 
-      user.rewardDebt = user.rewardDebt - (((_amount * pool.accRewardPerShare) / ACC_REWARD_PRECISION)).toInt256();
-      user.amount = user.amount - _amount;
+      user.rewardDebt =
+        user.rewardDebt -
+        (((_withdrawAmount * pool.accRewardPerShare) / ACC_REWARD_PRECISION)).toInt256();
+      user.amount = _newAmount;
 
-      emit LogOnWithdraw(_user, _pid, _amount);
+      emit LogOnWithdraw(_user, _pid, _withdrawAmount);
     } else {
       // Handling when rewarder1 getting set after the pool is live
       // if user.amount < _newAmount, then it is first deposit.
@@ -118,11 +126,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
   }
 
-  function onHarvest(
-    uint256 _pid,
-    address _user,
-    uint256 /* _alpacaAmount */
-  ) external override nonReentrant onlyFL {
+  function onHarvest(uint256 _pid, address _user) external override onlyFL {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_user];
 
@@ -150,11 +154,6 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     emit LogRewardPerSecond(_rewardPerSecond);
   }
 
-  modifier onlyFL() {
-    if (msg.sender != miniFL) revert Rewarder1_NotFL();
-    _;
-  }
-
   /// @notice Returns the number of pools.
   function poolLength() public view returns (uint256 pools) {
     pools = poolIds.length;
@@ -173,12 +172,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     if (_withUpdate) _massUpdatePools();
 
-    uint256 _lastRewardTime = block.timestamp;
     totalAllocPoint = totalAllocPoint + _allocPoint;
 
     poolInfo[_pid] = PoolInfo({
       allocPoint: _allocPoint.toUint64(),
-      lastRewardTime: _lastRewardTime.toUint64(),
+      lastRewardTime: block.timestamp.toUint64(),
       accRewardPerShare: 0
     });
     poolIds.push(_pid);
@@ -255,7 +253,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Update reward variables of the given pool.
   /// @param _pid The index of the pool. See `poolInfo`.
   /// @return pool Returns the pool that was updated.
-  function updatePool(uint256 _pid) external nonReentrant returns (PoolInfo memory) {
+  function updatePool(uint256 _pid) external returns (PoolInfo memory) {
     return _updatePool(_pid);
   }
 
