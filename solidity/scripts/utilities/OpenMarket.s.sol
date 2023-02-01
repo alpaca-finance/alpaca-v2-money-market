@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import "./BaseUtilsScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
 contract OpenMarketScript is BaseUtilsScript {
   using stdJson for string;

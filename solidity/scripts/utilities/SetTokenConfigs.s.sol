@@ -19,8 +19,8 @@ contract SetTokenConfigsScript is BaseUtilsScript {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30e18,
-      maxCollateral: 100e18
+      maxBorrow: 30e18, // be careful on decimals
+      maxCollateral: 100e18 // be careful on decimals
     });
 
     //---- execution ----//
