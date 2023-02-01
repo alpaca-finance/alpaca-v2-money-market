@@ -8,8 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
-import "./interfaces/IMiniFL.sol";
-import "./interfaces/IRewarder.sol";
+import { IMiniFL } from "./interfaces/IMiniFL.sol";
+import { IRewarder } from "./interfaces/IRewarder.sol";
 
 contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for uint256;
@@ -68,8 +68,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     bool _isDebtTokenPool,
     bool _withUpdate
   ) external onlyOwner {
-    if (address(_stakingToken) == address(ALPACA)) revert MiniFL_InvalidArguments();
-    if (isStakingToken[address(_stakingToken)]) revert MiniFL_DuplicatePool();
+    if (address(_stakingToken) == address(ALPACA)) {
+      revert MiniFL_InvalidArguments();
+    }
+    if (isStakingToken[address(_stakingToken)]) {
+      revert MiniFL_DuplicatePool();
+    }
 
     // Sanity check that the staking token is a valid ERC20 token.
     _stakingToken.balanceOf(address(this));
@@ -113,8 +117,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _alpacaPerSecond The amount of ALPACA to be distributed per second.
   /// @param _withUpdate If true, do mass update pools
   function setAlpacaPerSecond(uint256 _alpacaPerSecond, bool _withUpdate) external onlyOwner {
-    if (_alpacaPerSecond > maxAlpacaPerSecond) revert MiniFL_InvalidArguments();
-
+    if (_alpacaPerSecond > maxAlpacaPerSecond) {
+      revert MiniFL_InvalidArguments();
+    }
     if (_withUpdate) massUpdatePools();
     alpacaPerSecond = _alpacaPerSecond;
     emit LogAlpacaPerSecond(_alpacaPerSecond);
@@ -169,16 +174,22 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Update reward variables for a given pools.
   function updatePools(uint256[] calldata _pids) external nonReentrant {
     uint256 len = _pids.length;
-    for (uint256 i = 0; i < len; i++) {
-      _updatePool(_pids[i]);
+    for (uint256 _i; _i < len; ) {
+      _updatePool(_pids[_i]);
+      unchecked {
+        ++_i;
+      }
     }
   }
 
   /// @notice Update reward variables for all pools.
   function massUpdatePools() public nonReentrant {
     uint256 len = poolLength();
-    for (uint256 i = 0; i < len; ++i) {
-      _updatePool(i);
+    for (uint256 _i; _i < len; ) {
+      _updatePool(_i);
+      unchecked {
+        ++_i;
+      }
     }
   }
 
@@ -194,8 +205,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
 
-    if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) revert MiniFL_Forbidden();
-    if (!pool.isDebtTokenPool && msg.sender != _for) revert MiniFL_Forbidden();
+    if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
+      revert MiniFL_Forbidden();
+    }
+    if (!pool.isDebtTokenPool && msg.sender != _for) {
+      revert MiniFL_Forbidden();
+    }
 
     // Effects
     user.amount = user.amount + _amount;
@@ -205,9 +220,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _rewarderLength = rewarders[_pid].length;
     for (uint256 _i; _i < _rewarderLength; ) {
       address _rewarder = rewarders[_pid][_i];
-      if (address(_rewarder) != address(0)) {
-        IRewarder(_rewarder).onDeposit(_pid, _for, 0, user.amount);
-      }
+      IRewarder(_rewarder).onDeposit(_pid, _for, 0, user.amount);
       unchecked {
         ++_i;
       }
@@ -230,8 +243,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
 
-    if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) revert MiniFL_Forbidden();
-    if (!pool.isDebtTokenPool && msg.sender != _for) revert MiniFL_Forbidden();
+    if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
+      revert MiniFL_Forbidden();
+    }
+    if (!pool.isDebtTokenPool && msg.sender != _for) {
+      revert MiniFL_Forbidden();
+    }
 
     // Effects
     user.rewardDebt = user.rewardDebt - (((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
@@ -241,9 +258,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _rewarderLength = rewarders[_pid].length;
     for (uint256 _i; _i < _rewarderLength; ) {
       address _rewarder = rewarders[_pid][_i];
-      if (address(_rewarder) != address(0)) {
-        IRewarder(_rewarder).onWithdraw(_pid, _for, 0, user.amount);
-      }
+      IRewarder(_rewarder).onWithdraw(_pid, _for, 0, user.amount);
       unchecked {
         ++_i;
       }
@@ -274,9 +289,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _rewarderLength = rewarders[_pid].length;
     for (uint256 _i; _i < _rewarderLength; ) {
       address _rewarder = rewarders[_pid][_i];
-      if (address(_rewarder) != address(0)) {
-        IRewarder(_rewarder).onHarvest(_pid, msg.sender, 0);
-      }
+      IRewarder(_rewarder).onHarvest(_pid, msg.sender, 0);
       unchecked {
         ++_i;
       }
@@ -291,7 +304,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo storage _pool = poolInfo[_pid];
     UserInfo storage _user = userInfo[_pid][msg.sender];
 
-    if (_pool.isDebtTokenPool) revert MiniFL_Forbidden();
+    if (_pool.isDebtTokenPool) {
+      revert MiniFL_Forbidden();
+    }
 
     uint256 _amount = _user.amount;
     _user.amount = 0;
@@ -300,9 +315,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _rewarderLength = rewarders[_pid].length;
     for (uint256 _i; _i < _rewarderLength; ) {
       address _rewarder = rewarders[_pid][_i];
-      if (address(_rewarder) != address(0)) {
-        IRewarder(_rewarder).onWithdraw(_pid, msg.sender, 0, 0);
-      }
+      IRewarder(_rewarder).onWithdraw(_pid, msg.sender, 0, 0);
       unchecked {
         ++_i;
       }
@@ -322,21 +335,31 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address[] calldata _stakers,
     bool _allow
   ) external onlyOwner {
-    if (_stakers.length != _pids.length) revert MiniFL_InvalidArguments();
+    if (_stakers.length != _pids.length) {
+      revert MiniFL_InvalidArguments();
+    }
+    uint256 _length = _stakers.length;
+    for (uint256 _i; _i < _length; ) {
+      PoolInfo storage _poolInfo = poolInfo[_pids[_i]];
+      if (_poolInfo.isDebtTokenPool == false) {
+        revert MiniFL_InvalidArguments();
+      }
 
-    for (uint256 i = 0; i < _stakers.length; i++) {
-      PoolInfo storage _poolInfo = poolInfo[_pids[i]];
-      if (_poolInfo.isDebtTokenPool == false) revert MiniFL_InvalidArguments();
+      stakeDebtTokenAllowance[_pids[_i]][_stakers[_i]] = _allow;
+      emit LogApproveStakeDebtToken(_pids[_i], _stakers[_i], _allow);
 
-      stakeDebtTokenAllowance[_pids[i]][_stakers[i]] = _allow;
-      emit LogApproveStakeDebtToken(_pids[i], _stakers[i], _allow);
+      unchecked {
+        ++_i;
+      }
     }
   }
 
   /// @notice Set max reward per second
   /// @param _maxAlpacaPerSecond The max reward per second
   function setMaxAlpacaPerSecond(uint256 _maxAlpacaPerSecond) external onlyOwner {
-    if (_maxAlpacaPerSecond <= alpacaPerSecond) revert MiniFL_InvalidArguments();
+    if (_maxAlpacaPerSecond < alpacaPerSecond) {
+      revert MiniFL_InvalidArguments();
+    }
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
     emit LogSetMaxAlpacaPerSecond(_maxAlpacaPerSecond);
   }
@@ -347,5 +370,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function setPoolRewarders(uint256 _pid, address[] calldata _rewarders) external onlyOwner {
     // todo: rethink about validation
     rewarders[_pid] = _rewarders;
+    uint256 _length = _rewarders.length;
+    for (uint256 _i; _i < _length; ) {
+      if (IRewarder(_rewarders[_i]).miniFL() != address(this)) {
+        revert MiniFL_BadRewarder();
+      }
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }

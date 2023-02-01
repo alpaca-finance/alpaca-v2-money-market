@@ -8,8 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
-import "./interfaces/IMiniFL.sol";
-import "./interfaces/IRewarder.sol";
+import { IMiniFL } from "./interfaces/IMiniFL.sol";
+import { IRewarder } from "./interfaces/IRewarder.sol";
 
 contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for uint256;
@@ -221,8 +221,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   function _massUpdatePools() internal {
     uint256 _len = poolLength();
-    for (uint256 i = 0; i < _len; ++i) {
-      _updatePool(poolIds[i]);
+    for (uint256 _i; _i < _len; ) {
+      _updatePool(poolIds[_i]);
+      unchecked {
+        ++_i;
+      }
     }
   }
 
@@ -259,8 +262,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Update reward variables for a given pools.
   function updatePools(uint256[] calldata _pids) external nonReentrant {
     uint256 len = _pids.length;
-    for (uint256 i = 0; i < len; i++) {
-      _updatePool(_pids[i]);
+    for (uint256 _i; _i < len; ) {
+      _updatePool(_pids[_i]);
+      unchecked {
+        ++_i;
+      }
     }
   }
 

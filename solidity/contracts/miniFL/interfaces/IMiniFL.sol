@@ -9,6 +9,7 @@ interface IMiniFL {
   error MiniFL_DuplicatePool();
   error MiniFL_Forbidden();
   error MiniFL_InvalidArguments();
+  error MiniFL_BadRewarder();
 
   event LogDeposit(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
   event LogWithdraw(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);

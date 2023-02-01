@@ -6,6 +6,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 interface IRewarder {
   function name() external view returns (string memory);
 
+  function miniFL() external view returns (address);
+
   function onDeposit(
     uint256 pid,
     address user,

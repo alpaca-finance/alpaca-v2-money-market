@@ -34,4 +34,14 @@ contract MiniFL_SetPoolRewarders is MiniFL_BaseTest {
     assertEq(miniFL.rewarders(wethPoolID, 1), address(rewarder2));
     assertEq(miniFL.rewarders(dtokenPoolID, 0), address(rewarder1));
   }
+
+  function testRevert_WhenSetBadRewarder() external {
+    IRewarder _newRewarder = deployRewarder("BAD Rewarder", address(123), address(rewardToken1), alpacaMaximumReward);
+
+    address[] memory _poolDebtTokenRewarders = new address[](2);
+    _poolDebtTokenRewarders[0] = address(_newRewarder);
+    _poolDebtTokenRewarders[1] = address(rewarder1);
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_BadRewarder.selector));
+    miniFL.setPoolRewarders(dtokenPoolID, _poolDebtTokenRewarders);
+  }
 }
