@@ -294,7 +294,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _len = _inputs.length;
-    ILYFAdminFacet.SetRewardConversionConfigInput calldata _input;
+    ILYFAdminFacet.SetRewardConversionConfigInput memory _input;
     LibLYF01.RewardConversionConfig memory _config;
     for (uint256 _i; _i < _len; ) {
       _input = _inputs[_i];

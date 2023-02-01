@@ -29,7 +29,13 @@ library LibLYF01 {
   uint256 internal constant MAX_BPS = 10000;
 
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
-  event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
+  event LogReinvest(
+    address indexed _rewardTo,
+    address _rewardToken,
+    address _treasuryDesiredToken,
+    uint256 _rewardAmount,
+    uint256 _bountyAmount
+  );
 
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
@@ -574,11 +580,12 @@ library LibLYF01 {
 
     // transfer bounty to treasury
     RewardConversionConfig memory _swapConfig = lyfDs.rewardConversionConfigs[_lpConfig.rewardToken];
-    if (_lpConfig.rewardToken == _swapConfig.path[_swapConfig.path.length - 1]) {
+    address _treasuryDesiredToken = _swapConfig.path[_swapConfig.path.length - 1];
+    if (_lpConfig.rewardToken == _treasuryDesiredToken) {
       // just transfer if reward and desired token are the same
       IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
     } else {
-      // swap if different token
+      // swap if different token and send to revenue treasury
       IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _reinvestBounty);
       uint256[] memory _amounts = IRouterLike(_swapConfig.router).swapExactTokensForTokens(
         _reinvestBounty,
@@ -594,7 +601,13 @@ library LibLYF01 {
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;
 
-    emit LogReinvest(lyfDs.revenueTreasury, _pendingReward, _reinvestBounty);
+    emit LogReinvest(
+      lyfDs.revenueTreasury,
+      _lpConfig.rewardToken,
+      _treasuryDesiredToken,
+      _pendingReward,
+      _reinvestBounty
+    );
   }
 
   function borrow(
