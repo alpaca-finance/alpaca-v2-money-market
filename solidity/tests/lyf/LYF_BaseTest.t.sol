@@ -51,8 +51,8 @@ import { PancakeswapV2Strategy } from "../../contracts/lyf/strats/PancakeswapV2S
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // helper
-import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // oracle
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
@@ -84,7 +84,10 @@ abstract contract LYF_BaseTest is BaseTest {
   uint256 constant reinvestThreshold = 1e18;
 
   function setUp() public virtual {
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
     setUpMM(moneyMarketDiamond);
 
