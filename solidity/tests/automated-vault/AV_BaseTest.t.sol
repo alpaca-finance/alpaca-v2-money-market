@@ -5,7 +5,6 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // helper
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
-import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
 // contracts
 import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
@@ -24,6 +23,7 @@ import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.s
 // libraries
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -48,12 +48,15 @@ abstract contract AV_BaseTest is BaseTest {
   IAVVaultToken internal vaultToken;
 
   MockRouter internal mockRouter;
-  MockLPToken internal wethUsdcLPToken;
+  MockLPToken internal usdcWethLPToken;
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
     setUpMM();
 
     // set av facets
@@ -65,14 +68,14 @@ abstract contract AV_BaseTest is BaseTest {
     adminFacet.setMoneyMarket(moneyMarketDiamond);
 
     // deploy lp tokens
-    wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
+    usdcWethLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(usdc), address(weth));
 
     // setup router
-    mockRouter = new MockRouter(address(wethUsdcLPToken));
-    wethUsdcLPToken.mint(address(mockRouter), 1000000 ether);
+    mockRouter = new MockRouter(address(usdcWethLPToken));
+    usdcWethLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(wethUsdcLPToken)));
+    handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(usdcWethLPToken)));
 
     // setup interest rate models
     MockInterestModel mockInterestModel1 = new MockInterestModel(0);
@@ -81,7 +84,7 @@ abstract contract AV_BaseTest is BaseTest {
     // function openVault(address _lpToken,address _stableToken,address _assetToken,uint8 _leverageLevel,uint16 _managementFeePerSec);
     vaultToken = IAVVaultToken(
       adminFacet.openVault(
-        address(wethUsdcLPToken),
+        address(usdcWethLPToken),
         address(usdc),
         address(weth),
         address(handler),
@@ -108,7 +111,7 @@ abstract contract AV_BaseTest is BaseTest {
     tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({ token: address(weth), tier: LibAV01.AssetTier.TOKEN });
     tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({ token: address(usdc), tier: LibAV01.AssetTier.TOKEN });
     // todo: should we set this in openVault
-    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({ token: address(wethUsdcLPToken), tier: LibAV01.AssetTier.LP });
+    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({ token: address(usdcWethLPToken), tier: LibAV01.AssetTier.LP });
     adminFacet.setTokenConfigs(tokenConfigs);
 
     // setup oracle
@@ -122,7 +125,7 @@ abstract contract AV_BaseTest is BaseTest {
 
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
-    mockOracle.setLpTokenPrice(address(wethUsdcLPToken), 2e18);
+    mockOracle.setLpTokenPrice(address(usdcWethLPToken), 2e18);
 
     // set treasury
     treasury = address(this);
@@ -165,8 +168,8 @@ abstract contract AV_BaseTest is BaseTest {
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 1e24,
-      maxCollateral: 10e24
+      maxBorrow: normalizeEther(1e24, usdcDecimal),
+      maxCollateral: normalizeEther(10e24, usdcDecimal)
     });
 
     mmAdminFacet.setTokenConfigs(_inputs);
@@ -200,7 +203,7 @@ abstract contract AV_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
 
     ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
     vm.stopPrank();
 
     mmAdminFacet.setMaxNumOfToken(3, 3, 3);

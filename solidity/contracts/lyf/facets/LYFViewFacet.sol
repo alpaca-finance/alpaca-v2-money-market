@@ -265,9 +265,9 @@ contract LYFViewFacet is ILYFViewFacet {
     _subAccount = LibLYF01.getSubAccount(_primary, _subAccountId);
   }
 
-  function getTreasuries() external view returns (address _feeTreasury, address _revenueTreasury) {
+  function getTreasuries() external view returns (address _liquidationTreasury, address _revenueTreasury) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    _feeTreasury = lyfDs.treasury;
+    _liquidationTreasury = lyfDs.liquidationTreasury;
     _revenueTreasury = lyfDs.revenueTreasury;
   }
 

@@ -27,8 +27,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetReinvestorOk(address indexed _reinvester, bool isOk);
   event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
   event LogSetLiquidatorsOk(address indexed _liquidator, bool isOk);
-  event LogSetTreasury(address indexed _treasury);
-  event LogSetRevenueTreasury(address indexed _trasury);
+  event LogSetLiquidationTreasury(address indexed _treasury);
+  event LogSetRevenueTreasury(address indexed _treasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
@@ -56,13 +56,17 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     uint256 _inputLength = _tokenConfigInputs.length;
     LibLYF01.TokenConfig memory _tokenConfig;
-    TokenConfigInput calldata _tokenConfigInput;
+    TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
       _tokenConfigInput = _tokenConfigInputs[_i];
       // factors should not greater than MAX_BPS
       if (
         _tokenConfigInput.collateralFactor > LibLYF01.MAX_BPS || _tokenConfigInput.borrowingFactor > LibLYF01.MAX_BPS
       ) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+      // borrowingFactor can't be zero otherwise will cause divide by zero error
+      if (_tokenConfigInput.borrowingFactor == 0) {
         revert LYFAdminFacet_InvalidArguments();
       }
       // prevent user add collat or borrow too much
@@ -96,11 +100,14 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _len = _lpConfigInputs.length;
 
     LibLYF01.LPConfig memory _config;
-    LPConfigInput calldata _input;
+    LPConfigInput memory _input;
 
     for (uint256 _i; _i < _len; ) {
       _input = _lpConfigInputs[_i];
       if (_input.reinvestTreasuryBountyBps > LibLYF01.MAX_BPS) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+      if (_input.rewardToken != _input.reinvestPath[0]) {
         revert LYFAdminFacet_InvalidArguments();
       }
 
@@ -237,11 +244,11 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
   /// @notice Set the address that will keep the liqudation's fee
   /// @param _newTreasury The destination address
-  function setTreasury(address _newTreasury) external onlyOwner {
+  function setLiquidationTreasury(address _newTreasury) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.treasury = _newTreasury;
+    lyfDs.liquidationTreasury = _newTreasury;
 
-    emit LogSetTreasury(_newTreasury);
+    emit LogSetLiquidationTreasury(_newTreasury);
   }
 
   /// @notice Set the address that will keep the reinvest bounty

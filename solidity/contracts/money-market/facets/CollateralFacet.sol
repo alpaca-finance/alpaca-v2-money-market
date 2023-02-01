@@ -65,6 +65,8 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
+
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
 
     LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);

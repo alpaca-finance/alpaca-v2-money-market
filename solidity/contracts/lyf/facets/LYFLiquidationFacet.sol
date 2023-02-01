@@ -174,7 +174,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       LibLYF01.removeCollateral(_subAccount, _collatToken, _collatAmountOut, lyfDs);
 
       // transfer tokens out
-      IERC20(_debtToken).safeTransfer(lyfDs.treasury, _actualFee);
+      IERC20(_debtToken).safeTransfer(lyfDs.liquidationTreasury, _actualFee);
       IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
 
       emit LogRepurchase(
@@ -268,7 +268,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     uint256 _collatSold = _collatAmountBefore - IERC20(_params.collatToken).balanceOf(address(this));
 
-    IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
+    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
 
     // give priority to fee
     if (_repaidAmount > 0) {
@@ -326,7 +326,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
     uint256 _underlyingSold = _underlyingAmountBefore - IERC20(_collatUnderlyingToken).balanceOf(address(this));
 
-    IERC20(_params.repayToken).safeTransfer(lyfDs.treasury, _feeToTreasury);
+    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
 
     // give priority to fee
     if (_repaidAmount > 0) {
@@ -450,7 +450,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       uint256 _feeToTreasury = (_actualAmountToRepay * LIQUIDATION_FEE_BPS) / 10000;
       _removeDebtByAmount(_subAccount, _debtPoolId, _actualAmountToRepay - _feeToTreasury, lyfDs);
       // transfer fee to treasury
-      IERC20(_token).safeTransfer(lyfDs.treasury, _feeToTreasury);
+      IERC20(_token).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
     }
 
     // add remaining as subAccount collateral

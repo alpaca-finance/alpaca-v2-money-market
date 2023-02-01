@@ -27,11 +27,11 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
 
     // seed mm for ALICE to borrow
     vm.prank(BOB);
-    lendFacet.deposit(address(usdc), 100 ether);
+    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
 
     // setup liquidationStrategy
     mockLiquidationStrategy = new MockLiquidationStrategy(address(mockOracle));
-    usdc.mint(address(mockLiquidationStrategy), 1000 ether);
+    usdc.mint(address(mockLiquidationStrategy), normalizeEther(1000 ether, usdcDecimal));
 
     address[] memory _liquidationStrats = new address[](1);
     _liquidationStrats[0] = address(mockLiquidationStrategy);
@@ -56,9 +56,9 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
      */
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
-    borrowFacet.borrow(subAccount0, address(usdc), 1 ether);
+    borrowFacet.borrow(subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
     collateralFacet.addCollateral(ALICE, subAccount1, address(weth), 10 ether);
-    borrowFacet.borrow(subAccount1, address(usdc), 2 ether);
+    borrowFacet.borrow(subAccount1, address(usdc), normalizeEther(2 ether, usdcDecimal));
     vm.stopPrank();
   }
 
@@ -75,7 +75,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
       subAccount0,
       _debtToken,
       _collatToken,
-      100 ether,
+      normalizeEther(100 ether, usdcDecimal),
       0
     );
 
@@ -85,7 +85,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
       subAccount1,
       _debtToken,
       _collatToken,
-      100 ether,
+      normalizeEther(100 ether, usdcDecimal),
       0
     );
 
@@ -95,9 +95,19 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
     _inputs[1] = IAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, _debtToken);
 
     vm.expectEmit(true, true, false, false, moneyMarketDiamond);
-    emit LogWriteOffSubAccountDebt(viewFacet.getSubAccount(ALICE, subAccount0), _debtToken, 1 ether, 1 ether);
+    emit LogWriteOffSubAccountDebt(
+      viewFacet.getSubAccount(ALICE, subAccount0),
+      _debtToken,
+      normalizeEther(1 ether, usdcDecimal),
+      normalizeEther(1 ether, usdcDecimal)
+    );
     vm.expectEmit(true, true, false, false, moneyMarketDiamond);
-    emit LogWriteOffSubAccountDebt(viewFacet.getSubAccount(ALICE, subAccount1), _debtToken, 2 ether, 2 ether);
+    emit LogWriteOffSubAccountDebt(
+      viewFacet.getSubAccount(ALICE, subAccount1),
+      _debtToken,
+      normalizeEther(2 ether, usdcDecimal),
+      normalizeEther(2 ether, usdcDecimal)
+    );
     adminFacet.writeOffSubAccountsDebt(_inputs);
 
     // check subaccounts debt, no debt remain
@@ -126,7 +136,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
       subAccount0,
       _debtToken,
       _collatToken,
-      100 ether,
+      normalizeEther(100 ether, usdcDecimal),
       0
     );
 

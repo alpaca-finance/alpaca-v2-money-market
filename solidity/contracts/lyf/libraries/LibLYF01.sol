@@ -89,7 +89,7 @@ library LibLYF01 {
   struct LYFDiamondStorage {
     IMoneyMarket moneyMarket;
     IAlpacaV2Oracle oracle;
-    address treasury;
+    address liquidationTreasury;
     address revenueTreasury;
     // ---- protocol parameters ---- //
     uint8 maxNumOfCollatPerSubAccount; // maximum number of token in the collat linked list

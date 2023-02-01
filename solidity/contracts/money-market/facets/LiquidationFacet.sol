@@ -93,8 +93,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // question: should we check this thing?
-    if (!moneyMarketDs.repurchasersOk[msg.sender]) {
+    if (msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
 
@@ -122,9 +121,9 @@ contract LiquidationFacet is ILiquidationFacet {
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         // repayAmountWithFee = _currentDebtAmount + fee
         vars.repayAmountWithFee = _maxAmountRepurchaseable;
-        // repayAmountWithoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
         // calculate like this so we can close entire debt without dust
-        vars.repayAmountWithoutFee = (vars.repayAmountWithFee * _currentDebtAmount) / _maxAmountRepurchaseable;
+        // repayAmountWithoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
+        vars.repayAmountWithoutFee = _currentDebtAmount;
       } else {
         vars.repayAmountWithFee = _desiredRepayAmount;
         vars.repayAmountWithoutFee =
@@ -175,7 +174,7 @@ contract LiquidationFacet is ILiquidationFacet {
       vars.repayAmountWithFee
     ) - vars.repurchaseFeeToProtocol;
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-    IERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, vars.repurchaseFeeToProtocol);
+    IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, vars.repurchaseFeeToProtocol);
 
     // update states
     _reduceDebt(vars.subAccount, _repayToken, _actualRepayAmountWithoutFee, moneyMarketDs);
@@ -288,7 +287,7 @@ contract LiquidationFacet is ILiquidationFacet {
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
 
     IERC20(params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
-    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
+    IERC20(params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _feeToTreasury);
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);

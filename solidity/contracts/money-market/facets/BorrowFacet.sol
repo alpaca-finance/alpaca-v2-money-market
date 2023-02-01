@@ -98,8 +98,10 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _debtShareToRepay
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
+
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
+    LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
       _subAccount,

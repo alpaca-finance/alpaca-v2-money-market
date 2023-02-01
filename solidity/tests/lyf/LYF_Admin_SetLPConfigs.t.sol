@@ -58,6 +58,12 @@ contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
     });
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
     adminFacet.setLPConfigs(_lpConfigs);
+
+    // reinvestPath[0] != rewardToken
+    _lpConfigs[0].reinvestTreasuryBountyBps = 100;
+    _reinvestPath[0] = address(weth);
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
+    adminFacet.setLPConfigs(_lpConfigs);
   }
 
   function testRevert_WhenNonAdminSetLPConfigs() external {

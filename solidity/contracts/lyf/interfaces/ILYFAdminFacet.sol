@@ -63,4 +63,8 @@ interface ILYFAdminFacet {
   ) external;
 
   function setRewardConversionConfigs(SetRewardConversionConfigInput[] calldata _inputs) external;
+
+  function setLiquidationTreasury(address _newTreasury) external;
+
+  function setRevenueTreasury(address _newTreasury) external;
 }

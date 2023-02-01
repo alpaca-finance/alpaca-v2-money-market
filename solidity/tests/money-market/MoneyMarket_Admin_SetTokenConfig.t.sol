@@ -81,6 +81,11 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
     // borrowing factor is more than MAX_BPS
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
     adminFacet.setTokenConfigs(_inputs);
+
+    // borrowing factor is zero
+    _inputs[0].borrowingFactor = 0;
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
+    adminFacet.setTokenConfigs(_inputs);
   }
 
   function testRevert_WhenSetTokenConfigWithInvalidMaxCollateral() external {

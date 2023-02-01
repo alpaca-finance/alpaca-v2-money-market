@@ -26,11 +26,11 @@ contract MoneyMarket_NonCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     adminFacet.setNonCollatBorrowerOk(BOB, true);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 50 ether);
-    lendFacet.deposit(address(usdc), 20 ether);
-    lendFacet.deposit(address(btc), 20 ether);
-    lendFacet.deposit(address(cake), 20 ether);
-    lendFacet.deposit(address(isolateToken), 20 ether);
+    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
+    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(address(btc), normalizeEther(20 ether, btcDecimal));
+    lendFacet.deposit(address(cake), normalizeEther(20 ether, cakeDecimal));
+    lendFacet.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
   }
 
