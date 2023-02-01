@@ -109,4 +109,6 @@ interface IViewFacet {
     );
 
   function getRepurchaseRewardModel() external view returns (address);
+
+  function getIbTokenImplementation() external view returns (address);
 }
