@@ -114,7 +114,7 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
     LibMoneyMarket01.TokenConfig memory _tokenConfig;
-    TokenConfigInput calldata _tokenConfigInput;
+    TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
       _tokenConfigInput = _tokenConfigInputs[_i];
       _validateTokenConfig(

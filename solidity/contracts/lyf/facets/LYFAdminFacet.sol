@@ -55,7 +55,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     uint256 _inputLength = _tokenConfigInputs.length;
     LibLYF01.TokenConfig memory _tokenConfig;
-    TokenConfigInput calldata _tokenConfigInput;
+    TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
       _tokenConfigInput = _tokenConfigInputs[_i];
       // factors should not greater than MAX_BPS
@@ -99,7 +99,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _len = _lpConfigInputs.length;
 
     LibLYF01.LPConfig memory _config;
-    LPConfigInput calldata _input;
+    LPConfigInput memory _input;
 
     for (uint256 _i; _i < _len; ) {
       _input = _lpConfigInputs[_i];
