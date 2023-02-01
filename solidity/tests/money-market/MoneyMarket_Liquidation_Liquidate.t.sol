@@ -103,8 +103,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
-    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
-    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
+    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -139,7 +139,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       normalizeEther(0.075 ether, usdcDecimal)
     );
     assertEq(
-      MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore,
+      MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.075 ether, usdcDecimal)
     );
   }
@@ -180,7 +180,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     weth.mint(address(mockLiquidationStrategy), _injectedCollatAmount);
 
     uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
-    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -213,7 +213,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       normalizeEther(0.075 ether, usdcDecimal)
     );
     assertEq(
-      MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore,
+      MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.075 ether, usdcDecimal)
     );
   }
@@ -257,7 +257,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
 
     uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
-    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -291,7 +291,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       normalizeEther(0.150025 ether, usdcDecimal)
     );
     assertEq(
-      MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore,
+      MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.150025 ether, usdcDecimal)
     );
   }
@@ -363,7 +363,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.subAccountDebtShare, normalizeEther(40.413902 ether, usdcDecimal));
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidator), normalizeEther(0.198019 ether, usdcDecimal));
-    assertEq(MockERC20(_debtToken).balanceOf(treasury), normalizeEther(0.19802 ether, usdcDecimal));
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury), normalizeEther(0.19802 ether, usdcDecimal));
   }
 
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
@@ -381,7 +381,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
     uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
-    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -416,7 +416,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       normalizeEther(0.149999 ether, usdcDecimal)
     );
     assertEq(
-      MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore,
+      MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.15 ether, usdcDecimal)
     );
   }
