@@ -32,9 +32,9 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     // remove interest for convienice of test
     adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -122,9 +122,9 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     adminFacet.setMinDebtSize(20 ether);
 
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -160,9 +160,9 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
 
   function testRevert_WhenUserRepayMoreThanCollat() external {
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -190,9 +190,9 @@ contract LYF_Farm_RepayWithCollatTest is LYF_BaseTest {
     // remove interest for convienice of test
     adminFacet.setDebtPoolInterestModel(1, address(new MockInterestModel(0.01 ether)));
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);

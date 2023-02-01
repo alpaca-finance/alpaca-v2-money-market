@@ -33,9 +33,9 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
   function testCorrectness_WhenUserReducePosition_LeftoverTokenShouldReturnToUser() external {
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -61,7 +61,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     assertEq(viewFacet.getSubAccountTokenCollatAmount(BOB, subAccount0, address(wethUsdcLPToken)), 40 ether);
 
     // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
-    mockRouter.setRemoveLiquidityAmountsOut(2.5 ether, 2.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(2.5 ether, normalizeEther(2.5 ether, usdcDecimal));
 
     // should at lest left 38 usd as a debt
     adminFacet.setMinDebtSize(38 ether);
@@ -69,7 +69,13 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     // remove 5 lp,
     // repay 2 eth, 2 usdc
     vm.prank(BOB);
-    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 0.5 ether, 0.5 ether);
+    farmFacet.reducePosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      5 ether,
+      0.5 ether,
+      normalizeEther(0.5 ether, usdcDecimal)
+    );
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
     assertEq(viewFacet.getSubAccountTokenCollatAmount(BOB, subAccount0, address(wethUsdcLPToken)), 35 ether); // starting at 40, remove 5, remain 35
@@ -87,17 +93,16 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
       address(usdc),
       address(wethUsdcLPToken)
     );
-
     // start at 40, repay 2, remain 38
     assertEq(_subAccountWethDebtValue, 38 ether);
-    assertEq(_subAccountUsdcDebtValue, 38 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(38 ether, usdcDecimal));
   }
 
-  function testCorrectness_WhenUserReducePosition_LeftoverTokenShouldReturnToUser2() external {
+  function testCorrectness02_WhenUserReducePosition_LefoverTokenShouldReturnToUser() external {
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -123,7 +128,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     assertEq(viewFacet.getSubAccountTokenCollatAmount(BOB, subAccount0, address(wethUsdcLPToken)), 40 ether);
 
     // mock remove liquidity will return token0: 30 ether and token1: 30 ether
-    mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(30 ether, normalizeEther(30 ether, usdcDecimal));
 
     // should at lest left 10 usd as a debt
     adminFacet.setMinDebtSize(10 ether);
@@ -134,7 +139,13 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     // remove 5 lp,
     // repay 25 eth, 25 usdc
     vm.prank(BOB);
-    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 5 ether, 5 ether);
+    farmFacet.reducePosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      5 ether,
+      5 ether,
+      normalizeEther(5 ether, usdcDecimal)
+    );
 
     assertEq(masterChef.pendingReward(wethUsdcPoolId, lyfDiamond), 0 ether);
     // starting at 40, remove 5, remain 35
@@ -156,17 +167,17 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
     // debt start at 40, get 30, repay 25, remain 15, transfer back 5
     assertEq(_subAccountWethDebtValue, 15 ether);
-    assertEq(_subAccountUsdcDebtValue, 15 ether);
+    assertEq(_subAccountUsdcDebtValue, normalizeEther(15 ether, usdcDecimal));
 
     assertEq(weth.balanceOf(BOB) - wethBefore, 5 ether, "BOB get WETH back wrong");
-    assertEq(usdc.balanceOf(BOB) - usdcBefore, 5 ether, "BOB get USDC back wrong");
+    assertEq(usdc.balanceOf(BOB) - usdcBefore, normalizeEther(5 ether, usdcDecimal), "BOB get USDC back wrong");
   }
 
   function testRevert_WhenUserReducePosition_RemainingDebtIsLessThanMinDebtSizeShouldRevert() external {
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -187,7 +198,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     vm.stopPrank();
 
     // mock remove liquidity will return token0: 15 ether and token1: 15 ether
-    mockRouter.setRemoveLiquidityAmountsOut(15 ether, 15 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(15 ether, normalizeEther(15 ether, usdcDecimal));
 
     adminFacet.setMinDebtSize(10 ether);
 
@@ -195,14 +206,14 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     // repay 15 eth, 15 usdc
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(LibLYF01.LibLYF01_BorrowLessThanMinDebtSize.selector));
-    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 15 ether, 0 ether, 0 ether);
+    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 15 ether, 0, 0);
   }
 
   function testRevert_WhenUserReducePosition_IfSlippedShouldRevert() external {
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -227,22 +238,28 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
     // assume that every coin is 1 dollar and lp = 2 dollar
     // mock remove liquidity will return token0: 2.5 ether and token1: 2.5 ether
-    mockRouter.setRemoveLiquidityAmountsOut(2.5 ether, 2.5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(2.5 ether, normalizeEther(2.5 ether, usdcDecimal));
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(mockRouter), 5 ether);
     // remove 5 lp,
     // repay 2 eth, 2 usdc
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_TooLittleReceived.selector));
-    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 5 ether, 3 ether, 3 ether);
+    farmFacet.reducePosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      5 ether,
+      3 ether,
+      normalizeEther(3 ether, usdcDecimal)
+    );
     vm.stopPrank();
   }
 
   function testRevert_WhenUserReducePosition_IfResultedInUnhealthyStateShouldRevert() external {
     uint256 _wethToAddLP = 40 ether;
-    uint256 _usdcToAddLP = 40 ether;
+    uint256 _usdcToAddLP = normalizeEther(40 ether, usdcDecimal);
     uint256 _wethCollatAmount = 20 ether;
-    uint256 _usdcCollatAmount = 20 ether;
+    uint256 _usdcCollatAmount = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethCollatAmount);
@@ -265,14 +282,20 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
 
     // assume that every coin is 1 dollar and lp = 2 dollar
     // mock remove liquidity will return token0: 40 ether and token1: 40 ether
-    mockRouter.setRemoveLiquidityAmountsOut(40 ether, 40 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(40 ether, normalizeEther(40 ether, usdcDecimal));
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(mockRouter), 40 ether);
     // remove 40 lp,
     // repay 0 eth, 0 usdc
     vm.expectRevert(abi.encodeWithSelector(ILYFFarmFacet.LYFFarmFacet_BorrowingPowerTooLow.selector));
-    farmFacet.reducePosition(subAccount0, address(wethUsdcLPToken), 40 ether, 40 ether, 40 ether);
+    farmFacet.reducePosition(
+      subAccount0,
+      address(wethUsdcLPToken),
+      40 ether,
+      40 ether,
+      normalizeEther(40 ether, usdcDecimal)
+    );
     vm.stopPrank();
   }
 

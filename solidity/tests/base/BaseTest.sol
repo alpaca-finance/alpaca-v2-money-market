@@ -54,11 +54,27 @@ contract BaseTest is DSTest {
   address internal usd;
   MockERC20 internal isolateToken;
 
+  uint256 internal wNativeTokenDecimal = 18;
+  uint256 internal cakeDecimal;
+  uint256 internal wethDecimal;
+  uint256 internal usdcDecimal;
+  uint256 internal busdDecimal;
+  uint256 internal btcDecimal;
+  uint256 internal opmDecimal;
+  uint256 internal usdDecimal = 18;
+  uint256 internal isolateTokenDecimal;
+
   InterestBearingToken internal ibWeth;
   InterestBearingToken internal ibBtc;
   InterestBearingToken internal ibUsdc;
   InterestBearingToken internal ibIsolateToken;
   InterestBearingToken internal ibWNative;
+
+  uint256 internal ibWethDecimal;
+  uint256 internal ibBtcDecimal;
+  uint256 internal ibUsdcDecimal;
+  uint256 internal ibIsolateTokenDecimal;
+  uint256 internal ibWNativeDecimal;
 
   MockERC20 internal debtToken1;
 
@@ -74,6 +90,7 @@ contract BaseTest is DSTest {
   ProxyAdminLike internal proxyAdmin;
 
   constructor() {
+    // set block.timestamp be 100000
     vm.warp(100000);
     // deploy
     usd = address(0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff);
@@ -83,7 +100,7 @@ contract BaseTest is DSTest {
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
-    usdc = deployMockErc20("USD COIN", "USDC", 18);
+    usdc = deployMockErc20("USD COIN", "USDC", 6);
     busd = deployMockErc20("BUSD", "BUSD", 18);
     opm = deployMockErc20("OPM Token", "OPM", 9);
     alpaca = deployMockErc20("ALPACA TOKEN", "ALPACA", 18);
@@ -94,26 +111,34 @@ contract BaseTest is DSTest {
     rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
     rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 18);
 
+    cakeDecimal = cake.decimals();
+    wethDecimal = weth.decimals();
+    usdcDecimal = usdc.decimals();
+    busdDecimal = busd.decimals();
+    btcDecimal = btc.decimals();
+    opmDecimal = opm.decimals();
+    isolateTokenDecimal = isolateToken.decimals();
+
     // mint token
     vm.deal(ALICE, 1000 ether);
 
-    weth.mint(ALICE, 1000 ether);
-    btc.mint(ALICE, 1000 ether);
-    usdc.mint(ALICE, 1000 ether);
-    opm.mint(ALICE, 1000 ether);
-    cake.mint(ALICE, 1000 ether);
-    isolateToken.mint(ALICE, 1000 ether);
+    weth.mint(ALICE, normalizeEther(1000 ether, wethDecimal));
+    btc.mint(ALICE, normalizeEther(1000 ether, btcDecimal));
+    usdc.mint(ALICE, normalizeEther(1000 ether, usdcDecimal));
+    opm.mint(ALICE, normalizeEther(1000 ether, opmDecimal));
+    cake.mint(ALICE, normalizeEther(1000 ether, cakeDecimal));
+    isolateToken.mint(ALICE, normalizeEther(1000 ether, isolateTokenDecimal));
 
-    weth.mint(EVE, 1000 ether);
-    btc.mint(EVE, 1000 ether);
-    usdc.mint(EVE, 1000 ether);
-    opm.mint(EVE, 1000 ether);
-    isolateToken.mint(EVE, 1000 ether);
+    weth.mint(EVE, normalizeEther(1000 ether, wethDecimal));
+    btc.mint(EVE, normalizeEther(1000 ether, btcDecimal));
+    usdc.mint(EVE, normalizeEther(1000 ether, usdcDecimal));
+    opm.mint(EVE, normalizeEther(1000 ether, opmDecimal));
+    isolateToken.mint(EVE, normalizeEther(1000 ether, isolateTokenDecimal));
 
-    weth.mint(BOB, 1000 ether);
-    btc.mint(BOB, 1000 ether);
-    usdc.mint(BOB, 1000 ether);
-    isolateToken.mint(BOB, 1000 ether);
+    weth.mint(BOB, normalizeEther(1000 ether, wethDecimal));
+    btc.mint(BOB, normalizeEther(1000 ether, btcDecimal));
+    usdc.mint(BOB, normalizeEther(1000 ether, usdcDecimal));
+    isolateToken.mint(BOB, normalizeEther(1000 ether, isolateTokenDecimal));
 
     // miniFL
 
@@ -228,5 +253,9 @@ contract BaseTest is DSTest {
       _address := create(0, add(_bytecode, 0x20), mload(_bytecode))
     }
     return ProxyAdminLike(address(_address));
+  }
+
+  function normalizeEther(uint256 _ether, uint256 _decimal) internal pure returns (uint256 _normalizedEther) {
+    _normalizedEther = _ether / 10**(18 - _decimal);
   }
 }

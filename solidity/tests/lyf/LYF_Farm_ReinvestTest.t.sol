@@ -12,19 +12,26 @@ import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLink
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_Farm_ReinvestTest is LYF_BaseTest {
+  struct AddFarmInputs {
+    uint256 desiredToken0;
+    uint256 desiredToken1;
+    uint256 token0AmountIn;
+    uint256 token1AmountIn;
+  }
+
   function setUp() public override {
     super.setUp();
 
     // inject token to router for swap
-    usdc.mint(address(mockRouter), 1000 ether);
+    usdc.mint(address(mockRouter), normalizeEther(1000 ether, usdcDecimal));
     weth.mint(address(mockRouter), 1000 ether);
   }
 
   function testCorrectness_WhenReinvestisCalled_ShouldConvertRewardTokenToLP() external {
     uint256 _desiredWeth = 30 ether;
-    uint256 _desiredUsdc = 30 ether;
+    uint256 _desiredUsdc = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethAmountDirect = 20 ether;
-    uint256 _usdcAmountDirect = 30 ether;
+    uint256 _usdcAmountDirect = normalizeEther(30 ether, usdcDecimal);
 
     LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
@@ -77,9 +84,9 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
 
   function testCorrectness_WhenPendingRewardLessThanReinvestThreshold_ShouldSkipReinvest() external {
     uint256 _desiredWeth = 30 ether;
-    uint256 _desiredUsdc = 30 ether;
+    uint256 _desiredUsdc = normalizeEther(30 ether, usdcDecimal);
     uint256 _wethAmountDirect = 20 ether;
-    uint256 _usdcAmountDirect = 30 ether;
+    uint256 _usdcAmountDirect = normalizeEther(30 ether, usdcDecimal);
 
     LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
@@ -126,6 +133,20 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     uint256 _bobLpAmount = 50 ether;
     uint256 _aliceLpAmount = 30 ether;
 
+    AddFarmInputs memory _bobInput = AddFarmInputs(
+      50 ether, // _desiredToken0
+      normalizeEther(50 ether, usdcDecimal), // _desiredToken1
+      50 ether, // _token0AmountIn
+      normalizeEther(50 ether, usdcDecimal) // _token1AmountIn
+    );
+
+    AddFarmInputs memory _aliceInput = AddFarmInputs(
+      30 ether, // _desiredToken0
+      normalizeEther(30 ether, usdcDecimal), // _desiredToken1
+      30 ether, // _token0AmountIn
+      normalizeEther(30 ether, usdcDecimal) // _token1AmountIn
+    );
+
     wethUsdcLPToken.mint(address(BOB), _bobLpAmount);
     wethUsdcLPToken.mint(address(ALICE), _aliceLpAmount);
 
@@ -137,12 +158,12 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _bobLpAmount,
-      desiredToken0Amount: _bobLpAmount,
-      desiredToken1Amount: _bobLpAmount,
+      desiredToken0Amount: _bobInput.desiredToken0,
+      desiredToken1Amount: _bobInput.desiredToken1,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
-      token0AmountIn: _bobLpAmount,
-      token1AmountIn: _bobLpAmount
+      token0AmountIn: _bobInput.token0AmountIn,
+      token1AmountIn: _bobInput.token1AmountIn
     });
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
@@ -163,12 +184,12 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _aliceLpAmount,
-      desiredToken0Amount: _aliceLpAmount,
-      desiredToken1Amount: _aliceLpAmount,
+      desiredToken0Amount: _aliceInput.desiredToken0,
+      desiredToken1Amount: _aliceInput.desiredToken1,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
-      token0AmountIn: _aliceLpAmount,
-      token1AmountIn: _aliceLpAmount
+      token0AmountIn: _aliceInput.token0AmountIn,
+      token1AmountIn: _aliceInput.token1AmountIn
     });
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
@@ -203,6 +224,20 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     uint256 _bobLpAmount = 50 ether;
     uint256 _aliceLpAmount = 25 ether;
 
+    AddFarmInputs memory _bobInput = AddFarmInputs(
+      50 ether, // _desiredToken0
+      normalizeEther(50 ether, usdcDecimal), // _desiredToken1
+      50 ether, // _token0AmountIn
+      normalizeEther(50 ether, usdcDecimal) // _token1AmountIn
+    );
+
+    AddFarmInputs memory _aliceInput = AddFarmInputs(
+      25 ether, // _desiredToken0
+      normalizeEther(25 ether, usdcDecimal), // _desiredToken1
+      25 ether, // _token0AmountIn
+      normalizeEther(25 ether, usdcDecimal) // _token1AmountIn
+    );
+
     wethUsdcLPToken.mint(address(BOB), _bobLpAmount);
     wethUsdcLPToken.mint(address(ALICE), _aliceLpAmount);
 
@@ -214,12 +249,12 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _bobLpAmount,
-      desiredToken0Amount: _bobLpAmount,
-      desiredToken1Amount: _bobLpAmount,
+      desiredToken0Amount: _bobInput.desiredToken0,
+      desiredToken1Amount: _bobInput.desiredToken1,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
-      token0AmountIn: _bobLpAmount,
-      token1AmountIn: _bobLpAmount
+      token0AmountIn: _bobInput.token0AmountIn,
+      token1AmountIn: _bobInput.token1AmountIn
     });
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
@@ -235,12 +270,12 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
       minLpReceive: _aliceLpAmount,
-      desiredToken0Amount: _aliceLpAmount,
-      desiredToken1Amount: _aliceLpAmount,
+      desiredToken0Amount: _aliceInput.desiredToken0,
+      desiredToken1Amount: _aliceInput.desiredToken1,
       token0ToBorrow: 0,
       token1ToBorrow: 0,
-      token0AmountIn: _aliceLpAmount,
-      token1AmountIn: _aliceLpAmount
+      token0AmountIn: _aliceInput.token0AmountIn,
+      token1AmountIn: _aliceInput.token1AmountIn
     });
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
