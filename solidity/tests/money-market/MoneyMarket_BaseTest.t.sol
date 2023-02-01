@@ -17,10 +17,6 @@ import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/mon
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 
-// initializers
-import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
-import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
-
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
@@ -38,9 +34,7 @@ import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
-// helper
-import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
@@ -59,7 +53,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
