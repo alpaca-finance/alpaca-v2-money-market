@@ -93,8 +93,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // question: should we check this thing?
-    if (!moneyMarketDs.repurchasersOk[msg.sender]) {
+    if (msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
 
@@ -122,9 +121,9 @@ contract LiquidationFacet is ILiquidationFacet {
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         // repayAmountWithFee = _currentDebtAmount + fee
         vars.repayAmountWithFee = _maxAmountRepurchaseable;
-        // repayAmountWithoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
         // calculate like this so we can close entire debt without dust
-        vars.repayAmountWithoutFee = (vars.repayAmountWithFee * _currentDebtAmount) / _maxAmountRepurchaseable;
+        // repayAmountWithoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
+        vars.repayAmountWithoutFee = _currentDebtAmount;
       } else {
         vars.repayAmountWithFee = _desiredRepayAmount;
         vars.repayAmountWithoutFee =

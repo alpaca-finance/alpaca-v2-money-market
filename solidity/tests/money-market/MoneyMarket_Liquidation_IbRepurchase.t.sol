@@ -117,7 +117,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // RepuschaseFee = 15 * 0.01 = 0.15
 
     uint256 _expectedFeeToTreasury = normalizeEther(0.15 ether, usdcDecimal);
-    vm.prank(BOB);
+    vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(15 ether, usdcDecimal));
 
     // repay value = 15 * 1 = 1 USD

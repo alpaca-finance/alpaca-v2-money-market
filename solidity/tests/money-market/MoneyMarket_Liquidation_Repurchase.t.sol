@@ -98,7 +98,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // timestamp increased by 1 day, debt value should increased to 30.005076
     // fee amount = 15 * 0.01 = 0.15
     uint256 _expectedFee = normalizeEther(0.15 ether, usdcDecimal);
-    vm.prank(BOB);
+    vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(15 ether, usdcDecimal));
 
     // repay value = 15 * 1 = 1 USD
@@ -196,7 +196,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // timestamp increased by 1 day, btc value should increased to 3.00050765511672
     // fee amount = 20 * 0.01 = 0.2
     uint256 _expectedFee = normalizeEther(0.2 ether, usdcDecimal);
-    vm.prank(BOB);
+    vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(20 ether, usdcDecimal));
 
     // repay value = 20 * 1 = 1 USD
@@ -309,7 +309,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // repurchase fee = 1%
     // timestamp increased by 1 day, usdc debt value should increased to 30.005076
     // timestamp increased by 1 day, btc value should increased to 5.001410153102144
-    vm.prank(BOB);
+    vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(40 ether, usdcDecimal));
 
     // alice just have usdc debt 30.005076 (with interest)
@@ -375,6 +375,11 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
+    address[] memory repurchaserOk = new address[](1);
+    repurchaserOk[0] = BOB;
+
+    adminFacet.setRepurchasersOk(repurchaserOk, true);
+
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     // bob try repurchase with 2 usdc
@@ -396,11 +401,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.startPrank(CAT);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     // bob try repurchase with 2 usdc
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(2 ether, usdcDecimal));
-    vm.stopPrank();
   }
 
   function testRevert_shouldRevertIfRepayIsTooHigh() external {
@@ -436,7 +439,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // usdc price = 1 USD
     // reward = 0.01%
     // timestamp increased by 1 day, debt value should increased to 30.0050765511672
-    vm.startPrank(BOB);
+    vm.startPrank(BOB, BOB);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     // bob try repurchase with 20 usdc but borrowed value is 30.0050765511672 / 2 = 15.0025382755836,
     // so bob can't pay more than 15.0025382755836 followed by condition (!> 50% of borrowed value)
@@ -477,7 +480,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // usdc price = 1 USD
     // reward = 0.01%
     // timestamp increased by 1 day, usdc debt value should increased to 80.036099919413504
-    vm.startPrank(BOB);
+    vm.startPrank(BOB, BOB);
 
     // repay value = 40 * 1 = 40 USD
     // reward amount = 40 * 1.01 = 40.40 USD
@@ -538,7 +541,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // timestamp increased by 1 day, debt value should increased to 30.009024979851648
     // fee amount = 15 * 0.01 = 0.15
     uint256 _expectedFee = normalizeEther(0.15 ether, usdcDecimal);
-    vm.prank(BOB);
+    vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(15 ether, usdcDecimal));
 
     // repay value = 15 * 1 = 1 USD
