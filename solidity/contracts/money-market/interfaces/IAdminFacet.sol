@@ -58,6 +58,8 @@ interface IAdminFacet {
 
   function setOracle(address _oracle) external;
 
+  function setRepurchasersOk(address[] memory list, bool _isOk) external;
+
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
   function setLiquidatorsOk(address[] calldata list, bool _isOk) external;

@@ -78,13 +78,6 @@ contract LiquidationFacet is ILiquidationFacet {
     reentrancyGuardDs.liquidateExec = LibReentrancyGuard._NOT_ENTERED;
   }
 
-  modifier onlyEOA() {
-    if (msg.sender != tx.origin) {
-      revert LiquidationFacet_OnlyEOA();
-    }
-    _;
-  }
-
   /// @notice Repurchase the debt token in exchange of a collateral token
   /// @param _account The account to be repurchased
   /// @param _subAccountId The index to derive the subaccount
@@ -97,8 +90,12 @@ contract LiquidationFacet is ILiquidationFacet {
     address _repayToken,
     address _collatToken,
     uint256 _desiredRepayAmount
-  ) external nonReentrant onlyEOA returns (uint256 _collatAmountOut) {
+  ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) {
+      revert LiquidationFacet_Unauthorized();
+    }
 
     RepurchaseLocalVars memory vars;
 

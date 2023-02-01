@@ -375,7 +375,12 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.prank(BOB, BOB);
+    address[] memory repurchaserOk = new address[](1);
+    repurchaserOk[0] = BOB;
+
+    adminFacet.setRepurchasersOk(repurchaserOk, true);
+
+    vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     // bob try repurchase with 2 usdc
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(2 ether, usdcDecimal));
@@ -386,7 +391,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     borrowFacet.borrow(0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
 
-    vm.prank(BOB, BOB);
+    vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(2 ether, usdcDecimal));
   }
@@ -396,7 +401,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
 
-    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_OnlyEOA.selector));
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     // bob try repurchase with 2 usdc
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(2 ether, usdcDecimal));
   }
