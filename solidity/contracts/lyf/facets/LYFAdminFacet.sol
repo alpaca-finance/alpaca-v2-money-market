@@ -244,6 +244,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @notice Set the address that will keep the liqudation's fee
   /// @param _newTreasury The destination address
   function setLiquidationTreasury(address _newTreasury) external onlyOwner {
+    if (_newTreasury == address(0)) {
+      revert LYFAdminFacet_InvalidAddress();
+    }
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.liquidationTreasury = _newTreasury;
 
@@ -253,6 +256,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @notice Set the address that will keep the reinvest bounty
   /// @param _newTreasury new revenue treasury address
   function setRevenueTreasury(address _newTreasury) external onlyOwner {
+    if (_newTreasury == address(0)) {
+      revert LYFAdminFacet_InvalidAddress();
+    }
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.revenueTreasury = _newTreasury;
 

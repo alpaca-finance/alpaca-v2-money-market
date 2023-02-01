@@ -8,6 +8,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_ReserveTooLow();
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
+  error LYFAdminFacet_InvalidAddress();
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
