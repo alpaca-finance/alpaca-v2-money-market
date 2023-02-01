@@ -96,7 +96,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
 
-    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(treasury);
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     // add time 1 day
     // then total debt value should increase by 0.0033843674448 * 60 = 0.20306204668800000
@@ -157,6 +157,6 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, normalizeEther(45.155025 ether, usdcDecimal));
     assertEq(_stateAfter.subAccountDebtShare, normalizeEther(45.155025 ether, usdcDecimal));
     vm.stopPrank();
-    assertEq(MockERC20(_debtToken).balanceOf(treasury) - _treasuryBalanceBefore, _expectedFeeToTreasury);
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore, _expectedFeeToTreasury);
   }
 }

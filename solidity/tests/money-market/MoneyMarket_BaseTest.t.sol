@@ -38,7 +38,7 @@ import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/Li
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
-  address internal treasury = address(666);
+  address internal liquidationTreasury = address(666);
   address internal liquidator = address(667);
 
   IViewFacet internal viewFacet;
@@ -219,7 +219,13 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setOracle(address(mockOracle));
 
-    adminFacet.setTreasury(treasury);
+    // set repurchases ok
+    address[] memory _repurchasers = new address[](2);
+    _repurchasers[0] = BOB;
+    _repurchasers[1] = ALICE;
+    adminFacet.setRepurchasersOk(_repurchasers, true);
+
+    adminFacet.setLiquidationTreasury(liquidationTreasury);
 
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newLiquidationRewardBps);
     // _newLiquidationRewardBps = 5000 => 50% of fee goes to liquidator

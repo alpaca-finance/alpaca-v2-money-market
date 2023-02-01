@@ -174,7 +174,7 @@ contract LiquidationFacet is ILiquidationFacet {
       vars.repayAmountWithFee
     ) - vars.repurchaseFeeToProtocol;
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-    IERC20(_repayToken).safeTransfer(moneyMarketDs.treasury, vars.repurchaseFeeToProtocol);
+    IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, vars.repurchaseFeeToProtocol);
 
     // update states
     _reduceDebt(vars.subAccount, _repayToken, _actualRepayAmountWithoutFee, moneyMarketDs);
@@ -287,7 +287,7 @@ contract LiquidationFacet is ILiquidationFacet {
     moneyMarketDs.reserves[params.repayToken] += _repaidAmount;
 
     IERC20(params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
-    IERC20(params.repayToken).safeTransfer(moneyMarketDs.treasury, _feeToTreasury);
+    IERC20(params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _feeToTreasury);
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, _repaidAmount, moneyMarketDs);

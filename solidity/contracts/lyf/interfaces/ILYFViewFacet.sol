@@ -75,4 +75,6 @@ interface ILYFViewFacet {
   function getProtocolReserveOf(address _token) external view returns (uint256);
 
   function getSubAccount(address _primary, uint256 _subAccountId) external view returns (address);
+
+  function getTreasuries() external view returns (address _feeTreasury, address _revenueTreasury);
 }

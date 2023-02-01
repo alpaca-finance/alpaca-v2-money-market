@@ -68,7 +68,7 @@ library LibMoneyMarket01 {
     // ---- addresses ---- //
     address wNativeToken;
     address wNativeRelayer;
-    address treasury;
+    address liquidationTreasury;
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
@@ -112,8 +112,8 @@ library LibMoneyMarket01 {
     uint16 liquidationThresholdBps; // threshold that allow subAccount to be liquidated if borrowing power goes below threshold
     // fees
     uint16 lendingFeeBps; // fee that is charged from lending interest by protocol, goes to protocolReserve
-    uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to treasury
-    uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to treasury
+    uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to liquidationTreasury
+    uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to liquidationTreasury
     uint16 liquidationRewardBps; // reward that is given to liquidators
   }
 
