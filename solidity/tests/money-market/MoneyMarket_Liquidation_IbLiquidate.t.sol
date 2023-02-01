@@ -608,7 +608,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _state = CacheState({
       mmUnderlyingBalance: IERC20(_underlyingToken).balanceOf(address(moneyMarketDiamond)),
       ibTokenTotalSupply: IERC20(_ibToken).totalSupply(),
-      treasuryDebtTokenBalance: MockERC20(_debtToken).balanceOf(treasury),
+      treasuryDebtTokenBalance: MockERC20(_debtToken).balanceOf(liquidationTreasury),
       liquidatorDebtTokenBalance: MockERC20(_debtToken).balanceOf(liquidator),
       globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
@@ -678,7 +678,11 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _feeToTreasury,
     CacheState memory _cache
   ) internal {
-    assertEq(MockERC20(_debtToken).balanceOf(treasury), _cache.treasuryDebtTokenBalance + _feeToTreasury, "treasury");
+    assertEq(
+      MockERC20(_debtToken).balanceOf(liquidationTreasury),
+      _cache.treasuryDebtTokenBalance + _feeToTreasury,
+      "treasury"
+    );
   }
 
   function _assertLiquidatorReward(

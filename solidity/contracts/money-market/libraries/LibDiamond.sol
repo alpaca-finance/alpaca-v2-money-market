@@ -39,8 +39,6 @@ library LibDiamond {
     // owner of the contract
     address contractOwner;
     address pendingOwner;
-    uint8 diamondInitialized;
-    uint8 moneyMarketInitialized;
   }
 
   function diamondStorage() internal pure returns (DiamondStorage storage ds) {

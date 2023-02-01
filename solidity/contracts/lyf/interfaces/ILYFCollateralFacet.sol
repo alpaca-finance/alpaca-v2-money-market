@@ -9,6 +9,7 @@ interface ILYFCollateralFacet {
   error LYFCollateralFacet_ExceedCollateralLimit();
   error LYFCollateralFacet_RemoveLPCollateralNotAllowed();
   error LYFCollateralFacet_OnlyCollateralTierAllowed();
+  error LYFCollateralFacet_SelfCollatTransferNotAllowed();
 
   function addCollateral(
     address _account,

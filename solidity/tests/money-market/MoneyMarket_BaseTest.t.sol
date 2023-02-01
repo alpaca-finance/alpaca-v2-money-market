@@ -17,10 +17,6 @@ import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/mon
 import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 
-// initializers
-import { DiamondInit } from "../../contracts/money-market/initializers/DiamondInit.sol";
-import { MoneyMarketInit } from "../../contracts/money-market/initializers/MoneyMarketInit.sol";
-
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
 import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
@@ -38,13 +34,11 @@ import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
-// helper
-import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
-  address internal treasury = address(666);
+  address internal liquidationTreasury = address(666);
   address internal liquidator = address(667);
 
   IViewFacet internal viewFacet;
@@ -59,7 +53,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
@@ -222,7 +219,13 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setOracle(address(mockOracle));
 
-    adminFacet.setTreasury(treasury);
+    // set repurchases ok
+    address[] memory _repurchasers = new address[](2);
+    _repurchasers[0] = BOB;
+    _repurchasers[1] = ALICE;
+    adminFacet.setRepurchasersOk(_repurchasers, true);
+
+    adminFacet.setLiquidationTreasury(liquidationTreasury);
 
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newLiquidationRewardBps);
     // _newLiquidationRewardBps = 5000 => 50% of fee goes to liquidator

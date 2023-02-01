@@ -76,8 +76,9 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       _requiredUnderlyingAmount
     );
 
-    IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
+    IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
     router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
+    IERC20(_underlyingToken).safeApprove(address(router), 0);
 
     // transfer ibToken back to caller if not withdraw all
     if (_ibTokenAmountIn > _withdrawnIbTokenAmount) {

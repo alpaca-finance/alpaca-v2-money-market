@@ -5,7 +5,6 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // helper
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
-import { MMDiamondDeployer } from "../helper/MMDiamondDeployer.sol";
 
 // contracts
 import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
@@ -24,6 +23,7 @@ import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.s
 // libraries
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -53,7 +53,10 @@ abstract contract AV_BaseTest is BaseTest {
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    moneyMarketDiamond = MMDiamondDeployer.deployPoolDiamond(address(wNativeToken), address(wNativeRelayer));
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(wNativeToken),
+      address(wNativeRelayer)
+    );
     setUpMM();
 
     // set av facets

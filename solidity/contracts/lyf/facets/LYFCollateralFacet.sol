@@ -119,6 +119,10 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
+    if (_fromSubAccountId == _toSubAccountId) {
+      revert LYFCollateralFacet_SelfCollatTransferNotAllowed();
+    }
+
     if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
       revert LYFCollateralFacet_OnlyCollateralTierAllowed();
     }
