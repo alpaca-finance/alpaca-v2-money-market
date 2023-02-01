@@ -233,27 +233,26 @@ library MMDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (AdminFacet, bytes4[] memory) {
     AdminFacet _adminFacet = new AdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](20);
+    bytes4[] memory selectors = new bytes4[](19);
     selectors[0] = AdminFacet.openMarket.selector;
     selectors[1] = AdminFacet.setTokenConfigs.selector;
     selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
     selectors[3] = AdminFacet.setInterestModel.selector;
     selectors[4] = AdminFacet.setOracle.selector;
-    selectors[5] = AdminFacet.setRepurchasersOk.selector;
-    selectors[6] = AdminFacet.setNonCollatInterestModel.selector;
-    selectors[7] = AdminFacet.setLiquidationStratsOk.selector;
-    selectors[8] = AdminFacet.setLiquidatorsOk.selector;
-    selectors[9] = AdminFacet.setTreasury.selector;
-    selectors[10] = AdminFacet.setFees.selector;
-    selectors[11] = AdminFacet.withdrawReserve.selector;
-    selectors[12] = AdminFacet.setProtocolConfigs.selector;
-    selectors[13] = AdminFacet.setIbTokenImplementation.selector;
-    selectors[14] = AdminFacet.setLiquidationParams.selector;
-    selectors[15] = AdminFacet.setMaxNumOfToken.selector;
-    selectors[16] = AdminFacet.setMinDebtSize.selector;
-    selectors[17] = AdminFacet.writeOffSubAccountsDebt.selector;
-    selectors[18] = AdminFacet.topUpTokenReserve.selector;
-    selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
+    selectors[5] = AdminFacet.setNonCollatInterestModel.selector;
+    selectors[6] = AdminFacet.setLiquidationStratsOk.selector;
+    selectors[7] = AdminFacet.setLiquidatorsOk.selector;
+    selectors[8] = AdminFacet.setTreasury.selector;
+    selectors[9] = AdminFacet.setFees.selector;
+    selectors[10] = AdminFacet.withdrawReserve.selector;
+    selectors[11] = AdminFacet.setProtocolConfigs.selector;
+    selectors[12] = AdminFacet.setIbTokenImplementation.selector;
+    selectors[13] = AdminFacet.setLiquidationParams.selector;
+    selectors[14] = AdminFacet.setMaxNumOfToken.selector;
+    selectors[15] = AdminFacet.setMinDebtSize.selector;
+    selectors[16] = AdminFacet.writeOffSubAccountsDebt.selector;
+    selectors[17] = AdminFacet.topUpTokenReserve.selector;
+    selectors[18] = AdminFacet.setRepurchaseRewardModel.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),

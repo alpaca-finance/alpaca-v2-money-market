@@ -95,7 +95,6 @@ library LibMoneyMarket01 {
     mapping(address => TokenConfig) tokenConfigs; // token address => config
     mapping(address => uint256) debtLastAccruedAt; // token address => last interest accrual timestamp, shared between over and non collat
     // ---- whitelists ---- //
-    mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
     mapping(address => bool) liquidationStratOk; // liquidation strategies that can be used during liquidation process
     mapping(address => bool) liquidatorsOk; // allowed to initiate liquidation process
     // ---- reserves ---- //

@@ -127,7 +127,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     (, uint256 _debtAmountBefore) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, _debtToken);
 
-    vm.prank(ALICE);
+    vm.prank(ALICE, ALICE);
     liquidationFacet.repurchase(BOB, subAccount0, _debtToken, _collatToken, _repurchaseAmount);
 
     // check ALICE weth collat receieved + repurchaseReward
