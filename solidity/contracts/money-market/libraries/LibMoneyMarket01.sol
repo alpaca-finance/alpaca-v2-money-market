@@ -73,6 +73,8 @@ library LibMoneyMarket01 {
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
+    // pauseSwitch
+    bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address
     mapping(address => address) ibTokenToTokens; // ibToken address => token address
@@ -116,8 +118,6 @@ library LibMoneyMarket01 {
     uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to treasury
     uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to treasury
     uint16 liquidationRewardBps; // reward that is given to liquidators
-    // pauseSwitch
-    bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
   }
 
   function moneyMarketDiamondStorage() internal pure returns (MoneyMarketDiamondStorage storage moneyMarketStorage) {
