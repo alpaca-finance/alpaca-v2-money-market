@@ -115,4 +115,11 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
 
     assertEq(ibWeth.balanceOf(ALICE), 14.878048780487804878 ether);
   }
+
+  function testRevert_UserDepositWhenMMOnEmergencyPaused_ShouldRevert() external {
+    adminFacet.setEmergencyPaused(true);
+
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
+    lendFacet.deposit(address(weth), 10 ether);
+  }
 }
