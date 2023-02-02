@@ -110,7 +110,7 @@ library LYFDiamondDeployer {
   function deployAdminFacet(DiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
     LYFAdminFacet _adminFacet = new LYFAdminFacet();
 
-    bytes4[] memory selectors = new bytes4[](13);
+    bytes4[] memory selectors = new bytes4[](14);
     selectors[0] = LYFAdminFacet.setOracle.selector;
     selectors[1] = LYFAdminFacet.setLiquidationTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
@@ -124,6 +124,7 @@ library LYFDiamondDeployer {
     selectors[10] = LYFAdminFacet.setMinDebtSize.selector;
     selectors[11] = LYFAdminFacet.withdrawProtocolReserve.selector;
     selectors[12] = LYFAdminFacet.setRevenueTreasury.selector;
+    selectors[13] = LYFAdminFacet.setRewardConversionConfigs.selector;
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
       IDiamondCut.FacetCutAction.Add,
@@ -204,7 +205,7 @@ library LYFDiamondDeployer {
   {
     _viewFacet = new LYFViewFacet();
 
-    _selectors = new bytes4[](24);
+    _selectors = new bytes4[](25);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
     _selectors[2] = LYFViewFacet.getLpTokenAmount.selector;
@@ -229,6 +230,7 @@ library LYFDiamondDeployer {
     _selectors[21] = LYFViewFacet.getProtocolReserveOf.selector;
     _selectors[22] = LYFViewFacet.getSubAccount.selector;
     _selectors[23] = LYFViewFacet.getDebtPoolIdOf.selector;
+    _selectors[24] = LYFViewFacet.getRewardConversionConfig.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),

@@ -52,6 +52,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 
 // helper
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
+import { TestHelper } from "../helper/TestHelper.sol";
 import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // oracle
@@ -252,6 +253,21 @@ abstract contract LYF_BaseTest is BaseTest {
     });
     adminFacet.setLPConfigs(lpConfigs);
 
+    // set reward conversion configs
+    address[] memory _rewardConversionPath = new address[](2);
+    _rewardConversionPath[0] = address(cake);
+    _rewardConversionPath[1] = address(cake);
+
+    ILYFAdminFacet.SetRewardConversionConfigInput[]
+      memory _rewardConversionConfigInputs = new ILYFAdminFacet.SetRewardConversionConfigInput[](1);
+    _rewardConversionConfigInputs[0] = ILYFAdminFacet.SetRewardConversionConfigInput({
+      rewardToken: address(cake),
+      router: address(mockRouter),
+      path: _rewardConversionPath
+    });
+
+    adminFacet.setRewardConversionConfigs(_rewardConversionConfigInputs);
+
     // set oracle for LYF
     mockOracle = new MockAlpacaV2Oracle();
     mockOracle.setTokenPrice(address(weth), 1e18);
@@ -294,15 +310,10 @@ abstract contract LYF_BaseTest is BaseTest {
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
 
-    address _ibWeth = mmAdminFacet.openMarket(address(weth));
-    address _ibUsdc = mmAdminFacet.openMarket(address(usdc));
-    address _ibBtc = mmAdminFacet.openMarket(address(btc));
-    address _ibNativeToken = mmAdminFacet.openMarket(address(wNativeToken));
-
-    ibWeth = InterestBearingToken(_ibWeth);
-    ibUsdc = InterestBearingToken(_ibUsdc);
-    ibBtc = InterestBearingToken(_ibBtc);
-    ibWNative = InterestBearingToken(_ibNativeToken);
+    ibWeth = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(weth));
+    ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(usdc));
+    ibBtc = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(btc));
+    ibWNative = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(wNativeToken));
 
     ibWethDecimal = ibWeth.decimals();
     ibUsdcDecimal = ibUsdc.decimals();
