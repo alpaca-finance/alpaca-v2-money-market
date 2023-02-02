@@ -22,7 +22,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   error Rewarder1_PoolExisted();
   error Rewarder1_PoolNotExisted();
 
-  IERC20Upgradeable public rewardToken;
+  address public rewardToken;
 
   struct UserInfo {
     uint256 amount;
@@ -66,14 +66,14 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function initialize(
     string calldata _name,
     address _miniFL,
-    IERC20Upgradeable _rewardToken,
+    address _rewardToken,
     uint256 _maxRewardPerSecond
   ) external initializer {
     OwnableUpgradeable.__Ownable_init();
     ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
 
     // sanity check
-    _rewardToken.totalSupply();
+    IERC20Upgradeable(_rewardToken).totalSupply();
     IMiniFL(_miniFL).poolLength();
 
     name = _name;
@@ -140,7 +140,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     user.rewardDebt = _accumulatedRewards;
 
     if (_pendingRewards != 0) {
-      rewardToken.safeTransfer(_user, _pendingRewards);
+      IERC20Upgradeable(rewardToken).safeTransfer(_user, _pendingRewards);
     }
 
     emit LogHarvest(_user, _pid, _pendingRewards);
@@ -211,7 +211,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory _poolInfo = poolInfo[_pid];
     UserInfo storage _userInfo = userInfo[_pid][_user];
     uint256 _accRewardPerShare = _poolInfo.accRewardPerShare;
-    uint256 _stakedBalance = IMiniFL(miniFL).stakingToken(_pid).balanceOf(miniFL);
+    uint256 _stakedBalance = IMiniFL(miniFL).getStakingReserves(_pid);
     if (block.timestamp > _poolInfo.lastRewardTime && _stakedBalance != 0) {
       uint256 _timePast;
       unchecked {
@@ -242,7 +242,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (_poolInfo.lastRewardTime == 0) revert Rewarder1_PoolNotExisted();
 
     if (block.timestamp > _poolInfo.lastRewardTime) {
-      uint256 _stakedBalance = IMiniFL(miniFL).stakingToken(_pid).balanceOf(miniFL);
+      uint256 _stakedBalance = IMiniFL(miniFL).getStakingReserves(_pid);
       if (_stakedBalance > 0) {
         uint256 _timePast;
         unchecked {
