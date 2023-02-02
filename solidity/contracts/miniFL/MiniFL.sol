@@ -231,6 +231,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       revert MiniFL_Forbidden();
     }
 
+    stakingToken[_pid].safeTransferFrom(msg.sender, address(this), _amount);
+
     // Effects
     user.amount = user.amount + _amount;
     user.rewardDebt = user.rewardDebt + ((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
@@ -245,8 +247,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         ++_i;
       }
     }
-
-    stakingToken[_pid].safeTransferFrom(msg.sender, address(this), _amount);
 
     emit LogDeposit(msg.sender, _for, _pid, _amount);
   }
