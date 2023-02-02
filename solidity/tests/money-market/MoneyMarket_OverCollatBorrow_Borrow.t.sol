@@ -361,4 +361,12 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // 0.12 + 0.88 == 0.1
     borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.12 ether, wethDecimal));
   }
+
+  function testRevert_UserBorrowWhenMMOnEmergencyPaused_ShouldRevert() external {
+    adminFacet.setEmergencyPaused(true);
+
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
+    vm.prank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+  }
 }

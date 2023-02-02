@@ -66,6 +66,9 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    LibMoneyMarket01.onlyLive(moneyMarketDs);
+
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
 
     // accrue interest for borrowed debt token, to mint share correctly

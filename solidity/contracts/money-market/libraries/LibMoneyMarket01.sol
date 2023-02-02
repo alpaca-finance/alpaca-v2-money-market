@@ -38,6 +38,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_NotEnoughToken();
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
   error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
+  error LibMoneyMarket01_EmergencyPaused();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -72,6 +73,7 @@ library LibMoneyMarket01 {
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
+    bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address
     mapping(address => address) ibTokenToTokens; // ibToken address => token address
@@ -737,5 +739,11 @@ library LibMoneyMarket01 {
     uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
     IERC20(_token).safeTransferFrom(_from, address(this), _amount);
     _actualAmountReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+  }
+
+  function onlyLive(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
+    if (moneyMarketDs.emergencyPaused) {
+      revert LibMoneyMarket01_EmergencyPaused();
+    }
   }
 }

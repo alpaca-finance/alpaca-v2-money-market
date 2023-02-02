@@ -301,4 +301,12 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     );
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _bobBorrowAmount);
   }
+
+  function testRevert_ProtocolBorrowWhenMMOnEmergencyPaused_ShouldRevert() external {
+    adminFacet.setEmergencyPaused(true);
+
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
+    vm.prank(ALICE);
+    nonCollatBorrowFacet.nonCollatBorrow(address(weth), 1 ether);
+  }
 }
