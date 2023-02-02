@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
+import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 
 // ---- Interfaces ---- //
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
@@ -16,6 +17,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 /// @title LYFAdminFacet is dedicated to protocol parameter configuration
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
+  using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   event LogSetOracle(address indexed _oracle);
   event LogSetTokenConfig(address indexed _token, LibLYF01.TokenConfig _config);
@@ -31,6 +33,13 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetRevenueTreasury(address indexed _treasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
+  event LogWriteOffSubAccountDebt(
+    address indexed subAccount,
+    address indexed token,
+    address indexed lpToken,
+    uint256 debtShareWrittenOff,
+    uint256 debtValueWrittenOff
+  );
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -318,12 +327,28 @@ contract LYFAdminFacet is ILYFAdminFacet {
       _token = _inputs[i].token;
       _lpToken = _inputs[i].lpToken;
       _subAccount = LibLYF01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+      _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
 
       if (lyfDs.subAccountCollats[_subAccount].size != 0) {
         revert LYFAdminFacet_SubAccountHealthy(_subAccount);
       }
 
-      LibLYF01.accrueDebtPoolInterest(lyfDs.debtPoolIds[_token][_lpToken], lyfDs);
+      LibLYF01.accrueDebtPoolInterest(_debtPoolId, lyfDs);
+
+      (_shareToRemove, _amountToRemove) = LibLYF01.getCollatDebt(_subAccount, _debtPoolId, lyfDs);
+
+      // update subAccount debt share
+      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtPoolId, 0);
+
+      // update global debt
+      lyfDs.debtPoolInfos[_debtPoolId].totalShare -= _shareToRemove;
+      lyfDs.debtPoolInfos[_debtPoolId].totalValue -= _amountToRemove;
+
+      emit LogWriteOffSubAccountDebt(_subAccount, _token, _lpToken, _shareToRemove, _amountToRemove);
+
+      unchecked {
+        ++i;
+      }
     }
   }
 }
