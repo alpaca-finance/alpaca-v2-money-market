@@ -9,6 +9,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
   error LYFAdminFacet_InvalidAddress();
+  error LYFAdminFacet_SubAccountHealthy(address _subAccount);
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
@@ -29,6 +30,13 @@ interface ILYFAdminFacet {
     uint256 maxLpAmount;
     uint256 reinvestThreshold;
     uint256 reinvestTreasuryBountyBps;
+  }
+
+  struct WriteOffSubAccountDebtInput {
+    address account;
+    uint256 subAccountId;
+    address token;
+    address lpToken;
   }
 
   function setOracle(address _oracle) external;

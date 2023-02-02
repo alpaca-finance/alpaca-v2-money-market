@@ -299,4 +299,31 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     emit LogWitdrawReserve(_token, _to, _amount);
   }
+
+  /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
+  /// @param _inputs An array of input. Each should contain account, subAccountId, token, lpToken to write off for
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    uint256 _length = _inputs.length;
+
+    address _token;
+    address _lpToken;
+    address _subAccount;
+    uint256 _debtPoolId;
+    uint256 _shareToRemove;
+    uint256 _amountToRemove;
+
+    for (uint256 i; i < _length; ) {
+      _token = _inputs[i].token;
+      _lpToken = _inputs[i].lpToken;
+      _subAccount = LibLYF01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+
+      if (lyfDs.subAccountCollats[_subAccount].size != 0) {
+        revert LYFAdminFacet_SubAccountHealthy(_subAccount);
+      }
+
+      LibLYF01.accrueDebtPoolInterest(lyfDs.debtPoolIds[_token][_lpToken], lyfDs);
+    }
+  }
 }
