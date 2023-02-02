@@ -5,8 +5,8 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol";
 
 // ---- Interfaces ---- //
-import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
-import { IInterestBearingToken } from "./interfaces/IInterestBearingToken.sol";
+import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
+import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
 
 contract MoneyMarketReader {
   IMoneyMarket private _moneyMarket;
