@@ -27,7 +27,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetReinvestorOk(address indexed _reinvester, bool isOk);
   event LogSetLiquidationStratOk(address indexed _liquidationStrat, bool isOk);
   event LogSetLiquidatorsOk(address indexed _liquidator, bool isOk);
-  event LogSetTreasury(address indexed _trasury);
+  event LogSetLiquidationTreasury(address indexed _treasury);
+  event LogSetRevenueTreasury(address indexed _treasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
 
@@ -53,21 +54,36 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 _inputLength = _tokenConfigInputs.length;
-    address _token;
     LibLYF01.TokenConfig memory _tokenConfig;
+    TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
-      _token = _tokenConfigInputs[_i].token;
+      _tokenConfigInput = _tokenConfigInputs[_i];
+      // factors should not greater than MAX_BPS
+      if (
+        _tokenConfigInput.collateralFactor > LibLYF01.MAX_BPS || _tokenConfigInput.borrowingFactor > LibLYF01.MAX_BPS
+      ) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+      // borrowingFactor can't be zero otherwise will cause divide by zero error
+      if (_tokenConfigInput.borrowingFactor == 0) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+      // prevent user add collat or borrow too much
+      if (_tokenConfigInput.maxCollateral > 1e40) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+
       _tokenConfig = LibLYF01.TokenConfig({
-        tier: _tokenConfigInputs[_i].tier,
-        collateralFactor: _tokenConfigInputs[_i].collateralFactor,
-        borrowingFactor: _tokenConfigInputs[_i].borrowingFactor,
-        maxCollateral: _tokenConfigInputs[_i].maxCollateral,
-        to18ConversionFactor: LibLYF01.to18ConversionFactor(_token)
+        tier: _tokenConfigInput.tier,
+        collateralFactor: _tokenConfigInput.collateralFactor,
+        borrowingFactor: _tokenConfigInput.borrowingFactor,
+        maxCollateral: _tokenConfigInput.maxCollateral,
+        to18ConversionFactor: LibLYF01.to18ConversionFactor(_tokenConfigInput.token)
       });
 
-      lyfDs.tokenConfigs[_token] = _tokenConfig;
+      lyfDs.tokenConfigs[_tokenConfigInput.token] = _tokenConfig;
 
-      emit LogSetTokenConfig(_token, _tokenConfig);
+      emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
 
       unchecked {
         ++_i;
@@ -87,6 +103,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     for (uint256 _i; _i < _len; ) {
       _input = _lpConfigInputs[_i];
+      if (_input.reinvestTreasuryBountyBps > LibLYF01.MAX_BPS) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+      if (_input.rewardToken != _input.reinvestPath[0]) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
 
       // sanity check reinvestPath and router
       IRouterLike(_input.router).getAmountsIn(1 ether, _input.reinvestPath);
@@ -221,11 +243,26 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
   /// @notice Set the address that will keep the liqudation's fee
   /// @param _newTreasury The destination address
-  function setTreasury(address _newTreasury) external onlyOwner {
+  function setLiquidationTreasury(address _newTreasury) external onlyOwner {
+    if (_newTreasury == address(0)) {
+      revert LYFAdminFacet_InvalidAddress();
+    }
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    lyfDs.treasury = _newTreasury;
+    lyfDs.liquidationTreasury = _newTreasury;
 
-    emit LogSetTreasury(_newTreasury);
+    emit LogSetLiquidationTreasury(_newTreasury);
+  }
+
+  /// @notice Set the address that will keep the reinvest bounty
+  /// @param _newTreasury new revenue treasury address
+  function setRevenueTreasury(address _newTreasury) external onlyOwner {
+    if (_newTreasury == address(0)) {
+      revert LYFAdminFacet_InvalidAddress();
+    }
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    lyfDs.revenueTreasury = _newTreasury;
+
+    emit LogSetRevenueTreasury(_newTreasury);
   }
 
   /// @notice Set the maximum number of token in various lists
@@ -242,7 +279,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @param _token The token to be withdrawn
   /// @param _to The destination address
   /// @param _amount The amount to withdraw
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount

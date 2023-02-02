@@ -46,6 +46,8 @@ contract LendFacet is ILendFacet {
   function deposit(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    LibMoneyMarket01.onlyLive(moneyMarketDs);
+
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
     if (_ibToken == address(0)) {
       revert LendFacet_InvalidToken(_token);

@@ -34,6 +34,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    LibMoneyMarket01.onlyLive(moneyMarketDs);
+
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
     }

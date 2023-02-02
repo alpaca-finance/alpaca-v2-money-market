@@ -112,7 +112,7 @@ library LYFDiamondDeployer {
 
     bytes4[] memory selectors = new bytes4[](13);
     selectors[0] = LYFAdminFacet.setOracle.selector;
-    selectors[1] = LYFAdminFacet.setTreasury.selector;
+    selectors[1] = LYFAdminFacet.setLiquidationTreasury.selector;
     selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
     selectors[3] = LYFAdminFacet.setLPConfigs.selector;
     selectors[4] = LYFAdminFacet.setDebtPoolId.selector;
@@ -122,7 +122,8 @@ library LYFDiamondDeployer {
     selectors[8] = LYFAdminFacet.setLiquidatorsOk.selector;
     selectors[9] = LYFAdminFacet.setMaxNumOfToken.selector;
     selectors[10] = LYFAdminFacet.setMinDebtSize.selector;
-    selectors[11] = LYFAdminFacet.withdrawReserve.selector;
+    selectors[11] = LYFAdminFacet.withdrawProtocolReserve.selector;
+    selectors[12] = LYFAdminFacet.setRevenueTreasury.selector;
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_adminFacet),
       IDiamondCut.FacetCutAction.Add,
