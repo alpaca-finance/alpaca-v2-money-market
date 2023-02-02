@@ -15,8 +15,6 @@ import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/IL
 // mocks
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
   using SafeERC20 for ERC20;
 
@@ -36,11 +34,8 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     uint256 _repayAmount,
     uint256 /* _minReceive */
   ) external {
-    console.log("MockLiquidationStrategy:executeLiquidation");
-
     (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
     (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
-    console.log("MockLiquidationStrategy:executeLiquidation[1]");
     uint256 _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
 
     uint256 _repayTo18ConvertFactor = 10**(18 - ERC20(_repayToken).decimals());
