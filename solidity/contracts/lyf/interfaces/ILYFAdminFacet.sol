@@ -8,6 +8,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_ReserveTooLow();
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
+  error LYFAdminFacet_InvalidAddress();
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
@@ -56,7 +57,7 @@ interface ILYFAdminFacet {
 
   function setMaxNumOfToken(uint8 _numOfCollat, uint8 _numOfDebt) external;
 
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount
