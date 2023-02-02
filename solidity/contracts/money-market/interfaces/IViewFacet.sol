@@ -111,4 +111,6 @@ interface IViewFacet {
   function getRepurchaseRewardModel() external view returns (address);
 
   function getIbTokenImplementation() external view returns (address);
+
+  function getLiquidationTreasury() external view returns (address _liquidationTreasury);
 }

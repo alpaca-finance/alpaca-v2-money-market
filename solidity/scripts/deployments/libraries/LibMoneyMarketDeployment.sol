@@ -127,7 +127,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](33);
+    _selectors = new bytes4[](34);
     _selectors[0] = ViewFacet.getProtocolReserve.selector;
     _selectors[1] = ViewFacet.getTokenConfig.selector;
     _selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
@@ -161,6 +161,7 @@ library LibMoneyMarketDeployment {
     _selectors[30] = ViewFacet.getFeeParams.selector;
     _selectors[31] = ViewFacet.getGlobalDebtValueWithPendingInterest.selector;
     _selectors[32] = ViewFacet.getIbTokenImplementation.selector;
+    _selectors[33] = ViewFacet.getLiquidationTreasury.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
@@ -193,7 +194,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](20);
+    _selectors = new bytes4[](21);
     _selectors[0] = AdminFacet.openMarket.selector;
     _selectors[1] = AdminFacet.setTokenConfigs.selector;
     _selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
@@ -205,7 +206,7 @@ library LibMoneyMarketDeployment {
     _selectors[8] = AdminFacet.setLiquidatorsOk.selector;
     _selectors[9] = AdminFacet.setLiquidationTreasury.selector;
     _selectors[10] = AdminFacet.setFees.selector;
-    _selectors[11] = AdminFacet.withdrawReserve.selector;
+    _selectors[11] = AdminFacet.withdrawProtocolReserve.selector;
     _selectors[12] = AdminFacet.setProtocolConfigs.selector;
     _selectors[13] = AdminFacet.setIbTokenImplementation.selector;
     _selectors[14] = AdminFacet.setLiquidationParams.selector;
@@ -214,6 +215,7 @@ library LibMoneyMarketDeployment {
     _selectors[17] = AdminFacet.writeOffSubAccountsDebt.selector;
     _selectors[18] = AdminFacet.topUpTokenReserve.selector;
     _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
+    _selectors[20] = AdminFacet.setEmergencyPaused.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

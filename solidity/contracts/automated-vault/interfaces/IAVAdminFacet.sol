@@ -8,6 +8,7 @@ interface IAVAdminFacet {
   error AVAdminFacet_InvalidShareToken(address _token);
   error AVAdminFacet_InvalidHandler();
   error AVAdminFacet_InvalidParams();
+  error AVAdminFacet_InvalidAddress();
 
   struct ShareTokenPairs {
     address token;
