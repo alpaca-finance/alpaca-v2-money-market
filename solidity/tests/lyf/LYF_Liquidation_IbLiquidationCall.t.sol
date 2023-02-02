@@ -92,7 +92,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     address _collatToken = address(ibBtc);
     address _debtToken = address(usdc);
     address _lpToken = address(wethUsdcLPToken);
-    uint256 _repayAmount = 5 ether;
+    uint256 _repayAmount = normalizeEther(5 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     btc.approve(moneyMarketDiamond, type(uint256).max);
@@ -105,9 +105,9 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -143,15 +143,18 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     // debt reduce
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 25.0 ether);
+    assertEq(_aliceUsdcDebtValue, normalizeEther(25 ether, usdcDecimal));
 
     // LYF outstanding
     assertEq(viewFacet.getOutstandingBalanceOf(address(usdc)) - _usdcOutStandingBefore, _repayAmount);
 
     // liquidator get fee
-    assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, 0.025 ether);
+    assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, normalizeEther(0.025 ether, usdcDecimal));
     // liquidationTreasury get fee
-    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.025 ether);
+    assertEq(
+      usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore,
+      normalizeEther(0.025 ether, usdcDecimal)
+    );
   }
 
   function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
@@ -186,7 +189,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     address _collatToken = address(ibWeth);
     address _debtToken = address(usdc);
     address _lpToken = address(wethUsdcLPToken);
-    uint256 _repayAmount = 30 ether;
+    uint256 _repayAmount = normalizeEther(30 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -199,9 +202,9 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -232,7 +235,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     // debt reduce
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 10.198019801980198019 ether);
+    assertEq(_aliceUsdcDebtValue, 10198019);
 
     // LYF outstanding
     assertEq(viewFacet.getOutstandingBalanceOf(address(usdc)) - _usdcOutStandingBefore, 10.198019801980198019 ether);

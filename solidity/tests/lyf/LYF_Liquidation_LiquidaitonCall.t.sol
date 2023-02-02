@@ -132,9 +132,9 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 20 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 10 ether,
       token1AmountIn: 0 ether
     });
@@ -258,15 +258,15 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_stateAfter.subAccountCollatAmount, 0);
 
     // debt reduce
-    assertEq(_stateBefore.debtPoolTotalValue - _stateAfter.debtPoolTotalValue, 9900990099009900991);
-    assertEq(_stateAfter.subAccountDebtValue, 20099009900990099009);
+    assertEq(_stateBefore.debtPoolTotalValue - _stateAfter.debtPoolTotalValue, 9900991);
+    assertEq(_stateAfter.subAccountDebtValue, 20099009);
 
     // reserve
-    assertEq(_stateAfter.lyfReserveToken - _stateBefore.lyfReserveToken, 9900990099009900991);
+    assertEq(_stateAfter.lyfReserveToken - _stateBefore.lyfReserveToken, 9900991);
 
     // liquidator fee
-    assertEq(_stateAfter.liquidatorDebtTokenBalance - _stateBefore.liquidatorDebtTokenBalance, 49504950495049504);
+    assertEq(_stateAfter.liquidatorDebtTokenBalance - _stateBefore.liquidatorDebtTokenBalance, 49504);
     // treasury get fee
-    assertEq(_stateAfter.treasuryDebtTokenBalance - _stateBefore.treasuryDebtTokenBalance, 49504950495049505);
+    assertEq(_stateAfter.treasuryDebtTokenBalance - _stateBefore.treasuryDebtTokenBalance, 49505);
   }
 }
