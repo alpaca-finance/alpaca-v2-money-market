@@ -62,6 +62,7 @@ contract AdminFacet is IAdminFacet {
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetMinDebtSize(uint256 _newValue);
+  event LogSetEmergencyPaused(address indexed caller, bool _isPasued);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -482,5 +483,15 @@ contract AdminFacet is IAdminFacet {
     if (maxBorrow > 1e40) {
       revert AdminFacet_InvalidArguments();
     }
+  }
+
+  /// @notice Set emerygency flag for pausing deposit and borrow
+  /// @param _isPaused Flag to pause or resume
+  function setEmergencyPaused(bool _isPaused) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    moneyMarketDs.emergencyPaused = _isPaused;
+
+    emit LogSetEmergencyPaused(msg.sender, _isPaused);
   }
 }
