@@ -14,4 +14,6 @@ interface IMiniFL {
   function poolLength() external view returns (uint256);
 
   function stakingToken(uint256 _pid) external view returns (IERC20Upgradeable);
+
+  function getStakingReserves(uint256 _pid) external view returns (uint256);
 }

@@ -211,7 +211,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory _poolInfo = poolInfo[_pid];
     UserInfo storage _userInfo = userInfo[_pid][_user];
     uint256 _accRewardPerShare = _poolInfo.accRewardPerShare;
-    uint256 _stakedBalance = IMiniFL(miniFL).stakingToken(_pid).balanceOf(miniFL);
+    uint256 _stakedBalance = IMiniFL(miniFL).getStakingReserves(_pid);
     if (block.timestamp > _poolInfo.lastRewardTime && _stakedBalance != 0) {
       uint256 _timePast;
       unchecked {
@@ -242,7 +242,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (_poolInfo.lastRewardTime == 0) revert Rewarder1_PoolNotExisted();
 
     if (block.timestamp > _poolInfo.lastRewardTime) {
-      uint256 _stakedBalance = IMiniFL(miniFL).stakingToken(_pid).balanceOf(miniFL);
+      uint256 _stakedBalance = IMiniFL(miniFL).getStakingReserves(_pid);
       if (_stakedBalance > 0) {
         uint256 _timePast;
         unchecked {
