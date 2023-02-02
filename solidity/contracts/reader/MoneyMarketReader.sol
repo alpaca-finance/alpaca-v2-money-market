@@ -12,7 +12,7 @@ contract MoneyMarketReader {
   IMoneyMarket private _moneyMarket;
 
   struct MarketSummary {
-    // ---- IBToken ---- //
+    // ---- ibToken ---- //
     uint256 ibTotalSupply;
     uint256 ibTotalAsset;
     address ibAddress;

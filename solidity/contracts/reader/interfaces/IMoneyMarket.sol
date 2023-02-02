@@ -5,9 +5,14 @@ import { LibMoneyMarket01 } from "../../money-market/libraries/LibMoneyMarket01.
 
 interface IMoneyMarket {
   function getIbTokenFromToken(address _token) external view returns (address);
+
   function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
+
   function getGlobalPendingInterest(address _token) external view returns (uint256);
+
   function getGlobalDebtValue(address _token) external view returns (uint256);
+
   function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256);
+
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
 }
