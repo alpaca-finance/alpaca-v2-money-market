@@ -16,8 +16,14 @@ contract MoneyMarketReader {
     uint256 ibTotalSupply;
     uint256 ibTotalAsset;
     address ibAddress;
+    // ---- Token Config ---- //
+    uint8 tierAsUInt;
+    uint16 collateralFactor;
+    uint16 borrowingFactor;
+    uint64 to18ConversionFactor;
+    uint256 maxCollateral;
+    uint256 maxBorrow;
     // ---- Money Market ---- //
-    LibMoneyMarket01.TokenConfig tokenConfig;
     uint256 globalDebtValue;
     uint256 pendingIntetest;
     uint256 lastAccruedAt;
@@ -38,12 +44,19 @@ contract MoneyMarketReader {
     address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
     IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
 
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
+
     return
       MarketSummary({
         ibTotalSupply: _ibToken.totalSupply(),
         ibTotalAsset: _ibToken.totalAssets(),
         ibAddress: _ibAddress,
-        tokenConfig: _moneyMarket.getTokenConfig(_underlyingToken),
+        tierAsUInt: uint8(_tokenConfig.tier),
+        collateralFactor: _tokenConfig.collateralFactor,
+        borrowingFactor: _tokenConfig.borrowingFactor,
+        to18ConversionFactor: _tokenConfig.to18ConversionFactor,
+        maxCollateral: _tokenConfig.maxCollateral,
+        maxBorrow: _tokenConfig.maxBorrow,
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
         lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
