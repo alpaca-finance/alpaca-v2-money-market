@@ -11,6 +11,9 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // mocks
 import { MockFeeOnTransferToken } from "../mocks/MockFeeOnTransferToken.sol";
 
+// helpers
+import { TestHelper } from "../helper/TestHelper.sol";
+
 contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   MockFeeOnTransferToken internal fotToken;
   MockFeeOnTransferToken internal lateFotToken;
@@ -35,8 +38,8 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     lateFotToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
 
-    adminFacet.openMarket(address(fotToken));
-    adminFacet.openMarket(address(lateFotToken));
+    TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(fotToken));
+    TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(lateFotToken));
 
     mockOracle.setTokenPrice(address(fotToken), 1 ether);
     mockOracle.setTokenPrice(address(lateFotToken), 1 ether);

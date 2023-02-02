@@ -103,6 +103,10 @@ contract AVAdminFacet is IAVAdminFacet {
   }
 
   function setTreasury(address _treasury) external onlyOwner {
+    if (_treasury == address(0)) {
+      revert AVAdminFacet_InvalidAddress();
+    }
+
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
     avDs.treasury = _treasury;
   }

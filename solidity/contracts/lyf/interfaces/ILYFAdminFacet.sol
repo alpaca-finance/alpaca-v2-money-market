@@ -8,6 +8,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_ReserveTooLow();
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
+  error LYFAdminFacet_InvalidAddress();
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
@@ -30,9 +31,15 @@ interface ILYFAdminFacet {
     uint256 reinvestTreasuryBountyBps;
   }
 
+  struct SetRewardConversionConfigInput {
+    address router;
+    address rewardToken;
+    address[] path;
+  }
+
   function setOracle(address _oracle) external;
 
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
+  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigs) external;
 
   function setLPConfigs(LPConfigInput[] calldata _configs) external;
 
@@ -46,15 +53,17 @@ interface ILYFAdminFacet {
 
   function setMinDebtSize(uint256 _newValue) external;
 
-  function setReinvestorsOk(address[] memory list, bool _isOk) external;
+  function setReinvestorsOk(address[] calldata list, bool _isOk) external;
 
   function setMaxNumOfToken(uint8 _numOfCollat, uint8 _numOfDebt) external;
 
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount
   ) external;
+
+  function setRewardConversionConfigs(SetRewardConversionConfigInput[] calldata _inputs) external;
 
   function setLiquidationTreasury(address _newTreasury) external;
 

@@ -48,7 +48,11 @@ interface IAdminFacet {
     address token;
   }
 
-  function openMarket(address _token) external returns (address);
+  function openMarket(
+    address _token,
+    TokenConfigInput calldata _tokenConfigInput,
+    TokenConfigInput calldata _ibTokenConfigInput
+  ) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
@@ -81,7 +85,7 @@ interface IAdminFacet {
 
   function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount

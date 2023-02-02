@@ -26,3 +26,28 @@ This command will dry run locally (not deployed yet)
 - Add flag `--rpc-url $RPC_URL` to simulate deployment to network (not deployed yet)
 - Add flag `--broadcast` to signed and broadcast tx to network (will deploy)
   - To make it work on Tenderly, add flag `--slow` for it wait for tx to be confirmed before submit next tx
+
+## Utilitiy scripts
+
+Same prerequistie as deployment plus
+
+- have deployed contract addresses set in config file
+- for each script, you can set config values in script file inputs section
+
+Dry run locally
+
+```
+forge script solidity/scripts/utilities/ScriptName.s.sol --sig "runLocal()"
+```
+
+Simulate against specified RPC
+
+```
+forge script solidity/scripts/utilities/ScriptName.s.sol --rpc-url $RPC_URL
+```
+
+Apply against specified RPC
+
+```
+forge script solidity/scripts/utilities/ScriptName.s.sol --broadcast --rpc-url $RPC_URL
+```

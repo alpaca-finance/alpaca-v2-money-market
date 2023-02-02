@@ -18,8 +18,6 @@ import { IMasterChefLike } from "../interfaces/IMasterChefLike.sol";
 import { IStrat } from "../interfaces/IStrat.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract LYFLiquidationFacet is ILYFLiquidationFacet {
   using LibSafeToken for IERC20;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -247,11 +245,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
     uint256 _maxPossibleFee = (_maxPossibleRepayAmount * LIQUIDATION_FEE_BPS) / LibLYF01.MAX_BPS;
 
-    console.log("[C] Before ILiquidationStrategy:_maxPossibleRepayAmount", _maxPossibleRepayAmount);
-
     uint256 _expectedMaxRepayAmountWithFee = _maxPossibleRepayAmount + _maxPossibleFee;
 
-    console.log("[C] Before ILiquidationStrategy:executeLiquidation");
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _params.collatToken,
       _params.repayToken,
@@ -259,7 +254,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _expectedMaxRepayAmountWithFee,
       _params.minReceive
     );
-    console.log("[C] After ILiquidationStrategy:executeLiquidation");
 
     // 4. check repaid amount, take fees, and update states
     (uint256 _repaidAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
@@ -277,8 +271,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     uint256 _collatSold = _params.collatAmountBefore - IERC20(_params.collatToken).balanceOf(address(this));
 
-    console.log("[C]:_liquidationCall:_collatSold", _collatSold);
-    console.log("[C]:_liquidationCall:_repaidAmount", _repaidAmount);
     lyfDs.reserves[_params.repayToken] += _repaidAmount;
 
     IERC20(_params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
@@ -514,8 +506,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       lyfDs.tokenConfigs[_repayToken].borrowingFactor,
       lyfDs.tokenConfigs[_repayToken].to18ConversionFactor
     );
-    console.log("[C]_validateBorrowingPower:_repaidBorrowingPower", _repaidBorrowingPower);
-    console.log("[C]_validateBorrowingPower:_usedBorrowingPower", _usedBorrowingPower);
+
     if (_repaidBorrowingPower * LibLYF01.MAX_BPS > (_usedBorrowingPower * MAX_LIQUIDATE_BPS)) {
       revert LYFLiquidationFacet_RepayAmountExceedThreshold();
     }
@@ -528,9 +519,6 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
     uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    console.log("[C]:_calculateActualRepayAmountAndFee:_amountFromLiquidationStrat", _amountFromLiquidationStrat);
-    console.log("[C]:_calculateActualRepayAmountAndFee:_maxFeePossible", _maxFeePossible);
-    console.log("[C]:_calculateActualRepayAmountAndFee:_expectedMaxRepayAmount", _expectedMaxRepayAmount);
     _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
     _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
   }

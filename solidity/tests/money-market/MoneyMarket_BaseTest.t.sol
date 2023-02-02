@@ -18,14 +18,15 @@ import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/Adm
 import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 
 // interfaces
-import { ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { IViewFacet } from "../../contracts/money-market/facets/ViewFacet.sol";
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-import { IOwnershipFacet } from "../../contracts/money-market/facets/OwnershipFacet.sol";
+import { ICollateralFacet } from "../../contracts/money-market/interfaces/ICollateralFacet.sol";
+import { IViewFacet } from "../../contracts/money-market/interfaces/IViewFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
+import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
+import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
+import { IOwnershipFacet } from "../../contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -71,17 +72,69 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // warning: this one should set before open market
     adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
 
-    address _ibWeth = adminFacet.openMarket(address(weth));
-    address _ibUsdc = adminFacet.openMarket(address(usdc));
-    address _ibBtc = adminFacet.openMarket(address(btc));
-    address _ibNativeToken = adminFacet.openMarket(address(wNativeToken));
+    IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: address(weth),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    ibWeth = InterestBearingToken(adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput));
 
-    adminFacet.openMarket(address(cake));
+    IAdminFacet.TokenConfigInput memory _usdcTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: address(usdc),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: normalizeEther(100 ether, 6),
+      maxCollateral: normalizeEther(100 ether, 6)
+    });
+    ibUsdc = InterestBearingToken(adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput));
 
-    ibWeth = InterestBearingToken(_ibWeth);
-    ibUsdc = InterestBearingToken(_ibUsdc);
-    ibBtc = InterestBearingToken(_ibBtc);
-    ibWNative = InterestBearingToken(_ibNativeToken);
+    IAdminFacet.TokenConfigInput memory _btcTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: address(btc),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    ibBtc = InterestBearingToken(adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput));
+
+    IAdminFacet.TokenConfigInput memory _wNativeTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: address(wNativeToken),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    ibWNative = InterestBearingToken(
+      adminFacet.openMarket(address(wNativeToken), _wNativeTokenConfigInput, _wNativeTokenConfigInput)
+    );
+
+    IAdminFacet.TokenConfigInput memory _isolateTokenTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: address(isolateToken),
+      tier: LibMoneyMarket01.AssetTier.ISOLATE,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    ibIsolateToken = InterestBearingToken(
+      adminFacet.openMarket(address(isolateToken), _isolateTokenTokenConfigInput, _isolateTokenTokenConfigInput)
+    );
+
+    IAdminFacet.TokenConfigInput memory _cakeTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: address(cake),
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    adminFacet.openMarket(address(cake), _cakeTokenConfigInput, _cakeTokenConfigInput);
 
     ibWethDecimal = ibWeth.decimals();
     ibUsdcDecimal = ibUsdc.decimals();
@@ -92,7 +145,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     weth.approve(moneyMarketDiamond, type(uint256).max);
     btc.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
-    opm.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     cake.approve(moneyMarketDiamond, type(uint256).max);
@@ -104,73 +156,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     vm.stopPrank();
-
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](7);
-
-    _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(30 ether, wethDecimal),
-      maxCollateral: normalizeEther(100 ether, wethDecimal)
-    });
-
-    _inputs[1] = IAdminFacet.TokenConfigInput({
-      token: address(usdc),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(1e24, usdcDecimal),
-      maxCollateral: normalizeEther(10e24, usdcDecimal)
-    });
-
-    _inputs[2] = IAdminFacet.TokenConfigInput({
-      token: address(ibWeth),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(30 ether, ibWethDecimal),
-      maxCollateral: normalizeEther(100 ether, ibWethDecimal)
-    });
-
-    _inputs[3] = IAdminFacet.TokenConfigInput({
-      token: address(btc),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(30 ether, btcDecimal),
-      maxCollateral: normalizeEther(100 ether, btcDecimal)
-    });
-
-    _inputs[4] = IAdminFacet.TokenConfigInput({
-      token: address(wNativeToken),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(30 ether, wNativeTokenDecimal),
-      maxCollateral: normalizeEther(100 ether, wNativeTokenDecimal)
-    });
-
-    _inputs[5] = IAdminFacet.TokenConfigInput({
-      token: address(ibUsdc),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(30 ether, ibUsdcDecimal),
-      maxCollateral: normalizeEther(100 ether, ibUsdcDecimal)
-    });
-
-    _inputs[6] = IAdminFacet.TokenConfigInput({
-      token: address(cake),
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: normalizeEther(30 ether, cakeDecimal),
-      maxCollateral: normalizeEther(100 ether, cakeDecimal)
-    });
-
-    adminFacet.setTokenConfigs(_inputs);
 
     IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
     _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
@@ -203,11 +188,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);
-
-    // open isolate token market
-    address _ibIsolateToken = adminFacet.openMarket(address(isolateToken));
-    ibIsolateToken = InterestBearingToken(_ibIsolateToken);
-    ibIsolateTokenDecimal = ibIsolateToken.decimals();
 
     //set oracle
     mockOracle = new MockAlpacaV2Oracle();
