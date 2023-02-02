@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// ---- External Libraries ---- //
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol";
 
@@ -11,17 +8,16 @@ import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 import { IInterestBearingToken } from "./interfaces/IInterestBearingToken.sol";
 
-contract MoneyMarketReader is Ownable {
+contract MoneyMarketReader {
   IMoneyMarket private _moneyMarket;
 
-  struct ReaderSummary {
+  struct MarketSummary {
     // ---- IBToken ---- //
     uint256 ibTotalSupply;
     uint256 ibTotalAsset;
     address ibAddress;
     // ---- Money Market ---- //
     LibMoneyMarket01.TokenConfig tokenConfig;
-    uint256 globalDebtValueWithPendinthInterest;
     uint256 globalDebtValue;
     uint256 pendingIntetest;
     uint256 lastAccruedAt;
@@ -36,19 +32,18 @@ contract MoneyMarketReader is Ownable {
     _moneyMarket = IMoneyMarket(moneyMarket_);
   }
 
-  /// @dev Get the reader summary
+  /// @dev Get the market summary
   /// @param _underlyingToken The underlying token address
-  function getReaderSummary(address _underlyingToken) external view returns (ReaderSummary memory _readerSummary) {
+  function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory) {
     address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
     IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
 
     return
-      ReaderSummary({
+      MarketSummary({
         ibTotalSupply: _ibToken.totalSupply(),
         ibTotalAsset: _ibToken.totalAssets(),
         ibAddress: _ibAddress,
         tokenConfig: _moneyMarket.getTokenConfig(_underlyingToken),
-        globalDebtValueWithPendinthInterest: _moneyMarket.getGlobalDebtValueWithPendingInterest(_underlyingToken),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
         lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
