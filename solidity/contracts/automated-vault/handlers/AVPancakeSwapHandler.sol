@@ -14,7 +14,6 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-import "solidity/tests/utils/console.sol";
 
 contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUpgradeable {
   using LibSafeToken for IERC20;
