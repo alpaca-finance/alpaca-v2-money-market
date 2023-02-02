@@ -12,3 +12,5 @@ typechain/
 yarn-error.log/
 
 broadcast/
+
+deployedAddresses.json

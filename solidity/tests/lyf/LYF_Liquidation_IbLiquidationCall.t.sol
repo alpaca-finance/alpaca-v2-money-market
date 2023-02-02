@@ -120,7 +120,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     usdc.mint(liquidator, 10000 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
     uint256 _liquidatorUsdcBalanceBefore = usdc.balanceOf(liquidator);
     uint256 _usdcOutStandingBefore = viewFacet.getOutstandingBalanceOf(address(usdc));
 
@@ -150,8 +150,8 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     // liquidator get fee
     assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, 0.025 ether);
-    // treasury get fee
-    assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.025 ether);
+    // liquidationTreasury get fee
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.025 ether);
   }
 
   function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
@@ -208,7 +208,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(treasury);
+    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
     uint256 _liquidatorUsdcBalanceBefore = usdc.balanceOf(liquidator);
     uint256 _usdcOutStandingBefore = viewFacet.getOutstandingBalanceOf(address(usdc));
 

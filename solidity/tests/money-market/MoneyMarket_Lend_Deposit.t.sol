@@ -89,7 +89,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
      *    - alice's total ibWeth = 14.878048780487804878
      */
 
-    FixedInterestRateModel model = new FixedInterestRateModel();
+    FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
     adminFacet.setInterestModel(address(weth), address(model));
     borrowFacet.accrueInterest(address(weth));
 
@@ -100,7 +100,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), 20 ether);
+    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), normalizeEther(20 ether, usdcDecimal));
     borrowFacet.borrow(subAccount0, address(weth), 5 ether);
     vm.stopPrank();
 
@@ -114,5 +114,12 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     assertEq(ibWeth.balanceOf(ALICE), 14.878048780487804878 ether);
+  }
+
+  function testRevert_UserDepositWhenMMOnEmergencyPaused_ShouldRevert() external {
+    adminFacet.setEmergencyPaused(true);
+
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
+    lendFacet.deposit(address(weth), 10 ether);
   }
 }

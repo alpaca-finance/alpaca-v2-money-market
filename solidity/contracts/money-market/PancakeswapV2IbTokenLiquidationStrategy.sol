@@ -10,6 +10,7 @@ import { LibShareUtil } from "./libraries/LibShareUtil.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
+import { IInterestBearingToken } from "./interfaces/IInterestBearingToken.sol";
 import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
@@ -74,7 +75,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
 
     (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawFromMoneyMarket(
       _ibToken,
-      _underlyingToken,
       _ibTokenAmountIn,
       _requiredUnderlyingAmount
     );
@@ -82,8 +82,9 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     console.log("[C]:executeLiquidation:_requiredUnderlyingAmount", _requiredUnderlyingAmount);
     console.log("[C]:executeLiquidation:_withdrawnIbTokenAmount", _withdrawnIbTokenAmount);
 
-    IERC20(_underlyingToken).safeIncreaseAllowance(address(router), _withdrawnUnderlyingAmount);
+    IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
     router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
+    IERC20(_underlyingToken).safeApprove(address(router), 0);
 
     // transfer ibToken back to caller if not withdraw all
     if (_ibTokenAmountIn > _withdrawnIbTokenAmount) {
@@ -93,22 +94,16 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
 
   function _withdrawFromMoneyMarket(
     address _ibToken,
-    address _underlyingToken,
     uint256 _maxIbTokenToWithdraw,
     uint256 _requiredUnderlyingAmount
   ) internal returns (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) {
-    uint256 _requiredIbTokenToWithdraw = _convertUnderlyingToIbToken(
-      _ibToken,
-      _underlyingToken,
-      _requiredUnderlyingAmount
-    );
+    uint256 _requiredIbTokenToWithdraw = IInterestBearingToken(_ibToken).convertToShares(_requiredUnderlyingAmount);
 
     // _maxIbTokenToWithdraw is ibTokenAmount that caller send to strat
     _withdrawnIbTokenAmount = _maxIbTokenToWithdraw > _requiredIbTokenToWithdraw
       ? _requiredIbTokenToWithdraw
       : _maxIbTokenToWithdraw;
 
-    IERC20(_ibToken).safeIncreaseAllowance(address(moneyMarket), _withdrawnIbTokenAmount);
     _withdrawnUnderlyingAmount = moneyMarket.withdraw(_ibToken, _withdrawnIbTokenAmount);
   }
 
@@ -120,18 +115,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
     // underlying token amount to swap
     _requiredUnderlyingAmount = amountsIn[0];
-  }
-
-  function _convertUnderlyingToIbToken(
-    address _ibToken,
-    address _underlyingToken,
-    uint256 _underlyingTokenAmount
-  ) internal view returns (uint256 _ibTokenAmount) {
-    _ibTokenAmount = LibShareUtil.valueToShare(
-      _underlyingTokenAmount,
-      IERC20(_ibToken).totalSupply(),
-      moneyMarket.getTotalTokenWithPendingInterest(_underlyingToken)
-    );
   }
 
   /// @notice Set paths config to be used during swap step in executeLiquidation

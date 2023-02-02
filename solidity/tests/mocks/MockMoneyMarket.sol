@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import { IMoneyMarket } from "../../contracts/money-market/interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
+import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 
 contract MockMoneyMarket is IMoneyMarket {
   mapping(address => address) private _ibToTokens;
@@ -31,7 +32,7 @@ contract MockMoneyMarket is IMoneyMarket {
 
   function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue) {
     _shareValue = _withdrawalAmount;
-    IERC20(_ibToken).transferFrom(msg.sender, address(this), _shareAmount);
+    InterestBearingToken(_ibToken).onWithdraw(msg.sender, msg.sender, 0, _shareAmount);
     IERC20(_ibToTokens[_ibToken]).transfer(msg.sender, _shareValue);
   }
 }

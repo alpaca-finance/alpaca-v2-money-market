@@ -9,6 +9,7 @@ import { MockRouter } from "../../mocks/MockRouter.sol";
 import { MockLPToken } from "../../mocks/MockLPToken.sol";
 import { MockERC20 } from "../../mocks/MockERC20.sol";
 import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
+import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
 
 contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
@@ -17,12 +18,15 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
   MockMoneyMarket internal moneyMarket;
 
   uint256 _routerUSDCBalance;
-  uint256 _aliceUSDCBalance = 1000 ether; // minting in BaseTest
-  uint256 _aliceWETHBalance = 1000 ether; // minting in BaseTest
+  uint256 _aliceUSDCBalance;
+  uint256 _aliceWETHBalance;
   uint256 _aliceIbTokenBalance;
 
   function setUp() public override {
     super.setUp();
+
+    _aliceUSDCBalance = usdc.balanceOf(ALICE);
+    _aliceWETHBalance = weth.balanceOf(ALICE);
 
     wethUsdcLPToken = new MockLPToken("MOCK LP", "MOCK LP", 18, address(weth), address(usdc));
     router = new MockRouter(address(wethUsdcLPToken));
@@ -47,15 +51,17 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
 
     liquidationStrat.setPaths(_setPathsInputs);
 
-    vm.prank(address(moneyMarketDiamond));
+    vm.startPrank(address(moneyMarketDiamond));
     ibWeth.onDeposit(ALICE, 0, 100 ether);
+    ibWeth.transferOwnership(address(moneyMarket));
+    vm.stopPrank();
     _aliceIbTokenBalance = 100 ether;
 
-    weth.mint(address(moneyMarket), 100 ether); // mint to mm to trafer to strat
+    weth.mint(address(moneyMarket), normalizeEther(100 ether, wethDecimal)); // mint to mm to trafer to strat
     // moneyMarket.setWithdrawalAmount(1 ether);
 
-    usdc.mint(address(router), 100 ether); // prepare for swap
-    _routerUSDCBalance = 100 ether;
+    usdc.mint(address(router), normalizeEther(100 ether, usdcDecimal)); // prepare for swap
+    _routerUSDCBalance = normalizeEther(100 ether, usdcDecimal);
   }
 
   function testRevert_WhenExecuteLiquidation_PathConfigNotFound() external {
@@ -66,16 +72,22 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
         [address(weth), address(btc)]
       )
     );
-    liquidationStrat.executeLiquidation(address(ibWeth), address(btc), 1 ether, 1 ether, 0);
+    liquidationStrat.executeLiquidation(
+      address(ibWeth),
+      address(btc),
+      normalizeEther(1 ether, ibWethDecimal),
+      normalizeEther(1 ether, btcDecimal),
+      0
+    );
   }
 
-  function testCorrectness_WhenExecuteIbTokenLiquiationStrat() external {
+  function testCorrectness_WhenExecuteIbTokenLiquiationStrat_ShouldWork() external {
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(usdc);
-    uint256 _ibTokenIn = 1 ether;
-    uint256 _repayAmount = 1 ether; // reflect to amountIns[0]
-    uint256 _minReceive = 0 ether;
+    uint256 _ibTokenIn = normalizeEther(1 ether, ibWethDecimal);
+    uint256 _repayAmount = normalizeEther(1 ether, usdcDecimal); // reflect to amountIns[0]
+    uint256 _minReceive = 0;
 
     // _ibTokenTotalSupply = 100 ether
     // _totalTokenWithInterest = 100 ether
@@ -83,9 +95,16 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 1 ether
 
     // mock withdrawal amount
-    uint256 _expectedIbTokenAmountToWithdraw = 1 ether;
-    uint256 _expectedWithdrawalAmount = 1 ether;
+    uint256 _expectedIbTokenAmountToWithdraw = normalizeEther(1 ether, ibWethDecimal);
+    uint256 _expectedWithdrawalAmount = normalizeEther(1 ether, wethDecimal);
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+
+    // mock convert to share function
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 1 ether),
+      abi.encode(1 ether)
+    );
 
     // this case will call swapTokensForExactTokens
     uint256 _expectedSwapedAmount = _repayAmount;
@@ -116,16 +135,17 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
       "ibWeth balance of ALICE"
     );
     // to check final underlying should be not affected
-    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
+
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "weth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatLessThanRepayValue() external {
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(usdc);
-    uint256 _ibTokenIn = 0.5 ether;
-    uint256 _repayAmount = 1 ether; // reflect to amountIns[0]
-    uint256 _minReceive = 0 ether;
+    uint256 _ibTokenIn = normalizeEther(0.5 ether, ibWethDecimal);
+    uint256 _repayAmount = normalizeEther(1 ether, usdcDecimal); // reflect to amountIns[0]
+    uint256 _minReceive = 0;
 
     // _ibTokenTotalSupply = 100 ether
     // _totalTokenWithInterest = 100 ether
@@ -133,12 +153,18 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 0.5 ether
 
     // mock withdrawal amount
-    uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
-    uint256 _expectedWithdrawalAmount = 0.5 ether;
+    uint256 _expectedIbTokenAmountToWithdraw = normalizeEther(0.5 ether, ibWethDecimal);
+    uint256 _expectedWithdrawalAmount = normalizeEther(0.5 ether, wethDecimal);
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+    // mock convert to share function
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 1 ether),
+      abi.encode(1 ether)
+    );
 
     // this case will call swapTokensForExactTokens
-    uint256 _expectedSwapedAmount = 0.5 ether;
+    uint256 _expectedSwapedAmount = normalizeEther(0.5 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     // transfer ib token to strat
@@ -165,7 +191,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
       "ibWeth balance of ALICE"
     );
     // to check final underlying should be not affected
-    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "ibWeth balance of ALICE");
+    assertEq(weth.balanceOf(ALICE), _aliceWETHBalance, "weth balance of ALICE");
   }
 
   function testCorrectness_WhenExecuteIbTokenLiquiationStratWithCollatValueThatMoreThanRepayValue_ShouldTransferCollatBackToUserCorreclty()
@@ -174,8 +200,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(usdc);
-    uint256 _ibTokenIn = 1 ether;
-    uint256 _repayAmount = 0.5 ether; // reflect to amountIns[0]
+    uint256 _ibTokenIn = normalizeEther(1 ether, ibWethDecimal);
+    uint256 _repayAmount = normalizeEther(0.5 ether, usdcDecimal); // reflect to amountIns[0]
     uint256 _minReceive = 0 ether;
 
     // _ibTokenTotalSupply = 100 ether
@@ -186,10 +212,16 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // mock withdrawal amount
     uint256 _expectedIbTokenAmountToWithdraw = 0.5 ether;
     uint256 _expectedWithdrawalAmount = 0.5 ether;
+    // mock convert to share function
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+    vm.mockCall(
+      address(ibWeth),
+      abi.encodeWithSelector(InterestBearingToken.convertToShares.selector, 0.5 ether),
+      abi.encode(0.5 ether)
+    );
 
     // this case will call swapTokensForExactTokens
-    uint256 _expectedSwapedAmount = 0.5 ether;
+    uint256 _expectedSwapedAmount = normalizeEther(0.5 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
     // transfer ib token to strat
@@ -223,8 +255,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     // prepare criteria
     address _ibToken = address(ibWeth);
     address _debtToken = address(weth);
-    uint256 _ibTokenIn = 1 ether;
-    uint256 _repayAmount = 1 ether; // is amount to withdraw
+    uint256 _ibTokenIn = normalizeEther(1 ether, ibWethDecimal);
+    uint256 _repayAmount = normalizeEther(1 ether, wethDecimal); // is amount to withdraw
     uint256 _minReceive = 0 ether;
 
     // _ibTokenTotalSupply = 100 ether

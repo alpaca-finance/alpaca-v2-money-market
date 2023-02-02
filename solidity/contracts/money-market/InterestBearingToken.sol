@@ -1,20 +1,24 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-// bases
+// ---- External Libraries ---- //
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-// interfaces
+// ---- Libraries ---- //
+import { LibShareUtil } from "./libraries/LibShareUtil.sol";
+
+// ---- Interfaces ---- //
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 
-// libs
-import { LibShareUtil } from "./libraries/LibShareUtil.sol";
-
+/// @title InterestBearingToken is a ERC20 Token that partially implements ERC4626
+/// @notice Represent the shares in AF2.0 Money Market's lending pool.
+/// @dev PLEASE DO NOT INTEGRATE DIRECTLY WITH THIS CONTRACT AS A ERC4626 STANDARD
+/// As it does not support most of interface functions e.g. mint / withdraw
 contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   address private _asset;
   IMoneyMarket private _moneyMarket;
@@ -116,11 +120,11 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   function convertToShares(uint256 assets) public view override returns (uint256 shares) {
-    return LibShareUtil.valueToShare(assets, totalSupply(), _moneyMarket.getTotalToken(_asset));
+    return LibShareUtil.valueToShare(assets, totalSupply(), _moneyMarket.getTotalTokenWithPendingInterest(_asset));
   }
 
   function convertToAssets(uint256 shares) public view override returns (uint256 assets) {
-    return LibShareUtil.shareToValue(shares, _moneyMarket.getTotalToken(_asset), totalSupply());
+    return LibShareUtil.shareToValue(shares, _moneyMarket.getTotalTokenWithPendingInterest(_asset), totalSupply());
   }
 
   function previewDeposit(uint256 assets) external view override returns (uint256 shares) {

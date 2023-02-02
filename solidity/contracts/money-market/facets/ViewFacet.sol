@@ -371,4 +371,11 @@ contract ViewFacet is IViewFacet {
 
     return address(moneyMarketDs.repurchaseRewardModel);
   }
+
+  /// @notice Get the address of ibToken implementation that will be used during openMarket
+  /// @return Address of current ibToken implementation
+  function getIbTokenImplementation() external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.ibTokenImplementation;
+  }
 }

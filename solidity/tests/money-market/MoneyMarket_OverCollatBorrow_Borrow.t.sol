@@ -20,16 +20,16 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 50 ether);
-    lendFacet.deposit(address(usdc), 20 ether);
-    lendFacet.deposit(address(btc), 20 ether);
-    lendFacet.deposit(address(cake), 20 ether);
-    lendFacet.deposit(address(isolateToken), 20 ether);
+    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
+    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(address(btc), normalizeEther(20 ether, btcDecimal));
+    lendFacet.deposit(address(cake), normalizeEther(20 ether, cakeDecimal));
+    lendFacet.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_ShouldTransferTokenToUser() external {
-    uint256 _borrowAmount = 10 ether;
+    uint256 _borrowAmount = normalizeEther(10 ether, wethDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _borrowAmount * 2);
@@ -52,7 +52,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
-    uint256 _borrowAmount = 10 ether;
+    uint256 _borrowAmount = normalizeEther(10 ether, mockToken.decimals());
     vm.startPrank(BOB);
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidToken.selector, address(mockToken)));
     borrowFacet.borrow(subAccount0, address(mockToken), _borrowAmount);
@@ -61,24 +61,24 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserBorrowTooMuchTokePerSubAccount() external {
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 20 ether);
-    borrowFacet.borrow(subAccount0, address(weth), 1 ether);
-    borrowFacet.borrow(subAccount0, address(btc), 1 ether);
-    borrowFacet.borrow(subAccount0, address(usdc), 1 ether);
+    collateralFacet.addCollateral(BOB, subAccount0, address(weth), normalizeEther(20 ether, wethDecimal));
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(1 ether, wethDecimal));
+    borrowFacet.borrow(subAccount0, address(btc), normalizeEther(1 ether, btcDecimal));
+    borrowFacet.borrow(subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
 
     // now maximum is 3 token per account, when try borrow 4th token should revert
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
-    borrowFacet.borrow(subAccount0, address(cake), 1 ether);
+    borrowFacet.borrow(subAccount0, address(cake), normalizeEther(1 ether, cakeDecimal));
     vm.stopPrank();
   }
 
   function testCorrectness_WhenUserBorrowMultipleTokens_ListAndAccountDebtShareShouldUpdate() external {
-    uint256 _aliceBorrowAmount = 10 ether;
-    uint256 _aliceBorrowAmount2 = 20 ether;
+    uint256 _aliceBorrowAmount = normalizeEther(10 ether, wethDecimal);
+    uint256 _aliceBorrowAmount2 = normalizeEther(20 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
 
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
 
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
@@ -112,11 +112,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserBorrowMoreThanAvailable_ShouldRevert() external {
-    uint256 _aliceBorrowAmount = 20 ether;
+    uint256 _aliceBorrowAmount = normalizeEther(20 ether, wethDecimal);
 
     vm.startPrank(ALICE);
 
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
 
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
@@ -135,11 +135,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenMultipleUserBorrowTokens_MMShouldTransferCorrectIbTokenAmount() external {
-    uint256 _bobDepositAmount = 10 ether;
-    uint256 _aliceBorrowAmount = 10 ether;
+    uint256 _bobDepositAmount = normalizeEther(10 ether, wethDecimal);
+    uint256 _aliceBorrowAmount = normalizeEther(10 ether, wethDecimal);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
     borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
@@ -149,12 +149,12 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.stopPrank();
 
-    assertEq(ibWeth.balanceOf(BOB), 10 ether);
+    assertEq(ibWeth.balanceOf(BOB), normalizeEther(10 ether, ibWethDecimal));
   }
 
   function testRevert_WhenBorrowPowerLessThanBorrowingValue_ShouldRevert() external {
-    uint256 _aliceCollatAmount = 5 ether;
-    uint256 _aliceBorrowAmount = 5 ether;
+    uint256 _aliceCollatAmount = normalizeEther(5 ether, wethDecimal);
+    uint256 _aliceBorrowAmount = normalizeEther(5 ether, wethDecimal);
 
     vm.startPrank(ALICE);
 
@@ -168,8 +168,8 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenUserHaveNotBorrow_ShouldAbleToBorrowIsolateAsset() external {
-    uint256 _bobIsolateBorrowAmount = 5 ether;
-    uint256 _bobCollateralAmount = 10 ether;
+    uint256 _bobIsolateBorrowAmount = normalizeEther(5 ether, isolateTokenDecimal);
+    uint256 _bobCollateralAmount = normalizeEther(10 ether, wethDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _bobCollateralAmount);
@@ -179,26 +179,26 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenUserAlreadyBorrowIsloateToken_ShouldRevertIfTryToBorrowDifferentToken() external {
-    uint256 _bobIsloateBorrowAmount = 5 ether;
-    uint256 _bobCollateralAmount = 20 ether;
+    uint256 _bobIsolateBorrowAmount = normalizeEther(5 ether, isolateTokenDecimal);
+    uint256 _bobCollateralAmount = normalizeEther(20 ether, wethDecimal);
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), _bobCollateralAmount);
 
     // first borrow isolate token
-    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsloateBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
 
     // borrow the isolate token again should passed
-    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsloateBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
 
     // trying to borrow different asset
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
-    borrowFacet.borrow(subAccount0, address(weth), _bobIsloateBorrowAmount);
+    borrowFacet.borrow(subAccount0, address(weth), _bobIsolateBorrowAmount);
     vm.stopPrank();
   }
 
   function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectly() external {
-    uint256 _aliceCollatAmount = 5 ether;
+    uint256 _aliceCollatAmount = normalizeEther(5 ether, wethDecimal);
 
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _aliceCollatAmount);
@@ -207,7 +207,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
     // _borrowingPowerUSDValue = 5 * 1 * 9000/ 10000 = 4.5 ether USD
-    assertEq(_borrowingPowerUSDValue, 4.5 ether);
+    assertEq(_borrowingPowerUSDValue, normalizeEther(4.5 ether, usdDecimal));
 
     // borrow 2.025 weth => with 9000 borrow factor
     // the used borrowed power should be 2.025 * 10000 / 9000 = 2.25
@@ -215,19 +215,19 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // sum of both borrowed = 2.25 + 2.25 = 4.5
 
     vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), 2.025 ether);
-    borrowFacet.borrow(subAccount0, address(usdc), 2.025 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(2.025 ether, wethDecimal));
+    borrowFacet.borrow(subAccount0, address(usdc), normalizeEther(2.025 ether, usdcDecimal));
     vm.stopPrank();
 
     (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
-    assertEq(_borrowedUSDValue, 4.5 ether);
+    assertEq(_borrowedUSDValue, normalizeEther(4.5 ether, usdDecimal));
   }
 
   function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectlyWithIbTokenCollat()
     external
   {
-    uint256 _aliceCollatAmount = 5 ether;
-    uint256 _ibTokenCollatAmount = 5 ether;
+    uint256 _aliceCollatAmount = normalizeEther(5 ether, wethDecimal);
+    uint256 _ibTokenCollatAmount = normalizeEther(5 ether, ibWethDecimal);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, _aliceCollatAmount);
@@ -249,24 +249,24 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // borrowIbTokenAmountInToken = 5 * (50 / 50) (ibCollatAmount * (totalSupply / totalToken)) = 5
     // _borrowingPowerUSDValue of ibToken = 5 * 1 * 9000 / 10000 = 4.5 ether USD
     // then 4.5 + 4.5 = 9
-    assertEq(_borrowingPowerUSDValue, 9 ether);
+    assertEq(_borrowingPowerUSDValue, normalizeEther(9 ether, usdDecimal));
 
     // borrowFactor = 1000, weth price = 1
     // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 9 USD
     // maximumBorrowed weth amount = 9 * 9000/10000 = 8.1
     // _borrowedUSDValue = 8.1 * 10000 /9000 = 9
     vm.prank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), 8.1 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(8.1 ether, wethDecimal));
 
     (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
-    assertEq(_borrowedUSDValue, 9 ether);
+    assertEq(_borrowedUSDValue, normalizeEther(9 ether, usdDecimal));
   }
 
   function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectlyWithIbTokenCollat_ibTokenIsNot1to1WithToken()
     external
   {
-    uint256 _aliceCollatAmount = 5 ether;
-    uint256 _ibTokenCollatAmount = 5 ether;
+    uint256 _aliceCollatAmount = normalizeEther(5 ether, wethDecimal);
+    uint256 _ibTokenCollatAmount = normalizeEther(5 ether, ibWethDecimal);
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, _aliceCollatAmount);
@@ -280,9 +280,9 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     // manipulate ib price
     vm.prank(BOB);
-    lendFacet.deposit(address(weth), 50 ether);
+    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
     vm.prank(moneyMarketDiamond);
-    ibWeth.onWithdraw(BOB, BOB, 0, 50 ether);
+    ibWeth.onWithdraw(BOB, BOB, 0, normalizeEther(50 ether, ibWethDecimal));
 
     uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
@@ -294,23 +294,23 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // borrowIbTokenAmountInToken = 5 * (100 / 50) (ibCollatAmount * (totalToken / totalSupply )) = 10
     // _borrowingPowerUSDValue of ibToken = 10 * 1 * 9000 / 10000 = 9 ether USD
     // then 4.5 + 9 = 13.5
-    assertEq(_borrowingPowerUSDValue, 13.5 ether);
+    assertEq(_borrowingPowerUSDValue, normalizeEther(13.5 ether, usdDecimal));
 
     // borrowFactor = 1000, weth price = 1
     // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 13.5 USD
     // maximumBorrowed weth amount = 13.5 * 9000/10000 = 12.15
     // _borrowedUSDValue = 12.15 * 10000 / 9000 = 13.5
     vm.prank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), 12.15 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(12.15 ether, wethDecimal));
 
     (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
-    assertEq(_borrowedUSDValue, 13.5 ether);
+    assertEq(_borrowedUSDValue, normalizeEther(13.5 ether, usdDecimal));
   }
 
   function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit() external {
     // borrow cap is at 30 weth
-    uint256 _borrowAmount = 20 ether;
-    uint256 _bobCollateral = 100 ether;
+    uint256 _borrowAmount = normalizeEther(20 ether, wethDecimal);
+    uint256 _bobCollateral = normalizeEther(100 ether, wethDecimal);
 
     vm.startPrank(BOB);
 
@@ -330,35 +330,43 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // 1 weth = 1 usdc
     // ALICE has 0 weth debt
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), normalizeEther(2 ether, wethDecimal));
 
     // borrow + debt < minDebtSize should revert
     // 0.01 + 0 < 0.1
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
-    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
 
     // borrow + debt == minDebtSize should not revert
     // 0.1 + 0 == 0.1
-    borrowFacet.borrow(subAccount0, address(weth), 0.1 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.1 ether, wethDecimal));
 
     // ALICE has 0.1 weth debt
     // borrow + debt > minDebtSize should not revert
     // 0.01 + 0.1 > 0.1
-    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
 
     (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
     assertEq(_debtAmount, 0.11 ether);
 
     // weth price dropped, debt value = 0.11 * 0.8 = 0.88 USD
-    mockOracle.setTokenPrice(address(weth), 0.8 ether);
+    mockOracle.setTokenPrice(address(weth), normalizeEther(0.8 ether, wethDecimal));
 
     // because weth price dropped, borrow + debt < minDebtSize should revert
     // 0.01 + 0.88 < 0.1
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
-    borrowFacet.borrow(subAccount0, address(weth), 0.01 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
 
     // borrow + debt == minDebtSize should not revert
     // 0.12 + 0.88 == 0.1
-    borrowFacet.borrow(subAccount0, address(weth), 0.12 ether);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.12 ether, wethDecimal));
+  }
+
+  function testRevert_UserBorrowWhenMMOnEmergencyPaused_ShouldRevert() external {
+    adminFacet.setEmergencyPaused(true);
+
+    vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
+    vm.prank(ALICE);
+    borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
   }
 }

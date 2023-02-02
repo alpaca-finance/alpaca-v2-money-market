@@ -42,14 +42,15 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
     console.log("MockLiquidationStrategy:executeLiquidation[1]");
     uint256 _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
-    console.log("MockLiquidationStrategy:executeLiquidation[2]");
-    console.log("MockLiquidationStrategy:executeLiquidation:_collatPrice", _collatPrice);
-    console.log("MockLiquidationStrategy:executeLiquidation:_repayTokenPrice", _repayTokenPrice);
-    console.log("MockLiquidationStrategy:executeLiquidation:_priceCollatPerRepayToken", _priceCollatPerRepayToken);
-    uint256 _collatSold = (_repayAmount * 10**ERC20(_repayToken).decimals()) / _priceCollatPerRepayToken;
+
+    uint256 _repayTo18ConvertFactor = 10**(18 - ERC20(_repayToken).decimals());
+    uint256 _collatTo18ConvertFactor = 10**(18 - ERC20(_collatToken).decimals());
+
+    uint256 _collatSold = (_repayAmount * _repayTo18ConvertFactor * 1e18) / _priceCollatPerRepayToken;
     uint256 _actualCollatSold = _collatSold > _collatAmountIn ? _collatAmountIn : _collatSold;
-    uint256 _actualRepayAmount = (_actualCollatSold * _priceCollatPerRepayToken) / 10**ERC20(_collatToken).decimals();
-    console.log("MockLiquidationStrategy:executeLiquidation[3]");
+    uint256 _actualRepayAmount = (_actualCollatSold * _collatTo18ConvertFactor * _priceCollatPerRepayToken) /
+      (1e18 * _repayTo18ConvertFactor);
+
     ERC20(_repayToken).safeTransfer(msg.sender, _actualRepayAmount);
     ERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _actualCollatSold);
   }

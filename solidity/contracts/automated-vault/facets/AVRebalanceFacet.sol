@@ -55,7 +55,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
         avDs
       );
       uint256 _assetBorrowAmount = LibAV01.getTokenAmountFromUSDValue(
-        _vaultConfig.stableToken,
+        _vaultConfig.assetToken,
         uint256(_deltaDebt) - _stableBorrowValueUSD, // prevent precision loss from _deltaDebt / 2
         avDs
       );

@@ -36,7 +36,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetRepurchaserOk(address indexed _account, bool isOk);
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
-  event LogSetTreasury(address indexed _treasury);
+  event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(
     uint256 _lendingFeeBps,
     uint256 _repurchaseFeeBps,
@@ -62,6 +62,7 @@ contract AdminFacet is IAdminFacet {
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetMinDebtSize(uint256 _newValue);
+  event LogSetEmergencyPaused(address indexed caller, bool _isPasued);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -114,7 +115,7 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
     LibMoneyMarket01.TokenConfig memory _tokenConfig;
-    TokenConfigInput calldata _tokenConfigInput;
+    TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
       _tokenConfigInput = _tokenConfigInputs[_i];
       _validateTokenConfig(
@@ -238,10 +239,10 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
-  function setTreasury(address _treasury) external onlyOwner {
+  function setLiquidationTreasury(address _treasury) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.treasury = _treasury;
-    emit LogSetTreasury(_treasury);
+    moneyMarketDs.liquidationTreasury = _treasury;
+    emit LogSetLiquidationTreasury(_treasury);
   }
 
   /// @notice Withdraw the protocol's reserve
@@ -471,6 +472,10 @@ contract AdminFacet is IAdminFacet {
     if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
     }
+    // borrowingFactor can't be zero otherwise will cause divide by zero error
+    if (borrowingFactor == 0) {
+      revert AdminFacet_InvalidArguments();
+    }
     // prevent user add collat or borrow too much
     if (maxCollateral > 1e40) {
       revert AdminFacet_InvalidArguments();
@@ -478,5 +483,15 @@ contract AdminFacet is IAdminFacet {
     if (maxBorrow > 1e40) {
       revert AdminFacet_InvalidArguments();
     }
+  }
+
+  /// @notice Set emerygency flag for pausing deposit and borrow
+  /// @param _isPaused Flag to pause or resume
+  function setEmergencyPaused(bool _isPaused) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    moneyMarketDs.emergencyPaused = _isPaused;
+
+    emit LogSetEmergencyPaused(msg.sender, _isPaused);
   }
 }

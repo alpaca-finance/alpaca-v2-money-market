@@ -38,6 +38,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_NotEnoughToken();
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
   error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
+  error LibMoneyMarket01_EmergencyPaused();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -68,10 +69,11 @@ library LibMoneyMarket01 {
     // ---- addresses ---- //
     address wNativeToken;
     address wNativeRelayer;
-    address treasury;
+    address liquidationTreasury;
     address ibTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
+    bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address
     mapping(address => address) ibTokenToTokens; // ibToken address => token address
@@ -112,8 +114,8 @@ library LibMoneyMarket01 {
     uint16 liquidationThresholdBps; // threshold that allow subAccount to be liquidated if borrowing power goes below threshold
     // fees
     uint16 lendingFeeBps; // fee that is charged from lending interest by protocol, goes to protocolReserve
-    uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to treasury
-    uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to treasury
+    uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to liquidationTreasury
+    uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to liquidationTreasury
     uint16 liquidationRewardBps; // reward that is given to liquidators
   }
 
@@ -303,6 +305,7 @@ library LibMoneyMarket01 {
     returns (uint256 _globalPendingInterest)
   {
     uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
+
     if (block.timestamp > _lastAccrualTimestamp) {
       uint256 _secondsSinceLastAccrual;
       unchecked {
@@ -310,22 +313,22 @@ library LibMoneyMarket01 {
       }
       LibDoublyLinkedList.Node[] memory _borrowedAccounts = moneyMarketDs.nonCollatTokenDebtValues[_token].getAll();
       uint256 _accountLength = _borrowedAccounts.length;
-      uint256 _nonCollatInterestAmountPerSec;
+      uint256 _nonCollatInterestPerSec;
       for (uint256 _i; _i < _accountLength; ) {
-        _nonCollatInterestAmountPerSec +=
-          (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
-            _borrowedAccounts[_i].amount) /
-          1e18;
+        _nonCollatInterestPerSec += (getNonCollatInterestRate(_borrowedAccounts[_i].token, _token, moneyMarketDs) *
+          _borrowedAccounts[_i].amount);
+
         unchecked {
           ++_i;
         }
       }
+
       // _globalPendingInterest = (nonCollatInterestAmountPerSec + overCollatInterestAmountPerSec) * _secondsSinceLastAccrual
       _globalPendingInterest =
-        (_nonCollatInterestAmountPerSec +
-          (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token]) /
-          1e18) *
-        _secondsSinceLastAccrual;
+        ((_nonCollatInterestPerSec +
+          (getOverCollatInterestRate(_token, moneyMarketDs) * moneyMarketDs.overCollatDebtValues[_token])) *
+          _secondsSinceLastAccrual) /
+        1e18;
     }
   }
 
@@ -368,6 +371,7 @@ library LibMoneyMarket01 {
     // cache to save gas
     uint256 _totalDebtValue = moneyMarketDs.overCollatDebtValues[_token];
     _overCollatInterest = (getOverCollatInterestRate(_token, moneyMarketDs) * _timePast * _totalDebtValue) / 1e18;
+
     // update overcollat debt
     moneyMarketDs.overCollatDebtValues[_token] = _totalDebtValue + _overCollatInterest;
   }
@@ -735,5 +739,11 @@ library LibMoneyMarket01 {
     uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
     IERC20(_token).safeTransferFrom(_from, address(this), _amount);
     _actualAmountReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+  }
+
+  function onlyLive(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
+    if (moneyMarketDs.emergencyPaused) {
+      revert LibMoneyMarket01_EmergencyPaused();
+    }
   }
 }
