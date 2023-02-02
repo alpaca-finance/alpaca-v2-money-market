@@ -31,6 +31,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetRevenueTreasury(address indexed _treasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
+  event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -244,6 +245,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @notice Set the address that will keep the liqudation's fee
   /// @param _newTreasury The destination address
   function setLiquidationTreasury(address _newTreasury) external onlyOwner {
+    if (_newTreasury == address(0)) {
+      revert LYFAdminFacet_InvalidAddress();
+    }
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.liquidationTreasury = _newTreasury;
 
@@ -253,6 +257,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @notice Set the address that will keep the reinvest bounty
   /// @param _newTreasury new revenue treasury address
   function setRevenueTreasury(address _newTreasury) external onlyOwner {
+    if (_newTreasury == address(0)) {
+      revert LYFAdminFacet_InvalidAddress();
+    }
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     lyfDs.revenueTreasury = _newTreasury;
 
@@ -273,7 +280,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @param _token The token to be withdrawn
   /// @param _to The destination address
   /// @param _amount The amount to withdraw
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount
@@ -292,5 +299,36 @@ contract LYFAdminFacet is ILYFAdminFacet {
     IERC20(_token).safeTransfer(_to, _amount);
 
     emit LogWitdrawReserve(_token, _to, _amount);
+  }
+
+  /// @notice Set config to use when swap rewardToken to desiredToken to send to revenue treasury
+  /// @param _inputs Array of input to set the config
+  function setRewardConversionConfigs(ILYFAdminFacet.SetRewardConversionConfigInput[] calldata _inputs)
+    external
+    onlyOwner
+  {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _len = _inputs.length;
+    ILYFAdminFacet.SetRewardConversionConfigInput memory _input;
+    LibLYF01.RewardConversionConfig memory _config;
+    for (uint256 _i; _i < _len; ) {
+      _input = _inputs[_i];
+
+      if (_input.rewardToken != _input.path[0]) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+
+      // sanity check router and path
+      IRouterLike(_input.router).getAmountsIn(1 ether, _input.path);
+
+      _config = LibLYF01.RewardConversionConfig({ router: _input.router, path: _input.path });
+      lyfDs.rewardConversionConfigs[_input.rewardToken] = _config;
+
+      emit LogSetRewardConversionConfigs(_input.rewardToken, _config);
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }

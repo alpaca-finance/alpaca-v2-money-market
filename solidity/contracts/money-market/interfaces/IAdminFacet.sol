@@ -85,7 +85,7 @@ interface IAdminFacet {
 
   function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
-  function withdrawReserve(
+  function withdrawProtocolReserve(
     address _token,
     address _to,
     uint256 _amount

@@ -253,6 +253,21 @@ abstract contract LYF_BaseTest is BaseTest {
     });
     adminFacet.setLPConfigs(lpConfigs);
 
+    // set reward conversion configs
+    address[] memory _rewardConversionPath = new address[](2);
+    _rewardConversionPath[0] = address(cake);
+    _rewardConversionPath[1] = address(cake);
+
+    ILYFAdminFacet.SetRewardConversionConfigInput[]
+      memory _rewardConversionConfigInputs = new ILYFAdminFacet.SetRewardConversionConfigInput[](1);
+    _rewardConversionConfigInputs[0] = ILYFAdminFacet.SetRewardConversionConfigInput({
+      rewardToken: address(cake),
+      router: address(mockRouter),
+      path: _rewardConversionPath
+    });
+
+    adminFacet.setRewardConversionConfigs(_rewardConversionConfigInputs);
+
     // set oracle for LYF
     mockOracle = new MockAlpacaV2Oracle();
     mockOracle.setTokenPrice(address(weth), 1e18);

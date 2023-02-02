@@ -378,4 +378,10 @@ contract ViewFacet is IViewFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.ibTokenImplementation;
   }
+
+  /// @notice Get the address of liquidation treasury
+  function getLiquidationTreasury() external view returns (address _liquidationTreasury) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _liquidationTreasury = moneyMarketDs.liquidationTreasury;
+  }
 }

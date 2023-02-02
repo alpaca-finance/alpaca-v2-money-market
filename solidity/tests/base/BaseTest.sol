@@ -8,6 +8,11 @@ import { console } from "../utils/console.sol";
 
 // interfaces
 import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
+import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
+
+// miniFL
+import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
+import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 // mm contract
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
@@ -44,6 +49,7 @@ contract BaseTest is DSTest {
   MockERC20 internal usdc;
   MockERC20 internal busd;
   MockERC20 internal btc;
+  MockERC20 internal alpaca;
   address internal usd;
   MockERC20 internal isolateToken;
 
@@ -68,6 +74,11 @@ contract BaseTest is DSTest {
   uint256 internal ibIsolateTokenDecimal;
   uint256 internal ibWNativeDecimal;
 
+  MockERC20 internal debtToken1;
+
+  MockERC20 internal rewardToken1;
+  MockERC20 internal rewardToken2;
+
   IPriceOracle internal oracle;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   OracleMedianizer internal oracleMedianizer;
@@ -89,7 +100,13 @@ contract BaseTest is DSTest {
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 6);
     busd = deployMockErc20("BUSD", "BUSD", 18);
+    alpaca = deployMockErc20("ALPACA TOKEN", "ALPACA", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
+
+    debtToken1 = deployMockErc20("Debt Token 1", "DTOKEN1", 18);
+
+    rewardToken1 = deployMockErc20("Reward Token 1", "RTOKEN1", 18);
+    rewardToken2 = deployMockErc20("Reward Token 2", "RTOKEN2", 6);
 
     cakeDecimal = cake.decimals();
     wethDecimal = weth.decimals();
@@ -116,6 +133,8 @@ contract BaseTest is DSTest {
     btc.mint(BOB, normalizeEther(1000 ether, btcDecimal));
     usdc.mint(BOB, normalizeEther(1000 ether, usdcDecimal));
     isolateToken.mint(BOB, normalizeEther(1000 ether, isolateTokenDecimal));
+
+    // miniFL
 
     _setupProxyAdmin();
 
@@ -145,6 +164,46 @@ contract BaseTest is DSTest {
 
   function deployMockWNativeRelayer() internal returns (MockWNativeRelayer) {
     return new MockWNativeRelayer(address(wNativeToken));
+  }
+
+  function deployMiniFL(address _rewardToken, uint256 _rewardPerSec) internal returns (MiniFL) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/MiniFL.sol/MiniFL.json"));
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,uint256)")),
+      _rewardToken,
+      _rewardPerSec
+    );
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return MiniFL(_proxy);
+  }
+
+  function deployRewarder(
+    string memory _name,
+    address _miniFL,
+    address _rewardToken,
+    uint256 _maxRewardPerSecond
+  ) internal returns (Rewarder) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/Rewarder.sol/Rewarder.json"));
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(string,address,address,uint256)")),
+      _name,
+      _miniFL,
+      _rewardToken,
+      _maxRewardPerSecond
+    );
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return Rewarder(_proxy);
+  }
+
+  function deployAlpacaV2Oracle(address _oracleMedianizer) internal returns (AlpacaV2Oracle) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/AlpacaV2Oracle.sol/AlpacaV2Oracle.json"));
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,address)")),
+      _oracleMedianizer,
+      usd
+    );
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return AlpacaV2Oracle(_proxy);
   }
 
   function deployAlpacaV2Oracle(address _oracleMedianizer, address _baseStable) internal returns (AlpacaV2Oracle) {
