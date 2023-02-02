@@ -38,7 +38,7 @@ contract MoneyMarketReader is Ownable {
     _moneyMarket = IMoneyMarket(moneyMarket_);
   }
 
-  /// @dev 
+  /// @dev Get the reader summary
   /// @param _underlyingToken The underlying token address
   function getReaderSummary(address _underlyingToken) external view returns (ReaderSummary memory _readerSummary) {
     address _ibAddres = _moneyMarket.getIbTokenFromToken(_underlyingToken);
