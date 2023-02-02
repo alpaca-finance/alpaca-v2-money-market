@@ -19,21 +19,19 @@ contract MoneyMarketReader is Ownable {
     uint256 ibTotalSupply;
     uint256 ibTotalAsset;
     address ibAddress;
-
     // ---- Money Market ---- //
     LibMoneyMarket01.TokenConfig tokenConfig;
     uint256 globalDebtValueWithPendinthInterest;
     uint256 globalDebtValue;
     uint256 pendingIntetest;
     uint256 lastAccruedAt;
-
     // ---- MiniFL ---- //
     uint256 allocPoint;
     uint256 totalAllocPoint;
     uint256 rewardPerSec;
-
     uint256 blockTimestamp;
   }
+
   constructor(address moneyMarket_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
   }
@@ -41,22 +39,23 @@ contract MoneyMarketReader is Ownable {
   /// @dev Get the reader summary
   /// @param _underlyingToken The underlying token address
   function getReaderSummary(address _underlyingToken) external view returns (ReaderSummary memory _readerSummary) {
-    address _ibAddres = _moneyMarket.getIbTokenFromToken(_underlyingToken);
-    IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddres);
+    address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+    IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
 
-    return ReaderSummary({
-      ibTotalSupply: _ibToken.totalSupply(),
-      ibTotalAsset: _ibToken.totalAssets(),
-      ibAddress: _ibAddres,
-      tokenConfig: _moneyMarket.getTokenConfig(_underlyingToken),
-      globalDebtValueWithPendinthInterest: _moneyMarket.getGlobalDebtValueWithPendingInterest(_underlyingToken),
-      globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken) ,
-      pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
-      lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
-      allocPoint: 0,
-      totalAllocPoint: 0,
-      rewardPerSec: 0,
-      blockTimestamp: block.timestamp
-    });
+    return
+      ReaderSummary({
+        ibTotalSupply: _ibToken.totalSupply(),
+        ibTotalAsset: _ibToken.totalAssets(),
+        ibAddress: _ibAddress,
+        tokenConfig: _moneyMarket.getTokenConfig(_underlyingToken),
+        globalDebtValueWithPendinthInterest: _moneyMarket.getGlobalDebtValueWithPendingInterest(_underlyingToken),
+        globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
+        pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
+        lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
+        allocPoint: 0,
+        totalAllocPoint: 0,
+        rewardPerSec: 0,
+        blockTimestamp: block.timestamp
+      });
   }
 }
