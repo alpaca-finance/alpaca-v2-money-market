@@ -5,11 +5,11 @@ interface IAVHandler {
   function totalLpBalance() external view returns (uint256);
 
   function onDeposit(
-    address _token0,
-    address _token1,
-    uint256 _token0Amount,
-    uint256 _token1Amount,
-    uint256 _minLPAmount
+    address _stableToken,
+    address _assetToken,
+    uint256 _stableAmount,
+    uint256 _assetAmount,
+    uint256 _minLpAmount
   ) external returns (uint256);
 
   function onWithdraw(uint256 _lpToRemove) external returns (uint256, uint256);

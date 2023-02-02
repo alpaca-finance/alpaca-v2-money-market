@@ -14,6 +14,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
+
 contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUpgradeable {
   using LibSafeToken for IERC20;
 
@@ -38,13 +39,13 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
   }
 
   function onDeposit(
-    address _token0,
-    address _token1,
-    uint256 _token0Amount,
-    uint256 _token1Amount,
+    address _stableToken,
+    address _assetToken,
+    uint256 _stableAmount,
+    uint256 _assetAmount,
     uint256 _minLpAmount
   ) external onlyWhitelisted returns (uint256 _mintedLpAmount) {
-    _mintedLpAmount = composeLpToken(_token0, _token1, _token0Amount, _token1Amount, _minLpAmount);
+    _mintedLpAmount = composeLpToken(_stableToken, _assetToken, _stableAmount, _assetAmount, _minLpAmount);
     totalLpBalance += _mintedLpAmount;
   }
 
@@ -73,6 +74,11 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     uint256 _token1Amount,
     uint256 _minLpAmount
   ) internal returns (uint256 _mintedLpAmount) {
+    // 0. Sort token
+    if (_token0 != lpToken.token0()) {
+      (_token0, _token1) = (_token1, _token0);
+      (_token0Amount, _token1Amount) = (_token1Amount, _token0Amount);
+    }
     // 1. Approve router to do their stuffs
     IERC20(_token0).safeApprove(address(router), type(uint256).max);
     IERC20(_token1).safeApprove(address(router), type(uint256).max);
