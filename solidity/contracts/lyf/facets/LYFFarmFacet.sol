@@ -87,11 +87,16 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_BadInput();
     }
 
+    // sanity check token ordering. prevent borrow, remove collat for wrong token
+    address _token0 = ISwapPairLike(_input.lpToken).token0();
+    if (_input.token0 != _token0) {
+      revert LYFFarmFacet_BadInput();
+    }
+
     // prepare data
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_input.lpToken];
     address _subAccount = LibLYF01.getSubAccount(msg.sender, _input.subAccountId);
-    address _token0 = ISwapPairLike(_input.lpToken).token0();
     address _token1 = ISwapPairLike(_input.lpToken).token1();
     uint256 _token0DebtPoolId = lyfDs.debtPoolIds[_token0][_input.lpToken];
     uint256 _token1DebtPoolId = lyfDs.debtPoolIds[_token1][_input.lpToken];

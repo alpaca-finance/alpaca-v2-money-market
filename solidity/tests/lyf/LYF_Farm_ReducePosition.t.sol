@@ -44,6 +44,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
       desiredToken1Amount: _usdcToAddLP,
@@ -111,6 +112,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
       desiredToken1Amount: _usdcToAddLP,
@@ -186,6 +188,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
       desiredToken1Amount: _usdcToAddLP,
@@ -222,6 +225,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
       desiredToken1Amount: _usdcToAddLP,
@@ -268,6 +272,7 @@ contract LYF_Farm_ReducePositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
       desiredToken1Amount: _usdcToAddLP,
