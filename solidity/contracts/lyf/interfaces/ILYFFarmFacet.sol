@@ -25,6 +25,7 @@ interface ILYFFarmFacet {
   struct AddFarmPositionInput {
     uint256 subAccountId;
     address lpToken;
+    address token0; // for token ordering sanity check
     uint256 minLpReceive;
     uint256 desiredToken0Amount;
     uint256 desiredToken1Amount;

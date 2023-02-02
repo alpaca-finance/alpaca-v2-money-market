@@ -82,21 +82,21 @@ library LibAV01 {
   function depositToHandler(
     address _handler,
     address _vaultToken,
-    address _token0,
-    address _token1,
-    uint256 _desiredAmount0,
-    uint256 _desiredAmount1,
+    address _stableToken,
+    address _assetToken,
+    uint256 _desiredStableAmount,
+    uint256 _desiredAssetAmount,
     uint256 _equityBefore,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _shareToMint) {
-    IERC20(_token0).safeTransfer(_handler, _desiredAmount0);
-    IERC20(_token1).safeTransfer(_handler, _desiredAmount1);
+    IERC20(_stableToken).safeTransfer(_handler, _desiredStableAmount);
+    IERC20(_assetToken).safeTransfer(_handler, _desiredAssetAmount);
 
     IAVHandler(_handler).onDeposit(
-      _token0,
-      _token1,
-      _desiredAmount0,
-      _desiredAmount1,
+      _stableToken,
+      _assetToken,
+      _desiredStableAmount,
+      _desiredAssetAmount,
       0 // min lp amount
     );
 

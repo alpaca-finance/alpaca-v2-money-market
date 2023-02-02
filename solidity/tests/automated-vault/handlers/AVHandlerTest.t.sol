@@ -103,4 +103,19 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     handler.onWithdraw(5 ether);
     vm.stopPrank();
   }
+
+  function testCorrectness_WhenComposeLPTokenWithToken01OrderSwapped_ShouldWork() external {
+    // should work regardless of token ordering
+    // token0 = weth, token1 = usdc
+    weth.mint(address(handler), 10 ether);
+    usdc.mint(address(handler), normalizeEther(10 ether, usdcDecimal));
+    handler.onDeposit(address(weth), address(usdc), 10 ether, normalizeEther(10 ether, usdcDecimal), 0);
+    assertEq(handler.totalLpBalance(), 10 ether);
+
+    // token0 = usdc, token1 = weth
+    weth.mint(address(handler), 10 ether);
+    usdc.mint(address(handler), normalizeEther(10 ether, usdcDecimal));
+    handler.onDeposit(address(usdc), address(weth), normalizeEther(10 ether, usdcDecimal), 10 ether, 0);
+    assertEq(handler.totalLpBalance(), 20 ether);
+  }
 }
