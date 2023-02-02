@@ -72,9 +72,9 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 0,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -82,12 +82,19 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(5 ether, 5 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(5 ether, normalizeEther(5 ether, usdcDecimal));
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
-    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+    liquidationFacet.lpLiquidationCall(
+      ALICE,
+      subAccount0,
+      _lpToken,
+      _lpAmountToLiquidate,
+      4 ether,
+      normalizeEther(4 ether, usdcDecimal)
+    );
 
     // check alice position
     assertEq(
@@ -102,16 +109,16 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     );
     assertEq(
       viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
-      1 ether,
+      normalizeEther(1 ether, usdcDecimal),
       "alice remaining usdc collat"
     );
     (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 26.04 ether, "alice remaining usdc debt");
+    assertEq(_aliceUsdcDebtValue, normalizeEther(26.04 ether, usdcDecimal), "alice remaining usdc debt");
 
     // check treasury
-    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.04 ether);
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, normalizeEther(0.04 ether, usdcDecimal));
   }
 
   function testCorrectness_WhenLiquidateLPMoreThanCollateral_ShouldLiquidateAllLP() external {
@@ -148,9 +155,9 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 0,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -158,12 +165,19 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(30 ether, 30 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(30 ether, normalizeEther(30 ether, usdcDecimal));
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
-    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 5 ether, 5 ether);
+    liquidationFacet.lpLiquidationCall(
+      ALICE,
+      subAccount0,
+      _lpToken,
+      _lpAmountToLiquidate,
+      5 ether,
+      normalizeEther(5 ether, usdcDecimal)
+    );
 
     // check alice position
     assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken), 0, "alice remaining lp collat");
@@ -174,16 +188,16 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     );
     assertEq(
       viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
-      25 ether,
+      normalizeEther(25 ether, usdcDecimal),
       "alice remaining usdc collat"
     );
     (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 25.05 ether, "alice remaining usdc debt");
+    assertEq(_aliceUsdcDebtValue, normalizeEther(25.05 ether, usdcDecimal), "alice remaining usdc debt");
 
-    // check liquidationTreasury
-    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.05 ether);
+    // check treasury
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, normalizeEther(0.05 ether, usdcDecimal));
   }
 
   function testCorrectness_WhenLiquidateLPButReceiveTokensLessThanRepayAmount_ShouldWork() external {
@@ -220,9 +234,9 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
       lpToken: _lpToken,
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 0,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
@@ -230,12 +244,19 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     vm.stopPrank();
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
-    mockRouter.setRemoveLiquidityAmountsOut(2 ether, 2 ether);
+    mockRouter.setRemoveLiquidityAmountsOut(2 ether, normalizeEther(2 ether, usdcDecimal));
 
     uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
-    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, _lpAmountToLiquidate, 4 ether, 4 ether);
+    liquidationFacet.lpLiquidationCall(
+      ALICE,
+      subAccount0,
+      _lpToken,
+      _lpAmountToLiquidate,
+      4 ether,
+      normalizeEther(4 ether, usdcDecimal)
+    );
 
     // check alice position
     assertEq(
@@ -256,10 +277,10 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     (, uint256 _aliceWethDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(weth), _lpToken);
     assertEq(_aliceWethDebtValue, 0, "alice remaining weth debt");
     (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 28.02 ether, "alice remaining usdc debt");
+    assertEq(_aliceUsdcDebtValue, normalizeEther(28.02 ether, usdcDecimal), "alice remaining usdc debt");
 
-    // check liquidationTreasury
-    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, 0.02 ether);
+    // check treasury
+    assertEq(usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore, normalizeEther(0.02 ether, usdcDecimal));
   }
 
   function testRevert_WhenLiquidateLPOnHealthySubAccount() external {
@@ -273,9 +294,9 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
       lpToken: address(wethUsdcLPToken),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
-      desiredToken1Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
       token0ToBorrow: 30 ether,
-      token1ToBorrow: 30 ether,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
       token0AmountIn: 0,
       token1AmountIn: 0
     });
