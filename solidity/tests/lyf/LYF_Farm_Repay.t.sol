@@ -111,9 +111,9 @@ contract LYF_Farm_RepayTest is LYF_BaseTest {
     // test withdraw reserve
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.withdrawReserve(address(weth), address(this), 2 ether);
+    adminFacet.withdrawProtocolReserve(address(weth), address(this), 2 ether);
 
-    adminFacet.withdrawReserve(address(weth), address(this), 2 ether);
+    adminFacet.withdrawProtocolReserve(address(weth), address(this), 2 ether);
     assertEq(viewFacet.getProtocolReserveOf(address(weth)), 0);
     // should not change the outstanding since it decrease protocol reserve and increase reverse at the same time
     assertEq(viewFacet.getOutstandingBalanceOf(address(weth)), _expectedOutstandingAfterRepay);
