@@ -20,7 +20,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogWithdraw(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
   event LogEmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
   event LogHarvest(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogAddPool(uint256 indexed pid, uint256 allocPoint, IERC20Upgradeable indexed stakingToken);
+  event LogAddPool(uint256 indexed pid, uint256 allocPoint, address indexed stakingToken);
   event LogSetPool(uint256 indexed pid, uint256 allocPoint);
   event LogUpdatePool(uint256 indexed pid, uint64 lastRewardTime, uint256 stakedBalance, uint256 accAlpacaPerShare);
   event LogAlpacaPerSecond(uint256 alpacaPerSecond);
@@ -40,9 +40,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     bool isDebtTokenPool;
   }
 
-  IERC20Upgradeable public ALPACA;
+  address public ALPACA;
   PoolInfo[] public poolInfo;
-  IERC20Upgradeable[] public stakingToken;
+  address[] public stakingTokens;
 
   mapping(uint256 => address[]) public rewarders;
   mapping(address => bool) public isStakingToken;
@@ -61,7 +61,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     OwnableUpgradeable.__Ownable_init();
     ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
 
-    ALPACA = IERC20Upgradeable(_alpaca);
+    ALPACA = _alpaca;
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
   }
 
@@ -77,11 +77,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _withUpdate If true, do mass update pools.
   function addPool(
     uint256 _allocPoint,
-    IERC20Upgradeable _stakingToken,
+    address _stakingToken,
     bool _isDebtTokenPool,
     bool _withUpdate
   ) external onlyOwner {
-    if (address(_stakingToken) == address(ALPACA)) {
+    if (_stakingToken == address(ALPACA)) {
       revert MiniFL_InvalidArguments();
     }
     if (isStakingToken[address(_stakingToken)]) {
@@ -89,12 +89,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     // Sanity check that the staking token is a valid ERC20 token.
-    _stakingToken.balanceOf(address(this));
+    IERC20Upgradeable(_stakingToken).balanceOf(address(this));
 
     if (_withUpdate) massUpdatePools();
 
     totalAllocPoint = totalAllocPoint + _allocPoint;
-    stakingToken.push(_stakingToken);
+    stakingTokens.push(_stakingToken);
     isStakingToken[address(_stakingToken)] = true;
 
     poolInfo.push(
@@ -105,7 +105,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         isDebtTokenPool: _isDebtTokenPool
       })
     );
-    emit LogAddPool(stakingToken.length - 1, _allocPoint, _stakingToken);
+    emit LogAddPool(stakingTokens.length - 1, _allocPoint, _stakingToken);
   }
 
   /// @notice Update the given pool's ALPACA allocation point and `IRewarder` contract.
@@ -146,7 +146,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory pool = poolInfo[_pid];
     UserInfo memory user = userInfo[_pid][_user];
     uint256 accAlpacaPerShare = pool.accAlpacaPerShare;
-    uint256 stakedBalance = stakingReserves[address(stakingToken[_pid])];
+    uint256 stakedBalance = stakingReserves[address(stakingTokens[_pid])];
     if (block.timestamp > pool.lastRewardTime && stakedBalance != 0) {
       uint256 timePast;
       unchecked {
@@ -166,7 +166,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function _updatePool(uint256 pid) internal returns (PoolInfo memory) {
     PoolInfo memory pool = poolInfo[pid];
     if (block.timestamp > pool.lastRewardTime) {
-      uint256 stakedBalance = stakingReserves[address(stakingToken[pid])];
+      uint256 stakedBalance = stakingReserves[address(stakingTokens[pid])];
       if (stakedBalance > 0) {
         uint256 timePast;
         unchecked {
@@ -230,11 +230,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (!pool.isDebtTokenPool && msg.sender != _for) {
       revert MiniFL_Forbidden();
     }
-    IERC20Upgradeable _stakingToken = stakingToken[_pid];
-    _stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
+    address _stakingToken = stakingTokens[_pid];
+    IERC20Upgradeable(_stakingToken).safeTransferFrom(msg.sender, address(this), _amount);
 
     // Effects
-    stakingReserves[address(_stakingToken)] += _amount;
+    stakingReserves[_stakingToken] += _amount;
     user.amount = user.amount + _amount;
     user.rewardDebt = user.rewardDebt + ((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
@@ -285,10 +285,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         ++_i;
       }
     }
-    IERC20Upgradeable _stakingToken = stakingToken[_pid];
-    stakingReserves[address(_stakingToken)] -= _amount;
+    address _stakingToken = stakingTokens[_pid];
+    stakingReserves[_stakingToken] -= _amount;
 
-    _stakingToken.safeTransfer(msg.sender, _amount);
+    IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amount);
 
     emit LogWithdraw(msg.sender, _for, _pid, _amount);
   }
@@ -307,7 +307,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // Interactions
     if (_pendingAlpaca != 0) {
-      ALPACA.safeTransfer(msg.sender, _pendingAlpaca);
+      IERC20Upgradeable(ALPACA).safeTransfer(msg.sender, _pendingAlpaca);
     }
 
     uint256 _rewarderLength = rewarders[_pid].length;
@@ -348,11 +348,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       }
     }
 
-    IERC20Upgradeable _stakingToken = stakingToken[_pid];
-    stakingReserves[address(_stakingToken)] -= _amount;
+    address _stakingToken = stakingTokens[_pid];
+    stakingReserves[_stakingToken] -= _amount;
 
     // Note: transfer can fail or succeed if `amount` is zero.
-    _stakingToken.safeTransfer(msg.sender, _amount);
+    IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amount);
 
     emit LogEmergencyWithdraw(msg.sender, _pid, _amount);
   }
@@ -414,6 +414,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   function getStakingReserves(uint256 _pid) external view returns (uint256 _reservedAmount) {
-    _reservedAmount = stakingReserves[address(stakingToken[_pid])];
+    _reservedAmount = stakingReserves[stakingTokens[_pid]];
   }
 }

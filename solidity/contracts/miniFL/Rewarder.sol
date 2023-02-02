@@ -22,7 +22,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   error Rewarder1_PoolExisted();
   error Rewarder1_PoolNotExisted();
 
-  IERC20Upgradeable public rewardToken;
+  address public rewardToken;
 
   struct UserInfo {
     uint256 amount;
@@ -66,14 +66,14 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function initialize(
     string calldata _name,
     address _miniFL,
-    IERC20Upgradeable _rewardToken,
+    address _rewardToken,
     uint256 _maxRewardPerSecond
   ) external initializer {
     OwnableUpgradeable.__Ownable_init();
     ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
 
     // sanity check
-    _rewardToken.totalSupply();
+    IERC20Upgradeable(_rewardToken).totalSupply();
     IMiniFL(_miniFL).poolLength();
 
     name = _name;
@@ -140,7 +140,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     user.rewardDebt = _accumulatedRewards;
 
     if (_pendingRewards != 0) {
-      rewardToken.safeTransfer(_user, _pendingRewards);
+      IERC20Upgradeable(rewardToken).safeTransfer(_user, _pendingRewards);
     }
 
     emit LogHarvest(_user, _pid, _pendingRewards);

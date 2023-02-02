@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-
 import "./IRewarder.sol";
 
 interface IMiniFL {
@@ -13,7 +11,7 @@ interface IMiniFL {
 
   function poolLength() external view returns (uint256);
 
-  function stakingToken(uint256 _pid) external view returns (IERC20Upgradeable);
+  function stakingTokens(uint256 _pid) external view returns (address);
 
   function getStakingReserves(uint256 _pid) external view returns (uint256);
 }
