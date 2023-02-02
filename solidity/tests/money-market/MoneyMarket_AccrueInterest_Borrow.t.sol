@@ -418,13 +418,13 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     // test withdrawing reserve
     vm.expectRevert(IAdminFacet.AdminFacet_ReserveTooLow.selector);
-    adminFacet.withdrawReserve(address(weth), address(this), 5e16);
+    adminFacet.withdrawProtocolReserve(address(weth), address(this), 5e16);
 
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.withdrawReserve(address(weth), address(this), 4e16);
+    adminFacet.withdrawProtocolReserve(address(weth), address(this), 4e16);
 
-    adminFacet.withdrawReserve(address(weth), address(this), 4e16);
+    adminFacet.withdrawProtocolReserve(address(weth), address(this), 4e16);
     assertEq(viewFacet.getProtocolReserve(address(weth)), 0);
     assertEq(viewFacet.getTotalToken(address(weth)), 5396e16);
   }
