@@ -231,12 +231,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       revert MiniFL_Forbidden();
     }
     address _stakingToken = stakingTokens[_pid];
-    IERC20Upgradeable(_stakingToken).safeTransferFrom(msg.sender, address(this), _amount);
+    uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amount);
 
     // Effects
-    stakingReserves[_stakingToken] += _amount;
-    user.amount = user.amount + _amount;
-    user.rewardDebt = user.rewardDebt + ((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
+    stakingReserves[_stakingToken] += _receivedAmount;
+    user.amount = user.amount + _receivedAmount;
+    user.rewardDebt = user.rewardDebt + ((_receivedAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
     // Interactions
     uint256 _rewarderLength = rewarders[_pid].length;
@@ -249,7 +249,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       }
     }
 
-    emit LogDeposit(msg.sender, _for, _pid, _amount);
+    emit LogDeposit(msg.sender, _for, _pid, _receivedAmount);
   }
 
   /// @notice Withdraw tokens from MiniFL.
@@ -415,5 +415,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   function getStakingReserves(uint256 _pid) external view returns (uint256 _reservedAmount) {
     _reservedAmount = stakingReserves[stakingTokens[_pid]];
+  }
+
+  function _unsafePullToken(
+    address _from,
+    address _token,
+    uint256 _amount
+  ) internal returns (uint256 _receivedAmount) {
+    uint256 _currentTokenBalance = IERC20Upgradeable(_token).balanceOf(address(this));
+    IERC20Upgradeable(_token).safeTransferFrom(_from, address(this), _amount);
+    _receivedAmount = IERC20Upgradeable(_token).balanceOf(address(this)) - _currentTokenBalance;
   }
 }
