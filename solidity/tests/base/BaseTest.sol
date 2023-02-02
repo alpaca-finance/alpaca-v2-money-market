@@ -44,7 +44,6 @@ contract BaseTest is DSTest {
   MockERC20 internal usdc;
   MockERC20 internal busd;
   MockERC20 internal btc;
-  MockERC20 internal opm; // open market token
   address internal usd;
   MockERC20 internal isolateToken;
 
@@ -54,7 +53,6 @@ contract BaseTest is DSTest {
   uint256 internal usdcDecimal;
   uint256 internal busdDecimal;
   uint256 internal btcDecimal;
-  uint256 internal opmDecimal;
   uint256 internal usdDecimal = 18;
   uint256 internal isolateTokenDecimal;
 
@@ -91,7 +89,6 @@ contract BaseTest is DSTest {
     btc = deployMockErc20("Bitcoin", "BTC", 18);
     usdc = deployMockErc20("USD COIN", "USDC", 6);
     busd = deployMockErc20("BUSD", "BUSD", 18);
-    opm = deployMockErc20("OPM Token", "OPM", 9);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
 
     cakeDecimal = cake.decimals();
@@ -99,7 +96,6 @@ contract BaseTest is DSTest {
     usdcDecimal = usdc.decimals();
     busdDecimal = busd.decimals();
     btcDecimal = btc.decimals();
-    opmDecimal = opm.decimals();
     isolateTokenDecimal = isolateToken.decimals();
 
     // mint token
@@ -108,14 +104,12 @@ contract BaseTest is DSTest {
     weth.mint(ALICE, normalizeEther(1000 ether, wethDecimal));
     btc.mint(ALICE, normalizeEther(1000 ether, btcDecimal));
     usdc.mint(ALICE, normalizeEther(1000 ether, usdcDecimal));
-    opm.mint(ALICE, normalizeEther(1000 ether, opmDecimal));
     cake.mint(ALICE, normalizeEther(1000 ether, cakeDecimal));
     isolateToken.mint(ALICE, normalizeEther(1000 ether, isolateTokenDecimal));
 
     weth.mint(EVE, normalizeEther(1000 ether, wethDecimal));
     btc.mint(EVE, normalizeEther(1000 ether, btcDecimal));
     usdc.mint(EVE, normalizeEther(1000 ether, usdcDecimal));
-    opm.mint(EVE, normalizeEther(1000 ether, opmDecimal));
     isolateToken.mint(EVE, normalizeEther(1000 ether, isolateTokenDecimal));
 
     weth.mint(BOB, normalizeEther(1000 ether, wethDecimal));

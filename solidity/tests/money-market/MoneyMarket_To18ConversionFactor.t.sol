@@ -13,6 +13,9 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
 
+// helpers
+import { TestHelper } from "../helper/TestHelper.sol";
+
 contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
@@ -21,7 +24,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenMMConvert18DecimalPlacesToken_ShouldHandleDecimalConversionFactorCorrectly() external {
     // openMarket 18 decimals
     address _token18 = address(new MockERC20("18 decimals", "18", 18));
-    address _ibToken18 = adminFacet.openMarket(_token18);
+    address _ibToken18 = address(TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(_token18)));
     assertEq(IERC20(_ibToken18).decimals(), 18);
     assertEq(viewFacet.getTokenConfig(_token18).to18ConversionFactor, 1);
 
@@ -44,7 +47,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
   {
     // openMarket 12 decimals
     address _token12 = address(new MockERC20("12 decimals", "12", 12));
-    address _ibToken12 = adminFacet.openMarket(_token12);
+    address _ibToken12 = address(TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(_token12)));
     assertEq(IERC20(_ibToken12).decimals(), 12);
     assertEq(viewFacet.getTokenConfig(_token12).to18ConversionFactor, 10**6);
 
@@ -63,7 +66,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
 
     // openMarket 1 decimals
     address _token1 = address(new MockERC20("1 decimals", "1", 1));
-    address _ibToken1 = adminFacet.openMarket(_token1);
+    address _ibToken1 = address(TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(_token1)));
     assertEq(IERC20(_ibToken1).decimals(), 1);
     assertEq(viewFacet.getTokenConfig(_token1).to18ConversionFactor, 10**17);
 
@@ -84,8 +87,16 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
   function testRevert_WhenMMConvertTokenWithDecimalPlacesGreaterThan18() external {
     // openMarket 19 decimals
     address _token19 = address(new MockERC20("19 decimals", "19", 19));
+    IAdminFacet.TokenConfigInput memory _tokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: _token19,
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 1,
+      maxCollateral: 1
+    });
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_UnsupportedDecimals.selector);
-    adminFacet.openMarket(_token19);
+    adminFacet.openMarket(_token19, _tokenConfigInput, _tokenConfigInput);
 
     // setTokenConfigs 19 decimals
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);

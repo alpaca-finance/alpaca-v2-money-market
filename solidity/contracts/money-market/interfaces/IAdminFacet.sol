@@ -48,7 +48,11 @@ interface IAdminFacet {
     address token;
   }
 
-  function openMarket(address _token) external returns (address);
+  function openMarket(
+    address _token,
+    TokenConfigInput calldata _tokenConfigInput,
+    TokenConfigInput calldata _ibTokenConfigInput
+  ) external returns (address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
