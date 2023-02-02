@@ -36,10 +36,10 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
 
     LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
-    vm.prank(BOB);
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _desiredWeth,
       desiredToken1Amount: _desiredUsdc,
@@ -48,6 +48,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       token0AmountIn: _wethAmountDirect,
       token1AmountIn: _usdcAmountDirect
     });
+    vm.prank(BOB);
     farmFacet.addFarmPosition(_input);
 
     (uint256 _lpBalance, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
@@ -95,10 +96,10 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
 
     LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
-    vm.prank(BOB);
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _desiredWeth,
       desiredToken1Amount: _desiredUsdc,
@@ -107,6 +108,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
       token0AmountIn: _wethAmountDirect,
       token1AmountIn: _usdcAmountDirect
     });
+    vm.prank(BOB);
     farmFacet.addFarmPosition(_input);
 
     (uint256 _lpBalance, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
@@ -162,6 +164,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: _bobLpAmount,
       desiredToken0Amount: _bobInput.desiredToken0,
       desiredToken1Amount: _bobInput.desiredToken1,
@@ -188,6 +191,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: _aliceLpAmount,
       desiredToken0Amount: _aliceInput.desiredToken0,
       desiredToken1Amount: _aliceInput.desiredToken1,
@@ -257,6 +261,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: _bobLpAmount,
       desiredToken0Amount: _bobInput.desiredToken0,
       desiredToken1Amount: _bobInput.desiredToken1,
@@ -278,6 +283,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: _aliceLpAmount,
       desiredToken0Amount: _aliceInput.desiredToken0,
       desiredToken1Amount: _aliceInput.desiredToken1,

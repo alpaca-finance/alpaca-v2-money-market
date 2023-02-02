@@ -92,6 +92,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: _lpToken,
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
       desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
@@ -176,6 +177,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: _lpToken,
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
       desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
@@ -257,6 +259,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: _lpToken,
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
       desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
@@ -340,6 +343,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: _lpToken,
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
       desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
@@ -419,6 +423,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: _lpToken,
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
       desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
@@ -472,6 +477,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 30 ether,
       desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
