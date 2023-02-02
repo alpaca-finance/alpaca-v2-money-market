@@ -78,7 +78,11 @@ contract AdminFacet is IAdminFacet {
   /// @notice Open a new market for new token
   /// @param _token The token for lending/borrowing
   /// @return _newIbToken The address of interest bearing token created for this market
-  function openMarket(address _token) external onlyOwner nonReentrant returns (address _newIbToken) {
+  function openMarket(
+    address _token,
+    TokenConfigInput calldata _tokenConfigInput,
+    TokenConfigInput calldata _ibTokenConfigInput
+  ) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     if (moneyMarketDs.ibTokenImplementation == address(0)) {
       revert AdminFacet_InvalidIbTokenImplementation();
@@ -93,15 +97,8 @@ contract AdminFacet is IAdminFacet {
     _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
     IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
-    // todo: tbd
-    moneyMarketDs.tokenConfigs[_token] = LibMoneyMarket01.TokenConfig({
-      tier: LibMoneyMarket01.AssetTier.ISOLATE,
-      collateralFactor: 0,
-      borrowingFactor: 8500,
-      maxCollateral: 0,
-      maxBorrow: 100e18,
-      to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
-    });
+    _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
+    _setTokenConfig(_newIbToken, _ibTokenConfigInput, moneyMarketDs);
 
     moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
@@ -114,33 +111,51 @@ contract AdminFacet is IAdminFacet {
   function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
-    LibMoneyMarket01.TokenConfig memory _tokenConfig;
-    TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
-      _tokenConfigInput = _tokenConfigInputs[_i];
-      _validateTokenConfig(
-        _tokenConfigInput.collateralFactor,
-        _tokenConfigInput.borrowingFactor,
-        _tokenConfigInput.maxCollateral,
-        _tokenConfigInput.maxBorrow
-      );
-      _tokenConfig = LibMoneyMarket01.TokenConfig({
-        tier: _tokenConfigInput.tier,
-        collateralFactor: _tokenConfigInput.collateralFactor,
-        borrowingFactor: _tokenConfigInput.borrowingFactor,
-        maxCollateral: _tokenConfigInput.maxCollateral,
-        maxBorrow: _tokenConfigInput.maxBorrow,
-        to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
-      });
-
-      moneyMarketDs.tokenConfigs[_tokenConfigInput.token] = _tokenConfig;
-
-      emit LogSetTokenConfig(_tokenConfigInput.token, _tokenConfig);
+      _setTokenConfig(_tokenConfigInputs[_i].token, _tokenConfigInputs[_i], moneyMarketDs);
 
       unchecked {
         ++_i;
       }
     }
+  }
+
+  function _setTokenConfig(
+    address _token,
+    TokenConfigInput memory _tokenConfigInput,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    // factors should not greater than MAX_BPS
+    if (
+      _tokenConfigInput.collateralFactor > LibMoneyMarket01.MAX_BPS ||
+      _tokenConfigInput.borrowingFactor > LibMoneyMarket01.MAX_BPS
+    ) {
+      revert AdminFacet_InvalidArguments();
+    }
+    // borrowingFactor can't be zero otherwise will cause divide by zero error
+    if (_tokenConfigInput.borrowingFactor == 0) {
+      revert AdminFacet_InvalidArguments();
+    }
+    // prevent user add collat or borrow too much
+    if (_tokenConfigInput.maxCollateral > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
+    if (_tokenConfigInput.maxBorrow > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
+
+    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+      tier: _tokenConfigInput.tier,
+      collateralFactor: _tokenConfigInput.collateralFactor,
+      borrowingFactor: _tokenConfigInput.borrowingFactor,
+      maxCollateral: _tokenConfigInput.maxCollateral,
+      maxBorrow: _tokenConfigInput.maxBorrow,
+      to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
+    });
+
+    moneyMarketDs.tokenConfigs[_token] = _tokenConfig;
+
+    emit LogSetTokenConfig(_token, _tokenConfig);
   }
 
   /// @notice Whitelist/Blacklist the non collateralized borrower
@@ -463,29 +478,6 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.reserves[_token] += _actualAmountReceived;
 
     emit LogTopUpTokenReserve(_token, _actualAmountReceived);
-  }
-
-  function _validateTokenConfig(
-    uint256 collateralFactor,
-    uint256 borrowingFactor,
-    uint256 maxCollateral,
-    uint256 maxBorrow
-  ) internal pure {
-    // factors should not greater than MAX_BPS
-    if (collateralFactor > LibMoneyMarket01.MAX_BPS || borrowingFactor > LibMoneyMarket01.MAX_BPS) {
-      revert AdminFacet_InvalidArguments();
-    }
-    // borrowingFactor can't be zero otherwise will cause divide by zero error
-    if (borrowingFactor == 0) {
-      revert AdminFacet_InvalidArguments();
-    }
-    // prevent user add collat or borrow too much
-    if (maxCollateral > 1e40) {
-      revert AdminFacet_InvalidArguments();
-    }
-    if (maxBorrow > 1e40) {
-      revert AdminFacet_InvalidArguments();
-    }
   }
 
   /// @notice Set emerygency flag for pausing deposit and borrow
