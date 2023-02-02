@@ -586,16 +586,14 @@ library LibLYF01 {
       IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
     } else {
       // swap if different token and send to revenue treasury
-      IERC20(_lpConfig.rewardToken).safeIncreaseAllowance(_lpConfig.router, _reinvestBounty);
-      uint256[] memory _amounts = IRouterLike(_swapConfig.router).swapExactTokensForTokens(
+      IERC20(_lpConfig.rewardToken).safeApprove(_lpConfig.router, _reinvestBounty);
+      IRouterLike(_swapConfig.router).swapExactTokensForTokens(
         _reinvestBounty,
         0,
         _swapConfig.path,
         lyfDs.revenueTreasury,
         block.timestamp
       );
-      // re-assign _reinvestBounty with amountOut in desired token for logging
-      _reinvestBounty = _amounts[_amounts.length - 1];
     }
 
     // reset pending reward

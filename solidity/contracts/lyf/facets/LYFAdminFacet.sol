@@ -295,6 +295,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
     emit LogWitdrawReserve(_token, _to, _amount);
   }
 
+  /// @notice Set config to use when swap rewardToken to desiredToken to send to revenue treasury
+  /// @param _inputs Array of input to set the config
   function setRewardConversionConfigs(ILYFAdminFacet.SetRewardConversionConfigInput[] calldata _inputs)
     external
     onlyOwner
