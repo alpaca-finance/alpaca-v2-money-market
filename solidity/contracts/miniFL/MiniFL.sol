@@ -418,8 +418,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     rewarders[_pid] = _rewarders;
   }
 
-  function getStakingReserves(uint256 _pid) external view returns (uint256 _reservedAmount) {
-    _reservedAmount = stakingReserves[stakingTokens[_pid]];
+  function getStakingReserves(uint256 _pid) external view returns (uint256 _reserveAmount) {
+    _reserveAmount = stakingReserves[stakingTokens[_pid]];
   }
 
   function _unsafePullToken(
