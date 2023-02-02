@@ -68,4 +68,8 @@ interface ILYFAdminFacet {
   function setLiquidationTreasury(address _newTreasury) external;
 
   function setRevenueTreasury(address _newTreasury) external;
+
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
+
+  function topUpTokenReserve(address _token, uint256 _amount) external;
 }

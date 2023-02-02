@@ -40,6 +40,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 debtShareWrittenOff,
     uint256 debtValueWrittenOff
   );
+  event LogTopUpTokenReserve(address indexed token, uint256 amount);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -350,5 +351,18 @@ contract LYFAdminFacet is ILYFAdminFacet {
         ++i;
       }
     }
+  }
+
+  /// @notice Transfer token to diamond to increase token reserves
+  /// @param _token token to increase reserve for
+  /// @param _amount amount to transfer to diamond and increase reserve
+  function topUpTokenReserve(address _token, uint256 _amount) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    uint256 _actualAmountReceived = LibLYF01.unsafePullTokens(_token, msg.sender, _amount);
+
+    lyfDs.reserves[_token] += _actualAmountReceived;
+
+    emit LogTopUpTokenReserve(_token, _actualAmountReceived);
   }
 }
