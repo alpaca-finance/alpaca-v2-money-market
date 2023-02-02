@@ -16,7 +16,6 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
-  uint256 _subAccountId = 0;
   MockLiquidationStrategy internal mockLiquidationStrategy;
 
   function setUp() public override {
@@ -98,17 +97,17 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _lpToken),
       25 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(weth)),
       15 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(usdc)),
       normalizeEther(1 ether, usdcDecimal),
       "alice remaining usdc collat"
     );
@@ -180,14 +179,14 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
     );
 
     // check alice position
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken), 0, "alice remaining lp collat");
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _lpToken), 0, "alice remaining lp collat");
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(weth)),
       40 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(usdc)),
       normalizeEther(25 ether, usdcDecimal),
       "alice remaining usdc collat"
     );
@@ -260,17 +259,17 @@ contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
 
     // check alice position
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _lpToken),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _lpToken),
       25 ether,
       "alice remaining lp collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(weth)),
       12 ether,
       "alice remaining weth collat"
     );
     assertEq(
-      viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(usdc)),
+      viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(usdc)),
       0,
       "alice remaining usdc collat"
     );

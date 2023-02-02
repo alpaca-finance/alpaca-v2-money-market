@@ -273,13 +273,13 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _feeToLiquidator = (_actualLiquidationFee * liquidationRewardBps) / LibLYF01.MAX_BPS;
     uint256 _feeToTreasury = _actualLiquidationFee - _feeToLiquidator;
 
+    _validateBorrowingPower(_params.repayToken, _repaidAmount, _params.usedBorrowingPower, lyfDs);
+
     uint256 _collatSold = _params.collatAmountBefore - IERC20(_params.collatToken).balanceOf(address(this));
 
     console.log("[C]:_liquidationCall:_collatSold", _collatSold);
     console.log("[C]:_liquidationCall:_repaidAmount", _repaidAmount);
     lyfDs.reserves[_params.repayToken] += _repaidAmount;
-
-    _validateBorrowingPower(_params.repayToken, _repaidAmount, _params.usedBorrowingPower, lyfDs);
 
     IERC20(_params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
     IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);

@@ -23,6 +23,44 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
   PancakeswapV2IbTokenLiquidationStrategy _ibTokenLiquidationStrat;
   MockRouter02 internal router;
 
+  struct CacheState {
+    // general
+    uint256 lyfDebtTokenOutStanding;
+    // debt
+    uint256 debtPoolTotalValue;
+    uint256 debtPoolShare;
+    uint256 subAccountDebtValue;
+    // collat
+    uint256 tokenCollatAmount;
+    uint256 subAccountCollatAmount;
+    // fee
+    uint256 treasuryDebtTokenBalance;
+    uint256 liquidatorDebtTokenBalance;
+  }
+
+  function _getCacheState(
+    address _account,
+    uint256 _subAccountId,
+    address _collatToken,
+    address _debtToken,
+    address _lpToken
+  ) internal view returns (CacheState memory _cachestate) {
+    uint256 _debtPoolId = viewFacet.getDebtPoolIdOf(_debtToken, _lpToken);
+    uint256 _userDebtTokenValue;
+    (, _userDebtTokenValue) = viewFacet.getSubAccountDebt(_account, _subAccountId, address(usdc), _lpToken);
+
+    _cachestate = CacheState({
+      lyfDebtTokenOutStanding: viewFacet.getOutstandingBalanceOf(_debtToken),
+      debtPoolTotalValue: viewFacet.getDebtPoolTotalValue(_debtPoolId),
+      debtPoolShare: viewFacet.getDebtPoolTotalShare(_debtPoolId),
+      subAccountDebtValue: _userDebtTokenValue,
+      tokenCollatAmount: viewFacet.getTokenCollatAmount(_collatToken),
+      subAccountCollatAmount: viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken),
+      treasuryDebtTokenBalance: usdc.balanceOf(liquidationTreasury),
+      liquidatorDebtTokenBalance: usdc.balanceOf(liquidator)
+    });
+  }
+
   function setUp() public override {
     super.setUp();
 
@@ -120,11 +158,10 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     usdc.mint(liquidator, 10000 ether);
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
-    uint256 _liquidatorUsdcBalanceBefore = usdc.balanceOf(liquidator);
-    uint256 _usdcOutStandingBefore = viewFacet.getOutstandingBalanceOf(address(usdc));
-
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
+
+    CacheState memory _stateBefore = _getCacheState(ALICE, subAccount0, _collatToken, _debtToken, _lpToken);
+
     vm.startPrank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -138,22 +175,28 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     );
     vm.stopPrank();
 
+    CacheState memory _stateAfter = _getCacheState(ALICE, subAccount0, _collatToken, _debtToken, _lpToken);
+
     // ibBtc collateral is sold to repay
     assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(ibBtc)), 3.495 ether);
 
     // debt reduce
-    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, normalizeEther(25 ether, usdcDecimal));
+    assertEq(_stateAfter.subAccountDebtValue, normalizeEther(25 ether, usdcDecimal));
 
     // LYF outstanding
-    assertEq(viewFacet.getOutstandingBalanceOf(address(usdc)) - _usdcOutStandingBefore, _repayAmount);
+    assertEq(_stateAfter.lyfDebtTokenOutStanding - _stateBefore.lyfDebtTokenOutStanding, _repayAmount);
 
     // liquidator get fee
-    assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, normalizeEther(0.025 ether, usdcDecimal));
+    assertEq(
+      _stateAfter.liquidatorDebtTokenBalance - _stateBefore.liquidatorDebtTokenBalance,
+      normalizeEther(0.025 ether, usdcDecimal),
+      "!fee to liquidator"
+    );
     // liquidationTreasury get fee
     assertEq(
-      usdc.balanceOf(liquidationTreasury) - _treasuryUsdcBalanceBefore,
-      normalizeEther(0.025 ether, usdcDecimal)
+      _stateAfter.treasuryDebtTokenBalance - _stateBefore.treasuryDebtTokenBalance,
+      normalizeEther(0.025 ether, usdcDecimal),
+      "!fee to treasury"
     );
   }
 
@@ -172,17 +215,17 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
      * 3. liquidator liquidate alice position
      *      - liquidator wants to repay 30 USDC, but only 20 ibWeth remains as collat
      *      - withdraw 20 weth and swap to 20 USDC
-     *      - actualLiquidationFee = 20 * 0.3 / 30.3 = 0.198019801980198019
-     *      - actualRepay = 20 - 0.198019801980198019 = 19.801980198019801981
+     *      - actualLiquidationFee = 20 * 0.3 / 30.3 = 0.198019
+     *      - actualRepay = 20 - 0.198019 = 19.801981
      *
      * 4. alice position after liquidate
      *      - alice subaccount 0: ibWeth collateral = 0 ibWeth
-     *      - alice subaccount 0: usdc debt = 30 - 19.801980198019801981 = 10.198019801980198019 usdc
-     *      - lyf USDC outstanding should increase by repaid amount = 10.198019801980198019 USDC
+     *      - alice subaccount 0: usdc debt = 30 - 19.801981 = 10.198019 usdc
+     *      - lyf USDC outstanding should increase by repaid amount = 10.198019 USDC
      * 5. Fee
-     *      - totalFee = 0.198019801980198019
-     *      - 50% goes to liquidator = 0.198019801980198019 * 5000 / 10000 = 0.0990099009900990095
-     *      - treasury get = 0.198019801980198019 -  0.0990099009900990095 = 0.0990099009900990095
+     *      - totalFee = 0.198019
+     *      - 50% goes to liquidator = 0.198019 * 5000 / 10000 = 0.099009
+     *      - treasury get = 0.198019 - 0.099009 = 0.099010
      */
 
     // criteria
@@ -211,11 +254,9 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
-    uint256 _treasuryUsdcBalanceBefore = usdc.balanceOf(liquidationTreasury);
-    uint256 _liquidatorUsdcBalanceBefore = usdc.balanceOf(liquidator);
-    uint256 _usdcOutStandingBefore = viewFacet.getOutstandingBalanceOf(address(usdc));
-
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
+
+    CacheState memory _stateBefore = _getCacheState(ALICE, subAccount0, _collatToken, _debtToken, _lpToken);
 
     vm.startPrank(liquidator);
     liquidationFacet.liquidationCall(
@@ -230,19 +271,20 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     );
     vm.stopPrank();
 
+    CacheState memory _stateAfter = _getCacheState(ALICE, subAccount0, _collatToken, _debtToken, _lpToken);
+
     // ibBtc collateral is sold to repay
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(ibWeth)), 0 ether);
+    assertEq(_stateAfter.subAccountCollatAmount, 0 ether);
 
     // debt reduce
-    (, uint256 _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-    assertEq(_aliceUsdcDebtValue, 10198019);
+    assertEq(_stateAfter.subAccountDebtValue, 10198019);
 
     // LYF outstanding
-    assertEq(viewFacet.getOutstandingBalanceOf(address(usdc)) - _usdcOutStandingBefore, 10.198019801980198019 ether);
+    assertEq(_stateAfter.lyfDebtTokenOutStanding - _stateBefore.lyfDebtTokenOutStanding, 19801981);
 
-    // // liquidator get fee
-    // assertEq(usdc.balanceOf(liquidator) - _liquidatorUsdcBalanceBefore, 0.0990099009900990095 ether);
+    //  liquidator get fee
+    assertEq(_stateAfter.liquidatorDebtTokenBalance - _stateBefore.liquidatorDebtTokenBalance, 99009);
     // // treasury get fee
-    // assertEq(usdc.balanceOf(treasury) - _treasuryUsdcBalanceBefore, 0.0990099009900990095 ether);
+    assertEq(_stateAfter.treasuryDebtTokenBalance - _stateBefore.treasuryDebtTokenBalance, 99010);
   }
 }

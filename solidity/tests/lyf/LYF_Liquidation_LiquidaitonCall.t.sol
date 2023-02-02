@@ -16,12 +16,11 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
-  uint256 _subAccountId = 0;
   MockLiquidationStrategy internal mockLiquidationStrategy;
 
   struct CacheState {
     // general
-    uint256 lyfReserveToken;
+    uint256 lyfDebtTokenOutStanding;
     // debt
     uint256 debtPoolTotalValue;
     uint256 debtPoolShare;
@@ -32,6 +31,29 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     // fee
     uint256 treasuryDebtTokenBalance;
     uint256 liquidatorDebtTokenBalance;
+  }
+
+  function _getCacheState(
+    address _account,
+    uint256 _subAccountId,
+    address _collatToken,
+    address _debtToken,
+    address _lpToken
+  ) internal view returns (CacheState memory _cachestate) {
+    uint256 _debtPoolId = viewFacet.getDebtPoolIdOf(_debtToken, _lpToken);
+    uint256 _userDebtTokenValue;
+    (, _userDebtTokenValue) = viewFacet.getSubAccountDebt(_account, _subAccountId, address(usdc), _lpToken);
+
+    _cachestate = CacheState({
+      lyfDebtTokenOutStanding: viewFacet.getOutstandingBalanceOf(_debtToken),
+      debtPoolTotalValue: viewFacet.getDebtPoolTotalValue(_debtPoolId),
+      debtPoolShare: viewFacet.getDebtPoolTotalShare(_debtPoolId),
+      subAccountDebtValue: _userDebtTokenValue,
+      tokenCollatAmount: viewFacet.getTokenCollatAmount(_collatToken),
+      subAccountCollatAmount: viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, _collatToken),
+      treasuryDebtTokenBalance: usdc.balanceOf(liquidationTreasury),
+      liquidatorDebtTokenBalance: usdc.balanceOf(liquidator)
+    });
   }
 
   function setUp() public override {
@@ -152,7 +174,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
-      _subAccountId,
+      subAccount0,
       _debtToken,
       _collatToken,
       _lpToken,
@@ -205,26 +227,13 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     farmFacet.addFarmPosition(_input);
     vm.stopPrank();
 
-    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccountId, address(weth)), 10 ether);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, address(weth)), 10 ether);
     assertEq(viewFacet.getTotalBorrowingPower(ALICE, subAccount0), 63 ether);
     assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0), 33.333333333333333333 ether);
 
     usdc.mint(liquidator, 10000 ether);
 
-    uint256 _debtPoolId = viewFacet.getDebtPoolIdOf(_debtToken, _lpToken);
-    uint256 _aliceUsdcDebtValue;
-    (, _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-
-    CacheState memory _stateBefore = CacheState({
-      lyfReserveToken: viewFacet.getOutstandingBalanceOf(_debtToken),
-      debtPoolTotalValue: viewFacet.getDebtPoolTotalValue(_debtPoolId),
-      debtPoolShare: viewFacet.getDebtPoolTotalShare(_debtPoolId),
-      subAccountDebtValue: _aliceUsdcDebtValue,
-      tokenCollatAmount: viewFacet.getTokenCollatAmount(_collatToken),
-      subAccountCollatAmount: viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _collatToken),
-      treasuryDebtTokenBalance: usdc.balanceOf(liquidationTreasury),
-      liquidatorDebtTokenBalance: usdc.balanceOf(liquidator)
-    });
+    CacheState memory _stateBefore = _getCacheState(ALICE, subAccount0, _collatToken, _debtToken, _lpToken);
 
     mockOracle.setLpTokenPrice(address(_lpToken), 0.5 ether);
     vm.startPrank(liquidator);
@@ -241,19 +250,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     );
     vm.stopPrank();
 
-    (, _aliceUsdcDebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, address(usdc), _lpToken);
-
-    CacheState memory _stateAfter = CacheState({
-      lyfReserveToken: viewFacet.getOutstandingBalanceOf(_debtToken),
-      debtPoolTotalValue: viewFacet.getDebtPoolTotalValue(_debtPoolId),
-      debtPoolShare: viewFacet.getDebtPoolTotalShare(_debtPoolId),
-      subAccountDebtValue: _aliceUsdcDebtValue,
-      tokenCollatAmount: viewFacet.getTokenCollatAmount(_collatToken),
-      subAccountCollatAmount: viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _collatToken),
-      treasuryDebtTokenBalance: usdc.balanceOf(liquidationTreasury),
-      liquidatorDebtTokenBalance: usdc.balanceOf(liquidator)
-    });
-
+    CacheState memory _stateAfter = _getCacheState(ALICE, subAccount0, _collatToken, _debtToken, _lpToken);
     // collateral is sold to repay
     assertEq(_stateAfter.subAccountCollatAmount, 0);
 
@@ -262,7 +259,7 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
     assertEq(_stateAfter.subAccountDebtValue, 20099009);
 
     // reserve
-    assertEq(_stateAfter.lyfReserveToken - _stateBefore.lyfReserveToken, 9900991);
+    assertEq(_stateAfter.lyfDebtTokenOutStanding - _stateBefore.lyfDebtTokenOutStanding, 9900991);
 
     // liquidator fee
     assertEq(_stateAfter.liquidatorDebtTokenBalance - _stateBefore.liquidatorDebtTokenBalance, 49504);
