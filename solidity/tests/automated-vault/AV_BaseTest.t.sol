@@ -5,6 +5,7 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // helper
 import { AVDiamondDeployer } from "../helper/AVDiamondDeployer.sol";
+import { TestHelper } from "../helper/TestHelper.sol";
 
 // contracts
 import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
@@ -145,11 +146,8 @@ abstract contract AV_BaseTest is BaseTest {
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
 
-    address _ibWeth = mmAdminFacet.openMarket(address(weth));
-    address _ibUsdc = mmAdminFacet.openMarket(address(usdc));
-
-    ibWeth = InterestBearingToken(_ibWeth);
-    ibUsdc = InterestBearingToken(_ibUsdc);
+    ibWeth = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(weth));
+    ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(usdc));
 
     mmAdminFacet.setNonCollatBorrowerOk(avDiamond, true);
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);

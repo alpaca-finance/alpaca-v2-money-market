@@ -53,6 +53,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: desiredToken0Amount,
       desiredToken1Amount: desiredToken1Amount,
@@ -271,6 +272,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
       desiredToken1Amount: normalizeEther(1 ether, usdcDecimal),
@@ -292,6 +294,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1,
       desiredToken1Amount: 0,
@@ -310,6 +313,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
       desiredToken1Amount: 0,
@@ -363,6 +367,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
       desiredToken1Amount: 0,
@@ -403,6 +408,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
       desiredToken1Amount: 0,
@@ -432,6 +438,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
       desiredToken1Amount: 0,
@@ -462,6 +469,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 10 ether,
       desiredToken1Amount: 0,
@@ -500,6 +508,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: 1 ether,
       desiredToken1Amount: normalizeEther(1 ether, usdcDecimal),
@@ -531,6 +540,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
       lpToken: address(wethUsdcLPToken),
+      token0: wethUsdcLPToken.token0(),
       minLpReceive: 0,
       desiredToken0Amount: _wethToAddLP,
       desiredToken1Amount: normalizeEther(_usdcToAddLP, usdcDecimal),
@@ -548,6 +558,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     // borrow btc and usdc
     _input.lpToken = address(btcUsdcLPToken);
+    _input.token0 = btcUsdcLPToken.token0();
     _input.desiredToken0Amount = _btcToAddLP;
     _input.desiredToken1Amount = normalizeEther(_usdcToAddLP, usdcDecimal);
     _input.token0ToBorrow = _btcToAddLP;
