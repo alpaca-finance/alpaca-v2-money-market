@@ -276,4 +276,12 @@ contract LYFViewFacet is ILYFViewFacet {
     _liquidationTreasury = lyfDs.liquidationTreasury;
     _revenueTreasury = lyfDs.revenueTreasury;
   }
+
+  function getRewardConversionConfig(address _rewardToken)
+    external
+    view
+    returns (LibLYF01.RewardConversionConfig memory)
+  {
+    return LibLYF01.lyfDiamondStorage().rewardConversionConfigs[_rewardToken];
+  }
 }

@@ -79,4 +79,9 @@ interface ILYFViewFacet {
   function getSubAccount(address _primary, uint256 _subAccountId) external view returns (address);
 
   function getTreasuries() external view returns (address _feeTreasury, address _revenueTreasury);
+
+  function getRewardConversionConfig(address _rewardToken)
+    external
+    view
+    returns (LibLYF01.RewardConversionConfig memory);
 }

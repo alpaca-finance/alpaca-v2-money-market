@@ -22,4 +22,8 @@ interface IInterestBearingToken is IERC20 {
   function decimals() external view returns (uint256);
 
   function convertToShares(uint256 assets) external view returns (uint256 shares);
+
+  function totalAssets() external view returns (uint256);
+
+  function totalSupply() external view returns (uint256);
 }

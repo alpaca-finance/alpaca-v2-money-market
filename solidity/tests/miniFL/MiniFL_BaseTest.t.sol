@@ -38,9 +38,9 @@ contract MiniFL_BaseTest is BaseTest {
 
   function setupMiniFLPool() internal {
     // add staking pool
-    miniFL.addPool(60, IERC20Upgradeable(address(weth)), false, false);
+    miniFL.addPool(60, address(weth), false, false);
     // add debt token pool
-    miniFL.addPool(40, IERC20Upgradeable(address(debtToken1)), true, false);
+    miniFL.addPool(40, address(debtToken1), true, false);
 
     // set debtToken staker
     uint256[] memory _poolIds = new uint256[](1);

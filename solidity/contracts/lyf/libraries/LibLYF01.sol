@@ -29,7 +29,13 @@ library LibLYF01 {
   uint256 internal constant MAX_BPS = 10000;
 
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
-  event LogReinvest(address indexed _rewardTo, uint256 _reward, uint256 _bounty);
+  event LogReinvest(
+    address indexed _rewardTo,
+    address _rewardToken,
+    address _treasuryDesiredToken,
+    uint256 _rewardAmount,
+    uint256 _bountyAmount
+  );
 
   error LibLYF01_BadSubAccountId();
   error LibLYF01_PriceStale(address);
@@ -74,6 +80,11 @@ library LibLYF01 {
     uint256 lastAccruedAt;
   }
 
+  struct RewardConversionConfig {
+    address router;
+    address[] path;
+  }
+
   // Storage
   struct LYFDiamondStorage {
     IMoneyMarket moneyMarket;
@@ -87,8 +98,8 @@ library LibLYF01 {
     // ---- reserves ---- //
     mapping(address => uint256) reserves; // track token balance of protocol
     mapping(address => uint256) protocolReserves; // part of reserves that belongs to protocol
-    // collats = amount of collateral token
-    mapping(address => uint256) collats;
+    mapping(address => uint256) collats; // collats = amount of collateral token
+    mapping(address => RewardConversionConfig) rewardConversionConfigs; // rewardToken => RewardConversionConfig
     // ---- subAccounts ---- //
     mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => linked list of collats
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares; // subAccount => linked list of debtShares
@@ -568,12 +579,33 @@ library LibLYF01 {
     }
 
     // transfer bounty to treasury
-    IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
+    RewardConversionConfig memory _swapConfig = lyfDs.rewardConversionConfigs[_lpConfig.rewardToken];
+    address _treasuryDesiredToken = _swapConfig.path[_swapConfig.path.length - 1];
+    if (_lpConfig.rewardToken == _treasuryDesiredToken) {
+      // just transfer if reward and desired token are the same
+      IERC20(_lpConfig.rewardToken).safeTransfer(lyfDs.revenueTreasury, _reinvestBounty);
+    } else {
+      // swap if different token and send to revenue treasury
+      IERC20(_lpConfig.rewardToken).safeApprove(_lpConfig.router, _reinvestBounty);
+      IRouterLike(_swapConfig.router).swapExactTokensForTokens(
+        _reinvestBounty,
+        0,
+        _swapConfig.path,
+        lyfDs.revenueTreasury,
+        block.timestamp
+      );
+    }
 
     // reset pending reward
     lyfDs.pendingRewards[_lpToken] = 0;
 
-    emit LogReinvest(msg.sender, _pendingReward, _reinvestBounty);
+    emit LogReinvest(
+      lyfDs.revenueTreasury,
+      _lpConfig.rewardToken,
+      _treasuryDesiredToken,
+      _pendingReward,
+      _reinvestBounty
+    );
   }
 
   function borrow(

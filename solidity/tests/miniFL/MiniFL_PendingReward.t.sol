@@ -20,9 +20,53 @@ contract MiniFL_PendingReward is MiniFL_BaseTest {
     prepareForHarvest();
   }
 
-  function testCorrectness_WhenTimpast_PendingAlpacaShouldBeCorrectly() external {
+  function testCorrectness_WhenTimpast_PendingAlpacaShouldBeCorrect() external {
     // timpast for 100 second
     vm.warp(block.timestamp + 100);
+
+    // Mini FL, alpaca per second = 1000 ether then distributed reward = 1000 * 100 = 100000 ether
+    // ----------------------------------------------------------------------------------------------------
+    // | Pool   | AllocPoint | ALICE | BOB | Total Staked Token | Reward Amount* | ACC Reward per Share** |
+    // |--------|------------|-------|-----|--------------------|----------------|------------------------|
+    // | WETH   |         60 |    20 |  10 |                 30 |          60000 |                   2000 |
+    // | DToken |         40 |    10 |  90 |                100 |          40000 |                    400 |
+    // | Total  |        100 |       |     |                    |         100000 |                        |
+    // ----------------------------------------------------------------------------------------------------
+    // * distributedReward * alloc point / total alloc point
+    // ** Reward amount / Total Staked Token
+
+    // Summarize
+    // *** Reward Formula: (AMOUNT * ACC PER SHARE) - Reward Debt
+    // ALICE Reward
+    // ----------------------------
+    // |    Pool |  ALPACA Reward |
+    // |---------|----------------|
+    // |    WETH |          40000 |
+    // |  DToken |           4000 |
+    // |   Total |          44000 |
+    // ----------------------------
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
+    assertEq(miniFL.pendingAlpaca(dtokenPoolID, ALICE), 4000 ether);
+
+    // BOB Reward
+    // ----------------------------
+    // |    Pool |  ALPACA Reward |
+    // |---------|----------------|
+    // |    WETH |          20000 |
+    // |  DToken |          36000 |
+    // |   Total |          56000 |
+    // ----------------------------
+    assertEq(miniFL.pendingAlpaca(wethPoolID, BOB), 20000 ether);
+    assertEq(miniFL.pendingAlpaca(dtokenPoolID, BOB), 36000 ether);
+  }
+
+  function testCorrectness_WhenSomeOneTransferDirectToMiniFL_PendingAlpacaShouldBeCorrect() external {
+    // timpast for 100 second
+    vm.warp(block.timestamp + 100);
+
+    // increase balance in MiniFL
+    weth.mint(address(miniFL), 10 ether);
+    debtToken1.mint(address(miniFL), 10 ether);
 
     // Mini FL, alpaca per second = 1000 ether then distributed reward = 1000 * 100 = 100000 ether
     // ----------------------------------------------------------------------------------------------------

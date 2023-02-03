@@ -41,6 +41,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 debtValueWrittenOff
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
+  event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -364,5 +365,36 @@ contract LYFAdminFacet is ILYFAdminFacet {
     lyfDs.reserves[_token] += _actualAmountReceived;
 
     emit LogTopUpTokenReserve(_token, _actualAmountReceived);
+  }
+
+  /// @notice Set config to use when swap rewardToken to desiredToken to send to revenue treasury
+  /// @param _inputs Array of input to set the config
+  function setRewardConversionConfigs(ILYFAdminFacet.SetRewardConversionConfigInput[] calldata _inputs)
+    external
+    onlyOwner
+  {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    uint256 _len = _inputs.length;
+    ILYFAdminFacet.SetRewardConversionConfigInput memory _input;
+    LibLYF01.RewardConversionConfig memory _config;
+    for (uint256 _i; _i < _len; ) {
+      _input = _inputs[_i];
+
+      if (_input.rewardToken != _input.path[0]) {
+        revert LYFAdminFacet_InvalidArguments();
+      }
+
+      // sanity check router and path
+      IRouterLike(_input.router).getAmountsIn(1 ether, _input.path);
+
+      _config = LibLYF01.RewardConversionConfig({ router: _input.router, path: _input.path });
+      lyfDs.rewardConversionConfigs[_input.rewardToken] = _config;
+
+      emit LogSetRewardConversionConfigs(_input.rewardToken, _config);
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }

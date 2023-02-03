@@ -15,8 +15,8 @@ contract MiniFL_SetPool is MiniFL_BaseTest {
   }
 
   function testCorrectness_WhenSetPool() external {
-    miniFL.addPool(100, IERC20Upgradeable(address(weth)), false, false); // PID 0
-    miniFL.addPool(50, IERC20Upgradeable(address(usdc)), false, false); // PID 1
+    miniFL.addPool(100, address(weth), false, false); // PID 0
+    miniFL.addPool(50, address(usdc), false, false); // PID 1
 
     assertEq(miniFL.poolLength(), 2);
     assertEq(miniFL.totalAllocPoint(), 150);
