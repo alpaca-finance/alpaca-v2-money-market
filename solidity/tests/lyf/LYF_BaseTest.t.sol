@@ -63,6 +63,7 @@ abstract contract LYF_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
   address internal liquidationTreasury = address(888);
   address internal revenueTreasury = address(889);
+  address internal liquidator = address(666);
 
   LYFAdminFacet internal adminFacet;
   ILYFCollateralFacet internal collateralFacet;
