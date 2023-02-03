@@ -12,6 +12,7 @@ on:
       - "chore/**"
       - "test/**"
       - "unit/**"
+      - "refactor/**"
 env:
   FOUNDRY_PROFILE: ci
 
