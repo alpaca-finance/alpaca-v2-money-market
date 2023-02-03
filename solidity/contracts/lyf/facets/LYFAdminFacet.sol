@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
+import { LibFullMath } from "../libraries/LibFullMath.sol";
 
 // ---- Interfaces ---- //
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
@@ -32,6 +33,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
+  event LogSettleDebt(address indexed _token, uint256 _amount);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -330,5 +332,30 @@ contract LYFAdminFacet is ILYFAdminFacet {
         ++_i;
       }
     }
+  }
+
+  /// @notice Repay the debt to Money Market
+  /// @param _token The token to repay
+  /// @param _repayAmount The amount to repay
+  function settleDebt(address _token, uint256 _repayAmount) external onlyOwner {
+    if (_repayAmount == 0) {
+      revert LYFAdminFacet_NoMoneyMarketDebt();
+    }
+
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    _repayAmount = LibFullMath.min(_repayAmount, lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token));
+
+    uint256 _outstandingBalance = lyfDs.reserves[_token] > lyfDs.protocolReserves[_token]
+      ? lyfDs.reserves[_token] - lyfDs.protocolReserves[_token]
+      : 0;
+    if (_outstandingBalance < _repayAmount) {
+      revert LYFAdminFacet_NotEnoughToken();
+    }
+
+    lyfDs.reserves[_token] -= _repayAmount;
+    IERC20(_token).safeIncreaseAllowance(address(lyfDs.moneyMarket), _repayAmount);
+    lyfDs.moneyMarket.nonCollatRepay(address(this), _token, _repayAmount);
+
+    emit LogSettleDebt(_token, _repayAmount);
   }
 }
