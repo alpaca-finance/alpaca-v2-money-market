@@ -76,7 +76,7 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     vm.prank(funder2);
     miniFL.deposit(ALICE, wethPoolID, 11 ether);
 
-    vm.prank(funder1);
+    vm.prank(funder2);
     miniFL.deposit(BOB, wethPoolID, 12 ether);
 
     // ALICE balance should not changed
