@@ -249,7 +249,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
-      // callback to rewarder to do accounting
+      // rewarder callback to do accounting
       IRewarder(_rewarder).onDeposit(_pid, _for, user.totalAmount);
       unchecked {
         ++_i;
@@ -300,7 +300,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
-      // callback to rewarder to do accounting
+      // rewarder callback to do accounting
       IRewarder(_rewarder).onWithdraw(_pid, _for, user.totalAmount);
       unchecked {
         ++_i;
@@ -333,7 +333,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
-      // callback to rewarder to harvest reward from rewarder
+      // rewarder callback to claim reward
       IRewarder(_rewarder).onHarvest(_pid, msg.sender);
       unchecked {
         ++_i;
