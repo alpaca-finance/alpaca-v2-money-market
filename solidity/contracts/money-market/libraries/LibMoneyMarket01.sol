@@ -332,6 +332,27 @@ library LibMoneyMarket01 {
     }
   }
 
+  function getNonCollatPendingInterest(
+    address _account,
+    address _token,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _nonCollatPendingInterest) {
+    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
+
+    if (block.timestamp > _lastAccrualTimestamp) {
+      uint256 _secondsSinceLastAccrual;
+      unchecked {
+        _secondsSinceLastAccrual = block.timestamp - _lastAccrualTimestamp;
+      }
+
+      // _nonCollatPendingInterest = nonCollatInterestAmountPerSec * _secondsSinceLastAccrual
+      _nonCollatPendingInterest =
+        ((getNonCollatInterestRate(_account, _token, moneyMarketDs) *
+          moneyMarketDs.nonCollatAccountDebtValues[_account].getAmount(_token)) * _secondsSinceLastAccrual) /
+        1e18;
+    }
+  }
+
   function getOverCollatInterestRate(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
     internal
     view

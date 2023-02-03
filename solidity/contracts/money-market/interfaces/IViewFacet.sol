@@ -83,6 +83,8 @@ interface IViewFacet {
 
   function getNonCollatInterestRate(address _account, address _token) external view returns (uint256);
 
+  function getNonCollatAccountDebtWithPendingInterest(address _account, address _token) external view returns (uint256);
+
   function getLiquidationParams() external view returns (uint16, uint16);
 
   function getMaxNumOfToken()

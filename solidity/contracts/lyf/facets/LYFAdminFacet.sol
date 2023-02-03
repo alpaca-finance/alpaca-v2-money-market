@@ -13,6 +13,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
 /// @title LYFAdminFacet is dedicated to protocol parameter configuration
 contract LYFAdminFacet is ILYFAdminFacet {
@@ -339,22 +340,36 @@ contract LYFAdminFacet is ILYFAdminFacet {
   /// @param _repayAmount The amount to repay
   function settleDebt(address _token, uint256 _repayAmount) external onlyOwner {
     if (_repayAmount == 0) {
-      revert LYFAdminFacet_NoMoneyMarketDebt();
+      revert LYFAdminFacet_InvalidArguments();
     }
 
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    _repayAmount = LibFullMath.min(_repayAmount, lyfDs.moneyMarket.getNonCollatAccountDebt(address(this), _token));
+    IMoneyMarket moneyMarket = lyfDs.moneyMarket;
+    _repayAmount = LibFullMath.min(
+      _repayAmount,
+      moneyMarket.getNonCollatAccountDebtWithPendingInterest(address(this), _token)
+    );
 
-    uint256 _outstandingBalance = lyfDs.reserves[_token] > lyfDs.protocolReserves[_token]
-      ? lyfDs.reserves[_token] - lyfDs.protocolReserves[_token]
-      : 0;
+    uint256 _tokenReserve = lyfDs.reserves[_token];
+    uint256 _protocolReserve = lyfDs.protocolReserves[_token];
+    if (_tokenReserve <= _protocolReserve) {
+      revert LYFAdminFacet_ReserveTooLow();
+    }
+
+    uint256 _outstandingBalance;
+    unchecked {
+      _outstandingBalance = _tokenReserve - _protocolReserve;
+    }
     if (_outstandingBalance < _repayAmount) {
       revert LYFAdminFacet_NotEnoughToken();
     }
 
-    lyfDs.reserves[_token] -= _repayAmount;
-    IERC20(_token).safeIncreaseAllowance(address(lyfDs.moneyMarket), _repayAmount);
-    lyfDs.moneyMarket.nonCollatRepay(address(this), _token, _repayAmount);
+    unchecked {
+      lyfDs.reserves[_token] -= _repayAmount;
+    }
+
+    IERC20(_token).safeIncreaseAllowance(address(moneyMarket), _repayAmount);
+    moneyMarket.nonCollatRepay(address(this), _token, _repayAmount);
 
     emit LogSettleDebt(_token, _repayAmount);
   }
