@@ -28,9 +28,10 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   uint256 constant REPURCHASE_REWARD_BPS = 100;
   uint256 constant LIQUIDATION_FEE_BPS = 100;
   uint256 constant MAX_LIQUIDATE_BPS = 5000;
+  uint256 constant liquidationRewardBps = 5000;
 
   event LogRepurchase(
-    address indexed repurchaser,
+    address indexed _repurchaser,
     address _repayToken,
     address _collatToken,
     uint256 _amountIn,
@@ -38,28 +39,19 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _fee
   );
 
-  event LogLiquidateIb(
-    address indexed liquidator,
-    address _strat,
-    address _repayToken,
-    address _collatToken,
-    uint256 _amountIn,
-    uint256 _amountOut,
-    uint256 _feeToTreasury
-  );
-
   event LogLiquidate(
-    address indexed liquidator,
-    address _strat,
+    address indexed _liquidator,
+    address indexed _liquidationStrategy,
     address _repayToken,
     address _collatToken,
-    uint256 _amountIn,
-    uint256 _amountOut,
-    uint256 _feeToTreasury
+    uint256 _amountDebtRepaid,
+    uint256 _amountCollatLiquidated,
+    uint256 _feeToTreasury,
+    uint256 _feeToLiquidator
   );
 
   event LogLiquidateLP(
-    address indexed liquidator,
+    address indexed _liquidator,
     address _account,
     uint256 _subAccountId,
     address _lpToken,
@@ -76,8 +68,12 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     address repayToken;
     address collatToken;
     uint256 repayAmount;
+    uint256 usedBorrowingPower;
     uint256 debtShareId;
     uint256 minReceive;
+    uint256 collatTokenBalanceBefore;
+    uint256 repayTokenBalaceBefore;
+    uint256 subAccountCollatAmount;
   }
 
   struct LiquidateLPLocalVars {
@@ -223,133 +219,83 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       repayToken: _repayToken,
       collatToken: _collatToken,
       repayAmount: _repayAmount,
+      usedBorrowingPower: _usedBorrowingPower,
       debtShareId: _debtPoolId,
-      minReceive: _minReceive
+      minReceive: _minReceive,
+      collatTokenBalanceBefore: IERC20(_collatToken).balanceOf(address(this)),
+      repayTokenBalaceBefore: IERC20(_repayToken).balanceOf(address(this)),
+      subAccountCollatAmount: lyfDs.subAccountCollats[_subAccount].getAmount(_collatToken)
     });
 
-    address _collatUnderlyingToken = lyfDs.moneyMarket.getTokenFromIbToken(_collatToken);
-    if (_collatUnderlyingToken != address(0)) {
-      _ibLiquidationCall(_params, _collatUnderlyingToken, lyfDs);
-    } else {
-      _liquidationCall(_params, lyfDs);
-    }
+    _liquidationCall(_params, lyfDs);
   }
 
   function _liquidationCall(InternalLiquidationCallParams memory _params, LibLYF01.LYFDiamondStorage storage lyfDs)
     internal
   {
     // 2. send all collats under subaccount to strategy
-    uint256 _collatAmountBefore = IERC20(_params.collatToken).balanceOf(address(this));
-    uint256 _repayAmountBefore = IERC20(_params.repayToken).balanceOf(address(this));
-    uint256 _collatAmountToStrat = lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken);
-
-    IERC20(_params.collatToken).safeTransfer(_params.liquidationStrat, _collatAmountToStrat);
+    IERC20(_params.collatToken).safeTransfer(_params.liquidationStrat, _params.subAccountCollatAmount);
 
     // 3. call executeLiquidation on strategy
-    uint256 _actualRepayAmount = _getActualRepayAmount(
+    uint256 _maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
       _params.subAccount,
       _params.debtShareId,
       _params.repayAmount,
       lyfDs
     );
-    uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
+    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * LIQUIDATION_FEE_BPS) / LibLYF01.MAX_BPS;
+    uint256 _expectedMaxRepayAmountWithFee;
+    unchecked {
+      _expectedMaxRepayAmountWithFee = _maxPossibleRepayAmount + _maxPossibleFee;
+    }
 
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _params.collatToken,
       _params.repayToken,
-      _collatAmountToStrat,
-      _actualRepayAmount + _feeToTreasury,
+      _params.subAccountCollatAmount,
+      _expectedMaxRepayAmountWithFee,
       _params.minReceive
     );
 
     // 4. check repaid amount, take fees, and update states
-    uint256 _repayAmountFromLiquidation = IERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
+    (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) = _calculateActualRepayAmountAndFee(
+      _params,
+      _expectedMaxRepayAmountWithFee,
+      _maxPossibleFee
+    );
 
-    uint256 _collatSold = _collatAmountBefore - IERC20(_params.collatToken).balanceOf(address(this));
+    // 5. split fee between liquidator and treasury
+    uint256 _feeToLiquidator = (_actualLiquidationFee * liquidationRewardBps) / LibLYF01.MAX_BPS;
+    uint256 _feeToTreasury;
+    unchecked {
+      _feeToTreasury = _actualLiquidationFee - _feeToLiquidator;
+    }
 
-    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
+    _validateBorrowingPower(_params.repayToken, _actualRepayAmount, _params.usedBorrowingPower, lyfDs);
 
+    uint256 _collatSold = _params.collatTokenBalanceBefore - IERC20(_params.collatToken).balanceOf(address(this));
+
+    unchecked {
+      lyfDs.reserves[_params.repayToken] += _actualRepayAmount;
+    }
     // give priority to fee
-    if (_repaidAmount > 0) {
-      _removeDebtByAmount(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
+    if (_actualRepayAmount > 0) {
+      _removeDebtByAmount(_params.subAccount, _params.debtShareId, _actualRepayAmount, lyfDs);
     }
     LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatSold, lyfDs);
+
+    IERC20(_params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
+    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
 
     emit LogLiquidate(
       msg.sender,
       _params.liquidationStrat,
       _params.repayToken,
       _params.collatToken,
-      _repaidAmount,
+      _actualRepayAmount,
       _collatSold,
-      _feeToTreasury
-    );
-  }
-
-  function _ibLiquidationCall(
-    InternalLiquidationCallParams memory _params,
-    address _collatUnderlyingToken,
-    LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal {
-    uint256 _collatAmount = lyfDs.subAccountCollats[_params.subAccount].getAmount(_params.collatToken);
-
-    // withdraw underlyingToken from MM
-    uint256 _returnedUnderlyingAmount = lyfDs.moneyMarket.withdraw(_params.collatToken, _collatAmount);
-
-    // 2. convert collat amount under subaccount to underlying amount and send underlying to strategy
-    uint256 _underlyingAmountBefore = IERC20(_collatUnderlyingToken).balanceOf(address(this));
-    uint256 _repayAmountBefore = IERC20(_params.repayToken).balanceOf(address(this));
-
-    // transfer _underlyingToken to strat
-    IERC20(_collatUnderlyingToken).safeTransfer(_params.liquidationStrat, _returnedUnderlyingAmount);
-
-    // 3. call executeLiquidation on strategy to liquidate underlying token
-    uint256 _actualRepayAmount = _getActualRepayAmount(
-      _params.subAccount,
-      _params.debtShareId,
-      _params.repayAmount,
-      lyfDs
-    );
-    uint256 _feeToTreasury = (_actualRepayAmount * LIQUIDATION_FEE_BPS) / 10000;
-
-    ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
-      _collatUnderlyingToken,
-      _params.repayToken,
-      _returnedUnderlyingAmount,
-      _actualRepayAmount + _feeToTreasury,
-      _params.minReceive
-    );
-
-    // 4. check repaid amount, take fees, and update states
-    uint256 _repayAmountFromLiquidation = IERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
-    uint256 _repaidAmount = _repayAmountFromLiquidation - _feeToTreasury;
-    uint256 _underlyingSold = _underlyingAmountBefore - IERC20(_collatUnderlyingToken).balanceOf(address(this));
-
-    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
-
-    // give priority to fee
-    if (_repaidAmount > 0) {
-      _removeDebtByAmount(_params.subAccount, _params.debtShareId, _repaidAmount, lyfDs);
-    }
-    // withdraw all ib
-    LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatAmount, lyfDs);
-    // deposit leftover underlyingToken as collat
-    LibLYF01.addCollatWithoutMaxCollatNumCheck(
-      _params.subAccount,
-      _collatUnderlyingToken,
-      _returnedUnderlyingAmount - _underlyingSold,
-      lyfDs
-    );
-
-    emit LogLiquidateIb(
-      msg.sender,
-      _params.liquidationStrat,
-      _params.repayToken,
-      _params.collatToken,
-      _repaidAmount,
-      _underlyingSold,
-      _feeToTreasury
+      _feeToTreasury,
+      _feeToLiquidator
     );
   }
 
@@ -443,7 +389,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal returns (uint256 _actualAmountToRepay, uint256 _remainingAmountAfterRepay) {
     // repay what we can
-    _actualAmountToRepay = _getActualRepayAmount(_subAccount, _debtPoolId, _amountToRepay, lyfDs);
+    _actualAmountToRepay = _calculateMaxPossibleRepayAmount(_subAccount, _debtPoolId, _amountToRepay, lyfDs);
     _actualAmountToRepay = _actualAmountToRepay > _amountAvailable ? _amountAvailable : _actualAmountToRepay;
 
     if (_actualAmountToRepay > 0) {
@@ -461,7 +407,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   }
 
   /// @dev min(amountToRepurchase, debtValue)
-  function _getActualRepayAmount(
+  function _calculateMaxPossibleRepayAmount(
     address _subAccount,
     uint256 _debtPoolId,
     uint256 _repayAmount,
@@ -549,6 +495,41 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     if (_desiredRepayAmountWithFee < _actualRepayAmountWithFee) {
       _actualFee = (_actualFee * _desiredRepayAmountWithFee) / _actualRepayAmountWithFee;
       _actualRepayAmountWithFee = _desiredRepayAmountWithFee;
+    }
+  }
+
+  function _validateBorrowingPower(
+    address _repayToken,
+    uint256 _repaidAmount,
+    uint256 _usedBorrowingPower,
+    LibLYF01.LYFDiamondStorage storage lyfDs
+  ) internal view {
+    uint256 _repayTokenPrice = LibLYF01.getPriceUSD(_repayToken, lyfDs);
+    uint256 _repaidBorrowingPower = LibLYF01.usedBorrowingPower(
+      _repaidAmount,
+      _repayTokenPrice,
+      lyfDs.tokenConfigs[_repayToken].borrowingFactor,
+      lyfDs.tokenConfigs[_repayToken].to18ConversionFactor
+    );
+
+    if (_repaidBorrowingPower * LibLYF01.MAX_BPS > (_usedBorrowingPower * MAX_LIQUIDATE_BPS)) {
+      revert LYFLiquidationFacet_RepayAmountExceedThreshold();
+    }
+  }
+
+  function _calculateActualRepayAmountAndFee(
+    InternalLiquidationCallParams memory params,
+    uint256 _expectedMaxRepayAmount,
+    uint256 _maxFeePossible
+  ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
+    // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
+    uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) -
+      params.repayTokenBalaceBefore;
+    // find the actual fee through the rule of three
+    // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
+    _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
+    unchecked {
+      _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
     }
   }
 }
