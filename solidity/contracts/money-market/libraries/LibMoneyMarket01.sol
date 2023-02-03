@@ -42,6 +42,12 @@ library LibMoneyMarket01 {
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
+  event LogRemoveDebt(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _removedDebtShare,
+    uint256 _removedDebtAmount
+  );
 
   enum AssetTier {
     UNLISTED,
@@ -608,6 +614,24 @@ library LibMoneyMarket01 {
     if (_totalBorrowingPower < _totalUsedBorrowingPower) {
       revert LibMoneyMarket01_BorrowingPowerTooLow();
     }
+  }
+
+  function removeOverCollatDebt(
+    address _subAccount,
+    address _repayToken,
+    uint256 _debtShareToRemove,
+    uint256 _debtValueToRemove,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    uint256 _currentDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
+
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _currentDebtShare - _debtShareToRemove);
+    moneyMarketDs.overCollatDebtShares[_repayToken] -= _debtShareToRemove;
+    moneyMarketDs.overCollatDebtValues[_repayToken] -= _debtValueToRemove;
+
+    moneyMarketDs.globalDebts[_repayToken] -= _debtValueToRemove;
+
+    emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
 
   function transferCollat(
