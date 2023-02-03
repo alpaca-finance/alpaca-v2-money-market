@@ -72,6 +72,11 @@ contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
     assertEq(_funder1WethBalanceBefore - weth.balanceOf(funder1), 11 ether);
     assertEq(_funder2WethBalanceBefore - weth.balanceOf(funder2), 12 ether);
 
+    // check staking amount per funder
+    assertFunderAmount(ALICE, ALICE, wethPoolID, 10 ether);
+    assertFunderAmount(funder1, ALICE, wethPoolID, 11 ether);
+    assertFunderAmount(funder2, ALICE, wethPoolID, 12 ether);
+
     // assert reward user info, both user info should be same
     assertRewarderUserInfo(rewarder1, ALICE, wethPoolID, 33 ether, 0);
     assertRewarderUserInfo(rewarder2, ALICE, wethPoolID, 33 ether, 0);

@@ -112,9 +112,28 @@ contract MiniFL_BaseTest is BaseTest {
     uint256 _expectedAmount,
     int256 _expectedRewardDebt
   ) internal {
-    (uint256 _amount, int256 _rewardDebt) = miniFL.userInfo(_pid, _user);
-    assertEq(_amount, _expectedAmount);
+    (uint256 _totalAmount, int256 _rewardDebt) = miniFL.userInfo(_pid, _user);
+    assertEq(_totalAmount, _expectedAmount);
     assertEq(_rewardDebt, _expectedRewardDebt);
+  }
+
+  function assertTotalStakingAmount(
+    address _user,
+    uint256 _pid,
+    uint256 _expectedAmount
+  ) internal {
+    (uint256 _totalAmount, ) = miniFL.userInfo(_pid, _user);
+    assertEq(_totalAmount, _expectedAmount);
+  }
+
+  function assertFunderAmount(
+    address _funder,
+    address _for,
+    uint256 _pid,
+    uint256 _expectedAmount
+  ) internal {
+    uint256 _amount = miniFL.getFunderStakingAmount(_funder, _for, _pid);
+    assertEq(_amount, _expectedAmount);
   }
 
   function assertRewarderUserInfo(
@@ -124,8 +143,8 @@ contract MiniFL_BaseTest is BaseTest {
     uint256 _expectedAmount,
     int256 _expectedRewardDebt
   ) internal {
-    (uint256 _amount, int256 _rewardDebt) = _rewarder.userInfo(_pid, _user);
-    assertEq(_amount, _expectedAmount);
+    (uint256 _totalAmount, int256 _rewardDebt) = _rewarder.userInfo(_pid, _user);
+    assertEq(_totalAmount, _expectedAmount);
     assertEq(_rewardDebt, _expectedRewardDebt);
   }
 }

@@ -242,6 +242,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     unchecked {
       stakingReserves[_stakingToken] += _receivedAmount;
       user.totalAmount = user.totalAmount + _receivedAmount;
+      user.amounts[msg.sender] += _receivedAmount;
     }
     user.rewardDebt = user.rewardDebt + ((_receivedAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
@@ -425,6 +426,14 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   function getStakingReserves(uint256 _pid) external view returns (uint256 _reserveAmount) {
     _reserveAmount = stakingReserves[stakingTokens[_pid]];
+  }
+
+  function getFunderStakingAmount(
+    address _funder,
+    address _for,
+    uint256 _pid
+  ) external view returns (uint256 _stakingAmount) {
+    _stakingAmount = userInfo[_pid][_for].amounts[_funder];
   }
 
   function _unsafePullToken(
