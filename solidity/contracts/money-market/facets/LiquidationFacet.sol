@@ -21,7 +21,7 @@ contract LiquidationFacet is ILiquidationFacet {
   using LibSafeToken for IERC20;
 
   event LogRepurchase(
-    address indexed repurchaser,
+    address indexed _repurchaser,
     address _repayToken,
     address _collatToken,
     uint256 _actualRepayAmountWithoutFee,
@@ -30,8 +30,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repurchaseRewardToCaller
   );
   event LogLiquidate(
-    address indexed caller,
-    address indexed liquidationStrategy,
+    address indexed _caller,
+    address indexed _liquidationStrategy,
     address _repayToken,
     address _collatToken,
     uint256 _amountDebtRepaid,
@@ -48,8 +48,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repayAmount;
     uint256 usedBorrowingPower;
     uint256 minReceive;
-    uint256 collatAmountBefore;
-    uint256 repayAmountBefore;
+    uint256 collatTokenBalanceBefore;
+    uint256 repayTokenBalaceBefore;
     uint256 subAccountCollatAmount;
   }
 
@@ -255,8 +255,8 @@ contract LiquidationFacet is ILiquidationFacet {
       repayAmount: _repayAmount,
       usedBorrowingPower: _usedBorrowingPower,
       minReceive: _minReceive,
-      collatAmountBefore: IERC20(_collatToken).balanceOf(address(this)),
-      repayAmountBefore: IERC20(_repayToken).balanceOf(address(this)),
+      collatTokenBalanceBefore: IERC20(_collatToken).balanceOf(address(this)),
+      repayTokenBalaceBefore: IERC20(_repayToken).balanceOf(address(this)),
       subAccountCollatAmount: moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken)
     });
 
@@ -280,7 +280,9 @@ contract LiquidationFacet is ILiquidationFacet {
     );
     _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
 
-    _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
+    unchecked {
+      _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
+    }
 
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _params.collatToken,
@@ -293,7 +295,6 @@ contract LiquidationFacet is ILiquidationFacet {
     // 4. check repaid amount, take fees, and update states
     (_vars.repaidAmount, _vars.actualLiquidationFee) = _calculateActualRepayAmountAndFee(
       _params,
-      _params.repayAmountBefore,
       _vars.expectedMaxRepayAmount,
       _vars.maxPossibleFee
     );
@@ -308,9 +309,6 @@ contract LiquidationFacet is ILiquidationFacet {
 
     moneyMarketDs.reserves[_params.repayToken] += _vars.repaidAmount;
 
-    IERC20(_params.repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
-    IERC20(_params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
-
     // give priority to fee
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _params.subAccount,
@@ -324,13 +322,16 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs
     );
 
-    _vars.collatSold = _params.collatAmountBefore - IERC20(_params.collatToken).balanceOf(address(this));
+    _vars.collatSold = _params.collatTokenBalanceBefore - IERC20(_params.collatToken).balanceOf(address(this));
     LibMoneyMarket01.removeCollatFromSubAccount(
       _params.subAccount,
       _params.collatToken,
       _vars.collatSold,
       moneyMarketDs
     );
+
+    IERC20(_params.repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
+    IERC20(_params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
 
     emit LogLiquidate(
       msg.sender,
@@ -382,12 +383,17 @@ contract LiquidationFacet is ILiquidationFacet {
 
   function _calculateActualRepayAmountAndFee(
     InternalLiquidationCallParams memory _params,
-    uint256 _repayAmountBefore,
     uint256 _expectedMaxRepayAmount,
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
-    uint256 _amountFromLiquidationStrat = IERC20(_params.repayToken).balanceOf(address(this)) - _repayAmountBefore;
+    // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
+    uint256 _amountFromLiquidationStrat = IERC20(_params.repayToken).balanceOf(address(this)) -
+      _params.repayTokenBalaceBefore;
+    // find the actual fee through the rule of three
+    // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
     _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
-    _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
+    unchecked {
+      _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
+    }
   }
 }
