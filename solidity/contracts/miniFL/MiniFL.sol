@@ -260,16 +260,16 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   /// @notice Withdraw tokens from MiniFL.
-  /// @param _for Withdraw for who?
+  /// @param _from Withdraw from who?
   /// @param _pid The index of the pool. See `poolInfo`.
   /// @param _amountToWithdraw Staking token amount to withdraw.
   function withdraw(
-    address _for,
+    address _from,
     uint256 _pid,
     uint256 _amountToWithdraw
   ) external nonReentrant {
     PoolInfo memory pool = _updatePool(_pid);
-    UserInfo storage user = userInfo[_pid][_for];
+    UserInfo storage user = userInfo[_pid][_from];
 
     // if pool is debt pool, staker should be whitelisted
     if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
@@ -301,7 +301,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
       // rewarder callback to do accounting
-      IRewarder(_rewarder).onWithdraw(_pid, _for, user.totalAmount);
+      IRewarder(_rewarder).onWithdraw(_pid, _from, user.totalAmount);
       unchecked {
         ++_i;
       }
@@ -309,7 +309,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amountToWithdraw);
 
-    emit LogWithdraw(msg.sender, _for, _pid, _amountToWithdraw);
+    emit LogWithdraw(msg.sender, _from, _pid, _amountToWithdraw);
   }
 
   /// @notice Harvest ALPACA rewards
