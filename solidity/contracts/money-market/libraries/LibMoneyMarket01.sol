@@ -610,7 +610,6 @@ library LibMoneyMarket01 {
   function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowingPower, ) = getTotalUsedBorrowingPower(_subAccount, ds);
-    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
     if (_totalBorrowingPower < _totalUsedBorrowingPower) {
       revert LibMoneyMarket01_BorrowingPowerTooLow();
     }
