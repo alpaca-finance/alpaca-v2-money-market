@@ -357,25 +357,6 @@ contract LiquidationFacet is ILiquidationFacet {
     _maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
   }
 
-  function _reduceDebt(
-    address _subAccount,
-    address _repayToken,
-    uint256 _repayAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
-    uint256 _repayShare = LibShareUtil.valueToShare(
-      _repayAmount,
-      moneyMarketDs.overCollatDebtShares[_repayToken],
-      moneyMarketDs.overCollatDebtValues[_repayToken]
-    );
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _debtShare - _repayShare);
-    moneyMarketDs.overCollatDebtShares[_repayToken] -= _repayShare;
-    moneyMarketDs.overCollatDebtValues[_repayToken] -= _repayAmount;
-
-    moneyMarketDs.globalDebts[_repayToken] -= _repayAmount;
-  }
-
   function _reduceCollateral(
     address _subAccount,
     address _collatToken,
