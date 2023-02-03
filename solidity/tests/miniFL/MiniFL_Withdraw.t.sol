@@ -32,6 +32,54 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 5 ether);
   }
 
+  function testCorrectness_WhenFunderWithdrawFromMiniFL() external {
+    uint256 _aliceDepoisitAmount = 10 ether;
+
+    // alice deposited
+    vm.startPrank(ALICE);
+    weth.approve(address(miniFL), _aliceDepoisitAmount);
+    miniFL.deposit(ALICE, wethPoolID, _aliceDepoisitAmount);
+    vm.stopPrank();
+
+    // funder deposit for alice
+    vm.prank(funder1);
+    miniFL.deposit(ALICE, wethPoolID, 15 ether);
+
+    vm.prank(funder2);
+    miniFL.deposit(ALICE, wethPoolID, 10 ether);
+
+    // just correct staking total amount
+    assertTotalStakingAmount(ALICE, wethPoolID, 35 ether);
+
+    // cache balance before withdraw
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
+    uint256 _funder1WethBalanceBefore = weth.balanceOf(funder1);
+    uint256 _funder2WethBalanceBefore = weth.balanceOf(funder2);
+
+    // funder1 withdraw some
+    vm.prank(funder1);
+    miniFL.withdraw(ALICE, wethPoolID, 10 ether);
+
+    // funder2 also withdraw some
+    vm.prank(funder2);
+    miniFL.withdraw(ALICE, wethPoolID, 8 ether);
+
+    // check balance after withdraw
+    // ALICE balance should not changed
+    assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0);
+    assertEq(weth.balanceOf(funder1) - _funder1WethBalanceBefore, 10 ether);
+    assertEq(weth.balanceOf(funder2) - _funder2WethBalanceBefore, 8 ether);
+
+    // check staking amount per funder
+    // ALICE staking amount should not affected when funder withdraw
+    assertFunderAmount(ALICE, ALICE, wethPoolID, _aliceDepoisitAmount);
+    assertFunderAmount(funder1, ALICE, wethPoolID, 5 ether);
+    assertFunderAmount(funder2, ALICE, wethPoolID, 2 ether);
+
+    // ALICE total staking amount 35 - 18 = 17
+    assertTotalStakingAmount(ALICE, wethPoolID, 17 ether);
+  }
+
   function testRevert_WhenAliceWithdrawFromAmountOfFunder() external {
     // funder deposit for alice
     vm.prank(funder1);
