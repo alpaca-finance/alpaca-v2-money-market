@@ -29,7 +29,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
 
   struct UserInfo {
-    uint256 amount;
+    // funders address => amount
+    mapping(address => uint256) amounts;
+    uint256 totalAmount;
     int256 rewardDebt;
   }
 
@@ -49,6 +51,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   mapping(uint256 => mapping(address => bool)) public stakeDebtTokenAllowance;
   mapping(address => uint256) public stakingReserves;
 
+  // pool id => user
   mapping(uint256 => mapping(address => UserInfo)) public userInfo;
 
   uint256 public totalAllocPoint;
@@ -144,7 +147,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @return pending ALPACA reward for a given user.
   function pendingAlpaca(uint256 _pid, address _user) external view returns (uint256) {
     PoolInfo memory pool = poolInfo[_pid];
-    UserInfo memory user = userInfo[_pid][_user];
+    UserInfo storage user = userInfo[_pid][_user];
     uint256 accAlpacaPerShare = pool.accAlpacaPerShare;
     uint256 stakedBalance = stakingReserves[stakingTokens[_pid]];
     if (block.timestamp > pool.lastRewardTime && stakedBalance != 0) {
@@ -157,7 +160,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       accAlpacaPerShare = accAlpacaPerShare + ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance);
     }
 
-    return (((user.amount * accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256() - user.rewardDebt).toUint256();
+    return (((user.totalAmount * accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256() - user.rewardDebt).toUint256();
   }
 
   /// @notice Perform actual update pool.
@@ -224,19 +227,21 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   ) external nonReentrant {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
+
     if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
       revert MiniFL_Forbidden();
     }
-    if (!pool.isDebtTokenPool && msg.sender != _for) {
-      revert MiniFL_Forbidden();
-    }
+    // if (!pool.isDebtTokenPool && msg.sender != _for) {
+    //   revert MiniFL_Forbidden();
+    // }
+
     address _stakingToken = stakingTokens[_pid];
     uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amount);
 
     // Effects
     unchecked {
       stakingReserves[_stakingToken] += _receivedAmount;
-      user.amount = user.amount + _receivedAmount;
+      user.totalAmount = user.totalAmount + _receivedAmount;
     }
     user.rewardDebt = user.rewardDebt + ((_receivedAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
@@ -245,7 +250,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
-      IRewarder(_rewarder).onDeposit(_pid, _for, user.amount);
+      IRewarder(_rewarder).onDeposit(_pid, _for, user.totalAmount);
       unchecked {
         ++_i;
       }
@@ -278,14 +283,14 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Effects
     stakingReserves[_stakingToken] -= _amount;
     user.rewardDebt = user.rewardDebt - (((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
-    user.amount = user.amount - _amount;
+    user.totalAmount = user.totalAmount - _amount;
 
     // Interactions
     uint256 _rewarderLength = rewarders[_pid].length;
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
-      IRewarder(_rewarder).onWithdraw(_pid, _for, user.amount);
+      IRewarder(_rewarder).onWithdraw(_pid, _for, user.totalAmount);
       unchecked {
         ++_i;
       }
@@ -302,7 +307,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][msg.sender];
 
-    int256 accumulatedAlpaca = ((user.amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
+    int256 accumulatedAlpaca = ((user.totalAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
     uint256 _pendingAlpaca = (accumulatedAlpaca - user.rewardDebt).toUint256();
 
     // Effects
@@ -338,11 +343,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     address _stakingToken = stakingTokens[_pid];
     // amount before withdraw
-    uint256 _amount = _user.amount;
+    uint256 _amount = _user.totalAmount;
 
     // Effects
     stakingReserves[_stakingToken] -= _amount;
-    _user.amount = 0;
+    _user.totalAmount = 0;
     _user.rewardDebt = 0;
 
     // Interactions

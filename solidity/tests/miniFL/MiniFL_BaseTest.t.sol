@@ -11,6 +11,8 @@ import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 contract MiniFL_BaseTest is BaseTest {
   MiniFL internal miniFL;
+  address internal funder1 = address(7777777);
+  address internal funder2 = address(9999999);
 
   Rewarder internal rewarder1;
   Rewarder internal rewarder2;
@@ -34,6 +36,14 @@ contract MiniFL_BaseTest is BaseTest {
 
     rewardToken1.mint(address(rewarder1), 10000 ether);
     rewardToken2.mint(address(rewarder2), 15000 ether);
+
+    weth.mint(funder1, 100 ether);
+    weth.mint(funder2, 100 ether);
+
+    vm.prank(funder1);
+    weth.approve(address(miniFL), 100 ether);
+    vm.prank(funder2);
+    weth.approve(address(miniFL), 100 ether);
   }
 
   function setupMiniFLPool() internal {

@@ -33,10 +33,34 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     assertEq(_aliceWethBalanceBefore - weth.balanceOf(ALICE), 10 ether);
   }
 
-  function testRevert_WhenDepositMiniFLForAnother() external {
-    // deposit for ALICE
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
+  function testCorrectness_WhenOneFunderDepositMiniFLForAlice() external {
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
+    uint256 _funder1WethBalanceBefore = weth.balanceOf(funder1);
+    // funder1 deposit for ALICE
+    vm.prank(funder1);
     miniFL.deposit(ALICE, wethPoolID, 10 ether);
+
+    // ALICE balance should not changed
+    assertEq(_aliceWethBalanceBefore - weth.balanceOf(ALICE), 0);
+    assertEq(_funder1WethBalanceBefore - weth.balanceOf(funder1), 10 ether);
+  }
+
+  function testCorrectness_WhenManyFunderDepositMiniFLForAlice() external {
+    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
+    uint256 _funder1WethBalanceBefore = weth.balanceOf(funder1);
+    uint256 _funder2WethBalanceBefore = weth.balanceOf(funder2);
+    // funder1 deposit for ALICE
+    vm.prank(funder1);
+    miniFL.deposit(ALICE, wethPoolID, 10 ether);
+
+    // funder2 deposit for ALICE
+    vm.prank(funder2);
+    miniFL.deposit(ALICE, wethPoolID, 10 ether);
+
+    // ALICE balance should not changed
+    assertEq(_aliceWethBalanceBefore - weth.balanceOf(ALICE), 0);
+    assertEq(_funder1WethBalanceBefore - weth.balanceOf(funder1), 10 ether);
+    assertEq(_funder2WethBalanceBefore - weth.balanceOf(funder2), 10 ether);
   }
 
   // #deposit debtToken
