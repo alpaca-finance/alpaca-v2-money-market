@@ -29,7 +29,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
 
   struct UserInfo {
-    // funders address => amount
+    // funders address => amount // fundedAmounts
     mapping(address => uint256) amounts;
     uint256 totalAmount;
     int256 rewardDebt;
@@ -240,9 +240,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // Effects
     unchecked {
-      stakingReserves[_stakingToken] += _receivedAmount;
-      user.totalAmount = user.totalAmount + _receivedAmount;
       user.amounts[msg.sender] += _receivedAmount;
+      user.totalAmount = user.totalAmount + _receivedAmount;
+      stakingReserves[_stakingToken] += _receivedAmount;
     }
     user.rewardDebt = user.rewardDebt + ((_receivedAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
@@ -263,11 +263,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Withdraw tokens from MiniFL.
   /// @param _for Withdraw for who?
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _amount Staking token amount to withdraw.
+  /// @param _amountToWithdraw Staking token amount to withdraw.
   function withdraw(
     address _for,
     uint256 _pid,
-    uint256 _amount
+    uint256 _amountToWithdraw
   ) external nonReentrant {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
@@ -275,16 +275,28 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
       revert MiniFL_Forbidden();
     }
-    if (!pool.isDebtTokenPool && msg.sender != _for) {
-      revert MiniFL_Forbidden();
-    }
+    // if (!pool.isDebtTokenPool && msg.sender != _for) {
+    //   revert MiniFL_Forbidden();
+    // }
 
     address _stakingToken = stakingTokens[_pid];
+    if (_amountToWithdraw > user.amounts[msg.sender]) {
+      revert MiniFL_InsufficientAmount();
+    }
 
     // Effects
-    stakingReserves[_stakingToken] -= _amount;
-    user.rewardDebt = user.rewardDebt - (((_amount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
-    user.totalAmount = user.totalAmount - _amount;
+    unchecked {
+      // if amountToWithdraw > amount of funder, this line can be revert
+      user.amounts[msg.sender] -= _amountToWithdraw;
+
+      // total amount & staking reserves always >= user.amounts[msg.sender]
+      user.totalAmount -= _amountToWithdraw;
+      stakingReserves[_stakingToken] -= _amountToWithdraw;
+    }
+
+    user.rewardDebt =
+      user.rewardDebt -
+      (((_amountToWithdraw * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
 
     // Interactions
     uint256 _rewarderLength = rewarders[_pid].length;
@@ -297,9 +309,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       }
     }
 
-    IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amount);
+    IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amountToWithdraw);
 
-    emit LogWithdraw(msg.sender, _for, _pid, _amount);
+    emit LogWithdraw(msg.sender, _for, _pid, _amountToWithdraw);
   }
 
   /// @notice Harvest ALPACA rewards
