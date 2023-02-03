@@ -50,8 +50,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   mapping(uint256 => mapping(address => bool)) public stakeDebtTokenAllowance;
   mapping(address => uint256) public stakingReserves;
 
-  // pool id => user
-  mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+  mapping(uint256 => mapping(address => UserInfo)) public userInfo; // pool id => user
 
   uint256 public totalAllocPoint;
   uint256 public alpacaPerSecond;
