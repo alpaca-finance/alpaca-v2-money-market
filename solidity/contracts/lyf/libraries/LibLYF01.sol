@@ -692,19 +692,16 @@ library LibLYF01 {
     _actualAmountReceived = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
   }
 
-  /// @dev get debt share and debt amount of a subAccount in a debt pool
-  function getCollatDebt(
-    address _subAccount,
+  function getSubAccountDebtShareAndAmount(
+    address _account,
+    uint256 _subAccountId,
     uint256 _debtPoolId,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
-    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
+  ) external view returns (uint256 _debtShare, uint256 _debtAmount) {
+    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
-    // Note: precision loss 1 wei when convert share back to value
-    _debtAmount = LibShareUtil.shareToValue(
-      _debtShare,
-      lyfDs.debtPoolInfos[_debtPoolId].totalValue,
-      lyfDs.debtPoolInfos[_debtPoolId].totalShare
-    );
+    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
   }
 }

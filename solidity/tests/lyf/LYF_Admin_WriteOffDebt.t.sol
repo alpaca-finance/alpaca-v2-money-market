@@ -14,8 +14,7 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
   event LogWriteOffSubAccountDebt(
     address indexed subAccount,
-    address indexed token,
-    address indexed lpToken,
+    uint256 indexed debtPoolId,
     uint256 debtShareWrittenOff,
     uint256 debtValueWrittenOff
   );
@@ -47,30 +46,40 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
 
     usdc.approve(lyfDiamond, type(uint256).max);
 
-    // alice add collateral and open positions
+    // setup alice collateral and position for subAccount0 and 1
     vm.startPrank(ALICE);
-    for (uint256 _subAccount = 0; _subAccount < 2; ) {
-      uint256 _decrement = _subAccount * 10 ether;
+    ILYFFarmFacet.AddFarmPositionInput memory _input;
 
-      collateralFacet.addCollateral(ALICE, _subAccount, _collatToken, (40 ether - _decrement));
-      ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
-        subAccountId: _subAccount,
-        lpToken: _lpToken,
-        token0: address(weth),
-        minLpReceive: 0,
-        desiredToken0Amount: (30 ether - _decrement),
-        desiredToken1Amount: normalizeEther((30 ether - _decrement), usdcDecimal),
-        token0ToBorrow: 0,
-        token1ToBorrow: normalizeEther((30 ether - _decrement), usdcDecimal),
-        token0AmountIn: 0,
-        token1AmountIn: 0
-      });
-      farmFacet.addFarmPosition(_input);
+    collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 40 ether);
+    _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount0,
+      lpToken: _lpToken,
+      token0: address(weth),
+      minLpReceive: 0,
+      desiredToken0Amount: 30 ether,
+      desiredToken1Amount: normalizeEther(30 ether, usdcDecimal),
+      token0ToBorrow: 0,
+      token1ToBorrow: normalizeEther(30 ether, usdcDecimal),
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
 
-      unchecked {
-        _subAccount++;
-      }
-    }
+    collateralFacet.addCollateral(ALICE, subAccount1, _collatToken, 30 ether);
+    _input = ILYFFarmFacet.AddFarmPositionInput({
+      subAccountId: subAccount1,
+      lpToken: _lpToken,
+      token0: address(weth),
+      minLpReceive: 0,
+      desiredToken0Amount: 20 ether,
+      desiredToken1Amount: normalizeEther(20 ether, usdcDecimal),
+      token0ToBorrow: 0,
+      token1ToBorrow: normalizeEther(20 ether, usdcDecimal),
+      token0AmountIn: 0,
+      token1AmountIn: 0
+    });
+    farmFacet.addFarmPosition(_input);
+
     vm.stopPrank();
 
     assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _collatToken), 10 ether);
@@ -142,56 +151,105 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
     // set decreased lpToken price
     mockOracle.setLpTokenPrice(_lpToken, 0.5 ether);
 
-    ILYFAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new ILYFAdminFacet.WriteOffSubAccountDebtInput[](2);
+    // liquidate subAccount0 and 1
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      normalizeEther(10 ether, usdcDecimal),
+      0
+    );
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, 30 ether, 0, 0);
 
-    for (uint256 _i = 0; _i < 2; ) {
-      // liquidate alice's position
-      uint256 _subAccount = _i;
-      uint256 _decrement = _i * 10 ether;
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      subAccount1,
+      _debtToken,
+      _collatToken,
+      _lpToken,
+      normalizeEther(10 ether, usdcDecimal),
+      0
+    );
+    liquidationFacet.lpLiquidationCall(ALICE, subAccount1, _lpToken, 20 ether, 0, 0);
 
-      liquidationFacet.liquidationCall(
-        address(mockLiquidationStrategy),
-        ALICE,
-        _subAccount,
-        _debtToken,
-        _collatToken,
-        _lpToken,
-        normalizeEther(10 ether, usdcDecimal),
-        0
-      );
-      liquidationFacet.lpLiquidationCall(ALICE, _subAccount, _lpToken, (30 ether - _decrement), 0, 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _collatToken), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount0, _lpToken), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount1, _collatToken), 0);
+    assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, subAccount1, _lpToken), 0);
 
-      assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccount, _collatToken), 0);
-      assertEq(viewFacet.getSubAccountTokenCollatAmount(ALICE, _subAccount, _lpToken), 0);
+    uint256 _debtPoolId = viewFacet.getDebtPoolIdOf(_debtToken, _lpToken);
 
-      // get remaining debt
-      uint256 _subAccountRemainingDebtValue = normalizeEther((20.1 ether - _decrement), usdcDecimal);
-      (, uint256 _subAccountDebtValue) = viewFacet.getSubAccountDebt(ALICE, _subAccount, _debtToken, _lpToken);
-      assertEq(_subAccountDebtValue, _subAccountRemainingDebtValue);
+    // get remaining debt
+    uint256 subAccount0DebtShare;
+    uint256 subAccount0DebtValue;
+    uint256 subAccount1DebtShare;
+    uint256 subAccount1DebtValue;
 
-      // write off debt
-      _inputs[_i] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, _subAccount, _debtToken, _lpToken);
+    uint256 subAccount0RemainingDebtShare = normalizeEther(20.1 ether, usdcDecimal);
+    uint256 subAccount0RemainingDebtValue = normalizeEther(20.1 ether, usdcDecimal);
+    uint256 subAccount1RemainingDebtShare = normalizeEther(10.1 ether, usdcDecimal);
+    uint256 subAccount1RemainingDebtValue = normalizeEther(10.1 ether, usdcDecimal);
 
-      vm.expectEmit(true, true, true, true, lyfDiamond);
-      emit LogWriteOffSubAccountDebt(
-        viewFacet.getSubAccount(ALICE, _subAccount),
-        _debtToken,
-        _lpToken,
-        _subAccountRemainingDebtValue,
-        _subAccountRemainingDebtValue
-      );
+    (subAccount0DebtShare, subAccount0DebtValue) = viewFacet.getSubAccountDebt(
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _lpToken
+    );
+    (subAccount1DebtShare, subAccount1DebtValue) = viewFacet.getSubAccountDebt(
+      ALICE,
+      subAccount1,
+      _debtToken,
+      _lpToken
+    );
+    assertEq(subAccount0DebtShare, subAccount0RemainingDebtShare);
+    assertEq(subAccount0DebtValue, subAccount0RemainingDebtValue);
+    assertEq(subAccount1DebtShare, subAccount1RemainingDebtShare);
+    assertEq(subAccount1DebtValue, subAccount1RemainingDebtValue);
 
-      unchecked {
-        _i++;
-      }
-    }
+    // write off debt
+    ILYFAdminFacet.WriteOffSubAccountDebtInput[] memory inputs = new ILYFAdminFacet.WriteOffSubAccountDebtInput[](2);
+    inputs[0] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtPoolId);
+    inputs[1] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, _debtPoolId);
 
-    adminFacet.writeOffSubAccountsDebt(_inputs);
+    vm.expectEmit(true, true, false, true, lyfDiamond);
+    emit LogWriteOffSubAccountDebt(
+      viewFacet.getSubAccount(ALICE, subAccount0),
+      _debtPoolId,
+      subAccount0RemainingDebtShare,
+      subAccount0RemainingDebtValue
+    );
+    vm.expectEmit(true, true, false, true, lyfDiamond);
+    emit LogWriteOffSubAccountDebt(
+      viewFacet.getSubAccount(ALICE, subAccount1),
+      _debtPoolId,
+      subAccount1RemainingDebtShare,
+      subAccount1RemainingDebtValue
+    );
+    adminFacet.writeOffSubAccountsDebt(inputs);
 
-    (, uint256 subAccount0DebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, _debtToken, _lpToken);
-    (, uint256 subAccount1DebtValue) = viewFacet.getSubAccountDebt(ALICE, subAccount0, _debtToken, _lpToken);
+    (subAccount0DebtShare, subAccount0DebtValue) = viewFacet.getSubAccountDebt(
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _lpToken
+    );
+    (subAccount1DebtShare, subAccount1DebtValue) = viewFacet.getSubAccountDebt(
+      ALICE,
+      subAccount0,
+      _debtToken,
+      _lpToken
+    );
+    assertEq(subAccount0DebtShare, 0);
     assertEq(subAccount0DebtValue, 0);
+    assertEq(subAccount1DebtShare, 0);
     assertEq(subAccount1DebtValue, 0);
+    assertEq(viewFacet.getDebtPoolTotalShare(_debtPoolId), 0);
+    assertEq(viewFacet.getDebtPoolTotalValue(_debtPoolId), 0);
   }
 
   function testRevert_WhenAdminWriteOffSubAccountsDebt_ButOneSubAccountIsHealthy() external {
@@ -210,30 +268,27 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
     );
     liquidationFacet.lpLiquidationCall(ALICE, subAccount0, _lpToken, 30 ether, 0, 0);
 
+    uint256 _debtPoolId = viewFacet.getDebtPoolIdOf(_debtToken, _lpToken);
+
     ILYFAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new ILYFAdminFacet.WriteOffSubAccountDebtInput[](2);
-    _inputs[0] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtToken, _lpToken);
-    _inputs[1] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, _debtToken, _lpToken);
+    _inputs[0] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtPoolId);
+    _inputs[1] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, _debtPoolId);
 
     // should revert since subaccount1 is healthy
     vm.expectRevert(
-      abi.encodeWithSelector(
-        ILYFAdminFacet.LYFAdminFacet_SubAccountHealthy.selector,
-        viewFacet.getSubAccount(ALICE, subAccount1)
-      )
+      abi.encodeWithSelector(ILYFAdminFacet.LYFAdminFacet_SubAccountHealthy.selector, ALICE, subAccount1)
     );
     adminFacet.writeOffSubAccountsDebt(_inputs);
   }
 
   function testRevert_WhenNonAdminWriteOffSubAccountDebt() external {
+    uint256 _debtPoolId = viewFacet.getDebtPoolIdOf(address(usdc), address(wethUsdcLPToken));
+
+    ILYFAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new ILYFAdminFacet.WriteOffSubAccountDebtInput[](1);
+    _inputs[0] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtPoolId);
+
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    ILYFAdminFacet.WriteOffSubAccountDebtInput[] memory _inputs = new ILYFAdminFacet.WriteOffSubAccountDebtInput[](1);
-    _inputs[0] = ILYFAdminFacet.WriteOffSubAccountDebtInput(
-      ALICE,
-      subAccount0,
-      address(usdc),
-      address(wethUsdcLPToken)
-    );
     adminFacet.writeOffSubAccountsDebt(_inputs);
   }
 }

@@ -9,7 +9,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
   error LYFAdminFacet_InvalidAddress();
-  error LYFAdminFacet_SubAccountHealthy(address _subAccount);
+  error LYFAdminFacet_SubAccountHealthy(address _account, uint256 _subAccountId);
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
@@ -35,8 +35,7 @@ interface ILYFAdminFacet {
   struct WriteOffSubAccountDebtInput {
     address account;
     uint256 subAccountId;
-    address token;
-    address lpToken;
+    uint256 debtPoolId;
   }
 
   struct SetRewardConversionConfigInput {

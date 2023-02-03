@@ -23,15 +23,17 @@ contract MoneyMarket_Admin_TopUpTokenReserveTest is MoneyMarket_BaseTest {
     address _token = address(weth);
     uint256 _amount = 1 ether;
 
+    uint256 _wethBalanceBefore = weth.balanceOf(address(this));
+
     assertEq(viewFacet.getTotalToken(_token), 0);
-    assertEq(weth.balanceOf(address(this)), 100 ether);
+    assertEq(_wethBalanceBefore, 100 ether);
 
     vm.expectEmit(true, false, false, false, moneyMarketDiamond);
     emit LogTopUpTokenReserve(_token, _amount);
     adminFacet.topUpTokenReserve(_token, _amount);
 
     assertEq(viewFacet.getTotalToken(_token), _amount);
-    assertEq(weth.balanceOf(address(this)), 100 ether - _amount);
+    assertEq(_wethBalanceBefore - weth.balanceOf(address(this)), _amount);
   }
 
   function testRevert_WhenTopUpTokenReserveWithInvalidToken() external {

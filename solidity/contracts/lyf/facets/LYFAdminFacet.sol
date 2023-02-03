@@ -35,8 +35,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogWriteOffSubAccountDebt(
     address indexed subAccount,
-    address indexed token,
-    address indexed lpToken,
+    uint256 indexed debtPoolId,
     uint256 debtShareWrittenOff,
     uint256 debtValueWrittenOff
   );
@@ -312,41 +311,40 @@ contract LYFAdminFacet is ILYFAdminFacet {
   }
 
   /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
-  /// @param _inputs An array of input. Each should contain account, subAccountId, token, lpToken to write off for
+  /// @param _inputs An array of input. Each should contain account, subAccountId, and debtPoolId to write off for
   function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 _length = _inputs.length;
 
-    address _token;
-    address _lpToken;
+    address _account;
     address _subAccount;
+    uint256 _subAccountId;
     uint256 _debtPoolId;
     uint256 _shareToRemove;
     uint256 _amountToRemove;
 
     for (uint256 i; i < _length; ) {
-      _token = _inputs[i].token;
-      _lpToken = _inputs[i].lpToken;
-      _subAccount = LibLYF01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
-      _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
-
+      _account = _inputs[i].account;
+      _subAccountId = _inputs[i].subAccountId;
+      _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
       if (lyfDs.subAccountCollats[_subAccount].size != 0) {
-        revert LYFAdminFacet_SubAccountHealthy(_subAccount);
+        revert LYFAdminFacet_SubAccountHealthy(_account, _subAccountId);
       }
 
+      _debtPoolId = _inputs[i].debtPoolId;
       LibLYF01.accrueDebtPoolInterest(_debtPoolId, lyfDs);
+      (_shareToRemove, _amountToRemove) = LibLYF01.getSubAccountDebtShareAndAmount(
+        _account,
+        _subAccountId,
+        _debtPoolId,
+        lyfDs
+      );
 
-      (_shareToRemove, _amountToRemove) = LibLYF01.getCollatDebt(_subAccount, _debtPoolId, lyfDs);
+      // reset debt to zero
+      LibLYF01.removeDebt(_subAccount, _debtPoolId, _shareToRemove, _amountToRemove, lyfDs);
 
-      // update subAccount debt share
-      lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtPoolId, 0);
-
-      // update global debt
-      lyfDs.debtPoolInfos[_debtPoolId].totalShare -= _shareToRemove;
-      lyfDs.debtPoolInfos[_debtPoolId].totalValue -= _amountToRemove;
-
-      emit LogWriteOffSubAccountDebt(_subAccount, _token, _lpToken, _shareToRemove, _amountToRemove);
+      emit LogWriteOffSubAccountDebt(_subAccount, _debtPoolId, _shareToRemove, _amountToRemove);
 
       unchecked {
         ++i;
