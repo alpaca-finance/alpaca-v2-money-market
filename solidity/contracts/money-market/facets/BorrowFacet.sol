@@ -29,12 +29,6 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _borrowedAmount,
     uint256 _debtShare
   );
-  event LogRemoveDebt(
-    address indexed _subAccount,
-    address indexed _token,
-    uint256 _removeDebtShare,
-    uint256 _removeDebtAmount
-  );
 
   event LogRepay(
     address indexed _account,
@@ -132,8 +126,15 @@ contract BorrowFacet is IBorrowFacet {
       _actualAmountToRepay,
       moneyMarketDs
     );
+    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _subAccount,
+      _token,
+      _actualShareToRepay,
+      _actualAmountToRepay,
+      moneyMarketDs
+    );
 
-    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _actualAmountToRepay, moneyMarketDs);
+    LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
 
     emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
   }
@@ -179,42 +180,19 @@ contract BorrowFacet is IBorrowFacet {
 
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
-    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _subAccount,
+      _token,
+      _actualShareToRepay,
+      _amountToRepay,
+      moneyMarketDs
+    );
 
-    if (_amountToRepay > _collateralAmount) {
-      revert BorrowFacet_TooManyCollateralRemoved();
-    }
+    LibMoneyMarket01.removeCollatFromSubAccount(_subAccount, _token, _amountToRepay, moneyMarketDs);
 
-    moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _amountToRepay);
-    moneyMarketDs.collats[_token] -= _amountToRepay;
     moneyMarketDs.reserves[_token] += _amountToRepay;
 
     emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _amountToRepay);
-  }
-
-  function _removeDebt(
-    address _subAccount,
-    address _token,
-    uint256 _currentSubAccountDebtShare,
-    uint256 _shareToRemove,
-    uint256 _amountToRemove,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    // update user debtShare
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(
-      _token,
-      _currentSubAccountDebtShare - _shareToRemove
-    );
-
-    // update over collat debtShare
-    moneyMarketDs.overCollatDebtShares[_token] -= _shareToRemove;
-    moneyMarketDs.overCollatDebtValues[_token] -= _amountToRemove;
-
-    // update global debt
-    moneyMarketDs.globalDebts[_token] -= _amountToRemove;
-
-    // emit event
-    emit LogRemoveDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
   }
 
   function _validateRepay(
