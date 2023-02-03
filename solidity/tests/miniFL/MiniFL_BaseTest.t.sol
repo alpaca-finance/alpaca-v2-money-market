@@ -115,7 +115,7 @@ contract MiniFL_BaseTest is BaseTest {
     miniFL.deposit(BOB, wethPoolID, 4 ether);
   }
 
-  function assertUserInfo(
+  function assertTotalStakingAmountWithReward(
     address _user,
     uint256 _pid,
     uint256 _expectedAmount,

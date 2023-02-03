@@ -344,42 +344,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     emit LogHarvest(msg.sender, _pid, _pendingAlpaca);
   }
 
-  /// @notice Withdraw without caring about rewards. EMERGENCY ONLY.
-  /// @param _pid The index of the pool. See `poolInfo`.
-  function emergencyWithdraw(uint256 _pid) external nonReentrant {
-    PoolInfo memory _pool = poolInfo[_pid];
-    UserInfo storage _user = userInfo[_pid][msg.sender];
-
-    if (_pool.isDebtTokenPool) {
-      revert MiniFL_Forbidden();
-    }
-
-    address _stakingToken = stakingTokens[_pid];
-    // amount before withdraw
-    uint256 _amount = _user.totalAmount;
-
-    // Effects
-    stakingReserves[_stakingToken] -= _amount;
-    _user.totalAmount = 0;
-    _user.rewardDebt = 0;
-
-    // Interactions
-    uint256 _rewarderLength = rewarders[_pid].length;
-    address _rewarder;
-    for (uint256 _i; _i < _rewarderLength; ) {
-      _rewarder = rewarders[_pid][_i];
-      IRewarder(_rewarder).onWithdraw(_pid, msg.sender, 0);
-      unchecked {
-        ++_i;
-      }
-    }
-
-    // Note: transfer can fail or succeed if `amount` is zero.
-    IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amount);
-
-    emit LogEmergencyWithdraw(msg.sender, _pid, _amount);
-  }
-
   /// @notice Approve stakers to stake debt token.
   /// @param _pids The pool ids.
   /// @param _stakers The addresses of the stakers.
