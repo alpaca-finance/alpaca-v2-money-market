@@ -49,6 +49,10 @@ library LibMoneyMarket01 {
     uint256 _removedDebtAmount
   );
 
+  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+
+  event LogAddCollateral(address indexed _subAccount, address indexed _token, address _caller, uint256 _amount);
+
   enum AssetTier {
     UNLISTED,
     ISOLATE,
@@ -556,7 +560,7 @@ library LibMoneyMarket01 {
     return uint64(_conversionFactor);
   }
 
-  function addCollat(
+  function addCollatToSubAccount(
     address _subAccount,
     address _token,
     uint256 _addAmount,
@@ -582,17 +586,8 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
     ds.collats[_token] += _addAmount;
-  }
 
-  function removeCollat(
-    address _subAccount,
-    address _token,
-    uint256 _removeAmount,
-    MoneyMarketDiamondStorage storage ds
-  ) internal {
-    removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
-
-    ds.collats[_token] -= _removeAmount;
+    emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
   }
 
   function removeCollatFromSubAccount(
@@ -607,7 +602,12 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_TooManyCollateralRemoved();
     }
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
+    ds.collats[_token] -= _removeAmount;
 
+    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
+  }
+
+  function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowingPower, ) = getTotalUsedBorrowingPower(_subAccount, ds);
     // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop

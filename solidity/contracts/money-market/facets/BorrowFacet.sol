@@ -134,6 +134,8 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
+    LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
+
     emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
   }
 
@@ -186,12 +188,8 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
-    if (_amountToRepay > _collateralAmount) {
-      revert BorrowFacet_TooManyCollateralRemoved();
-    }
+    LibMoneyMarket01.removeCollatFromSubAccount(_subAccount, _token, _amountToRepay, moneyMarketDs);
 
-    moneyMarketDs.subAccountCollats[_subAccount].updateOrRemove(_token, _collateralAmount - _amountToRepay);
-    moneyMarketDs.collats[_token] -= _amountToRepay;
     moneyMarketDs.reserves[_token] += _amountToRepay;
 
     emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _amountToRepay);

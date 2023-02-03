@@ -30,13 +30,6 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _amount
   );
 
-  event LogRemoveCollateral(
-    address indexed _account,
-    uint256 indexed _subAccountId,
-    address indexed _token,
-    uint256 _amount
-  );
-
   event LogTransferCollateral(
     address indexed _account,
     uint256 indexed _fromSubAccountId,
@@ -69,9 +62,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
 
-    LibMoneyMarket01.addCollat(_subAccount, _token, _amount, moneyMarketDs);
-
-    emit LogAddCollateral(_account, _subAccountId, _token, msg.sender, _amount);
+    LibMoneyMarket01.addCollatToSubAccount(_subAccount, _token, _amount, moneyMarketDs);
   }
 
   /// @notice Remove a collateral token from a subaccount
@@ -89,11 +80,10 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    LibMoneyMarket01.removeCollat(_subAccount, _token, _removeAmount, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(_subAccount, _token, _removeAmount, moneyMarketDs);
+    LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
 
     IERC20(_token).safeTransfer(msg.sender, _removeAmount);
-
-    emit LogRemoveCollateral(msg.sender, _subAccountId, _token, _removeAmount);
   }
 
   /// @notice Transfer the collateral from one subaccount to another subaccount
@@ -116,9 +106,10 @@ contract CollateralFacet is ICollateralFacet {
     address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);
     LibMoneyMarket01.accrueBorrowedPositionsOf(_fromSubAccount, moneyMarketDs);
     LibMoneyMarket01.removeCollatFromSubAccount(_fromSubAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.validateSubaccountIsHealthy(_fromSubAccount, moneyMarketDs);
 
     address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
-    LibMoneyMarket01.transferCollat(_toSubAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.addCollatToSubAccount(_toSubAccount, _token, _amount, moneyMarketDs);
 
     emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
