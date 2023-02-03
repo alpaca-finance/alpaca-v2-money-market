@@ -9,7 +9,6 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
   error LYFAdminFacet_InvalidAddress();
-  error LYFAdminFacet_NoMoneyMarketDebt();
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
