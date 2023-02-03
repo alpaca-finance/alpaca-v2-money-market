@@ -4,15 +4,16 @@ pragma solidity 0.8.17;
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import { BaseTest } from "../base/BaseTest.sol";
+import { StdCheatsSafe } from "../utils/StdCheats.sol";
 
 // interfaces
 import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
-contract MiniFL_BaseTest is BaseTest {
+contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   MiniFL internal miniFL;
-  address internal funder1 = address(7777777);
-  address internal funder2 = address(9999999);
+  address internal funder1 = makeAddr("funder1");
+  address internal funder2 = makeAddr("funder2");
 
   Rewarder internal rewarder1;
   Rewarder internal rewarder2;

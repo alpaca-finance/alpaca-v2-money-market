@@ -180,6 +180,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
           ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance).toUint128();
       }
       _poolInfo.lastRewardTime = block.timestamp.toUint64();
+      // update memory poolInfo in state
+      poolInfo[_pid] = _poolInfo;
       emit LogUpdatePool(_pid, _poolInfo.lastRewardTime, stakedBalance, _poolInfo.accAlpacaPerShare);
     }
   }
@@ -275,11 +277,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       revert MiniFL_Forbidden();
     }
 
-    address _stakingToken = stakingTokens[_pid];
     // caller couldn't withdraw more than their funded
     if (_amountToWithdraw > user.fundedAmounts[msg.sender]) {
       revert MiniFL_InsufficientFundedAmount();
     }
+
+    address _stakingToken = stakingTokens[_pid];
 
     // Effects
     unchecked {
