@@ -56,6 +56,7 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
       ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
         subAccountId: _subAccount,
         lpToken: _lpToken,
+        token0: address(weth),
         minLpReceive: 0,
         desiredToken0Amount: (30 ether - _decrement),
         desiredToken1Amount: normalizeEther((30 ether - _decrement), usdcDecimal),
