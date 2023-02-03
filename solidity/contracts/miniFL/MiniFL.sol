@@ -146,17 +146,18 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _user Address of a user.
   /// @return pending ALPACA reward for a given user.
   function pendingAlpaca(uint256 _pid, address _user) external view returns (uint256) {
-    PoolInfo memory pool = poolInfo[_pid];
     UserInfo storage user = userInfo[_pid][_user];
-    uint256 accAlpacaPerShare = pool.accAlpacaPerShare;
+    PoolInfo memory _poolInfo = poolInfo[_pid];
+
+    uint256 accAlpacaPerShare = _poolInfo.accAlpacaPerShare;
     uint256 stakedBalance = stakingReserves[stakingTokens[_pid]];
-    if (block.timestamp > pool.lastRewardTime && stakedBalance != 0) {
+    if (block.timestamp > _poolInfo.lastRewardTime && stakedBalance != 0) {
       uint256 timePast;
       unchecked {
-        timePast = block.timestamp - pool.lastRewardTime;
+        timePast = block.timestamp - _poolInfo.lastRewardTime;
       }
 
-      uint256 alpacaReward = (timePast * alpacaPerSecond * pool.allocPoint) / totalAllocPoint;
+      uint256 alpacaReward = (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
       accAlpacaPerShare = accAlpacaPerShare + ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance);
     }
 
@@ -165,26 +166,24 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   /// @notice Perform actual update pool.
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @return pool Returns the pool that was updated.
-  function _updatePool(uint256 _pid) internal returns (PoolInfo memory) {
-    PoolInfo memory pool = poolInfo[_pid];
-    if (block.timestamp > pool.lastRewardTime) {
+  /// @return _poolInfo Returns the pool that was updated.
+  function _updatePool(uint256 _pid) internal returns (PoolInfo memory _poolInfo) {
+    _poolInfo = poolInfo[_pid];
+    if (block.timestamp > _poolInfo.lastRewardTime) {
       uint256 stakedBalance = stakingReserves[stakingTokens[_pid]];
       if (stakedBalance > 0) {
         uint256 timePast;
         unchecked {
-          timePast = block.timestamp - pool.lastRewardTime;
+          timePast = block.timestamp - _poolInfo.lastRewardTime;
         }
-        uint256 alpacaReward = (timePast * alpacaPerSecond * pool.allocPoint) / totalAllocPoint;
-        pool.accAlpacaPerShare =
-          pool.accAlpacaPerShare +
+        uint256 alpacaReward = (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+        _poolInfo.accAlpacaPerShare =
+          _poolInfo.accAlpacaPerShare +
           ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance).toUint128();
       }
-      pool.lastRewardTime = block.timestamp.toUint64();
-      poolInfo[_pid] = pool;
-      emit LogUpdatePool(_pid, pool.lastRewardTime, stakedBalance, pool.accAlpacaPerShare);
+      _poolInfo.lastRewardTime = block.timestamp.toUint64();
+      emit LogUpdatePool(_pid, _poolInfo.lastRewardTime, stakedBalance, _poolInfo.accAlpacaPerShare);
     }
-    return pool;
   }
 
   /// @notice Update reward variables of the given pool.
@@ -225,11 +224,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _pid,
     uint256 _amountToDeposit
   ) external nonReentrant {
-    PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
+    PoolInfo memory _poolInfo = _updatePool(_pid);
 
     // if pool is debt pool, staker should be whitelisted
-    if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
+    if (_poolInfo.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
       revert MiniFL_Forbidden();
     }
 
@@ -242,7 +241,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       user.totalAmount = user.totalAmount + _receivedAmount;
       stakingReserves[_stakingToken] += _receivedAmount;
     }
-    user.rewardDebt = user.rewardDebt + ((_receivedAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
+    user.rewardDebt =
+      user.rewardDebt +
+      ((_receivedAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
 
     // Interactions
     uint256 _rewarderLength = rewarders[_pid].length;
@@ -268,11 +269,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _pid,
     uint256 _amountToWithdraw
   ) external nonReentrant {
-    PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_from];
+    PoolInfo memory _poolInfo = _updatePool(_pid);
 
     // if pool is debt pool, staker should be whitelisted
-    if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
+    if (_poolInfo.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
       revert MiniFL_Forbidden();
     }
 
@@ -293,7 +294,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     user.rewardDebt =
       user.rewardDebt -
-      (((_amountToWithdraw * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
+      (((_amountToWithdraw * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
 
     // Interactions
     uint256 _rewarderLength = rewarders[_pid].length;
@@ -315,10 +316,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Harvest ALPACA rewards
   /// @param _pid The index of the pool. See `poolInfo`.
   function harvest(uint256 _pid) external nonReentrant {
-    PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][msg.sender];
+    PoolInfo memory _poolInfo = _updatePool(_pid);
 
-    int256 accumulatedAlpaca = ((user.totalAmount * pool.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
+    int256 accumulatedAlpaca = ((user.totalAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
     uint256 _pendingAlpaca = (accumulatedAlpaca - user.rewardDebt).toUint256();
 
     // Effects
