@@ -14,10 +14,10 @@ import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 contract MiniFL_Harvest is MiniFL_BaseTest {
   using LibAccount for address;
 
-  uint256 _aliceWethDeposited = 20 ether;
+  uint256 _aliceTotalWethDeposited = 20 ether;
   uint256 _aliceDTokenDeposited = 10 ether;
 
-  uint256 _bobWethDeposited = 10 ether;
+  uint256 _bobTotalWethDeposited = 10 ether;
   uint256 _bobDTokenDeposited = 90 ether;
 
   function setUp() public override {
@@ -54,7 +54,7 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     // alice pending alpaca on WETHPool = 40000
     vm.prank(ALICE);
     miniFL.harvest(wethPoolID);
-    assertUserInfo(ALICE, wethPoolID, _aliceWethDeposited, 40000 ether);
+    assertUserInfo(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
 
     // alice pending alpaca on DTOKENPool = 4000
     vm.prank(ALICE);
@@ -64,7 +64,7 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     // bob pending alpaca on WETHPool = 20000
     vm.prank(BOB);
     miniFL.harvest(wethPoolID);
-    assertUserInfo(BOB, wethPoolID, _bobWethDeposited, 20000 ether);
+    assertUserInfo(BOB, wethPoolID, _bobTotalWethDeposited, 20000 ether);
 
     // bob pending alpaca on DTOKENPool = 36000
     vm.prank(BOB);

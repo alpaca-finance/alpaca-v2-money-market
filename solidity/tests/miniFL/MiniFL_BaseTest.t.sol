@@ -86,13 +86,13 @@ contract MiniFL_BaseTest is BaseTest {
 
   function prepareForHarvest() internal {
     vm.startPrank(ALICE);
-    weth.approve(address(miniFL), 20 ether);
-    miniFL.deposit(ALICE, wethPoolID, 20 ether);
+    weth.approve(address(miniFL), 10 ether);
+    miniFL.deposit(ALICE, wethPoolID, 10 ether);
     vm.stopPrank();
 
     vm.startPrank(BOB);
-    weth.approve(address(miniFL), 10 ether);
-    miniFL.deposit(BOB, wethPoolID, 10 ether);
+    weth.approve(address(miniFL), 6 ether);
+    miniFL.deposit(BOB, wethPoolID, 6 ether);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -104,6 +104,15 @@ contract MiniFL_BaseTest is BaseTest {
     debtToken1.approve(address(miniFL), 10 ether);
     miniFL.deposit(ALICE, dtokenPoolID, 10 ether);
     vm.stopPrank();
+
+    vm.prank(funder1);
+    miniFL.deposit(ALICE, wethPoolID, 4 ether);
+
+    vm.prank(funder2);
+    miniFL.deposit(ALICE, wethPoolID, 6 ether);
+
+    vm.prank(funder1);
+    miniFL.deposit(BOB, wethPoolID, 4 ether);
   }
 
   function assertUserInfo(
