@@ -29,8 +29,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
 
   struct UserInfo {
-    // funders address => amount
-    mapping(address => uint256) fundedAmounts;
+    mapping(address => uint256) fundedAmounts; // funders address => amount
     uint256 totalAmount;
     int256 rewardDebt;
   }
