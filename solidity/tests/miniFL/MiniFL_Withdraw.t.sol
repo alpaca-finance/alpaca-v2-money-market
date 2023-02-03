@@ -5,8 +5,6 @@ import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC
 
 import { MiniFL_BaseTest } from "./MiniFL_BaseTest.t.sol";
 
-import { stdError } from "../utils/StdError.sol";
-
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
