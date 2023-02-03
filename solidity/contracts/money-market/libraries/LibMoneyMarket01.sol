@@ -616,7 +616,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function removeOverCollatDebt(
+  function removeOverCollatDebtFromSubAccount(
     address _subAccount,
     address _repayToken,
     uint256 _debtShareToRemove,

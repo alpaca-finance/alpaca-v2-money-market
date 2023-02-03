@@ -132,8 +132,13 @@ contract BorrowFacet is IBorrowFacet {
       _actualAmountToRepay,
       moneyMarketDs
     );
-
-    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _actualAmountToRepay, moneyMarketDs);
+    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _subAccount,
+      _token,
+      _actualShareToRepay,
+      _actualAmountToRepay,
+      moneyMarketDs
+    );
 
     emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
   }
@@ -179,7 +184,13 @@ contract BorrowFacet is IBorrowFacet {
 
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
-    _removeDebt(_subAccount, _token, _currentDebtShare, _actualShareToRepay, _amountToRepay, moneyMarketDs);
+    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _subAccount,
+      _token,
+      _actualShareToRepay,
+      _amountToRepay,
+      moneyMarketDs
+    );
 
     if (_amountToRepay > _collateralAmount) {
       revert BorrowFacet_TooManyCollateralRemoved();

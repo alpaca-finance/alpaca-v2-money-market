@@ -188,7 +188,7 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, vars.repurchaseFeeToProtocol);
 
     // update states
-    LibMoneyMarket01.removeOverCollatDebt(
+    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       vars.subAccount,
       _repayToken,
       LibShareUtil.valueToShare(
@@ -312,7 +312,7 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
 
     // give priority to fee
-    LibMoneyMarket01.removeOverCollatDebt(
+    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       params.subAccount,
       params.repayToken,
       LibShareUtil.valueToShare(
