@@ -219,11 +219,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Deposit tokens to MiniFL for ALPACA allocation.
   /// @param _for The beneficary address of the deposit.
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _amount amount to deposit.
+  /// @param _amountToDeposit amount to deposit.
   function deposit(
     address _for,
     uint256 _pid,
-    uint256 _amount
+    uint256 _amountToDeposit
   ) external nonReentrant {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
@@ -234,7 +234,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     address _stakingToken = stakingTokens[_pid];
-    uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amount);
+    uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amountToDeposit);
 
     // Effects
     unchecked {
