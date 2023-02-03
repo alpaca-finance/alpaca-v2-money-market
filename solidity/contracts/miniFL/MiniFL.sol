@@ -29,8 +29,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
 
   struct UserInfo {
-    // funders address => amount // fundedAmounts
-    mapping(address => uint256) amounts;
+    // funders address => amount
+    mapping(address => uint256) fundedAmounts;
     uint256 totalAmount;
     int256 rewardDebt;
   }
@@ -228,19 +228,17 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
 
+    // if pool is debt pool, staker should be whitelisted
     if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
       revert MiniFL_Forbidden();
     }
-    // if (!pool.isDebtTokenPool && msg.sender != _for) {
-    //   revert MiniFL_Forbidden();
-    // }
 
     address _stakingToken = stakingTokens[_pid];
     uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amount);
 
     // Effects
     unchecked {
-      user.amounts[msg.sender] += _receivedAmount;
+      user.fundedAmounts[msg.sender] += _receivedAmount;
       user.totalAmount = user.totalAmount + _receivedAmount;
       stakingReserves[_stakingToken] += _receivedAmount;
     }
@@ -251,6 +249,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
+      // callback to rewarder to do accounting
       IRewarder(_rewarder).onDeposit(_pid, _for, user.totalAmount);
       unchecked {
         ++_i;
@@ -272,24 +271,22 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_for];
 
+    // if pool is debt pool, staker should be whitelisted
     if (pool.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
       revert MiniFL_Forbidden();
     }
-    // if (!pool.isDebtTokenPool && msg.sender != _for) {
-    //   revert MiniFL_Forbidden();
-    // }
 
     address _stakingToken = stakingTokens[_pid];
-    if (_amountToWithdraw > user.amounts[msg.sender]) {
-      revert MiniFL_InsufficientAmount();
+    // caller couldn't withdraw more than their funded
+    if (_amountToWithdraw > user.fundedAmounts[msg.sender]) {
+      revert MiniFL_InsufficientFundedAmount();
     }
 
     // Effects
     unchecked {
-      // if amountToWithdraw > amount of funder, this line can be revert
-      user.amounts[msg.sender] -= _amountToWithdraw;
+      user.fundedAmounts[msg.sender] -= _amountToWithdraw;
 
-      // total amount & staking reserves always >= user.amounts[msg.sender]
+      // total amount & staking reserves always >= user.fundedAmounts[msg.sender]
       user.totalAmount -= _amountToWithdraw;
       stakingReserves[_stakingToken] -= _amountToWithdraw;
     }
@@ -303,6 +300,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
+      // callback to rewarder to do accounting
       IRewarder(_rewarder).onWithdraw(_pid, _for, user.totalAmount);
       unchecked {
         ++_i;
@@ -335,6 +333,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _rewarder;
     for (uint256 _i; _i < _rewarderLength; ) {
       _rewarder = rewarders[_pid][_i];
+      // callback to rewarder to harvest reward from rewarder
       IRewarder(_rewarder).onHarvest(_pid, msg.sender);
       unchecked {
         ++_i;
@@ -404,12 +403,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     _reserveAmount = stakingReserves[stakingTokens[_pid]];
   }
 
-  function getFunderStakingAmount(
+  function getFundedAmount(
     address _funder,
     address _for,
     uint256 _pid
   ) external view returns (uint256 _stakingAmount) {
-    _stakingAmount = userInfo[_pid][_for].amounts[_funder];
+    _stakingAmount = userInfo[_pid][_for].fundedAmounts[_funder];
   }
 
   function _unsafePullToken(

@@ -141,7 +141,7 @@ contract MiniFL_BaseTest is BaseTest {
     uint256 _pid,
     uint256 _expectedAmount
   ) internal {
-    uint256 _amount = miniFL.getFunderStakingAmount(_funder, _for, _pid);
+    uint256 _amount = miniFL.getFundedAmount(_funder, _for, _pid);
     assertEq(_amount, _expectedAmount);
   }
 

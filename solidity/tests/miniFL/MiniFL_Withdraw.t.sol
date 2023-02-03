@@ -87,7 +87,7 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
 
     // fund of funder must withdraw by funder
     vm.prank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientAmount.selector));
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientFundedAmount.selector));
     miniFL.withdraw(ALICE, wethPoolID, 10 ether);
   }
 
@@ -107,17 +107,17 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
 
     // alice could not withdraw more than 10
     vm.prank(ALICE);
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientAmount.selector));
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientFundedAmount.selector));
     miniFL.withdraw(ALICE, wethPoolID, 11 ether);
 
     // funder1 could not withdraw more than 15
     vm.prank(funder1);
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientAmount.selector));
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientFundedAmount.selector));
     miniFL.withdraw(ALICE, wethPoolID, 16 ether);
 
     // funder2 could not withdraw more than 20
     vm.prank(funder2);
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientAmount.selector));
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InsufficientFundedAmount.selector));
     miniFL.withdraw(ALICE, wethPoolID, 20.1 ether);
   }
 

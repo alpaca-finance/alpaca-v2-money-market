@@ -8,7 +8,7 @@ interface IMiniFL {
   error MiniFL_Forbidden();
   error MiniFL_InvalidArguments();
   error MiniFL_BadRewarder();
-  error MiniFL_InsufficientAmount();
+  error MiniFL_InsufficientFundedAmount();
 
   function poolLength() external view returns (uint256);
 
