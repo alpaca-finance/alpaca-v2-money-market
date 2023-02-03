@@ -22,14 +22,6 @@ contract CollateralFacet is ICollateralFacet {
   using SafeCast for uint256;
   using SafeCast for int256;
 
-  event LogAddCollateral(
-    address indexed _account,
-    uint256 indexed _subAccountId,
-    address indexed _token,
-    address _caller,
-    uint256 _amount
-  );
-
   event LogTransferCollateral(
     address indexed _account,
     uint256 indexed _fromSubAccountId,
