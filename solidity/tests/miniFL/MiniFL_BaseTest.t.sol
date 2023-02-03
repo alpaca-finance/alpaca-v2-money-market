@@ -116,7 +116,7 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
     miniFL.deposit(BOB, wethPoolID, 4 ether);
   }
 
-  function assertTotalStakingAmountWithReward(
+  function assertTotalUserStakingAmountWithReward(
     address _user,
     uint256 _pid,
     uint256 _expectedAmount,
@@ -127,7 +127,7 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
     assertEq(_rewardDebt, _expectedRewardDebt);
   }
 
-  function assertTotalStakingAmount(
+  function assertTotalUserStakingAmount(
     address _user,
     uint256 _pid,
     uint256 _expectedAmount
@@ -156,5 +156,9 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
     (uint256 _totalAmount, int256 _rewardDebt) = _rewarder.userInfo(_pid, _user);
     assertEq(_totalAmount, _expectedAmount);
     assertEq(_rewardDebt, _expectedRewardDebt);
+  }
+
+  function assertStakingReserve(uint256 _pid, uint256 _expectedAmount) internal {
+    assertEq(miniFL.getStakingReserves(_pid), _expectedAmount);
   }
 }

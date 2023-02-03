@@ -31,7 +31,7 @@ contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 5 ether);
 
     // assert total staking amount
-    assertTotalStakingAmount(ALICE, wethPoolID, 5 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 5 ether);
 
     // assert reward user info, both user info should be same
     assertRewarderUserInfo(rewarder1, ALICE, wethPoolID, 5 ether, 0);
@@ -53,7 +53,7 @@ contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
     miniFL.deposit(ALICE, wethPoolID, 20 ether);
 
     // check total amount = 45
-    assertTotalStakingAmount(ALICE, wethPoolID, 45 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 45 ether);
 
     // balance before withdraw
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
@@ -77,7 +77,7 @@ contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
 
     // assert total staking amount after withdraw
     // 45 - 22 = 23
-    assertTotalStakingAmount(ALICE, wethPoolID, 23 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 23 ether);
 
     // check staking amount per funder
     assertFunderAmount(ALICE, ALICE, wethPoolID, 5 ether); // 10 - 5 = 5
@@ -105,7 +105,7 @@ contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
     assertEq(debtToken1.balanceOf(BOB) - _bobDTokenBalanceBefore, 5 ether);
 
     // assert total staking amount
-    assertTotalStakingAmount(BOB, dtokenPoolID, 5 ether);
+    assertTotalUserStakingAmount(BOB, dtokenPoolID, 5 ether);
 
     // assert reward user info
     assertRewarderUserInfo(rewarder1, BOB, dtokenPoolID, 5 ether, 0);

@@ -35,7 +35,10 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     // check staking amount for ALICE as funder
     assertFunderAmount(ALICE, ALICE, wethPoolID, 10 ether);
     // check total staking amount
-    assertTotalStakingAmount(ALICE, wethPoolID, 10 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 10 ether);
+
+    // check reserve amount
+    assertStakingReserve(wethPoolID, 10 ether);
   }
 
   function testCorrectness_WhenOneFunderDepositMiniFLForAlice() external {
@@ -54,13 +57,17 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     assertFunderAmount(funder1, ALICE, wethPoolID, 10 ether);
 
     // check total staking amount
-    assertTotalStakingAmount(ALICE, wethPoolID, 10 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 10 ether);
+
+    // check reserve amount
+    assertStakingReserve(wethPoolID, 10 ether);
   }
 
-  function testCorrectness_WhenManyFunderDepositMiniFLForAlice() external {
+  function testCorrectness_WhenManyFunderDepositMiniFLForAliceAndBob() external {
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
     uint256 _funder1WethBalanceBefore = weth.balanceOf(funder1);
     uint256 _funder2WethBalanceBefore = weth.balanceOf(funder2);
+
     // funder1 deposit for ALICE
     vm.prank(funder1);
     miniFL.deposit(ALICE, wethPoolID, 10 ether);
@@ -69,18 +76,26 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     vm.prank(funder2);
     miniFL.deposit(ALICE, wethPoolID, 11 ether);
 
+    vm.prank(funder1);
+    miniFL.deposit(BOB, wethPoolID, 12 ether);
+
     // ALICE balance should not changed
     assertEq(_aliceWethBalanceBefore - weth.balanceOf(ALICE), 0);
     assertEq(_funder1WethBalanceBefore - weth.balanceOf(funder1), 10 ether);
-    assertEq(_funder2WethBalanceBefore - weth.balanceOf(funder2), 11 ether);
+    assertEq(_funder2WethBalanceBefore - weth.balanceOf(funder2), 23 ether); // 11 for alice, 12 for bob
 
     // check staking amount per funder
     assertFunderAmount(ALICE, ALICE, wethPoolID, 0 ether);
     assertFunderAmount(funder1, ALICE, wethPoolID, 10 ether);
     assertFunderAmount(funder2, ALICE, wethPoolID, 11 ether);
+    assertFunderAmount(funder2, BOB, wethPoolID, 12 ether);
 
-    // check total staking amount for ALICE
-    assertTotalStakingAmount(ALICE, wethPoolID, 21 ether);
+    // check total staking amount
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 21 ether);
+    assertTotalUserStakingAmount(BOB, wethPoolID, 12 ether);
+
+    // check reserve amount
+    assertStakingReserve(wethPoolID, 33 ether);
   }
 
   // #deposit debtToken
@@ -96,7 +111,10 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     // check staking amount for BOB as funder
     assertFunderAmount(BOB, BOB, dtokenPoolID, 10 ether);
     // check total staking amount
-    assertTotalStakingAmount(BOB, dtokenPoolID, 10 ether);
+    assertTotalUserStakingAmount(BOB, dtokenPoolID, 10 ether);
+
+    // check reserve amount
+    assertStakingReserve(dtokenPoolID, 10 ether);
   }
 
   // note: now debt token can deposit for another
@@ -114,8 +132,11 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     assertFunderAmount(BOB, ALICE, dtokenPoolID, 10 ether);
 
     // check total staking amount
-    assertTotalStakingAmount(BOB, dtokenPoolID, 0);
-    assertTotalStakingAmount(ALICE, dtokenPoolID, 10 ether);
+    assertTotalUserStakingAmount(BOB, dtokenPoolID, 0);
+    assertTotalUserStakingAmount(ALICE, dtokenPoolID, 10 ether);
+
+    // check reserve amount
+    assertStakingReserve(dtokenPoolID, 10 ether);
   }
 
   function testRevert_WhenNotAllowToDepositDebtToken() external {

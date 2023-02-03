@@ -52,24 +52,26 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     uint256 _bobAlpacaBefore = BOB.myBalanceOf(address(alpaca));
 
     // alice pending alpaca on WETHPool = 40000
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
     vm.prank(ALICE);
     miniFL.harvest(wethPoolID);
-    assertTotalStakingAmountWithReward(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 0);
 
     // alice pending alpaca on DTOKENPool = 4000
     vm.prank(ALICE);
     miniFL.harvest(dtokenPoolID);
-    assertTotalStakingAmountWithReward(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
 
     // bob pending alpaca on WETHPool = 20000
     vm.prank(BOB);
     miniFL.harvest(wethPoolID);
-    assertTotalStakingAmountWithReward(BOB, wethPoolID, _bobTotalWethDeposited, 20000 ether);
+    assertTotalUserStakingAmountWithReward(BOB, wethPoolID, _bobTotalWethDeposited, 20000 ether);
 
     // bob pending alpaca on DTOKENPool = 36000
     vm.prank(BOB);
     miniFL.harvest(dtokenPoolID);
-    assertTotalStakingAmountWithReward(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
+    assertTotalUserStakingAmountWithReward(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
 
     // assert all alpaca received
     assertEq(ALICE.myBalanceOf(address(alpaca)) - _aliceAlpacaBefore, 44000 ether);

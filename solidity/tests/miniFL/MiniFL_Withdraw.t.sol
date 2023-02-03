@@ -28,6 +28,9 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
     miniFL.withdraw(ALICE, wethPoolID, 5 ether);
 
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 5 ether);
+
+    // check reserve amount
+    assertStakingReserve(wethPoolID, 5 ether);
   }
 
   function testCorrectness_WhenFunderWithdrawFromMiniFL() external {
@@ -39,6 +42,12 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
     miniFL.deposit(ALICE, wethPoolID, _aliceDepoisitAmount);
     vm.stopPrank();
 
+    // bob deposited
+    vm.startPrank(BOB);
+    weth.approve(address(miniFL), 5 ether);
+    miniFL.deposit(BOB, wethPoolID, 5 ether);
+    vm.stopPrank();
+
     // funder deposit for alice
     vm.prank(funder1);
     miniFL.deposit(ALICE, wethPoolID, 15 ether);
@@ -47,7 +56,7 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
     miniFL.deposit(ALICE, wethPoolID, 10 ether);
 
     // just correct staking total amount
-    assertTotalStakingAmount(ALICE, wethPoolID, 35 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 35 ether);
 
     // cache balance before withdraw
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
@@ -75,7 +84,10 @@ contract MiniFL_Withdraw is MiniFL_BaseTest {
     assertFunderAmount(funder2, ALICE, wethPoolID, 2 ether);
 
     // ALICE total staking amount 35 - 18 = 17
-    assertTotalStakingAmount(ALICE, wethPoolID, 17 ether);
+    assertTotalUserStakingAmount(ALICE, wethPoolID, 17 ether);
+
+    // check reserve amount total of alice 17, and bob 5
+    assertStakingReserve(wethPoolID, 22 ether);
   }
 
   function testRevert_WhenAliceWithdrawFromAmountOfFunder() external {

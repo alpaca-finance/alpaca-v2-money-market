@@ -64,13 +64,13 @@ contract MiniFL_HarvestWithRewarder is MiniFL_BaseTest {
     // --------------------------------------------------------------
     vm.prank(ALICE);
     miniFL.harvest(wethPoolID);
-    assertTotalStakingAmountWithReward(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
     assertRewarderUserInfo(rewarder1, ALICE, wethPoolID, _aliceTotalWethDeposited, 6000 ether);
     assertRewarderUserInfo(rewarder2, ALICE, wethPoolID, _aliceTotalWethDeposited, 10000 ether);
 
     vm.prank(ALICE);
     miniFL.harvest(dtokenPoolID);
-    assertTotalStakingAmountWithReward(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
     assertRewarderUserInfo(rewarder1, ALICE, dtokenPoolID, _aliceDTokenDeposited, 100 ether);
     assertRewarderUserInfo(rewarder2, ALICE, dtokenPoolID, 0, 0);
 
@@ -88,13 +88,13 @@ contract MiniFL_HarvestWithRewarder is MiniFL_BaseTest {
     // --------------------------------------------------------------
     vm.prank(BOB);
     miniFL.harvest(wethPoolID);
-    assertTotalStakingAmountWithReward(BOB, wethPoolID, _bobTotalWethDeposited, 20000 ether);
+    assertTotalUserStakingAmountWithReward(BOB, wethPoolID, _bobTotalWethDeposited, 20000 ether);
     assertRewarderUserInfo(rewarder1, BOB, wethPoolID, _bobTotalWethDeposited, 3000 ether);
     assertRewarderUserInfo(rewarder2, BOB, wethPoolID, _bobTotalWethDeposited, 5000 ether);
 
     vm.prank(BOB);
     miniFL.harvest(dtokenPoolID);
-    assertTotalStakingAmountWithReward(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
+    assertTotalUserStakingAmountWithReward(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
     assertRewarderUserInfo(rewarder1, BOB, dtokenPoolID, _bobDTokenDeposited, 900 ether);
     assertRewarderUserInfo(rewarder2, BOB, dtokenPoolID, 0, 0);
 
