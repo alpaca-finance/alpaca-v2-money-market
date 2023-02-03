@@ -70,7 +70,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     }
 
     uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_repayAmount, _path);
-
     (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawFromMoneyMarket(
       _ibToken,
       _ibTokenAmountIn,
