@@ -21,7 +21,7 @@ contract LiquidationFacet is ILiquidationFacet {
   using LibSafeToken for IERC20;
 
   event LogRepurchase(
-    address indexed repurchaser,
+    address indexed _repurchaser,
     address _repayToken,
     address _collatToken,
     uint256 _actualRepayAmountWithoutFee,
@@ -30,8 +30,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _repurchaseRewardToCaller
   );
   event LogLiquidate(
-    address indexed caller,
-    address indexed liquidationStrategy,
+    address indexed _caller,
+    address indexed _liquidationStrategy,
     address _repayToken,
     address _collatToken,
     uint256 _amountDebtRepaid,

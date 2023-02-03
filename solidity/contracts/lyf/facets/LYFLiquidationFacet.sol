@@ -31,7 +31,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   uint256 constant liquidationRewardBps = 5000;
 
   event LogRepurchase(
-    address indexed repurchaser,
+    address indexed _repurchaser,
     address _repayToken,
     address _collatToken,
     uint256 _amountIn,
@@ -40,8 +40,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   );
 
   event LogLiquidate(
-    address indexed liquidator,
-    address indexed liquidationStrategy,
+    address indexed _liquidator,
+    address indexed _liquidationStrategy,
     address _repayToken,
     address _collatToken,
     uint256 _amountDebtRepaid,
@@ -51,7 +51,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
   );
 
   event LogLiquidateLP(
-    address indexed liquidator,
+    address indexed _liquidator,
     address _account,
     uint256 _subAccountId,
     address _lpToken,
