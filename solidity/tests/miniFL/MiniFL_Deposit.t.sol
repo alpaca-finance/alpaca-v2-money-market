@@ -15,7 +15,7 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     setupMiniFLPool();
   }
 
-  function testRevert_WhenDepositOnNotExistsPool() external {
+  function testRevert_WhenDepositMiniFLButPoolIsNotExists() external {
     vm.startPrank(ALICE);
     vm.expectRevert();
     miniFL.deposit(ALICE, notExistsPoolID, 10 ether);
@@ -23,7 +23,7 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
   }
 
   // #deposit ibToken (not debt token)
-  function testCorrectness_WhenDeposit() external {
+  function testCorrectness_WhenDepositMiniFLShouldWork() external {
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
     vm.startPrank(ALICE);
     weth.approve(address(miniFL), 10 ether);
@@ -33,14 +33,14 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
     assertEq(_aliceWethBalanceBefore - weth.balanceOf(ALICE), 10 ether);
   }
 
-  function testRevert_WhenDepositForAnother() external {
+  function testRevert_WhenDepositMiniFLForAnother() external {
     // deposit for ALICE
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
     miniFL.deposit(ALICE, wethPoolID, 10 ether);
   }
 
   // #deposit debtToken
-  function testCorrectness_WhenDepositDebtToken() external {
+  function testCorrectness_WhenDepositMiniFLDebtToken() external {
     uint256 _bobDebtTokenBalanceBefore = debtToken1.balanceOf(BOB);
 
     vm.startPrank(BOB);
@@ -52,7 +52,7 @@ contract MiniFL_Deposit is MiniFL_BaseTest {
   }
 
   // note: now debt token can deposit for another
-  function testCorrectness_WhenDepositDebtTokenForAnother() external {
+  function testCorrectness_WhenDepositMiniFLWithDebtTokenForAnother() external {
     uint256 _bobDebtTokenBalanceBefore = debtToken1.balanceOf(BOB);
     // BOB deposit for ALICE
     vm.startPrank(BOB);
