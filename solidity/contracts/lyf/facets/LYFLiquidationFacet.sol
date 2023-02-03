@@ -41,11 +41,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
   event LogLiquidate(
     address indexed liquidator,
-    address _strat,
+    address indexed liquidationStrategy,
     address _repayToken,
     address _collatToken,
-    uint256 _amountIn,
-    uint256 _amountOut,
+    uint256 _amountDebtRepaid,
+    uint256 _amountCollatLiquidated,
     uint256 _feeToTreasury,
     uint256 _feeToLiquidator
   );
@@ -275,16 +275,17 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     uint256 _collatSold = _params.collatTokenBalanceBefore - IERC20(_params.collatToken).balanceOf(address(this));
 
-    lyfDs.reserves[_params.repayToken] += _actualRepayAmount;
-
-    IERC20(_params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
-    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
-
+    unchecked {
+      lyfDs.reserves[_params.repayToken] += _actualRepayAmount;
+    }
     // give priority to fee
     if (_actualRepayAmount > 0) {
       _removeDebtByAmount(_params.subAccount, _params.debtShareId, _actualRepayAmount, lyfDs);
     }
     LibLYF01.removeCollateral(_params.subAccount, _params.collatToken, _collatSold, lyfDs);
+
+    IERC20(_params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
+    IERC20(_params.repayToken).safeTransfer(lyfDs.liquidationTreasury, _feeToTreasury);
 
     emit LogLiquidate(
       msg.sender,
@@ -521,8 +522,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _expectedMaxRepayAmount,
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
+    // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
     uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) -
       params.repayTokenBalaceBefore;
+    // find the actual fee through the rule of three
+    // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
     _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
     unchecked {
       _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;

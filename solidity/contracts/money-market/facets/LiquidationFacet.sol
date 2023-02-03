@@ -288,14 +288,16 @@ contract LiquidationFacet is ILiquidationFacet {
 
     uint256 _collatSold = params.collatTokenBalanceBefore - IERC20(params.collatToken).balanceOf(address(this));
 
-    moneyMarketDs.reserves[params.repayToken] += _actualRepayAmount;
-
-    IERC20(params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
-    IERC20(params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _feeToTreasury);
+    unchecked {
+      moneyMarketDs.reserves[params.repayToken] += _actualRepayAmount;
+    }
 
     // give priority to fee
     _reduceDebt(params.subAccount, params.repayToken, _actualRepayAmount, moneyMarketDs);
     _reduceCollateral(params.subAccount, params.collatToken, _collatSold, moneyMarketDs);
+
+    IERC20(params.repayToken).safeTransfer(msg.sender, _feeToLiquidator);
+    IERC20(params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _feeToTreasury);
 
     emit LogLiquidate(
       msg.sender,
@@ -380,10 +382,12 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _expectedMaxRepayAmount,
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
+    // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
     uint256 _amountFromLiquidationStrat = IERC20(params.repayToken).balanceOf(address(this)) -
       params.repayTokenBalaceBefore;
+    // find the actual fee through the rule of three
+    // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
     _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
-
     unchecked {
       _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
     }
