@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { IMoneyMarket } from "../../contracts/money-market/interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 
-contract MockMoneyMarket is IMoneyMarket {
+contract MockMoneyMarket {
   mapping(address => address) private _ibToTokens;
   uint256 private _withdrawalAmount;
 
