@@ -42,6 +42,16 @@ library LibMoneyMarket01 {
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
+  event LogRemoveDebt(
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _removedDebtShare,
+    uint256 _removedDebtAmount
+  );
+
+  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+
+  event LogAddCollateral(address indexed _subAccount, address indexed _token, address _caller, uint256 _amount);
 
   enum AssetTier {
     UNLISTED,
@@ -550,7 +560,7 @@ library LibMoneyMarket01 {
     return uint64(_conversionFactor);
   }
 
-  function addCollat(
+  function addCollatToSubAccount(
     address _subAccount,
     address _token,
     uint256 _addAmount,
@@ -576,17 +586,8 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
     ds.collats[_token] += _addAmount;
-  }
 
-  function removeCollat(
-    address _subAccount,
-    address _token,
-    uint256 _removeAmount,
-    MoneyMarketDiamondStorage storage ds
-  ) internal {
-    removeCollatFromSubAccount(_subAccount, _token, _removeAmount, ds);
-
-    ds.collats[_token] -= _removeAmount;
+    emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
   }
 
   function removeCollatFromSubAccount(
@@ -601,13 +602,35 @@ library LibMoneyMarket01 {
       revert LibMoneyMarket01_TooManyCollateralRemoved();
     }
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
+    ds.collats[_token] -= _removeAmount;
 
+    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
+  }
+
+  function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view {
     uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
     (uint256 _totalUsedBorrowingPower, ) = getTotalUsedBorrowingPower(_subAccount, ds);
-    // violate check-effect pattern for gas optimization, will change after come up with a way that doesn't loop
     if (_totalBorrowingPower < _totalUsedBorrowingPower) {
       revert LibMoneyMarket01_BorrowingPowerTooLow();
     }
+  }
+
+  function removeOverCollatDebtFromSubAccount(
+    address _subAccount,
+    address _repayToken,
+    uint256 _debtShareToRemove,
+    uint256 _debtValueToRemove,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    uint256 _currentDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
+
+    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _currentDebtShare - _debtShareToRemove);
+    moneyMarketDs.overCollatDebtShares[_repayToken] -= _debtShareToRemove;
+    moneyMarketDs.overCollatDebtValues[_repayToken] -= _debtValueToRemove;
+
+    moneyMarketDs.globalDebts[_repayToken] -= _debtValueToRemove;
+
+    emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
 
   function transferCollat(
