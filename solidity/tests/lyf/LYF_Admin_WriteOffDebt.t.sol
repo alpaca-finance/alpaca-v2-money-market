@@ -189,10 +189,10 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
     uint256 subAccount1DebtShare;
     uint256 subAccount1DebtValue;
 
-    uint256 subAccount0RemainingDebtShare = normalizeEther(20.1 ether, usdcDecimal);
-    uint256 subAccount0RemainingDebtValue = normalizeEther(20.1 ether, usdcDecimal);
-    uint256 subAccount1RemainingDebtShare = normalizeEther(10.1 ether, usdcDecimal);
-    uint256 subAccount1RemainingDebtValue = normalizeEther(10.1 ether, usdcDecimal);
+    uint256 subAccount0RemainingDebtShare = 20099009;
+    uint256 subAccount0RemainingDebtValue = 20099009;
+    uint256 subAccount1RemainingDebtShare = 10099009;
+    uint256 subAccount1RemainingDebtValue = 10099009;
 
     (subAccount0DebtShare, subAccount0DebtValue) = viewFacet.getSubAccountDebt(
       ALICE,
