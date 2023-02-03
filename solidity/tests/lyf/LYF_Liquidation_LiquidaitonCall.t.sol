@@ -200,12 +200,17 @@ contract LYF_Liquidation_LiquidationCallTest is LYF_BaseTest {
      *
      * 3. liquidator liquidate alice position
      *      - repay 10 USDC
-     *      - treasury get 1% of repaid debt = 10 * 1/100 = 0.1
-     *      - actual repay = 10 - 0.1 = 9.9 USDC
+     *      - treasury get 1% of repaid debt compare with maximum fee = 10 * 0.3/30.3 = 0.099009
+     *      - actual repay = 10 - 0.099009 = 9.900991 USDC
      *
      * 4. alice position after liquidate
      *      - alice subaccount 0: weth collateral = 10 - 10 = 0 weth
-     *      - alice subaccount 0: usdc debt = 30 - 9.9 = 20.1 usdc
+     *      - alice subaccount 0: usdc debt = 30 - 9.900991 = 20.099009 usdc
+     *
+     * 5. Fee
+     *      - totalFee = 0.099009
+     *      - 50% goes to liquidator = 0.099009 * 5000 / 10000 = 0.0495045
+     *      - treasury get = 0.099009 - 0.0495045 = 0.0495045
      */
 
     address _collatToken = address(weth);
