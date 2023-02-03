@@ -8,7 +8,6 @@ interface ILYFLiquidationFacet {
   error LYFLiquidationFacet_InsufficientAmount();
   error LYFLiquidationFacet_TooLittleReceived();
   error LYFLiquidationFacet_InvalidAssetTier();
-  error LYFLiquidationFacet_RepayAmountExceedThreshold();
 
   function repurchase(
     address _account,
@@ -24,7 +23,7 @@ interface ILYFLiquidationFacet {
     address _account,
     uint256 _subAccountId,
     address _lpToken,
-    uint256 _lpSharesToLiquidate,
+    uint256 _lpAmountToLiquidate,
     uint256 _amount0ToRepay,
     uint256 _amount1ToRepay
   ) external;
@@ -34,8 +33,8 @@ interface ILYFLiquidationFacet {
     address _account,
     uint256 _subAccountId,
     address _repayToken,
-    address _collatToken,
     address _lpToken,
+    address _collatToken,
     uint256 _repayAmount,
     uint256 _minReceive
   ) external;
