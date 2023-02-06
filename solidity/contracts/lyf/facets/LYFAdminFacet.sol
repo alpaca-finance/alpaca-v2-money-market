@@ -367,7 +367,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
       lyfDs.reserves[_token] -= _repayAmount;
     }
 
-    IERC20(_token).safeIncreaseAllowance(address(moneyMarket), _repayAmount);
+    IERC20(_token).safeApprove(address(moneyMarket), _repayAmount);
     moneyMarket.nonCollatRepay(address(this), _token, _repayAmount);
 
     emit LogSettleDebt(_token, _repayAmount);

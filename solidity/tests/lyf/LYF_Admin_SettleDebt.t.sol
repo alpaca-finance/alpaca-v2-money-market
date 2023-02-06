@@ -46,7 +46,7 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
     assertEq(viewFacet.getMMDebt(_borrowToken), normalizeEther(30 ether, usdcDecimal));
   }
 
-  function testCorrectness_WhenAdminFulllySettleDebt_MMDebtShouldBeRemained() external {
+  function testCorrectness_WhenAdminPartiallySettleDebt_MMDebtShouldBeRemained() external {
     // [after open position] usdc debt -> value: 30, share: 30
     _setupMMDebt();
 
@@ -73,7 +73,7 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
     assertEq(_protocolReserve, normalizeEther(10 ether, usdcDecimal));
   }
 
-  function testCorrectness_WhenAdminPartiallySettleDebt_MMDebtShouldBeZero() external {
+  function testCorrectness_WhenAdminFullySettleDebt_MMDebtShouldBeZero() external {
     // [after open position] usdc debt -> value: 30, share: 30
     _setupMMDebt();
 
@@ -89,7 +89,7 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
     assertEq(viewFacet.getProtocolReserveOf(_borrowToken), 0);
   }
 
-  function testRevert_WhenAdminSettleDebtWithLowReserve() external {
+  function testRevert_WhenAdminSettleDebtWithNotEnoughReserve() external {
     _setupMMDebt();
 
     // settle debt
