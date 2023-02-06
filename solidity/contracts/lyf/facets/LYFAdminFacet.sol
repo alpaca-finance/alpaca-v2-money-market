@@ -34,7 +34,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogWriteOffSubAccountDebt(
-    address indexed subAccount,
+    address indexed account,
+    uint256 indexed subAccountId,
     uint256 indexed debtPoolId,
     uint256 debtShareWrittenOff,
     uint256 debtValueWrittenOff
@@ -334,17 +335,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
       _debtPoolId = _inputs[i].debtPoolId;
       LibLYF01.accrueDebtPoolInterest(_debtPoolId, lyfDs);
-      (_shareToRemove, _amountToRemove) = LibLYF01.getSubAccountDebtShareAndAmount(
-        _account,
-        _subAccountId,
-        _debtPoolId,
-        lyfDs
-      );
+      (_shareToRemove, _amountToRemove) = LibLYF01.getSubAccountDebtShareAndAmount(_subAccount, _debtPoolId, lyfDs);
 
       // reset debt to zero
       LibLYF01.removeDebt(_subAccount, _debtPoolId, _shareToRemove, _amountToRemove, lyfDs);
 
-      emit LogWriteOffSubAccountDebt(_subAccount, _debtPoolId, _shareToRemove, _amountToRemove);
+      emit LogWriteOffSubAccountDebt(_account, _subAccountId, _debtPoolId, _shareToRemove, _amountToRemove);
 
       unchecked {
         ++i;

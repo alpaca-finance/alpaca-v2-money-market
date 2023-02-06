@@ -694,15 +694,13 @@ library LibLYF01 {
 
   /// @dev get sub account debt share and debt value
   function getSubAccountDebtShareAndAmount(
-    address _account,
-    uint256 _subAccountId,
+    address _subAccount,
     uint256 _debtPoolId,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) external view returns (uint256 _debtShare, uint256 _debtAmount) {
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
-    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYF01.DebtPoolInfo memory _debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
-    _debtAmount = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
+    _debtAmount = LibShareUtil.shareToValue(_debtShare, _debtPoolInfo.totalValue, _debtPoolInfo.totalShare);
   }
 }

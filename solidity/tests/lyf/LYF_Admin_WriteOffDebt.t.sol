@@ -13,7 +13,8 @@ import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 
 contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
   event LogWriteOffSubAccountDebt(
-    address indexed subAccount,
+    address indexed account,
+    uint256 indexed subAccountId,
     uint256 indexed debtPoolId,
     uint256 debtShareWrittenOff,
     uint256 debtValueWrittenOff
@@ -216,16 +217,18 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
     inputs[0] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount0, _debtPoolId);
     inputs[1] = ILYFAdminFacet.WriteOffSubAccountDebtInput(ALICE, subAccount1, _debtPoolId);
 
-    vm.expectEmit(true, true, false, true, lyfDiamond);
+    vm.expectEmit(true, true, true, true, lyfDiamond);
     emit LogWriteOffSubAccountDebt(
-      viewFacet.getSubAccount(ALICE, subAccount0),
+      ALICE,
+      subAccount0,
       _debtPoolId,
       subAccount0RemainingDebtShare,
       subAccount0RemainingDebtValue
     );
-    vm.expectEmit(true, true, false, true, lyfDiamond);
+    vm.expectEmit(true, true, true, true, lyfDiamond);
     emit LogWriteOffSubAccountDebt(
-      viewFacet.getSubAccount(ALICE, subAccount1),
+      ALICE,
+      subAccount1,
       _debtPoolId,
       subAccount1RemainingDebtShare,
       subAccount1RemainingDebtValue

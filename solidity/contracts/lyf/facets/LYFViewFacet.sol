@@ -140,7 +140,11 @@ contract LYFViewFacet is ILYFViewFacet {
 
     uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
 
-    (_debtShare, _debtAmount) = LibLYF01.getSubAccountDebtShareAndAmount(_account, _subAccountId, _debtPoolId, lyfDs);
+    (_debtShare, _debtAmount) = LibLYF01.getSubAccountDebtShareAndAmount(
+      LibLYF01.getSubAccount(_account, _subAccountId),
+      _debtPoolId,
+      lyfDs
+    );
   }
 
   /// @notice Get the list of all debt share and amount of a subaccount
