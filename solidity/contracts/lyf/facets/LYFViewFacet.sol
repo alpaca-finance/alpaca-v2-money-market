@@ -252,12 +252,6 @@ contract LYFViewFacet is ILYFViewFacet {
     }
   }
 
-  function getReserveOf(address _token) external view returns (uint256 _reserveAmount) {
-    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-
-    _reserveAmount = lyfDs.reserves[_token];
-  }
-
   function getProtocolReserveOf(address _token) external view returns (uint256 _protocolReserveAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 

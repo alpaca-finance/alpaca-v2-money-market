@@ -207,7 +207,7 @@ library LYFDiamondDeployer {
   {
     _viewFacet = new LYFViewFacet();
 
-    _selectors = new bytes4[](26);
+    _selectors = new bytes4[](25);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
     _selectors[2] = LYFViewFacet.getLpTokenAmount.selector;
@@ -229,11 +229,10 @@ library LYFDiamondDeployer {
     _selectors[18] = LYFViewFacet.getMaxNumOfToken.selector;
     _selectors[19] = LYFViewFacet.getMinDebtSize.selector;
     _selectors[20] = LYFViewFacet.getOutstandingBalanceOf.selector;
-    _selectors[21] = LYFViewFacet.getReserveOf.selector;
-    _selectors[22] = LYFViewFacet.getProtocolReserveOf.selector;
-    _selectors[23] = LYFViewFacet.getSubAccount.selector;
-    _selectors[24] = LYFViewFacet.getDebtPoolIdOf.selector;
-    _selectors[25] = LYFViewFacet.getRewardConversionConfig.selector;
+    _selectors[21] = LYFViewFacet.getProtocolReserveOf.selector;
+    _selectors[22] = LYFViewFacet.getSubAccount.selector;
+    _selectors[23] = LYFViewFacet.getDebtPoolIdOf.selector;
+    _selectors[24] = LYFViewFacet.getRewardConversionConfig.selector;
 
     IDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
       address(_viewFacet),

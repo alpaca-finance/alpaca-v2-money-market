@@ -20,14 +20,14 @@ contract LYF_Admin_TopUpTokenReserves is LYF_BaseTest {
     address _token = address(weth);
     uint256 _amount = 1 ether;
 
-    assertEq(viewFacet.getReserveOf(_token), 0);
+    assertEq(viewFacet.getOutstandingBalanceOf(_token), 0);
     assertEq(weth.balanceOf(address(this)), 100 ether);
 
     vm.expectEmit(true, false, false, true, lyfDiamond);
     emit LogTopUpTokenReserve(_token, _amount);
     adminFacet.topUpTokenReserve(_token, _amount);
 
-    assertEq(viewFacet.getReserveOf(_token), _amount);
+    assertEq(viewFacet.getOutstandingBalanceOf(_token), _amount);
     assertEq(weth.balanceOf(address(this)), 100 ether - _amount);
   }
 
