@@ -104,19 +104,19 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
      *      - alice total borrowing power = (10 * 1 * 0.9) + (30 * 0.5 * 0.9) = 22.5 usd
      *
      * 3. liquidator liquidate alice position
-     *      - repay 10 USDC
-     *      - treasury get 1% of repaid debt = 10 * 1/100 = 0.1
-     *      - actual repay = 10 - 0.1 = 9.9 USDC
+     *      - repay 10 usdc
+     *      - treasury get 1% of repaid debt compare with maximum fee = 10 * 0.3/30.3 = 0.099009
+     *      - actual repay = 10 - 0.099009 = 9.900991 usdc
      *
      * 4. liquidator liquidate 30 lp (all lp)
      *
      * 5. alice position after liquidate
      *      - alice subaccount 0: lp collateral = 30 - 30 = 0 lp
      *      - alice subaccount 0: weth collateral = 10 - 10 = 0 weth
-     *      - alice subaccount 0: usdc debt = 30 - 9.9 = 20.1 usdc
+     *      - alice subaccount 0: usdc debt = 30 - 9.900991 = 20.099009 usdc
      *
      * 6. admin write off alice subaccount to be 0 debt
-     *      - alice subaccount 0: usdc debt = 20.1 - 20.1 = 0 usdc
+     *      - alice subaccount 0: usdc debt = 20.099009 - 20.099009 = 0 usdc
      */
 
     /**
@@ -133,19 +133,19 @@ contract LYF_Admin_WriteOffDebtTest is LYF_BaseTest {
      *      - alice total borrowing power = (10 * 1 * 0.9) + (20 * 0.5 * 0.9) = 18 usd
      *
      * 3. liquidator liquidate alice position
-     *      - repay 10 USDC
-     *      - treasury get 1% of repaid debt = 10 * 1/100 = 0.1
-     *      - actual repay = 10 - 0.1 = 9.9 USDC
+     *      - repay 10 usdc
+     *      - treasury get 1% of repaid debt compare with maximum fee = 10 * 0.3/30.3 = 0.099009
+     *      - actual repay = 10 - 0.099009 = 9.900991 usdc
      *
      * 4. liquidator liquidate 30 lp (all lp)
      *
      * 5. alice position after liquidate
      *      - alice subaccount 0: lp collateral = 20 - 20 = 0 lp
      *      - alice subaccount 0: weth collateral = 10 - 10 = 0 weth
-     *      - alice subaccount 0: usdc debt = 20 - 9.9 = 10.1 usdc
+     *      - alice subaccount 0: usdc debt = 20 - 9.900991 = 10.1 usdc
      *
      * 6. admin write off alice subaccount to be 0 debt
-     *      - alice subaccount 0: usdc debt = 10.1 - 10.1 = 0 usdc
+     *      - alice subaccount 0: usdc debt = 9.900991 - 9.900991 = 0 usdc
      */
 
     // set decreased lpToken price
