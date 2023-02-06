@@ -77,7 +77,7 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
     // [after open position] usdc debt -> value: 30, share: 30
     _setupMMDebt();
 
-    // [after repaid (10 ether)] usdc debt -> value: 20, share: 20
+    // [after repaid (30 ether)] usdc debt -> value: 0, share: 0
     vm.prank(ALICE);
     farmFacet.repay(ALICE, subAccount0, address(usdc), address(wethUsdcLPToken), normalizeEther(30 ether, usdcDecimal));
 
