@@ -401,10 +401,16 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     rewarders[_pid] = _rewarders;
   }
 
+  /// @notice Get amount of total staking token at pid
+  /// @param _pid pool id
   function getStakingReserves(uint256 _pid) external view returns (uint256 _reserveAmount) {
     _reserveAmount = stakingReserves[stakingTokens[_pid]];
   }
 
+  /// @notice Get amount of staking token funded for a user at pid
+  /// @param _funder funder address
+  /// @param _for user address
+  /// @param _pid pool id
   function getFundedAmount(
     address _funder,
     address _for,
