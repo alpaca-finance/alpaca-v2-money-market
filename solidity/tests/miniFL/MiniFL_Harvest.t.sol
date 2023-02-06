@@ -11,13 +11,13 @@ import { LibAccount } from "../libs/LibAccount.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_Harvest is MiniFL_BaseTest {
+contract MiniFL_HarvestTest is MiniFL_BaseTest {
   using LibAccount for address;
 
-  uint256 _aliceWethDeposited = 20 ether;
+  uint256 _aliceTotalWethDeposited = 20 ether;
   uint256 _aliceDTokenDeposited = 10 ether;
 
-  uint256 _bobWethDeposited = 10 ether;
+  uint256 _bobTotalWethDeposited = 10 ether;
   uint256 _bobDTokenDeposited = 90 ether;
 
   function setUp() public override {
@@ -52,24 +52,26 @@ contract MiniFL_Harvest is MiniFL_BaseTest {
     uint256 _bobAlpacaBefore = BOB.myBalanceOf(address(alpaca));
 
     // alice pending alpaca on WETHPool = 40000
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
     vm.prank(ALICE);
     miniFL.harvest(wethPoolID);
-    assertUserInfo(ALICE, wethPoolID, _aliceWethDeposited, 40000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 0);
 
     // alice pending alpaca on DTOKENPool = 4000
     vm.prank(ALICE);
     miniFL.harvest(dtokenPoolID);
-    assertUserInfo(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
 
     // bob pending alpaca on WETHPool = 20000
     vm.prank(BOB);
     miniFL.harvest(wethPoolID);
-    assertUserInfo(BOB, wethPoolID, _bobWethDeposited, 20000 ether);
+    assertTotalUserStakingAmountWithReward(BOB, wethPoolID, _bobTotalWethDeposited, 20000 ether);
 
     // bob pending alpaca on DTOKENPool = 36000
     vm.prank(BOB);
     miniFL.harvest(dtokenPoolID);
-    assertUserInfo(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
+    assertTotalUserStakingAmountWithReward(BOB, dtokenPoolID, _bobDTokenDeposited, 36000 ether);
 
     // assert all alpaca received
     assertEq(ALICE.myBalanceOf(address(alpaca)) - _aliceAlpacaBefore, 44000 ether);
