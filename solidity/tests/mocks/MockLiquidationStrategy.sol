@@ -36,7 +36,6 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
   ) external {
     (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
     (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
-
     uint256 _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
 
     uint256 _repayTo18ConvertFactor = 10**(18 - ERC20(_repayToken).decimals());

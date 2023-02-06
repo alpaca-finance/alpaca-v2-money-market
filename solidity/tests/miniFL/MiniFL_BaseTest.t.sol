@@ -4,13 +4,16 @@ pragma solidity 0.8.17;
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import { BaseTest } from "../base/BaseTest.sol";
+import { StdCheatsSafe } from "../utils/StdCheats.sol";
 
 // interfaces
 import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
-contract MiniFL_BaseTest is BaseTest {
+contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   MiniFL internal miniFL;
+  address internal funder1 = makeAddr("funder1");
+  address internal funder2 = makeAddr("funder2");
 
   Rewarder internal rewarder1;
   Rewarder internal rewarder2;
@@ -34,6 +37,14 @@ contract MiniFL_BaseTest is BaseTest {
 
     rewardToken1.mint(address(rewarder1), 10000 ether);
     rewardToken2.mint(address(rewarder2), 15000 ether);
+
+    weth.mint(funder1, 100 ether);
+    weth.mint(funder2, 100 ether);
+
+    vm.prank(funder1);
+    weth.approve(address(miniFL), 100 ether);
+    vm.prank(funder2);
+    weth.approve(address(miniFL), 100 ether);
   }
 
   function setupMiniFLPool() internal {
@@ -76,13 +87,13 @@ contract MiniFL_BaseTest is BaseTest {
 
   function prepareForHarvest() internal {
     vm.startPrank(ALICE);
-    weth.approve(address(miniFL), 20 ether);
-    miniFL.deposit(ALICE, wethPoolID, 20 ether);
+    weth.approve(address(miniFL), 10 ether);
+    miniFL.deposit(ALICE, wethPoolID, 10 ether);
     vm.stopPrank();
 
     vm.startPrank(BOB);
-    weth.approve(address(miniFL), 10 ether);
-    miniFL.deposit(BOB, wethPoolID, 10 ether);
+    weth.approve(address(miniFL), 6 ether);
+    miniFL.deposit(BOB, wethPoolID, 6 ether);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -94,17 +105,45 @@ contract MiniFL_BaseTest is BaseTest {
     debtToken1.approve(address(miniFL), 10 ether);
     miniFL.deposit(ALICE, dtokenPoolID, 10 ether);
     vm.stopPrank();
+
+    vm.prank(funder1);
+    miniFL.deposit(ALICE, wethPoolID, 4 ether);
+
+    vm.prank(funder2);
+    miniFL.deposit(ALICE, wethPoolID, 6 ether);
+
+    vm.prank(funder1);
+    miniFL.deposit(BOB, wethPoolID, 4 ether);
   }
 
-  function assertUserInfo(
+  function assertTotalUserStakingAmountWithReward(
     address _user,
     uint256 _pid,
     uint256 _expectedAmount,
     int256 _expectedRewardDebt
   ) internal {
-    (uint256 _amount, int256 _rewardDebt) = miniFL.userInfo(_pid, _user);
-    assertEq(_amount, _expectedAmount);
+    (uint256 _totalAmount, int256 _rewardDebt) = miniFL.userInfo(_pid, _user);
+    assertEq(_totalAmount, _expectedAmount);
     assertEq(_rewardDebt, _expectedRewardDebt);
+  }
+
+  function assertTotalUserStakingAmount(
+    address _user,
+    uint256 _pid,
+    uint256 _expectedAmount
+  ) internal {
+    (uint256 _totalAmount, ) = miniFL.userInfo(_pid, _user);
+    assertEq(_totalAmount, _expectedAmount);
+  }
+
+  function assertFunderAmount(
+    address _funder,
+    address _for,
+    uint256 _pid,
+    uint256 _expectedAmount
+  ) internal {
+    uint256 _amount = miniFL.getFundedAmount(_funder, _for, _pid);
+    assertEq(_amount, _expectedAmount);
   }
 
   function assertRewarderUserInfo(
@@ -114,8 +153,12 @@ contract MiniFL_BaseTest is BaseTest {
     uint256 _expectedAmount,
     int256 _expectedRewardDebt
   ) internal {
-    (uint256 _amount, int256 _rewardDebt) = _rewarder.userInfo(_pid, _user);
-    assertEq(_amount, _expectedAmount);
+    (uint256 _totalAmount, int256 _rewardDebt) = _rewarder.userInfo(_pid, _user);
+    assertEq(_totalAmount, _expectedAmount);
     assertEq(_rewardDebt, _expectedRewardDebt);
+  }
+
+  function assertStakingReserve(uint256 _pid, uint256 _expectedAmount) internal {
+    assertEq(miniFL.getStakingReserves(_pid), _expectedAmount);
   }
 }

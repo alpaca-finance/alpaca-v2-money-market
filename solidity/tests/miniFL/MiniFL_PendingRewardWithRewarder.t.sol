@@ -11,7 +11,7 @@ import { LibAccount } from "../libs/LibAccount.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_PendingRewardWithRewarder is MiniFL_BaseTest {
+contract MiniFL_PendingRewardWithRewarderTest is MiniFL_BaseTest {
   using LibAccount for address;
 
   function setUp() public override {
