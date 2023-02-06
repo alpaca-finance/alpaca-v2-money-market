@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
-import { LYF_BaseTest, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
+import { LYF_BaseTest, ILYFAdminFacet, console } from "./LYF_BaseTest.t.sol";
 
 // ---- Interfaces ---- //
 import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
 import { ILYFViewFacet } from "../../contracts/lyf/interfaces/ILYFViewFacet.sol";
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
   address _borrowToken;
@@ -16,6 +19,8 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
 
     _borrowToken = address(usdc);
     _lpToken = address(wethUsdcLPToken);
+    FixedInterestRateModel model = new FixedInterestRateModel(usdcDecimal);
+    IAdminFacet(moneyMarketDiamond).setNonCollatInterestModel(lyfDiamond, address(usdc), address(model));
   }
 
   function _setupMMDebt() internal {
@@ -41,7 +46,7 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
     assertEq(viewFacet.getMMDebt(_borrowToken), normalizeEther(30 ether, usdcDecimal));
   }
 
-  function testCorrectness_WhenAdminFulllySettleDebt_MMDebtShouldBeZero() external {
+  function testCorrectness_WhenAdminFulllySettleDebt_MMDebtShouldBeRemained() external {
     // [after open position] usdc debt -> value: 30, share: 30
     _setupMMDebt();
 
@@ -52,42 +57,45 @@ contract LYF_Admin_SettleDebtTest is LYF_BaseTest {
     // warp time to make share value changed
     vm.warp(block.timestamp + 10);
 
-    uint256 _pendingInterest = viewFacet.getDebtPoolPendingInterest(viewFacet.getDebtPoolIdOf(_borrowToken, _lpToken));
-
     // [after repaid (20 ether)] usdc debt -> value: 0, share: 0
     vm.prank(ALICE);
     farmFacet.repay(ALICE, subAccount0, address(usdc), address(wethUsdcLPToken), normalizeEther(20 ether, usdcDecimal));
-    viewFacet.getSubAccountDebt(ALICE, subAccount0, _borrowToken, _lpToken);
 
     assertEq(viewFacet.getOutstandingBalanceOf(_borrowToken), normalizeEther(30 ether, usdcDecimal));
 
     uint256 _protocolReserve = viewFacet.getProtocolReserveOf(_borrowToken);
 
-    viewFacet.getMMDebt(_borrowToken);
-
     // settle debt
-    // reserve will be equal to outstanding balance
     // protocolReserve should not be affected, so protocolReserve = 10 usdc
     adminFacet.settleDebt(_borrowToken, normalizeEther(30 ether, usdcDecimal));
-    assertEq(viewFacet.getMMDebt(_borrowToken), 0);
+    assertEq(viewFacet.getMMDebt(_borrowToken), normalizeEther(9 ether, usdcDecimal));
     assertEq(viewFacet.getOutstandingBalanceOf(_borrowToken), 0);
     assertEq(_protocolReserve, normalizeEther(10 ether, usdcDecimal));
   }
 
-  function testCorrectness_WhenAdminPartiallySettleDebt_MMDebtShouldBeRemained() external {
+  function testCorrectness_WhenAdminPartiallySettleDebt_MMDebtShouldBeZero() external {
     // [after open position] usdc debt -> value: 30, share: 30
     _setupMMDebt();
 
     // [after repaid (10 ether)] usdc debt -> value: 20, share: 20
     vm.prank(ALICE);
-    farmFacet.repay(ALICE, subAccount0, address(usdc), address(wethUsdcLPToken), normalizeEther(10 ether, usdcDecimal));
+    farmFacet.repay(ALICE, subAccount0, address(usdc), address(wethUsdcLPToken), normalizeEther(30 ether, usdcDecimal));
 
     // settle debt
     // reserve will be equal to outstanding balance
-    adminFacet.settleDebt(_borrowToken, normalizeEther(10 ether, usdcDecimal));
-    assertEq(viewFacet.getMMDebt(_borrowToken), normalizeEther(20 ether, usdcDecimal));
+    adminFacet.settleDebt(_borrowToken, normalizeEther(30 ether, usdcDecimal));
+    assertEq(viewFacet.getMMDebt(_borrowToken), 0);
     assertEq(viewFacet.getOutstandingBalanceOf(_borrowToken), 0);
     assertEq(viewFacet.getProtocolReserveOf(_borrowToken), 0);
+  }
+
+  function testRevert_WhenAdminSettleDebtWithLowReserve() external {
+    _setupMMDebt();
+
+    // settle debt
+    // tokenReserve = 0 usdc, and protocolReserve = 0 usdc (reserve too low)
+    vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_ReserveTooLow.selector);
+    adminFacet.settleDebt(_borrowToken, normalizeEther(1 ether, usdcDecimal));
   }
 
   function testRevert_WhenAdminSettleDebtWithNotEnoughBalance() external {

@@ -345,10 +345,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     IMoneyMarket moneyMarket = lyfDs.moneyMarket;
-    _repayAmount = LibFullMath.min(
-      _repayAmount,
-      moneyMarket.getNonCollatAccountDebtWithPendingInterest(address(this), _token)
-    );
+
+    moneyMarket.accrueInterest(_token);
+    _repayAmount = LibFullMath.min(_repayAmount, moneyMarket.getNonCollatAccountDebt(address(this), _token));
 
     uint256 _tokenReserve = lyfDs.reserves[_token];
     uint256 _protocolReserve = lyfDs.protocolReserves[_token];

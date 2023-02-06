@@ -290,21 +290,6 @@ contract ViewFacet is IViewFacet {
     _debtAmount = LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);
   }
 
-  /// @notice Get the amount of token borrowed by a particular non collateralized borrower
-  /// @param _account The non collateralized borrower
-  /// @param _token The borrowed token
-  /// @return _debtAmount The amount of token borrowed by this particular non collateralized borrower
-  function getNonCollatAccountDebtWithPendingInterest(address _account, address _token)
-    external
-    view
-    returns (uint256 _debtAmount)
-  {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    _debtAmount += LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);
-    _debtAmount += LibMoneyMarket01.getNonCollatPendingInterest(_account, _token, moneyMarketDs);
-  }
-
   /// @notice Get the amount of token borrowed by all non collateralized borrowers
   /// @param _token The borrowed token
   /// @return _debtAmount The amount of token borrowed by non colleralized borrowers
