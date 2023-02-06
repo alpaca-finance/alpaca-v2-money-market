@@ -10,7 +10,7 @@ import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_DepositWithRewarder is MiniFL_BaseTest {
+contract MiniFL_DepositWithRewarderTest is MiniFL_BaseTest {
   function setUp() public override {
     super.setUp();
     setupMiniFLPool();

@@ -9,7 +9,7 @@ import { MiniFL_BaseTest } from "./MiniFL_BaseTest.t.sol";
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 import { IRewarder } from "../../contracts/miniFL/interfaces/IRewarder.sol";
 
-contract MiniFL_Deposit is MiniFL_BaseTest {
+contract MiniFL_DepositTest is MiniFL_BaseTest {
   function setUp() public override {
     super.setUp();
     setupMiniFLPool();

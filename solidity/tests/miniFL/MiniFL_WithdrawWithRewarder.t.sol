@@ -8,7 +8,7 @@ import { MiniFL_BaseTest } from "./MiniFL_BaseTest.t.sol";
 // interfaces
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
 
-contract MiniFL_WithdrawWithRewarder is MiniFL_BaseTest {
+contract MiniFL_WithdrawWithRewarderTest is MiniFL_BaseTest {
   function setUp() public override {
     super.setUp();
     setupMiniFLPool();
