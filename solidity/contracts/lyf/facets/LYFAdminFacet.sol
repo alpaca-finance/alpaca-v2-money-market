@@ -6,6 +6,7 @@ import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
+import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 
 // ---- Interfaces ---- //
 import { ILYFAdminFacet } from "../interfaces/ILYFAdminFacet.sol";
@@ -18,6 +19,7 @@ import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 /// @title LYFAdminFacet is dedicated to protocol parameter configuration
 contract LYFAdminFacet is ILYFAdminFacet {
   using LibSafeToken for IERC20;
+  using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   event LogSetOracle(address indexed _oracle);
   event LogSetTokenConfig(address indexed _token, LibLYF01.TokenConfig _config);
@@ -33,6 +35,14 @@ contract LYFAdminFacet is ILYFAdminFacet {
   event LogSetRevenueTreasury(address indexed _treasury);
   event LogSetMaxNumOfToken(uint256 _maxNumOfCollat, uint256 _maxNumOfDebt);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
+  event LogWriteOffSubAccountDebt(
+    address indexed account,
+    uint256 indexed subAccountId,
+    uint256 indexed debtPoolId,
+    uint256 debtShareWrittenOff,
+    uint256 debtValueWrittenOff
+  );
+  event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
   event LogSettleDebt(address indexed _token, uint256 _amount);
 
@@ -302,6 +312,56 @@ contract LYFAdminFacet is ILYFAdminFacet {
     IERC20(_token).safeTransfer(_to, _amount);
 
     emit LogWitdrawReserve(_token, _to, _amount);
+  }
+
+  /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
+  /// @param _inputs An array of input. Each should contain account, subAccountId, and debtPoolId to write off for
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    uint256 _length = _inputs.length;
+
+    address _account;
+    address _subAccount;
+    uint256 _subAccountId;
+    uint256 _debtPoolId;
+    uint256 _shareToRemove;
+    uint256 _amountToRemove;
+
+    for (uint256 i; i < _length; ) {
+      _account = _inputs[i].account;
+      _subAccountId = _inputs[i].subAccountId;
+      _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
+      if (lyfDs.subAccountCollats[_subAccount].size != 0) {
+        revert LYFAdminFacet_SubAccountHealthy(_account, _subAccountId);
+      }
+
+      _debtPoolId = _inputs[i].debtPoolId;
+      LibLYF01.accrueDebtPoolInterest(_debtPoolId, lyfDs);
+      (_shareToRemove, _amountToRemove) = LibLYF01.getSubAccountDebtShareAndAmount(_subAccount, _debtPoolId, lyfDs);
+
+      // reset debt to zero
+      LibLYF01.removeDebt(_subAccount, _debtPoolId, _shareToRemove, _amountToRemove, lyfDs);
+
+      emit LogWriteOffSubAccountDebt(_account, _subAccountId, _debtPoolId, _shareToRemove, _amountToRemove);
+
+      unchecked {
+        ++i;
+      }
+    }
+  }
+
+  /// @notice Transfer token to diamond to increase token reserves
+  /// @param _token token to increase reserve for
+  /// @param _amount amount to transfer to diamond and increase reserve
+  function topUpTokenReserve(address _token, uint256 _amount) external onlyOwner {
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+
+    uint256 _actualAmountReceived = LibLYF01.unsafePullTokens(_token, msg.sender, _amount);
+
+    lyfDs.reserves[_token] += _actualAmountReceived;
+
+    emit LogTopUpTokenReserve(_token, _actualAmountReceived);
   }
 
   /// @notice Set config to use when swap rewardToken to desiredToken to send to revenue treasury
