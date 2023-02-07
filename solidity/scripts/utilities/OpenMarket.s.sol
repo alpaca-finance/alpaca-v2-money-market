@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "./BaseUtilsScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
+import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 contract OpenMarketScript is BaseUtilsScript {
   using stdJson for string;
@@ -17,9 +18,26 @@ contract OpenMarketScript is BaseUtilsScript {
 
     //---- inputs ----//
     address underlyingToken = mockTokenForLocalRun;
+    IAdminFacet.TokenConfigInput memory underlyingTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: underlyingToken,
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
+      token: underlyingToken,
+      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
 
     //---- execution ----//
-    address newIbToken = moneyMarket.openMarket(underlyingToken);
+    // note: openMarket will ignore `token` provided in TokenConfigInput and use param instead
+    address newIbToken = moneyMarket.openMarket(underlyingToken, underlyingTokenConfigInput, ibTokenConfigInput);
     console.log("openMarket for", underlyingToken);
 
     _stopBroadcast();
