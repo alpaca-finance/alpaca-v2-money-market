@@ -98,7 +98,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) nonCollatAccountDebtValues; // account => list token debt
     mapping(address => LibDoublyLinkedList.List) nonCollatTokenDebtValues; // token => debt of each account
     mapping(address => ProtocolConfig) protocolConfigs; // account => ProtocolConfig
-    mapping(bytes32 => IInterestRateModel) nonCollatInterestModels; // nonCollatId => non-collat interest model
+    mapping(address => mapping(address => IInterestRateModel)) nonCollatInterestModels; // [account][token] => non-collat interest model
     mapping(address => bool) nonCollatBorrowerOk; // can this address do non collat borrow
     // ---- subAccounts ---- //
     mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => list of subAccount's all collateral
@@ -362,8 +362,7 @@ library LibMoneyMarket01 {
     address _token,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _interestRate) {
-    bytes32 _nonCollatId = getNonCollatId(_account, _token);
-    IInterestRateModel _interestModel = moneyMarketDs.nonCollatInterestModels[_nonCollatId];
+    IInterestRateModel _interestModel = moneyMarketDs.nonCollatInterestModels[_account][_token];
     if (address(_interestModel) == address(0)) {
       return 0;
     }
@@ -521,10 +520,6 @@ library LibMoneyMarket01 {
     } else {
       (_price, ) = moneyMarketDs.oracle.getTokenPrice(_token);
     }
-  }
-
-  function getNonCollatId(address _account, address _token) internal pure returns (bytes32 _id) {
-    _id = keccak256(abi.encodePacked(_account, _token));
   }
 
   /// @dev must accrue interest for underlying token before withdraw
