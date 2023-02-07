@@ -192,7 +192,7 @@ contract ViewFacet is IViewFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (_debtShare, _debtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (_debtShare, _debtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndValueOf(_subAccount, _token, moneyMarketDs);
   }
 
   /// @notice Get all the collateral under the subaccount
