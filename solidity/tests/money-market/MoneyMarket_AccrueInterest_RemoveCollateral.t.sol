@@ -75,7 +75,7 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
     assertGt(_aliceActualUSDCDebtAmount, _usdcBorrowAmount);
 
     //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _wethBorrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _usdcBorrowAmount);
+    assertGt(viewFacet.getOverCollatTokenDebtValue(address(weth)), _wethBorrowAmount);
+    assertGt(viewFacet.getOverCollatTokenDebtValue(address(usdc)), _usdcBorrowAmount);
   }
 }

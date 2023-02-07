@@ -191,7 +191,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     // assert Global
     // from BOB 10 + 1, Alice 10
-    assertEq(viewFacet.getOverCollatDebtValue(address(weth)), 21 ether, "Global getOverCollatDebtValue missmatch");
+    assertEq(viewFacet.getOverCollatTokenDebtValue(address(weth)), 21 ether, "Global getOverCollatDebtValue missmatch");
 
     // assert IB exchange rate change
     // alice wthdraw 10 ibWeth, totalToken = 51, totalSupply = 50
@@ -295,7 +295,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // assert Global
     // from BOB 10 + 0.002820 = 10.002820, Alice 10 = 20.002820
     assertEq(
-      viewFacet.getOverCollatDebtValue(address(usdc)),
+      viewFacet.getOverCollatTokenDebtValue(address(usdc)),
       normalizeEther(20.002820 ether, usdcDecimal),
       "Global getOverCollatDebtValue missmatch"
     );

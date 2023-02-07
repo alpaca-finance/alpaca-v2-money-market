@@ -611,7 +611,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       treasuryDebtTokenBalance: MockERC20(_debtToken).balanceOf(liquidationTreasury),
       liquidatorDebtTokenBalance: MockERC20(_debtToken).balanceOf(liquidator),
       globalDebtValue: viewFacet.getGlobalDebtValue(_debtToken),
-      debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
+      debtValue: viewFacet.getOverCollatTokenDebtValue(_debtToken),
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       subAccountDebtShare: _subAccountDebtShare,
       ibTokenCollat: viewFacet.getTotalCollat(_ibToken),
@@ -632,7 +632,11 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _globalValueWithInterest = _cache.globalDebtValue + _pendingInterest;
     uint256 _repaidShare = (_actualRepaidAmount * _cache.debtShare) / (_debtValueWithInterest);
 
-    assertEq(viewFacet.getOverCollatDebtValue(_debtToken), _debtValueWithInterest - _actualRepaidAmount, "debt value");
+    assertEq(
+      viewFacet.getOverCollatTokenDebtValue(_debtToken),
+      _debtValueWithInterest - _actualRepaidAmount,
+      "debt value"
+    );
     assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), _cache.debtShare - _repaidShare, "debt share");
     assertEq(_subAccountDebtShare, _cache.subAccountDebtShare - _repaidShare, "sub account debt share");
 

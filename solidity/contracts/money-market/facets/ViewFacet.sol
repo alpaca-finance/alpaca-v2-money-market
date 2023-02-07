@@ -128,7 +128,7 @@ contract ViewFacet is IViewFacet {
   /// @notice Get the total amount of borrowed token via over collat borrowing
   /// @param _token The token that has been borrowed
   /// @return The total amount of over collateralized debt
-  function getOverCollatDebtValue(address _token) external view returns (uint256) {
+  function getOverCollatTokenDebtValue(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.overCollatDebtValues[_token];
   }

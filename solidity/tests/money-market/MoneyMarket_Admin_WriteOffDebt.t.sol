@@ -119,7 +119,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
 
     // check diamond debt states, no debt remain
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 0);
-    assertEq(viewFacet.getOverCollatDebtValue(_debtToken), 0);
+    assertEq(viewFacet.getOverCollatTokenDebtValue(_debtToken), 0);
     assertEq(viewFacet.getOverCollatTokenDebtShares(_debtToken), 0);
   }
 

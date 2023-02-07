@@ -144,7 +144,7 @@ library LibMoneyMarketDeployment {
     _selectors[5] = ViewFacet.getOverCollatTokenDebt.selector;
     _selectors[6] = ViewFacet.getDebtLastAccruedAt.selector;
     _selectors[7] = ViewFacet.getGlobalPendingInterest.selector;
-    _selectors[8] = ViewFacet.getOverCollatDebtValue.selector;
+    _selectors[8] = ViewFacet.getOverCollatTokenDebtValue.selector;
     _selectors[9] = ViewFacet.getOverCollatTokenDebtShares.selector;
     _selectors[10] = ViewFacet.getFloatingBalance.selector;
     _selectors[11] = ViewFacet.getOverCollatDebtShareAndAmountOf.selector;
