@@ -138,12 +138,13 @@ contract LYFViewFacet is ILYFViewFacet {
   ) external view returns (uint256 _debtShare, uint256 _debtAmount) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    address _subAccount = LibLYF01.getSubAccount(_account, _subAccountId);
     uint256 _debtPoolId = lyfDs.debtPoolIds[_token][_lpToken];
-    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
-    _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
-    _debtAmount = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
+    (_debtShare, _debtAmount) = LibLYF01.getSubAccountDebtShareAndAmount(
+      LibLYF01.getSubAccount(_account, _subAccountId),
+      _debtPoolId,
+      lyfDs
+    );
   }
 
   /// @notice Get the list of all debt share and amount of a subaccount
