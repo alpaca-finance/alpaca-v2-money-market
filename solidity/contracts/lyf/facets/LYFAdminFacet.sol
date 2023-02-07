@@ -355,15 +355,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
       revert LYFAdminFacet_ReserveTooLow();
     }
 
-    uint256 _outstandingBalance;
     unchecked {
-      _outstandingBalance = _tokenReserve - _protocolReserve;
-    }
-    if (_outstandingBalance < _repayAmount) {
-      revert LYFAdminFacet_NotEnoughToken();
-    }
+      uint256 _outstandingBalance = _tokenReserve - _protocolReserve;
+      if (_outstandingBalance < _repayAmount) {
+        revert LYFAdminFacet_NotEnoughToken();
+      }
 
-    unchecked {
       lyfDs.reserves[_token] -= _repayAmount;
     }
 
