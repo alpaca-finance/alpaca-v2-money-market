@@ -164,10 +164,4 @@ contract MiniFL_WithdrawTest is MiniFL_BaseTest {
     assertEq(debtToken1.balanceOf(BOB) - _bobDTokenBalanceBefore, 5 ether);
     // need to check pending alpaca ??????
   }
-
-  function testRevert_WhenNotAllowToWithdrawDebtToken() external {
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
-    vm.prank(ALICE);
-    miniFL.withdraw(ALICE, dtokenPoolID, 5 ether);
-  }
 }

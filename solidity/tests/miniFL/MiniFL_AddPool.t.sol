@@ -18,16 +18,16 @@ contract MiniFL_AddPoolTest is MiniFL_BaseTest {
     assertEq(miniFL.poolLength(), 0);
     assertEq(miniFL.totalAllocPoint(), 0);
 
-    miniFL.addPool(100, address(weth), false, false);
-    miniFL.addPool(50, address(usdc), false, false);
+    miniFL.addPool(100, address(weth), false);
+    miniFL.addPool(50, address(usdc), false);
 
     assertEq(miniFL.poolLength(), 2);
     assertEq(miniFL.totalAllocPoint(), 150);
   }
 
   function testRevert_WhenAddDuplicatedStakingTokenPool() external {
-    miniFL.addPool(100, address(weth), false, false);
+    miniFL.addPool(100, address(weth), false);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_DuplicatePool.selector));
-    miniFL.addPool(100, address(weth), false, false);
+    miniFL.addPool(100, address(weth), false);
   }
 }
