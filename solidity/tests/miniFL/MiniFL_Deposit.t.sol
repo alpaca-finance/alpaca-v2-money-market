@@ -140,10 +140,12 @@ contract MiniFL_DepositTest is MiniFL_BaseTest {
   }
 
   function testRevert_WhenNonWhitelistedCallersDepositMiniFLW() external {
-    vm.startPrank(CAT);
+    // random address which not whitelisted callers
+    address randomCaller = makeAddr("randomCaller");
+    vm.startPrank(randomCaller);
     weth.approve(address(miniFL), 10 ether);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
-    miniFL.deposit(CAT, wethPoolID, 10 ether);
+    miniFL.deposit(randomCaller, wethPoolID, 10 ether);
     vm.stopPrank();
   }
 }

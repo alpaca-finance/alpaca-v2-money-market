@@ -32,7 +32,9 @@ contract MiniFL_SetWhitelistedCallersTest is MiniFL_BaseTest {
   }
 
   function testRevert_WhenNonOwnerSetWhitelistedCallers() external {
-    vm.startPrank(CAT);
+    // random address which not whitelisted callers
+    address randomCaller = makeAddr("randomCaller");
+    vm.startPrank(randomCaller);
     vm.expectRevert("Ownable: caller is not the owner");
 
     miniFL.setWhitelistedCallers(_callers, true);

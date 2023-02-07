@@ -166,9 +166,11 @@ contract MiniFL_WithdrawTest is MiniFL_BaseTest {
   }
 
   function testRevert_WhenNonWhitelistedCallersWithDrawFromMiniFL() external {
-    vm.startPrank(CAT);
+    // random address which not whitelisted callers
+    address randomCaller = makeAddr("randomCaller");
+    vm.startPrank(randomCaller);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
-    miniFL.withdraw(CAT, wethPoolID, 10 ether);
+    miniFL.withdraw(randomCaller, wethPoolID, 10 ether);
     vm.stopPrank();
   }
 }
