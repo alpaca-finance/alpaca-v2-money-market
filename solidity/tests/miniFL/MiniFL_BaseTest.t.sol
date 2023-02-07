@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import { BaseTest } from "../base/BaseTest.sol";
+import { BaseTest, console } from "../base/BaseTest.sol";
 import { StdCheatsSafe } from "../utils/StdCheats.sol";
 
 // interfaces
@@ -14,6 +14,8 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   MiniFL internal miniFL;
   address internal funder1 = makeAddr("funder1");
   address internal funder2 = makeAddr("funder2");
+
+  address[] internal whitelistedCallers = new address[](1);
 
   Rewarder internal rewarder1;
   Rewarder internal rewarder2;
@@ -45,6 +47,9 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
     weth.approve(address(miniFL), 100 ether);
     vm.prank(funder2);
     weth.approve(address(miniFL), 100 ether);
+
+    whitelistedCallers[0] = address(this);
+    miniFL.setWhitelistedCallers(whitelistedCallers, true);
   }
 
   function setupMiniFLPool() internal {

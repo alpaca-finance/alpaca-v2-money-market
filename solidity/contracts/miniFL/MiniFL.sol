@@ -27,6 +27,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool allow);
   event LogSetMaxAlpacaPerSecond(uint256 maxAlpacaPerSecond);
   event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
+  event LogSetWhitelistedCallers(address indexed caller, bool allow);
 
   struct UserInfo {
     mapping(address => uint256) fundedAmounts; // funders address => amount
@@ -51,11 +52,19 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   mapping(address => uint256) public stakingReserves;
 
   mapping(uint256 => mapping(address => UserInfo)) public userInfo; // pool id => user
+  mapping(address => bool) public whitelistedCallers;
 
   uint256 public totalAllocPoint;
   uint256 public alpacaPerSecond;
   uint256 private constant ACC_ALPACA_PRECISION = 1e12;
   uint256 public maxAlpacaPerSecond;
+
+  modifier onlyWhitelisted() {
+    if (!whitelistedCallers[msg.sender]) {
+      revert MiniFL_Unauthorized();
+    }
+    _;
+  }
 
   /// @param _alpaca The ALPACA token contract address.
   function initialize(address _alpaca, uint256 _maxAlpacaPerSecond) external initializer {
@@ -81,7 +90,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _stakingToken,
     bool _isDebtTokenPool,
     bool _withUpdate
-  ) external onlyOwner {
+  ) external onlyWhitelisted {
     if (_stakingToken == ALPACA) {
       revert MiniFL_InvalidArguments();
     }
@@ -427,5 +436,20 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _currentTokenBalance = IERC20Upgradeable(_token).balanceOf(address(this));
     IERC20Upgradeable(_token).safeTransferFrom(_from, address(this), _amount);
     _receivedAmount = IERC20Upgradeable(_token).balanceOf(address(this)) - _currentTokenBalance;
+  }
+
+  /// @notice Set whitelisted callers
+  /// @param _callers The addresses of the callers.
+  /// @param _allow Whether to allow or disallow callers.
+  function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
+    uint256 _length = _callers.length;
+    for (uint256 _i; _i < _length; ) {
+      whitelistedCallers[_callers[_i]] = _allow;
+      emit LogSetWhitelistedCallers(_callers[_i], _allow);
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }
