@@ -9,6 +9,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_NotEnoughToken();
   error LYFAdminFacet_InvalidArguments();
   error LYFAdminFacet_InvalidAddress();
+  error LYFAdminFacet_SubAccountHealthy(address _account, uint256 _subAccountId);
 
   struct TokenConfigInput {
     LibLYF01.AssetTier tier;
@@ -29,6 +30,12 @@ interface ILYFAdminFacet {
     uint256 maxLpAmount;
     uint256 reinvestThreshold;
     uint256 reinvestTreasuryBountyBps;
+  }
+
+  struct WriteOffSubAccountDebtInput {
+    address account;
+    uint256 subAccountId;
+    uint256 debtPoolId;
   }
 
   struct SetRewardConversionConfigInput {
@@ -68,4 +75,8 @@ interface ILYFAdminFacet {
   function setLiquidationTreasury(address _newTreasury) external;
 
   function setRevenueTreasury(address _newTreasury) external;
+
+  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
+
+  function topUpTokenReserve(address _token, uint256 _amount) external;
 }
