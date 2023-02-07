@@ -25,6 +25,13 @@ contract MiniFL_AddPoolTest is MiniFL_BaseTest {
     assertEq(miniFL.totalAllocPoint(), 150);
   }
 
+  function testRevert_WhenNonWhitelistedCallersAddPool() external {
+    vm.startPrank(CAT);
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
+    miniFL.addPool(100, address(weth), false);
+    vm.stopPrank();
+  }
+
   function testRevert_WhenAddDuplicatedStakingTokenPool() external {
     miniFL.addPool(100, address(weth), false);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_DuplicatePool.selector));
