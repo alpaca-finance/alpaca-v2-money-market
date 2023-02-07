@@ -29,5 +29,19 @@
     "FeeModels": {
       "FeeModel1": "0x375b69193614E923aFcccb49e336E43492F9111B"
     }
+  },
+  "IbTokens": {
+    "ibDodo": "0x390F64Ca45fB7411720F814127C80aFbB6E84b5E",
+    "ibMock6": "0xCD8bcBD66E26CF1B099E8eaBF5052528e39b9eD0",
+    "ibBusd": "0x051797FB004CFa40450615940d72f3793Bd1A9Ed",
+    "ibPstake": "0x72ea29fA4044C09985d52ea708bF39D249A95435",
+    "ibBnb": "0xbb71221b956F4D2B2fdda71D65C80d403C929a0A"
+  },
+  "Tokens": {
+    "busd": "0x9C4Ac75cFc93cab7122dDdc1658343Aa7DB6a78F",
+    "bnb": "0xd3988230C9cBf7676008E8B808998d33A25ac55A",
+    "dodo": "0x3024ADb02C99bd6e617f8f372E2c237f4085F8e3",
+    "mock6DecimalsToken": "0xeDDC4Ce39dbDf46a4B702A881b56f7996CCbDEbe",
+    "pstake": "0x58A3aCe82B7fBa6de3fd5F68C58b4dDC86d97FC5"
   }
 }
