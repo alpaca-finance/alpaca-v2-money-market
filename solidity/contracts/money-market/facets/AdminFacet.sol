@@ -91,8 +91,12 @@ contract AdminFacet is IAdminFacet {
     }
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
 
     if (_ibToken != address(0)) {
+      revert AdminFacet_InvalidToken(_token);
+    }
+    if (_debtToken != address(0)) {
       revert AdminFacet_InvalidToken(_token);
     }
 
