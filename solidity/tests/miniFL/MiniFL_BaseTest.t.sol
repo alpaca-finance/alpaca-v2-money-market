@@ -54,16 +54,15 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
 
   function setupMiniFLPool() internal {
     // add staking pool
-    miniFL.addPool(60, address(weth), false, false);
+    miniFL.addPool(60, address(weth), false);
     // add debt token pool
-    miniFL.addPool(40, address(debtToken1), true, false);
+    miniFL.addPool(40, address(debtToken1), false);
 
     // set debtToken staker
     uint256[] memory _poolIds = new uint256[](1);
     _poolIds[0] = dtokenPoolID;
     address[] memory _stakers = new address[](1);
     _stakers[0] = BOB;
-    miniFL.approveStakeDebtToken(_poolIds, _stakers, true);
     debtToken1.mint(BOB, 1000 ether);
   }
 

@@ -5,7 +5,6 @@ import "./IRewarder.sol";
 
 interface IMiniFL {
   error MiniFL_DuplicatePool();
-  error MiniFL_Forbidden();
   error MiniFL_InvalidArguments();
   error MiniFL_BadRewarder();
   error MiniFL_InsufficientFundedAmount();

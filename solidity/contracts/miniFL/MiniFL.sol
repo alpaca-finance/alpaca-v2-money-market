@@ -39,7 +39,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint128 accAlpacaPerShare;
     uint64 lastRewardTime;
     uint64 allocPoint;
-    bool isDebtTokenPool;
   }
 
   address public ALPACA;
@@ -48,7 +47,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   mapping(uint256 => address[]) public rewarders;
   mapping(address => bool) public isStakingToken;
-  mapping(uint256 => mapping(address => bool)) public stakeDebtTokenAllowance;
   mapping(address => uint256) public stakingReserves;
 
   mapping(uint256 => mapping(address => UserInfo)) public userInfo; // pool id => user
@@ -83,12 +81,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Add a new staking token pool. Can only be called by the owner.
   /// @param _allocPoint AP of the new pool.
   /// @param _stakingToken Address of the staking token.
-  /// @param _isDebtTokenPool Whether the pool is a debt token pool.
   /// @param _withUpdate If true, do mass update pools.
   function addPool(
     uint256 _allocPoint,
     address _stakingToken,
-    bool _isDebtTokenPool,
     bool _withUpdate
   ) external onlyWhitelisted {
     if (_stakingToken == ALPACA) {
@@ -108,12 +104,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     isStakingToken[_stakingToken] = true;
 
     poolInfo.push(
-      PoolInfo({
-        allocPoint: _allocPoint.toUint64(),
-        lastRewardTime: block.timestamp.toUint64(),
-        accAlpacaPerShare: 0,
-        isDebtTokenPool: _isDebtTokenPool
-      })
+      PoolInfo({ allocPoint: _allocPoint.toUint64(), lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 })
     );
     emit LogAddPool(stakingTokens.length - 1, _allocPoint, _stakingToken);
   }
@@ -236,11 +227,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     UserInfo storage user = userInfo[_pid][_for];
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
-    // if pool is debt pool, staker should be whitelisted
-    if (_poolInfo.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
-      revert MiniFL_Forbidden();
-    }
-
     address _stakingToken = stakingTokens[_pid];
     uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amountToDeposit);
 
@@ -280,11 +266,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   ) external nonReentrant {
     UserInfo storage user = userInfo[_pid][_from];
     PoolInfo memory _poolInfo = _updatePool(_pid);
-
-    // if pool is debt pool, staker should be whitelisted
-    if (_poolInfo.isDebtTokenPool && !stakeDebtTokenAllowance[_pid][msg.sender]) {
-      revert MiniFL_Forbidden();
-    }
 
     // caller couldn't withdraw more than their funded
     if (_amountToWithdraw > user.fundedAmounts[msg.sender]) {
@@ -352,33 +333,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     emit LogHarvest(msg.sender, _pid, _pendingAlpaca);
-  }
-
-  /// @notice Approve stakers to stake debt token.
-  /// @param _pids The pool ids.
-  /// @param _stakers The addresses of the stakers.
-  /// @param _allow Whether to allow or disallow staking.
-  function approveStakeDebtToken(
-    uint256[] calldata _pids,
-    address[] calldata _stakers,
-    bool _allow
-  ) external onlyOwner {
-    if (_stakers.length != _pids.length) {
-      revert MiniFL_InvalidArguments();
-    }
-    uint256 _length = _stakers.length;
-    for (uint256 _i; _i < _length; ) {
-      if (poolInfo[_pids[_i]].isDebtTokenPool == false) {
-        revert MiniFL_InvalidArguments();
-      }
-
-      stakeDebtTokenAllowance[_pids[_i]][_stakers[_i]] = _allow;
-      emit LogApproveStakeDebtToken(_pids[_i], _stakers[_i], _allow);
-
-      unchecked {
-        ++_i;
-      }
-    }
   }
 
   /// @notice Set max reward per second
