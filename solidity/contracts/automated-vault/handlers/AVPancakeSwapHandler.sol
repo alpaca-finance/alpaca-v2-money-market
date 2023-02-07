@@ -14,7 +14,6 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
-
 contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUpgradeable {
   using LibSafeToken for IERC20;
 
@@ -32,7 +31,11 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     _;
   }
 
-  function initialize(address _router, address _lpToken) public initializer {
+  constructor() {
+    _disableInitializers();
+  }
+
+  function initialize(address _router, address _lpToken) external initializer {
     OwnableUpgradeable.__Ownable_init();
     router = IPancakeRouter02(_router);
     lpToken = IPancakePair(_lpToken);
