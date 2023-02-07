@@ -64,7 +64,7 @@ contract DeployMoneyMarket is Script {
     moneyMarket.setRepurchaseRewardModel(IFeeModel(feeModel1));
 
     // set protocol params
-    moneyMarket.setTreasury(address(0));
+    // moneyMarket.setTreasury(address(0));
 
     vm.stopBroadcast();
 
