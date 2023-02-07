@@ -61,7 +61,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _wethBorrowAmount);
 
     uint256 _debtAmount;
-    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     assertEq(_debtAmount, _wethBorrowAmount);
 
     vm.warp(block.timestamp + 10);
@@ -71,7 +71,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _actualInterestAfter = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterestAfter, 1e18);
     borrowFacet.accrueInterest(address(weth));
-    (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, uint256 _actualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
 
     uint256 _actualAccrueTime = viewFacet.getDebtLastAccruedAt(address(weth));
@@ -101,7 +101,11 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _bobBalanceBeforeBorrow = weth.balanceOf(BOB);
     borrowFacet.borrow(subAccount0, address(weth), _bobBorrowAmount);
 
-    (, uint256 _actualBobDebtAmountBeforeWarp) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, uint256 _actualBobDebtAmountBeforeWarp) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      BOB,
+      subAccount0,
+      address(weth)
+    );
     assertEq(_actualBobDebtAmountBeforeWarp, _bobBorrowAmount);
     vm.stopPrank();
 
@@ -111,7 +115,11 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     vm.warp(block.timestamp + 10);
 
     borrowFacet.accrueInterest(address(weth));
-    (, uint256 _actualBobDebtAmountAfter) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, uint256 _actualBobDebtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      BOB,
+      subAccount0,
+      address(weth)
+    );
 
     assertEq(_actualBobDebtAmountAfter - _actualBobDebtAmountBeforeWarp, 1 ether);
 
@@ -167,7 +175,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), block.timestamp);
 
     // assert BOB
-    (, uint256 _bobActualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, uint256 _bobActualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     // bob borrow 10 with 0.1 interest rate per sec
     // precision loss
     // 10 second passed _bobExpectedDebtAmount = 10 + (10*0.1) ~ 11 = 10999999999999999999
@@ -175,7 +183,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobActualDebtAmount, _bobExpectedDebtAmount);
 
     // assert ALICE
-    (, uint256 _aliceActualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (, uint256 _aliceActualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     // _aliceExpectedDebtAmount should be 10 ether
     // so _aliceExpectedDebtAmount = 10 ether
     uint256 _aliceExpectedDebtAmount = 10 ether;
@@ -269,7 +277,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(viewFacet.getDebtLastAccruedAt(address(usdc)), block.timestamp);
 
     // assert BOB
-    (, uint256 _bobActualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(usdc));
+    (, uint256 _bobActualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(usdc));
     // bob borrow 10 usdc, pool has 20 usdc, utilization = 50%
     // interest rate = 10.2941176456512000% per year
     // 1 day passed _bobExpectedDebtAmount = debtAmount + (debtAmount * seconedPass * ratePerSec)
@@ -278,7 +286,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobActualDebtAmount, _bobExpectedDebtAmount);
 
     // assert ALICE
-    (, uint256 _aliceActualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
+    (, uint256 _aliceActualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(usdc));
     // _aliceExpectedDebtAmount should be 10 ether
     // so _aliceExpectedDebtAmount = 10 ether
     uint256 _aliceExpectedDebtAmount = normalizeEther(10 ether, usdcDecimal);
@@ -335,7 +343,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _wethBorrowAmount + _nonCollatBorrowAmount);
 
     uint256 _debtAmount;
-    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     uint256 _nonCollatDebtAmount = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
     assertEq(_debtAmount, _wethBorrowAmount);
     assertEq(_nonCollatDebtAmount, _nonCollatBorrowAmount);
@@ -348,7 +356,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _actualInterestAfter = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterestAfter, 4e18);
     borrowFacet.accrueInterest(address(weth));
-    (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, uint256 _actualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
     uint256 _bobNonCollatDebt = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
     uint256 _tokenCollatDebt = viewFacet.getNonCollatTokenDebt(address(weth));
@@ -383,7 +391,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _wethBorrowAmount + _nonCollatBorrowAmount);
 
     uint256 _debtAmount;
-    (, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     uint256 _nonCollatDebtAmount = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
     assertEq(_debtAmount, _wethBorrowAmount);
     assertEq(_nonCollatDebtAmount, _nonCollatBorrowAmount);
@@ -400,7 +408,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     borrowFacet.accrueInterest(address(weth));
     // total token with interest before accrue should equal to total token after accrue
     assertEq(_totalTokenWithInterestBeforeAccrue, viewFacet.getTotalToken(address(weth)));
-    (, uint256 _actualDebtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(weth));
+    (, uint256 _actualDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(weth));
     assertEq(_actualDebtAmount, _expectedDebtAmount);
     uint256 _bobNonCollatDebt = viewFacet.getNonCollatAccountDebt(BOB, address(weth));
     uint256 _tokenCollatDebt = viewFacet.getNonCollatTokenDebt(address(weth));

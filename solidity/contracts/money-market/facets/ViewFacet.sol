@@ -153,7 +153,7 @@ contract ViewFacet is IViewFacet {
   /// @param _account The main account
   /// @param _subAccountId The index to derive the subaccount
   /// @return Array of node containing shares of borrowed token in the debt pool
-  function getOverCollatSubAccountDebtShares(address _account, uint256 _subAccountId)
+  function getOverCollatDebtSharesOf(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)
@@ -183,7 +183,7 @@ contract ViewFacet is IViewFacet {
   /// @param _token The borrowed token
   /// @return _debtShare The amount of debt share on the token under the subaccount
   /// @return _debtAmount The actual amount of debt on the token under the subaccount
-  function getOverCollatSubAccountDebt(
+  function getOverCollatDebtShareAndAmountOf(
     address _account,
     uint256 _subAccountId,
     address _token

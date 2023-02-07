@@ -124,7 +124,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, normalizeEther(21.0625 ether, wethDecimal));
     assertEq(_stateAfter.subAccountCollat, normalizeEther(21.0625 ether, wethDecimal));
@@ -200,7 +200,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, normalizeEther(21.0625 ether, wethDecimal));
     assertEq(_stateAfter.subAccountCollat, normalizeEther(21.0625 ether, wethDecimal));
@@ -277,7 +277,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, normalizeEther(2.1185925 ether, wethDecimal)); // 40 - 37.88140914584859 = 2.11859085415141 weth remaining
     assertEq(_stateAfter.subAccountCollat, normalizeEther(2.1185925 ether, wethDecimal)); // same as collat
@@ -354,7 +354,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
 
     assertEq(_stateAfter.collat, 0);
     assertEq(_stateAfter.subAccountCollat, 0);
@@ -401,7 +401,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       debtValue: viewFacet.getOverCollatDebtValue(_debtToken),
       subAccountDebtShare: 0
     });
-    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
 
     // strategy doesn't return collat
     assertEq(_stateAfter.collat, 0);

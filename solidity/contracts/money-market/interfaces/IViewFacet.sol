@@ -14,7 +14,7 @@ interface IViewFacet {
 
   function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
 
-  function getOverCollatSubAccountDebtShares(address _account, uint256 _subAccountId)
+  function getOverCollatDebtSharesOf(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);
@@ -50,7 +50,7 @@ interface IViewFacet {
 
   function getFloatingBalance(address _token) external view returns (uint256);
 
-  function getOverCollatSubAccountDebt(
+  function getOverCollatDebtShareAndAmountOf(
     address _account,
     uint256 _subAccountId,
     address _token

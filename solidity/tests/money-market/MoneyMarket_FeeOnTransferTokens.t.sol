@@ -82,7 +82,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     assertEq(lateFotToken.balanceOf(BOB) - _bobBalanceBefore, _borrowAmount - _transferFee);
 
     // debt should be accounted for full _borrowAmount before fee
-    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(lateFotToken));
+    (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(lateFotToken));
     assertEq(_debtAmount, _borrowAmount);
   }
 
@@ -107,7 +107,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     // can't repay entire debt because transfer fee during repayment is deduced
     uint256 _feeAmount = (_borrowAmount * (lateFotToken.transferFeeBps())) / 10000;
-    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, address(lateFotToken));
+    (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, address(lateFotToken));
     assertEq(_debtAmount, _feeAmount);
   }
 
@@ -128,7 +128,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     mockOracle.setTokenPrice(_collatToken, 0.5 ether);
 
-    (, uint256 _debtAmountBefore) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, _debtToken);
+    (, uint256 _debtAmountBefore) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, _debtToken);
 
     vm.prank(ALICE, ALICE);
     liquidationFacet.repurchase(BOB, subAccount0, _debtToken, _collatToken, _repurchaseAmount);
@@ -139,7 +139,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     // repurchaseFee = 1%, transferFee = 1%
     // check debt reduced = repurchaseAmount - repurchaseFee - transferFee = 0.1 - 0.001 - 0.001 = 0.098
-    (, uint256 _debtAmountAfter) = viewFacet.getOverCollatSubAccountDebt(BOB, subAccount0, _debtToken);
+    (, uint256 _debtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, _debtToken);
     assertEq(_debtAmountBefore - _debtAmountAfter, 0.098 ether);
 
     // check fee to treasury = repurchaseFee - transferFee = 0.001 - (0.01 * 0.001) = 0.00099

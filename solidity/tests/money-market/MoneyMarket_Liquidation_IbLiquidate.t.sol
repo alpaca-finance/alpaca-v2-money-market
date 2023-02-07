@@ -604,7 +604,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     address _underlyingToken,
     address _debtToken
   ) internal view returns (CacheState memory _state) {
-    (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, 0, _debtToken);
+    (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
     _state = CacheState({
       mmUnderlyingBalance: IERC20(_underlyingToken).balanceOf(address(moneyMarketDiamond)),
       ibTokenTotalSupply: IERC20(_ibToken).totalSupply(),
@@ -627,7 +627,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _pendingInterest,
     CacheState memory _cache
   ) internal {
-    (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatSubAccountDebt(_account, _subAccountId, _debtToken);
+    (uint256 _subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(_account, _subAccountId, _debtToken);
     uint256 _debtValueWithInterest = _cache.debtValue + _pendingInterest;
     uint256 _globalValueWithInterest = _cache.globalDebtValue + _pendingInterest;
     uint256 _repaidShare = (_actualRepaidAmount * _cache.debtShare) / (_debtValueWithInterest);

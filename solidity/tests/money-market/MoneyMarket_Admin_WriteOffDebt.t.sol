@@ -111,10 +111,10 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
     adminFacet.writeOffSubAccountsDebt(_inputs);
 
     // check subaccounts debt, no debt remain
-    (, uint256 _subAccount0DebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, _debtToken);
+    (, uint256 _subAccount0DebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, _debtToken);
     assertEq(_subAccount0DebtAmount, 0);
 
-    (, uint256 _subAccount1DebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount1, _debtToken);
+    (, uint256 _subAccount1DebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount1, _debtToken);
     assertEq(_subAccount1DebtAmount, 0);
 
     // check diamond debt states, no debt remain
