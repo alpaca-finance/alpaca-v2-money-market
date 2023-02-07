@@ -74,6 +74,9 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
     if (!okHolders[msg.sender] && !okHolders[to]) {
       revert DebtToken_UnApprovedHolder();
     }
+    if (msg.sender == to) {
+      revert DebtToken_NoSelfTransfer();
+    }
     _transfer(msg.sender, to, amount);
     return true;
   }
