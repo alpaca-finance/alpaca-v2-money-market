@@ -63,6 +63,10 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     _;
   }
 
+  constructor() {
+    _disableInitializers();
+  }
+
   function initialize(
     string calldata _name,
     address _miniFL,

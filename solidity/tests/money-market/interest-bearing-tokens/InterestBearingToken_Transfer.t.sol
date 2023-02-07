@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
+import { InterestBearingTokenBaseTest, console } from "./InterestBearingTokenBaseTest.sol";
 
 // contracts
 import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
@@ -12,7 +12,7 @@ import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/f
 // libs
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract InterestBearingToken_TransferTest is MoneyMarket_BaseTest {
+contract InterestBearingToken_TransferTest is InterestBearingTokenBaseTest {
   using SafeERC20 for InterestBearingToken;
 
   InterestBearingToken internal ibToken;
@@ -20,8 +20,7 @@ contract InterestBearingToken_TransferTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
 
-    ibToken = new InterestBearingToken();
-    ibToken.initialize(address(weth), moneyMarketDiamond);
+    ibToken = deployInterestBearingToken(address(weth));
 
     vm.prank(moneyMarketDiamond);
     ibToken.onDeposit(BOB, 0, 1 ether);

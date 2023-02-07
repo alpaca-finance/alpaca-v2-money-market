@@ -62,6 +62,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       revert MiniFL_Unauthorized();
     }
     _;
+
+  constructor() {
+    _disableInitializers();
   }
 
   /// @param _alpaca The ALPACA token contract address.
