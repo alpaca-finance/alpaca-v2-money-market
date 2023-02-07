@@ -10,7 +10,7 @@ import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol"
 contract SetUpMMForTestScript is BaseUtilsScript {
   using stdJson for string;
 
-  function run() public {
+  function _run() internal override {
     _setUpForLocalRun();
 
     _startDeployerBroadcast();

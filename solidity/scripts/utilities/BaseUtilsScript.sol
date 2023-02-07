@@ -35,16 +35,16 @@ abstract contract BaseUtilsScript is Script {
     address MoneyMarketDiamond;
   }
 
-  // function run() public {
-  //   _setUp();
-  //   _run();
-  // }
+  function run() public {
+    _setUp();
+    _run();
+  }
 
   /// @dev to run script locally pass flag --sig "runLocal()"
-  // function runLocal() public {
-  //   _setUpForLocalRun();
-  //   _run();
-  // }
+  function runLocal() public {
+    _setUpForLocalRun();
+    _run();
+  }
 
   //
   // setups
@@ -108,5 +108,5 @@ abstract contract BaseUtilsScript is Script {
     console.log("==== broadcast stopped ====\n");
   }
 
-  // function _run() internal virtual;
+  function _run() internal virtual;
 }
