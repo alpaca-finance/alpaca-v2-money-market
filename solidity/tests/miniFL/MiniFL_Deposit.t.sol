@@ -138,4 +138,12 @@ contract MiniFL_DepositTest is MiniFL_BaseTest {
     // check reserve amount
     assertStakingReserve(dtokenPoolID, 10 ether);
   }
+
+  function testRevert_WhenNonWhitelistedCallersDepositMiniFLW() external {
+    vm.startPrank(CAT);
+    weth.approve(address(miniFL), 10 ether);
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
+    miniFL.deposit(CAT, wethPoolID, 10 ether);
+    vm.stopPrank();
+  }
 }

@@ -164,4 +164,11 @@ contract MiniFL_WithdrawTest is MiniFL_BaseTest {
     assertEq(debtToken1.balanceOf(BOB) - _bobDTokenBalanceBefore, 5 ether);
     // need to check pending alpaca ??????
   }
+
+  function testRevert_WhenNonWhitelistedCallersWithDrawFromMiniFL() external {
+    vm.startPrank(CAT);
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
+    miniFL.withdraw(CAT, wethPoolID, 10 ether);
+    vm.stopPrank();
+  }
 }
