@@ -188,14 +188,13 @@ contract AdminFacet is IAdminFacet {
     address _token,
     address _model
   ) external onlyOwner {
-    // Sanity check
-    IInterestRateModel(_model).getInterestRate(0, 0);
-
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     // sanity call to IInterestRateModel
     // should revert if the address doesn't implement IInterestRateModel
     // neglect the fact if the _model implement fallback and did not revert
     IInterestRateModel(_model).getInterestRate(0, 0);
+
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
     moneyMarketDs.nonCollatInterestModels[_account][_token] = IInterestRateModel(_model);
     emit LogSetNonCollatInterestModel(_account, _token, _model);
   }
