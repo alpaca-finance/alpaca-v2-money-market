@@ -29,5 +29,24 @@ contract DebtToken_InitializerTest is MoneyMarket_BaseTest {
     assertEq(debtToken.decimals(), weth.decimals());
 
     // check money market being set correctly
+    assertEq(debtToken.owner(), moneyMarketDiamond);
+    assertEq(debtToken.moneyMarket(), moneyMarketDiamond);
+  }
+
+  function testRevert_WhenInitializeOwnerIsNotMoneyMarket() external {
+    DebtToken debtToken = new DebtToken();
+
+    // expect general evm error without data since sanity check calls method that doesn't exist on ALICE
+    vm.expectRevert();
+    debtToken.initialize(address(weth), ALICE);
+  }
+
+  function testRevert_WhenCallInitializeAfterHasBeenInitialized() external {
+    DebtToken debtToken = new DebtToken();
+
+    debtToken.initialize(address(weth), moneyMarketDiamond);
+
+    vm.expectRevert("Initializable: contract is already initialized");
+    debtToken.initialize(address(weth), moneyMarketDiamond);
   }
 }
