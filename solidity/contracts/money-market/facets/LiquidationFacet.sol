@@ -22,6 +22,8 @@ contract LiquidationFacet is ILiquidationFacet {
 
   event LogRepurchase(
     address indexed _repurchaser,
+    address _account,
+    uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
     uint256 _actualRepayAmountWithoutFee,
@@ -32,6 +34,8 @@ contract LiquidationFacet is ILiquidationFacet {
   event LogLiquidate(
     address indexed _caller,
     address indexed _liquidationStrategy,
+    address _account,
+    uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
     uint256 _amountDebtRepaid,
@@ -42,6 +46,8 @@ contract LiquidationFacet is ILiquidationFacet {
 
   struct InternalLiquidationCallParams {
     address liquidationStrat;
+    address account;
+    uint256 subAccountId;
     address subAccount;
     address repayToken;
     address collatToken;
@@ -205,6 +211,8 @@ contract LiquidationFacet is ILiquidationFacet {
 
     emit LogRepurchase(
       msg.sender,
+      _account,
+      _subAccountId,
       _repayToken,
       _collatToken,
       _actualRepayAmountWithoutFee,
@@ -249,6 +257,8 @@ contract LiquidationFacet is ILiquidationFacet {
 
     InternalLiquidationCallParams memory _params = InternalLiquidationCallParams({
       liquidationStrat: _liquidationStrat,
+      account: _account,
+      subAccountId: _subAccountId,
       subAccount: _subAccount,
       repayToken: _repayToken,
       collatToken: _collatToken,
@@ -336,6 +346,8 @@ contract LiquidationFacet is ILiquidationFacet {
     emit LogLiquidate(
       msg.sender,
       _params.liquidationStrat,
+      _params.account,
+      _params.subAccountId,
       _params.repayToken,
       _params.collatToken,
       _vars.repaidAmount,

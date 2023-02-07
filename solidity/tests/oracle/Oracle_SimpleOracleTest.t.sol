@@ -13,8 +13,11 @@ contract Oracle_SimpleOracleTest is BaseTest {
   function setUp() public virtual {
     feeder = EVE;
 
-    SimplePriceOracle simplePriceOracle = new SimplePriceOracle();
-    simplePriceOracle.initialize(feeder);
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/SimplePriceOracle.sol/SimplePriceOracle.json"));
+    bytes memory _initializer = abi.encodeWithSelector(bytes4(keccak256("initialize(address)")), feeder);
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    SimplePriceOracle simplePriceOracle = SimplePriceOracle(_proxy);
+
     address oldOwner = simplePriceOracle.owner();
     vm.prank(oldOwner);
     simplePriceOracle.transferOwnership(DEPLOYER);

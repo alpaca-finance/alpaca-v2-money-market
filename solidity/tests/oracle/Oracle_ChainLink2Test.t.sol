@@ -25,7 +25,6 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     _fakeAggregatorWETHUSDC[1] = new MockChainLinkAggregator(1e18, 18);
 
     ChainLinkPriceOracle2 chainLinkPriceOracle = new ChainLinkPriceOracle2();
-    chainLinkPriceOracle.initialize();
     address oldOwner = chainLinkPriceOracle.owner();
     vm.prank(oldOwner);
     chainLinkPriceOracle.transferOwnership(DEPLOYER);

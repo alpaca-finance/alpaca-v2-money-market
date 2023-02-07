@@ -139,10 +139,13 @@ contract MiniFL_DepositTest is MiniFL_BaseTest {
     assertStakingReserve(dtokenPoolID, 10 ether);
   }
 
-  function testRevert_WhenNotAllowToDepositDebtToken() external {
-    // alice is not debt token staker
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
-    vm.prank(ALICE);
-    miniFL.deposit(BOB, dtokenPoolID, 10 ether);
+  function testRevert_WhenNonWhitelistedCallersDepositMiniFLW() external {
+    // random address which not whitelisted callers
+    address randomCaller = makeAddr("randomCaller");
+    vm.startPrank(randomCaller);
+    weth.approve(address(miniFL), 10 ether);
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
+    miniFL.deposit(randomCaller, wethPoolID, 10 ether);
+    vm.stopPrank();
   }
 }

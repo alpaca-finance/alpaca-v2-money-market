@@ -39,6 +39,10 @@ contract ChainLinkPriceOracle2 is OwnableUpgradeable, IPriceOracle {
   /// ---------------------------------------------------
   event LogSetPriceFeed(address indexed token0, address indexed token1, IAggregatorV3[] sources);
 
+  constructor() {
+    _disableInitializers();
+  }
+
   function initialize() external initializer {
     OwnableUpgradeable.__Ownable_init();
   }

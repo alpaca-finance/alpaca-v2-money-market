@@ -165,9 +165,12 @@ contract MiniFL_WithdrawTest is MiniFL_BaseTest {
     // need to check pending alpaca ??????
   }
 
-  function testRevert_WhenNotAllowToWithdrawDebtToken() external {
-    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Forbidden.selector));
-    vm.prank(ALICE);
-    miniFL.withdraw(ALICE, dtokenPoolID, 5 ether);
+  function testRevert_WhenNonWhitelistedCallersWithDrawFromMiniFL() external {
+    // random address which not whitelisted callers
+    address randomCaller = makeAddr("randomCaller");
+    vm.startPrank(randomCaller);
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
+    miniFL.withdraw(randomCaller, wethPoolID, 10 ether);
+    vm.stopPrank();
   }
 }
