@@ -48,6 +48,10 @@ contract DeployMoneyMarket is Script {
     address ibTokenImplementation = address(new InterestBearingToken());
     moneyMarket.setIbTokenImplementation(ibTokenImplementation);
 
+    // setup debt token
+    address debtTokenImplementation = address(new InterestBearingToken());
+    moneyMarket.setDebtTokenImplementation(debtTokenImplementation);
+
     // setup liquidation strategies
     address router = address(0);
     address pancakeswapV2LiquidationStrategy = address(new PancakeswapV2LiquidationStrategy(router));

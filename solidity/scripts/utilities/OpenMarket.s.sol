@@ -19,7 +19,7 @@ contract OpenMarketScript is BaseUtilsScript {
     address underlyingToken = mockTokenForLocalRun;
 
     //---- execution ----//
-    address newIbToken = moneyMarket.openMarket(underlyingToken);
+    (address newIbToken, address newDebtToken) = moneyMarket.openMarket(underlyingToken);
     console.log("openMarket for", underlyingToken);
 
     _stopBroadcast();
@@ -28,6 +28,8 @@ contract OpenMarketScript is BaseUtilsScript {
     string memory configJson;
     configJson = configJson.serialize("newIbToken", newIbToken);
     configJson.write(configFilePath, ".IbTokens");
+    configJson = configJson.serialize("newDebtToken", newDebtToken);
+    configJson.write(configFilePath, ".DebtTokens");
   }
 
   function _setUpForLocalRun() internal override {

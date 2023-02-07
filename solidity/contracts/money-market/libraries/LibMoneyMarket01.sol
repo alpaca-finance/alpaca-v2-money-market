@@ -81,12 +81,16 @@ library LibMoneyMarket01 {
     address wNativeRelayer;
     address liquidationTreasury;
     address ibTokenImplementation;
+    address debtTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
     bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address
     mapping(address => address) ibTokenToTokens; // ibToken address => token address
+    // ---- debt tokens ---- //
+    mapping(address => address) tokenToDebtTokens; // token address => debtToken address
+    mapping(address => address) debtTokenToTokens; // debtToken address => token address
     // ---- lending ---- //
     mapping(address => uint256) globalDebts; // token address => over + non collat debt
     // ---- over-collateralized lending ---- //

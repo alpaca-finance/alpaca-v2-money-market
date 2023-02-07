@@ -16,6 +16,7 @@ import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 // mm contract
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
@@ -73,6 +74,12 @@ contract BaseTest is DSTest {
   uint256 internal ibUsdcDecimal;
   uint256 internal ibIsolateTokenDecimal;
   uint256 internal ibWNativeDecimal;
+
+  DebtToken internal debtWeth;
+  DebtToken internal debtBtc;
+  DebtToken internal debtUsdc;
+  DebtToken internal debtIsolateToken;
+  DebtToken internal debtWNative;
 
   MockERC20 internal debtToken1;
 

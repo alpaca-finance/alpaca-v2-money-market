@@ -52,7 +52,7 @@ interface IAdminFacet {
     address _token,
     TokenConfigInput calldata _tokenConfigInput,
     TokenConfigInput calldata _ibTokenConfigInput
-  ) external returns (address);
+  ) external returns (address, address);
 
   function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
 
