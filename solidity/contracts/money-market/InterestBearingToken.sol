@@ -26,7 +26,9 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
 
   error InterestBearingToken_NoSelfTransfer();
 
-  constructor() ERC20("", "") {}
+  constructor() ERC20("", "") {
+    _disableInitializers();
+  }
 
   function initialize(address asset_, address moneyMarket_) external initializer {
     _moneyMarket = IMoneyMarket(moneyMarket_);

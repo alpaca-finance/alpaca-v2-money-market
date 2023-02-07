@@ -39,6 +39,10 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
   error OracleMedianizer_NoValidSource();
   error OracleMedianizer_TooMuchDeviation();
 
+  constructor() {
+    _disableInitializers();
+  }
+
   function initialize() external initializer {
     OwnableUpgradeable.__Ownable_init();
   }

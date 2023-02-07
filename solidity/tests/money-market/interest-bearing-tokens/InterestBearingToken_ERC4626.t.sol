@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
+import { InterestBearingTokenBaseTest, console } from "./InterestBearingTokenBaseTest.sol";
 
 // contracts
 import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
@@ -9,14 +9,13 @@ import { InterestBearingToken } from "../../../contracts/money-market/InterestBe
 // interfaces
 import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/facets/AdminFacet.sol";
 
-contract InterestBearingToken_ERC4626Test is MoneyMarket_BaseTest {
+contract InterestBearingToken_ERC4626Test is InterestBearingTokenBaseTest {
   InterestBearingToken internal ibToken;
 
   function setUp() public override {
     super.setUp();
 
-    ibToken = new InterestBearingToken();
-    ibToken.initialize(address(weth), moneyMarketDiamond);
+    ibToken = deployInterestBearingToken(address(weth));
   }
 
   function testCorrectness_WhenCallImplementedGetterMethods_ShouldWork() external {

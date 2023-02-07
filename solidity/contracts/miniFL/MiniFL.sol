@@ -57,6 +57,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   uint256 private constant ACC_ALPACA_PRECISION = 1e12;
   uint256 public maxAlpacaPerSecond;
 
+  constructor() {
+    _disableInitializers();
+  }
+
   /// @param _alpaca The ALPACA token contract address.
   function initialize(address _alpaca, uint256 _maxAlpacaPerSecond) external initializer {
     OwnableUpgradeable.__Ownable_init();

@@ -42,6 +42,10 @@ contract SimplePriceOracle is OwnableUpgradeable, IPriceOracle {
   event LogSetFeeder(address indexed _caller, address _feeder);
   event LogSetPrice(address indexed _token0, address indexed _token1, uint256 _price);
 
+  constructor() {
+    _disableInitializers();
+  }
+
   function initialize(address _feeder) external initializer {
     OwnableUpgradeable.__Ownable_init();
     setFeeder(_feeder);
