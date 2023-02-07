@@ -37,11 +37,7 @@ contract OpenMarketScript is BaseUtilsScript {
 
     //---- execution ----//
     // note: openMarket will ignore `token` provided in TokenConfigInput and use param instead
-    (address newIbToken, address newDebtToken) = moneyMarket.openMarket(
-      underlyingToken,
-      underlyingTokenConfigInput,
-      ibTokenConfigInput
-    );
+    address newIbToken = moneyMarket.openMarket(underlyingToken, underlyingTokenConfigInput, ibTokenConfigInput);
     console.log("openMarket for", underlyingToken);
 
     _stopBroadcast();
@@ -50,8 +46,6 @@ contract OpenMarketScript is BaseUtilsScript {
     string memory configJson;
     configJson = configJson.serialize("newIbToken", newIbToken);
     configJson.write(configFilePath, ".IbTokens");
-    configJson = configJson.serialize("newDebtToken", newDebtToken);
-    configJson.write(configFilePath, ".DebtTokens");
   }
 
   function _setUpForLocalRun() internal override {

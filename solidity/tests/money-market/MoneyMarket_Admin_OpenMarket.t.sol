@@ -30,11 +30,7 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
       maxBorrow: normalizeEther(30 ether, _testToken.decimals()),
       maxCollateral: normalizeEther(100 ether, _testToken.decimals())
     });
-    (address _ibToken, ) = adminFacet.openMarket(
-      address(_testToken),
-      _defaultTokenConfigInput,
-      _defaultTokenConfigInput
-    );
+    address _ibToken = adminFacet.openMarket(address(_testToken), _defaultTokenConfigInput, _defaultTokenConfigInput);
     assertEq(IERC20(_ibToken).name(), "Interest Bearing TEST");
     assertEq(IERC20(_ibToken).symbol(), "ibTEST");
     assertEq(IERC20(_ibToken).decimals(), 9);

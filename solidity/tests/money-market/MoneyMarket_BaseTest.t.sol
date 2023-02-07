@@ -43,9 +43,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal liquidationTreasury = address(666);
   address internal liquidator = address(667);
 
-  address internal newIbToken;
-  address internal newDebtToken;
-
   IViewFacet internal viewFacet;
   IAdminFacet internal adminFacet;
   ILendFacet internal lendFacet;
@@ -84,9 +81,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxBorrow: 30 ether,
       maxCollateral: 100 ether
     });
-    (newIbToken, newDebtToken) = adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput);
-    ibWeth = InterestBearingToken(newIbToken);
-    debtWeth = DebtToken(newDebtToken);
+    ibWeth = InterestBearingToken(adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _usdcTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(usdc),
@@ -96,9 +91,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxBorrow: normalizeEther(100 ether, 6),
       maxCollateral: normalizeEther(100 ether, 6)
     });
-    (newIbToken, newDebtToken) = adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput);
-    ibUsdc = InterestBearingToken(newIbToken);
-    debtUsdc = DebtToken(newDebtToken);
+    ibUsdc = InterestBearingToken(adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _btcTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(btc),
@@ -108,9 +101,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxBorrow: 30 ether,
       maxCollateral: 100 ether
     });
-    (newIbToken, newDebtToken) = adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput);
-    ibBtc = InterestBearingToken(newIbToken);
-    debtBtc = DebtToken(newDebtToken);
+    ibBtc = InterestBearingToken(adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _wNativeTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(wNativeToken),
@@ -120,13 +111,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxBorrow: 30 ether,
       maxCollateral: 100 ether
     });
-    (newIbToken, newDebtToken) = adminFacet.openMarket(
-      address(wNativeToken),
-      _wNativeTokenConfigInput,
-      _wNativeTokenConfigInput
+    ibWNative = InterestBearingToken(
+      adminFacet.openMarket(address(wNativeToken), _wNativeTokenConfigInput, _wNativeTokenConfigInput)
     );
-    ibWNative = InterestBearingToken(newIbToken);
-    debtWNative = DebtToken(newDebtToken);
 
     IAdminFacet.TokenConfigInput memory _isolateTokenTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(isolateToken),
@@ -136,13 +123,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
       maxBorrow: 30 ether,
       maxCollateral: 100 ether
     });
-    (newIbToken, newDebtToken) = adminFacet.openMarket(
-      address(isolateToken),
-      _isolateTokenTokenConfigInput,
-      _isolateTokenTokenConfigInput
+    ibIsolateToken = InterestBearingToken(
+      adminFacet.openMarket(address(isolateToken), _isolateTokenTokenConfigInput, _isolateTokenTokenConfigInput)
     );
-    ibIsolateToken = InterestBearingToken(newIbToken);
-    debtIsolateToken = DebtToken(newDebtToken);
 
     IAdminFacet.TokenConfigInput memory _cakeTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(cake),

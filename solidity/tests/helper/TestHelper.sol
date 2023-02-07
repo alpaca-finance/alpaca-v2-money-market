@@ -22,8 +22,7 @@ library TestHelper {
       maxBorrow: normalizeEther(30 ether, IERC20(_token).decimals()),
       maxCollateral: normalizeEther(100 ether, IERC20(_token).decimals())
     });
-    (address ibToken, ) = _adminFacet.openMarket(_token, _defaultTokenConfigInput, _defaultTokenConfigInput);
-    return InterestBearingToken(ibToken);
+    return InterestBearingToken(_adminFacet.openMarket(_token, _defaultTokenConfigInput, _defaultTokenConfigInput));
   }
 
   function normalizeEther(uint256 _ether, uint256 _decimal) internal pure returns (uint256 _normalizedEther) {

@@ -75,12 +75,6 @@ contract BaseTest is DSTest {
   uint256 internal ibIsolateTokenDecimal;
   uint256 internal ibWNativeDecimal;
 
-  DebtToken internal debtWeth;
-  DebtToken internal debtBtc;
-  DebtToken internal debtUsdc;
-  DebtToken internal debtIsolateToken;
-  DebtToken internal debtWNative;
-
   MockERC20 internal debtToken1;
 
   MockERC20 internal rewardToken1;

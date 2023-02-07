@@ -80,12 +80,11 @@ contract AdminFacet is IAdminFacet {
   /// @notice Open a new market for new token
   /// @param _token The token for lending/borrowing
   /// @return _newIbToken The address of interest bearing token created for this market
-  /// @return _newDebtToken The address of debt token created for this market
   function openMarket(
     address _token,
     TokenConfigInput calldata _tokenConfigInput,
     TokenConfigInput calldata _ibTokenConfigInput
-  ) external onlyOwner nonReentrant returns (address _newIbToken, address _newDebtToken) {
+  ) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     if (moneyMarketDs.ibTokenImplementation == address(0)) {
       revert AdminFacet_InvalidIbTokenImplementation();
@@ -100,7 +99,7 @@ contract AdminFacet is IAdminFacet {
     _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
     IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
-    _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
+    address _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
     IDebtToken(_newDebtToken).initialize(_token, address(this));
 
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
@@ -108,9 +107,7 @@ contract AdminFacet is IAdminFacet {
 
     moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
-
     moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
-    moneyMarketDs.debtTokenToTokens[_newDebtToken] = _token;
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }
