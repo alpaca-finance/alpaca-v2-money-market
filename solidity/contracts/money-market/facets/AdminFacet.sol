@@ -192,8 +192,11 @@ contract AdminFacet is IAdminFacet {
     IInterestRateModel(_model).getInterestRate(0, 0);
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    bytes32 _nonCollatId = LibMoneyMarket01.getNonCollatId(_account, _token);
-    moneyMarketDs.nonCollatInterestModels[_nonCollatId] = IInterestRateModel(_model);
+    // sanity call to IInterestRateModel
+    // should revert if the address doesn't implement IInterestRateModel
+    // neglect the fact if the _model implement fallback and did not revert
+    IInterestRateModel(_model).getInterestRate(0, 0);
+    moneyMarketDs.nonCollatInterestModels[_account][_token] = IInterestRateModel(_model);
     emit LogSetNonCollatInterestModel(_account, _token, _model);
   }
 
