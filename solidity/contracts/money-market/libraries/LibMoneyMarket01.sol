@@ -643,7 +643,7 @@ library LibMoneyMarket01 {
     }
   }
 
-  function getOverCollatDebtShareAndValueOf(
+  function getOverCollatDebtShareAndAmountOf(
     address _subAccount,
     address _token,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
