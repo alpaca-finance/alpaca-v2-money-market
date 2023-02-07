@@ -28,7 +28,7 @@ contract MiniFL_AddPoolTest is MiniFL_BaseTest {
   function testRevert_WhenNonWhitelistedCallersAddPool() external {
     vm.startPrank(CAT);
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_Unauthorized.selector));
-    miniFL.addPool(100, address(weth), false, false);
+    miniFL.addPool(100, address(weth), false);
     vm.stopPrank();
   }
 

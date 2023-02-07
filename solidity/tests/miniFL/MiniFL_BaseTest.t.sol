@@ -15,7 +15,7 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   address internal funder1 = makeAddr("funder1");
   address internal funder2 = makeAddr("funder2");
 
-  address[] internal whitelistedCallers = new address[](1);
+  address[] internal whitelistedCallers = new address[](5);
 
   Rewarder internal rewarder1;
   Rewarder internal rewarder2;
@@ -49,6 +49,10 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
     weth.approve(address(miniFL), 100 ether);
 
     whitelistedCallers[0] = address(this);
+    whitelistedCallers[1] = ALICE;
+    whitelistedCallers[2] = BOB;
+    whitelistedCallers[3] = funder1;
+    whitelistedCallers[4] = funder2;
     miniFL.setWhitelistedCallers(whitelistedCallers, true);
   }
 

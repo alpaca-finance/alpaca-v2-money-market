@@ -27,7 +27,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool allow);
   event LogSetMaxAlpacaPerSecond(uint256 maxAlpacaPerSecond);
   event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
-  event LogSetWhitelistedCallers(address indexed caller, bool allow);
+  event LogSetWhitelistedCaller(address indexed caller, bool allow);
 
   struct UserInfo {
     mapping(address => uint256) fundedAmounts; // funders address => amount
@@ -223,7 +223,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _for,
     uint256 _pid,
     uint256 _amountToDeposit
-  ) external nonReentrant {
+  ) external onlyWhitelisted nonReentrant {
     UserInfo storage user = userInfo[_pid][_for];
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
@@ -263,7 +263,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address _from,
     uint256 _pid,
     uint256 _amountToWithdraw
-  ) external nonReentrant {
+  ) external onlyWhitelisted nonReentrant {
     UserInfo storage user = userInfo[_pid][_from];
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
@@ -393,13 +393,13 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   /// @notice Set whitelisted callers
-  /// @param _callers The addresses of the callers.
+  /// @param _callers The addresses of the callers that are going to be whitelisted.
   /// @param _allow Whether to allow or disallow callers.
   function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
     uint256 _length = _callers.length;
     for (uint256 _i; _i < _length; ) {
       whitelistedCallers[_callers[_i]] = _allow;
-      emit LogSetWhitelistedCallers(_callers[_i], _allow);
+      emit LogSetWhitelistedCaller(_callers[_i], _allow);
 
       unchecked {
         ++_i;
