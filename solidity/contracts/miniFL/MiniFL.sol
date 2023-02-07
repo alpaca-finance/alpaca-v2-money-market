@@ -62,6 +62,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       revert MiniFL_Unauthorized();
     }
     _;
+  }
 
   constructor() {
     _disableInitializers();
