@@ -32,26 +32,36 @@ library LibMoneyMarketDeployment {
 
   function deployMoneyMarketDiamond(address _nativeToken, address _nativeRelayer)
     internal
-    returns (address, FacetAddresses memory)
+    returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses)
   {
     // deploy facets
-    FacetAddresses memory _addresses;
-    _addresses.diamondCutFacet = address(new DiamondCutFacet());
-    _addresses.diamondLoupeFacet = address(new DiamondLoupeFacet());
-    _addresses.viewFacet = address(new ViewFacet());
-    _addresses.lendFacet = address(new LendFacet());
-    _addresses.collateralFacet = address(new CollateralFacet());
-    _addresses.borrowFacet = address(new BorrowFacet());
-    _addresses.nonCollatBorrowFacet = address(new NonCollatBorrowFacet());
-    _addresses.adminFacet = address(new AdminFacet());
-    _addresses.liquidationFacet = address(new LiquidationFacet());
-    _addresses.ownershipFacet = address(new OwnershipFacet());
+    _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
-    address _moneyMarketDiamond = address(
-      new MoneyMarketDiamond(_addresses.diamondCutFacet, _nativeToken, _nativeRelayer)
+    _moneyMarketDiamond = address(
+      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer)
     );
 
+    // do diamondCut
+    diamondCutAllMoneyMarketFacets(_moneyMarketDiamond, _facetAddresses);
+
+    return (_moneyMarketDiamond, _facetAddresses);
+  }
+
+  function deployMoneyMarketFacets() internal returns (FacetAddresses memory _facetAddresses) {
+    _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
+    _facetAddresses.diamondLoupeFacet = address(new DiamondLoupeFacet());
+    _facetAddresses.viewFacet = address(new ViewFacet());
+    _facetAddresses.lendFacet = address(new LendFacet());
+    _facetAddresses.collateralFacet = address(new CollateralFacet());
+    _facetAddresses.borrowFacet = address(new BorrowFacet());
+    _facetAddresses.nonCollatBorrowFacet = address(new NonCollatBorrowFacet());
+    _facetAddresses.adminFacet = address(new AdminFacet());
+    _facetAddresses.liquidationFacet = address(new LiquidationFacet());
+    _facetAddresses.ownershipFacet = address(new OwnershipFacet());
+  }
+
+  function diamondCutAllMoneyMarketFacets(address _moneyMarketDiamond, FacetAddresses memory _facetAddresses) internal {
     // prepare selectors
     bytes4[] memory _diamondLoupeFacetSelectors = getDiamondLoupeFacetSelectors();
     bytes4[] memory _viewFacetSelectors = getViewFacetSelectors();
@@ -67,55 +77,53 @@ library LibMoneyMarketDeployment {
     IDiamondCut.FacetCut[] memory _facetCuts = new IDiamondCut.FacetCut[](9);
     _facetCuts[0] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.diamondLoupeFacet,
+      facetAddress: _facetAddresses.diamondLoupeFacet,
       functionSelectors: _diamondLoupeFacetSelectors
     });
     _facetCuts[1] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.viewFacet,
+      facetAddress: _facetAddresses.viewFacet,
       functionSelectors: _viewFacetSelectors
     });
     _facetCuts[2] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.lendFacet,
+      facetAddress: _facetAddresses.lendFacet,
       functionSelectors: _lendFacetSelectors
     });
     _facetCuts[3] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.collateralFacet,
+      facetAddress: _facetAddresses.collateralFacet,
       functionSelectors: _collateralFacetSelectors
     });
     _facetCuts[4] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.borrowFacet,
+      facetAddress: _facetAddresses.borrowFacet,
       functionSelectors: _borrowFacetSelectors
     });
     _facetCuts[5] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.nonCollatBorrowFacet,
+      facetAddress: _facetAddresses.nonCollatBorrowFacet,
       functionSelectors: _nonCollatBorrowFacetSelectors
     });
     _facetCuts[6] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.adminFacet,
+      facetAddress: _facetAddresses.adminFacet,
       functionSelectors: _adminFacetSelectors
     });
     _facetCuts[7] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.liquidationFacet,
+      facetAddress: _facetAddresses.liquidationFacet,
       functionSelectors: _liquidationFacetSelectors
     });
     _facetCuts[8] = IDiamondCut.FacetCut({
       action: IDiamondCut.FacetCutAction.Add,
-      facetAddress: _addresses.ownershipFacet,
+      facetAddress: _facetAddresses.ownershipFacet,
       functionSelectors: _ownershipFacetSelectors
     });
 
     // perform diamond cut on deployed MoneyMarketDiamond
     // address(0) and empty string means no initialization / cleanup after diamond cut
     DiamondCutFacet(_moneyMarketDiamond).diamondCut(_facetCuts, address(0), "");
-
-    return (_moneyMarketDiamond, _addresses);
   }
 
   function getDiamondLoupeFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
