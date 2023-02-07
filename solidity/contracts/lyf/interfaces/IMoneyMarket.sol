@@ -21,4 +21,12 @@ interface IMoneyMarket {
   function deposit(address _token, uint256 _amount) external;
 
   function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
+
+  function nonCollatRepay(
+    address _account,
+    address _token,
+    uint256 _repayAmount
+  ) external;
+
+  function accrueInterest(address _token) external;
 }

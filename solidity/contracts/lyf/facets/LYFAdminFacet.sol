@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
+import { LibFullMath } from "../libraries/LibFullMath.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 
 // ---- Interfaces ---- //
@@ -13,6 +14,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { IRouterLike } from "../interfaces/IRouterLike.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
+import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
 
 /// @title LYFAdminFacet is dedicated to protocol parameter configuration
 contract LYFAdminFacet is ILYFAdminFacet {
@@ -42,6 +44,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
+  event LogSettleDebt(address indexed _token, uint256 _amount);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -390,5 +393,40 @@ contract LYFAdminFacet is ILYFAdminFacet {
         ++_i;
       }
     }
+  }
+
+  /// @notice Repay the debt to Money Market
+  /// @param _token The token to repay
+  /// @param _repayAmount The amount to repay
+  function settleDebt(address _token, uint256 _repayAmount) external onlyOwner {
+    if (_repayAmount == 0) {
+      revert LYFAdminFacet_InvalidArguments();
+    }
+
+    LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
+    IMoneyMarket moneyMarket = lyfDs.moneyMarket;
+
+    moneyMarket.accrueInterest(_token);
+    _repayAmount = LibFullMath.min(_repayAmount, moneyMarket.getNonCollatAccountDebt(address(this), _token));
+
+    uint256 _tokenReserve = lyfDs.reserves[_token];
+    uint256 _protocolReserve = lyfDs.protocolReserves[_token];
+    if (_tokenReserve <= _protocolReserve) {
+      revert LYFAdminFacet_ReserveTooLow();
+    }
+
+    unchecked {
+      uint256 _outstandingBalance = _tokenReserve - _protocolReserve;
+      if (_outstandingBalance < _repayAmount) {
+        revert LYFAdminFacet_NotEnoughToken();
+      }
+
+      lyfDs.reserves[_token] -= _repayAmount;
+    }
+
+    IERC20(_token).safeApprove(address(moneyMarket), _repayAmount);
+    moneyMarket.nonCollatRepay(address(this), _token, _repayAmount);
+
+    emit LogSettleDebt(_token, _repayAmount);
   }
 }
