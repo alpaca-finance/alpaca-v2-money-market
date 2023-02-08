@@ -68,13 +68,13 @@ abstract contract BaseDeploymentScript is Script {
   // utilities
   //
 
-  function _getDeploymentConfig() internal returns (DeploymentConfig memory) {
+  function _getDeploymentConfig() internal view returns (DeploymentConfig memory) {
     console.log("load deployment config from", configFilePath);
     string memory configJson = vm.readFile(configFilePath);
     return abi.decode(configJson.parseRaw("DeploymentConfig"), (DeploymentConfig));
   }
 
-  function _getMoneyMarketConfig() internal returns (MoneyMarketConfig memory) {
+  function _getMoneyMarketConfig() internal view returns (MoneyMarketConfig memory) {
     console.log("load money market config from", configFilePath);
     string memory configJson = vm.readFile(configFilePath);
     return abi.decode(configJson.parseRaw("MoneyMarket"), (MoneyMarketConfig));

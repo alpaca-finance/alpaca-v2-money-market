@@ -5,7 +5,7 @@ import "./BaseDeploymentScript.sol";
 
 import { LibMoneyMarketDeployment } from "./libraries/LibMoneyMarketDeployment.sol";
 
-contract DeployMoneyMarketFacets is BaseDeploymentScript {
+contract DeployMoneyMarketFacetsScript is BaseDeploymentScript {
   using stdJson for string;
 
   function _run() internal override {
@@ -21,16 +21,16 @@ contract DeployMoneyMarketFacets is BaseDeploymentScript {
 
     // facets
     string memory facetsJson = "Facets";
-    facetsJson.serialize("DiamondCutFacet", _facetAddresses.diamondCutFacet);
-    facetsJson.serialize("DiamondLoupeFacet", _facetAddresses.diamondLoupeFacet);
-    facetsJson.serialize("ViewFacet", _facetAddresses.viewFacet);
-    facetsJson.serialize("LendFacet", _facetAddresses.lendFacet);
-    facetsJson.serialize("CollateralFacet", _facetAddresses.collateralFacet);
-    facetsJson.serialize("BorrowFacet", _facetAddresses.borrowFacet);
-    facetsJson.serialize("NonCollatBorrowFacet", _facetAddresses.nonCollatBorrowFacet);
-    facetsJson.serialize("AdminFacet", _facetAddresses.adminFacet);
-    facetsJson.serialize("LiquidationFacet", _facetAddresses.liquidationFacet);
-    facetsJson = facetsJson.serialize("OwnershipFacet", _facetAddresses.ownershipFacet);
+    facetsJson.serialize("diamondCutFacet", _facetAddresses.diamondCutFacet);
+    facetsJson.serialize("diamondLoupeFacet", _facetAddresses.diamondLoupeFacet);
+    facetsJson.serialize("viewFacet", _facetAddresses.viewFacet);
+    facetsJson.serialize("lendFacet", _facetAddresses.lendFacet);
+    facetsJson.serialize("collateralFacet", _facetAddresses.collateralFacet);
+    facetsJson.serialize("borrowFacet", _facetAddresses.borrowFacet);
+    facetsJson.serialize("nonCollatBorrowFacet", _facetAddresses.nonCollatBorrowFacet);
+    facetsJson.serialize("adminFacet", _facetAddresses.adminFacet);
+    facetsJson.serialize("liquidationFacet", _facetAddresses.liquidationFacet);
+    facetsJson = facetsJson.serialize("ownershipFacet", _facetAddresses.ownershipFacet);
 
     // this will overwrite .MoneyMarket.Facets key in config file
     facetsJson.write(configFilePath, ".MoneyMarket.Facets");

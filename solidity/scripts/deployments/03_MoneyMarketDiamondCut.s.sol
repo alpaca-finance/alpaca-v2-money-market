@@ -6,7 +6,7 @@ import "./BaseDeploymentScript.sol";
 import { LibMoneyMarketDeployment } from "./libraries/LibMoneyMarketDeployment.sol";
 import { MoneyMarketDiamond } from "solidity/contracts/money-market/MoneyMarketDiamond.sol";
 
-contract DeployMoneyMarketDiamond is BaseDeploymentScript {
+contract MoneyMarketDiamondCutScript is BaseDeploymentScript {
   using stdJson for string;
 
   function _run() internal override {

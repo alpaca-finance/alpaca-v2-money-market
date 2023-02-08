@@ -65,13 +65,14 @@ contract SetUpMMForTestScript is BaseUtilsScript {
     _stopBroadcast();
 
     //---- setup user positions ----//
+
+    _startUserBroadcast();
+    // prepare user's tokens
     MockERC20(bnb).mint(userAddress, 100 ether);
     MockERC20(busd).mint(userAddress, 100 ether);
     MockERC20(mock6DecimalsToken).mint(userAddress, 100e6);
     MockERC20(dodo).mint(userAddress, 100 ether);
     MockERC20(pstake).mint(userAddress, 100 ether);
-
-    _startUserBroadcast();
 
     MockERC20(bnb).approve(address(moneyMarket), type(uint256).max);
     MockERC20(busd).approve(address(moneyMarket), type(uint256).max);

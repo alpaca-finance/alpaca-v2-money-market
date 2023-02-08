@@ -6,7 +6,7 @@ import "./BaseDeploymentScript.sol";
 import { LibMoneyMarketDeployment } from "./libraries/LibMoneyMarketDeployment.sol";
 import { MoneyMarketDiamond } from "solidity/contracts/money-market/MoneyMarketDiamond.sol";
 
-contract DeployMoneyMarketDiamond is BaseDeploymentScript {
+contract DeployMoneyMarketDiamondScript is BaseDeploymentScript {
   using stdJson for string;
 
   LibMoneyMarketDeployment.FacetAddresses internal _facetAddresses;
