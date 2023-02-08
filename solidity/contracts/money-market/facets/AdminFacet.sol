@@ -88,7 +88,7 @@ contract AdminFacet is IAdminFacet {
     TokenConfigInput calldata _ibTokenConfigInput
   ) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    IMiniFL miniFL = moneyMarketDs.miniFL;
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
 
     if (moneyMarketDs.ibTokenImplementation == address(0)) {
       revert AdminFacet_InvalidIbTokenImplementation();
@@ -110,6 +110,11 @@ contract AdminFacet is IAdminFacet {
     address _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
     IDebtToken(_newDebtToken).initialize(_token, address(this));
 
+    address[] memory _okHolders = new address[](2);
+    _okHolders[0] = address(this);
+    _okHolders[1] = address(address(_miniFL));
+    IDebtToken(_newDebtToken).setOkHolders(_okHolders, true);
+
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
     _setTokenConfig(_newIbToken, _ibTokenConfigInput, moneyMarketDs);
 
@@ -117,8 +122,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
     moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
 
-    miniFL.addPool(0, _newIbToken, true);
-    miniFL.addPool(0, _newDebtToken, true);
+    moneyMarketDs.miniFLPoolIds[_newIbToken] = _miniFL.addPool(0, _newIbToken, true);
+    moneyMarketDs.miniFLPoolIds[_newDebtToken] = _miniFL.addPool(0, _newDebtToken, true);
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }

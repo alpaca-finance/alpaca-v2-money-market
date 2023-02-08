@@ -86,11 +86,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _allocPoint AP of the new pool.
   /// @param _stakingToken Address of the staking token.
   /// @param _withUpdate If true, do mass update pools.
+  /// @return _pid The index of the new pool.
   function addPool(
     uint256 _allocPoint,
     address _stakingToken,
     bool _withUpdate
-  ) external onlyWhitelisted {
+  ) external onlyWhitelisted returns (uint256 _pid) {
     if (_stakingToken == ALPACA) {
       revert MiniFL_InvalidArguments();
     }
@@ -110,6 +111,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     poolInfo.push(
       PoolInfo({ allocPoint: _allocPoint.toUint64(), lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 })
     );
+    unchecked {
+      _pid = poolInfo.length - 1;
+    }
     emit LogAddPool(stakingTokens.length - 1, _allocPoint, _stakingToken);
   }
 
@@ -178,7 +182,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         unchecked {
           timePast = block.timestamp - _poolInfo.lastRewardTime;
         }
-        uint256 alpacaReward = (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+        uint256 alpacaReward = totalAllocPoint != 0
+          ? (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint
+          : 0;
         _poolInfo.accAlpacaPerShare =
           _poolInfo.accAlpacaPerShare +
           ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance).toUint128();
@@ -409,5 +415,19 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         ++_i;
       }
     }
+  }
+
+  /// @notice Get total amount of a user
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _subAccount The address of the user.
+  function getUserTotalAmountOf(uint256 _pid, address _subAccount) external view returns (uint256 _totalAmount) {
+    _totalAmount = userInfo[_pid][_subAccount].totalAmount;
+  }
+
+  /// @notice Get reward debt of a user
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _subAccount The address of the user.
+  function getUserRewardDebtOf(uint256 _pid, address _subAccount) external view returns (int256 _rewardDebt) {
+    _rewardDebt = userInfo[_pid][_subAccount].rewardDebt;
   }
 }

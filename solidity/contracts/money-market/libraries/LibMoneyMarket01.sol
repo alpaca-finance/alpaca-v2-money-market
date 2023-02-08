@@ -92,6 +92,8 @@ library LibMoneyMarket01 {
     mapping(address => address) ibTokenToTokens; // ibToken address => token address
     // ---- debt tokens ---- //
     mapping(address => address) tokenToDebtTokens; // token address => debtToken address
+    // ---- miniFL pools ---- //
+    mapping(address => uint256) miniFLPoolIds; // token address => pool id
     // ---- lending ---- //
     mapping(address => uint256) globalDebts; // token address => over + non collat debt
     // ---- over-collateralized lending ---- //

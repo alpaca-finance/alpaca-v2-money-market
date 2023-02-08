@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -368,5 +369,34 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+  }
+
+  function testCorrectness_WhenUserBorrowTokenFromMM_MiniFLShouldStakeDebtTokenForUser() external {
+    IMiniFL _miniFL = IMiniFL(address(miniFL));
+
+    address _subAccount;
+    address _debtToken;
+    uint256 _poolId;
+
+    uint256 _borrowAmount = normalizeEther(10 ether, wethDecimal);
+    address _borrowToken = address(weth);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, _borrowToken, _borrowAmount * 2);
+    collateralFacet.addCollateral(BOB, subAccount1, _borrowToken, _borrowAmount * 2);
+    borrowFacet.borrow(subAccount0, _borrowToken, _borrowAmount);
+    borrowFacet.borrow(subAccount1, _borrowToken, _borrowAmount / 2);
+    vm.stopPrank();
+
+    // check token is exist in miniFL
+    _subAccount = viewFacet.getSubAccount(BOB, subAccount0);
+    _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
+    _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _borrowAmount);
+
+    _subAccount = viewFacet.getSubAccount(BOB, subAccount1);
+    _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
+    _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _borrowAmount / 2);
   }
 }

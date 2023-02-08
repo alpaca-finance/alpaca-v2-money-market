@@ -6,17 +6,21 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 import { FixedInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
 contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
+  IMiniFL _miniFL;
 
   function setUp() public override {
     super.setUp();
 
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
+
+    _miniFL = IMiniFL(address(miniFL));
 
     // set interest to make sure that repay work correclty with share
     FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
@@ -48,6 +52,15 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     uint256 _globalDebtValue;
     (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
 
+    // get debt token balance before repay
+    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
+    address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+
+    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _debtShareBefore = _debtShare;
+    assertEq(_debtTokenBalanceBefore, _debtShareBefore);
+
     vm.prank(ALICE);
     // repay all debt share
     borrowFacet.repay(ALICE, subAccount0, address(weth), _debtShare);
@@ -58,6 +71,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
     assertEq(_globalDebtValue, 0);
+
+    // debt token in MiniFL should be zero (withdrawn & burned)
+    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _debtShareBefore);
   }
 
   function testCorrectness_WhenUserRepayDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
@@ -97,6 +114,14 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     uint256 _globalDebtValue;
     (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
 
+    // get debt token balance before repay
+    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
+    address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+
+    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    assertEq(_debtTokenBalanceBefore, _debtShare);
+
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
     borrowFacet.repay(ALICE, subAccount0, address(weth), _repayShare);
@@ -113,6 +138,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 5.5 ether);
     assertEq(_globalDebtShare, 5 ether);
     assertEq(_globalDebtValue, 5.5 ether);
+
+    // debt token in MiniFL should be equal to _debtTokenBalanceBefore - _repayShare (withdrawn & burned)
+    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _repayShare);
   }
 
   function testRevert_WhenUserRepayAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {

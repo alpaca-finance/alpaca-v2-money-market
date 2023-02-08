@@ -28,6 +28,22 @@ contract ViewFacet is IViewFacet {
     return moneyMarketDs.ibTokenToTokens[_ibToken];
   }
 
+  /// @notice Get the address of debt token for the borrowing token
+  /// @param _token The borrowing token
+  /// @return The address of debt token associated with
+  function getDebtTokenFromToken(address _token) external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.tokenToDebtTokens[_token];
+  }
+
+  /// @notice Get the miniFL pool id of the debt token
+  /// @param _token The debt token
+  /// @return The pool id of the debt token
+  function getMiniFLPoolIdFromDebtToken(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.miniFLPoolIds[_token];
+  }
+
   /// @notice Get the protocol reserve from interest collecting
   /// @param _token The token that has reserve
   /// @return _reserve The amount of reserve for that token
