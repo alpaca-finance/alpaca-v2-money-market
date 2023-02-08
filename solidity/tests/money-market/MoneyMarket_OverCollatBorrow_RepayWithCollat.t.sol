@@ -51,14 +51,14 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     uint256 _debtAmount;
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
-    (uint256 _repayShareAmount, ) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (uint256 _repayShareAmount, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     uint256 _collatBefore = viewFacet.getTotalCollat(address(weth));
 
     vm.prank(ALICE);
     // repay all debt share
     borrowFacet.repayWithCollat(subAccount0, address(weth), _repayShareAmount);
 
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(weth));
     assertEq(_debtShare, 0);
     assertEq(_debtAmount, 0);
@@ -77,7 +77,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     uint256 _repayShare = normalizeEther(20 ether, wethDecimal);
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     uint256 _collatBefore = viewFacet.getTotalCollat(address(weth));
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
@@ -87,7 +87,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
     uint256 _totalTokenAfter = viewFacet.getTotalToken(address(weth));
 
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(weth));
 
     // expect facet should not exchange token with sender
@@ -109,7 +109,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     uint256 _repayShareAmount = normalizeEther(5 ether, wethDecimal);
     uint256 _globalDebtShare;
     uint256 _globalDebtValue;
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     uint256 _collatBefore = viewFacet.getTotalCollat(address(weth));
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
@@ -117,7 +117,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     borrowFacet.repayWithCollat(subAccount0, address(weth), _repayShareAmount);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
 
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(weth));
 
     // expect facet should not exchange token with sender
@@ -149,7 +149,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     vm.warp(block.timestamp + 10);
     // usdc debt value should increase by 1 ether
 
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(usdc));
     vm.prank(ALICE);
     // debt share = 10, debt value = 11
     borrowFacet.repayWithCollat(subAccount0, address(usdc), normalizeEther(10 ether, usdcDecimal));
@@ -159,7 +159,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     // then collat as share is 5 * 10 / 11 = 4.545454
     // actual repay share = Min(repayShare, debtShare, collatAsShare) = Min(10, 10, 4.545454)
     // then actual repay share = 4.545454
-    (_debtShare, _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(usdc));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(usdc));
 
     // repay share = 4.545454
@@ -199,7 +199,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     // repay entire debt should not revert
     borrowFacet.repayWithCollat(subAccount0, address(weth), normalizeEther(0.1 ether, wethDecimal));
 
-    (, uint256 _debtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
+    (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     assertEq(_debtAmount, 0);
   }
 }

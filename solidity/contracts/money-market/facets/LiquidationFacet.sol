@@ -130,7 +130,11 @@ contract LiquidationFacet is ILiquidationFacet {
     // cap repurchase amount if needed and calculate fee
     {
       // _maxAmountRepurchaseable = current debt + fee
-      (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(_vars.subAccount, _repayToken, moneyMarketDs);
+      (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
+        _vars.subAccount,
+        _repayToken,
+        moneyMarketDs
+      );
       uint256 _maxAmountRepurchaseable = (_currentDebtAmount *
         (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) / LibMoneyMarket01.MAX_BPS;
 
