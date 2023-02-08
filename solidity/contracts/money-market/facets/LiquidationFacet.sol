@@ -297,7 +297,7 @@ contract LiquidationFacet is ILiquidationFacet {
     );
 
     // cache the balance of tokens before executing strategy contract
-    // this is be used to find the actual collateral used and repay token back from the strategy
+    // this will be used to find the actual collateral used and repay token back from the strategy
     _vars.collatTokenBalanceBefore = IERC20(_params.collatToken).balanceOf(address(this));
     _vars.repayTokenBalaceBefore = IERC20(_params.repayToken).balanceOf(address(this));
 
