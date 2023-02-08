@@ -39,6 +39,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
   error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
   error LibMoneyMarket01_EmergencyPaused();
+  error LibMoneyMarket01_NotAuthorized();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -763,6 +764,12 @@ library LibMoneyMarket01 {
   function onlyLive(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
     if (moneyMarketDs.emergencyPaused) {
       revert LibMoneyMarket01_EmergencyPaused();
+    }
+  }
+
+  function onlyManager(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
+    if (!moneyMarketDs.managersOk[msg.sender]) {
+      revert LibMoneyMarket01_NotAuthorized();
     }
   }
 }
