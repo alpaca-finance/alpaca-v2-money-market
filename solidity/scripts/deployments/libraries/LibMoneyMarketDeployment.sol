@@ -150,7 +150,7 @@ library LibMoneyMarketDeployment {
     _selectors[11] = ViewFacet.getOverCollatDebtShareAndAmountOf.selector;
     _selectors[12] = ViewFacet.getAllSubAccountCollats.selector;
     _selectors[13] = ViewFacet.getTotalCollat.selector;
-    _selectors[14] = ViewFacet.getOverCollatSubAccountCollatAmount.selector;
+    _selectors[14] = ViewFacet.getCollatAmountOf.selector;
     _selectors[15] = ViewFacet.getTotalToken.selector;
     _selectors[16] = ViewFacet.getRepurchaseRewardModel.selector;
     _selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;

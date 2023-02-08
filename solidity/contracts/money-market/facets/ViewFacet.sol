@@ -226,7 +226,7 @@ contract ViewFacet is IViewFacet {
   /// @param _subAccountId The id of subAccount
   /// @param _token The token used as a collateral
   /// @return The amount of collateral
-  function getOverCollatSubAccountCollatAmount(
+  function getCollatAmountOf(
     address _account,
     uint256 _subAccountId,
     address _token

@@ -615,7 +615,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
       subAccountDebtShare: _subAccountDebtShare,
       ibTokenCollat: viewFacet.getTotalCollat(_ibToken),
-      subAccountIbTokenCollat: viewFacet.getOverCollatSubAccountCollatAmount(_account, _subAccountId, _ibToken)
+      subAccountIbTokenCollat: viewFacet.getCollatAmountOf(_account, _subAccountId, _ibToken)
     });
   }
 
@@ -659,7 +659,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     assertEq(viewFacet.getTotalCollat(_ibToken), _cache.ibTokenCollat - _withdrawnIbToken, "collatertal");
     assertEq(
-      viewFacet.getOverCollatSubAccountCollatAmount(_account, _subAccountId, _ibToken),
+      viewFacet.getCollatAmountOf(_account, _subAccountId, _ibToken),
       _cache.subAccountIbTokenCollat - _withdrawnIbToken,
       "sub account collatertal"
     );
