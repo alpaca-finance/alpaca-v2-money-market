@@ -110,6 +110,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
     mapping(address => bool) liquidationStratOk; // liquidation strategies that can be used during liquidation process
     mapping(address => bool) liquidatorsOk; // allowed to initiate liquidation process
+    mapping(address => bool) managersOk; // allowed to manipulate account/subaccount on behalf of end users
     // ---- reserves ---- //
     mapping(address => uint256) protocolReserves; // token address => amount that is reserved for protocol
     mapping(address => uint256) reserves; // token address => amount that is available in protocol
