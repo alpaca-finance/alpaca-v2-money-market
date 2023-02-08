@@ -286,7 +286,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) internal {
     LiquidationLocalVars memory _vars;
 
-    // removal all collateral from the subaccount first
+    // remove all collateral from the subaccount first
     // In case the collateral is ibToken and currently staking in miniFL
     // This will withdraw from miniFL so that the collat token can be transfered to strategy contract
     LibMoneyMarket01.removeCollatFromSubAccount(
