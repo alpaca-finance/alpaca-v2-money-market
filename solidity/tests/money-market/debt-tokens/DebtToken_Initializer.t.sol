@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
+import { DebtToken_BaseTest } from "./DebtToken_BaseTest.t.sol";
 
 // contracts
 import { DebtToken } from "../../../contracts/money-market/DebtToken.sol";
@@ -9,13 +10,13 @@ import { DebtToken } from "../../../contracts/money-market/DebtToken.sol";
 // interfaces
 import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/facets/AdminFacet.sol";
 
-contract DebtToken_InitializerTest is MoneyMarket_BaseTest {
+contract DebtToken_InitializerTest is DebtToken_BaseTest {
   function setUp() public override {
     super.setUp();
   }
 
   function testCorrectness_WhenInitialize_ShouldWork() external {
-    DebtToken debtToken = new DebtToken();
+    DebtToken debtToken = deployUninitializedDebtToken();
 
     // should revert because haven't set underlying asset via initialize
     vm.expectRevert();
@@ -34,7 +35,7 @@ contract DebtToken_InitializerTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenInitializeOwnerIsNotMoneyMarket() external {
-    DebtToken debtToken = new DebtToken();
+    DebtToken debtToken = deployUninitializedDebtToken();
 
     // expect general evm error without data since sanity check calls method that doesn't exist on ALICE
     vm.expectRevert();
@@ -42,7 +43,7 @@ contract DebtToken_InitializerTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenCallInitializeAfterHasBeenInitialized() external {
-    DebtToken debtToken = new DebtToken();
+    DebtToken debtToken = deployUninitializedDebtToken();
 
     debtToken.initialize(address(weth), moneyMarketDiamond);
 

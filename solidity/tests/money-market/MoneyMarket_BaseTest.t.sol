@@ -72,6 +72,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // set ib token implementation
     // warning: this one should set before open market
     adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    adminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(weth),

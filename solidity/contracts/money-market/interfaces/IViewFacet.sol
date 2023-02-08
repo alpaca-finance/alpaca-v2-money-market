@@ -112,5 +112,9 @@ interface IViewFacet {
 
   function getIbTokenImplementation() external view returns (address);
 
+  function getDebtTokenFromToken(address _token) external view returns (address);
+
+  function getDebtTokenImplementation() external view returns (address);
+
   function getLiquidationTreasury() external view returns (address _liquidationTreasury);
 }

@@ -35,6 +35,11 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
     assertEq(IERC20(_ibToken).symbol(), "ibTEST");
     assertEq(IERC20(_ibToken).decimals(), 9);
 
+    address _debtToken = viewFacet.getDebtTokenFromToken(address(_testToken));
+    assertEq(IERC20(_debtToken).name(), "debtTEST");
+    assertEq(IERC20(_debtToken).symbol(), "debtTEST");
+    assertEq(IERC20(_debtToken).decimals(), 9);
+
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidToken.selector, address(_testToken)));
     adminFacet.openMarket(address(_testToken), _defaultTokenConfigInput, _defaultTokenConfigInput);
 

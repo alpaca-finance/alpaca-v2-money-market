@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "./BaseUtilsScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 contract OpenMarketScript is BaseUtilsScript {
@@ -52,7 +53,9 @@ contract OpenMarketScript is BaseUtilsScript {
     super._setUpForLocalRun();
     mockTokenForLocalRun = _setUpMockToken();
     address ibTokenImplementation = address(new InterestBearingToken());
+    address debtTokenImplemenation = address(new DebtToken());
     vm.broadcast(deployerPrivateKey);
     moneyMarket.setIbTokenImplementation(ibTokenImplementation);
+    moneyMarket.setDebtTokenImplementation(debtTokenImplemenation);
   }
 }

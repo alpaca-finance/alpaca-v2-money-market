@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
+import { DebtToken_BaseTest } from "./DebtToken_BaseTest.t.sol";
 
 // contracts
 import { DebtToken } from "../../../contracts/money-market/DebtToken.sol";
@@ -12,7 +13,7 @@ import { IAdminFacet, LibMoneyMarket01, IDebtToken } from "../../../contracts/mo
 // libs
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract DebtToken_TransferTest is MoneyMarket_BaseTest {
+contract DebtToken_TransferTest is DebtToken_BaseTest {
   using SafeERC20 for DebtToken;
 
   DebtToken internal debtToken;
@@ -20,7 +21,7 @@ contract DebtToken_TransferTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
 
-    debtToken = new DebtToken();
+    debtToken = deployUninitializedDebtToken();
     debtToken.initialize(address(weth), moneyMarketDiamond);
 
     vm.startPrank(moneyMarketDiamond);
