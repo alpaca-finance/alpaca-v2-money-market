@@ -15,6 +15,7 @@ import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
+import { IMiniFL } from "../interfaces/IMiniFL.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -84,6 +85,7 @@ library LibMoneyMarket01 {
     address debtTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
+    IMiniFL miniFL;
     bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address

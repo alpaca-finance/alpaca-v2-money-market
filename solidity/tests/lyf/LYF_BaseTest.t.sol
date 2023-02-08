@@ -9,6 +9,8 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 
 // contracts
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
+import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
@@ -83,8 +85,10 @@ abstract contract LYF_BaseTest is BaseTest {
   PancakeswapV2Strategy internal addStrat;
   MockMasterChef internal masterChef;
   MockAlpacaV2Oracle internal mockOracle;
+  MiniFL internal miniFL;
 
   uint256 constant reinvestThreshold = 1e18;
+  uint256 constant alpacaMaximumReward = 1000 ether;
 
   function setUp() public virtual {
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
@@ -307,9 +311,16 @@ abstract contract LYF_BaseTest is BaseTest {
   function setUpMM(address _moneyMarketDiamond) internal {
     IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
 
-    // set ib token implementation
+    // set ibToken and debtToken implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
+
+    miniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
+    mmAdminFacet.setMiniFL(address(miniFL));
+    address[] memory _whitelistedCallers = new address[](1);
+    _whitelistedCallers[0] = moneyMarketDiamond;
+    miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(usdc));

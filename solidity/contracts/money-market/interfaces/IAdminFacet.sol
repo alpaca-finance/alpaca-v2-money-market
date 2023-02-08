@@ -93,6 +93,8 @@ interface IAdminFacet {
 
   function setIbTokenImplementation(address _newImplementation) external;
 
+  function setDebtTokenImplementation(address _newImplementation) external;
+
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external;
@@ -110,4 +112,6 @@ interface IAdminFacet {
   function setMinDebtSize(uint256 _newValue) external;
 
   function setEmergencyPaused(bool _isPaused) external;
+
+  function setMiniFL(address _miniFL) external;
 }

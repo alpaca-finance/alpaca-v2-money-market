@@ -202,7 +202,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](21);
+    _selectors = new bytes4[](23);
     _selectors[0] = AdminFacet.openMarket.selector;
     _selectors[1] = AdminFacet.setTokenConfigs.selector;
     _selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
@@ -224,6 +224,8 @@ library LibMoneyMarketDeployment {
     _selectors[18] = AdminFacet.topUpTokenReserve.selector;
     _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
     _selectors[20] = AdminFacet.setEmergencyPaused.selector;
+    _selectors[21] = AdminFacet.setDebtTokenImplementation.selector;
+    _selectors[22] = AdminFacet.setMiniFL.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
