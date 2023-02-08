@@ -92,7 +92,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     // check account ib token collat
-    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, address(ibWeth)), 10 ether);
+    assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
 
     vm.startPrank(ALICE);
     collateralFacet.removeCollateral(0, address(ibWeth), 10 ether);
@@ -100,6 +100,6 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     // check account ib token collat
 
-    assertEq(viewFacet.getOverCollatSubAccountCollatAmount(ALICE, subAccount0, address(ibWeth)), 0 ether);
+    assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 0 ether);
   }
 }
