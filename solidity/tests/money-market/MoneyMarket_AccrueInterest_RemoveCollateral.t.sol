@@ -60,14 +60,22 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
     vm.stopPrank();
 
     // assert ALICE
-    (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(weth));
-    (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatSubAccountDebt(ALICE, subAccount0, address(usdc));
+    (, uint256 _aliceActualWethDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      ALICE,
+      subAccount0,
+      address(weth)
+    );
+    (, uint256 _aliceActualUSDCDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      ALICE,
+      subAccount0,
+      address(usdc)
+    );
 
     assertGt(_aliceActualWethDebtAmount, _wethBorrowAmount);
     assertGt(_aliceActualUSDCDebtAmount, _usdcBorrowAmount);
 
     //assert Global
-    assertGt(viewFacet.getOverCollatDebtValue(address(weth)), _wethBorrowAmount);
-    assertGt(viewFacet.getOverCollatDebtValue(address(usdc)), _usdcBorrowAmount);
+    assertGt(viewFacet.getOverCollatTokenDebtValue(address(weth)), _wethBorrowAmount);
+    assertGt(viewFacet.getOverCollatTokenDebtValue(address(usdc)), _usdcBorrowAmount);
   }
 }

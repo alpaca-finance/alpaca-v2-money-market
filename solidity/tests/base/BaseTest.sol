@@ -16,7 +16,6 @@ import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 // mm contract
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
-import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";

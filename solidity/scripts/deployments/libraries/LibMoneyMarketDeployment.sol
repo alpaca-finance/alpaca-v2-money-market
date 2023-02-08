@@ -135,22 +135,22 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](34);
+    _selectors = new bytes4[](36);
     _selectors[0] = ViewFacet.getProtocolReserve.selector;
     _selectors[1] = ViewFacet.getTokenConfig.selector;
-    _selectors[2] = ViewFacet.getOverCollatSubAccountDebtShares.selector;
+    _selectors[2] = ViewFacet.getOverCollatDebtSharesOf.selector;
     _selectors[3] = ViewFacet.getTotalBorrowingPower.selector;
     _selectors[4] = ViewFacet.getTotalUsedBorrowingPower.selector;
     _selectors[5] = ViewFacet.getOverCollatTokenDebt.selector;
     _selectors[6] = ViewFacet.getDebtLastAccruedAt.selector;
     _selectors[7] = ViewFacet.getGlobalPendingInterest.selector;
-    _selectors[8] = ViewFacet.getOverCollatDebtValue.selector;
+    _selectors[8] = ViewFacet.getOverCollatTokenDebtValue.selector;
     _selectors[9] = ViewFacet.getOverCollatTokenDebtShares.selector;
     _selectors[10] = ViewFacet.getFloatingBalance.selector;
-    _selectors[11] = ViewFacet.getOverCollatSubAccountDebt.selector;
+    _selectors[11] = ViewFacet.getOverCollatDebtShareAndAmountOf.selector;
     _selectors[12] = ViewFacet.getAllSubAccountCollats.selector;
     _selectors[13] = ViewFacet.getTotalCollat.selector;
-    _selectors[14] = ViewFacet.getOverCollatSubAccountCollatAmount.selector;
+    _selectors[14] = ViewFacet.getCollatAmountOf.selector;
     _selectors[15] = ViewFacet.getTotalToken.selector;
     _selectors[16] = ViewFacet.getRepurchaseRewardModel.selector;
     _selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
@@ -170,6 +170,8 @@ library LibMoneyMarketDeployment {
     _selectors[31] = ViewFacet.getGlobalDebtValueWithPendingInterest.selector;
     _selectors[32] = ViewFacet.getIbTokenImplementation.selector;
     _selectors[33] = ViewFacet.getLiquidationTreasury.selector;
+    _selectors[34] = ViewFacet.getDebtTokenFromToken.selector;
+    _selectors[35] = ViewFacet.getDebtTokenImplementation.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
