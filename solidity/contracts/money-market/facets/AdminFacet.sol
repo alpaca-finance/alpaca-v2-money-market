@@ -94,6 +94,10 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidIbTokenImplementation();
     }
 
+    if (moneyMarketDs.debtTokenImplementation == address(0)) {
+      revert AdminFacet_InvalidDebtTokenImplementation();
+    }
+
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
     address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
 
@@ -487,7 +491,11 @@ contract AdminFacet is IAdminFacet {
       LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
       // get all subaccount token debt, calculate to value
-      (_shareToRemove, _amountToRemove) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+      (_shareToRemove, _amountToRemove) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
+        _subAccount,
+        _token,
+        moneyMarketDs
+      );
 
       LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
         _subAccount,

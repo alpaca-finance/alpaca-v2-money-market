@@ -111,7 +111,7 @@ contract BorrowFacet is IBorrowFacet {
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
+    (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
       _subAccount,
       _token,
       moneyMarketDs
@@ -180,7 +180,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtValues[_token]
     );
 
-    (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(
+    (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
       _subAccount,
       _token,
       moneyMarketDs
@@ -254,7 +254,11 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     // check borrow + currentDebt < minDebtSize
-    (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
+      _subAccount,
+      _token,
+      moneyMarketDs
+    );
     if (
       ((_amount + _currentDebtAmount) * _tokenConfig.to18ConversionFactor * _tokenPrice) / 1e18 <
       moneyMarketDs.minDebtSize

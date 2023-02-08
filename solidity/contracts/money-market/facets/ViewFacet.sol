@@ -144,7 +144,7 @@ contract ViewFacet is IViewFacet {
   /// @notice Get the total amount of borrowed token via over collat borrowing
   /// @param _token The token that has been borrowed
   /// @return The total amount of over collateralized debt
-  function getOverCollatDebtValue(address _token) external view returns (uint256) {
+  function getOverCollatTokenDebtValue(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.overCollatDebtValues[_token];
   }
@@ -169,7 +169,7 @@ contract ViewFacet is IViewFacet {
   /// @param _account The main account
   /// @param _subAccountId The index to derive the subaccount
   /// @return Array of node containing shares of borrowed token in the debt pool
-  function getOverCollatSubAccountDebtShares(address _account, uint256 _subAccountId)
+  function getOverCollatDebtSharesOf(address _account, uint256 _subAccountId)
     external
     view
     returns (LibDoublyLinkedList.Node[] memory)
@@ -199,7 +199,7 @@ contract ViewFacet is IViewFacet {
   /// @param _token The borrowed token
   /// @return _debtShare The amount of debt share on the token under the subaccount
   /// @return _debtAmount The actual amount of debt on the token under the subaccount
-  function getOverCollatSubAccountDebt(
+  function getOverCollatDebtShareAndAmountOf(
     address _account,
     uint256 _subAccountId,
     address _token
@@ -208,7 +208,7 @@ contract ViewFacet is IViewFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
-    (_debtShare, _debtAmount) = LibMoneyMarket01.getOverCollatDebt(_subAccount, _token, moneyMarketDs);
+    (_debtShare, _debtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(_subAccount, _token, moneyMarketDs);
   }
 
   /// @notice Get all the collateral under the subaccount
@@ -242,7 +242,7 @@ contract ViewFacet is IViewFacet {
   /// @param _subAccountId The id of subAccount
   /// @param _token The token used as a collateral
   /// @return The amount of collateral
-  function getOverCollatSubAccountCollatAmount(
+  function getCollatAmountOf(
     address _account,
     uint256 _subAccountId,
     address _token
@@ -393,6 +393,13 @@ contract ViewFacet is IViewFacet {
   function getIbTokenImplementation() external view returns (address) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.ibTokenImplementation;
+  }
+
+  /// @notice Get the address of debtToken implementation that will be used during openMarket
+  /// @return Address of current debtToken implementation
+  function getDebtTokenImplementation() external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.debtTokenImplementation;
   }
 
   /// @notice Get the address of liquidation treasury

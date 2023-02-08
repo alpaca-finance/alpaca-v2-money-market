@@ -2,17 +2,18 @@
 pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
+import { DebtToken_BaseTest } from "./DebtToken_BaseTest.t.sol";
 
 // contracts
 import { DebtToken } from "../../../contracts/money-market/DebtToken.sol";
 
 // interfaces
-import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { IAdminFacet, LibMoneyMarket01, IDebtToken } from "../../../contracts/money-market/facets/AdminFacet.sol";
 
 // libs
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract DebtToken_TransferTest is MoneyMarket_BaseTest {
+contract DebtToken_TransferTest is DebtToken_BaseTest {
   using SafeERC20 for DebtToken;
 
   DebtToken internal debtToken;
@@ -20,12 +21,13 @@ contract DebtToken_TransferTest is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
 
-    debtToken = new DebtToken();
+    debtToken = deployUninitializedDebtToken();
     debtToken.initialize(address(weth), moneyMarketDiamond);
 
     vm.startPrank(moneyMarketDiamond);
-    address[] memory _okHolders = new address[](1);
+    address[] memory _okHolders = new address[](2);
     _okHolders[0] = moneyMarketDiamond;
+    _okHolders[1] = ALICE;
 
     debtToken.setOkHolders(_okHolders, true);
     debtToken.mint(moneyMarketDiamond, 1 ether);
@@ -47,11 +49,11 @@ contract DebtToken_TransferTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenNonOkHolderTransfer() external {
-    vm.startPrank(ALICE);
-    vm.expectRevert(DebtToken.DebtToken_UnApprovedHolder.selector);
+    vm.startPrank(BOB);
+    vm.expectRevert(IDebtToken.DebtToken_UnApprovedHolder.selector);
     debtToken.transfer(ALICE, 0.1 ether);
 
-    vm.expectRevert(DebtToken.DebtToken_UnApprovedHolder.selector);
+    vm.expectRevert(IDebtToken.DebtToken_UnApprovedHolder.selector);
     debtToken.transferFrom(moneyMarketDiamond, ALICE, 0.1 ether);
     vm.stopPrank();
 
@@ -60,10 +62,10 @@ contract DebtToken_TransferTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenSelfTransfer() external {
     vm.startPrank(moneyMarketDiamond);
-    vm.expectRevert(DebtToken.DebtToken_NoSelfTransfer.selector);
+    vm.expectRevert(IDebtToken.DebtToken_NoSelfTransfer.selector);
     debtToken.transfer(moneyMarketDiamond, 1 ether);
 
-    vm.expectRevert(DebtToken.DebtToken_NoSelfTransfer.selector);
+    vm.expectRevert(IDebtToken.DebtToken_NoSelfTransfer.selector);
     debtToken.transferFrom(moneyMarketDiamond, moneyMarketDiamond, 1 ether);
     vm.stopPrank();
 
@@ -93,7 +95,12 @@ contract DebtToken_TransferTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenTransferToZeroAddress() external {
+    // assume address(0) is okHolder
+    address[] memory _okHolders = new address[](1);
+    _okHolders[0] = address(0);
     vm.startPrank(moneyMarketDiamond);
+    debtToken.setOkHolders(_okHolders, true);
+
     vm.expectRevert("ERC20: transfer to the zero address");
     debtToken.transfer(address(0), 1 ether);
 
