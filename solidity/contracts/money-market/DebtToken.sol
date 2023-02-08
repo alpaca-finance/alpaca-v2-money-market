@@ -19,9 +19,6 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
 
   mapping(address => bool) public okHolders;
 
-  error DebtToken_UnApprovedHolder();
-  error DebtToken_NoSelfTransfer();
-
   constructor() ERC20("", "") {}
 
   function initialize(address asset_, address moneyMarket_) external initializer {
@@ -38,9 +35,13 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
     return address(_moneyMarket);
   }
 
-  function setOkHolders(address[] memory _okHolders, bool _isOk) public override onlyOwner {
-    for (uint256 idx = 0; idx < _okHolders.length; idx++) {
-      okHolders[_okHolders[idx]] = _isOk;
+  function setOkHolders(address[] calldata _okHolders, bool _isOk) public override onlyOwner {
+    uint256 _length = _okHolders.length;
+    for (uint256 _idx; _idx < _length; ) {
+      okHolders[_okHolders[_idx]] = _isOk;
+      unchecked {
+        ++_idx;
+      }
     }
   }
 
@@ -71,7 +72,7 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
   }
 
   function transfer(address to, uint256 amount) public override returns (bool) {
-    if (!okHolders[msg.sender] && !okHolders[to]) {
+    if (!(okHolders[msg.sender] && okHolders[to])) {
       revert DebtToken_UnApprovedHolder();
     }
     if (msg.sender == to) {
@@ -86,7 +87,7 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
     address to,
     uint256 amount
   ) public override returns (bool) {
-    if (!okHolders[msg.sender] && !okHolders[to]) {
+    if (!(okHolders[msg.sender] && okHolders[to])) {
       revert DebtToken_UnApprovedHolder();
     }
     if (from == to) {
