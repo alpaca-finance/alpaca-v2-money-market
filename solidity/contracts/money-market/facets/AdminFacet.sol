@@ -125,8 +125,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
     moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
 
-    moneyMarketDs.miniFLPoolIds[_newIbToken] = _miniFL.addPool(0, _newIbToken, true);
-    moneyMarketDs.miniFLPoolIds[_newDebtToken] = _miniFL.addPool(0, _newDebtToken, true);
+    moneyMarketDs.miniFLPoolIds[_newIbToken] = _miniFL.addPool(0, _newIbToken, false);
+    moneyMarketDs.miniFLPoolIds[_newDebtToken] = _miniFL.addPool(0, _newDebtToken, false);
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }

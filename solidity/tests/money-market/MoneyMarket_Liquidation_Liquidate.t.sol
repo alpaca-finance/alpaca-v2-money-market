@@ -538,6 +538,24 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     );
   }
 
+  function testRevert_WhenTryToLiquidateNonExistedCollateral_ShouldRevert() external {
+    // criteria
+    address _collatToken = address(ibUsdc);
+    address _debtToken = address(usdc);
+
+    vm.prank(liquidator);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_InsufficientAmount.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      0,
+      0
+    );
+  }
+
   function testRevert_WhenLiquidateMoreThanThreshold() external {
     address _debtToken = address(usdc);
     address _collatToken = address(weth);
