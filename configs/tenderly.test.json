@@ -27,7 +27,9 @@
     "FeeModels": {
       "FeeModel1": "0x240e73A2DfFFD2BE917a3496D9c2BcAbaf1dF512"
     },
-    "Reader": {}
+    "Reader": {
+      "MoneyMarketReader": "0xB52FA457DD7160e062d7442eB763d57C83ec5A07"
+    }
   },
   "IbTokens": {
     "ibDodo": "0x6F0275dC63125A20567B4FFF005826fC78dCceB1",

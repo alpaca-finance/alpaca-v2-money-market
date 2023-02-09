@@ -22,6 +22,6 @@ contract DeployMoneyMarketFacets is BaseDeploymentScript {
     mmReaderJson = mmReaderJson.serialize("MoneyMarketReader", mmReader);
 
     // this will overwrite .MoneyMarket.Facets key in config file
-    mmReader.write(configFilePath, ".MoneyMarket.Reader");
+    mmReaderJson.write(configFilePath, ".MoneyMarket.Reader");
   }
 }

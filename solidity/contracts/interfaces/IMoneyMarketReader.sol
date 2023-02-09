@@ -16,6 +16,7 @@ interface IMoneyMarketReader {
     uint256 maxBorrow;
     // ---- Money Market ---- //
     uint256 globalDebtValue;
+    uint256 totalToken;
     uint256 pendingIntetest;
     uint256 lastAccruedAt;
     // ---- MiniFL ---- //

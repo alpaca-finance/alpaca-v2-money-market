@@ -36,6 +36,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         maxCollateral: _tokenConfig.maxCollateral,
         maxBorrow: _tokenConfig.maxBorrow,
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
+        totalToken: _moneyMarket.getTotalToken(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
         lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
         allocPoint: 0,
