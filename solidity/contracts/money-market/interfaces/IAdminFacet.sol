@@ -14,6 +14,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidArguments();
   error AdminFacet_InvalidToken(address _token);
   error AdminFacet_InvalidIbTokenImplementation();
+  error AdminFacet_InvalidDebtTokenImplementation();
   error AdminFacet_SubAccountHealthy(address _subAccount);
   error AdminFacet_ExceedMaxRepurchaseReward();
 
@@ -92,6 +93,8 @@ interface IAdminFacet {
   ) external;
 
   function setIbTokenImplementation(address _newImplementation) external;
+
+  function setDebtTokenImplementation(address _newImplementation) external;
 
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInput) external;
 

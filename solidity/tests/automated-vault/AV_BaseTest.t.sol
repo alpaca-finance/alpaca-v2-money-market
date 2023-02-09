@@ -10,6 +10,7 @@ import { TestHelper } from "../helper/TestHelper.sol";
 // contracts
 import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
@@ -145,6 +146,7 @@ abstract contract AV_BaseTest is BaseTest {
     // set ib token implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(usdc));
