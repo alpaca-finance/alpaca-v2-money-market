@@ -66,7 +66,6 @@ contract AdminFacet is IAdminFacet {
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed caller, bool _isPasued);
-  event LogSetMiniFL(address _miniFL);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -233,14 +232,6 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IAlpacaV2Oracle(_oracle);
     emit LogSetOracle(_oracle);
-  }
-
-  /// @notice Set the miniFL used for adding pool
-  /// @param _miniFL The address of miniFL
-  function setMiniFL(address _miniFL) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.miniFL = IMiniFL(_miniFL);
-    emit LogSetMiniFL(_miniFL);
   }
 
   /// @notice Whitelist/Blacklist the address allowed for repurchasing

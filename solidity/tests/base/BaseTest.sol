@@ -87,6 +87,9 @@ contract BaseTest is DSTest {
 
   ProxyAdminLike internal proxyAdmin;
 
+  MiniFL internal miniFL;
+  uint256 constant alpacaMaximumReward = 1000 ether;
+
   constructor() {
     // set block.timestamp be 100000
     vm.warp(100000);
@@ -143,6 +146,8 @@ contract BaseTest is DSTest {
     vm.label(BOB, "BOB");
     vm.label(CAT, "CAT");
     vm.label(EVE, "EVE");
+
+    miniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
   }
 
   function deployMockErc20(

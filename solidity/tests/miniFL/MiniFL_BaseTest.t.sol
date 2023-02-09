@@ -11,7 +11,6 @@ import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
-  MiniFL internal miniFL;
   address internal funder1 = makeAddr("funder1");
   address internal funder2 = makeAddr("funder2");
 
@@ -24,10 +23,7 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   uint256 dtokenPoolID = 1;
   uint256 notExistsPoolID = 999;
 
-  uint256 alpacaMaximumReward = 1000 ether;
-
   function setUp() public virtual {
-    miniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
     miniFL.setAlpacaPerSecond(alpacaMaximumReward, false);
     alpaca.mint(address(miniFL), 10000000 ether);
 

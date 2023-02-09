@@ -30,16 +30,17 @@ library LibMoneyMarketDeployment {
     address ownershipFacet;
   }
 
-  function deployMoneyMarketDiamond(address _nativeToken, address _nativeRelayer)
-    internal
-    returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses)
-  {
+  function deployMoneyMarketDiamond(
+    address _nativeToken,
+    address _nativeRelayer,
+    address _miniFL
+  ) internal returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses) {
     // deploy facets
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
     _moneyMarketDiamond = address(
-      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer)
+      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer, _miniFL)
     );
 
     // do diamondCut
@@ -205,7 +206,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](23);
+    _selectors = new bytes4[](22);
     _selectors[0] = AdminFacet.openMarket.selector;
     _selectors[1] = AdminFacet.setTokenConfigs.selector;
     _selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
@@ -228,7 +229,6 @@ library LibMoneyMarketDeployment {
     _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
     _selectors[20] = AdminFacet.setEmergencyPaused.selector;
     _selectors[21] = AdminFacet.setDebtTokenImplementation.selector;
-    _selectors[22] = AdminFacet.setMiniFL.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
