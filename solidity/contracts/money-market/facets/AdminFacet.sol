@@ -262,7 +262,7 @@ contract AdminFacet is IAdminFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _length = _accountManagers.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.liquidatorsOk[_accountManagers[_i]] = _isOk;
+      moneyMarketDs.accountManagersOk[_accountManagers[_i]] = _isOk;
       emit LogSetAccountManagerOk(_accountManagers[_i], _isOk);
       unchecked {
         ++_i;

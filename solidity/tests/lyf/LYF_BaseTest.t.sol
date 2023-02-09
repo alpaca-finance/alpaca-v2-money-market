@@ -389,6 +389,17 @@ abstract contract LYF_BaseTest is BaseTest {
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
 
+    // set max num of tokens
+    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
+
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](3);
+    _accountManagers[0] = ALICE;
+    _accountManagers[1] = BOB;
+    _accountManagers[2] = EVE;
+
+    mmAdminFacet.setAccountManagersOk(_accountManagers, true);
+
     vm.startPrank(EVE);
 
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -401,8 +412,5 @@ abstract contract LYF_BaseTest is BaseTest {
     ILendFacet(moneyMarketDiamond).deposit(address(btc), normalizeEther(100 ether, btcDecimal));
 
     vm.stopPrank();
-
-    // set max num of tokens
-    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
   }
 }

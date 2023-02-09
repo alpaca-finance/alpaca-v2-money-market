@@ -48,6 +48,10 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.onlyLive(moneyMarketDs);
 
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
     if (_ibToken == address(0)) {
       revert LendFacet_InvalidToken(_token);

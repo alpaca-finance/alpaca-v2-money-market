@@ -219,5 +219,12 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set minimum debt required to borrow
     adminFacet.setMinDebtSize(normalizeEther(0.1 ether, usdDecimal));
+
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](2);
+    _accountManagers[0] = ALICE;
+    _accountManagers[1] = BOB;
+
+    adminFacet.setAccountManagersOk(_accountManagers, true);
   }
 }
