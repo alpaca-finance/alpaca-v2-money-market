@@ -11,17 +11,12 @@ contract DeployMoneyMarketFacets is BaseDeploymentScript {
   function _run() internal override {
     _startDeployerBroadcast();
 
+    // TODO
     address mmReader = address(new MoneyMarketReader(0x7Cd6B7f3Fb066D11eA35dF24Ab9Cdd58292ec352));
 
     _stopBroadcast();
 
-    // write deployed addresses to json
-    // NOTE: can't specify order of keys
-
-    string memory mmReaderJson;
-    mmReaderJson = mmReaderJson.serialize("MoneyMarketReader", mmReader);
-
-    // this will overwrite .MoneyMarket.Facets key in config file
-    mmReaderJson.write(configFilePath, ".MoneyMarket.Reader");
+    // moneyMarket.reader = address
+    vm.toString(mmReader).write(configFilePath, ".moneyMarket.reader");
   }
 }

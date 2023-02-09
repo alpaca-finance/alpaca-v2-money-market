@@ -1,44 +1,31 @@
 {
-  "DeploymentConfig": {
+  "deploymentConfig": {
     "wNativeAddress": "0x8bF059FDb54A13150A112d86439120D7755e068A",
     "wNativeRelayer": "0x8bF059FDb54A13150A112d86439120D7755e068A"
   },
-  "MoneyMarket": {
-    "Facets": {
-      "BorrowFacet": "0x101F6bbD60C57A6A6c5424290A4402c8fd3FFdfe",
-      "ViewFacet": "0x516E047871d8aea493ced886Ddd7b3Ffe55d0BE2",
-      "DiamondLoupeFacet": "0xd288F244cFcD0722E4d2D1964e49FE577A02CD9b",
-      "LiquidationFacet": "0x8C6eC8a76B2e7630C8C04a63953f522313F8a94a",
-      "OwnershipFacet": "0xe31a524D2F0F2f38827F9834689E28303020393C",
-      "LendFacet": "0xB5f80cBF84c682ee5580A6561A5CD89B7a4013eA",
-      "NonCollatBorrowFacet": "0xf2dD255dd9A5a604C3D6b407484dD375f630CDDF",
-      "AdminFacet": "0xE71f389bd2cB47bFB9D668827Af01574dCA194Cd",
-      "DiamondCutFacet": "0xeDDC4Ce39dbDf46a4B702A881b56f7996CCbDEbe",
-      "CollateralFacet": "0xaC9B4c79A4285EB33aFe872A954b77D16B0B7dC6"
-    },
-    "InterestRateModels": {
-      "InterestRateModel1": "0xC5BD7d08e727f8DE46dE3740b4349D37f3858783"
-    },
-    "LiquidationStrategies": {
-      "PancakeswapV2IbTokenLiquidationStrategy": "0x1637Aa4d929eb2690b9E94caf3EDA5c93670f46f",
-      "PancakeswapV2LiquidationStrategy": "0x304142d058E7886A32d2E6eBFF500A7FCfDB6B72"
-    },
-    "MoneyMarketDiamond": "0x7Cd6B7f3Fb066D11eA35dF24Ab9Cdd58292ec352",
-    "FeeModels": {
-      "FeeModel1": "0x240e73A2DfFFD2BE917a3496D9c2BcAbaf1dF512"
-    },
-    "Reader": {
-      "MoneyMarketReader": "0xB52FA457DD7160e062d7442eB763d57C83ec5A07"
+  "moneyMarket": {
+    "moneyMarketDiamond": "0xDD543E2E624F6CBD0C620ba5b2E945c29EDd4adE",
+    "facets": {
+      "collateralFacet": "0x76970E84cEaE11e22a3E808c01127Eec1ec5D25F",
+      "nonCollatBorrowFacet": "0xF8371ef9Db8ec9189Db47896A169773E0ba6d29A",
+      "ownershipFacet": "0xAb277f3290C6383AB433842ca187cDBe66c28fEf",
+      "lendFacet": "0x3c344aA3d6f51B1A9739BFFEc78E73E2a5c95231",
+      "diamondLoupeFacet": "0xa7BD47F964878500d30cFEe190082e6A81Eb53D2",
+      "viewFacet": "0xD2E3506e3F73AD542050852fDB21c4C7743208BF",
+      "borrowFacet": "0x8572109700Eef5Ac1d67c522b26e51D1Ee2D3c44",
+      "adminFacet": "0x792E43Fe374bC2D32934ff96A8f1DAeAeB9ecCDe",
+      "diamondCutFacet": "0x1E171870853a0FdCF329697f044f59b7667d93cC",
+      "liquidationFacet": "0x1570f44ec37b16a499522E524C02D4298aa1fe03"
     }
   },
-  "IbTokens": {
+  "ibTokens": {
     "ibDodo": "0x6F0275dC63125A20567B4FFF005826fC78dCceB1",
     "ibMock6": "0x997b4608856FbF2346232df492a5D9eEED19cA77",
     "ibPstake": "0x2f63b20E1F96b22F6B75C43230d96aeC6aca669E",
     "ibBnb": "0x31a37E9370E4Bc2C5E65Bab0536D4089bB88aC05",
     "ibBusd": "0x9049d23C39DE853ba36B5502d2Bfac7fe31eF6C6"
   },
-  "Tokens": {
+  "tokens": {
     "pstake": "0xDD543E2E624F6CBD0C620ba5b2E945c29EDd4adE",
     "bnb": "0x792E43Fe374bC2D32934ff96A8f1DAeAeB9ecCDe",
     "dodo": "0xAb277f3290C6383AB433842ca187cDBe66c28fEf",
