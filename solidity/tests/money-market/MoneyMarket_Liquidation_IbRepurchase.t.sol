@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 struct CacheState {
   uint256 collat;
@@ -158,5 +159,9 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.subAccountDebtShare, normalizeEther(45.155025 ether, usdcDecimal));
     vm.stopPrank();
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore, _expectedFeeToTreasury);
+
+    // check staking ib token in MiniFL
+    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(address(ibWeth));
+    assertEq(IMiniFL(address(miniFL)).getUserTotalAmountOf(_poolId, _aliceSubAccount0), _stateAfter.subAccountCollat);
   }
 }

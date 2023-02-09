@@ -8,6 +8,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 
 // interfaces
 import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
   function setUp() public override {
@@ -124,6 +125,10 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
 
   // Add Collat with ibToken
   function testCorrectness_WhenAddCollateralViaIbToken_ibTokenShouldTransferFromUserToMM() external {
+    IMiniFL _miniFL = IMiniFL(address(miniFL));
+    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(address(ibWeth));
+
     // LEND to get ibToken
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
@@ -134,16 +139,16 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     // Add collat by ibToken
     vm.startPrank(ALICE);
     ibWeth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+    collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 10 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), 990 ether);
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
 
-    assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
-    assertEq(ibWeth.balanceOf(moneyMarketDiamond), 10 ether);
-
     // check account ib token collat
+    // when add collat by ibToken, ibToken is staked to MiniFL
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), 10 ether);
+    assertEq(ibWeth.balanceOf(ALICE), 0 ether);
   }
 }

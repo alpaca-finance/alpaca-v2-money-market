@@ -194,8 +194,6 @@ contract LiquidationFacet is ILiquidationFacet {
       msg.sender,
       _vars.repayAmountWithFee
     ) - _vars.repurchaseFeeToProtocol;
-    IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
-    IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.repurchaseFeeToProtocol);
 
     // update states
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
@@ -212,6 +210,9 @@ contract LiquidationFacet is ILiquidationFacet {
     LibMoneyMarket01.removeCollatFromSubAccount(_vars.subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
 
     moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithoutFee;
+
+    IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
+    IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.repurchaseFeeToProtocol);
 
     emit LogRepurchase(
       msg.sender,

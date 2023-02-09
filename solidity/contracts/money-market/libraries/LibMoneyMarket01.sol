@@ -590,6 +590,14 @@ library LibMoneyMarket01 {
     }
     moneyMarketDs.collats[_token] += _addAmount;
 
+    // stake token to miniFL, when user add collateral by ibToken
+    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
+    if (_poolId != 0) {
+      IERC20(_token).safeIncreaseAllowance(address(_miniFL), _addAmount);
+      _miniFL.deposit(_subAccount, _poolId, _addAmount);
+    }
+
     emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
   }
 
@@ -606,6 +614,12 @@ library LibMoneyMarket01 {
     }
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
     moneyMarketDs.collats[_token] -= _removeAmount;
+
+    // withdraw token from miniFL
+    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+    if (_poolId != 0) {
+      moneyMarketDs.miniFL.withdraw(_subAccount, _poolId, _removeAmount);
+    }
 
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }
@@ -646,6 +660,12 @@ library LibMoneyMarket01 {
 
     // burn debt token
     IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _debtShareToRemove);
+
+    // withdraw token from miniFL
+    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_repayToken];
+    if (_poolId != 0) {
+      moneyMarketDs.miniFL.withdraw(_subAccount, _poolId, _debtShareToRemove);
+    }
 
     emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
