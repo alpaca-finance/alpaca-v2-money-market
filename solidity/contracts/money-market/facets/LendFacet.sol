@@ -46,6 +46,7 @@ contract LendFacet is ILendFacet {
   function deposit(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // This will revert if markets are paused
     LibMoneyMarket01.onlyLive(moneyMarketDs);
 
     // This function should not be called from anyone
@@ -99,8 +100,14 @@ contract LendFacet is ILendFacet {
     if (msg.value == 0) {
       revert LendFacet_InvalidAmount(msg.value);
     }
-
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // This will revert if markets are paused
+    LibMoneyMarket01.onlyLive(moneyMarketDs);
+
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
     address _nativeToken = moneyMarketDs.wNativeToken;
     if (_nativeToken == address(0)) {
       revert LendFacet_InvalidToken(_nativeToken);
