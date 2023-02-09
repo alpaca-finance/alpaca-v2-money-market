@@ -198,7 +198,6 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.repurchaseFeeToProtocol);
 
     // update states
-    // uint256 _actualShareToRepay = ;
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _vars.subAccount,
       _repayToken,
