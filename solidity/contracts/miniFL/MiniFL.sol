@@ -10,6 +10,7 @@ import { SafeCastUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/m
 
 import { IMiniFL } from "./interfaces/IMiniFL.sol";
 import { IRewarder } from "./interfaces/IRewarder.sol";
+import { console } from "solidity/tests/utils/console.sol";
 
 contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for uint256;
@@ -75,6 +76,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     ALPACA = _alpaca;
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
+    poolInfo.push(PoolInfo({ allocPoint: 0, lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 }));
+    stakingTokens.push(address(0));
   }
 
   /// @notice Returns the number of pools.
