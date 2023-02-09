@@ -23,4 +23,6 @@ interface IMoneyMarket {
   function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256);
 
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
+
+  function setAccountManagersOk(address[] calldata list, bool _isOk) external;
 }

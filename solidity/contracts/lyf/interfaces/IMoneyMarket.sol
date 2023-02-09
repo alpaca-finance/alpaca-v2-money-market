@@ -29,4 +29,6 @@ interface IMoneyMarket {
   ) external;
 
   function accrueInterest(address _token) external;
+
+  function setAccountManagersOk(address[] calldata list, bool _isOk) external;
 }

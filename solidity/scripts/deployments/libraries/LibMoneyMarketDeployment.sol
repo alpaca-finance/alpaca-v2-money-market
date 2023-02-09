@@ -227,7 +227,7 @@ library LibMoneyMarketDeployment {
     _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
     _selectors[20] = AdminFacet.setEmergencyPaused.selector;
     _selectors[21] = AdminFacet.setAccountManagersOk.selector;
-    _selectors[21] = AdminFacet.setDebtTokenImplementation.selector;
+    _selectors[22] = AdminFacet.setDebtTokenImplementation.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

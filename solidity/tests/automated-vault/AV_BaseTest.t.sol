@@ -196,7 +196,11 @@ abstract contract AV_BaseTest is BaseTest {
     });
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = EVE;
 
+    mmAdminFacet.setAccountManagersOk(_accountManagers, true);
     // prepare for borrow
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
