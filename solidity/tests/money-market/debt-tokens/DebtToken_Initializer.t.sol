@@ -7,9 +7,6 @@ import { DebtToken_BaseTest } from "./DebtToken_BaseTest.t.sol";
 // contracts
 import { DebtToken } from "../../../contracts/money-market/DebtToken.sol";
 
-// interfaces
-import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/facets/AdminFacet.sol";
-
 contract DebtToken_InitializerTest is DebtToken_BaseTest {
   function setUp() public override {
     super.setUp();
