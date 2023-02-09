@@ -590,6 +590,14 @@ library LibMoneyMarket01 {
     }
     ds.collats[_token] += _addAmount;
 
+    // stake token to miniFL, when user add collateral by ibToken
+    uint256 _poolId = ds.miniFLPoolIds[_token];
+    IMiniFL _miniFL = ds.miniFL;
+    if (_poolId != 0) {
+      IERC20(_token).safeIncreaseAllowance(address(_miniFL), _addAmount);
+      _miniFL.deposit(_subAccount, _poolId, _addAmount);
+    }
+
     emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
   }
 

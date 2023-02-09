@@ -55,7 +55,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     // get debt token balance before repay
     address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
     address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
 
     uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
     uint256 _debtShareBefore = _debtShare;
@@ -119,7 +119,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     // get debt token balance before repay
     address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
     address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
 
     uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
     assertEq(_debtTokenBalanceBefore, _debtShare);

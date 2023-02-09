@@ -10,7 +10,6 @@ import { SafeCastUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/m
 
 import { IMiniFL } from "./interfaces/IMiniFL.sol";
 import { IRewarder } from "./interfaces/IRewarder.sol";
-import { console } from "solidity/tests/utils/console.sol";
 
 contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for uint256;

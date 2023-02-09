@@ -10,7 +10,7 @@ interface IViewFacet {
 
   function getTokenFromIbToken(address _ibToken) external view returns (address);
 
-  function getMiniFLPoolIdFromDebtToken(address _token) external view returns (uint256);
+  function getMiniFLPoolIdFromToken(address _token) external view returns (uint256);
 
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 

@@ -391,12 +391,12 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // check token is exist in miniFL
     _subAccount = viewFacet.getSubAccount(BOB, subAccount0);
     _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
-    _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+    _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _borrowAmount);
 
     _subAccount = viewFacet.getSubAccount(BOB, subAccount1);
     _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
-    _poolId = viewFacet.getMiniFLPoolIdFromDebtToken(_debtToken);
+    _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _borrowAmount / 2);
   }
 }

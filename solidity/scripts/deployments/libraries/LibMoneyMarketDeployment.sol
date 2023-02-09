@@ -173,7 +173,7 @@ library LibMoneyMarketDeployment {
     _selectors[33] = ViewFacet.getLiquidationTreasury.selector;
     _selectors[34] = ViewFacet.getDebtTokenFromToken.selector;
     _selectors[35] = ViewFacet.getDebtTokenImplementation.selector;
-    _selectors[36] = ViewFacet.getMiniFLPoolIdFromDebtToken.selector;
+    _selectors[36] = ViewFacet.getMiniFLPoolIdFromToken.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
