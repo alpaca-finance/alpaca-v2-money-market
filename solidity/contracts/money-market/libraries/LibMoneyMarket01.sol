@@ -16,6 +16,7 @@ import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
 import { IMiniFL } from "../interfaces/IMiniFL.sol";
+import { IDebtToken } from "../interfaces/IDebtToken.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -632,6 +633,17 @@ library LibMoneyMarket01 {
 
     moneyMarketDs.globalDebts[_repayToken] -= _debtValueToRemove;
 
+    // withdraw debt token from miniFL
+    // Note: prevent stack too deep
+    moneyMarketDs.miniFL.withdraw(
+      _subAccount,
+      moneyMarketDs.miniFLPoolIds[moneyMarketDs.tokenToDebtTokens[_repayToken]],
+      _debtShareToRemove
+    );
+
+    // burn debt token
+    IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _debtShareToRemove);
+
     emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
 
@@ -691,6 +703,7 @@ library LibMoneyMarket01 {
     MoneyMarketDiamondStorage storage ds
   ) internal returns (uint256 _shareToAdd) {
     LibDoublyLinkedList.List storage userDebtShare = ds.subAccountDebtShares[_subAccount];
+    IMiniFL _miniFL = ds.miniFL;
 
     userDebtShare.initIfNotExist();
 
@@ -712,6 +725,14 @@ library LibMoneyMarket01 {
     if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
+
+    // mint debt token to money market and stake to miniFL
+    address _debtToken = ds.tokenToDebtTokens[_token];
+    uint256 _poolId = ds.miniFLPoolIds[_debtToken];
+
+    IDebtToken(_debtToken).mint(address(this), _amount);
+    IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _amount);
+    _miniFL.deposit(_subAccount, _poolId, _amount);
   }
 
   function nonCollatBorrow(

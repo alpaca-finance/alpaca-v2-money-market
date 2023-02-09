@@ -13,7 +13,6 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { ILiquidationFacet } from "../interfaces/ILiquidationFacet.sol";
 import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
-import { IDebtToken } from "../interfaces/IDebtToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 /// @title LiquidationFacet is dedicated to repurchasing and liquidating
@@ -199,32 +198,21 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.repurchaseFeeToProtocol);
 
     // update states
-    uint256 _actualShareToRepay = LibShareUtil.valueToShare(
-      _actualRepayAmountWithoutFee,
-      moneyMarketDs.overCollatDebtShares[_repayToken],
-      moneyMarketDs.overCollatDebtValues[_repayToken]
-    );
+    // uint256 _actualShareToRepay = ;
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _vars.subAccount,
       _repayToken,
-      _actualShareToRepay,
+      LibShareUtil.valueToShare(
+        _actualRepayAmountWithoutFee,
+        moneyMarketDs.overCollatDebtShares[_repayToken],
+        moneyMarketDs.overCollatDebtValues[_repayToken]
+      ),
       _actualRepayAmountWithoutFee,
       moneyMarketDs
     );
     LibMoneyMarket01.removeCollatFromSubAccount(_vars.subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
 
     moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithoutFee;
-
-    // withdraw debt token from miniFL
-    // Note: prevent stack too deep
-    moneyMarketDs.miniFL.withdraw(
-      _vars.subAccount,
-      moneyMarketDs.miniFLPoolIds[moneyMarketDs.tokenToDebtTokens[_repayToken]],
-      _actualShareToRepay
-    );
-
-    // burn debt token
-    IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _actualShareToRepay);
 
     emit LogRepurchase(
       msg.sender,
@@ -337,15 +325,14 @@ contract LiquidationFacet is ILiquidationFacet {
     moneyMarketDs.reserves[_params.repayToken] += _vars.repaidAmount;
 
     // give priority to fee
-    uint256 _actualShareToRepay = LibShareUtil.valueToShare(
-      _vars.repaidAmount,
-      moneyMarketDs.overCollatDebtShares[_params.repayToken],
-      moneyMarketDs.overCollatDebtValues[_params.repayToken]
-    );
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _params.subAccount,
       _params.repayToken,
-      _actualShareToRepay,
+      LibShareUtil.valueToShare(
+        _vars.repaidAmount,
+        moneyMarketDs.overCollatDebtShares[_params.repayToken],
+        moneyMarketDs.overCollatDebtValues[_params.repayToken]
+      ),
       _vars.repaidAmount,
       moneyMarketDs
     );
@@ -360,14 +347,6 @@ contract LiquidationFacet is ILiquidationFacet {
 
     IERC20(_params.repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
     IERC20(_params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
-
-    // 6. withdraw debt token from miniFL
-    address _debtToken = moneyMarketDs.tokenToDebtTokens[_params.repayToken];
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_debtToken];
-    moneyMarketDs.miniFL.withdraw(_params.subAccount, _poolId, _actualShareToRepay);
-
-    // burn debt token
-    IDebtToken(_debtToken).burn(address(this), _actualShareToRepay);
 
     emit LogLiquidate(
       msg.sender,

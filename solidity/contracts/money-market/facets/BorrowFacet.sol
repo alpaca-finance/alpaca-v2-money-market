@@ -14,8 +14,6 @@ import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // ---- Interfaces ---- //
 import { IBorrowFacet } from "../interfaces/IBorrowFacet.sol";
-import { IDebtToken } from "../interfaces/IDebtToken.sol";
-import { IMiniFL } from "../interfaces/IMiniFL.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 /// @title BorrowFacet is dedicated to over collateralized borrowing and repayment
@@ -62,7 +60,6 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    IMiniFL _miniFL = moneyMarketDs.miniFL;
 
     LibMoneyMarket01.onlyLive(moneyMarketDs);
 
@@ -82,14 +79,6 @@ contract BorrowFacet is IBorrowFacet {
     moneyMarketDs.reserves[_token] -= _amount;
 
     IERC20(_token).safeTransfer(msg.sender, _amount);
-
-    // mint debt token to money market and stake to miniFL
-    address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_debtToken];
-
-    IDebtToken(_debtToken).mint(address(this), _debtShare);
-    IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _debtShare);
-    _miniFL.deposit(_subAccount, _poolId, _debtShare);
 
     emit LogBorrow(msg.sender, _subAccountId, _token, _amount, _debtShare);
   }
@@ -128,14 +117,6 @@ contract BorrowFacet is IBorrowFacet {
     _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
 
     moneyMarketDs.reserves[_token] += _actualAmountToRepay;
-
-    // withdraw debt token from miniFL
-    address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_debtToken];
-    moneyMarketDs.miniFL.withdraw(_subAccount, _poolId, _actualShareToRepay);
-
-    // burn debt token
-    IDebtToken(_debtToken).burn(address(this), _actualShareToRepay);
 
     _validateRepay(
       _token,
