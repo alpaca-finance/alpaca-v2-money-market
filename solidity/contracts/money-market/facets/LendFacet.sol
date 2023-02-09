@@ -80,6 +80,10 @@ contract LendFacet is ILendFacet {
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_ibToken];
 
     if (_underlyingToken == address(0)) {
@@ -96,6 +100,7 @@ contract LendFacet is ILendFacet {
   }
 
   /// @notice Deposit native token for lending
+  /// @dev TODO: Remove this function as account manager can handle this
   function depositETH() external payable nonReentrant {
     if (msg.value == 0) {
       revert LendFacet_InvalidAmount(msg.value);
@@ -136,8 +141,13 @@ contract LendFacet is ILendFacet {
 
   /// @notice Withdraw the lended native token by burning the interest bearing token
   /// @param _shareAmount The amount of interest bearing token to burn
+  /// @dev TODO: Remove this function as account manager can handle this
   function withdrawETH(uint256 _shareAmount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
 
     address _wNativeToken = moneyMarketDs.wNativeToken;
     address _ibWNativeToken = moneyMarketDs.tokenToIbTokens[_wNativeToken];
