@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "./MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
@@ -73,8 +73,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtValue, 0);
 
     // debt token in MiniFL should be zero (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _debtTokenBalanceAfter after burned
     uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
     assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _debtShareBefore);
+    assertEq(DebtToken(_debtToken).totalSupply(), _debtTokenBalanceAfter);
   }
 
   function testCorrectness_WhenUserRepayDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {
@@ -140,8 +142,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtValue, 5.5 ether);
 
     // debt token in MiniFL should be equal to _debtTokenBalanceBefore - _repayShare (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _debtTokenBalanceAfter after burned
     uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
     assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _repayShare);
+    assertEq(DebtToken(_debtToken).totalSupply(), _debtTokenBalanceAfter);
   }
 
   function testRevert_WhenUserRepayAndTotalUsedBorrowingPowerAfterRepayIsLowerThanMinimum() external {
