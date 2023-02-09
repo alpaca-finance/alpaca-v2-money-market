@@ -422,8 +422,8 @@ contract LiquidationFacet is ILiquidationFacet {
   }
 
   function _calculateActualRepayAmountAndFee(
-    address _token,
-    uint256 _balanceBefore,
+    address _repayToken,
+    uint256 _repayTokenBalanceBefore,
     uint256 _expectedMaxRepayAmount,
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
