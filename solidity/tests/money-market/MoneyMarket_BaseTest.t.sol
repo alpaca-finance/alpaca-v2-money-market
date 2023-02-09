@@ -6,6 +6,7 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 // core
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
@@ -71,6 +72,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // set ib token implementation
     // warning: this one should set before open market
     adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    adminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: address(weth),
@@ -140,6 +142,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibUsdcDecimal = ibUsdc.decimals();
     ibBtcDecimal = ibBtc.decimals();
     ibWNativeDecimal = ibWNative.decimals();
+    ibIsolateTokenDecimal = ibIsolateToken.decimals();
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);

@@ -19,6 +19,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
+import { IDebtToken } from "../interfaces/IDebtToken.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 /// @title AdminFacet is dedicated to protocol parameter configuration
@@ -27,7 +28,7 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
+  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken, address _debtToken);
   event LogSetTokenConfig(address indexed _token, LibMoneyMarket01.TokenConfig _config);
   event LogsetNonCollatBorrowerOk(address indexed _account, bool isOk);
   event LogSetInterestModel(address indexed _token, address _interestModel);
@@ -45,6 +46,7 @@ contract AdminFacet is IAdminFacet {
   );
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
+  event LogSetDebtTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolConfig(
     address indexed _account,
     address indexed _token,
@@ -88,22 +90,34 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidIbTokenImplementation();
     }
 
+    if (moneyMarketDs.debtTokenImplementation == address(0)) {
+      revert AdminFacet_InvalidDebtTokenImplementation();
+    }
+
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
 
     if (_ibToken != address(0)) {
+      revert AdminFacet_InvalidToken(_token);
+    }
+    if (_debtToken != address(0)) {
       revert AdminFacet_InvalidToken(_token);
     }
 
     _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
     IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
+    address _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
+    IDebtToken(_newDebtToken).initialize(_token, address(this));
+
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
     _setTokenConfig(_newIbToken, _ibTokenConfigInput, moneyMarketDs);
 
     moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
+    moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
 
-    emit LogOpenMarket(msg.sender, _token, _newIbToken);
+    emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }
 
   /// @notice Set token-specific configuration
@@ -342,6 +356,16 @@ contract AdminFacet is IAdminFacet {
     IInterestBearingToken(_newImplementation).decimals();
     moneyMarketDs.ibTokenImplementation = _newImplementation;
     emit LogSetIbTokenImplementation(_newImplementation);
+  }
+
+  /// @notice Set the implementation address of debt token
+  /// @param _newImplementation The address of debt token contract
+  function setDebtTokenImplementation(address _newImplementation) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // sanity check
+    IDebtToken(_newImplementation).decimals();
+    moneyMarketDs.debtTokenImplementation = _newImplementation;
+    emit LogSetDebtTokenImplementation(_newImplementation);
   }
 
   /// @notice Set the non collteral's borrower configuration

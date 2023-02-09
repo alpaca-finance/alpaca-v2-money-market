@@ -9,6 +9,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 
 // contracts
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
@@ -310,6 +311,7 @@ abstract contract LYF_BaseTest is BaseTest {
     // set ib token implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(usdc));
