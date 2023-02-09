@@ -113,6 +113,4 @@ interface IAdminFacet {
   function setMinDebtSize(uint256 _newValue) external;
 
   function setEmergencyPaused(bool _isPaused) external;
-
-  function setMiniFL(address _miniFL) external;
 }

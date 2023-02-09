@@ -7,7 +7,6 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
-import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
@@ -54,14 +53,12 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IOwnershipFacet internal ownershipFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
-  MiniFL internal miniFL;
-
-  uint256 constant alpacaMaximumReward = 1000 ether;
 
   function setUp() public virtual {
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
       address(wNativeToken),
-      address(wNativeRelayer)
+      address(wNativeRelayer),
+      address(miniFL)
     );
 
     viewFacet = IViewFacet(moneyMarketDiamond);
@@ -73,8 +70,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
     ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
 
-    miniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
-    adminFacet.setMiniFL(address(miniFL));
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = moneyMarketDiamond;
     miniFL.setWhitelistedCallers(_whitelistedCallers, true);

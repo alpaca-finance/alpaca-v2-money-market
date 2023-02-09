@@ -19,7 +19,8 @@ contract DeployMoneyMarketDiamond is BaseDeploymentScript {
       new MoneyMarketDiamond(
         _facetAddresses.diamondCutFacet,
         deploymentConfig.wNativeAddress,
-        deploymentConfig.wNativeRelayer
+        deploymentConfig.wNativeRelayer,
+        deploymentConfig.miniFLAddress
       )
     );
 

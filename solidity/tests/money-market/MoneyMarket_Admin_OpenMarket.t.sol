@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MiniFL } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
