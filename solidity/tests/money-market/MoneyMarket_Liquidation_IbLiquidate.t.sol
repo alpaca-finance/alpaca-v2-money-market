@@ -518,8 +518,12 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
-    vm.prank(ALICE);
+    vm.startPrank(ALICE);
+    lendFacet.deposit(address(usdc), normalizeEther(1 ether, usdcDecimal));
+    ibUsdc.approve(moneyMarketDiamond, normalizeEther(1 ether, ibUsdcDecimal));
+    collateralFacet.addCollateral(ALICE, 0, _ibCollatToken, normalizeEther(1 ether, usdcDecimal));
     borrowFacet.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    vm.stopPrank();
 
     // Time past for 1 day
     vm.warp(block.timestamp + 1 days);
