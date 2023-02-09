@@ -428,7 +428,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
     // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
-    uint256 _amountFromLiquidationStrat = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+    uint256 _amountFromLiquidationStrat = IERC20(_repayToken).balanceOf(address(this)) - _repayTokenBalanceBefore;
     // find the actual fee through the rule of three
     // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
     _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
