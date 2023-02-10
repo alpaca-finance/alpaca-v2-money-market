@@ -103,7 +103,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
 
-    // ibToken should be staked to MiniFL when add collat by ibToken
+    // ibToken should be staked to MiniFL when add collat with ibToken
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 10 ether);
 
@@ -115,7 +115,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     // check account ib token collat
-    // ibToken should be withdraw from MiniFL when remove collat
+    // ibToken should be withdrawn from MiniFL when remove collat
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 0 ether);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 0 ether);
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
@@ -126,7 +126,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
 
-    // ibToken should be staked to MiniFL when add collat by ibToken
+    // ibToken should be staked to MiniFL when add collat with ibToken
     uint256 _stakingAmountBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     uint256 _collatAmountBefore = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
 
@@ -144,7 +144,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     uint256 _collatAmountAfter = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
 
     // check account ib token collat
-    // ibToken should be withdraw from MiniFL when remove collat
+    // ibToken should be withdrawn from MiniFL when remove collat
     assertEq(
       viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)),
       _collatAmountBefore - _collatAmountAfter

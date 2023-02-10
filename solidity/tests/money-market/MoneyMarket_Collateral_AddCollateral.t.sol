@@ -145,7 +145,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
 
     // check account ib token collat
-    // when add collat by ibToken, ibToken is staked to MiniFL
+    // when add collat with ibToken, ibToken should get staked to MiniFL
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 10 ether);
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);

@@ -611,6 +611,10 @@ library LibMoneyMarket01 {
     // stake token to miniFL, when user add collateral by ibToken
     uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
     IMiniFL _miniFL = moneyMarketDs.miniFL;
+
+    // If the collateral token has no miniFL's poolID associated with it
+    // skip the deposit to miniFL process
+    // This generally applies to non-ibToken collateral
     if (_poolId != 0) {
       IERC20(_token).safeIncreaseAllowance(address(_miniFL), _addAmount);
       _miniFL.deposit(_account, _poolId, _addAmount);
@@ -634,8 +638,13 @@ library LibMoneyMarket01 {
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
     moneyMarketDs.collats[_token] -= _removeAmount;
 
-    // withdraw token from miniFL
+    // In the subsequent call, MM should get hold of physical token to proceed
+    // Thus, we need to withdraw the physical token from miniFL first
     uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+
+    // If the collateral token has no miniFL's poolID associated with it
+    // skip the withdrawal from miniFL process
+    // This generally applies to non-ibToken collateral
     if (_poolId != 0) {
       moneyMarketDs.miniFL.withdraw(_account, _poolId, _removeAmount);
     }
@@ -680,6 +689,10 @@ library LibMoneyMarket01 {
 
     // withdraw token from miniFL
     uint256 _poolId = moneyMarketDs.miniFLPoolIds[_repayToken];
+
+    // If the collateral token has no miniFL's poolID associated with it
+    // skip the withdrawal from miniFL process
+    // This generally applies to non-ibToken collateral
     if (_poolId != 0) {
       _miniFL.withdraw(_account, _poolId, _debtShareToRemove);
     }
