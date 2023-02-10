@@ -175,11 +175,9 @@ library LibMoneyMarketDeployment {
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](4);
+    _selectors = new bytes4[](2);
     _selectors[0] = LendFacet.deposit.selector;
     _selectors[1] = LendFacet.withdraw.selector;
-    _selectors[2] = LendFacet.depositETH.selector;
-    _selectors[3] = LendFacet.withdrawETH.selector;
   }
 
   function getCollateralFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

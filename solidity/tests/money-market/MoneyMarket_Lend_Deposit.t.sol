@@ -63,17 +63,6 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserDepositETH_TokenShouldSafeTransferFromUserToMM() external {
-    vm.prank(ALICE);
-    lendFacet.depositETH{ value: 10 ether }();
-
-    assertEq(wNativeToken.balanceOf(ALICE), 0 ether);
-    assertEq(ALICE.balance, 990 ether);
-    assertEq(wNativeToken.balanceOf(moneyMarketDiamond), 10 ether);
-
-    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
-  }
-
   function testCorrectness_WhenUserDepositWithUnaccrueInterest_ShouldMintShareCorrectly() external {
     /**
      * scenario:
