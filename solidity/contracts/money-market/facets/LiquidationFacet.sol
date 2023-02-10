@@ -54,8 +54,6 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repayAmount;
     uint256 usedBorrowingPower;
     uint256 minReceive;
-    uint256 collatTokenBalanceBefore;
-    uint256 repayTokenBalaceBefore;
     uint256 subAccountCollatAmount;
   }
 
@@ -68,6 +66,8 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 feeToLiquidator;
     uint256 feeToTreasury;
     uint256 collatSold;
+    uint256 collatTokenBalanceBefore;
+    uint256 repayTokenBalaceBefore;
   }
 
   struct RepurchaseLocalVars {
@@ -199,6 +199,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // update states
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _account,
       _vars.subAccount,
       _repayToken,
       LibShareUtil.valueToShare(
@@ -249,6 +250,11 @@ contract LiquidationFacet is ILiquidationFacet {
     }
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+    uint256 _collatAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
+
+    if (_collatAmount == 0) {
+      revert LiquidationFacet_InsufficientAmount();
+    }
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
@@ -269,9 +275,7 @@ contract LiquidationFacet is ILiquidationFacet {
       repayAmount: _repayAmount,
       usedBorrowingPower: _usedBorrowingPower,
       minReceive: _minReceive,
-      collatTokenBalanceBefore: IERC20(_collatToken).balanceOf(address(this)),
-      repayTokenBalaceBefore: IERC20(_repayToken).balanceOf(address(this)),
-      subAccountCollatAmount: moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken)
+      subAccountCollatAmount: _collatAmount
     });
 
     _liquidationCall(_params, moneyMarketDs);
@@ -281,11 +285,27 @@ contract LiquidationFacet is ILiquidationFacet {
     InternalLiquidationCallParams memory _params,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
+    LiquidationLocalVars memory _vars;
+
+    // remove all collateral from the subaccount first
+    // In case the collateral is ibToken and currently staking in miniFL
+    // This will withdraw from miniFL so that the collat token can be transfered to strategy contract
+    LibMoneyMarket01.removeCollatFromSubAccount(
+      _params.subAccount,
+      _params.collatToken,
+      _params.subAccountCollatAmount,
+      moneyMarketDs
+    );
+
+    // cache the balance of tokens before executing strategy contract
+    // this will be used to find the actual collateral used and repay token back from the strategy
+    _vars.collatTokenBalanceBefore = IERC20(_params.collatToken).balanceOf(address(this));
+    _vars.repayTokenBalaceBefore = IERC20(_params.repayToken).balanceOf(address(this));
+
     // 2. send all collats under subaccount to strategy
     IERC20(_params.collatToken).safeTransfer(_params.liquidationStrat, _params.subAccountCollatAmount);
-    LiquidationLocalVars memory _vars;
-    // 3. call executeLiquidation on strategy
 
+    // 3. call executeLiquidation on strategy
     _vars.maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
       _params.subAccount,
       _params.repayToken,
@@ -308,7 +328,8 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // 4. check repaid amount, take fees, and update states
     (_vars.repaidAmount, _vars.actualLiquidationFee) = _calculateActualRepayAmountAndFee(
-      _params,
+      _params.repayToken,
+      _vars.repayTokenBalaceBefore,
       _vars.expectedMaxRepayAmount,
       _vars.maxPossibleFee
     );
@@ -325,6 +346,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // give priority to fee
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _params.account,
       _params.subAccount,
       _params.repayToken,
       LibShareUtil.valueToShare(
@@ -336,11 +358,15 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs
     );
 
-    _vars.collatSold = _params.collatTokenBalanceBefore - IERC20(_params.collatToken).balanceOf(address(this));
-    LibMoneyMarket01.removeCollatFromSubAccount(
+    // Calculate the actual collateral used in liquidation strategy by comparing balance before and after
+    _vars.collatSold = _vars.collatTokenBalanceBefore - IERC20(_params.collatToken).balanceOf(address(this));
+
+    // add remaining collateral back to the subaccount since we have removed all collateral earlier
+    // this should also deposit collateral back to miniFL if applicable
+    LibMoneyMarket01.addCollatToSubAccount(
       _params.subAccount,
       _params.collatToken,
-      _vars.collatSold,
+      _params.subAccountCollatAmount - _vars.collatSold,
       moneyMarketDs
     );
 
@@ -398,13 +424,13 @@ contract LiquidationFacet is ILiquidationFacet {
   }
 
   function _calculateActualRepayAmountAndFee(
-    InternalLiquidationCallParams memory _params,
+    address _repayToken,
+    uint256 _repayTokenBalanceBefore,
     uint256 _expectedMaxRepayAmount,
     uint256 _maxFeePossible
   ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
     // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
-    uint256 _amountFromLiquidationStrat = IERC20(_params.repayToken).balanceOf(address(this)) -
-      _params.repayTokenBalaceBefore;
+    uint256 _amountFromLiquidationStrat = IERC20(_repayToken).balanceOf(address(this)) - _repayTokenBalanceBefore;
     // find the actual fee through the rule of three
     // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
     _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;

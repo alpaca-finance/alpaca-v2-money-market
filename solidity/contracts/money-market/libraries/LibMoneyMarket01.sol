@@ -15,6 +15,8 @@ import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
+import { IMiniFL } from "../interfaces/IMiniFL.sol";
+import { IDebtToken } from "../interfaces/IDebtToken.sol";
 
 library LibMoneyMarket01 {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -39,10 +41,12 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
   error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
   error LibMoneyMarket01_EmergencyPaused();
+  error LibMoneyMarket01_UnAuthorized();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
   event LogRemoveDebt(
+    address indexed _account,
     address indexed _subAccount,
     address indexed _token,
     uint256 _removedDebtShare,
@@ -52,6 +56,14 @@ library LibMoneyMarket01 {
   event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
 
   event LogAddCollateral(address indexed _subAccount, address indexed _token, address _caller, uint256 _amount);
+
+  event LogOverCollatBorrow(
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _borrowedAmount,
+    uint256 _debtShare
+  );
 
   enum AssetTier {
     UNLISTED,
@@ -77,16 +89,20 @@ library LibMoneyMarket01 {
   // Storage
   struct MoneyMarketDiamondStorage {
     // ---- addresses ---- //
-    address wNativeToken;
-    address wNativeRelayer;
     address liquidationTreasury;
     address ibTokenImplementation;
+    address debtTokenImplementation;
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
+    IMiniFL miniFL;
     bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address
     mapping(address => address) ibTokenToTokens; // ibToken address => token address
+    // ---- debt tokens ---- //
+    mapping(address => address) tokenToDebtTokens; // token address => debtToken address
+    // ---- miniFL pools ---- //
+    mapping(address => uint256) miniFLPoolIds; // token address => pool id
     // ---- lending ---- //
     mapping(address => uint256) globalDebts; // token address => over + non collat debt
     // ---- over-collateralized lending ---- //
@@ -110,6 +126,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
     mapping(address => bool) liquidationStratOk; // liquidation strategies that can be used during liquidation process
     mapping(address => bool) liquidatorsOk; // allowed to initiate liquidation process
+    mapping(address => bool) accountManagersOk; // allowed to manipulate account/subaccount on behalf of end users
     // ---- reserves ---- //
     mapping(address => uint256) protocolReserves; // token address => amount that is reserved for protocol
     mapping(address => uint256) reserves; // token address => amount that is available in protocol
@@ -527,7 +544,6 @@ library LibMoneyMarket01 {
     address _underlyingToken,
     address _ibToken,
     uint256 _shareAmount,
-    address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _withdrawAmount) {
     _withdrawAmount = LibShareUtil.shareToValue(
@@ -541,9 +557,7 @@ library LibMoneyMarket01 {
     }
 
     // burn ibToken
-    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _withdrawAmount, _shareAmount);
-
-    emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
+    IInterestBearingToken(_ibToken).onWithdraw(msg.sender, msg.sender, _withdrawAmount, _shareAmount);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint64) {
@@ -559,28 +573,28 @@ library LibMoneyMarket01 {
     address _subAccount,
     address _token,
     uint256 _addAmount,
-    MoneyMarketDiamondStorage storage ds
+    MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // validation
-    if (ds.tokenConfigs[_token].tier != AssetTier.COLLATERAL) {
+    if (moneyMarketDs.tokenConfigs[_token].tier != AssetTier.COLLATERAL) {
       revert LibMoneyMarket01_InvalidAssetTier();
     }
-    if (_addAmount + ds.collats[_token] > ds.tokenConfigs[_token].maxCollateral) {
+    if (_addAmount + moneyMarketDs.collats[_token] > moneyMarketDs.tokenConfigs[_token].maxCollateral) {
       revert LibMoneyMarket01_ExceedCollateralLimit();
     }
 
     // init list
-    LibDoublyLinkedList.List storage subAccountCollateralList = ds.subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage subAccountCollateralList = moneyMarketDs.subAccountCollats[_subAccount];
     subAccountCollateralList.initIfNotExist();
 
     // TODO: optimize this
     uint256 _currentCollatAmount = subAccountCollateralList.getAmount(_token);
     // update state
     subAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _addAmount);
-    if (subAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount) {
+    if (subAccountCollateralList.length() > moneyMarketDs.maxNumOfCollatPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
-    ds.collats[_token] += _addAmount;
+    moneyMarketDs.collats[_token] += _addAmount;
 
     emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
   }
@@ -589,28 +603,32 @@ library LibMoneyMarket01 {
     address _subAccount,
     address _token,
     uint256 _removeAmount,
-    MoneyMarketDiamondStorage storage ds
+    MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    LibDoublyLinkedList.List storage _subAccountCollatList = ds.subAccountCollats[_subAccount];
+    LibDoublyLinkedList.List storage _subAccountCollatList = moneyMarketDs.subAccountCollats[_subAccount];
     uint256 _currentCollatAmount = _subAccountCollatList.getAmount(_token);
     if (_removeAmount > _currentCollatAmount) {
       revert LibMoneyMarket01_TooManyCollateralRemoved();
     }
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
-    ds.collats[_token] -= _removeAmount;
+    moneyMarketDs.collats[_token] -= _removeAmount;
 
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
   }
 
-  function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage ds) internal view {
-    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, ds);
-    (uint256 _totalUsedBorrowingPower, ) = getTotalUsedBorrowingPower(_subAccount, ds);
+  function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
+    internal
+    view
+  {
+    uint256 _totalBorrowingPower = getTotalBorrowingPower(_subAccount, moneyMarketDs);
+    (uint256 _totalUsedBorrowingPower, ) = getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
     if (_totalBorrowingPower < _totalUsedBorrowingPower) {
       revert LibMoneyMarket01_BorrowingPowerTooLow();
     }
   }
 
   function removeOverCollatDebtFromSubAccount(
+    address _account,
     address _subAccount,
     address _repayToken,
     uint256 _debtShareToRemove,
@@ -625,20 +643,31 @@ library LibMoneyMarket01 {
 
     moneyMarketDs.globalDebts[_repayToken] -= _debtValueToRemove;
 
-    emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
+    // withdraw debt token from miniFL
+    // Note: prevent stack too deep
+    moneyMarketDs.miniFL.withdraw(
+      _account,
+      moneyMarketDs.miniFLPoolIds[moneyMarketDs.tokenToDebtTokens[_repayToken]],
+      _debtShareToRemove
+    );
+
+    // burn debt token
+    IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _debtShareToRemove);
+
+    emit LogRemoveDebt(_account, _subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
 
   function transferCollat(
     address _toSubAccount,
     address _token,
     uint256 _transferAmount,
-    MoneyMarketDiamondStorage storage ds
+    MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    LibDoublyLinkedList.List storage toSubAccountCollateralList = ds.subAccountCollats[_toSubAccount];
+    LibDoublyLinkedList.List storage toSubAccountCollateralList = moneyMarketDs.subAccountCollats[_toSubAccount];
     toSubAccountCollateralList.initIfNotExist();
     uint256 _currentCollatAmount = toSubAccountCollateralList.getAmount(_token);
     toSubAccountCollateralList.addOrUpdate(_token, _currentCollatAmount + _transferAmount);
-    if (toSubAccountCollateralList.length() > ds.maxNumOfCollatPerSubAccount) {
+    if (toSubAccountCollateralList.length() > moneyMarketDs.maxNumOfCollatPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
   }
@@ -678,45 +707,59 @@ library LibMoneyMarket01 {
   }
 
   function overCollatBorrow(
+    address _account,
     address _subAccount,
     address _token,
     uint256 _amount,
-    MoneyMarketDiamondStorage storage ds
+    MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _shareToAdd) {
-    LibDoublyLinkedList.List storage userDebtShare = ds.subAccountDebtShares[_subAccount];
+    LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount];
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
 
     userDebtShare.initIfNotExist();
 
     _shareToAdd = LibShareUtil.valueToShareRoundingUp(
       _amount,
-      ds.overCollatDebtShares[_token],
-      ds.overCollatDebtValues[_token]
+      moneyMarketDs.overCollatDebtShares[_token],
+      moneyMarketDs.overCollatDebtValues[_token]
     );
 
     // update over collat debt
-    ds.overCollatDebtShares[_token] += _shareToAdd;
-    ds.overCollatDebtValues[_token] += _amount;
+    moneyMarketDs.overCollatDebtShares[_token] += _shareToAdd;
+    moneyMarketDs.overCollatDebtValues[_token] += _amount;
 
     // update global debt
-    ds.globalDebts[_token] += _amount;
+    moneyMarketDs.globalDebts[_token] += _amount;
 
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
-    if (userDebtShare.length() > ds.maxNumOfDebtPerSubAccount) {
+    if (userDebtShare.length() > moneyMarketDs.maxNumOfDebtPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
+
+    // mint debt token to money market and stake to miniFL
+    address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
+    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_debtToken];
+
+    // pool for debt token always exist
+    // since pool is created during AdminFacet.openMarket()
+    IDebtToken(_debtToken).mint(address(this), _amount);
+    IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _amount);
+    _miniFL.deposit(_account, _poolId, _amount);
+
+    emit LogOverCollatBorrow(msg.sender, _subAccount, _token, _amount, _shareToAdd);
   }
 
   function nonCollatBorrow(
     address _account,
     address _token,
     uint256 _amount,
-    MoneyMarketDiamondStorage storage ds
+    MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    LibDoublyLinkedList.List storage debtValue = ds.nonCollatAccountDebtValues[_account];
+    LibDoublyLinkedList.List storage debtValue = moneyMarketDs.nonCollatAccountDebtValues[_account];
     debtValue.initIfNotExist();
 
-    LibDoublyLinkedList.List storage tokenDebts = ds.nonCollatTokenDebtValues[_token];
+    LibDoublyLinkedList.List storage tokenDebts = moneyMarketDs.nonCollatTokenDebtValues[_token];
     tokenDebts.initIfNotExist();
 
     // update account debt
@@ -725,14 +768,14 @@ library LibMoneyMarket01 {
 
     debtValue.addOrUpdate(_token, _newAccountDebt);
 
-    if (debtValue.length() > ds.maxNumOfDebtPerNonCollatAccount) {
+    if (debtValue.length() > moneyMarketDs.maxNumOfDebtPerNonCollatAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
 
     tokenDebts.addOrUpdate(msg.sender, _newTokenDebt);
 
     // update global debt
-    ds.globalDebts[_token] += _amount;
+    moneyMarketDs.globalDebts[_token] += _amount;
   }
 
   /// @dev safeTransferFrom that revert when not receiving full amount (have fee on transfer)
@@ -762,6 +805,12 @@ library LibMoneyMarket01 {
   function onlyLive(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
     if (moneyMarketDs.emergencyPaused) {
       revert LibMoneyMarket01_EmergencyPaused();
+    }
+  }
+
+  function onlyAccountManager(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
+    if (!moneyMarketDs.accountManagersOk[msg.sender]) {
+      revert LibMoneyMarket01_UnAuthorized();
     }
   }
 }

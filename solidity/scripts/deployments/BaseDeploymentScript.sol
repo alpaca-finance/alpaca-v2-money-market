@@ -17,6 +17,7 @@ abstract contract BaseDeploymentScript is Script {
   struct DeploymentConfig {
     address wNativeAddress;
     address wNativeRelayer;
+    address miniFLAddress;
   }
 
   struct MoneyMarketConfig {

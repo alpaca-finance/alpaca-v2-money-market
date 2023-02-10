@@ -75,6 +75,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     ALPACA = _alpaca;
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
+
+    // The first pool is going to be a dummy pool where nobody uses.
+    // This is to prevent confusion whether PID 0 is a valid pool or not
+    poolInfo.push(PoolInfo({ allocPoint: 0, lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 }));
+    stakingTokens.push(address(0));
   }
 
   /// @notice Returns the number of pools.
@@ -86,11 +91,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _allocPoint AP of the new pool.
   /// @param _stakingToken Address of the staking token.
   /// @param _withUpdate If true, do mass update pools.
+  /// @return _pid The index of the new pool.
   function addPool(
     uint256 _allocPoint,
     address _stakingToken,
     bool _withUpdate
-  ) external onlyWhitelisted {
+  ) external onlyWhitelisted returns (uint256 _pid) {
     if (_stakingToken == ALPACA) {
       revert MiniFL_InvalidArguments();
     }
@@ -110,7 +116,13 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     poolInfo.push(
       PoolInfo({ allocPoint: _allocPoint.toUint64(), lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 })
     );
-    emit LogAddPool(stakingTokens.length - 1, _allocPoint, _stakingToken);
+
+    // possible to unchecked
+    // since poolInfo is always pushed before going to this statement
+    unchecked {
+      _pid = poolInfo.length - 1;
+    }
+    emit LogAddPool(_pid, _allocPoint, _stakingToken);
   }
 
   /// @notice Update the given pool's ALPACA allocation point and `IRewarder` contract.
@@ -123,6 +135,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _allocPoint,
     bool _withUpdate
   ) external onlyOwner {
+    // prevent setting allocPoint of dummy pool
+    if (_pid == 0) revert MiniFL_InvalidArguments();
     if (_withUpdate) massUpdatePools();
 
     totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;
@@ -178,7 +192,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         unchecked {
           timePast = block.timestamp - _poolInfo.lastRewardTime;
         }
-        uint256 alpacaReward = (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+        uint256 alpacaReward = totalAllocPoint != 0
+          ? (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint
+          : 0;
         _poolInfo.accAlpacaPerShare =
           _poolInfo.accAlpacaPerShare +
           ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance).toUint128();
@@ -409,5 +425,19 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         ++_i;
       }
     }
+  }
+
+  /// @notice Get total amount of a user
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _user The address of the user.
+  function getUserTotalAmountOf(uint256 _pid, address _user) external view returns (uint256 _totalAmount) {
+    _totalAmount = userInfo[_pid][_user].totalAmount;
+  }
+
+  /// @notice Get reward debt of a user
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _user The address of the user.
+  function getUserRewardDebtOf(uint256 _pid, address _user) external view returns (int256 _rewardDebt) {
+    _rewardDebt = userInfo[_pid][_user].rewardDebt;
   }
 }

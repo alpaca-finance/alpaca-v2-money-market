@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -20,11 +21,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
-    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(address(btc), normalizeEther(20 ether, btcDecimal));
-    lendFacet.deposit(address(cake), normalizeEther(20 ether, cakeDecimal));
-    lendFacet.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
+    lendFacet.deposit(ALICE, address(weth), normalizeEther(50 ether, wethDecimal));
+    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(ALICE, address(btc), normalizeEther(20 ether, btcDecimal));
+    lendFacet.deposit(ALICE, address(cake), normalizeEther(20 ether, cakeDecimal));
+    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
   }
 
@@ -145,7 +146,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(address(weth), _bobDepositAmount);
+    lendFacet.deposit(BOB, address(weth), _bobDepositAmount);
 
     vm.stopPrank();
 
@@ -280,7 +281,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     // manipulate ib price
     vm.prank(BOB);
-    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
+    lendFacet.deposit(BOB, address(weth), normalizeEther(50 ether, wethDecimal));
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, normalizeEther(50 ether, ibWethDecimal));
 
@@ -368,5 +369,25 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+  }
+
+  function testCorrectness_WhenUserBorrowTokenFromMM_MMShouldStakeDebtTokenInMiniFLForUser() external {
+    IMiniFL _miniFL = IMiniFL(address(miniFL));
+
+    address _debtToken;
+    uint256 _poolId;
+
+    uint256 _borrowAmount = normalizeEther(10 ether, wethDecimal);
+    address _borrowToken = address(weth);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, _borrowToken, _borrowAmount * 2);
+    borrowFacet.borrow(subAccount0, _borrowToken, _borrowAmount);
+    vm.stopPrank();
+
+    // check token is exist in miniFL
+    _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
+    _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, BOB), _borrowAmount);
   }
 }

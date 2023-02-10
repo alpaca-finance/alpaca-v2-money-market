@@ -28,6 +28,22 @@ contract ViewFacet is IViewFacet {
     return moneyMarketDs.ibTokenToTokens[_ibToken];
   }
 
+  /// @notice Get the address of debt token for the borrowing token
+  /// @param _token The borrowing token
+  /// @return The address of debt token associated with
+  function getDebtTokenFromToken(address _token) external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.tokenToDebtTokens[_token];
+  }
+
+  /// @notice Get the miniFL pool id of the token
+  /// @param _token The address of token
+  /// @return The pool id of the token
+  function getMiniFLPoolIdOfToken(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.miniFLPoolIds[_token];
+  }
+
   /// @notice Get the protocol reserve from interest collecting
   /// @param _token The token that has reserve
   /// @return _reserve The amount of reserve for that token
@@ -377,6 +393,13 @@ contract ViewFacet is IViewFacet {
   function getIbTokenImplementation() external view returns (address) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.ibTokenImplementation;
+  }
+
+  /// @notice Get the address of debtToken implementation that will be used during openMarket
+  /// @return Address of current debtToken implementation
+  function getDebtTokenImplementation() external view returns (address) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.debtTokenImplementation;
   }
 
   /// @notice Get the address of liquidation treasury

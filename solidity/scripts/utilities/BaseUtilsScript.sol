@@ -67,7 +67,11 @@ abstract contract BaseUtilsScript is Script {
   function _setUpForLocalRun() internal virtual {
     _startDeployerBroadcast();
     console.log("deploy money market diamond for test run");
-    (address _moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(1), address(2));
+    (address _moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
+      address(1),
+      address(2),
+      address(3)
+    );
     _stopBroadcast();
     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
     deployerAddress = vm.addr(deployerPrivateKey);

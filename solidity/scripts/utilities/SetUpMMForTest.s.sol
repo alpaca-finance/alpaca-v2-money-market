@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "../BaseScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
 import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
 
@@ -37,6 +38,7 @@ contract SetUpMMForTestScript is BaseScript {
     moneyMarket.setMaxNumOfToken(3, 3, 3);
 
     moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
+    moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
 
     //---- open markets ----//
     IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({

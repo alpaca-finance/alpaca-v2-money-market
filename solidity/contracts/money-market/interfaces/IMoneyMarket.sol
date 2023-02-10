@@ -10,7 +10,11 @@ interface IMoneyMarket {
 
   function getTokenFromIbToken(address _ibToken) external view returns (address);
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
+  function withdraw(
+    address _for,
+    address _ibToken,
+    uint256 _shareAmount
+  ) external returns (uint256 _shareValue);
 
   function getIbTokenFromToken(address _token) external view returns (address);
 
@@ -23,4 +27,6 @@ interface IMoneyMarket {
   function getGlobalDebtValueWithPendingInterest(address _token) external view returns (uint256);
 
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
+
+  function setAccountManagersOk(address[] calldata _list, bool _isOk) external;
 }

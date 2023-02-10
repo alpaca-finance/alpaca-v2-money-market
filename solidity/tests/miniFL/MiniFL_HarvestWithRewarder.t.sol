@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import { MiniFL_BaseTest } from "./MiniFL_BaseTest.t.sol";
+import { MiniFL_BaseTest, console } from "./MiniFL_BaseTest.t.sol";
 
 // libs
 import { LibAccount } from "../libs/LibAccount.sol";
@@ -24,7 +24,6 @@ contract MiniFL_HarvestWithRewarderTest is MiniFL_BaseTest {
     super.setUp();
     setupMiniFLPool();
     setupRewarder();
-
     prepareForHarvest();
 
     // deposited info

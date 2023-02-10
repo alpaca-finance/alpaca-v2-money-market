@@ -22,14 +22,6 @@ contract BorrowFacet is IBorrowFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   using SafeCast for uint256;
 
-  event LogBorrow(
-    address indexed _account,
-    uint256 indexed _subAccountId,
-    address indexed _token,
-    uint256 _borrowedAmount,
-    uint256 _debtShare
-  );
-
   event LogRepay(
     address indexed _account,
     uint256 indexed _subAccountId,
@@ -74,13 +66,11 @@ contract BorrowFacet is IBorrowFacet {
 
     _validateBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
-    uint256 _debtShare = LibMoneyMarket01.overCollatBorrow(_subAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.overCollatBorrow(msg.sender, _subAccount, _token, _amount, moneyMarketDs);
 
     moneyMarketDs.reserves[_token] -= _amount;
 
     IERC20(_token).safeTransfer(msg.sender, _amount);
-
-    emit LogBorrow(msg.sender, _subAccountId, _token, _amount, _debtShare);
   }
 
   /// @notice Repay the debt for the subaccount
@@ -127,6 +117,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _account,
       _subAccount,
       _token,
       _actualShareToRepay,
@@ -181,6 +172,7 @@ contract BorrowFacet is IBorrowFacet {
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      msg.sender,
       _subAccount,
       _token,
       _actualShareToRepay,

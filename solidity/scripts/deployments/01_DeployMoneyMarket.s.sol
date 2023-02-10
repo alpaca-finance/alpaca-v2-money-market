@@ -21,7 +21,7 @@ contract DeployMoneyMarket is BaseScript {
     _startDeployerBroadcast();
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
-      .deployMoneyMarketDiamond(config.wNativeAddress, config.wNativeRelayer);
+      .deployMoneyMarketDiamond(config.miniFLAddress);
     moneyMarket = IMoneyMarket(_moneyMarket);
 
     // setup oracles
@@ -33,6 +33,10 @@ contract DeployMoneyMarket is BaseScript {
     // // setup ib token
     // address ibTokenImplementation = address(new InterestBearingToken());
     // moneyMarket.setIbTokenImplementation(ibTokenImplementation);
+
+    // // setup debt token
+    // address debtTokenImplementation = address(new InterestBearingToken());
+    // moneyMarket.setDebtTokenImplementation(debtTokenImplementation);
 
     // // setup liquidation strategies
     // address router = address(0);

@@ -11,7 +11,6 @@ import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
 
 contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
-  MiniFL internal miniFL;
   address internal funder1 = makeAddr("funder1");
   address internal funder2 = makeAddr("funder2");
 
@@ -20,19 +19,16 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   Rewarder internal rewarder1;
   Rewarder internal rewarder2;
 
-  uint256 wethPoolID = 0;
-  uint256 dtokenPoolID = 1;
+  uint256 wethPoolID;
+  uint256 dtokenPoolID;
   uint256 notExistsPoolID = 999;
 
-  uint256 alpacaMaximumReward = 1000 ether;
-
   function setUp() public virtual {
-    miniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
-    miniFL.setAlpacaPerSecond(alpacaMaximumReward, false);
+    miniFL.setAlpacaPerSecond(maxAlpacaPerSecond, false);
     alpaca.mint(address(miniFL), 10000000 ether);
 
-    rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), alpacaMaximumReward);
-    rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), alpacaMaximumReward);
+    rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), maxAlpacaPerSecond);
+    rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), maxAlpacaPerSecond);
 
     rewarder1.setRewardPerSecond(100 ether, false);
     rewarder2.setRewardPerSecond(150 ether, false);
@@ -58,9 +54,9 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
 
   function setupMiniFLPool() internal {
     // add staking pool
-    miniFL.addPool(60, address(weth), false);
+    wethPoolID = miniFL.addPool(60, address(weth), false);
     // add debt token pool
-    miniFL.addPool(40, address(debtToken1), false);
+    dtokenPoolID = miniFL.addPool(40, address(debtToken1), false);
 
     // set debtToken staker
     uint256[] memory _poolIds = new uint256[](1);
@@ -96,6 +92,7 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   function prepareForHarvest() internal {
     vm.startPrank(ALICE);
     weth.approve(address(miniFL), 10 ether);
+    console.log("WETH POOOL", wethPoolID);
     miniFL.deposit(ALICE, wethPoolID, 10 ether);
     vm.stopPrank();
 

@@ -10,6 +10,7 @@ import { TestHelper } from "../helper/TestHelper.sol";
 // contracts
 import { AVPancakeSwapHandler } from "../../contracts/automated-vault/handlers/AVPancakeSwapHandler.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // interfaces
 import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
@@ -54,10 +55,9 @@ abstract contract AV_BaseTest is BaseTest {
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
-      address(wNativeToken),
-      address(wNativeRelayer)
-    );
+
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
+
     setUpMM();
 
     // set av facets
@@ -142,9 +142,14 @@ abstract contract AV_BaseTest is BaseTest {
   function setUpMM() internal {
     IAdminFacet mmAdminFacet = IAdminFacet(moneyMarketDiamond);
 
-    // set ib token implementation
+    // set ibToken and debtToken implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
+
+    address[] memory _whitelistedCallers = new address[](1);
+    _whitelistedCallers[0] = moneyMarketDiamond;
+    miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(usdc));
@@ -194,14 +199,18 @@ abstract contract AV_BaseTest is BaseTest {
     });
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = EVE;
 
+    mmAdminFacet.setAccountManagersOk(_accountManagers, true);
     // prepare for borrow
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(usdc), normalizeEther(100 ether, usdcDecimal));
     vm.stopPrank();
 
     mmAdminFacet.setMaxNumOfToken(3, 3, 3);

@@ -37,13 +37,13 @@ contract MiniFL_SetPoolRewardersTest is MiniFL_BaseTest {
   }
 
   function testRevert_WhenSetRewarderWithWrongMiniFL() external {
-    MiniFL otherMiniFL = deployMiniFL(address(alpaca), alpacaMaximumReward);
+    MiniFL otherMiniFL = deployMiniFL(address(alpaca), maxAlpacaPerSecond);
 
     IRewarder _newRewarder = deployRewarder(
       "NewRewarder",
       address(otherMiniFL),
       address(rewardToken1),
-      alpacaMaximumReward
+      maxAlpacaPerSecond
     );
 
     address[] memory _poolDebtTokenRewarders = new address[](2);

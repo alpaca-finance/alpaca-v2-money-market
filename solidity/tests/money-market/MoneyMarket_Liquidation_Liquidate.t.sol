@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "./MoneyMarket_BaseTest.t.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 // mocks
 import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
@@ -27,6 +28,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
   MockLiquidationStrategy internal mockLiquidationStrategy;
   MockBadLiquidationStrategy internal mockBadLiquidationStrategy;
+  IMiniFL internal _miniFL;
 
   function setUp() public override {
     super.setUp();
@@ -41,6 +43,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     usdc.mint(address(mockLiquidationStrategy), normalizeEther(1000 ether, usdcDecimal));
     mockBadLiquidationStrategy = new MockBadLiquidationStrategy();
     usdc.mint(address(mockBadLiquidationStrategy), normalizeEther(1000 ether, usdcDecimal));
+
+    _miniFL = IMiniFL(address(miniFL));
 
     address[] memory _liquidationStrats = new address[](2);
     _liquidationStrats[0] = address(mockLiquidationStrategy);
@@ -57,8 +61,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
+    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    lendFacet.deposit(BOB, address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
@@ -142,6 +146,13 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.075 ether, usdcDecimal)
     );
+
+    // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testCorrectness_InjectedCollatToStrat_ThenPartialLiquidate_ShouldWork() external {
@@ -216,6 +227,13 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.075 ether, usdcDecimal)
     );
+
+    // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testCorrectness_WhenLiquidateMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -294,6 +312,13 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.150025 ether, usdcDecimal)
     );
+
+    // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testCorrectness_WhenLiquidateAllCollateral_ShouldWorkButTreasuryReceiveNoFee() external {
@@ -364,6 +389,13 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidator), normalizeEther(0.198019 ether, usdcDecimal));
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury), normalizeEther(0.19802 ether, usdcDecimal));
+
+    // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testCorrectness_WhenLiquidationStrategyReturnRepayTokenLessThanExpected_AndNoCollatIsReturned_ShouldCauseBadDebt()
@@ -419,6 +451,13 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.15 ether, usdcDecimal)
     );
+
+    // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testRevert_WhenLiquidateWhileSubAccountIsHealthy() external {
@@ -490,6 +529,24 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       address(usdc),
       address(weth),
       normalizeEther(1 ether, usdcDecimal),
+      0
+    );
+  }
+
+  function testRevert_WhenTryToLiquidateNonExistedCollateral_ShouldRevert() external {
+    // criteria
+    address _collatToken = address(ibUsdc);
+    address _debtToken = address(usdc);
+
+    vm.prank(liquidator);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_InsufficientAmount.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      0,
       0
     );
   }

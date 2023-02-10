@@ -9,6 +9,7 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 
 // contracts
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
@@ -87,10 +88,8 @@ abstract contract LYF_BaseTest is BaseTest {
   uint256 constant reinvestThreshold = 1e18;
 
   function setUp() public virtual {
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
-      address(wNativeToken),
-      address(wNativeRelayer)
-    );
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
+
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
     setUpMM(moneyMarketDiamond);
 
@@ -302,14 +301,24 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMaxNumOfToken(3, 3);
 
     adminFacet.setMinDebtSize(normalizeEther(0.01 ether, usdDecimal));
+
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = lyfDiamond;
+    mmWhitelistAccountManagers(moneyMarketDiamond, _accountManagers);
   }
 
   function setUpMM(address _moneyMarketDiamond) internal {
     IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
 
-    // set ib token implementation
+    // set ibToken and debtToken implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
+    mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
+
+    address[] memory _whitelistedCallers = new address[](1);
+    _whitelistedCallers[0] = moneyMarketDiamond;
+    miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(usdc));
@@ -389,6 +398,17 @@ abstract contract LYF_BaseTest is BaseTest {
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
 
+    // set max num of tokens
+    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
+
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](3);
+    _accountManagers[0] = ALICE;
+    _accountManagers[1] = BOB;
+    _accountManagers[2] = EVE;
+
+    mmWhitelistAccountManagers(moneyMarketDiamond, _accountManagers);
+
     vm.startPrank(EVE);
 
     weth.approve(moneyMarketDiamond, type(uint256).max);
@@ -396,13 +416,16 @@ abstract contract LYF_BaseTest is BaseTest {
     btc.approve(moneyMarketDiamond, type(uint256).max);
 
     // DON'T change these value. Some test cases are tied to deposit balances.
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), normalizeEther(100 ether, wethDecimal));
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
-    ILendFacet(moneyMarketDiamond).deposit(address(btc), normalizeEther(100 ether, btcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(weth), normalizeEther(100 ether, wethDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(btc), normalizeEther(100 ether, btcDecimal));
 
     vm.stopPrank();
+  }
 
-    // set max num of tokens
-    mmAdminFacet.setMaxNumOfToken(3, 3, 3);
+  function mmWhitelistAccountManagers(address _moneyMarketDiamond, address[] memory _list) internal {
+    IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
+
+    mmAdminFacet.setAccountManagersOk(_list, true);
   }
 }

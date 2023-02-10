@@ -163,7 +163,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     // ib collat + wallet
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
-    moneyMarket.deposit(address(weth), 1 ether);
+    moneyMarket.deposit(ALICE, address(weth), 1 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 1 ether);
     vm.stopPrank();
     _testAddFarmSuccess(
@@ -182,7 +182,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     snapshot = vm.snapshot();
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 0.5 ether);
-    moneyMarket.deposit(address(weth), 0.5 ether);
+    moneyMarket.deposit(ALICE, address(weth), 0.5 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 0.5 ether);
     vm.stopPrank();
     _testAddFarmSuccess(
@@ -338,7 +338,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
 
     // only ib collat but not enough
     snapshot = vm.snapshot();
-    moneyMarket.deposit(address(weth), 1 ether);
+    moneyMarket.deposit(ALICE, address(weth), 1 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 0.5 ether);
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
     farmFacet.addFarmPosition(_input);
@@ -347,7 +347,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     // not enough normal and ib collat
     snapshot = vm.snapshot();
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 0.4 ether);
-    moneyMarket.deposit(address(weth), 1 ether);
+    moneyMarket.deposit(ALICE, address(weth), 1 ether);
     collateralFacet.addCollateral(ALICE, subAccount0, address(ibWeth), 0.5 ether);
     vm.expectRevert(ILYFFarmFacet.LYFFarmFacet_CollatNotEnough.selector);
     farmFacet.addFarmPosition(_input);

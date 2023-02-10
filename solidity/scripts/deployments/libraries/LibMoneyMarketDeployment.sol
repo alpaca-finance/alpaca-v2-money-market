@@ -30,7 +30,7 @@ library LibMoneyMarketDeployment {
     address ownershipFacet;
   }
 
-  function deployMoneyMarketDiamond(address _nativeToken, address _nativeRelayer)
+  function deployMoneyMarketDiamond(address _miniFL)
     internal
     returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses)
   {
@@ -38,9 +38,8 @@ library LibMoneyMarketDeployment {
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
-    _moneyMarketDiamond = address(
-      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer)
-    );
+
+    _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _miniFL));
 
     // do diamondCut
     diamondCutAllMoneyMarketFacets(_moneyMarketDiamond, _facetAddresses);
@@ -135,7 +134,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](34);
+    _selectors = new bytes4[](37);
     _selectors[0] = ViewFacet.getProtocolReserve.selector;
     _selectors[1] = ViewFacet.getTokenConfig.selector;
     _selectors[2] = ViewFacet.getOverCollatDebtSharesOf.selector;
@@ -170,14 +169,15 @@ library LibMoneyMarketDeployment {
     _selectors[31] = ViewFacet.getGlobalDebtValueWithPendingInterest.selector;
     _selectors[32] = ViewFacet.getIbTokenImplementation.selector;
     _selectors[33] = ViewFacet.getLiquidationTreasury.selector;
+    _selectors[34] = ViewFacet.getDebtTokenFromToken.selector;
+    _selectors[35] = ViewFacet.getDebtTokenImplementation.selector;
+    _selectors[36] = ViewFacet.getMiniFLPoolIdOfToken.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](4);
+    _selectors = new bytes4[](2);
     _selectors[0] = LendFacet.deposit.selector;
     _selectors[1] = LendFacet.withdraw.selector;
-    _selectors[2] = LendFacet.depositETH.selector;
-    _selectors[3] = LendFacet.withdrawETH.selector;
   }
 
   function getCollateralFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
@@ -202,7 +202,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](21);
+    _selectors = new bytes4[](23);
     _selectors[0] = AdminFacet.openMarket.selector;
     _selectors[1] = AdminFacet.setTokenConfigs.selector;
     _selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
@@ -224,6 +224,8 @@ library LibMoneyMarketDeployment {
     _selectors[18] = AdminFacet.topUpTokenReserve.selector;
     _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
     _selectors[20] = AdminFacet.setEmergencyPaused.selector;
+    _selectors[21] = AdminFacet.setAccountManagersOk.selector;
+    _selectors[22] = AdminFacet.setDebtTokenImplementation.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

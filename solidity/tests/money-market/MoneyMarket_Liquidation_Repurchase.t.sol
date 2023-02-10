@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "./MoneyMarket_BaseTest.t.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -12,6 +12,7 @@ import { ILiquidationFacet } from "../../contracts/money-market/facets/Liquidati
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 struct CacheState {
   uint256 collat;
@@ -25,9 +26,12 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
   uint256 _subAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
+  IMiniFL internal _miniFL;
 
   function setUp() public override {
     super.setUp();
+
+    _miniFL = IMiniFL(address(miniFL));
 
     TripleSlopeModel6 _tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(_tripleSlope6));
@@ -43,8 +47,8 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
+    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    lendFacet.deposit(BOB, address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
@@ -142,6 +146,13 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
+
+    // debt token in MiniFL should be equal to debtShare after repurchased (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
@@ -252,6 +263,13 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_btcState.debtShare, normalizeEther(3 ether, btcDecimal));
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
+
+    // debt token in MiniFL should be equal to debtShare after repurchased (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testCorrectness_ShouldRepurchasePassedWithMoreThanDebtTokenAmount_TransferTokenCorrectly() external {
@@ -368,6 +386,13 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_btcState.debtShare, normalizeEther(5 ether, btcDecimal));
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
+
+    // debt token in MiniFL should be equal to debtShare after repurchased (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
   function testRevert_ShouldRevertIfSubAccountIsHealthy() external {
@@ -582,5 +607,12 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), normalizeEther(25.159024 ether, usdcDecimal));
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
+
+    // debt token in MiniFL should be equal to debtShare after repurchased (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 }

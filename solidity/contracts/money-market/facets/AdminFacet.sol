@@ -19,6 +19,8 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
+import { IDebtToken } from "../interfaces/IDebtToken.sol";
+import { IMiniFL } from "../interfaces/IMiniFL.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 /// @title AdminFacet is dedicated to protocol parameter configuration
@@ -27,7 +29,7 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken);
+  event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken, address _debtToken);
   event LogSetTokenConfig(address indexed _token, LibMoneyMarket01.TokenConfig _config);
   event LogsetNonCollatBorrowerOk(address indexed _account, bool isOk);
   event LogSetInterestModel(address indexed _token, address _interestModel);
@@ -36,6 +38,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetRepurchaserOk(address indexed _account, bool isOk);
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
+  event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(
     uint256 _lendingFeeBps,
@@ -45,6 +48,7 @@ contract AdminFacet is IAdminFacet {
   );
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
+  event LogSetDebtTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolConfig(
     address indexed _account,
     address indexed _token,
@@ -84,26 +88,49 @@ contract AdminFacet is IAdminFacet {
     TokenConfigInput calldata _ibTokenConfigInput
   ) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
+
     if (moneyMarketDs.ibTokenImplementation == address(0)) {
       revert AdminFacet_InvalidIbTokenImplementation();
     }
 
+    if (moneyMarketDs.debtTokenImplementation == address(0)) {
+      revert AdminFacet_InvalidDebtTokenImplementation();
+    }
+
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
 
     if (_ibToken != address(0)) {
+      revert AdminFacet_InvalidToken(_token);
+    }
+    if (_debtToken != address(0)) {
       revert AdminFacet_InvalidToken(_token);
     }
 
     _newIbToken = Clones.clone(moneyMarketDs.ibTokenImplementation);
     IInterestBearingToken(_newIbToken).initialize(_token, address(this));
 
+    address _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
+    IDebtToken(_newDebtToken).initialize(_token, address(this));
+
+    // add MoneyMarket and MiniFL as okHolders of new DebtToken
+    address[] memory _okHolders = new address[](2);
+    _okHolders[0] = address(this);
+    _okHolders[1] = address(address(_miniFL));
+    IDebtToken(_newDebtToken).setOkHolders(_okHolders, true);
+
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
     _setTokenConfig(_newIbToken, _ibTokenConfigInput, moneyMarketDs);
 
     moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
+    moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
 
-    emit LogOpenMarket(msg.sender, _token, _newIbToken);
+    moneyMarketDs.miniFLPoolIds[_newIbToken] = _miniFL.addPool(0, _newIbToken, false);
+    moneyMarketDs.miniFLPoolIds[_newDebtToken] = _miniFL.addPool(0, _newDebtToken, false);
+
+    emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }
 
   /// @notice Set token-specific configuration
@@ -254,6 +281,21 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  /// @notice Whitelist/Blacklist the address allowed for interacting with money market on users' behalf
+  /// @param _accountManagers an array of address of account managers
+  /// @param _isOk a flag to allow or disallow
+  function setAccountManagersOk(address[] calldata _accountManagers, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _accountManagers.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.accountManagersOk[_accountManagers[_i]] = _isOk;
+      emit LogSetAccountManagerOk(_accountManagers[_i], _isOk);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
   function setLiquidationTreasury(address _treasury) external onlyOwner {
@@ -344,6 +386,16 @@ contract AdminFacet is IAdminFacet {
     emit LogSetIbTokenImplementation(_newImplementation);
   }
 
+  /// @notice Set the implementation address of debt token
+  /// @param _newImplementation The address of debt token contract
+  function setDebtTokenImplementation(address _newImplementation) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // sanity check
+    IDebtToken(_newImplementation).decimals();
+    moneyMarketDs.debtTokenImplementation = _newImplementation;
+    emit LogSetDebtTokenImplementation(_newImplementation);
+  }
+
   /// @notice Set the non collteral's borrower configuration
   /// @param _protocolConfigInputs An array of configrations for borrowers
   function setProtocolConfigs(ProtocolConfigInput[] calldata _protocolConfigInputs) external onlyOwner {
@@ -432,13 +484,15 @@ contract AdminFacet is IAdminFacet {
     uint256 _length = _inputs.length;
 
     address _token;
+    address _account;
     address _subAccount;
     uint256 _shareToRemove;
     uint256 _amountToRemove;
 
     for (uint256 i; i < _length; ) {
       _token = _inputs[i].token;
-      _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+      _account = _inputs[i].account;
+      _subAccount = LibMoneyMarket01.getSubAccount(_account, _inputs[i].subAccountId);
 
       if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
         revert AdminFacet_SubAccountHealthy(_subAccount);
@@ -454,6 +508,7 @@ contract AdminFacet is IAdminFacet {
       );
 
       LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+        _account,
         _subAccount,
         _token,
         _shareToRemove,
