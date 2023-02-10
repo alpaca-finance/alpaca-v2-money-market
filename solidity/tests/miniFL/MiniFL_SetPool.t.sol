@@ -27,4 +27,10 @@ contract MiniFL_SetPoolTest is MiniFL_BaseTest {
     assertEq(miniFL.poolLength(), 3);
     assertEq(miniFL.totalAllocPoint(), 200);
   }
+
+  function testRevert_WhenSetPoolWithDummyPoolId() external {
+    // PID 0 = dummy pool
+    vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InvalidArguments.selector));
+    miniFL.setPool(0, 100, true);
+  }
 }
