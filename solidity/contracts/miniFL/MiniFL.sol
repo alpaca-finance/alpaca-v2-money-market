@@ -75,6 +75,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     ALPACA = _alpaca;
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
+
+    // The first pool is going to be a dummy pool where nobody uses.
+    // This is to prevent confusion whether PID 0 is a valid pool or not
     poolInfo.push(PoolInfo({ allocPoint: 0, lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 }));
     stakingTokens.push(address(0));
   }
@@ -113,6 +116,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     poolInfo.push(
       PoolInfo({ allocPoint: _allocPoint.toUint64(), lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 })
     );
+
+    // possible to unchecked
+    // since poolInfo is always pushed before going to this statement
     unchecked {
       _pid = poolInfo.length - 1;
     }
@@ -129,6 +135,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _allocPoint,
     bool _withUpdate
   ) external onlyOwner {
+    if (_pid == 0) revert MiniFL_InvalidArguments();
     if (_withUpdate) massUpdatePools();
 
     totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;

@@ -113,6 +113,7 @@ contract AdminFacet is IAdminFacet {
     address _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
     IDebtToken(_newDebtToken).initialize(_token, address(this));
 
+    // add MoneyMarket and MiniFL as okHolders of new DebtToken
     address[] memory _okHolders = new address[](2);
     _okHolders[0] = address(this);
     _okHolders[1] = address(address(_miniFL));
