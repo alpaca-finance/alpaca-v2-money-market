@@ -135,6 +135,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _allocPoint,
     bool _withUpdate
   ) external onlyOwner {
+    // prevent setting allocPoint of dummy pool
     if (_pid == 0) revert MiniFL_InvalidArguments();
     if (_withUpdate) massUpdatePools();
 
