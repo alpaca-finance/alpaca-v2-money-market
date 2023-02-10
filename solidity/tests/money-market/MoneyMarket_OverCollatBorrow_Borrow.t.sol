@@ -371,7 +371,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
   }
 
-  function testCorrectness_WhenUserBorrowTokenFromMM_MiniFLShouldStakeDebtTokenForUser() external {
+  function testCorrectness_WhenUserBorrowTokenFromMM_MMShouldStakeDebtTokenInMiniFLForUser() external {
     IMiniFL _miniFL = IMiniFL(address(miniFL));
 
     address _debtToken;
@@ -387,7 +387,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     // check token is exist in miniFL
     _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
-    _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
+    _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, BOB), _borrowAmount);
   }
 }

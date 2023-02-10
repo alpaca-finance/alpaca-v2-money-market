@@ -116,7 +116,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     unchecked {
       _pid = poolInfo.length - 1;
     }
-    emit LogAddPool(stakingTokens.length - 1, _allocPoint, _stakingToken);
+    emit LogAddPool(_pid, _allocPoint, _stakingToken);
   }
 
   /// @notice Update the given pool's ALPACA allocation point and `IRewarder` contract.
@@ -421,15 +421,15 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   /// @notice Get total amount of a user
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _subAccount The address of the user.
-  function getUserTotalAmountOf(uint256 _pid, address _subAccount) external view returns (uint256 _totalAmount) {
-    _totalAmount = userInfo[_pid][_subAccount].totalAmount;
+  /// @param _user The address of the user.
+  function getUserTotalAmountOf(uint256 _pid, address _user) external view returns (uint256 _totalAmount) {
+    _totalAmount = userInfo[_pid][_user].totalAmount;
   }
 
   /// @notice Get reward debt of a user
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _subAccount The address of the user.
-  function getUserRewardDebtOf(uint256 _pid, address _subAccount) external view returns (int256 _rewardDebt) {
-    _rewardDebt = userInfo[_pid][_subAccount].rewardDebt;
+  /// @param _user The address of the user.
+  function getUserRewardDebtOf(uint256 _pid, address _user) external view returns (int256 _rewardDebt) {
+    _rewardDebt = userInfo[_pid][_user].rewardDebt;
   }
 }

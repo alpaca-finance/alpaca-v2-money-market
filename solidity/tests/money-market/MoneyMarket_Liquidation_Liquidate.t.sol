@@ -150,7 +150,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
     address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_miniFLDebtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
@@ -231,7 +231,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
     address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_miniFLDebtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
@@ -316,7 +316,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
     address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_miniFLDebtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
@@ -393,7 +393,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
     address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_miniFLDebtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
@@ -455,7 +455,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
     address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_miniFLDebtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
