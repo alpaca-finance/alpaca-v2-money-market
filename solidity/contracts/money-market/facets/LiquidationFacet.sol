@@ -208,6 +208,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _actualRepayAmountWithoutFee,
       moneyMarketDs
     );
+    // need to call removeCollat which might withdraw from miniFL to be able to transfer to repurchaser
     LibMoneyMarket01.removeCollatFromSubAccount(
       _account,
       _vars.subAccount,

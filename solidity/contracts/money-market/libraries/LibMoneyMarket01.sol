@@ -52,9 +52,20 @@ library LibMoneyMarket01 {
     uint256 _removedDebtAmount
   );
 
-  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogRemoveCollateral(
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _amount
+  );
 
-  event LogAddCollateral(address indexed _subAccount, address indexed _token, address _caller, uint256 _amount);
+  event LogAddCollateral(
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    address _caller,
+    uint256 _amount
+  );
 
   event LogOverCollatBorrow(
     address indexed _account,
@@ -608,7 +619,7 @@ library LibMoneyMarket01 {
       _miniFL.deposit(_account, _poolId, _addAmount);
     }
 
-    emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
+    emit LogAddCollateral(_account, _subAccount, _token, msg.sender, _addAmount);
   }
 
   function removeCollatFromSubAccount(
@@ -632,7 +643,7 @@ library LibMoneyMarket01 {
       moneyMarketDs.miniFL.withdraw(_account, _poolId, _removeAmount);
     }
 
-    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
+    emit LogRemoveCollateral(_account, _subAccount, _token, _removeAmount);
   }
 
   function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)

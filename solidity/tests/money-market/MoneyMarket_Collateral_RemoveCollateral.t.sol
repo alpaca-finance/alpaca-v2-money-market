@@ -19,17 +19,18 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     _miniFL = IMiniFL(address(miniFL));
   }
 
-  function _addCollatViaIbToken() internal {
+  function _depositWETHAndAddibWETHAsCollat(address _caller, uint256 _amount) internal {
     // LEND to get ibToken
-    vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(address(weth), 10 ether);
-    vm.stopPrank();
+    vm.startPrank(_caller);
+
+    weth.approve(moneyMarketDiamond, _amount);
+    uint256 _ibBalanceBefore = ibWeth.balanceOf(_caller);
+    lendFacet.deposit(address(weth), _amount);
+    uint256 _ibReceived = ibWeth.balanceOf(_caller) - _ibBalanceBefore;
 
     // Add collat by ibToken
-    vm.startPrank(ALICE);
-    ibWeth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
+    ibWeth.approve(moneyMarketDiamond, _ibReceived);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), _ibReceived);
     vm.stopPrank();
   }
 
@@ -100,7 +101,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenRemoveCollateralViaIbToken_ibTokenCollatShouldBeCorrect() external {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
-    _addCollatViaIbToken();
+    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
 
     // ibToken should be staked to MiniFL when add collat by ibToken
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
@@ -123,7 +124,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenPartiallyRemoveCollateralViaIbToken_ibTokenCollatShouldBeRemain() external {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
-    _addCollatViaIbToken();
+    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
 
     // ibToken should be staked to MiniFL when add collat by ibToken
     uint256 _stakingAmountBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
