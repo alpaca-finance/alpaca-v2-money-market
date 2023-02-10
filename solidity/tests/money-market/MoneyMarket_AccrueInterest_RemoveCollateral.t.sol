@@ -26,10 +26,10 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 50 ether);
-    lendFacet.deposit(address(btc), 100 ether);
-    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(address(isolateToken), 20 ether);
+    lendFacet.deposit(ALICE, address(weth), 50 ether);
+    lendFacet.deposit(ALICE, address(btc), 100 ether);
+    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(ALICE, address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 

@@ -26,7 +26,11 @@ interface IMoneyMarket {
 
   function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
 
-  function deposit(address _token, uint256 _amount) external;
+  function deposit(
+    address _for,
+    address _token,
+    uint256 _amount
+  ) external;
 
   function setAccountManagersOk(address[] calldata list, bool _isOk) external;
 }

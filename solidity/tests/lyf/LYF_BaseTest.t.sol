@@ -414,9 +414,9 @@ abstract contract LYF_BaseTest is BaseTest {
     btc.approve(moneyMarketDiamond, type(uint256).max);
 
     // DON'T change these value. Some test cases are tied to deposit balances.
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), normalizeEther(100 ether, wethDecimal));
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
-    ILendFacet(moneyMarketDiamond).deposit(address(btc), normalizeEther(100 ether, btcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(weth), normalizeEther(100 ether, wethDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(btc), normalizeEther(100 ether, btcDecimal));
 
     vm.stopPrank();
   }

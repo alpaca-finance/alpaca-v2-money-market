@@ -92,14 +92,14 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(address(btc), 10 ether);
+    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    lendFacet.deposit(BOB, address(btc), 10 ether);
     collateralFacet.addCollateral(BOB, 0, address(btc), 10 ether);
     vm.stopPrank();
 
     // alice add ibWETh collat for 80 ether
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 80 ether);
+    lendFacet.deposit(ALICE, address(weth), 80 ether);
     collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
     vm.stopPrank();
 
@@ -523,7 +523,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(usdc), normalizeEther(1 ether, usdcDecimal));
+    lendFacet.deposit(ALICE, address(usdc), normalizeEther(1 ether, usdcDecimal));
     ibUsdc.approve(moneyMarketDiamond, normalizeEther(1 ether, ibUsdcDecimal));
     collateralFacet.addCollateral(ALICE, 0, _ibCollatToken, normalizeEther(1 ether, usdcDecimal));
     borrowFacet.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
@@ -563,7 +563,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // increase shareValue of ibWeth by 2.5%
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
-    lendFacet.deposit(address(weth), 4 ether);
+    lendFacet.deposit(BOB, address(weth), 4 ether);
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, 4 ether);
     // set price to weth from 1 to 0.8 ether USD

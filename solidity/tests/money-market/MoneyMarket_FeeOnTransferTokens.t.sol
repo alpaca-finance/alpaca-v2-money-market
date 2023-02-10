@@ -46,7 +46,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     // setup fotToken that can be borrowed
     vm.prank(ALICE);
-    lendFacet.deposit(address(lateFotToken), 10 ether);
+    lendFacet.deposit(ALICE, address(lateFotToken), 10 ether);
 
     lateFotToken.setFee(100);
 
@@ -58,7 +58,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   function testRevert_WhenDepositWithFeeOnTransferToken() external {
     vm.prank(BOB);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
-    lendFacet.deposit(address(fotToken), 1 ether);
+    lendFacet.deposit(BOB, address(fotToken), 1 ether);
   }
 
   function testRevert_WhenAddCollateralWithFeeOnTransferToken() external {

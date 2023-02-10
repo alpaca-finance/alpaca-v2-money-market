@@ -214,11 +214,11 @@ contract LYF_Liquidation_RepurchaseTest is LYF_BaseTest {
     address _lpToken = address(wethUsdcLPToken);
 
     vm.prank(ALICE);
-    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 40 ether);
+    IMoneyMarket(moneyMarketDiamond).deposit(ALICE, address(weth), 40 ether);
 
     // increase ibWeth price to 1.2 weth/ibWeth
     vm.prank(BOB);
-    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 28 ether);
+    IMoneyMarket(moneyMarketDiamond).deposit(BOB, address(weth), 28 ether);
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, 28 ether);
 

@@ -19,7 +19,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenUserDeposit_TokenShouldSafeTransferFromUserToMM() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(ALICE, address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), 990 ether);
@@ -35,7 +35,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, _depositAmount1);
-    lendFacet.deposit(address(weth), _depositAmount1);
+    lendFacet.deposit(ALICE, address(weth), _depositAmount1);
     vm.stopPrank();
 
     // frist deposit mintShare = depositAmount
@@ -45,7 +45,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     weth.mint(BOB, _depositAmount2);
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, _depositAmount2);
-    lendFacet.deposit(address(weth), _depositAmount2);
+    lendFacet.deposit(ALICE, address(weth), _depositAmount2);
     vm.stopPrank();
 
     // mintShare = 20 * 10 / 10 = 20
@@ -59,7 +59,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     address _randomToken = address(10);
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
-    lendFacet.deposit(_randomToken, 10 ether);
+    lendFacet.deposit(ALICE, _randomToken, 10 ether);
     vm.stopPrank();
   }
 
@@ -94,7 +94,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     borrowFacet.accrueInterest(address(weth));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(ALICE, address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
@@ -110,7 +110,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0.25 ether);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), 5 ether);
+    lendFacet.deposit(ALICE, address(weth), 5 ether);
     vm.stopPrank();
 
     assertEq(ibWeth.balanceOf(ALICE), 14.878048780487804878 ether);
@@ -120,6 +120,6 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     adminFacet.setEmergencyPaused(true);
 
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
-    lendFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(ALICE, address(weth), 10 ether);
   }
 }

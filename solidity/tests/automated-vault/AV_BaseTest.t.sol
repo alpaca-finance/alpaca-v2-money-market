@@ -206,8 +206,8 @@ abstract contract AV_BaseTest is BaseTest {
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(usdc), normalizeEther(100 ether, usdcDecimal));
     vm.stopPrank();
 
     mmAdminFacet.setMaxNumOfToken(3, 3, 3);

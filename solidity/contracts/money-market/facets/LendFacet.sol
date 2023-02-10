@@ -23,7 +23,14 @@ import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 contract LendFacet is ILendFacet {
   using LibSafeToken for IERC20;
 
-  event LogDeposit(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
+  event LogDeposit(
+    address indexed _for,
+    address _caller,
+    address _token,
+    address _ibToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogDepositETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogWithdrawETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
@@ -41,9 +48,14 @@ contract LendFacet is ILendFacet {
   }
 
   /// @notice Deposit a token for lending
+  /// @param _for The actual lender
   /// @param _token The token to lend
   /// @param _amount The amount to lend
-  function deposit(address _token, uint256 _amount) external nonReentrant {
+  function deposit(
+    address _for,
+    address _token,
+    uint256 _amount
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     // This will revert if markets are paused
@@ -66,8 +78,10 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
     IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareToMint);
-
-    emit LogDeposit(msg.sender, _token, _ibToken, _amount, _shareToMint);
+    // _for is purely used for event tracking purpose
+    // since this function will be called from only AccountManager
+    // we need a way to track the actual lender
+    emit LogDeposit(_for, msg.sender, _token, _ibToken, _amount, _shareToMint);
   }
 
   /// @notice Withdraw the lended token by burning the interest bearing token
