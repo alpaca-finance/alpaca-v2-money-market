@@ -90,7 +90,8 @@ abstract contract LYF_BaseTest is BaseTest {
   function setUp() public virtual {
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
       address(wNativeToken),
-      address(wNativeRelayer)
+      address(wNativeRelayer),
+      address(miniFL)
     );
     lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
     setUpMM(moneyMarketDiamond);
@@ -308,10 +309,14 @@ abstract contract LYF_BaseTest is BaseTest {
   function setUpMM(address _moneyMarketDiamond) internal {
     IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
 
-    // set ib token implementation
+    // set ibToken and debtToken implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
     mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
+
+    address[] memory _whitelistedCallers = new address[](1);
+    _whitelistedCallers[0] = moneyMarketDiamond;
+    miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(_moneyMarketDiamond, address(usdc));

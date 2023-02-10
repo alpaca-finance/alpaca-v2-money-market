@@ -30,16 +30,17 @@ library LibMoneyMarketDeployment {
     address ownershipFacet;
   }
 
-  function deployMoneyMarketDiamond(address _nativeToken, address _nativeRelayer)
-    internal
-    returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses)
-  {
+  function deployMoneyMarketDiamond(
+    address _nativeToken,
+    address _nativeRelayer,
+    address _miniFL
+  ) internal returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses) {
     // deploy facets
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
     _moneyMarketDiamond = address(
-      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer)
+      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer, _miniFL)
     );
 
     // do diamondCut

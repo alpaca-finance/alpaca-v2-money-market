@@ -26,6 +26,7 @@ contract DeployMoneyMarket is Script {
   struct DeploymentConfig {
     address wNativeAddress;
     address wNativeRelayer;
+    address miniFLAddress;
   }
 
   function run() public {
@@ -35,7 +36,7 @@ contract DeployMoneyMarket is Script {
     vm.startBroadcast(deployerPrivateKey);
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
-      .deployMoneyMarketDiamond(config.wNativeAddress, config.wNativeRelayer);
+      .deployMoneyMarketDiamond(config.wNativeAddress, config.wNativeRelayer, config.miniFLAddress);
     IMoneyMarket moneyMarket = IMoneyMarket(_moneyMarket);
 
     // setup oracles
