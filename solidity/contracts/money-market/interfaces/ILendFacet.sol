@@ -12,5 +12,9 @@ interface ILendFacet {
     uint256 _amount
   ) external;
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
+  function withdraw(
+    address _for,
+    address _ibToken,
+    uint256 _shareAmount
+  ) external returns (uint256 _shareValue);
 }

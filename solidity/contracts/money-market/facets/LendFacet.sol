@@ -31,7 +31,14 @@ contract LendFacet is ILendFacet {
     uint256 _amountIn,
     uint256 _amountOut
   );
-  event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
+  event LogWithdraw(
+    address indexed _for,
+    address _caller,
+    address _token,
+    address _ibToken,
+    uint256 _amountIn,
+    uint256 _amountOut
+  );
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -84,13 +91,14 @@ contract LendFacet is ILendFacet {
   }
 
   /// @notice Withdraw the lended token by burning the interest bearing token
+  /// @param _for The actual lender
   /// @param _ibToken The interest bearing token to burn
   /// @param _shareAmount The amount of interest bearing token to burn
-  function withdraw(address _ibToken, uint256 _shareAmount)
-    external
-    nonReentrantWithdraw
-    returns (uint256 _withdrawAmount)
-  {
+  function withdraw(
+    address _for,
+    address _ibToken,
+    uint256 _shareAmount
+  ) external nonReentrantWithdraw returns (uint256 _withdrawAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     // This function should not be called from anyone
@@ -105,10 +113,15 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.accrueInterest(_underlyingToken, moneyMarketDs);
 
-    _withdrawAmount = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, msg.sender, moneyMarketDs);
+    _withdrawAmount = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, moneyMarketDs);
 
     moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
 
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
+
+    // _for is purely used for event tracking purpose
+    // since this function will be called from only AccountManager
+    // we need a way to track the actual lender
+    emit LogWithdraw(_for, msg.sender, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
   }
 }

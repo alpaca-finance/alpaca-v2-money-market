@@ -532,7 +532,6 @@ library LibMoneyMarket01 {
     address _underlyingToken,
     address _ibToken,
     uint256 _shareAmount,
-    address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _withdrawAmount) {
     _withdrawAmount = LibShareUtil.shareToValue(
@@ -546,9 +545,7 @@ library LibMoneyMarket01 {
     }
 
     // burn ibToken
-    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _withdrawAmount, _shareAmount);
-
-    emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
+    IInterestBearingToken(_ibToken).onWithdraw(msg.sender, msg.sender, _withdrawAmount, _shareAmount);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint64) {

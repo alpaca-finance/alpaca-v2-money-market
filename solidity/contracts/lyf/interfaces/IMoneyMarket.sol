@@ -16,7 +16,11 @@ interface IMoneyMarket {
 
   function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256 _debtAmount);
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
+  function withdraw(
+    address _for,
+    address _ibToken,
+    uint256 _shareAmount
+  ) external returns (uint256 _shareValue);
 
   function deposit(
     address _for,
