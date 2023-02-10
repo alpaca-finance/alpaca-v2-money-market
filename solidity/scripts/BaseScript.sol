@@ -41,31 +41,30 @@ abstract contract BaseScript is Script {
     address moneyMarketDiamond;
   }
 
-  function _setUp() internal {
+  function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
     userAddress = vm.addr(userPrivateKey);
-
     MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
-    address _moneyMarketDiamond = mmConfig.moneyMarketDiamond;
-    // setup mm if not exist for local simulation
-    uint256 size;
-    assembly {
-      size := extcodesize(_moneyMarketDiamond)
-    }
-    if (size > 0) {
-      moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-    } else {
-      vm.startPrank(deployerAddress);
-      (_moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(1), address(2));
-      vm.stopPrank();
-      moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-    }
-
-    console.log("addresses");
-    console.log("  deployer     :", deployerAddress);
-    console.log("  user     :", userAddress);
-    console.log("  money market :", address(moneyMarket));
+    moneyMarket = IMoneyMarket(mmConfig.moneyMarketDiamond);
   }
+
+  // function _pretendMM() internal {
+  //   MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
+  //   address _moneyMarketDiamond = mmConfig.moneyMarketDiamond;
+  //   // setup mm if not exist for local simulation
+  //   uint256 size;
+  //   assembly {
+  //     size := extcodesize(_moneyMarketDiamond)
+  //   }
+  //   if (size > 0) {
+  //     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
+  //   } else {
+  //     vm.startPrank(deployerAddress);
+  //     (_moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(1), address(2));
+  //     vm.stopPrank();
+  //     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
+  //   }
+  // }
 
   function _setUpMockToken(string memory symbol, uint8 decimals) internal returns (address) {
     address newToken = address(new MockERC20("", symbol, decimals));

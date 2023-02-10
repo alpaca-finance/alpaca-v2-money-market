@@ -11,7 +11,7 @@ contract SetUpMMForTestScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _setUp();
+    _loadAddresses();
 
     _startDeployerBroadcast();
 
