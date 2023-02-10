@@ -275,7 +275,7 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
-  /// @notice Whitelist/Blacklist the address allowed for liquidation
+  /// @notice Whitelist/Blacklist the address allowed for interacting with money market on users' behalf
   /// @param _accountManagers an array of address of account managers
   /// @param _isOk a flag to allow or disallow
   function setAccountManagersOk(address[] calldata _accountManagers, bool _isOk) external onlyOwner {
