@@ -25,16 +25,16 @@ contract LendFacet is ILendFacet {
 
   event LogDeposit(
     address indexed _for,
+    address indexed _token,
     address _caller,
-    address _token,
     address _ibToken,
     uint256 _amountIn,
     uint256 _amountOut
   );
   event LogWithdraw(
     address indexed _for,
+    address indexed _token,
     address _caller,
-    address _token,
     address _ibToken,
     uint256 _amountIn,
     uint256 _amountOut
@@ -87,7 +87,7 @@ contract LendFacet is ILendFacet {
     // _for is purely used for event tracking purpose
     // since this function will be called from only AccountManager
     // we need a way to track the actual lender
-    emit LogDeposit(_for, msg.sender, _token, _ibToken, _amount, _shareToMint);
+    emit LogDeposit(_for, _token, msg.sender, _ibToken, _amount, _shareToMint);
   }
 
   /// @notice Withdraw the lended token by burning the interest bearing token
@@ -122,6 +122,6 @@ contract LendFacet is ILendFacet {
     // _for is purely used for event tracking purpose
     // since this function will be called from only AccountManager
     // we need a way to track the actual lender
-    emit LogWithdraw(_for, msg.sender, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
+    emit LogWithdraw(_for, _underlyingToken, msg.sender, _ibToken, _shareAmount, _withdrawAmount);
   }
 }
