@@ -208,7 +208,13 @@ contract LiquidationFacet is ILiquidationFacet {
       _actualRepayAmountWithoutFee,
       moneyMarketDs
     );
-    LibMoneyMarket01.removeCollatFromSubAccount(_vars.subAccount, _collatToken, _collatAmountOut, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(
+      _account,
+      _vars.subAccount,
+      _collatToken,
+      _collatAmountOut,
+      moneyMarketDs
+    );
 
     moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithoutFee;
 
@@ -292,6 +298,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // In case the collateral is ibToken and currently staking in miniFL
     // This will withdraw from miniFL so that the collat token can be transfered to strategy contract
     LibMoneyMarket01.removeCollatFromSubAccount(
+      _params.account,
       _params.subAccount,
       _params.collatToken,
       _params.subAccountCollatAmount,
@@ -365,6 +372,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // add remaining collateral back to the subaccount since we have removed all collateral earlier
     // this should also deposit collateral back to miniFL if applicable
     LibMoneyMarket01.addCollatToSubAccount(
+      _params.account,
       _params.subAccount,
       _params.collatToken,
       _params.subAccountCollatAmount - _vars.collatSold,

@@ -564,6 +564,7 @@ library LibMoneyMarket01 {
   }
 
   function addCollatToSubAccount(
+    address _account,
     address _subAccount,
     address _token,
     uint256 _addAmount,
@@ -595,13 +596,14 @@ library LibMoneyMarket01 {
     IMiniFL _miniFL = moneyMarketDs.miniFL;
     if (_poolId != 0) {
       IERC20(_token).safeIncreaseAllowance(address(_miniFL), _addAmount);
-      _miniFL.deposit(_subAccount, _poolId, _addAmount);
+      _miniFL.deposit(_account, _poolId, _addAmount);
     }
 
     emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
   }
 
   function removeCollatFromSubAccount(
+    address _account,
     address _subAccount,
     address _token,
     uint256 _removeAmount,
@@ -618,7 +620,7 @@ library LibMoneyMarket01 {
     // withdraw token from miniFL
     uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
     if (_poolId != 0) {
-      moneyMarketDs.miniFL.withdraw(_subAccount, _poolId, _removeAmount);
+      moneyMarketDs.miniFL.withdraw(_account, _poolId, _removeAmount);
     }
 
     emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
@@ -652,20 +654,17 @@ library LibMoneyMarket01 {
     moneyMarketDs.globalDebts[_repayToken] -= _debtValueToRemove;
 
     // withdraw debt token from miniFL
-    // Note: prevent stack too deep
-    moneyMarketDs.miniFL.withdraw(
-      _account,
-      moneyMarketDs.miniFLPoolIds[moneyMarketDs.tokenToDebtTokens[_repayToken]],
-      _debtShareToRemove
-    );
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
+    address _debtToken = moneyMarketDs.tokenToDebtTokens[_repayToken];
+    _miniFL.withdraw(_account, moneyMarketDs.miniFLPoolIds[_debtToken], _debtShareToRemove);
 
     // burn debt token
-    IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _debtShareToRemove);
+    IDebtToken(_debtToken).burn(address(this), _debtShareToRemove);
 
     // withdraw token from miniFL
     uint256 _poolId = moneyMarketDs.miniFLPoolIds[_repayToken];
     if (_poolId != 0) {
-      moneyMarketDs.miniFL.withdraw(_subAccount, _poolId, _debtShareToRemove);
+      _miniFL.withdraw(_account, _poolId, _debtShareToRemove);
     }
 
     emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);

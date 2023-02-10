@@ -126,8 +126,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
   // Add Collat with ibToken
   function testCorrectness_WhenAddCollateralViaIbToken_ibTokenShouldTransferFromUserToMM() external {
     IMiniFL _miniFL = IMiniFL(address(miniFL));
-    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(address(ibWeth));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
     // LEND to get ibToken
     vm.startPrank(ALICE);
@@ -148,7 +147,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     // check account ib token collat
     // when add collat by ibToken, ibToken is staked to MiniFL
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), 10 ether);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 10 ether);
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
   }
 }

@@ -190,7 +190,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
-    LibMoneyMarket01.removeCollatFromSubAccount(_subAccount, _token, _amountToRepay, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _subAccount, _token, _amountToRepay, moneyMarketDs);
 
     moneyMarketDs.reserves[_token] += _amountToRepay;
 

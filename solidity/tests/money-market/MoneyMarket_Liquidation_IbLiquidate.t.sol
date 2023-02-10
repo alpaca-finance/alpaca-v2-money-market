@@ -248,8 +248,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
 
     // check staking ib token in MiniFL
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_ibCollatToken);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _aliceSubAccount0), 40 ether - _expectedIbTokenToWithdraw);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 40 ether - _expectedIbTokenToWithdraw);
   }
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -380,8 +380,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _assertTreasuryFee(_debtToken, _expectedLiquidationFeeToTrasury, _stateBefore);
 
     // check staking ib token in MiniFL
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_ibCollatToken);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _aliceSubAccount0), 40 ether - _expectedIbTokenToWithdraw);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 40 ether - _expectedIbTokenToWithdraw);
   }
 
   function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
@@ -524,8 +524,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
 
     // check staking ib token in MiniFL
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_ibCollatToken);
-    assertEq(IMiniFL(address(miniFL)).getUserTotalAmountOf(_poolId, _aliceSubAccount0), 0);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(IMiniFL(address(miniFL)).getUserTotalAmountOf(_poolId, ALICE), 0);
   }
 
   function testRevert_WhenPartialLiquidateIbCollateral_RepayTokenAndUnderlyingAreSame() external {

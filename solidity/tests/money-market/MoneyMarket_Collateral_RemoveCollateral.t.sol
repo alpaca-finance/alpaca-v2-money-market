@@ -98,14 +98,13 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
   // Add and Remove Collat with ibToken
   function testCorrectness_WhenRemoveCollateralViaIbToken_ibTokenCollatShouldBeCorrect() external {
-    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(address(ibWeth));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
     _addCollatViaIbToken();
 
     // ibToken should be staked to MiniFL when add collat by ibToken
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), 10 ether);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 10 ether);
 
     // check account ib token collat
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
@@ -117,18 +116,17 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     // check account ib token collat
     // ibToken should be withdraw from MiniFL when remove collat
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 0 ether);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), 0 ether);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 0 ether);
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
   }
 
   function testCorrectness_WhenPartiallyRemoveCollateralViaIbToken_ibTokenCollatShouldBeRemain() external {
-    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(address(ibWeth));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
     _addCollatViaIbToken();
 
     // ibToken should be staked to MiniFL when add collat by ibToken
-    uint256 _stakingAmountBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _stakingAmountBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     uint256 _collatAmountBefore = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
 
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
@@ -141,7 +139,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     collateralFacet.removeCollateral(0, address(ibWeth), 5 ether);
     vm.stopPrank();
 
-    uint256 _stakingAmountAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _stakingAmountAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     uint256 _collatAmountAfter = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
 
     // check account ib token collat
@@ -150,7 +148,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
       viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)),
       _collatAmountBefore - _collatAmountAfter
     );
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _stakingAmountBefore - _stakingAmountAfter);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stakingAmountBefore - _stakingAmountAfter);
     assertEq(ibWeth.balanceOf(ALICE), _stakingAmountBefore - _stakingAmountAfter);
   }
 }

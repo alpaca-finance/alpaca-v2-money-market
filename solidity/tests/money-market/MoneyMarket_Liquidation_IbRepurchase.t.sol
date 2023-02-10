@@ -161,7 +161,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore, _expectedFeeToTreasury);
 
     // check staking ib token in MiniFL
-    uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(address(ibWeth));
-    assertEq(IMiniFL(address(miniFL)).getUserTotalAmountOf(_poolId, _aliceSubAccount0), _stateAfter.subAccountCollat);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
+    assertEq(IMiniFL(address(miniFL)).getUserTotalAmountOf(_poolId, ALICE), _stateAfter.subAccountCollat);
   }
 }
