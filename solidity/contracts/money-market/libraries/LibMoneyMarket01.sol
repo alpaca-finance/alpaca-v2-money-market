@@ -45,6 +45,7 @@ library LibMoneyMarket01 {
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
   event LogRemoveDebt(
+    address indexed _account,
     address indexed _subAccount,
     address indexed _token,
     uint256 _removedDebtShare,
@@ -54,6 +55,14 @@ library LibMoneyMarket01 {
   event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
 
   event LogAddCollateral(address indexed _subAccount, address indexed _token, address _caller, uint256 _amount);
+
+  event LogOverCollatBorrow(
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _borrowedAmount,
+    uint256 _debtShare
+  );
 
   enum AssetTier {
     UNLISTED,
@@ -648,7 +657,7 @@ library LibMoneyMarket01 {
     // burn debt token
     IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _debtShareToRemove);
 
-    emit LogRemoveDebt(_subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
+    emit LogRemoveDebt(_account, _subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
 
   function transferCollat(
@@ -740,6 +749,8 @@ library LibMoneyMarket01 {
     IDebtToken(_debtToken).mint(address(this), _amount);
     IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _amount);
     _miniFL.deposit(_account, _poolId, _amount);
+
+    emit LogOverCollatBorrow(msg.sender, _subAccount, _token, _amount, _shareToAdd);
   }
 
   function nonCollatBorrow(
