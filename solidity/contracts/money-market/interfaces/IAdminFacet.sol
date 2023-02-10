@@ -67,7 +67,7 @@ interface IAdminFacet {
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
-  function setAccountManagersOk(address[] calldata list, bool _isOk) external;
+  function setAccountManagersOk(address[] calldata _list, bool _isOk) external;
 
   function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
