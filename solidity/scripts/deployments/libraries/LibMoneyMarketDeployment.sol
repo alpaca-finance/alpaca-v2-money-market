@@ -30,7 +30,7 @@ library LibMoneyMarketDeployment {
     address ownershipFacet;
   }
 
-  function deployMoneyMarketDiamond()
+  function deployMoneyMarketDiamond(address _miniFL)
     internal
     returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses)
   {
@@ -38,7 +38,8 @@ library LibMoneyMarketDeployment {
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
-    _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet));
+
+    _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _miniFL));
 
     // do diamondCut
     diamondCutAllMoneyMarketFacets(_moneyMarketDiamond, _facetAddresses);

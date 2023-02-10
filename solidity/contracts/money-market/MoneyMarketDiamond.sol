@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
 import { IDiamondLoupe } from "./interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
+import { IMiniFL } from "./interfaces/IMiniFL.sol";
 import { IERC173 } from "./interfaces/IERC173.sol";
 import { IERC165 } from "./interfaces/IERC165.sol";
 
@@ -15,7 +16,7 @@ import { LibMoneyMarket01 } from "./libraries/LibMoneyMarket01.sol";
 contract MoneyMarketDiamond {
   error MoneyMarketDiamond_InvalidAddress();
 
-  constructor(address _diamondCutFacet) {
+  constructor(address _diamondCutFacet, address _miniFL) {
     // set contract owner
     LibDiamond.setContractOwner(msg.sender);
 
@@ -36,6 +37,10 @@ contract MoneyMarketDiamond {
     ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
     ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
     ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+
+    // initialize money market states
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    moneyMarketDs.miniFL = IMiniFL(_miniFL);
   }
 
   // Find facet for function that is called and execute the

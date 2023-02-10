@@ -55,7 +55,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond();
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);
@@ -66,7 +66,11 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
     ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
 
-    // set ib token implementation
+    address[] memory _whitelistedCallers = new address[](1);
+    _whitelistedCallers[0] = moneyMarketDiamond;
+    miniFL.setWhitelistedCallers(_whitelistedCallers, true);
+
+    // set ibToken and debtToken implementation
     // warning: this one should set before open market
     adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
     adminFacet.setDebtTokenImplementation(address(new DebtToken()));

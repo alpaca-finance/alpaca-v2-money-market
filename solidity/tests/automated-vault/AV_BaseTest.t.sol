@@ -55,7 +55,9 @@ abstract contract AV_BaseTest is BaseTest {
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond();
+
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
+
     setUpMM();
 
     // set av facets
@@ -140,10 +142,14 @@ abstract contract AV_BaseTest is BaseTest {
   function setUpMM() internal {
     IAdminFacet mmAdminFacet = IAdminFacet(moneyMarketDiamond);
 
-    // set ib token implementation
+    // set ibToken and debtToken implementation
     // warning: this one should set before open market
     mmAdminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
     mmAdminFacet.setDebtTokenImplementation(address(new DebtToken()));
+
+    address[] memory _whitelistedCallers = new address[](1);
+    _whitelistedCallers[0] = moneyMarketDiamond;
+    miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
     ibWeth = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(weth));
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(usdc));

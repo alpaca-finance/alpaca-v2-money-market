@@ -20,6 +20,7 @@ import { IFeeModel } from "../interfaces/IFeeModel.sol";
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 import { IDebtToken } from "../interfaces/IDebtToken.sol";
+import { IMiniFL } from "../interfaces/IMiniFL.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 /// @title AdminFacet is dedicated to protocol parameter configuration
@@ -87,6 +88,8 @@ contract AdminFacet is IAdminFacet {
     TokenConfigInput calldata _ibTokenConfigInput
   ) external onlyOwner nonReentrant returns (address _newIbToken) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
+
     if (moneyMarketDs.ibTokenImplementation == address(0)) {
       revert AdminFacet_InvalidIbTokenImplementation();
     }
@@ -117,6 +120,9 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.tokenToIbTokens[_token] = _newIbToken;
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
     moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
+
+    _miniFL.addPool(0, _newIbToken, false);
+    _miniFL.addPool(0, _newDebtToken, false);
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }
