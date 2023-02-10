@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import "./BaseUtilsScript.sol";
+import "../BaseScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
 import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
 
-contract SetUpMMForTestScript is BaseUtilsScript {
+contract SetUpMMForTestScript is BaseScript {
   using stdJson for string;
 
-  function _run() internal override {
-    _setUpForLocalRun();
+  function run() public {
+    _setUp();
 
     _startDeployerBroadcast();
 
     //---- setup tokens ----//
-    address bnb = address(new MockERC20("", "MOCKBNB", 18));
-    address busd = address(new MockERC20("", "MOCKBUSD", 18));
-    address dodo = address(new MockERC20("", "MOCKDODO", 18));
-    address pstake = address(new MockERC20("", "MOCKPSTAKE", 18));
-    address mock6DecimalsToken = address(new MockERC20("", "MOCK6", 6));
+    address bnb = _setUpMockToken("MOCKBNB", 18);
+    address busd = _setUpMockToken("MOCKBUSD", 18);
+    address dodo = _setUpMockToken("MOCKDODO", 18);
+    address pstake = _setUpMockToken("MOCKPSTAKE", 18);
+    address mock6DecimalsToken = _setUpMockToken("MOCK6", 6);
 
     //---- setup mock oracle ----//
     MockAlpacaV2Oracle mockOracle = new MockAlpacaV2Oracle();
@@ -52,7 +52,6 @@ contract SetUpMMForTestScript is BaseUtilsScript {
     address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, tokenConfigInput);
     tokenConfigInput.token = mock6DecimalsToken;
     address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, tokenConfigInput);
-    console.log("openMarket for", mock6DecimalsToken);
     tokenConfigInput.token = dodo;
     tokenConfigInput.tier = LibMoneyMarket01.AssetTier.CROSS;
     tokenConfigInput.collateralFactor = 0;
@@ -108,13 +107,13 @@ contract SetUpMMForTestScript is BaseUtilsScript {
     configJson.serialize("ibDodo", ibDodo);
     configJson.serialize("ibPstake", ibPstake);
     configJson = configJson.serialize("ibMock6", ibMock6);
-    configJson.write(configFilePath, ".IbTokens");
+    _writeJson(configJson, ".ibTokens");
 
     configJson.serialize("bnb", bnb);
     configJson.serialize("busd", busd);
     configJson.serialize("dodo", dodo);
     configJson.serialize("pstake", pstake);
     configJson = configJson.serialize("mock6DecimalsToken", mock6DecimalsToken);
-    configJson.write(configFilePath, ".Tokens");
+    _writeJson(configJson, ".tokens");
   }
 }

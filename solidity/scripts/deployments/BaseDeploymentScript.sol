@@ -10,6 +10,7 @@ import { IViewFacet } from "solidity/contracts/money-market/interfaces/IViewFace
 
 interface IMoneyMarket is IAdminFacet, IViewFacet {}
 
+/// @dev DEPRECATED pls use BaseScript
 abstract contract BaseDeploymentScript is Script {
   using stdJson for string;
 

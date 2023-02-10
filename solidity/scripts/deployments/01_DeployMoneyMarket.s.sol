@@ -72,7 +72,7 @@ contract DeployMoneyMarket is BaseScript {
     facetsJson.serialize("adminFacet", facetAddresses.adminFacet);
     facetsJson.serialize("liquidationFacet", facetAddresses.liquidationFacet);
     facetsJson = facetsJson.serialize("ownershipFacet", facetAddresses.ownershipFacet);
-    facetsJson.write(configFilePath, ".moneyMarket.facets");
+    _writeJson(facetsJson, ".moneyMarket.facets");
 
     // // interest rate models
     // string memory interestRateModelsJson;

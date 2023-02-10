@@ -13,11 +13,12 @@ import { IViewFacet } from "solidity/contracts/money-market/interfaces/IViewFace
 import { ICollateralFacet } from "solidity/contracts/money-market/interfaces/ICollateralFacet.sol";
 import { IBorrowFacet } from "solidity/contracts/money-market/interfaces/IBorrowFacet.sol";
 import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFacet.sol";
+import { IOwnershipFacet } from "solidity/contracts/money-market/interfaces/IOwnershipFacet.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
-interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet {}
+interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IOwnershipFacet {}
 
 abstract contract BaseScript is Script {
   using stdJson for string;
@@ -37,13 +38,15 @@ abstract contract BaseScript is Script {
   }
 
   struct MoneyMarketConfig {
-    address MoneyMarketDiamond;
-    LibMoneyMarketDeployment.FacetAddresses Facets;
+    address moneyMarketDiamond;
   }
 
   function _setUp() internal {
+    deployerAddress = vm.addr(deployerPrivateKey);
+    userAddress = vm.addr(userPrivateKey);
+
     MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
-    address _moneyMarketDiamond = mmConfig.MoneyMarketDiamond;
+    address _moneyMarketDiamond = mmConfig.moneyMarketDiamond;
     // setup mm if not exist for local simulation
     uint256 size;
     assembly {
@@ -52,12 +55,11 @@ abstract contract BaseScript is Script {
     if (size > 0) {
       moneyMarket = IMoneyMarket(_moneyMarketDiamond);
     } else {
+      vm.startPrank(deployerAddress);
       (_moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(1), address(2));
+      vm.stopPrank();
       moneyMarket = IMoneyMarket(_moneyMarketDiamond);
     }
-
-    deployerAddress = vm.addr(deployerPrivateKey);
-    userAddress = vm.addr(userPrivateKey);
 
     console.log("addresses");
     console.log("  deployer     :", deployerAddress);
@@ -65,20 +67,23 @@ abstract contract BaseScript is Script {
     console.log("  money market :", address(moneyMarket));
   }
 
-  function _setUpMockToken() internal returns (address) {
-    return address(new MockERC20("", "TEST", 18));
+  function _setUpMockToken(string memory symbol, uint8 decimals) internal returns (address) {
+    address newToken = address(new MockERC20("", symbol, decimals));
+    vm.label(newToken, symbol);
+    return newToken;
   }
 
-  function _getDeploymentConfig() internal view returns (DeploymentConfig memory) {
+  function _getDeploymentConfig() internal view returns (DeploymentConfig memory config) {
     console.log("load deployment config from", configFilePath);
     string memory configJson = vm.readFile(configFilePath);
-    return abi.decode(configJson.parseRaw("deploymentConfig"), (DeploymentConfig));
+    config.wNativeAddress = abi.decode(configJson.parseRaw(".deploymentConfig.wNativeAddress"), (address));
+    config.wNativeRelayer = abi.decode(configJson.parseRaw(".deploymentConfig.wNativeRelayer"), (address));
   }
 
-  function _getMoneyMarketConfig() internal view returns (MoneyMarketConfig memory) {
+  function _getMoneyMarketConfig() internal view returns (MoneyMarketConfig memory config) {
     console.log("load money market config from", configFilePath);
     string memory configJson = vm.readFile(configFilePath);
-    return abi.decode(configJson.parseRaw("moneyMarket"), (MoneyMarketConfig));
+    config.moneyMarketDiamond = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (address));
   }
 
   function _startDeployerBroadcast() internal {
