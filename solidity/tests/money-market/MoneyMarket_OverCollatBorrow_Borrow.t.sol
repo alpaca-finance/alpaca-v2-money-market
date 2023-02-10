@@ -371,10 +371,9 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
   }
 
-  function testCorrectness_WhenUserBorrowTokenFromMM_MiniFLShouldStakeDebtTokenForUser() external {
+  function testCorrectness_WhenUserBorrowTokenFromMM_MMShouldStakeDebtTokenInMiniFLForUser() external {
     IMiniFL _miniFL = IMiniFL(address(miniFL));
 
-    address _subAccount;
     address _debtToken;
     uint256 _poolId;
 
@@ -383,20 +382,12 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, _borrowToken, _borrowAmount * 2);
-    collateralFacet.addCollateral(BOB, subAccount1, _borrowToken, _borrowAmount * 2);
     borrowFacet.borrow(subAccount0, _borrowToken, _borrowAmount);
-    borrowFacet.borrow(subAccount1, _borrowToken, _borrowAmount / 2);
     vm.stopPrank();
 
     // check token is exist in miniFL
-    _subAccount = viewFacet.getSubAccount(BOB, subAccount0);
     _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
-    _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _borrowAmount);
-
-    _subAccount = viewFacet.getSubAccount(BOB, subAccount1);
-    _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
-    _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, _subAccount), _borrowAmount / 2);
+    _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, BOB), _borrowAmount);
   }
 }

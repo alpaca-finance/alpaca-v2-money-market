@@ -38,8 +38,8 @@ contract ViewFacet is IViewFacet {
 
   /// @notice Get the miniFL pool id of the token
   /// @param _token The address of token
-  /// @return The pool id of the debt token
-  function getMiniFLPoolIdFromToken(address _token) external view returns (uint256) {
+  /// @return The pool id of the token
+  function getMiniFLPoolIdOfToken(address _token) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     return moneyMarketDs.miniFLPoolIds[_token];
   }

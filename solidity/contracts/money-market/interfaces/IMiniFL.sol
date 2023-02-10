@@ -6,7 +6,7 @@ interface IMiniFL {
 
   function totalAllocPoint() external view returns (uint256);
 
-  function getUserTotalAmountOf(uint256 _pid, address _subAccount) external view returns (uint256 _totalAmount);
+  function getUserTotalAmountOf(uint256 _pid, address _user) external view returns (uint256 _totalAmount);
 
   function addPool(
     uint256 _allocPoint,
