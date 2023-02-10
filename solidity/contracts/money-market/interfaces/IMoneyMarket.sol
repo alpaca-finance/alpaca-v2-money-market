@@ -28,5 +28,5 @@ interface IMoneyMarket {
 
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
 
-  function setAccountManagersOk(address[] calldata list, bool _isOk) external;
+  function setAccountManagersOk(address[] calldata _list, bool _isOk) external;
 }
