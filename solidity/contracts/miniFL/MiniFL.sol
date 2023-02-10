@@ -75,6 +75,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     ALPACA = _alpaca;
     maxAlpacaPerSecond = _maxAlpacaPerSecond;
+
+    // Add a dummy pool to check whether pool of staking token exists or not.
     poolInfo.push(PoolInfo({ allocPoint: 0, lastRewardTime: block.timestamp.toUint64(), accAlpacaPerShare: 0 }));
     stakingTokens.push(address(0));
   }
