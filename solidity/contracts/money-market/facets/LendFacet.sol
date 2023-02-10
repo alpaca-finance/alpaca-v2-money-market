@@ -53,7 +53,7 @@ contract LendFacet is ILendFacet {
   }
 
   /// @notice Deposit a token for lending
-  /// @param _for The actual lender
+  /// @param _for The actual lender. Used only for tracking purpose
   /// @param _token The token to lend
   /// @param _amount The amount to lend
   function deposit(
@@ -91,7 +91,7 @@ contract LendFacet is ILendFacet {
   }
 
   /// @notice Withdraw the lended token by burning the interest bearing token
-  /// @param _for The actual lender
+  /// @param _for The actual owner. Used only for tracking purpose
   /// @param _ibToken The interest bearing token to burn
   /// @param _shareAmount The amount of interest bearing token to burn
   function withdraw(
