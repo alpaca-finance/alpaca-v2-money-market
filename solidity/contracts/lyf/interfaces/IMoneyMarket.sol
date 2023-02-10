@@ -16,9 +16,17 @@ interface IMoneyMarket {
 
   function getNonCollatAccountDebt(address _account, address _token) external view returns (uint256 _debtAmount);
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external returns (uint256 _shareValue);
+  function withdraw(
+    address _for,
+    address _ibToken,
+    uint256 _shareAmount
+  ) external returns (uint256 _shareValue);
 
-  function deposit(address _token, uint256 _amount) external;
+  function deposit(
+    address _for,
+    address _token,
+    uint256 _amount
+  ) external;
 
   function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
 
@@ -29,4 +37,6 @@ interface IMoneyMarket {
   ) external;
 
   function accrueInterest(address _token) external;
+
+  function setAccountManagersOk(address[] calldata _list, bool _isOk) external;
 }

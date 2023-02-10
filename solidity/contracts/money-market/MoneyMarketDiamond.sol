@@ -16,15 +16,7 @@ import { LibMoneyMarket01 } from "./libraries/LibMoneyMarket01.sol";
 contract MoneyMarketDiamond {
   error MoneyMarketDiamond_InvalidAddress();
 
-  constructor(
-    address _diamondCutFacet,
-    address _wNativeToken,
-    address _wNativeRelayer,
-    address _miniFL
-  ) {
-    if (_wNativeToken == address(0) || _wNativeRelayer == address(0) || _miniFL == address(0))
-      revert MoneyMarketDiamond_InvalidAddress();
-
+  constructor(address _diamondCutFacet, address _miniFL) {
     // set contract owner
     LibDiamond.setContractOwner(msg.sender);
 
@@ -48,8 +40,6 @@ contract MoneyMarketDiamond {
 
     // initialize money market states
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    moneyMarketDs.wNativeToken = _wNativeToken;
-    moneyMarketDs.wNativeRelayer = _wNativeRelayer;
     moneyMarketDs.miniFL = IMiniFL(_miniFL);
   }
 

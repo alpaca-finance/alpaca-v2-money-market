@@ -36,7 +36,7 @@ contract DeployMoneyMarket is Script {
     vm.startBroadcast(deployerPrivateKey);
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
-      .deployMoneyMarketDiamond(config.wNativeAddress, config.wNativeRelayer, config.miniFLAddress);
+      .deployMoneyMarketDiamond(config.miniFLAddress);
     IMoneyMarket moneyMarket = IMoneyMarket(_moneyMarket);
 
     // setup oracles

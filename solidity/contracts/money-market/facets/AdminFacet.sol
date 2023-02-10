@@ -38,6 +38,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetRepurchaserOk(address indexed _account, bool isOk);
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
+  event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(
     uint256 _lendingFeeBps,
@@ -274,6 +275,21 @@ contract AdminFacet is IAdminFacet {
     for (uint256 _i; _i < _length; ) {
       moneyMarketDs.liquidatorsOk[_liquidators[_i]] = _isOk;
       emit LogSetLiquidatorOk(_liquidators[_i], _isOk);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  /// @notice Whitelist/Blacklist the address allowed for interacting with money market on users' behalf
+  /// @param _accountManagers an array of address of account managers
+  /// @param _isOk a flag to allow or disallow
+  function setAccountManagersOk(address[] calldata _accountManagers, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _accountManagers.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.accountManagersOk[_accountManagers[_i]] = _isOk;
+      emit LogSetAccountManagerOk(_accountManagers[_i], _isOk);
       unchecked {
         ++_i;
       }

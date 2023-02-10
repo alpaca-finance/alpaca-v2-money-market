@@ -30,18 +30,16 @@ library LibMoneyMarketDeployment {
     address ownershipFacet;
   }
 
-  function deployMoneyMarketDiamond(
-    address _nativeToken,
-    address _nativeRelayer,
-    address _miniFL
-  ) internal returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses) {
+  function deployMoneyMarketDiamond(address _miniFL)
+    internal
+    returns (address _moneyMarketDiamond, FacetAddresses memory _facetAddresses)
+  {
     // deploy facets
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
-    _moneyMarketDiamond = address(
-      new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _nativeToken, _nativeRelayer, _miniFL)
-    );
+
+    _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _miniFL));
 
     // do diamondCut
     diamondCutAllMoneyMarketFacets(_moneyMarketDiamond, _facetAddresses);
@@ -177,11 +175,9 @@ library LibMoneyMarketDeployment {
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](4);
+    _selectors = new bytes4[](2);
     _selectors[0] = LendFacet.deposit.selector;
     _selectors[1] = LendFacet.withdraw.selector;
-    _selectors[2] = LendFacet.depositETH.selector;
-    _selectors[3] = LendFacet.withdrawETH.selector;
   }
 
   function getCollateralFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
@@ -206,7 +202,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](22);
+    _selectors = new bytes4[](23);
     _selectors[0] = AdminFacet.openMarket.selector;
     _selectors[1] = AdminFacet.setTokenConfigs.selector;
     _selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
@@ -228,7 +224,8 @@ library LibMoneyMarketDeployment {
     _selectors[18] = AdminFacet.topUpTokenReserve.selector;
     _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
     _selectors[20] = AdminFacet.setEmergencyPaused.selector;
-    _selectors[21] = AdminFacet.setDebtTokenImplementation.selector;
+    _selectors[21] = AdminFacet.setAccountManagersOk.selector;
+    _selectors[22] = AdminFacet.setDebtTokenImplementation.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

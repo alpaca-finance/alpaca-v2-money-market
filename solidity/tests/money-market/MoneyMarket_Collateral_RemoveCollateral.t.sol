@@ -25,7 +25,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     weth.approve(moneyMarketDiamond, _amount);
     uint256 _ibBalanceBefore = ibWeth.balanceOf(_caller);
-    lendFacet.deposit(address(weth), _amount);
+    lendFacet.deposit(_caller, address(weth), _amount);
     uint256 _ibReceived = ibWeth.balanceOf(_caller) - _ibBalanceBefore;
 
     // Add collat by ibToken
@@ -51,7 +51,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowingPower_ShouldRevert() external {
     // BOB deposit 10 weth
     vm.startPrank(BOB);
-    lendFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(BOB, address(weth), 10 ether);
     vm.stopPrank();
 
     // alice add collateral 10 weth

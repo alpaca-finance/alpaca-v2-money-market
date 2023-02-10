@@ -28,9 +28,9 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     adminFacet.setInterestModel(address(usdc), address(usdcModel));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), normalizeEther(20 ether, wethDecimal));
-    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
+    lendFacet.deposit(ALICE, address(weth), normalizeEther(20 ether, wethDecimal));
+    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
 
     uint256 _aliceBorrowAmount = normalizeEther(10 ether, wethDecimal);

@@ -108,7 +108,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
 
-    lendFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(ALICE, address(weth), 10 ether);
     // add ibWethToken
     ibWeth.approve(moneyMarketDiamond, 10 ether);
     collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
@@ -131,7 +131,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     // LEND to get ibToken
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(address(weth), 10 ether);
+    lendFacet.deposit(ALICE, address(weth), 10 ether);
     vm.stopPrank();
 
     vm.warp(block.timestamp + 100);
