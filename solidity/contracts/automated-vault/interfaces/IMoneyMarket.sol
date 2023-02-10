@@ -36,5 +36,5 @@ interface IMoneyMarket {
     uint256 _amount
   ) external;
 
-  function setAccountManagersOk(address[] calldata list, bool _isOk) external;
+  function setAccountManagersOk(address[] calldata _list, bool _isOk) external;
 }
