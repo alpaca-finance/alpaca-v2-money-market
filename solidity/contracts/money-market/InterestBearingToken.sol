@@ -64,13 +64,13 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
    * It emits `Withdraw` event that is expected by ERC4626 standard when withdraw / redeem.
    */
   function onWithdraw(
-    address owner,
+    address _owner,
     address receiver,
     uint256 assets,
     uint256 shares
   ) external onlyOwner {
-    _burn(owner, shares);
-    emit Withdraw(msg.sender, receiver, owner, assets, shares);
+    _burn(_owner, shares);
+    emit Withdraw(msg.sender, receiver, _owner, assets, shares);
   }
 
   /// -----------------------------------------------------------------------
