@@ -104,6 +104,10 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     adminFacet.setNonCollatBorrowerOk(BOB, true);
+
+    address[] memory _accountManager = new address[](1);
+    _accountManager[0] = address(_ibTokenLiquidationStrat);
+    adminFacet.setAccountManagersOk(_accountManager, true);
   }
 
   // | Before test we set state like this

@@ -303,6 +303,11 @@ abstract contract LYF_BaseTest is BaseTest {
     adminFacet.setMaxNumOfToken(3, 3);
 
     adminFacet.setMinDebtSize(normalizeEther(0.01 ether, usdDecimal));
+
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = lyfDiamond;
+    mmWhitelistAccountManagers(moneyMarketDiamond, _accountManagers);
   }
 
   function setUpMM(address _moneyMarketDiamond) internal {
@@ -400,7 +405,7 @@ abstract contract LYF_BaseTest is BaseTest {
     _accountManagers[1] = BOB;
     _accountManagers[2] = EVE;
 
-    mmAdminFacet.setAccountManagersOk(_accountManagers, true);
+    mmWhitelistAccountManagers(moneyMarketDiamond, _accountManagers);
 
     vm.startPrank(EVE);
 
@@ -414,5 +419,11 @@ abstract contract LYF_BaseTest is BaseTest {
     ILendFacet(moneyMarketDiamond).deposit(address(btc), normalizeEther(100 ether, btcDecimal));
 
     vm.stopPrank();
+  }
+
+  function mmWhitelistAccountManagers(address _moneyMarketDiamond, address[] memory _list) internal {
+    IAdminFacet mmAdminFacet = IAdminFacet(_moneyMarketDiamond);
+
+    mmAdminFacet.setAccountManagersOk(_list, true);
   }
 }

@@ -99,6 +99,10 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     _setPathsInputs[1] = PancakeswapV2IbTokenLiquidationStrategy.SetPathParams({ path: _wethUsdcPths });
 
     _ibTokenLiquidationStrat.setPaths(_setPathsInputs);
+
+    address[] memory _accountManager = new address[](1);
+    _accountManager[0] = address(_ibTokenLiquidationStrat);
+    mmWhitelistAccountManagers(moneyMarketDiamond, _accountManager);
   }
 
   function testCorrectness_WhenSubAccountWentUnderWaterWithIbCollat_ShouldBeAbleToPartialLiquidateIbCollat() external {
