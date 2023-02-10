@@ -78,6 +78,7 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
     IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareToMint);
+
     // _for is purely used for event tracking purpose
     // since this function will be called from only AccountManager
     // we need a way to track the actual lender
