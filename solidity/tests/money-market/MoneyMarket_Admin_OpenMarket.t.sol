@@ -56,7 +56,7 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
     assertEq(IERC20(_ibToken).balanceOf(ALICE), normalizeEther(5 ether, IERC20(_ibToken).decimals()));
   }
 
-  function testCorrectness_WhenUserOpenNewMarket_ShouldAddPoolsFromMiniFL() external {
+  function testCorrectness_WhenUserOpenNewMarket_ShouldAddPoolsInMiniFL() external {
     // from setUp() now there are 12 pools with 0 allocPoint
     uint256 _poolLengthBefore = miniFL.poolLength();
     uint256 _allocPointBefore = miniFL.totalAllocPoint();
