@@ -99,6 +99,10 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
     _setPathsInputs[1] = PancakeswapV2IbTokenLiquidationStrategy.SetPathParams({ path: _wethUsdcPths });
 
     _ibTokenLiquidationStrat.setPaths(_setPathsInputs);
+
+    address[] memory _accountManager = new address[](1);
+    _accountManager[0] = address(_ibTokenLiquidationStrat);
+    mmWhitelistAccountManagers(moneyMarketDiamond, _accountManager);
   }
 
   function testCorrectness_WhenSubAccountWentUnderWaterWithIbCollat_ShouldBeAbleToPartialLiquidateIbCollat() external {
@@ -134,7 +138,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     btc.approve(moneyMarketDiamond, type(uint256).max);
-    IMoneyMarket(moneyMarketDiamond).deposit(address(btc), 4 ether);
+    IMoneyMarket(moneyMarketDiamond).deposit(ALICE, address(btc), 4 ether);
 
     ibBtc.approve(lyfDiamond, type(uint256).max);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 4 ether);
@@ -237,7 +241,7 @@ contract LYF_Liquidation_IbLiquidationCallTest is LYF_BaseTest {
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
-    IMoneyMarket(moneyMarketDiamond).deposit(address(weth), 20 ether);
+    IMoneyMarket(moneyMarketDiamond).deposit(ALICE, address(weth), 20 ether);
 
     ibBtc.approve(lyfDiamond, type(uint256).max);
     collateralFacet.addCollateral(ALICE, subAccount0, _collatToken, 20 ether);

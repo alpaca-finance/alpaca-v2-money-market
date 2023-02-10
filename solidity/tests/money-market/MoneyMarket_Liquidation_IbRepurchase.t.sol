@@ -39,8 +39,8 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
+    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    lendFacet.deposit(BOB, address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
@@ -64,7 +64,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     weth.mint(ALICE, 40 ether);
     vm.startPrank(ALICE);
     // withdraw weth and add ibWeth as collateral for simpler calculation
-    lendFacet.deposit(address(weth), 40 ether);
+    lendFacet.deposit(ALICE, address(weth), 40 ether);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     collateralFacet.addCollateral(ALICE, _subAccountId, address(ibWeth), 40 ether);
     collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
@@ -73,7 +73,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // now 1 ibWeth = 1 weth
     // make 1 ibWeth = 2 weth by inflating MM with 40 weth
     vm.prank(BOB);
-    lendFacet.deposit(address(weth), 40 ether);
+    lendFacet.deposit(BOB, address(weth), 40 ether);
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, 40 ether);
 

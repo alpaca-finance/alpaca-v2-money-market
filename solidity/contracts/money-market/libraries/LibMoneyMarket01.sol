@@ -41,6 +41,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_NumberOfTokenExceedLimit();
   error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
   error LibMoneyMarket01_EmergencyPaused();
+  error LibMoneyMarket01_UnAuthorized();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -88,8 +89,6 @@ library LibMoneyMarket01 {
   // Storage
   struct MoneyMarketDiamondStorage {
     // ---- addresses ---- //
-    address wNativeToken;
-    address wNativeRelayer;
     address liquidationTreasury;
     address ibTokenImplementation;
     address debtTokenImplementation;
@@ -127,6 +126,7 @@ library LibMoneyMarket01 {
     mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
     mapping(address => bool) liquidationStratOk; // liquidation strategies that can be used during liquidation process
     mapping(address => bool) liquidatorsOk; // allowed to initiate liquidation process
+    mapping(address => bool) accountManagersOk; // allowed to manipulate account/subaccount on behalf of end users
     // ---- reserves ---- //
     mapping(address => uint256) protocolReserves; // token address => amount that is reserved for protocol
     mapping(address => uint256) reserves; // token address => amount that is available in protocol
@@ -544,7 +544,6 @@ library LibMoneyMarket01 {
     address _underlyingToken,
     address _ibToken,
     uint256 _shareAmount,
-    address _withdrawFrom,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal returns (uint256 _withdrawAmount) {
     _withdrawAmount = LibShareUtil.shareToValue(
@@ -558,9 +557,7 @@ library LibMoneyMarket01 {
     }
 
     // burn ibToken
-    IInterestBearingToken(_ibToken).onWithdraw(_withdrawFrom, _withdrawFrom, _withdrawAmount, _shareAmount);
-
-    emit LogWithdraw(_withdrawFrom, _underlyingToken, _ibToken, _shareAmount, _withdrawAmount);
+    IInterestBearingToken(_ibToken).onWithdraw(msg.sender, msg.sender, _withdrawAmount, _shareAmount);
   }
 
   function to18ConversionFactor(address _token) internal view returns (uint64) {
@@ -808,6 +805,12 @@ library LibMoneyMarket01 {
   function onlyLive(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
     if (moneyMarketDs.emergencyPaused) {
       revert LibMoneyMarket01_EmergencyPaused();
+    }
+  }
+
+  function onlyAccountManager(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
+    if (!moneyMarketDs.accountManagersOk[msg.sender]) {
+      revert LibMoneyMarket01_UnAuthorized();
     }
   }
 }

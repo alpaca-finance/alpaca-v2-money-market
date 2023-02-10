@@ -55,11 +55,9 @@ abstract contract AV_BaseTest is BaseTest {
 
   function setUp() public virtual {
     avDiamond = AVDiamondDeployer.deployPoolDiamond();
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
-      address(wNativeToken),
-      address(wNativeRelayer),
-      address(miniFL)
-    );
+
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
+
     setUpMM();
 
     // set av facets
@@ -201,14 +199,18 @@ abstract contract AV_BaseTest is BaseTest {
     });
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
+    // set account manager to allow interactions
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = EVE;
 
+    mmAdminFacet.setAccountManagersOk(_accountManagers, true);
     // prepare for borrow
     vm.startPrank(EVE);
     weth.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
 
-    ILendFacet(moneyMarketDiamond).deposit(address(weth), 100 ether);
-    ILendFacet(moneyMarketDiamond).deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(weth), 100 ether);
+    ILendFacet(moneyMarketDiamond).deposit(EVE, address(usdc), normalizeEther(100 ether, usdcDecimal));
     vm.stopPrank();
 
     mmAdminFacet.setMaxNumOfToken(3, 3, 3);

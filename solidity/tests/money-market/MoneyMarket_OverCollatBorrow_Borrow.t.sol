@@ -21,11 +21,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     mockToken.mint(ALICE, 1000 ether);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
-    lendFacet.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(address(btc), normalizeEther(20 ether, btcDecimal));
-    lendFacet.deposit(address(cake), normalizeEther(20 ether, cakeDecimal));
-    lendFacet.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
+    lendFacet.deposit(ALICE, address(weth), normalizeEther(50 ether, wethDecimal));
+    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    lendFacet.deposit(ALICE, address(btc), normalizeEther(20 ether, btcDecimal));
+    lendFacet.deposit(ALICE, address(cake), normalizeEther(20 ether, cakeDecimal));
+    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
   }
 
@@ -146,7 +146,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(address(weth), _bobDepositAmount);
+    lendFacet.deposit(BOB, address(weth), _bobDepositAmount);
 
     vm.stopPrank();
 
@@ -281,7 +281,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     // manipulate ib price
     vm.prank(BOB);
-    lendFacet.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
+    lendFacet.deposit(BOB, address(weth), normalizeEther(50 ether, wethDecimal));
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, normalizeEther(50 ether, ibWethDecimal));
 

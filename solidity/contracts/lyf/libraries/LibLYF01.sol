@@ -412,6 +412,7 @@ library LibLYF01 {
   }
 
   function removeIbCollateral(
+    address _account,
     address _subAccount,
     address _token,
     address _ibToken,
@@ -439,7 +440,7 @@ library LibLYF01 {
 
       _subAccountCollatList.updateOrRemove(_ibToken, _collateralAmountIb - _ibRemoved);
 
-      _underlyingRemoved = moneyMarket.withdraw(_ibToken, _ibRemoved);
+      _underlyingRemoved = moneyMarket.withdraw(_account, _ibToken, _ibRemoved);
 
       ds.collats[_ibToken] -= _ibRemoved;
     }
