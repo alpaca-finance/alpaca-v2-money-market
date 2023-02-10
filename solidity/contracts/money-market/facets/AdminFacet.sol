@@ -467,13 +467,15 @@ contract AdminFacet is IAdminFacet {
     uint256 _length = _inputs.length;
 
     address _token;
+    address _account;
     address _subAccount;
     uint256 _shareToRemove;
     uint256 _amountToRemove;
 
     for (uint256 i; i < _length; ) {
       _token = _inputs[i].token;
-      _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+      _account = _inputs[i].account;
+      _subAccount = LibMoneyMarket01.getSubAccount(_account, _inputs[i].subAccountId);
 
       if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
         revert AdminFacet_SubAccountHealthy(_subAccount);
@@ -489,6 +491,7 @@ contract AdminFacet is IAdminFacet {
       );
 
       LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+        _account,
         _subAccount,
         _token,
         _shareToRemove,

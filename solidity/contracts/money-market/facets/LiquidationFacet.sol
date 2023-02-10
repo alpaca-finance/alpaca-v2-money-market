@@ -199,6 +199,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // update states
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _account,
       _vars.subAccount,
       _repayToken,
       LibShareUtil.valueToShare(
@@ -345,6 +346,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // give priority to fee
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+      _params.account,
       _params.subAccount,
       _params.repayToken,
       LibShareUtil.valueToShare(

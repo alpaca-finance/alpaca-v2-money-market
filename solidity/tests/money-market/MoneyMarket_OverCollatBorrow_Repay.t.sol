@@ -53,11 +53,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
 
     // get debt token balance before repay
-    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
     address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
     uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
 
-    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     uint256 _debtShareBefore = _debtShare;
     assertEq(_debtTokenBalanceBefore, _debtShareBefore);
 
@@ -74,7 +73,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     // debt token in MiniFL should be zero (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _debtTokenBalanceAfter after burned
-    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _debtShareBefore);
     assertEq(DebtToken(_debtToken).totalSupply(), _debtTokenBalanceAfter);
   }
@@ -117,11 +116,10 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
 
     // get debt token balance before repay
-    address _subAccount = viewFacet.getSubAccount(ALICE, subAccount0);
     address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
     uint256 _poolId = viewFacet.getMiniFLPoolIdFromToken(_debtToken);
 
-    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     assertEq(_debtTokenBalanceBefore, _debtShare);
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
@@ -143,7 +141,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     // debt token in MiniFL should be equal to _debtTokenBalanceBefore - _repayShare (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _debtTokenBalanceAfter after burned
-    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, _subAccount);
+    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _repayShare);
     assertEq(DebtToken(_debtToken).totalSupply(), _debtTokenBalanceAfter);
   }
