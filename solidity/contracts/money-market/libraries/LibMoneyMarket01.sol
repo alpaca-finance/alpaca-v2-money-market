@@ -735,6 +735,8 @@ library LibMoneyMarket01 {
     address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
     uint256 _poolId = moneyMarketDs.miniFLPoolIds[_debtToken];
 
+    // pool for debt token always exist
+    // since pool is created during AdminFacet.openMarket()
     IDebtToken(_debtToken).mint(address(this), _amount);
     IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _amount);
     _miniFL.deposit(_account, _poolId, _amount);
