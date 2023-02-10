@@ -199,7 +199,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _expectdAmount = 10.2 ether;
     _aliceBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibWeth), _wethBorrowAmount);
+    lendFacet.withdraw(ALICE, address(ibWeth), _wethBorrowAmount);
     _aliceBalanceAfter = weth.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _expectdAmount, "ALICE weth balance missmatch");
@@ -232,7 +232,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     vm.warp(block.timestamp + _secondPassed);
 
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibWeth), 10 ether);
+    lendFacet.withdraw(ALICE, address(ibWeth), 10 ether);
 
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore + _secondPassed);
   }
@@ -308,13 +308,13 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     //can't withdraw because there's no reserve
     vm.expectRevert(abi.encodeWithSignature("LibMoneyMarket01_NotEnoughToken()"));
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibUsdc), _usdcBorrowAmount);
+    lendFacet.withdraw(ALICE, address(ibUsdc), _usdcBorrowAmount);
 
     // once there's lender, alice can now withdraw
     vm.prank(BOB);
     lendFacet.deposit(BOB, address(usdc), _expectdAmount);
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibUsdc), _usdcBorrowAmount);
+    lendFacet.withdraw(ALICE, address(ibUsdc), _usdcBorrowAmount);
 
     _aliceBalanceAfter = usdc.balanceOf(ALICE);
 

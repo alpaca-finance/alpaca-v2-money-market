@@ -30,7 +30,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     ibWeth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.withdraw(address(ibWeth), 10 ether);
+    lendFacet.withdraw(ALICE, address(ibWeth), 10 ether);
     vm.stopPrank();
 
     assertEq(ibWeth.totalSupply(), 0);
@@ -42,7 +42,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     address _randomToken = address(10);
     vm.startPrank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
-    lendFacet.withdraw(_randomToken, 10 ether);
+    lendFacet.withdraw(ALICE, _randomToken, 10 ether);
     vm.stopPrank();
   }
 
@@ -75,7 +75,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
     _expectedTotalShare -= 10 ether;
     ibWeth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.withdraw(address(ibWeth), 10 ether);
+    lendFacet.withdraw(ALICE, address(ibWeth), 10 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), 1000 ether);
@@ -86,7 +86,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     _expectedTotalShare -= 20 ether;
     ibWeth.approve(moneyMarketDiamond, 20 ether);
-    lendFacet.withdraw(address(ibWeth), 20 ether);
+    lendFacet.withdraw(ALICE, address(ibWeth), 20 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(BOB), 1000 ether);
@@ -119,7 +119,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
 
     // user withdraw 1M ibWeth, get 1M weth back
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-    lendFacet.withdraw(address(ibWeth), 1e7 ether);
+    lendFacet.withdraw(BOB, address(ibWeth), 1e7 ether);
 
     assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 1e7 ether);
     vm.stopPrank();
@@ -128,7 +128,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
 
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibWeth), 1);
+    lendFacet.withdraw(ALICE, address(ibWeth), 1);
 
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 1);
   }
@@ -170,7 +170,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(ibUsdc.convertToShares(0.201 ether), 0.2 ether);
 
     vm.prank(ALICE);
-    lendFacet.withdraw(address(ibUsdc), normalizeEther(0.2 ether, ibUsdcDecimal));
+    lendFacet.withdraw(ALICE, address(ibUsdc), normalizeEther(0.2 ether, ibUsdcDecimal));
 
     // check ALICE state
     assertEq(usdc.balanceOf(ALICE) - _aliceUsdcBalanceBefore, normalizeEther(0.201 ether, usdcDecimal));

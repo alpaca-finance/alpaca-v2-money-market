@@ -99,7 +99,9 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       ? _requiredIbTokenToWithdraw
       : _maxIbTokenToWithdraw;
 
-    _withdrawnUnderlyingAmount = moneyMarket.withdraw(_ibToken, _withdrawnIbTokenAmount);
+    // calling mm.withdraw by specifying that it was withdraw for money market
+    // as this is in liquidation process, money market withdraw the ibToken for itself
+    _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _withdrawnIbTokenAmount);
   }
 
   function _getRequiredUnderlyingAmount(uint256 _repayAmount, address[] memory _path)

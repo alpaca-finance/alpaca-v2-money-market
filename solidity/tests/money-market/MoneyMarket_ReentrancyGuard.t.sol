@@ -37,12 +37,12 @@ contract MockAttacker is BaseTest {
 
   function attack(uint256 _amount) external payable {
     ILendFacet(moneyMarket).deposit(ALICE, address(weth), _amount);
-    ILendFacet(moneyMarket).withdraw(address(ibWeth), 1 ether);
+    ILendFacet(moneyMarket).withdraw(ALICE, address(ibWeth), 1 ether);
   }
 
   //@dev Fallback function to accept BNB.
   receive() external payable {
     vm.expectRevert(abi.encodeWithSelector(LibReentrancyGuard.LibReentrancyGuard_ReentrantCall.selector));
-    ILendFacet(moneyMarket).withdraw(ibWNativeToken, 1 ether);
+    ILendFacet(moneyMarket).withdraw(ALICE, ibWNativeToken, 1 ether);
   }
 }
