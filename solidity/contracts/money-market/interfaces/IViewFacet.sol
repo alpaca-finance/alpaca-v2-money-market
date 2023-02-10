@@ -10,6 +10,8 @@ interface IViewFacet {
 
   function getTokenFromIbToken(address _ibToken) external view returns (address);
 
+  function getMiniFLPoolIdOfToken(address _token) external view returns (uint256);
+
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
   function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);

@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
 import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -368,5 +369,25 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
     vm.prank(ALICE);
     borrowFacet.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+  }
+
+  function testCorrectness_WhenUserBorrowTokenFromMM_MMShouldStakeDebtTokenInMiniFLForUser() external {
+    IMiniFL _miniFL = IMiniFL(address(miniFL));
+
+    address _debtToken;
+    uint256 _poolId;
+
+    uint256 _borrowAmount = normalizeEther(10 ether, wethDecimal);
+    address _borrowToken = address(weth);
+
+    vm.startPrank(BOB);
+    collateralFacet.addCollateral(BOB, subAccount0, _borrowToken, _borrowAmount * 2);
+    borrowFacet.borrow(subAccount0, _borrowToken, _borrowAmount);
+    vm.stopPrank();
+
+    // check token is exist in miniFL
+    _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
+    _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, BOB), _borrowAmount);
   }
 }

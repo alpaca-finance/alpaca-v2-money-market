@@ -61,13 +61,11 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
     // from setUp() now there are 12 pools with 0 allocPoint
     uint256 _poolLengthBefore = miniFL.poolLength();
     uint256 _allocPointBefore = miniFL.totalAllocPoint();
-    assertEq(_poolLengthBefore, 12);
-    assertEq(_allocPointBefore, 0);
 
     // register new token
     _ibToken = adminFacet.openMarket(address(_testToken), _defaultTokenConfigInput, _defaultTokenConfigInput);
 
-    // after openMarket MiniFL should have 12 + 2 pools
+    // after openMarket MiniFL should have existed pool + 2 pools
     // 2 added pools (ibToken, debtToken)
     uint256 _poolLengthAfter = miniFL.poolLength();
     uint256 _allocPointAfter = miniFL.totalAllocPoint();

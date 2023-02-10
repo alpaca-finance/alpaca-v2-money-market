@@ -15,13 +15,14 @@ contract MiniFL_AddPoolTest is MiniFL_BaseTest {
   }
 
   function testCorrectness_WhenAddPool() external {
-    assertEq(miniFL.poolLength(), 0);
+    // pid 0 = dummy pool
+    assertEq(miniFL.poolLength(), 1);
     assertEq(miniFL.totalAllocPoint(), 0);
 
     miniFL.addPool(100, address(weth), false);
     miniFL.addPool(50, address(usdc), false);
 
-    assertEq(miniFL.poolLength(), 2);
+    assertEq(miniFL.poolLength(), 3);
     assertEq(miniFL.totalAllocPoint(), 150);
   }
 
