@@ -111,20 +111,4 @@ contract LendFacet is ILendFacet {
 
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
   }
-
-  function _safeUnwrap(
-    address _wNativeToken,
-    address _nativeRelayer,
-    address _to,
-    uint256 _amount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal {
-    if (_amount > moneyMarketDs.reserves[_wNativeToken]) {
-      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
-    }
-    moneyMarketDs.reserves[_wNativeToken] -= _amount;
-    IERC20(_wNativeToken).safeTransfer(_nativeRelayer, _amount);
-    IWNativeRelayer(_nativeRelayer).withdraw(_amount);
-    LibSafeToken.safeTransferETH(_to, _amount);
-  }
 }

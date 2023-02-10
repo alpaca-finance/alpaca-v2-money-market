@@ -36,7 +36,7 @@ contract MockAttacker is BaseTest {
   }
 
   function attack(uint256 _amount) external payable {
-    ILendFacet(moneyMarket).deposit(address(weth), _amount);
+    ILendFacet(moneyMarket).deposit(ALICE, address(weth), _amount);
     ILendFacet(moneyMarket).withdraw(address(ibWeth), 1 ether);
   }
 

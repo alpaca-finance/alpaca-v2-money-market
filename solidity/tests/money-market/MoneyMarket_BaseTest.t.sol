@@ -55,10 +55,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
-      address(wNativeToken),
-      address(wNativeRelayer)
-    );
+    (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond();
 
     viewFacet = IViewFacet(moneyMarketDiamond);
     lendFacet = ILendFacet(moneyMarketDiamond);

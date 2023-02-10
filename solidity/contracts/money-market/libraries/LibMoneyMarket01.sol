@@ -78,8 +78,6 @@ library LibMoneyMarket01 {
   // Storage
   struct MoneyMarketDiamondStorage {
     // ---- addresses ---- //
-    address wNativeToken;
-    address wNativeRelayer;
     address liquidationTreasury;
     address ibTokenImplementation;
     address debtTokenImplementation;
