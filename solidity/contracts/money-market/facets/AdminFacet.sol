@@ -113,6 +113,12 @@ contract AdminFacet is IAdminFacet {
     address _newDebtToken = Clones.clone(moneyMarketDs.debtTokenImplementation);
     IDebtToken(_newDebtToken).initialize(_token, address(this));
 
+    // add MoneyMarket and MiniFL as okHolders of new DebtToken
+    address[] memory _okHolders = new address[](2);
+    _okHolders[0] = address(this);
+    _okHolders[1] = address(address(_miniFL));
+    IDebtToken(_newDebtToken).setOkHolders(_okHolders, true);
+
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
     _setTokenConfig(_newIbToken, _ibTokenConfigInput, moneyMarketDs);
 
@@ -120,8 +126,8 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.ibTokenToTokens[_newIbToken] = _token;
     moneyMarketDs.tokenToDebtTokens[_token] = _newDebtToken;
 
-    _miniFL.addPool(0, _newIbToken, false);
-    _miniFL.addPool(0, _newDebtToken, false);
+    moneyMarketDs.miniFLPoolIds[_newIbToken] = _miniFL.addPool(0, _newIbToken, false);
+    moneyMarketDs.miniFLPoolIds[_newDebtToken] = _miniFL.addPool(0, _newDebtToken, false);
 
     emit LogOpenMarket(msg.sender, _token, _newIbToken, _newDebtToken);
   }
@@ -462,13 +468,15 @@ contract AdminFacet is IAdminFacet {
     uint256 _length = _inputs.length;
 
     address _token;
+    address _account;
     address _subAccount;
     uint256 _shareToRemove;
     uint256 _amountToRemove;
 
     for (uint256 i; i < _length; ) {
       _token = _inputs[i].token;
-      _subAccount = LibMoneyMarket01.getSubAccount(_inputs[i].account, _inputs[i].subAccountId);
+      _account = _inputs[i].account;
+      _subAccount = LibMoneyMarket01.getSubAccount(_account, _inputs[i].subAccountId);
 
       if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
         revert AdminFacet_SubAccountHealthy(_subAccount);
@@ -484,6 +492,7 @@ contract AdminFacet is IAdminFacet {
       );
 
       LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+        _account,
         _subAccount,
         _token,
         _shareToRemove,

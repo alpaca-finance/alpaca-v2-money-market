@@ -24,7 +24,6 @@ contract MiniFL_HarvestWithRewarderTest is MiniFL_BaseTest {
     super.setUp();
     setupMiniFLPool();
     setupRewarder();
-
     prepareForHarvest();
 
     // deposited info

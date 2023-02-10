@@ -26,4 +26,6 @@ interface IInterestBearingToken is IERC20 {
   function totalAssets() external view returns (uint256);
 
   function totalSupply() external view returns (uint256);
+
+  function mint(uint256 shares, address receiver) external returns (uint256 assets);
 }
