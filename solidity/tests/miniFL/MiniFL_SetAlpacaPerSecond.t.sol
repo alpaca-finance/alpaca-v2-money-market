@@ -16,7 +16,7 @@ contract MiniFL_SetAlpacaPerSecondTest is MiniFL_BaseTest {
 
   function testCorrectness_WhenSetAlpacaPerSecond() external {
     // set from base test as max
-    assertEq(miniFL.alpacaPerSecond(), alpacaMaximumReward);
+    assertEq(miniFL.alpacaPerSecond(), maxAlpacaPerSecond);
 
     miniFL.setAlpacaPerSecond(500 ether, false);
     assertEq(miniFL.alpacaPerSecond(), 500 ether);
@@ -24,6 +24,6 @@ contract MiniFL_SetAlpacaPerSecondTest is MiniFL_BaseTest {
 
   function testRevert_WhenSetAlpacaPerSecondMoreThanMaximum() external {
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_InvalidArguments.selector));
-    miniFL.setAlpacaPerSecond(alpacaMaximumReward + 1, false);
+    miniFL.setAlpacaPerSecond(maxAlpacaPerSecond + 1, false);
   }
 }

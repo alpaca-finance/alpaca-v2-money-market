@@ -24,11 +24,11 @@ contract MiniFL_BaseTest is BaseTest, StdCheatsSafe {
   uint256 notExistsPoolID = 999;
 
   function setUp() public virtual {
-    miniFL.setAlpacaPerSecond(alpacaMaximumReward, false);
+    miniFL.setAlpacaPerSecond(maxAlpacaPerSecond, false);
     alpaca.mint(address(miniFL), 10000000 ether);
 
-    rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), alpacaMaximumReward);
-    rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), alpacaMaximumReward);
+    rewarder1 = deployRewarder("REWARDER01", address(miniFL), address(rewardToken1), maxAlpacaPerSecond);
+    rewarder2 = deployRewarder("REWARDER02", address(miniFL), address(rewardToken2), maxAlpacaPerSecond);
 
     rewarder1.setRewardPerSecond(100 ether, false);
     rewarder2.setRewardPerSecond(150 ether, false);
