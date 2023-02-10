@@ -22,7 +22,7 @@ contract MoneyMarket_ReentrancyGuardTest is MoneyMarket_BaseTest {
   function testRevert_WhenMMGetReentrance_ShouldRevert() external {
     // wrong error message since it is expected message inside contract called.
     vm.expectRevert();
-    attacker.attack{ value: 2 ether }();
+    attacker.attack(2 ether);
   }
 }
 
@@ -35,9 +35,9 @@ contract MockAttacker is BaseTest {
     ibWNativeToken = _ibWNativeToken;
   }
 
-  function attack() external payable {
-    ILendFacet(moneyMarket).depositETH{ value: address(this).balance }();
-    ILendFacet(moneyMarket).withdrawETH(1 ether);
+  function attack(uint256 _amount) external payable {
+    ILendFacet(moneyMarket).deposit(address(weth), _amount);
+    ILendFacet(moneyMarket).withdraw(address(ibWeth), 1 ether);
   }
 
   //@dev Fallback function to accept BNB.

@@ -133,28 +133,6 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 1);
   }
 
-  function testCorrectness_WhenUserWithdrawETH_ShareShouldBurnedAndTransferTokenBackCorrectly() external {
-    // deposit first
-    vm.prank(ALICE);
-    lendFacet.depositETH{ value: 10 ether }();
-
-    assertEq(wNativeToken.balanceOf(ALICE), 0 ether);
-    assertEq(ALICE.balance, 990 ether);
-    assertEq(wNativeToken.balanceOf(moneyMarketDiamond), 10 ether);
-
-    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
-
-    // then withdraw 5
-    vm.prank(ALICE);
-    lendFacet.withdrawETH(5 ether);
-
-    assertEq(wNativeToken.balanceOf(ALICE), 0 ether);
-    assertEq(ALICE.balance, 995 ether);
-    assertEq(wNativeToken.balanceOf(moneyMarketDiamond), 5 ether);
-
-    assertEq(ibWNative.balanceOf(ALICE), 5 ether);
-  }
-
   function testCorrectness_WhenUnderlyingWasBorrowedAndAccrueInterest_AndUserPartialWithdraw_ShouldAccrueInterestAndTransferPrincipalWithInterestAndUpdateMMState()
     external
   {

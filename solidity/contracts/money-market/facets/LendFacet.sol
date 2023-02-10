@@ -32,8 +32,6 @@ contract LendFacet is ILendFacet {
     uint256 _amountOut
   );
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogDepositETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
-  event LogWithdrawETH(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
 
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
@@ -112,73 +110,6 @@ contract LendFacet is ILendFacet {
     moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
 
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
-  }
-
-  /// @notice Deposit native token for lending
-  /// @dev TODO: Remove this function as account manager can handle this
-  function depositETH() external payable nonReentrant {
-    if (msg.value == 0) {
-      revert LendFacet_InvalidAmount(msg.value);
-    }
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // This will revert if markets are paused
-    LibMoneyMarket01.onlyLive(moneyMarketDs);
-
-    // This function should not be called from anyone
-    // except account manager contract and will revert upon trying to do so
-    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
-
-    address _nativeToken = moneyMarketDs.wNativeToken;
-    if (_nativeToken == address(0)) {
-      revert LendFacet_InvalidToken(_nativeToken);
-    }
-
-    address _ibToken = moneyMarketDs.tokenToIbTokens[_nativeToken];
-    if (_ibToken == address(0)) {
-      revert LendFacet_InvalidToken(_nativeToken);
-    }
-
-    LibMoneyMarket01.accrueInterest(_nativeToken, moneyMarketDs);
-
-    (, uint256 _shareToMint) = LibMoneyMarket01.getShareAmountFromValue(
-      _nativeToken,
-      _ibToken,
-      msg.value,
-      moneyMarketDs
-    );
-
-    moneyMarketDs.reserves[_nativeToken] += msg.value;
-    IWNative(_nativeToken).deposit{ value: msg.value }();
-    IInterestBearingToken(_ibToken).onDeposit(msg.sender, msg.value, _shareToMint);
-
-    emit LogDepositETH(msg.sender, _nativeToken, _ibToken, msg.value, _shareToMint);
-  }
-
-  /// @notice Withdraw the lended native token by burning the interest bearing token
-  /// @param _shareAmount The amount of interest bearing token to burn
-  /// @dev TODO: Remove this function as account manager can handle this
-  function withdrawETH(uint256 _shareAmount) external nonReentrant {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    // This function should not be called from anyone
-    // except account manager contract and will revert upon trying to do so
-    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
-
-    address _wNativeToken = moneyMarketDs.wNativeToken;
-    address _ibWNativeToken = moneyMarketDs.tokenToIbTokens[_wNativeToken];
-
-    LibMoneyMarket01.accrueInterest(_wNativeToken, moneyMarketDs);
-
-    uint256 _shareValue = LibShareUtil.shareToValue(
-      _shareAmount,
-      LibMoneyMarket01.getTotalToken(_wNativeToken, moneyMarketDs),
-      IInterestBearingToken(_ibWNativeToken).totalSupply()
-    );
-
-    IInterestBearingToken(_ibWNativeToken).onWithdraw(msg.sender, msg.sender, _shareValue, _shareAmount);
-    _safeUnwrap(_wNativeToken, moneyMarketDs.wNativeRelayer, msg.sender, _shareValue, moneyMarketDs);
-
-    emit LogWithdrawETH(msg.sender, _wNativeToken, _ibWNativeToken, _shareAmount, _shareValue);
   }
 
   function _safeUnwrap(
