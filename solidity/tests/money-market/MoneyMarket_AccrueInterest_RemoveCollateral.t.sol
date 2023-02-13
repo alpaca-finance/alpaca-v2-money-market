@@ -47,8 +47,8 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
 
     // ALICE borrow
     vm.startPrank(ALICE);
-    borrowFacet.borrow(subAccount0, address(weth), _wethBorrowAmount);
-    borrowFacet.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _wethBorrowAmount);
+    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     // time past

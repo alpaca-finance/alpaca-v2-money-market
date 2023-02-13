@@ -47,6 +47,7 @@ contract BorrowFacet is IBorrowFacet {
   /// @param _token The token to borrow
   /// @param _amount The amount to borrow
   function borrow(
+    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
@@ -55,21 +56,31 @@ contract BorrowFacet is IBorrowFacet {
 
     LibMoneyMarket01.onlyLive(moneyMarketDs);
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     // accrue interest for borrowed debt token, to mint share correctly
+    // This is to handle the case where the subaccount is borrowing the token that has not been borrowed
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     // accrue all debt tokens under subaccount
     // because used borrowing power is calcualated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
+    // Validate if this borrowing transaction will violate the business rules
+    // this includes insufficient borrowing power, borrowing below minimum debt size , etc.
     _validateBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
-    LibMoneyMarket01.overCollatBorrow(msg.sender, _subAccount, _token, _amount, moneyMarketDs);
+    // Book the debt under the account that the account manager act on behalf of
+    LibMoneyMarket01.overCollatBorrow(_account, _subAccount, _token, _amount, moneyMarketDs);
 
+    // Update the global reserve of the token, as a result less borrowing can be amde
     moneyMarketDs.reserves[_token] -= _amount;
 
+    // Transfer the token back to account manager
     IERC20(_token).safeTransfer(msg.sender, _amount);
   }
 

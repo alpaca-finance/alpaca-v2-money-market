@@ -37,7 +37,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     // set up borrow first
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 100 ether);
-    borrowFacet.borrow(subAccount0, address(weth), _aliceBorrowAmount);
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);
@@ -95,7 +95,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     // since _debtShareAfterAccrue: 11 ether, while _debtAmountAfterAccrue: 10 ether
     vm.startPrank(ALICE);
     uint256 _aliceSecondBorrowAmount = _debtAmountBefore + _pendingInterest;
-    borrowFacet.borrow(subAccount0, address(weth), _aliceSecondBorrowAmount);
+    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceSecondBorrowAmount);
     (uint256 _debtShareAfterSecondBorrow, ) = viewFacet.getOverCollatDebtShareAndAmountOf(
       ALICE,
       subAccount0,

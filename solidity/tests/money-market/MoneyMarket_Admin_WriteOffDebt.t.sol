@@ -56,9 +56,9 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
      */
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
-    borrowFacet.borrow(subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
+    borrowFacet.borrow(ALICE, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
     collateralFacet.addCollateral(ALICE, subAccount1, address(weth), 10 ether);
-    borrowFacet.borrow(subAccount1, address(usdc), normalizeEther(2 ether, usdcDecimal));
+    borrowFacet.borrow(ALICE, subAccount1, address(usdc), normalizeEther(2 ether, usdcDecimal));
     vm.stopPrank();
   }
 

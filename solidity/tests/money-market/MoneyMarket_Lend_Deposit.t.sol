@@ -90,7 +90,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    borrowFacet.borrow(subAccount0, address(weth), 5 ether);
+    borrowFacet.borrow(BOB, subAccount0, address(weth), 5 ether);
     vm.stopPrank();
 
     // advance time for interest
