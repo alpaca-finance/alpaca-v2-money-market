@@ -45,7 +45,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_TooManyCollateralRemoved.selector));
-    collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether + 1);
+    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 10 ether + 1);
   }
 
   function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowingPower_ShouldRevert() external {
@@ -67,7 +67,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowingPower
     // should revert
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_BorrowingPowerTooLow.selector));
-    collateralFacet.removeCollateral(subAccount0, address(weth), 10 ether);
+    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 10 ether);
     vm.stopPrank();
   }
 
@@ -87,7 +87,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getTotalCollat(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
-    collateralFacet.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
+    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), _removeCollateralAmount);
 
     uint256 _borrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
@@ -111,7 +111,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
 
     vm.startPrank(ALICE);
-    collateralFacet.removeCollateral(0, address(ibWeth), 10 ether);
+    collateralFacet.removeCollateral(ALICE, 0, address(ibWeth), 10 ether);
     vm.stopPrank();
 
     // check account ib token collat
@@ -139,7 +139,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     assertEq(_collatAmountBefore, 10 ether);
 
     vm.startPrank(ALICE);
-    collateralFacet.removeCollateral(0, address(ibWeth), _removedAmount);
+    collateralFacet.removeCollateral(ALICE, 0, address(ibWeth), _removedAmount);
     vm.stopPrank();
 
     uint256 _balanceAfter = ibWeth.balanceOf(ALICE);
