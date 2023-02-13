@@ -53,9 +53,20 @@ library LibMoneyMarket01 {
     uint256 _removedDebtAmount
   );
 
-  event LogRemoveCollateral(address indexed _subAccount, address indexed _token, uint256 _amount);
+  event LogRemoveCollateral(
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _amount
+  );
 
-  event LogAddCollateral(address indexed _subAccount, address indexed _token, address _caller, uint256 _amount);
+  event LogAddCollateral(
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    address _caller,
+    uint256 _amount
+  );
 
   event LogOverCollatBorrow(
     address indexed _account,
@@ -570,6 +581,7 @@ library LibMoneyMarket01 {
   }
 
   function addCollatToSubAccount(
+    address _account,
     address _subAccount,
     address _token,
     uint256 _addAmount,
@@ -596,10 +608,23 @@ library LibMoneyMarket01 {
     }
     moneyMarketDs.collats[_token] += _addAmount;
 
-    emit LogAddCollateral(_subAccount, _token, msg.sender, _addAmount);
+    // stake token to miniFL, when user add collateral by ibToken
+    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
+
+    // If the collateral token has no miniFL's poolID associated with it
+    // skip the deposit to miniFL process
+    // This generally applies to non-ibToken collateral
+    if (_poolId != 0) {
+      IERC20(_token).safeApprove(address(_miniFL), _addAmount);
+      _miniFL.deposit(_account, _poolId, _addAmount);
+    }
+
+    emit LogAddCollateral(_account, _subAccount, _token, msg.sender, _addAmount);
   }
 
   function removeCollatFromSubAccount(
+    address _account,
     address _subAccount,
     address _token,
     uint256 _removeAmount,
@@ -613,7 +638,18 @@ library LibMoneyMarket01 {
     _subAccountCollatList.updateOrRemove(_token, _currentCollatAmount - _removeAmount);
     moneyMarketDs.collats[_token] -= _removeAmount;
 
-    emit LogRemoveCollateral(_subAccount, _token, _removeAmount);
+    // In the subsequent call, MM should get hold of physical token to proceed
+    // Thus, we need to withdraw the physical token from miniFL first
+    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+
+    // If the collateral token has no miniFL's poolID associated with it
+    // skip the withdrawal from miniFL process
+    // This generally applies to non-ibToken collateral
+    if (_poolId != 0) {
+      moneyMarketDs.miniFL.withdraw(_account, _poolId, _removeAmount);
+    }
+
+    emit LogRemoveCollateral(_account, _subAccount, _token, _removeAmount);
   }
 
   function validateSubaccountIsHealthy(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs)
@@ -644,15 +680,12 @@ library LibMoneyMarket01 {
     moneyMarketDs.globalDebts[_repayToken] -= _debtValueToRemove;
 
     // withdraw debt token from miniFL
-    // Note: prevent stack too deep
-    moneyMarketDs.miniFL.withdraw(
-      _account,
-      moneyMarketDs.miniFLPoolIds[moneyMarketDs.tokenToDebtTokens[_repayToken]],
-      _debtShareToRemove
-    );
+    IMiniFL _miniFL = moneyMarketDs.miniFL;
+    address _debtToken = moneyMarketDs.tokenToDebtTokens[_repayToken];
+    _miniFL.withdraw(_account, moneyMarketDs.miniFLPoolIds[_debtToken], _debtShareToRemove);
 
     // burn debt token
-    IDebtToken(moneyMarketDs.tokenToDebtTokens[_repayToken]).burn(address(this), _debtShareToRemove);
+    IDebtToken(_debtToken).burn(address(this), _debtShareToRemove);
 
     emit LogRemoveDebt(_account, _subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
@@ -743,9 +776,9 @@ library LibMoneyMarket01 {
 
     // pool for debt token always exist
     // since pool is created during AdminFacet.openMarket()
-    IDebtToken(_debtToken).mint(address(this), _amount);
-    IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _amount);
-    _miniFL.deposit(_account, _poolId, _amount);
+    IDebtToken(_debtToken).mint(address(this), _shareToAdd);
+    IERC20(_debtToken).safeApprove(address(_miniFL), _shareToAdd);
+    _miniFL.deposit(_account, _poolId, _shareToAdd);
 
     emit LogOverCollatBorrow(msg.sender, _subAccount, _token, _amount, _shareToAdd);
   }
