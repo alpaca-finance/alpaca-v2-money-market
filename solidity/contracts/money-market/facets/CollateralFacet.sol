@@ -48,13 +48,18 @@ contract CollateralFacet is ICollateralFacet {
     uint256 _amount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
 
-    LibMoneyMarket01.addCollatToSubAccount(msg.sender, _subAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.addCollatToSubAccount(_account, _subAccount, _token, _amount, moneyMarketDs);
   }
 
   /// @notice Remove a collateral token from a subaccount
