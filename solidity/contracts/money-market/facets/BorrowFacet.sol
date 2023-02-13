@@ -97,28 +97,49 @@ contract BorrowFacet is IBorrowFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
+    // accrue all debt tokens under subaccount
+    // because used borrowing power is calcualated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
+    // Get the current debt amount and share of this token under the subaccount
+    // The current debt share will be used to cap the maximum that can be repaid
+    // The current debt amount will be used to check the minimum debt size after repaid
     (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
       _subAccount,
       _token,
       moneyMarketDs
     );
 
+    // The debt share that can be repaid should not exceed the current debt share
+    // that the subaccount is holding
     uint256 _actualShareToRepay = LibFullMath.min(_currentDebtShare, _debtShareToRepay);
-    // cache to save gas
+
+    // caching these variables to save gas from multiple reads
     uint256 _cachedDebtValue = moneyMarketDs.overCollatDebtValues[_token];
     uint256 _cachedDebtShare = moneyMarketDs.overCollatDebtShares[_token];
+
+    // Find the actual underlying amount that need to be pulled from the share
     uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
 
-    // transfer only amount to repay, handle fee on transfer
+    // Pull the token from msg.sender, the actual amount received will be used for debt accounting
+    // In case somehow there's fee on transfer - which's might be introduced after the token was lent
+    // Not reverting to ensure that repay transaction can be done even if there's fee on transfer
     _actualAmountToRepay = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _actualAmountToRepay);
+
+    // Recalculate the debt share to remove in case there's fee on transfer
     _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
 
+    // Increase the reserve amount of the token as there's new physical token coming in
     moneyMarketDs.reserves[_token] += _actualAmountToRepay;
 
+    // Check if the repay transaction will violate the business rule
+    // namely the debt size after repaid should be more than minimum debt size
     _validateRepay(
       _token,
       _currentDebtShare,
@@ -127,6 +148,8 @@ contract BorrowFacet is IBorrowFacet {
       _actualAmountToRepay,
       moneyMarketDs
     );
+
+    // Remove the debt share from this subaccount's accounting
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _account,
       _subAccount,
@@ -136,6 +159,10 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
+    // Ensure that ultimately the subaccount will still remain healthy
+    // meaning total borrowing power is greather or equal to what has been used
+    // While repaying should always result in subaccount being healthier than before
+    // This line is for code consistency
     LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
 
     emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
