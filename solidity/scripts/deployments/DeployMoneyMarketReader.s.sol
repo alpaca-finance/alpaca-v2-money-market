@@ -9,11 +9,9 @@ contract DeployMoneyMarketFacets is BaseScript {
   using stdJson for string;
 
   function run() public {
-    MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
-
     _startDeployerBroadcast();
 
-    address mmReader = address(new MoneyMarketReader(mmConfig.moneyMarketDiamond));
+    address mmReader = address(new MoneyMarketReader(address(moneyMarket)));
 
     _stopBroadcast();
 

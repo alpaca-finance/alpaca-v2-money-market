@@ -14,6 +14,7 @@ import { ICollateralFacet } from "solidity/contracts/money-market/interfaces/ICo
 import { IBorrowFacet } from "solidity/contracts/money-market/interfaces/IBorrowFacet.sol";
 import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFacet.sol";
 import { IOwnershipFacet } from "solidity/contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
@@ -29,27 +30,19 @@ abstract contract BaseScript is Script {
     string.concat(vm.projectRoot(), string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
   IMoneyMarket internal moneyMarket;
+  IMiniFL internal miniFL;
   address internal deployerAddress;
   address internal userAddress;
   address internal proxyAdminAddress;
 
-  // TODO: deploy miniFL and update deployment sequence
-  struct DeploymentConfig {
-    address wNativeAddress;
-    address wNativeRelayer;
-  }
-
-  struct MoneyMarketConfig {
-    address moneyMarketDiamond;
-  }
-
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
     userAddress = vm.addr(userPrivateKey);
-    MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
-    moneyMarket = IMoneyMarket(mmConfig.moneyMarketDiamond);
+
     string memory configJson = vm.readFile(configFilePath);
+    moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
+    miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
   }
 
   // function _pretendMM() internal {
@@ -74,19 +67,6 @@ abstract contract BaseScript is Script {
     address newToken = address(new MockERC20("", symbol, decimals));
     vm.label(newToken, symbol);
     return newToken;
-  }
-
-  function _getDeploymentConfig() internal view returns (DeploymentConfig memory config) {
-    console.log("load deployment config from", configFilePath);
-    string memory configJson = vm.readFile(configFilePath);
-    config.wNativeAddress = abi.decode(configJson.parseRaw(".deploymentConfig.wNativeAddress"), (address));
-    config.wNativeRelayer = abi.decode(configJson.parseRaw(".deploymentConfig.wNativeRelayer"), (address));
-  }
-
-  function _getMoneyMarketConfig() internal view returns (MoneyMarketConfig memory config) {
-    console.log("load money market config from", configFilePath);
-    string memory configJson = vm.readFile(configFilePath);
-    config.moneyMarketDiamond = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (address));
   }
 
   function _startDeployerBroadcast() internal {

@@ -16,13 +16,18 @@ contract DeployMoneyMarket is BaseScript {
   using stdJson for string;
 
   function run() public {
-    DeploymentConfig memory config = _getDeploymentConfig();
+    _loadAddresses();
 
     _startDeployerBroadcast();
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
-      .deployMoneyMarketDiamond(config.miniFLAddress);
+      .deployMoneyMarketDiamond(address(miniFL));
     moneyMarket = IMoneyMarket(_moneyMarket);
+
+    // whitelist mm on miniFL to be able to openMarket
+    address[] memory _callers = new address[](1);
+    _callers[0] = address(moneyMarket);
+    miniFL.setWhitelistedCallers(_callers, true);
 
     // setup oracles
 

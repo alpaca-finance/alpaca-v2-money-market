@@ -63,6 +63,13 @@ contract SetUpMMForTestScript is BaseScript {
     tokenConfigInput.tier = LibMoneyMarket01.AssetTier.ISOLATE;
     address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, tokenConfigInput);
 
+    // TEMP: set user as account manager. to be migrated to router
+    {
+      address[] memory _accountManagers = new address[](1);
+      _accountManagers[0] = userAddress;
+      moneyMarket.setAccountManagersOk(_accountManagers, true);
+    }
+
     _stopBroadcast();
 
     //---- setup user positions ----//
@@ -82,9 +89,9 @@ contract SetUpMMForTestScript is BaseScript {
     MockERC20(pstake).approve(address(moneyMarket), type(uint256).max);
 
     // seed money market
-    moneyMarket.deposit(dodo, 10 ether);
-    moneyMarket.deposit(pstake, 10 ether);
-    moneyMarket.deposit(mock6DecimalsToken, 10e6);
+    moneyMarket.deposit(userAddress, dodo, 10 ether);
+    moneyMarket.deposit(userAddress, pstake, 10 ether);
+    moneyMarket.deposit(userAddress, mock6DecimalsToken, 10e6);
 
     // subAccount 0
     moneyMarket.addCollateral(userAddress, 0, bnb, 1 ether);
