@@ -108,6 +108,7 @@ contract CollateralFacet is ICollateralFacet {
   /// @param _toSubAccountId An index to derive the subaccount to transfer to
   /// @param _token The token to transfer
   /// @param _amount The amount to transfer
+  /// @dev TODO: To be removed as this action can be done through account manager
   function transferCollateral(
     uint256 _fromSubAccountId,
     uint256 _toSubAccountId,
