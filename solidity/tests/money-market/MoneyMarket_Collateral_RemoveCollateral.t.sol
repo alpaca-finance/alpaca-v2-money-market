@@ -123,10 +123,12 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenPartiallyRemoveCollateralViaIbToken_ibTokenCollatShouldBeRemain() external {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
+    uint256 _removedAmount = 5 ether;
 
     _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
 
     // ibToken should be staked to MiniFL when add collat with ibToken
+    uint256 _balanceBefore = ibWeth.balanceOf(ALICE);
     uint256 _stakingAmountBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     uint256 _collatAmountBefore = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
 
@@ -137,19 +139,19 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     assertEq(_collatAmountBefore, 10 ether);
 
     vm.startPrank(ALICE);
-    collateralFacet.removeCollateral(0, address(ibWeth), 5 ether);
+    collateralFacet.removeCollateral(0, address(ibWeth), _removedAmount);
     vm.stopPrank();
 
+    uint256 _balanceAfter = ibWeth.balanceOf(ALICE);
     uint256 _stakingAmountAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     uint256 _collatAmountAfter = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
 
     // check account ib token collat
     // ibToken should be withdrawn from MiniFL when remove collat
-    assertEq(
-      viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)),
-      _collatAmountBefore - _collatAmountAfter
-    );
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stakingAmountBefore - _stakingAmountAfter);
-    assertEq(ibWeth.balanceOf(ALICE), _stakingAmountBefore - _stakingAmountAfter);
+    // collateral amount should be reduced by _removedAmount, also staking amount
+    assertEq(_collatAmountBefore - _removedAmount, _collatAmountAfter);
+    assertEq(_stakingAmountBefore - _removedAmount, _stakingAmountAfter);
+    // after removing collateral, token should be returned to user equal to _removedAmount
+    assertEq(_balanceAfter - _balanceBefore, _removedAmount);
   }
 }

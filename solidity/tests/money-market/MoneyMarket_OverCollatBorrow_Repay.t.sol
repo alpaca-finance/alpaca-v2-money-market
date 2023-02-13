@@ -27,9 +27,9 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(weth), address(model));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), normalizeEther(20 ether, wethDecimal));
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
+    lendFacet.deposit(ALICE, address(weth), normalizeEther(40 ether, wethDecimal));
+    lendFacet.deposit(ALICE, address(usdc), normalizeEther(40 ether, usdcDecimal));
+    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(40 ether, isolateTokenDecimal));
     vm.stopPrank();
 
     uint256 _aliceBorrowAmount = 10 ether;
@@ -76,6 +76,37 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
     assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _debtShareBefore);
     assertEq(DebtToken(_debtToken).totalSupply(), _debtTokenBalanceAfter);
+  }
+
+  function testCorrectness_WhenUserRepayDebtAfterTimepass_DebtTokenInMiniFLShouldBeRemovedCorrectly() external {
+    // get debt token balance before repay
+    address _debtToken = viewFacet.getDebtTokenFromToken(address(weth));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
+    (, uint256 _debtAmountBefore) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
+
+    // _pendingInterest = 1 ether, after accrue interest, the debt amount should be increased by 1 ether
+    uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(address(weth));
+    borrowFacet.accrueInterest(address(weth));
+
+    (, uint256 _debtAmountAfterAccrue) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
+    assertEq(_debtAmountAfterAccrue, _debtAmountBefore + _pendingInterest);
+
+    // now if alice borrow more 11 ether, the debt share should be increased by 10 ether
+    // since _debtShareAfterAccrue: 11 ether, while _debtAmountAfterAccrue: 10 ether
+    vm.startPrank(ALICE);
+    uint256 _aliceSecondBorrowAmount = _debtAmountBefore + _pendingInterest;
+    borrowFacet.borrow(subAccount0, address(weth), _aliceSecondBorrowAmount);
+    (uint256 _debtShareAfterSecondBorrow, ) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      ALICE,
+      subAccount0,
+      address(weth)
+    );
+
+    // after repay with all debt share, the debt share and debt token (in MiniFL) should be zero
+    borrowFacet.repay(ALICE, subAccount0, address(weth), _debtShareAfterSecondBorrow);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 0);
+    assertEq(DebtToken(_debtToken).totalSupply(), 0);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenUserRepayDebtMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount() external {

@@ -616,7 +616,7 @@ library LibMoneyMarket01 {
     // skip the deposit to miniFL process
     // This generally applies to non-ibToken collateral
     if (_poolId != 0) {
-      IERC20(_token).safeIncreaseAllowance(address(_miniFL), _addAmount);
+      IERC20(_token).safeApprove(address(_miniFL), _addAmount);
       _miniFL.deposit(_account, _poolId, _addAmount);
     }
 
@@ -786,9 +786,9 @@ library LibMoneyMarket01 {
 
     // pool for debt token always exist
     // since pool is created during AdminFacet.openMarket()
-    IDebtToken(_debtToken).mint(address(this), _amount);
-    IERC20(_debtToken).safeIncreaseAllowance(address(_miniFL), _amount);
-    _miniFL.deposit(_account, _poolId, _amount);
+    IDebtToken(_debtToken).mint(address(this), _shareToAdd);
+    IERC20(_debtToken).safeApprove(address(_miniFL), _shareToAdd);
+    _miniFL.deposit(_account, _poolId, _shareToAdd);
 
     emit LogOverCollatBorrow(msg.sender, _subAccount, _token, _amount, _shareToAdd);
   }
