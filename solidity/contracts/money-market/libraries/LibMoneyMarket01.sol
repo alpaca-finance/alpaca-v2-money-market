@@ -687,16 +687,6 @@ library LibMoneyMarket01 {
     // burn debt token
     IDebtToken(_debtToken).burn(address(this), _debtShareToRemove);
 
-    // withdraw token from miniFL
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_repayToken];
-
-    // If the collateral token has no miniFL's poolID associated with it
-    // skip the withdrawal from miniFL process
-    // This generally applies to non-ibToken collateral
-    if (_poolId != 0) {
-      _miniFL.withdraw(_account, _poolId, _debtShareToRemove);
-    }
-
     emit LogRemoveDebt(_account, _subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
   }
 
