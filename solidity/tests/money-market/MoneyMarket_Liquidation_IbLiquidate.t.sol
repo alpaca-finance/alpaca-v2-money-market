@@ -399,7 +399,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
-    collateralFacet.removeCollateral(_aliceSubAccountId, _ibCollatToken, 30 ether);
+    collateralFacet.removeCollateral(ALICE, _aliceSubAccountId, _ibCollatToken, 30 ether);
     vm.stopPrank();
     // | After Alice adjust Collateral state will changed a bit
     // | ---------------------------------------------- |
