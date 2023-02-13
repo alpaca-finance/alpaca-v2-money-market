@@ -69,6 +69,7 @@ contract CollateralFacet is ICollateralFacet {
   }
 
   /// @notice Remove a collateral token from a subaccount
+  /// @param _account Main account that collateral will be removed from
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The collateral token
   /// @param _removeAmount The amount to remove
@@ -92,7 +93,9 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // Remove collateral from subaccount's accounting
-    // The physical token of collateral token should be within MM Diamond
+    // Additionally, withdraw the collateral token that should have been
+    // staked at miniFL specifically if the collateral was ibToken
+    // The physical token of collateral token should now have been at MM Diamond
     LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _removeAmount, moneyMarketDs);
 
     // Do a final subaccount health check as the subaccount should not be at risk of liquidation
