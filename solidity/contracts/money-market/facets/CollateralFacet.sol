@@ -54,7 +54,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
 
-    LibMoneyMarket01.addCollatToSubAccount(_subAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.addCollatToSubAccount(msg.sender, _subAccount, _token, _amount, moneyMarketDs);
   }
 
   /// @notice Remove a collateral token from a subaccount
@@ -72,7 +72,7 @@ contract CollateralFacet is ICollateralFacet {
 
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    LibMoneyMarket01.removeCollatFromSubAccount(_subAccount, _token, _removeAmount, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _subAccount, _token, _removeAmount, moneyMarketDs);
     LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
 
     IERC20(_token).safeTransfer(msg.sender, _removeAmount);
@@ -97,11 +97,11 @@ contract CollateralFacet is ICollateralFacet {
 
     address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);
     LibMoneyMarket01.accrueBorrowedPositionsOf(_fromSubAccount, moneyMarketDs);
-    LibMoneyMarket01.removeCollatFromSubAccount(_fromSubAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _fromSubAccount, _token, _amount, moneyMarketDs);
     LibMoneyMarket01.validateSubaccountIsHealthy(_fromSubAccount, moneyMarketDs);
 
     address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
-    LibMoneyMarket01.addCollatToSubAccount(_toSubAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.addCollatToSubAccount(msg.sender, _toSubAccount, _token, _amount, moneyMarketDs);
 
     emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }

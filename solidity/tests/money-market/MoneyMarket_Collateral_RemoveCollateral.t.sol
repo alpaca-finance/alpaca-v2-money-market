@@ -8,10 +8,30 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 
 // interfaces
 import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
+  IMiniFL _miniFL;
+
   function setUp() public override {
     super.setUp();
+
+    _miniFL = IMiniFL(address(miniFL));
+  }
+
+  function _depositWETHAndAddibWETHAsCollat(address _caller, uint256 _amount) internal {
+    // LEND to get ibToken
+    vm.startPrank(_caller);
+
+    weth.approve(moneyMarketDiamond, _amount);
+    uint256 _ibBalanceBefore = ibWeth.balanceOf(_caller);
+    lendFacet.deposit(_caller, address(weth), _amount);
+    uint256 _ibReceived = ibWeth.balanceOf(_caller) - _ibBalanceBefore;
+
+    // Add collat by ibToken
+    ibWeth.approve(moneyMarketDiamond, _ibReceived);
+    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), _ibReceived);
+    vm.stopPrank();
   }
 
   function testRevert_WhenUserRemoveCollateralMoreThanExistingAmount_ShouldRevert() external {
@@ -79,17 +99,13 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
   // Add and Remove Collat with ibToken
   function testCorrectness_WhenRemoveCollateralViaIbToken_ibTokenCollatShouldBeCorrect() external {
-    // LEND to get ibToken
-    vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
-    vm.stopPrank();
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
-    // Add collat by ibToken
-    vm.startPrank(ALICE);
-    ibWeth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 10 ether);
-    vm.stopPrank();
+    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
+
+    // ibToken should be staked to MiniFL when add collat with ibToken
+    assertEq(ibWeth.balanceOf(ALICE), 0 ether);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 10 ether);
 
     // check account ib token collat
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
@@ -99,7 +115,43 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     // check account ib token collat
-
+    // ibToken should be withdrawn from MiniFL when remove collat
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 0 ether);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 0 ether);
+    assertEq(ibWeth.balanceOf(ALICE), 10 ether);
+  }
+
+  function testCorrectness_WhenPartiallyRemoveCollateralViaIbToken_ibTokenCollatShouldBeRemain() external {
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
+    uint256 _removedAmount = 5 ether;
+
+    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
+
+    // ibToken should be staked to MiniFL when add collat with ibToken
+    uint256 _balanceBefore = ibWeth.balanceOf(ALICE);
+    uint256 _stakingAmountBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
+    uint256 _collatAmountBefore = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
+
+    assertEq(ibWeth.balanceOf(ALICE), 0 ether);
+    assertEq(_stakingAmountBefore, 10 ether);
+
+    // check account ib token collat
+    assertEq(_collatAmountBefore, 10 ether);
+
+    vm.startPrank(ALICE);
+    collateralFacet.removeCollateral(0, address(ibWeth), _removedAmount);
+    vm.stopPrank();
+
+    uint256 _balanceAfter = ibWeth.balanceOf(ALICE);
+    uint256 _stakingAmountAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
+    uint256 _collatAmountAfter = viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth));
+
+    // check account ib token collat
+    // ibToken should be withdrawn from MiniFL when remove collat
+    // collateral amount should be reduced by _removedAmount, also staking amount
+    assertEq(_collatAmountBefore - _removedAmount, _collatAmountAfter);
+    assertEq(_stakingAmountBefore - _removedAmount, _stakingAmountAfter);
+    // after removing collateral, token should be returned to user equal to _removedAmount
+    assertEq(_balanceAfter - _balanceBefore, _removedAmount);
   }
 }

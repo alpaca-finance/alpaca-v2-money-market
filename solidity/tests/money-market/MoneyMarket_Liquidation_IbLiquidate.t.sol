@@ -9,6 +9,7 @@ import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMone
 // interfaces
 import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 // contract
@@ -41,12 +42,15 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
   MockLPToken internal wethUsdcLPToken;
   MockRouter02 internal router;
   PancakeswapV2IbTokenLiquidationStrategy _ibTokenLiquidationStrat;
+  IMiniFL internal _miniFL;
 
   uint256 _aliceSubAccountId = 0;
   address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _aliceSubAccountId);
 
   function setUp() public override {
     super.setUp();
+
+    _miniFL = IMiniFL(address(miniFL));
 
     TripleSlopeModel6 tripleSlope6 = new TripleSlopeModel6();
     adminFacet.setInterestModel(address(weth), address(tripleSlope6));
@@ -246,6 +250,10 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
     _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
+
+    // check staking ib token in MiniFL
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 40 ether - _expectedIbTokenToWithdraw);
   }
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
@@ -374,6 +382,10 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
     _assertLiquidatorReward(_debtToken, _expectedLiquidationFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedLiquidationFeeToTrasury, _stateBefore);
+
+    // check staking ib token in MiniFL
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 40 ether - _expectedIbTokenToWithdraw);
   }
 
   function testCorrectness_WhenLiquidateIbTokenCollatIsLessThanRequire_DebtShouldRepayAndCollatShouldBeGone() external {
@@ -514,6 +526,10 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
     _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
+
+    // check staking ib token in MiniFL
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(IMiniFL(address(miniFL)).getUserTotalAmountOf(_poolId, ALICE), 0);
   }
 
   function testRevert_WhenPartialLiquidateIbCollateral_RepayTokenAndUnderlyingAreSame() external {
