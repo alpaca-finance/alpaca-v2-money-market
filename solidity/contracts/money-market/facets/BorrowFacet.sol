@@ -178,37 +178,59 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _debtShareToRepay
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
     address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
+
+    // accrue all debt tokens under subaccount
+    // because used borrowing power is calcualated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    // actual repay amount is minimum of collateral amount, debt amount, and repay amount
     uint256 _collateralAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_token);
 
+    // Find the debt share equivalent of collateral token
+    // Simply convert the amount of collateral token with respect to over collat debt shares and values
     uint256 _collateralAsShare = LibShareUtil.valueToShare(
       _collateralAmount,
       moneyMarketDs.overCollatDebtShares[_token],
       moneyMarketDs.overCollatDebtValues[_token]
     );
 
+    // Get the current debt amount and share of this token under the subaccount
+    // The current debt share will be used to cap the maximum that can be repaid
+    // The current debt amount will be used to check the minimum debt size after repaid
     (uint256 _currentDebtShare, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
       _subAccount,
       _token,
       moneyMarketDs
     );
 
+    // Maximum of debt share that can be removed should be the minium of
+    // 1. current debt share under the subaccount
+    // 2. the input debt share intented to be removed
+    // 3. the equivalent of debt share in collateral form
     uint256 _actualShareToRepay = LibFullMath.min(
       _debtShareToRepay,
       LibFullMath.min(_currentDebtShare, _collateralAsShare)
     );
 
+    // Calculate the amount to be used in repay transaction
     uint256 _amountToRepay = LibShareUtil.shareToValue(
       _actualShareToRepay,
       moneyMarketDs.overCollatDebtValues[_token],
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
+    // Check if the repay transaction will violate the business rule
+    // namely the debt size after repaid should be more than minimum debt size
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
+    // Remove the debt share from this subaccount's accounting
+    // the actual token repaid will be from interal accounting transfer from
+    // collateral to reserves
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       msg.sender,
       _subAccount,
@@ -218,8 +240,13 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
+    // Remove collateral from subaccount's accounting
+    // Additionally, withdraw the collateral token that should have been
+    // staked at miniFL specifically if the collateral was ibToken
+    // The physical token of collateral token should now have been at MM Diamond
     LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _subAccount, _token, _amountToRepay, moneyMarketDs);
 
+    // Increase the reserves as the token has freed up
     moneyMarketDs.reserves[_token] += _amountToRepay;
 
     emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _amountToRepay);
