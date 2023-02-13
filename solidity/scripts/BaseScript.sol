@@ -31,7 +31,9 @@ abstract contract BaseScript is Script {
   IMoneyMarket internal moneyMarket;
   address internal deployerAddress;
   address internal userAddress;
+  address internal proxyAdminAddress;
 
+  // TODO: deploy miniFL and update deployment sequence
   struct DeploymentConfig {
     address wNativeAddress;
     address wNativeRelayer;
@@ -46,6 +48,8 @@ abstract contract BaseScript is Script {
     userAddress = vm.addr(userPrivateKey);
     MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
     moneyMarket = IMoneyMarket(mmConfig.moneyMarketDiamond);
+    string memory configJson = vm.readFile(configFilePath);
+    proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
   }
 
   // function _pretendMM() internal {

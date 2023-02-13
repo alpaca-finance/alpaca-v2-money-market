@@ -33,5 +33,10 @@
     "busd": "0x3024ADb02C99bd6e617f8f372E2c237f4085F8e3",
     "dodo": "0x58A3aCe82B7fBa6de3fd5F68C58b4dDC86d97FC5",
     "pstake": "0xeDDC4Ce39dbDf46a4B702A881b56f7996CCbDEbe"
+  },
+  "proxyAdmin": "0xDB072A6c22833ffbDCb6B6b94804f82D0F725c37",
+  "miniFL": {
+    "implementation": "0xDB072A6c22833ffbDCb6B6b94804f82D0F725c37",
+    "proxy": "0x30b920df2805432f4202E1C4b02a168787e37F19"
   }
 }
