@@ -125,7 +125,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     uint256 wethAliceBeforeWithdraw = weth.balanceOf(ALICE);
     vm.prank(ALICE);
-    collateralFacet.removeCollateral(0, address(weth), 10 ether);
+    collateralFacet.removeCollateral(ALICE, 0, address(weth), 10 ether);
     uint256 wethAliceAfterWithdraw = weth.balanceOf(ALICE);
     assertEq(wethAliceAfterWithdraw - wethAliceBeforeWithdraw, 10 ether);
     LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, 0);

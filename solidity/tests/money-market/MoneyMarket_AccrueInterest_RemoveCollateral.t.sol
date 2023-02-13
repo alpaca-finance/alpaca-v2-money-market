@@ -56,7 +56,7 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
 
     vm.startPrank(ALICE);
     // remove collateral will trigger accrue interest on all borrowed token
-    collateralFacet.removeCollateral(subAccount0, address(weth), 0);
+    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 0);
     vm.stopPrank();
 
     // assert ALICE

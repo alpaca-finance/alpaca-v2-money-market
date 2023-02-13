@@ -55,10 +55,16 @@ contract CollateralFacet is ICollateralFacet {
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
+    // While there's no impact if interest of all of the borrowed tokens have not been accrued
+    // Interests are accrued for code consistency
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
+    // Pull the token from msg.sender
+    // This should revert if the incoming token has fee on transfer
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
 
+    // Book the collateral to subaccount's accounting
+    // If the collateral token is ibToken, the ibToken should be staked at miniFL contract
     LibMoneyMarket01.addCollatToSubAccount(_account, _subAccount, _token, _amount, moneyMarketDs);
   }
 
@@ -67,19 +73,33 @@ contract CollateralFacet is ICollateralFacet {
   /// @param _token The collateral token
   /// @param _removeAmount The amount to remove
   function removeCollateral(
+    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _removeAmount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
 
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
+
+    // accrue every debts for all token borrowed from this subaccount
+    // This is to ensure that the subaccount's health check calculation below
+    // already took unaccrued instests into account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _subAccount, _token, _removeAmount, moneyMarketDs);
+    // Remove collateral from subaccount's accounting
+    // The physical token of collateral token should be within MM Diamond
+    LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _removeAmount, moneyMarketDs);
+
+    // Do a final subaccount health check as the subaccount should not be at risk of liquidation
+    // after the collateral was removed
     LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
 
+    // Transfer the token back to account manager. Not the subaccount owner.
     IERC20(_token).safeTransfer(msg.sender, _removeAmount);
   }
 
