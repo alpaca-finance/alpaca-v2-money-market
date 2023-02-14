@@ -74,7 +74,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(subAccount0, address(lateFotToken), _borrowAmount);
+    borrowFacet.borrow(BOB, subAccount0, address(lateFotToken), _borrowAmount);
     vm.stopPrank();
 
     // after borrow should receive _borrowAmount - _transferFee
@@ -97,7 +97,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(subAccount0, address(lateFotToken), _borrowAmount);
+    borrowFacet.borrow(BOB, subAccount0, address(lateFotToken), _borrowAmount);
     borrowFacet.repay(BOB, subAccount0, address(lateFotToken), _borrowAmount);
     vm.stopPrank();
 
@@ -123,7 +123,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     collateralFacet.addCollateral(BOB, subAccount0, _collatToken, 2 ether);
-    borrowFacet.borrow(subAccount0, _debtToken, 1 ether);
+    borrowFacet.borrow(BOB, subAccount0, _debtToken, 1 ether);
     vm.stopPrank();
 
     mockOracle.setTokenPrice(_collatToken, 0.5 ether);
