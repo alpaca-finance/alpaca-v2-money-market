@@ -128,8 +128,8 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     // due to the fact that token were transfer back and forth at account manager
     // BOB got < 100 + 0.99 (subjected to fee during borrow) - 1 (repay) - (fee on transfer during repay)
     // fee on transfer during repay = 10 * 0.99 = 9.99, transfer to repay 1 ether
-    // 8.99 left to transfer back => 8.99 * 0.99 =
-    // total left = 100 + 0.99 -10  + 8.9001 => 99.801
+    // 8.9 left to transfer back => 8.9 * 0.99 = 8.811
+    // total left = 100 + 0.99 -10  + 8.811 => 99.801
     assertEq(lateFotToken.balanceOf(BOB), 99.801000000000000000 ether);
 
     // can't repay entire debt because transfer fee during repayment is deduced
