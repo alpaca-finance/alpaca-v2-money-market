@@ -232,7 +232,7 @@ contract BorrowFacet is IBorrowFacet {
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
     // Remove the debt share from this subaccount's accounting
-    // the actual token repaid will be from interal accounting transfer from
+    // the actual token repaid will be from internal accounting transfer from
     // collateral to reserves
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       msg.sender,
