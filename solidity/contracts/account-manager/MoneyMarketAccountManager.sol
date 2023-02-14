@@ -71,7 +71,28 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     address _token,
     uint256 _repayAmount,
     uint256 _debtShareToRepay
-  ) external {}
+  ) external {
+    // cache the balance of token before proceeding
+    uint256 _amountBefore = IERC20(_token).balanceOf(address(this));
+
+    // Fund this contract from caller
+    // ignore the fact that there might be fee on transfer
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _repayAmount);
+
+    // Call repay by forwarding input _debtShareToRepay
+    // Money Market should deduct the fund as much as possible
+    // If there's excess amount left, transfer back to user
+    IBorrowFacet(moneyMarketDiamond).repay(_account, _subAccountId, _token, _debtShareToRepay);
+
+    // Calculate the excess amount left in the contract
+    // This will revert if the input repay amount has lower value than _debtShareToRepay
+    // And there's some token left in contract (can be done by inject token directly to this contract)
+    uint256 _excessAmount = IERC20(_token).balanceOf(address(this)) - _amountBefore;
+
+    if (_excessAmount != 0) {
+      IERC20(_token).safeTransfer(msg.sender, _excessAmount);
+    }
+  }
 
   function deposit(address _token, uint256 _amount) external {
     // pull funds from caller and deposit to money market
