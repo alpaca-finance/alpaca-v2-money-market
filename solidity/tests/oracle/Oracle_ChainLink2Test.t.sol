@@ -29,7 +29,7 @@ contract Oracle_ChainLinkPriceOracleTest is BaseTest {
     vm.prank(oldOwner);
     chainLinkPriceOracle.transferOwnership(DEPLOYER);
 
-    oracle = IPriceOracle(chainLinkPriceOracle);
+    oracle = IPriceOracle(address(chainLinkPriceOracle));
   }
 
   function testCorrectness_NotOwner_setPriceFeed_shouldRevertCallerIsNotOwner() external {

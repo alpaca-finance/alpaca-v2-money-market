@@ -3,11 +3,12 @@ pragma solidity 0.8.17;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+import { IOracleMedianizer } from "./interfaces/IOracleMedianizer.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 
 import { LibFullMath } from "./libraries/LibFullMath.sol";
 
-contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
+contract OracleMedianizer is OwnableUpgradeable, IOracleMedianizer {
   using LibFullMath for uint256;
 
   // Mapping from token0, token1 to number of sources

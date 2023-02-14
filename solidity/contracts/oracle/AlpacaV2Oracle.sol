@@ -35,7 +35,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @notice Stabletoken to compare value
   address public immutable baseStable;
 
-  /// @notice a chainLink interface to perform get price
+  /// @notice a OracleMedianizer interface to perform get price
   address public oracle;
 
   /// @notice mapping of token to tokenConfig
