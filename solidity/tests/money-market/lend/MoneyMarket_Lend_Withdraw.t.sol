@@ -156,7 +156,7 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     accountManager.addCollatFor(BOB, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(BOB, subAccount0, _token, normalizeEther(1 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, _token, normalizeEther(1 ether, usdcDecimal));
     vm.stopPrank();
 
     vm.warp(block.timestamp + 1);

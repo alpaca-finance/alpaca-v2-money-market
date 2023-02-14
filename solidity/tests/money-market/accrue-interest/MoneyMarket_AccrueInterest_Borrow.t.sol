@@ -53,7 +53,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     accountManager.addCollatFor(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
@@ -99,7 +99,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     accountManager.addCollatFor(BOB, subAccount0, address(weth), _bobBorrowAmount * 2);
 
     uint256 _bobBalanceBeforeBorrow = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _bobBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _bobBorrowAmount);
 
     (, uint256 _actualBobDebtAmountBeforeWarp) = viewFacet.getOverCollatDebtShareAndAmountOf(
       BOB,
@@ -152,7 +152,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // BOB borrow
     vm.startPrank(BOB);
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
@@ -166,7 +166,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // ALICE borrow and bob's interest accrue
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = weth.balanceOf(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     vm.stopPrank();
 
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
@@ -253,7 +253,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // BOB borrow
     vm.startPrank(BOB);
     uint256 _bobBalanceBefore = usdc.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(usdc), _usdcBorrowAmount);
+    accountManager.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = usdc.balanceOf(BOB);
@@ -268,7 +268,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // ALICE borrow and bob's interest accrue
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = usdc.balanceOf(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _usdcBorrowAmount);
+    accountManager.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     uint256 _aliceBalanceAfter = usdc.balanceOf(ALICE);
@@ -333,7 +333,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     // bob borrow
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     //bob non collat borrow
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _nonCollatBorrowAmount);
     vm.stopPrank();
@@ -381,7 +381,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     // bob borrow
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     //bob non collat borrow
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _nonCollatBorrowAmount);
     vm.stopPrank();
@@ -495,7 +495,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     // borrow 9 weth => with 9000 borrow factor
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), 9 ether);
+    accountManager.borrow(subAccount0, address(weth), 9 ether);
     // weth debt share = 9, debt value = 9
     // borrowed value = 9 * 9 / 9 = 9
     // the used borrowed power should be 9 * 10000 / 9000 = 10 ether
@@ -513,7 +513,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // alice borrow other asset, weth debt value should be accrued interest
     // borrow 9 usdc => with 9000 borrow factor
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), normalizeEther(9 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, address(usdc), normalizeEther(9 ether, usdcDecimal));
 
     // weth debt value increased by 8.1
     // weth debt share = 9, debt value = 9 + 8.1 = 17.1

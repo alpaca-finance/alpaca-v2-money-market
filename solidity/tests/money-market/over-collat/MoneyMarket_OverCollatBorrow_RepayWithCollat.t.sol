@@ -38,7 +38,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     // set up borrow first
     vm.startPrank(ALICE);
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);
@@ -143,7 +143,7 @@ contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTes
     // set up for case collat is less than debt
     vm.startPrank(ALICE);
     accountManager.addCollatFor(ALICE, subAccount0, address(usdc), normalizeEther(5 ether, usdcDecimal));
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), normalizeEther(10 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, address(usdc), normalizeEther(10 ether, usdcDecimal));
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);

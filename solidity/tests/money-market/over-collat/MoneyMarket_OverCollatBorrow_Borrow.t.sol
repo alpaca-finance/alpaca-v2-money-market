@@ -36,7 +36,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     accountManager.addCollatFor(BOB, subAccount0, address(weth), _borrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
@@ -56,20 +56,20 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     uint256 _borrowAmount = normalizeEther(10 ether, mockToken.decimals());
     vm.startPrank(BOB);
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidToken.selector, address(mockToken)));
-    borrowFacet.borrow(BOB, subAccount0, address(mockToken), _borrowAmount);
+    accountManager.borrow(subAccount0, address(mockToken), _borrowAmount);
     vm.stopPrank();
   }
 
   function testRevert_WhenUserBorrowTooMuchTokePerSubAccount() external {
     vm.startPrank(BOB);
     accountManager.addCollatFor(BOB, subAccount0, address(weth), normalizeEther(20 ether, wethDecimal));
-    borrowFacet.borrow(BOB, subAccount0, address(weth), normalizeEther(1 ether, wethDecimal));
-    borrowFacet.borrow(BOB, subAccount0, address(btc), normalizeEther(1 ether, btcDecimal));
-    borrowFacet.borrow(BOB, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(1 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(btc), normalizeEther(1 ether, btcDecimal));
+    accountManager.borrow(subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
 
     // now maximum is 3 token per account, when try borrow 4th token should revert
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_NumberOfTokenExceedLimit.selector));
-    borrowFacet.borrow(BOB, subAccount0, address(cake), normalizeEther(1 ether, cakeDecimal));
+    accountManager.borrow(subAccount0, address(cake), normalizeEther(1 ether, cakeDecimal));
     vm.stopPrank();
   }
 
@@ -81,7 +81,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
 
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getOverCollatDebtSharesOf(ALICE, subAccount0);
@@ -92,7 +92,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
 
     // list will be add at the front of linkList
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _aliceBorrowAmount2);
+    accountManager.borrow(subAccount0, address(usdc), _aliceBorrowAmount2);
     vm.stopPrank();
 
     aliceDebtShares = viewFacet.getOverCollatDebtSharesOf(ALICE, subAccount0);
@@ -102,7 +102,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     assertEq(aliceDebtShares[1].amount, _aliceBorrowAmount);
 
     vm.startPrank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     aliceDebtShares = viewFacet.getOverCollatDebtSharesOf(ALICE, subAccount0);
@@ -119,7 +119,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
 
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     LibDoublyLinkedList.Node[] memory aliceDebtShares = viewFacet.getOverCollatDebtSharesOf(ALICE, subAccount0);
@@ -131,7 +131,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     // list will be add at the front of linkList
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_NotEnoughToken.selector, _aliceBorrowAmount * 2));
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount * 2);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount * 2);
     vm.stopPrank();
   }
 
@@ -141,7 +141,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), normalizeEther(100 ether, wethDecimal));
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -161,9 +161,9 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), _aliceCollatAmount * 2);
 
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.expectRevert();
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
 
     vm.stopPrank();
   }
@@ -175,7 +175,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     accountManager.addCollatFor(BOB, subAccount0, address(weth), _bobCollateralAmount);
 
-    borrowFacet.borrow(BOB, subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
+    accountManager.borrow(subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
     vm.stopPrank();
   }
 
@@ -187,14 +187,14 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     accountManager.addCollatFor(BOB, subAccount0, address(weth), _bobCollateralAmount);
 
     // first borrow isolate token
-    borrowFacet.borrow(BOB, subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
+    accountManager.borrow(subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
 
     // borrow the isolate token again should passed
-    borrowFacet.borrow(BOB, subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
+    accountManager.borrow(subAccount0, address(isolateToken), _bobIsolateBorrowAmount);
 
     // trying to borrow different asset
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _bobIsolateBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _bobIsolateBorrowAmount);
     vm.stopPrank();
   }
 
@@ -216,8 +216,8 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // sum of both borrowed = 2.25 + 2.25 = 4.5
 
     vm.startPrank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(2.025 ether, wethDecimal));
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), normalizeEther(2.025 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(2.025 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(usdc), normalizeEther(2.025 ether, usdcDecimal));
     vm.stopPrank();
 
     (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
@@ -258,7 +258,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // maximumBorrowed weth amount = 9 * 9000/10000 = 8.1
     // _borrowedUSDValue = 8.1 * 10000 /9000 = 9
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(8.1 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(8.1 ether, wethDecimal));
 
     (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, normalizeEther(9 ether, usdDecimal));
@@ -304,7 +304,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // maximumBorrowed weth amount = 13.5 * 9000/10000 = 12.15
     // _borrowedUSDValue = 12.15 * 10000 / 9000 = 13.5
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(12.15 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(12.15 ether, wethDecimal));
 
     (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
     assertEq(_borrowedUSDValue, normalizeEther(13.5 ether, usdDecimal));
@@ -320,11 +320,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     accountManager.addCollatFor(BOB, subAccount0, address(weth), _bobCollateral);
 
     // first borrow should pass
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _borrowAmount);
 
     // the second borrow will revert since it exceed the cap
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_ExceedBorrowLimit.selector));
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _borrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _borrowAmount);
     vm.stopPrank();
   }
 
@@ -338,16 +338,16 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // borrow + debt < minDebtSize should revert
     // 0.01 + 0 < 0.1
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
 
     // borrow + debt == minDebtSize should not revert
     // 0.1 + 0 == 0.1
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(0.1 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(0.1 ether, wethDecimal));
 
     // ALICE has 0.1 weth debt
     // borrow + debt > minDebtSize should not revert
     // 0.01 + 0.1 > 0.1
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
 
     (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     assertEq(_debtAmount, 0.11 ether);
@@ -358,11 +358,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // because weth price dropped, borrow + debt < minDebtSize should revert
     // 0.01 + 0.88 < 0.1
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
 
     // borrow + debt == minDebtSize should not revert
     // 0.12 + 0.88 == 0.1
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(0.12 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(0.12 ether, wethDecimal));
 
     vm.stopPrank();
   }
@@ -372,7 +372,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(0.01 ether, wethDecimal));
   }
 
   function testCorrectness_WhenUserBorrowTokenFromMM_MMShouldStakeDebtTokenInMiniFLForUser() external {
@@ -386,7 +386,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     accountManager.addCollatFor(BOB, subAccount0, _borrowToken, _borrowAmount * 2);
-    borrowFacet.borrow(BOB, subAccount0, _borrowToken, _borrowAmount);
+    accountManager.borrow(subAccount0, _borrowToken, _borrowAmount);
     vm.stopPrank();
 
     // check token is exist in miniFL

@@ -47,7 +47,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     // alice borrow 1 weth
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), 1 ether);
+    accountManager.borrow(subAccount0, address(weth), 1 ether);
 
     // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowingPower
     // should revert

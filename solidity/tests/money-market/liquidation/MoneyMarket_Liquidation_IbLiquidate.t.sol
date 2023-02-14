@@ -141,7 +141,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     // | After Alice borrow 30 USDC
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -152,7 +152,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(BOB);
-    borrowFacet.borrow(BOB, 0, _underlyingToken, 24 ether);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
     // | After BOB borrow 24 WETH
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -273,7 +273,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(40 ether, usdcDecimal);
 
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     // | After Alice borrow 30 USDC
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -284,7 +284,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(BOB);
-    borrowFacet.borrow(BOB, 0, _underlyingToken, 24 ether);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
     // | After BOB borrow 24 WETH
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -417,7 +417,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     // | After Alice borrow 30 USDC
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -428,7 +428,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(BOB);
-    borrowFacet.borrow(BOB, 0, _underlyingToken, 24 ether);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
     // | After BOB borrow 24 WETH
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -549,7 +549,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     accountManager.depositAndAddCollateral(0, address(usdc), normalizeEther(1 ether, usdcDecimal));
 
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
 
     // Time past for 1 day
@@ -581,7 +581,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenLiquidateIbWhileSubAccountIsHealthy() external {
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
 
     // increase shareValue of ibWeth by 2.5%
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
@@ -610,7 +610,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenIbLiquidateMoreThanThreshold() external {
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
 
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);

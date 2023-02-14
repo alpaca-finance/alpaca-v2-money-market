@@ -47,8 +47,8 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
 
     // BOB borrow
     vm.startPrank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _wethBorrowAmount);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _usdcBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     // time past
