@@ -139,7 +139,7 @@ contract BorrowFacet is IBorrowFacet {
     // Increase the reserve amount of the token as there's new physical token coming in
     moneyMarketDs.reserves[_token] += _actualAmountToRepay;
 
-    // Check if the repay transaction will violate the business rule
+    // Check and revert if the repay transaction will violate the business rule
     // namely the debt size after repaid should be more than minimum debt size
     _validateRepay(
       _token,
