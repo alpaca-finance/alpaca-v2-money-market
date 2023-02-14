@@ -128,7 +128,7 @@ contract BorrowFacet is IBorrowFacet {
     // Find the actual underlying amount that need to be pulled from the share
     uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
 
-    // Pull the token from msg.sender, the actual amount received will be used for debt accounting
+    // Pull the token from the account manager, the actual amount received will be used for debt accounting
     // In case somehow there's fee on transfer - which's might be introduced after the token was lent
     // Not reverting to ensure that repay transaction can be done even if there's fee on transfer
     _actualAmountToRepay = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _actualAmountToRepay);
