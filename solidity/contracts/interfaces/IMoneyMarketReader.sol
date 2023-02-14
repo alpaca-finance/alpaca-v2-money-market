@@ -26,7 +26,33 @@ interface IMoneyMarketReader {
     uint256 blockTimestamp;
   }
 
+  struct CollateralPosition {
+    address token;
+    uint256 amount;
+    uint16 collateralFactor;
+  }
+  struct DebtPosition {
+    address token;
+    uint256 shares;
+    uint256 amount;
+    uint16 borrowingFactor;
+  }
+
+  struct SubAccountSummary {
+    uint256 totalBorrowedValue;
+    uint256 totalCollateralValue;
+    uint256 totalBorrowingPower;
+    uint256 totalUsedBorrowingPower;
+    CollateralPosition[] collaterals;
+    DebtPosition[] debts;
+  }
+
   function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory);
+
+  function getSubAccountSummary(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (SubAccountSummary memory);
 
   function moneyMarket() external view returns (address);
 }

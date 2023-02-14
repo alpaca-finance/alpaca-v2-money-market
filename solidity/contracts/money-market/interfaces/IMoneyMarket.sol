@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface IMoneyMarket {
   function getTotalToken(address _token) external view returns (uint256);
@@ -29,4 +30,16 @@ interface IMoneyMarket {
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
 
   function setAccountManagersOk(address[] calldata _list, bool _isOk) external;
+
+  function getAllSubAccountCollats(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (LibDoublyLinkedList.Node[] memory);
+
+  function getOracle() external view returns (address);
+
+  function getOverCollatDebtSharesOf(address _account, uint256 _subAccountId)
+    external
+    view
+    returns (LibDoublyLinkedList.Node[] memory);
 }
