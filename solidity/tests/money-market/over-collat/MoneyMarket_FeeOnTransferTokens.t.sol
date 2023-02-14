@@ -61,8 +61,11 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   function testRevert_WhenDepositWithFeeOnTransferToken() external {
     vm.startPrank(BOB);
     fotToken.approve(address(accountManager), type(uint256).max);
+    // inject token to account manager first, tryting to bypass exceed balance error at MM
+    fotToken.transfer(address(accountManager), 1 ether);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
     accountManager.deposit(address(fotToken), 1 ether);
+    vm.stopPrank();
   }
 
   function testRevert_WhenAddCollateralWithFeeOnTransferToken() external {

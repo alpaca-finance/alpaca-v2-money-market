@@ -69,10 +69,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   }
 
   function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _amountReceived) {
-    uint256 _tokenAmountBefore = IERC20(_token).balanceOf(address(this));
     // Deduct the fund from caller to this contract
+    // assuming that there's no fee on trasnfer
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    uint256 _depositAmount = IERC20(_token).balanceOf(address(this)) - _tokenAmountBefore;
 
     // Get the ibToken address from money market
     // This will be used to transfer the ibToken back to caller
@@ -85,7 +84,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // approve money market as it will cal safeTransferFrom to this address
     // reset allowance afterward
     IERC20(_token).safeApprove(moneyMarketDiamond, type(uint256).max);
-    ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _depositAmount);
+    // If the token has feen on transfer, this should fail as the balance from caller
+    // to this account manager is lower than intent amount
+    // leadning to ERC20: exceed balance error
+    ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
     IERC20(_token).safeApprove(moneyMarketDiamond, 0);
 
     // calculate the actual ibToken receive from deposit action
