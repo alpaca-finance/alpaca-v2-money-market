@@ -103,10 +103,15 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     // alice add ibWETh collat for 80 ether
     vm.startPrank(ALICE);
-    // todo: use accountManager.depositAndAddCollateral(_subAccountId, _token, _amount); here
-    accountManager.deposit(address(weth), 80 ether);
-    ibWeth.approve(address(accountManager), 40 ether);
-    accountManager.addCollatFor(ALICE, 0, address(ibWeth), 40 ether);
+
+    accountManager.deposit(address(weth), 40 ether);
+    accountManager.depositAndAddCollateral(0, address(weth), 40 ether);
+    /*
+    The following block of code has the same effect as above
+    // accountManager.deposit(address(weth), 80 ether);
+    // ibWeth.approve(address(accountManager), 40 ether);
+    // accountManager.addCollatFor(ALICE, 0, address(ibWeth), 40 ether);
+    */
     vm.stopPrank();
 
     adminFacet.setNonCollatBorrowerOk(BOB, true);
@@ -541,10 +546,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    // todo: use accountManager.depositAndAddCollateral(_subAccountId, _token, _amount); here
-    accountManager.deposit(address(usdc), normalizeEther(1 ether, usdcDecimal));
-    ibUsdc.approve(address(accountManager), normalizeEther(1 ether, ibUsdcDecimal));
-    accountManager.addCollatFor(ALICE, 0, _ibCollatToken, normalizeEther(1 ether, usdcDecimal));
+
+    accountManager.depositAndAddCollateral(0, address(usdc), normalizeEther(1 ether, usdcDecimal));
+
     borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
 

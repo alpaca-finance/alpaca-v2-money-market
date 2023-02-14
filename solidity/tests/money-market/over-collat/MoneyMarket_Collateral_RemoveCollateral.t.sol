@@ -19,21 +19,6 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     _miniFL = IMiniFL(address(miniFL));
   }
 
-  function _depositWETHAndAddibWETHAsCollat(address _caller, uint256 _amount) internal {
-    // LEND to get ibToken
-    vm.startPrank(_caller);
-
-    weth.approve(moneyMarketDiamond, _amount);
-    uint256 _ibBalanceBefore = ibWeth.balanceOf(_caller);
-    lendFacet.deposit(_caller, address(weth), _amount);
-    uint256 _ibReceived = ibWeth.balanceOf(_caller) - _ibBalanceBefore;
-
-    // Add collat by ibToken
-    ibWeth.approve(moneyMarketDiamond, _ibReceived);
-    accountManager.addCollatFor(ALICE, 0, address(ibWeth), _ibReceived);
-    vm.stopPrank();
-  }
-
   function testRevert_WhenUserRemoveCollateralMoreThanExistingAmount_ShouldRevert() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
@@ -101,7 +86,9 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenRemoveCollateralViaIbToken_ibTokenCollatShouldBeCorrect() external {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
-    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
+    vm.startPrank(ALICE);
+    accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
+    vm.stopPrank();
 
     // ibToken should be staked to MiniFL when add collat with ibToken
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
@@ -125,7 +112,9 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
     uint256 _removedAmount = 5 ether;
 
-    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
+    vm.startPrank(ALICE);
+    accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
+    vm.stopPrank();
 
     // ibToken should be staked to MiniFL when add collat with ibToken
     uint256 _balanceBefore = ibWeth.balanceOf(ALICE);

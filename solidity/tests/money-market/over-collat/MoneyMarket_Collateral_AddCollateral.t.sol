@@ -108,10 +108,15 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     uint256 _collateral = 100 ether;
     vm.startPrank(ALICE);
 
+    // deposit and add ib as collat
+    accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
+
+    /*
+    The following block of code has the same effect as above
     accountManager.deposit(address(weth), 10 ether);
-    // add ibWethToken
     ibWeth.approve(moneyMarketDiamond, 10 ether);
     accountManager.addCollatFor(ALICE, 0, address(ibWeth), 10 ether);
+    */
 
     // first time should pass
     accountManager.addCollatFor(ALICE, 0, address(weth), _collateral);
@@ -137,6 +142,7 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     uint256 _amountOfibTokenBefore = ibWeth.balanceOf(address(moneyMarketDiamond));
 
     vm.warp(block.timestamp + 100);
+
     // Add collat by ibToken
     vm.startPrank(ALICE);
     ibWeth.approve(moneyMarketDiamond, 10 ether);

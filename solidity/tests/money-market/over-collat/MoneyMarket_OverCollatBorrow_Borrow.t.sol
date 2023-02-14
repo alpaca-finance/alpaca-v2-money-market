@@ -237,6 +237,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // add by actual token
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), _aliceCollatAmount);
     // add by ibToken
+    // todo: use accountManager.depositAndAddCollateral(_subAccountId, _token, _amount); here
     accountManager.addCollatFor(ALICE, subAccount0, address(ibWeth), _ibTokenCollatAmount);
     vm.stopPrank();
 
@@ -276,6 +277,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // add by actual token
     accountManager.addCollatFor(ALICE, subAccount0, address(weth), _aliceCollatAmount);
     // add by ibToken
+    // todo: use accountManager.depositAndAddCollateral(_subAccountId, _token, _amount); here
     accountManager.addCollatFor(ALICE, subAccount0, address(ibWeth), _ibTokenCollatAmount);
     vm.stopPrank();
 

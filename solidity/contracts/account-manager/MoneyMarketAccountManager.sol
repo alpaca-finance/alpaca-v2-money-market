@@ -33,7 +33,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
     // Use the received ibToken and put it as a colltaral in given subaccount id
     // expecting that all of the received ibToken successfully deposited as collateral
+    IERC20(_ibToken).safeApprove(moneyMarketDiamond, _amount);
     ICollateralFacet(moneyMarketDiamond).addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
+    IERC20(_ibToken).safeApprove(moneyMarketDiamond, 0);
   }
 
   function removeCollateralAndWithdraw(
