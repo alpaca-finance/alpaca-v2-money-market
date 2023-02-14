@@ -25,11 +25,11 @@ contract SetUpMMForTestScript is BaseScript {
 
     //---- setup mock oracle ----//
     MockAlpacaV2Oracle mockOracle = new MockAlpacaV2Oracle();
-    mockOracle.setTokenPrice(bnb, 1 ether);
+    mockOracle.setTokenPrice(bnb, 300 ether);
     mockOracle.setTokenPrice(busd, 1 ether);
-    mockOracle.setTokenPrice(dodo, 1 ether);
-    mockOracle.setTokenPrice(pstake, 1 ether);
-    mockOracle.setTokenPrice(mock6DecimalsToken, 1 ether);
+    mockOracle.setTokenPrice(dodo, 0.13 ether);
+    mockOracle.setTokenPrice(pstake, 0.12 ether);
+    mockOracle.setTokenPrice(mock6DecimalsToken, 666 ether);
 
     moneyMarket.setOracle(address(mockOracle));
 

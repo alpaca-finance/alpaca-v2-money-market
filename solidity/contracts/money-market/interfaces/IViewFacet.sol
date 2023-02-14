@@ -36,7 +36,7 @@ interface IViewFacet {
     view
     returns (uint256 _totalUsedBorrowingPower);
 
-  function getOverCollatTokenDebt(address _token) external view returns (uint256, uint256);
+  function getOverCollatTokenDebt(address _token) external view returns (uint256 _debtShares, uint256 _debtValue);
 
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
 

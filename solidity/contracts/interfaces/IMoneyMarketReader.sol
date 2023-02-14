@@ -14,6 +14,7 @@ interface IMoneyMarketReader {
     uint64 to18ConversionFactor;
     uint256 maxCollateral;
     uint256 maxBorrow;
+    uint256 tokenPrice;
     // ---- Money Market ---- //
     uint256 globalDebtValue;
     uint256 totalToken;
@@ -29,12 +30,14 @@ interface IMoneyMarketReader {
   struct CollateralPosition {
     address token;
     uint256 amount;
+    uint256 price;
     uint16 collateralFactor;
   }
   struct DebtPosition {
     address token;
     uint256 shares;
     uint256 amount;
+    uint256 price;
     uint16 borrowingFactor;
   }
 

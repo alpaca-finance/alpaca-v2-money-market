@@ -42,4 +42,6 @@ interface IMoneyMarket {
     external
     view
     returns (LibDoublyLinkedList.Node[] memory);
+
+  function getOverCollatTokenDebt(address _token) external view returns (uint256 _debtShares, uint256 _debtValue);
 }

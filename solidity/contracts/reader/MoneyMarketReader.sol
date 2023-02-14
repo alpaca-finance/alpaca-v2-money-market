@@ -38,6 +38,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         to18ConversionFactor: _tokenConfig.to18ConversionFactor,
         maxCollateral: _tokenConfig.maxCollateral,
         maxBorrow: _tokenConfig.maxBorrow,
+        tokenPrice: _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0)),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         totalToken: _moneyMarket.getTotalToken(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
@@ -65,7 +66,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
     uint256 _tmpVal;
     address _token;
-    uint256 _amount;
+    uint256 _price;
 
     {
       LibDoublyLinkedList.Node[] memory _rawCollats = _moneyMarket.getAllSubAccountCollats(_account, _subAccountId);
@@ -73,16 +74,17 @@ contract MoneyMarketReader is IMoneyMarketReader {
       _collaterals = new CollateralPosition[](_collatLen);
       for (uint256 _i; _i < _collatLen; ) {
         _token = _rawCollats[_i].token;
-        _amount = _rawCollats[_i].amount;
+        _price = _getPrice(_oracleMedianizer, _token, _usd);
         LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
 
-        _tmpVal = (_getPrice(_oracleMedianizer, _token, _usd) * _amount) / 1e18;
+        _tmpVal = (_price * _rawCollats[_i].amount) / 1e18;
         summary.totalCollateralValue += _tmpVal;
         summary.totalBorrowingPower += (_tmpVal * _tokenConfig.collateralFactor) / LibMoneyMarket01.MAX_BPS;
 
         _collaterals[_i] = CollateralPosition({
           token: _token,
-          amount: _amount,
+          amount: _rawCollats[_i].amount,
+          price: _price,
           collateralFactor: _tokenConfig.collateralFactor
         });
 
@@ -98,17 +100,19 @@ contract MoneyMarketReader is IMoneyMarketReader {
       _debts = new DebtPosition[](_debtLen);
       for (uint256 _i; _i < _debtLen; ) {
         _token = _rawDebts[_i].token;
-        _amount = _rawDebts[_i].amount;
+        _price = _getPrice(_oracleMedianizer, _token, _usd);
         LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
+        (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
 
-        _tmpVal = (_getPrice(_oracleMedianizer, _token, _usd) * _amount) / 1e18;
+        _tmpVal = (_price * _rawDebts[_i].amount) / 1e18;
         summary.totalBorrowedValue += _tmpVal;
-        summary.totalUsedBorrowingPower += (_tmpVal * _tokenConfig.borrowingFactor) / LibMoneyMarket01.MAX_BPS;
+        summary.totalUsedBorrowingPower += (_tmpVal * LibMoneyMarket01.MAX_BPS) / _tokenConfig.borrowingFactor;
 
         _debts[_i] = DebtPosition({
           token: _token,
-          amount: _amount,
-          shares: 0,
+          shares: _rawDebts[_i].amount,
+          amount: (_rawDebts[_i].amount * _totalDebtAmount) / _totalDebtShares,
+          price: _price,
           borrowingFactor: _tokenConfig.borrowingFactor
         });
 
