@@ -407,4 +407,9 @@ contract ViewFacet is IViewFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     _liquidationTreasury = moneyMarketDs.liquidationTreasury;
   }
+
+  /// @notice Get oracle address
+  function getOracle() external view returns (address) {
+    return address(LibMoneyMarket01.moneyMarketDiamondStorage().oracle);
+  }
 }

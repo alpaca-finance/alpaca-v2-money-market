@@ -119,4 +119,6 @@ interface IViewFacet {
   function getDebtTokenImplementation() external view returns (address);
 
   function getLiquidationTreasury() external view returns (address _liquidationTreasury);
+
+  function getOracle() external view returns (address);
 }
