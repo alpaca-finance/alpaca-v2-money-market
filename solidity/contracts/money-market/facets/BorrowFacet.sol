@@ -43,6 +43,7 @@ contract BorrowFacet is IBorrowFacet {
   }
 
   /// @notice Borrow a token agaist the placed collaterals
+  /// @param _account Account owner
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to borrow
   /// @param _amount The amount to borrow
