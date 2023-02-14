@@ -19,7 +19,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   address moneyMarketDiamond;
 
   constructor(address _moneyMarketDiamond) {
-    // todo: sanity check
+    // sanity call, should revert if the input didn't implement
+    // this particular interface
+    IViewFacet(_moneyMarketDiamond).getMinDebtSize();
     moneyMarketDiamond = _moneyMarketDiamond;
   }
 
@@ -52,7 +54,16 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _subAccountId,
     address _token,
     uint256 _amount
-  ) external {}
+  ) external {
+    // borrow token out on behalf of caller's subaccount
+    IBorrowFacet(moneyMarketDiamond).borrow(msg.sender, _subAccountId, _token, _amount);
+
+    // transfer borrowed token back to caller
+    // If there's fee on transfer on the token, generally this should revert
+    // unless there has been direct inject of borrow token into this contract
+    // prior to this call
+    IERC20(_token).safeTransfer(msg.sender, _amount);
+  }
 
   function repay(
     address _account,
