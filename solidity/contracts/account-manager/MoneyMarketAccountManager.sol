@@ -44,7 +44,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   function depositAndStake(address _token, uint256 _amount) external {}
 
-  function unStakeAndWithdraw(address _ibToken, uint256 _amount) external {}
+  function unstakeAndWithdraw(address _ibToken, uint256 _amount) external {}
 
   function borrow(
     uint256 _subAccountId,
