@@ -70,7 +70,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _amountReceived) {
     // Deduct the fund from caller to this contract
-    // assuming that there's no fee on trasnfer
+    // assuming that there's no fee on transfer
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
     // Get the ibToken address from money market
@@ -93,5 +93,19 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // calculate the actual ibToken receive from deposit action
     // outstanding ibToken in the contract prior to the deposit action should not be included
     _amountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
+  }
+
+  function addColalteralFor(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _amount
+  ) external {
+    // Deduct the fund from caller to this contract
+    // assuming that there's no fee on transfer
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    // Add collateral on behalf of caller
+    ICollateralFacet(moneyMarketDiamond).addCollateral(_account, _subAccountId, _token, _amount);
   }
 }
