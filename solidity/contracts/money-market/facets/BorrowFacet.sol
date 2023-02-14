@@ -151,6 +151,8 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     // Remove the debt share from this subaccount's accounting
+    // additionally, this library call will unstake the debt token
+    // from miniFL and burn the debt token
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _account,
       _subAccount,
