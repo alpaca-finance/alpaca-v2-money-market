@@ -68,7 +68,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     lendFacet.deposit(ALICE, address(weth), 40 ether);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     collateralFacet.addCollateral(ALICE, _subAccountId, address(ibWeth), 40 ether);
-    collateralFacet.removeCollateral(_subAccountId, address(weth), 40 ether);
+    collateralFacet.removeCollateral(ALICE, _subAccountId, address(weth), 40 ether);
     vm.stopPrank();
 
     // now 1 ibWeth = 1 weth

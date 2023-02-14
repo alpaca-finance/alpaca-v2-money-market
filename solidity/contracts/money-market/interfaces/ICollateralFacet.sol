@@ -14,6 +14,7 @@ interface ICollateralFacet {
   ) external;
 
   function removeCollateral(
+    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _removeAmount
