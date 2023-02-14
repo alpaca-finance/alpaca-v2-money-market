@@ -72,7 +72,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
     // alice borrowed 30% of vault then interest should be 0.0617647058676 per year
     // interest per day = 0.00016921837224
-    borrowFacet.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
   }
 
@@ -349,7 +349,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     collateralFacet.addCollateral(ALICE, 0, address(btc), 100 ether);
-    borrowFacet.borrow(0, address(usdc), normalizeEther(50 ether, usdcDecimal));
+    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(50 ether, usdcDecimal));
     vm.stopPrank();
 
     address _debtToken = address(usdc);
@@ -485,7 +485,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     // try to make usedBorrowingPower / borrowingPower = threshold
     // borrow more to increase usedBorrowingPower to 36 ether
-    borrowFacet.borrow(0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
+    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
 
     // decrease price to lower borrowingPower so that 36 / (40 * Price * 0.9) = 1.1111
     // Price = 0.900009

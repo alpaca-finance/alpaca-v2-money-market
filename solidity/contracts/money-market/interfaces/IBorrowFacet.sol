@@ -18,6 +18,7 @@ interface IBorrowFacet {
   error BorrowFacet_TooManyCollateralRemoved();
 
   function borrow(
+    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
