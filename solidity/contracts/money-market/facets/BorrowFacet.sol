@@ -75,7 +75,7 @@ contract BorrowFacet is IBorrowFacet {
     // this includes insufficient borrowing power, borrowing below minimum debt size , etc.
     _validateBorrow(_subAccount, _token, _amount, moneyMarketDs);
 
-    // Book the debt under the account that the account manager act on behalf of
+    // Book the debt under the subaccount that the account manager act on behalf of
     LibMoneyMarket01.overCollatBorrow(_account, _subAccount, _token, _amount, moneyMarketDs);
 
     // Update the global reserve of the token, as a result less borrowing can be amde
