@@ -19,6 +19,7 @@ import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
 interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet {}
 
+/// @dev DEPRECATED pls use BaseScript
 abstract contract BaseUtilsScript is Script {
   using stdJson for string;
 
