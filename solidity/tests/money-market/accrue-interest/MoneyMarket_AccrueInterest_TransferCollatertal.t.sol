@@ -41,8 +41,8 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     uint256 _usdcBorrowAmount = normalizeEther(10 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
+    accountManager.addCollatFor(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollatFor(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
     vm.stopPrank();
 
     // BOB borrow

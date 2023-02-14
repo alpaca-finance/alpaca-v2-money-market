@@ -98,13 +98,15 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
     accountManager.deposit(address(btc), 10 ether);
-    collateralFacet.addCollateral(BOB, 0, address(btc), 10 ether);
+    accountManager.addCollatFor(BOB, 0, address(btc), 10 ether);
     vm.stopPrank();
 
     // alice add ibWETh collat for 80 ether
     vm.startPrank(ALICE);
+    // todo: use accountManager.depositAndAddCollateral(_subAccountId, _token, _amount); here
     accountManager.deposit(address(weth), 80 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+    ibWeth.approve(address(accountManager), 40 ether);
+    accountManager.addCollatFor(ALICE, 0, address(ibWeth), 40 ether);
     vm.stopPrank();
 
     adminFacet.setNonCollatBorrowerOk(BOB, true);
@@ -398,7 +400,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(40 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
+    accountManager.addCollatFor(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
     collateralFacet.removeCollateral(ALICE, _aliceSubAccountId, _ibCollatToken, 30 ether);
     vm.stopPrank();
     // | After Alice adjust Collateral state will changed a bit
@@ -539,9 +541,10 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
+    // todo: use accountManager.depositAndAddCollateral(_subAccountId, _token, _amount); here
     accountManager.deposit(address(usdc), normalizeEther(1 ether, usdcDecimal));
-    ibUsdc.approve(moneyMarketDiamond, normalizeEther(1 ether, ibUsdcDecimal));
-    collateralFacet.addCollateral(ALICE, 0, _ibCollatToken, normalizeEther(1 ether, usdcDecimal));
+    ibUsdc.approve(address(accountManager), normalizeEther(1 ether, ibUsdcDecimal));
+    accountManager.addCollatFor(ALICE, 0, _ibCollatToken, normalizeEther(1 ether, usdcDecimal));
     borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
 

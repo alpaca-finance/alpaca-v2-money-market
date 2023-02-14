@@ -69,9 +69,13 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenAddCollateralWithFeeOnTransferToken() external {
-    vm.prank(BOB);
+    vm.startPrank(BOB);
+    fotToken.approve(address(accountManager), type(uint256).max);
+    // inject token to account manager first, tryting to bypass exceed balance error at MM
+    fotToken.transfer(address(accountManager), 1 ether);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
-    collateralFacet.addCollateral(BOB, subAccount0, address(fotToken), 1 ether);
+    accountManager.addCollatFor(BOB, subAccount0, address(fotToken), 1 ether);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenBorrowFeeOnTransferToken_ShouldAbleToBorrowButReceiveAmountAfterFee() external {
@@ -80,7 +84,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     uint256 _bobBalanceBefore = lateFotToken.balanceOf(BOB);
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
+    accountManager.addCollatFor(BOB, subAccount0, address(weth), 10 ether);
     borrowFacet.borrow(BOB, subAccount0, address(lateFotToken), _borrowAmount);
     vm.stopPrank();
 
@@ -103,7 +107,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     adminFacet.setMinDebtSize(0);
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
+    accountManager.addCollatFor(BOB, subAccount0, address(weth), 10 ether);
     borrowFacet.borrow(BOB, subAccount0, address(lateFotToken), _borrowAmount);
     borrowFacet.repay(BOB, subAccount0, address(lateFotToken), _borrowAmount);
     vm.stopPrank();
@@ -129,7 +133,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, _collatToken, 2 ether);
+    accountManager.addCollatFor(BOB, subAccount0, _collatToken, 2 ether);
     borrowFacet.borrow(BOB, subAccount0, _debtToken, 1 ether);
     vm.stopPrank();
 

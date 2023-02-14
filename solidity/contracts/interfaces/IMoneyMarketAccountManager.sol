@@ -34,7 +34,8 @@ interface IMoneyMarketAccountManager {
 
   function deposit(address _token, uint256 _amount) external;
 
-  function addColalteral(
+  function addCollatFor(
+    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount

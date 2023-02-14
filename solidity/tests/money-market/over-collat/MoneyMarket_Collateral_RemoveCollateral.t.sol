@@ -30,14 +30,14 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     // Add collat by ibToken
     ibWeth.approve(moneyMarketDiamond, _ibReceived);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), _ibReceived);
+    accountManager.addCollatFor(ALICE, 0, address(ibWeth), _ibReceived);
     vm.stopPrank();
   }
 
   function testRevert_WhenUserRemoveCollateralMoreThanExistingAmount_ShouldRevert() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
+    accountManager.addCollatFor(ALICE, 0, address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), 990 ether);
@@ -57,7 +57,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     // alice add collateral 10 weth
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
+    accountManager.addCollatFor(ALICE, subAccount0, address(weth), 10 ether);
     vm.stopPrank();
 
     vm.startPrank(ALICE);
@@ -80,7 +80,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
+    accountManager.addCollatFor(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore + _addCollateralAmount);

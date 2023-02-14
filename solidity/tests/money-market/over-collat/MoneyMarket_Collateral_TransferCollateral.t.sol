@@ -20,7 +20,7 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
+    accountManager.addCollatFor(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     uint256 _MMbalanceBeforeTransfer = weth.balanceOf(moneyMarketDiamond);
     uint256 _balanceBeforeTransfer = weth.balanceOf(ALICE);
@@ -60,7 +60,7 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
+    accountManager.addCollatFor(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     // alice transfer collateral from subAccount0 to subAccount0
     vm.prank(ALICE);
