@@ -38,7 +38,6 @@ library LibMoneyMarketDeployment {
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
-
     _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _miniFL));
 
     // do diamondCut

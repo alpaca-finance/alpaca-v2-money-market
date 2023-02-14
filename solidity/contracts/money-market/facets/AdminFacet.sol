@@ -117,7 +117,7 @@ contract AdminFacet is IAdminFacet {
     // add MoneyMarket and MiniFL as okHolders of new DebtToken
     address[] memory _okHolders = new address[](2);
     _okHolders[0] = address(this);
-    _okHolders[1] = address(address(_miniFL));
+    _okHolders[1] = address(_miniFL);
     IDebtToken(_newDebtToken).setOkHolders(_okHolders, true);
 
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);

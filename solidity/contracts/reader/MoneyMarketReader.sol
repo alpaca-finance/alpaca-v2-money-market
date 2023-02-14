@@ -5,34 +5,12 @@ pragma solidity 0.8.17;
 import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol";
 
 // ---- Interfaces ---- //
+import { IMoneyMarketReader } from "../interfaces/IMoneyMarketReader.sol";
 import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
 
-contract MoneyMarketReader {
+contract MoneyMarketReader is IMoneyMarketReader {
   IMoneyMarket private _moneyMarket;
-
-  struct MarketSummary {
-    // ---- ibToken ---- //
-    uint256 ibTotalSupply;
-    uint256 ibTotalAsset;
-    address ibAddress;
-    // ---- Token Config ---- //
-    uint8 tierAsUInt;
-    uint16 collateralFactor;
-    uint16 borrowingFactor;
-    uint64 to18ConversionFactor;
-    uint256 maxCollateral;
-    uint256 maxBorrow;
-    // ---- Money Market ---- //
-    uint256 globalDebtValue;
-    uint256 pendingIntetest;
-    uint256 lastAccruedAt;
-    // ---- MiniFL ---- //
-    uint256 allocPoint;
-    uint256 totalAllocPoint;
-    uint256 rewardPerSec;
-    uint256 blockTimestamp;
-  }
 
   constructor(address moneyMarket_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
@@ -58,6 +36,7 @@ contract MoneyMarketReader {
         maxCollateral: _tokenConfig.maxCollateral,
         maxBorrow: _tokenConfig.maxBorrow,
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
+        totalToken: _moneyMarket.getTotalToken(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
         lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
         allocPoint: 0,
@@ -65,5 +44,9 @@ contract MoneyMarketReader {
         rewardPerSec: 0,
         blockTimestamp: block.timestamp
       });
+  }
+
+  function moneyMarket() external view returns (address) {
+    return address(_moneyMarket);
   }
 }
