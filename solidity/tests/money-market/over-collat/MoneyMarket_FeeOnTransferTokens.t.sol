@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 
-import { FixedFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // mocks
-import { MockFeeOnTransferToken } from "../mocks/MockFeeOnTransferToken.sol";
+import { MockFeeOnTransferToken } from "../../mocks/MockFeeOnTransferToken.sol";
 
 // helpers
-import { TestHelper } from "../helper/TestHelper.sol";
+import { TestHelper } from "../../helper/TestHelper.sol";
 
 contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   MockFeeOnTransferToken internal fotToken;

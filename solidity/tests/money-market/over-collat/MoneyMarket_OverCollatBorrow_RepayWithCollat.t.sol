@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
 
-import { FixedInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { FixedInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
 contract MoneyMarket_OverCollatBorrow_RepayWithCollatTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;

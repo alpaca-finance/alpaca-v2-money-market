@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IAdminFacet, LibMoneyMarket01 } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/facets/AdminFacet.sol";
 
 contract MoneyMarket_Admin_SetMaxNumberOfTokenTest is MoneyMarket_BaseTest {
   function setUp() public override {

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
-import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { ILendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
+import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
 contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
   function setUp() public override {

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
+import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
-contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseTest {
+contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 
   function setUp() public override {
@@ -33,7 +33,7 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     vm.stopPrank();
   }
 
-  function testCorrectness_WhenUserBorrowMultipleTokenAndTransferCollateral_ShouldaccrueInterestForAllBorrowedToken()
+  function testCorrectness_WhenUserBorrowMultipleTokenAndRemoveCollateral_ShouldaccrueInterestForAllBorrowedToken()
     external
   {
     // ALICE add collateral
@@ -45,7 +45,7 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
     vm.stopPrank();
 
-    // BOB borrow
+    // ALICE borrow
     vm.startPrank(ALICE);
     borrowFacet.borrow(ALICE, subAccount0, address(weth), _wethBorrowAmount);
     borrowFacet.borrow(ALICE, subAccount0, address(usdc), _usdcBorrowAmount);
@@ -55,8 +55,8 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     vm.warp(block.timestamp + 100);
 
     vm.startPrank(ALICE);
-    // transfer collateral will trigger accrue interest on all borrowed token
-    collateralFacet.transferCollateral(0, 1, address(weth), 0);
+    // remove collateral will trigger accrue interest on all borrowed token
+    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 0);
     vm.stopPrank();
 
     // assert ALICE
