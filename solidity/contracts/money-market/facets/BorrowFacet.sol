@@ -211,7 +211,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
-    // Maximum of debt share that can be removed should be the minium of
+    // Maximum of debt share that can be removed should be the minimum of
     // 1. current debt share under the subaccount
     // 2. the input debt share intented to be removed
     // 3. the equivalent of debt share in collateral form
