@@ -227,7 +227,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs.overCollatDebtShares[_token]
     );
 
-    // Check if the repay transaction will violate the business rule
+    // Check and revert if the repay transaction will violate the business rule
     // namely the debt size after repaid should be more than minimum debt size
     _validateRepay(_token, _currentDebtShare, _currentDebtAmount, _actualShareToRepay, _amountToRepay, moneyMarketDs);
 
