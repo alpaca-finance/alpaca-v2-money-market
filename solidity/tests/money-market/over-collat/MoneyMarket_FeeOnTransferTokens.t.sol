@@ -30,13 +30,16 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     vm.startPrank(ALICE);
     fotToken.approve(moneyMarketDiamond, type(uint256).max);
     lateFotToken.approve(moneyMarketDiamond, type(uint256).max);
+    lateFotToken.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     fotToken.mint(BOB, 100 ether);
     lateFotToken.mint(BOB, 100 ether);
+
     vm.startPrank(BOB);
     fotToken.approve(moneyMarketDiamond, type(uint256).max);
     lateFotToken.approve(moneyMarketDiamond, type(uint256).max);
+    lateFotToken.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(fotToken));
@@ -47,7 +50,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     // setup fotToken that can be borrowed
     vm.startPrank(ALICE);
-    lateFotToken.approve(address(accountManager), type(uint256).max);
+
     accountManager.deposit(address(lateFotToken), 10 ether);
     vm.stopPrank();
 
@@ -118,12 +121,16 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     accountManager.addCollatFor(BOB, subAccount0, address(weth), 10 ether);
     accountManager.borrow(subAccount0, address(lateFotToken), _borrowAmount);
-    borrowFacet.repay(BOB, subAccount0, address(lateFotToken), _borrowAmount);
+    accountManager.repay(BOB, subAccount0, address(lateFotToken), 10 ether, _borrowAmount);
     vm.stopPrank();
 
     // BOB is left with _feeAmount short of starting point because _feeAmount is taken during borrow
-    // currentBalance = startingBalance + borrowedAmount - repaidAmount = 100 + 0.99 - 1 = 99.99
-    assertEq(lateFotToken.balanceOf(BOB), 99.99 ether);
+    // due to the fact that token were transfer back and forth at account manager
+    // BOB got < 100 + 0.99 (subjected to fee during borrow) - 1 (repay) - (fee on transfer during repay)
+    // fee on transfer during repay = 10 * 0.99 = 9.99, transfer to repay 1 ether
+    // 8.99 left to transfer back => 8.99 * 0.99 =
+    // total left = 100 + 0.99 -10  + 8.9001 => 99.801
+    assertEq(lateFotToken.balanceOf(BOB), 99.801000000000000000 ether);
 
     // can't repay entire debt because transfer fee during repayment is deduced
     uint256 _feeAmount = (_borrowAmount * (lateFotToken.transferFeeBps())) / 10000;

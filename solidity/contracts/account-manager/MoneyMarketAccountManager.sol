@@ -82,7 +82,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Call repay by forwarding input _debtShareToRepay
     // Money Market should deduct the fund as much as possible
     // If there's excess amount left, transfer back to user
+    IERC20(_token).safeApprove(moneyMarketDiamond, _repayAmount);
     IBorrowFacet(moneyMarketDiamond).repay(_account, _subAccountId, _token, _debtShareToRepay);
+    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
 
     // Calculate the excess amount left in the contract
     // This will revert if the input repay amount has lower value than _debtShareToRepay
