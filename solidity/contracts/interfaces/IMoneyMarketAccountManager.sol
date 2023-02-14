@@ -31,4 +31,6 @@ interface IMoneyMarketAccountManager {
     uint256 _repayAmount,
     uint256 _debtShareToRepay
   ) external;
+
+  function deposit(address _token, uint256 _amount) external;
 }

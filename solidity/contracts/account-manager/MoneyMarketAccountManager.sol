@@ -17,17 +17,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   using LibSafeToken for IERC20;
 
   address moneyMarketDiamond;
-  ILendFacet internal lendFacet;
-  IViewFacet internal viewFacet;
-  IBorrowFacet internal borrowFacet;
-  ICollateralFacet internal collateralFacet;
 
   constructor(address _moneyMarketDiamond) {
+    // todo: sanity check
     moneyMarketDiamond = _moneyMarketDiamond;
-    lendFacet = ILendFacet(_moneyMarketDiamond);
-    viewFacet = IViewFacet(_moneyMarketDiamond);
-    borrowFacet = IBorrowFacet(_moneyMarketDiamond);
-    collateralFacet = ICollateralFacet(_moneyMarketDiamond);
   }
 
   function depositAndAddCollateral(
@@ -35,20 +28,12 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     address _token,
     uint256 _amount
   ) external {
-    address _ibToken = viewFacet.getIbTokenFromToken(_token);
-    uint256 _ibBalanceBeforeDeposit = IInterestBearingToken(_ibToken).balanceOf(msg.sender);
+    // pull funds from caller and deposit to money market
+    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
 
-    IERC20(_token).safeApprove(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(msg.sender, _token, _amount);
-    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
-
-    uint256 _ibBalanceAfterDeposit = IInterestBearingToken(_ibToken).balanceOf(msg.sender);
-    uint256 _collatAmount;
-    unchecked {
-      _collatAmount = _ibBalanceAfterDeposit - _ibBalanceBeforeDeposit;
-    }
-
-    collateralFacet.addCollateral(msg.sender, _subAccountId, _token, _collatAmount);
+    // Use the received ibToken and put it as a colltaral in given subaccount id
+    // expecting that all of the received ibToken successfully deposited as collateral
+    ICollateralFacet(moneyMarketDiamond).addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
   }
 
   function removeCollateralAndWithdraw(
@@ -74,4 +59,35 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _repayAmount,
     uint256 _debtShareToRepay
   ) external {}
+
+  function deposit(address _token, uint256 _amount) external {
+    // pull funds from caller and deposit to money market
+    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+
+    // transfer ibToken received back to caller
+    IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+  }
+
+  function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _amountReceived) {
+    // Deduct the fund from caller to this contract
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    // Get the ibToken address from money market
+    // This will be used to transfer the ibToken back to caller
+    _ibToken = IViewFacet(moneyMarketDiamond).getIbTokenFromToken(_token);
+
+    // Cache the balance of before interacting with money market
+    uint256 _ibBalanceBeforeDeposit = IERC20(_ibToken).balanceOf(address(this));
+
+    // deposit to money market, expecting to get ibToken in return
+    // approve money market as it will cal safeTransferFrom to this address
+    // reset allowance afterward
+    IERC20(_token).safeApprove(moneyMarketDiamond, type(uint256).max);
+    ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
+    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
+
+    // calculate the actual ibToken receive from deposit action
+    // outstanding ibToken in the contract prior to the deposit action should not be included
+    _amountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
+  }
 }
