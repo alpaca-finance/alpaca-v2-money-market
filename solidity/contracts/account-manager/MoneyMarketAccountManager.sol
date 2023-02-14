@@ -5,7 +5,7 @@ pragma solidity 0.8.17;
 import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
 
 // ---- Interfaces ---- //
-import { IAccountManager } from "../interfaces/IAccountManager.sol";
+import { IMoneyMarketAccountManager } from "../interfaces/IMoneyMarketAccountManager.sol";
 import { ILendFacet } from "../money-market/interfaces/ILendFacet.sol";
 import { IViewFacet } from "../money-market/interfaces/IViewFacet.sol";
 import { IBorrowFacet } from "../money-market/interfaces/IBorrowFacet.sol";
@@ -13,7 +13,7 @@ import { ICollateralFacet } from "../money-market/interfaces/ICollateralFacet.so
 import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
 import { IERC20 } from "../money-market/interfaces/IERC20.sol";
 
-contract AccountManager is IAccountManager {
+contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   using LibSafeToken for IERC20;
 
   address moneyMarketDiamond;

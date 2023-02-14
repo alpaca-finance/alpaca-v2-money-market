@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-interface IAccountManager {
+interface IMoneyMarketAccountManager {
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,
