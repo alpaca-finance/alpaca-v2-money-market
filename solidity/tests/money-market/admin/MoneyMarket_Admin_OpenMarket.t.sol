@@ -51,8 +51,8 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
     // able to deposit
     _testToken.mint(ALICE, normalizeEther(5 ether, _testToken.decimals()));
     vm.startPrank(ALICE);
-    _testToken.approve(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(ALICE, address(_testToken), normalizeEther(5 ether, _testToken.decimals()));
+    _testToken.approve(address(accountManager), type(uint256).max);
+    accountManager.deposit(address(_testToken), normalizeEther(5 ether, _testToken.decimals()));
     vm.stopPrank();
     assertEq(IERC20(_ibToken).balanceOf(ALICE), normalizeEther(5 ether, IERC20(_ibToken).decimals()));
   }

@@ -26,6 +26,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     fotToken.mint(ALICE, 100 ether);
     lateFotToken.mint(ALICE, 100 ether);
+
     vm.startPrank(ALICE);
     fotToken.approve(moneyMarketDiamond, type(uint256).max);
     lateFotToken.approve(moneyMarketDiamond, type(uint256).max);
@@ -45,8 +46,10 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(lateFotToken), 1 ether);
 
     // setup fotToken that can be borrowed
-    vm.prank(ALICE);
-    lendFacet.deposit(ALICE, address(lateFotToken), 10 ether);
+    vm.startPrank(ALICE);
+    lateFotToken.approve(address(accountManager), type(uint256).max);
+    accountManager.deposit(address(lateFotToken), 10 ether);
+    vm.stopPrank();
 
     lateFotToken.setFee(100);
 
@@ -56,9 +59,10 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenDepositWithFeeOnTransferToken() external {
-    vm.prank(BOB);
+    vm.startPrank(BOB);
+    fotToken.approve(address(accountManager), type(uint256).max);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
-    lendFacet.deposit(BOB, address(fotToken), 1 ether);
+    accountManager.deposit(address(fotToken), 1 ether);
   }
 
   function testRevert_WhenAddCollateralWithFeeOnTransferToken() external {

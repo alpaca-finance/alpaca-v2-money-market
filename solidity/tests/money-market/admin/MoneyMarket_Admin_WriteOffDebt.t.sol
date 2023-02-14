@@ -27,7 +27,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
 
     // seed mm for ALICE to borrow
     vm.prank(BOB);
-    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
 
     // setup liquidationStrategy
     mockLiquidationStrategy = new MockLiquidationStrategy(address(mockOracle));

@@ -26,10 +26,10 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 50 ether);
-    lendFacet.deposit(ALICE, address(btc), 100 ether);
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), 20 ether);
+    accountManager.deposit(address(weth), 50 ether);
+    accountManager.deposit(address(btc), 100 ether);
+    accountManager.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 

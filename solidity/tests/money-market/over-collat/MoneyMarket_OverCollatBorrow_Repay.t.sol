@@ -27,9 +27,9 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(weth), address(model));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), normalizeEther(40 ether, wethDecimal));
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(40 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(40 ether, isolateTokenDecimal));
+    accountManager.deposit(address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(40 ether, usdcDecimal));
+    accountManager.deposit(address(isolateToken), normalizeEther(40 ether, isolateTokenDecimal));
     vm.stopPrank();
 
     uint256 _aliceBorrowAmount = 10 ether;

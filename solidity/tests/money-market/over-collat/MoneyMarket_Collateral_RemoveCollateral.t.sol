@@ -51,7 +51,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowingPower_ShouldRevert() external {
     // BOB deposit 10 weth
     vm.startPrank(BOB);
-    lendFacet.deposit(BOB, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
     // alice add collateral 10 weth

@@ -36,10 +36,10 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     adminFacet.setNonCollatInterestModel(BOB, address(btc), address(tripleSlope7));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 50 ether);
-    lendFacet.deposit(ALICE, address(btc), 100 ether);
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), 20 ether);
+    accountManager.deposit(address(weth), 50 ether);
+    accountManager.deposit(address(btc), 100 ether);
+    accountManager.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 
@@ -214,7 +214,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore + _secondPassed);
@@ -225,7 +225,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _secondPassed = 10;
 
     vm.prank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
 
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore);
 
@@ -312,7 +312,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     // once there's lender, alice can now withdraw
     vm.prank(BOB);
-    lendFacet.deposit(BOB, address(usdc), _expectdAmount);
+    accountManager.deposit(address(usdc), _expectdAmount);
     vm.prank(ALICE);
     lendFacet.withdraw(ALICE, address(ibUsdc), _usdcBorrowAmount);
 

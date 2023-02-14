@@ -26,11 +26,11 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     adminFacet.setNonCollatBorrowerOk(BOB, true);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), normalizeEther(50 ether, wethDecimal));
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(btc), normalizeEther(20 ether, btcDecimal));
-    lendFacet.deposit(ALICE, address(cake), normalizeEther(20 ether, cakeDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
+    accountManager.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.deposit(address(btc), normalizeEther(20 ether, btcDecimal));
+    accountManager.deposit(address(cake), normalizeEther(20 ether, cakeDecimal));
+    accountManager.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
   }
 
@@ -174,7 +174,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(BOB, address(weth), _bobDepositAmount);
+    accountManager.deposit(address(weth), _bobDepositAmount);
 
     vm.stopPrank();
 
