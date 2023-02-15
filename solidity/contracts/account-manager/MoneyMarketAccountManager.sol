@@ -168,6 +168,15 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  function repayWithCollat(
+    uint256 _subAccountId,
+    address _token,
+    uint256 _debtShareToRepay
+  ) external {
+    // Simply forward the call to MoneyMarket
+    IBorrowFacet(moneyMarketDiamond).repayWithCollat(msg.sender, _subAccountId, _token, _debtShareToRepay);
+  }
+
   function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _amountReceived) {
     // Deduct the fund from caller to this contract
     // assuming that there's no fee on transfer

@@ -176,6 +176,7 @@ contract BorrowFacet is IBorrowFacet {
   /// @param _token The token to repay
   /// @param _debtShareToRepay The amount to repay
   function repayWithCollat(
+    address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _debtShareToRepay
@@ -186,7 +187,7 @@ contract BorrowFacet is IBorrowFacet {
     // except account manager contract and will revert upon trying to do so
     LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
 
-    address _subAccount = LibMoneyMarket01.getSubAccount(msg.sender, _subAccountId);
+    address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     // accrue all debt tokens under subaccount
     // because used borrowing power is calcualated from all debt token of sub account
@@ -235,7 +236,7 @@ contract BorrowFacet is IBorrowFacet {
     // the actual token repaid will be from internal accounting transfer from
     // collateral to reserves
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
-      msg.sender,
+      _account,
       _subAccount,
       _token,
       _actualShareToRepay,
@@ -247,12 +248,12 @@ contract BorrowFacet is IBorrowFacet {
     // Additionally, withdraw the collateral token that should have been
     // staked at miniFL specifically if the collateral was ibToken
     // The physical token of collateral token should now have been at MM Diamond
-    LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _subAccount, _token, _amountToRepay, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _amountToRepay, moneyMarketDs);
 
     // Increase the reserves as the token has freed up
     moneyMarketDs.reserves[_token] += _amountToRepay;
 
-    emit LogRepayWithCollat(msg.sender, _subAccountId, _token, _amountToRepay);
+    emit LogRepayWithCollat(_account, _subAccountId, _token, _amountToRepay);
   }
 
   function _validateRepay(

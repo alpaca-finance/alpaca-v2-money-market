@@ -48,4 +48,10 @@ interface IMoneyMarketAccountManager {
     uint256 _repayAmount,
     uint256 _debtShareToRepay
   ) external;
+
+  function repayWithCollat(
+    uint256 _subAccountId,
+    address _token,
+    uint256 _debtShareAmount
+  ) external;
 }
