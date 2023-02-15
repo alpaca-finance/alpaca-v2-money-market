@@ -16,6 +16,7 @@ import { IERC20 } from "../money-market/interfaces/IERC20.sol";
 contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   using LibSafeToken for IERC20;
 
+  // todo: change to IMoneyMarket interface and remove all facet interfaces
   address moneyMarketDiamond;
 
   constructor(address _moneyMarketDiamond) {
