@@ -13,6 +13,13 @@ interface IMoneyMarketAccountManager {
     uint256 _amount
   ) external;
 
+  function removeCollatFor(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _amount
+  ) external;
+
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,

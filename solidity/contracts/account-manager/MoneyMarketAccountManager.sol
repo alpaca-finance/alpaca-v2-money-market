@@ -54,13 +54,13 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
     // Calculate the actual amount received by comparing balance after - balance before
     // This is to accurately find the amount received even if the underlying token has fee on transfer
-    uint256 _actualUnderlyingReceived = IERC20(_underlyingToken).balanceOf(address(this)) -
-      _underlyingTokenAmountBefore;
-
-    // Transfer the token back to the caller
+    // then, transfer the token back to the caller
     // The _acutalUnderlyingReceived is expected to be greater than 0
     // as this function won't proceed if input shareAmount is 0
-    IERC20(_underlyingToken).safeTransfer(msg.sender, _actualUnderlyingReceived);
+    IERC20(_underlyingToken).safeTransfer(
+      msg.sender,
+      IERC20(_underlyingToken).balanceOf(address(this)) - _underlyingTokenAmountBefore
+    );
   }
 
   function addCollatFor(
@@ -79,6 +79,34 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
     ICollateralFacet(moneyMarketDiamond).addCollateral(_account, _subAccountId, _token, _amount);
     IERC20(_token).safeApprove(moneyMarketDiamond, 0);
+  }
+
+  function removeCollatFor(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _amount
+  ) external {
+    // Abort if trying to remove 0
+    if (_amount == 0) {
+      return;
+    }
+    // cache the balanceOf before executing remove collateral
+    // This will be used to determine the actual amount of token back from MoneyMarket
+    // if the input token is not ERC20, this call should revert at this point
+    uint256 _tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+
+    // Remove collateral from the subaccount on behalf of user
+    // Will be reverted if removing collateral will violate the business rules based on
+    // how MoneyMarket was configured
+    ICollateralFacet(moneyMarketDiamond).removeCollateral(_account, _subAccountId, _token, _amount);
+
+    // Calculate the actual amount received by comparing balance after - balance before
+    // This is to accurately find the amount received even if the underlying token has fee on transfer
+    // Then, transfer the token back to the caller
+    // The _acutalUnderlyingReceived is expected to be greater than 0
+    // as this function won't proceed if input amount is 0
+    IERC20(_token).safeTransfer(msg.sender, IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore);
   }
 
   function depositAndAddCollateral(
