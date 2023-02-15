@@ -50,7 +50,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
       (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibAmount);
 
       // Transfer the token back to the caller
-      // The _acutalUnderlyingReceived is expected to be greater than 0
+      // The _underlyingAmountReceived is expected to be greater than 0
       // as this function won't proceed if input shareAmount is 0
       IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
     }
@@ -157,7 +157,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
       );
 
       // Transfer the underlying token back to the caller
-      // The _acutalUnderlyingReceived is expected to be greater than 0
+      // The _underlyingAmountReceived is expected to be greater than 0
       // as this function won't proceed if input shareAmount is 0
       IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
     }
