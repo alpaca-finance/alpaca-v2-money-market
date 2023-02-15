@@ -40,4 +40,6 @@ interface IMoneyMarketAccountManager {
     address _token,
     uint256 _amount
   ) external;
+
+  function withdraw(address _ibToken, uint256 _shareAmount) external;
 }
