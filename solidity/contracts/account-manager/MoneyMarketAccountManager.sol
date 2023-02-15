@@ -252,13 +252,13 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // to this account manager is lower than specified amount
     // leading to ERC20: exceed balance error
     ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
-    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
 
     // calculate the actual ibToken receive from deposit action
     // outstanding ibToken in the contract prior to the deposit action should not be included
     _ibAmountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
   }
 
+  /// @dev This function expect this contract should have ibToken before calling
   function _withdraw(address _ibToken, uint256 _shareAmount)
     internal
     returns (address _underlyingToken, uint256 _underlyingAmountReceived)
