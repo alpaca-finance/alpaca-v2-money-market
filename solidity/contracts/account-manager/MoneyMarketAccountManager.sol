@@ -248,9 +248,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // approve money market as it will cal safeTransferFrom to this address
     // reset allowance afterward
     IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
-    // If the token has feen on transfer, this should fail as the balance from caller
-    // to this account manager is lower than intent amount
-    // leadning to ERC20: exceed balance error
+    // If the token has fee on transfer, this should fail as the balance from caller
+    // to this account manager is lower than specified amount
+    // leading to ERC20: exceed balance error
     ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
     IERC20(_token).safeApprove(moneyMarketDiamond, 0);
 
