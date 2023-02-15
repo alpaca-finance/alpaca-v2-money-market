@@ -77,7 +77,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         _price = _getPrice(_oracleMedianizer, _token, _usd);
         LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
 
-        _tmpVal = (_price * _rawCollats[_i].amount) / 1e18;
+        _tmpVal = (_price * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
         summary.totalCollateralValue += _tmpVal;
         summary.totalBorrowingPower += (_tmpVal * _tokenConfig.collateralFactor) / LibMoneyMarket01.MAX_BPS;
 
@@ -104,7 +104,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
         (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
 
-        _tmpVal = (_price * _rawDebts[_i].amount) / 1e18;
+        _tmpVal = (_price * _rawDebts[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
         summary.totalBorrowedValue += _tmpVal;
         summary.totalUsedBorrowingPower += (_tmpVal * LibMoneyMarket01.MAX_BPS) / _tokenConfig.borrowingFactor;
 

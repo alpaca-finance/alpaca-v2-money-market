@@ -94,16 +94,16 @@ contract SetUpMMForTestScript is BaseScript {
     moneyMarket.deposit(userAddress, mock6DecimalsToken, 10e6);
 
     // subAccount 0
-    moneyMarket.addCollateral(userAddress, 0, bnb, 1 ether);
+    moneyMarket.addCollateral(userAddress, 0, bnb, 99.9 ether);
     moneyMarket.addCollateral(userAddress, 0, busd, 10 ether);
 
-    moneyMarket.borrow(0, dodo, 1 ether);
-    moneyMarket.borrow(0, mock6DecimalsToken, 1e6);
+    moneyMarket.borrow(userAddress, 0, dodo, 3.14159 ether);
+    moneyMarket.borrow(userAddress, 0, mock6DecimalsToken, 12e5);
 
     // subAccount 1
     moneyMarket.addCollateral(userAddress, 1, mock6DecimalsToken, 10e6);
 
-    moneyMarket.borrow(1, pstake, 1 ether);
+    moneyMarket.borrow(userAddress, 1, pstake, 2.34 ether);
 
     _stopBroadcast();
 
