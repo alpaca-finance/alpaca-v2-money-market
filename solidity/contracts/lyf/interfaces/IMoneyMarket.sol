@@ -26,7 +26,7 @@ interface IMoneyMarket {
     address _for,
     address _token,
     uint256 _amount
-  ) external;
+  ) external returns (uint256 _shareAmount);
 
   function getTotalTokenWithPendingInterest(address _token) external view returns (uint256 _totalToken);
 
