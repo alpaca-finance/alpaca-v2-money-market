@@ -82,6 +82,22 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  function transferCollateral(
+    uint256 _fromSubAccountId,
+    uint256 _toSubAccountId,
+    address _token,
+    uint256 _amount
+  ) external {
+    // Simply forward the call
+    ICollateralFacet(moneyMarketDiamond).transferCollateral(
+      msg.sender,
+      _fromSubAccountId,
+      _toSubAccountId,
+      _token,
+      _amount
+    );
+  }
+
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,

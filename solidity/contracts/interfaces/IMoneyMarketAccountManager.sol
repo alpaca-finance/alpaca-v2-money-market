@@ -19,6 +19,13 @@ interface IMoneyMarketAccountManager {
     uint256 _amount
   ) external;
 
+  function transferCollateral(
+    uint256 _fromSubAccountId,
+    uint256 _toSubAccountId,
+    address _token,
+    uint256 _amount
+  ) external;
+
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,

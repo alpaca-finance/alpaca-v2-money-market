@@ -111,27 +111,45 @@ contract CollateralFacet is ICollateralFacet {
   /// @param _toSubAccountId An index to derive the subaccount to transfer to
   /// @param _token The token to transfer
   /// @param _amount The amount to transfer
-  /// @dev TODO: To be removed as this action can be done through account manager
   function transferCollateral(
+    address _account,
     uint256 _fromSubAccountId,
     uint256 _toSubAccountId,
     address _token,
     uint256 _amount
   ) external nonReentrant {
+    // Prevent self transfer to be on a safe side of double accounting
     if (_fromSubAccountId == _toSubAccountId) {
       revert CollateralFacet_NoSelfTransfer();
     }
 
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    address _fromSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _fromSubAccountId);
+    // This function should not be called from anyone
+    // except account manager contract and will revert upon trying to do so
+    LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
+
+    address _fromSubAccount = LibMoneyMarket01.getSubAccount(_account, _fromSubAccountId);
+
+    // Accure all the debt tokens under the origin subaccount
+    // This is to ensure that debt are updated and the health check is accurate
     LibMoneyMarket01.accrueBorrowedPositionsOf(_fromSubAccount, moneyMarketDs);
-    LibMoneyMarket01.removeCollatFromSubAccount(msg.sender, _fromSubAccount, _token, _amount, moneyMarketDs);
+
+    // Remove the collateral from the origin subaccount
+    LibMoneyMarket01.removeCollatFromSubAccount(_account, _fromSubAccount, _token, _amount, moneyMarketDs);
+
+    // before proceeding to add the recently removed collateral to the destination subaccount's accounting
+    // perform a health check. This should revert if the remove collateral operation result in
+    // making the origin subaccount at risk of liquidation
     LibMoneyMarket01.validateSubaccountIsHealthy(_fromSubAccount, moneyMarketDs);
 
-    address _toSubAccount = LibMoneyMarket01.getSubAccount(msg.sender, _toSubAccountId);
-    LibMoneyMarket01.addCollatToSubAccount(msg.sender, _toSubAccount, _token, _amount, moneyMarketDs);
+    address _toSubAccount = LibMoneyMarket01.getSubAccount(_account, _toSubAccountId);
 
-    emit LogTransferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
+    // Add the collateral to destination subaccount's accounting
+    // The health check on the destination subaccount is not required as adding collateral
+    // will always benefit the subaccount or at worst changes nothing
+    LibMoneyMarket01.addCollatToSubAccount(_account, _toSubAccount, _token, _amount, moneyMarketDs);
+
+    emit LogTransferCollateral(_account, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
 }

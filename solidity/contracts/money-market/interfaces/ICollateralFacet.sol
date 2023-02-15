@@ -21,6 +21,7 @@ interface ICollateralFacet {
   ) external;
 
   function transferCollateral(
+    address _account,
     uint256 _fromSubAccountId,
     uint256 _toSubAccountId,
     address _token,

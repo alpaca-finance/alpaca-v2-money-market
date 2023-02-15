@@ -28,7 +28,7 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
 
     // alice transfer collateral from subAccount0 to subAccount1
     vm.prank(ALICE);
-    collateralFacet.transferCollateral(subAccount0, subAccount1, address(weth), _transferCollateralAmount);
+    accountManager.transferCollateral(subAccount0, subAccount1, address(weth), _transferCollateralAmount);
 
     LibDoublyLinkedList.Node[] memory subAccount0CollatList = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
@@ -65,6 +65,6 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
     // alice transfer collateral from subAccount0 to subAccount0
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_NoSelfTransfer.selector));
-    collateralFacet.transferCollateral(subAccount0, subAccount0, address(weth), _transferCollateralAmount);
+    accountManager.transferCollateral(subAccount0, subAccount0, address(weth), _transferCollateralAmount);
   }
 }
