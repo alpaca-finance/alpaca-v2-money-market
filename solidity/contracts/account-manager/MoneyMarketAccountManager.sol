@@ -232,7 +232,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IBorrowFacet(moneyMarketDiamond).repayWithCollat(msg.sender, _subAccountId, _token, _debtShareToRepay);
   }
 
-  function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _amountReceived) {
+  function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _ibAmountReceived) {
     // Deduct the fund from caller to this contract
     // assuming that there's no fee on transfer
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
@@ -256,7 +256,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
     // calculate the actual ibToken receive from deposit action
     // outstanding ibToken in the contract prior to the deposit action should not be included
-    _amountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
+    _ibAmountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
   }
 
   function _withdraw(address _ibToken, uint256 _shareAmount)
