@@ -119,6 +119,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _underlyingTokenAmountBefore = IERC20(_underlyingToken).balanceOf(address(this));
 
     // Exchange the ibToken back to the underlying token with some interest
+    // specifying to MoneyMarket that this withdraw is done on behalf of the caller
     // ibToken will be burned during the process
     ILendFacet(moneyMarketDiamond).withdraw(msg.sender, _ibToken, _shareAmount);
 

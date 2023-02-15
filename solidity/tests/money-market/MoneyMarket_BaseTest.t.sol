@@ -173,6 +173,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     usdc.approve(address(accountManager), type(uint256).max);
     isolateToken.approve(address(accountManager), type(uint256).max);
     ibWeth.approve(address(accountManager), type(uint256).max);
+    ibUsdc.approve(address(accountManager), type(uint256).max);
     cake.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
@@ -186,6 +187,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     btc.approve(address(accountManager), type(uint256).max);
     usdc.approve(address(accountManager), type(uint256).max);
     isolateToken.approve(address(accountManager), type(uint256).max);
+    ibWeth.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
