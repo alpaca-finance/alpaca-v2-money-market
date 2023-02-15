@@ -71,9 +71,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // assuming that there's no fee on transfer
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
-    // Add collateral on behalf of the caller
-    // This can be revert if by adding the amount of collateral will exceed the maximum collateral capcity
-    // and should be reverted at MoneyMarket
+    // Add collateral for `_account`
+    // This call to money market will revert if added amount makes total collateral exceed maximum collateral capacity
     IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
     ICollateralFacet(moneyMarketDiamond).addCollateral(_account, _subAccountId, _token, _amount);
     IERC20(_token).safeApprove(moneyMarketDiamond, 0);
