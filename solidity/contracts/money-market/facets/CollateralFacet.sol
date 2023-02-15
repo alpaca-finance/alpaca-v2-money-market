@@ -107,6 +107,7 @@ contract CollateralFacet is ICollateralFacet {
   }
 
   /// @notice Transfer the collateral from one subaccount to another subaccount
+  /// @param _account The main account to do internal trasnfer of collateral
   /// @param _fromSubAccountId An index to derive the subaccount to transfer from
   /// @param _toSubAccountId An index to derive the subaccount to transfer to
   /// @param _token The token to transfer

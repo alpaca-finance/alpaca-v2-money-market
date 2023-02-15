@@ -172,6 +172,7 @@ contract BorrowFacet is IBorrowFacet {
   }
 
   /// @notice Repay the debt for the subaccount using the same collateral
+  /// @param _account The account to repay for
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to repay
   /// @param _debtShareToRepay The amount to repay
