@@ -86,12 +86,11 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     address _token,
     uint256 _amount
   ) external {
-    // skip if trying to remove 0
+    // skip if trying to remove 0 as this function won't proceed if input amount is 0
     if (_amount != 0) {
-      // Remove the collateral on behalf of user
-      // Transfer all of the amount received back to the caller
+      // Remove caller's collateral from specified subaccount
+      // Then transfer all of the amount received back to the caller
       // The amount to be transfer is expected to be greater than 0
-      // as this function won't proceed if input amount is 0
       IERC20(_token).safeTransfer(msg.sender, _removeCollateral(_subAccountId, _token, _amount));
     }
   }
