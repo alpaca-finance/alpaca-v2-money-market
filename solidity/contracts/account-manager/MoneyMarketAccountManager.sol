@@ -41,7 +41,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   /// @param _ibToken The interest bearing token to burn
   /// @param _ibAmount The amount of interest bearing token to burn
   function withdraw(address _ibToken, uint256 _ibAmount) external {
-    // Abort if trying to withdraw 0
+    // Skio if trying to withdraw 0
     if (_ibAmount != 0) {
       // pull ibToken from the caller
       IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _ibAmount);
@@ -147,7 +147,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     address _ibToken,
     uint256 _amount
   ) external {
-    // Abort if trying to remove 0
+    // Skip if trying to remove 0
     if (_amount != 0) {
       // Execute remove collateral first
       // Then withdraw all of the ibToken received from removal of collateral
