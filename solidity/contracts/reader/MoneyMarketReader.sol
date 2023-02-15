@@ -50,90 +50,101 @@ contract MoneyMarketReader is IMoneyMarketReader {
       });
   }
 
+  /// @dev Get subaccount summary of collaterals and debts
   function getSubAccountSummary(address _account, uint256 _subAccountId)
     external
     view
     returns (SubAccountSummary memory summary)
   {
-    // IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
-    // IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
-    // address _usd = _alpacaV2Oracle.usd();
-    IPriceOracle _oracleMedianizer;
-    address _usd;
-
-    CollateralPosition[] memory _collaterals;
-    DebtPosition[] memory _debts;
-
-    uint256 _tmpVal;
-    address _token;
-    uint256 _price;
-
-    {
-      LibDoublyLinkedList.Node[] memory _rawCollats = _moneyMarket.getAllSubAccountCollats(_account, _subAccountId);
-      uint256 _collatLen = _rawCollats.length;
-      _collaterals = new CollateralPosition[](_collatLen);
-      for (uint256 _i; _i < _collatLen; ) {
-        _token = _rawCollats[_i].token;
-        _price = _getPrice(_oracleMedianizer, _token, _usd);
-        LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
-
-        _tmpVal = (_price * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
-        summary.totalCollateralValue += _tmpVal;
-        summary.totalBorrowingPower += (_tmpVal * _tokenConfig.collateralFactor) / LibMoneyMarket01.MAX_BPS;
-
-        _collaterals[_i] = CollateralPosition({
-          token: _token,
-          amount: _rawCollats[_i].amount,
-          price: _price,
-          collateralFactor: _tokenConfig.collateralFactor
-        });
-
-        unchecked {
-          ++_i;
-        }
-      }
-    }
-
-    {
-      LibDoublyLinkedList.Node[] memory _rawDebts = _moneyMarket.getOverCollatDebtSharesOf(_account, _subAccountId);
-      uint256 _debtLen = _rawDebts.length;
-      _debts = new DebtPosition[](_debtLen);
-      for (uint256 _i; _i < _debtLen; ) {
-        _token = _rawDebts[_i].token;
-        _price = _getPrice(_oracleMedianizer, _token, _usd);
-        LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
-        (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
-
-        _tmpVal = (_price * _rawDebts[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
-        summary.totalBorrowedValue += _tmpVal;
-        summary.totalUsedBorrowingPower += (_tmpVal * LibMoneyMarket01.MAX_BPS) / _tokenConfig.borrowingFactor;
-
-        _debts[_i] = DebtPosition({
-          token: _token,
-          shares: _rawDebts[_i].amount,
-          amount: (_rawDebts[_i].amount * _totalDebtAmount) / _totalDebtShares,
-          price: _price,
-          borrowingFactor: _tokenConfig.borrowingFactor
-        });
-
-        unchecked {
-          ++_i;
-        }
-      }
-    }
-
-    summary.collaterals = _collaterals;
-    summary.debts = _debts;
+    (summary.totalCollateralValue, summary.totalBorrowingPower, summary.collaterals) = _getSubAccountCollatSummary(
+      _account,
+      _subAccountId
+    );
+    (summary.totalBorrowedValue, summary.totalUsedBorrowingPower, summary.debts) = _getSubAccountDebtSummary(
+      _account,
+      _subAccountId
+    );
   }
 
-  // /// @dev Return the price of token0/token1, multiplied by 1e18
-  // function getPrice(address token0, address token1) external view returns (uint256, uint256) {
-  //   IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
-  //   IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
-  //   return (_getPrice(_oracleMedianizer, token0, token1), block.timestamp);
-  // }
+  function _getSubAccountCollatSummary(address _account, uint256 _subAccountId)
+    internal
+    view
+    returns (
+      uint256 _totalCollateralValue,
+      uint256 _totalBorrowingPower,
+      CollateralPosition[] memory _collaterals
+    )
+  {
+    LibDoublyLinkedList.Node[] memory _rawCollats = _moneyMarket.getAllSubAccountCollats(_account, _subAccountId);
+    uint256 _collatLen = _rawCollats.length;
+    _collaterals = new CollateralPosition[](_collatLen);
 
-  // function getPriceUSD(address token) external view returns (uint256, uint256)
+    for (uint256 _i; _i < _collatLen; ++_i) {
+      address _token = _rawCollats[_i].token;
+      uint256 _price = getPriceUSD(_token);
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
+
+      uint256 _valueUSD = (_price * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
+      _totalCollateralValue += _valueUSD;
+      _totalBorrowingPower += (_valueUSD * _tokenConfig.collateralFactor) / LibMoneyMarket01.MAX_BPS;
+
+      _collaterals[_i] = CollateralPosition({
+        token: _token,
+        amount: _rawCollats[_i].amount,
+        price: _price,
+        collateralFactor: _tokenConfig.collateralFactor
+      });
+    }
+  }
+
+  function _getSubAccountDebtSummary(address _account, uint256 _subAccountId)
+    internal
+    view
+    returns (
+      uint256 _totalBorrowedValue,
+      uint256 _totalUsedBorrowingPower,
+      DebtPosition[] memory _debts
+    )
+  {
+    LibDoublyLinkedList.Node[] memory _rawDebts = _moneyMarket.getOverCollatDebtSharesOf(_account, _subAccountId);
+    uint256 _debtLen = _rawDebts.length;
+    _debts = new DebtPosition[](_debtLen);
+
+    for (uint256 _i; _i < _debtLen; ++_i) {
+      address _token = _rawDebts[_i].token;
+      uint256 _price = getPriceUSD(_token);
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
+      (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
+
+      uint256 _valueUSD = (_price * _rawDebts[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
+      _totalBorrowedValue += _valueUSD;
+      _totalUsedBorrowingPower += (_valueUSD * LibMoneyMarket01.MAX_BPS) / _tokenConfig.borrowingFactor;
+
+      _debts[_i] = DebtPosition({
+        token: _token,
+        shares: _rawDebts[_i].amount,
+        amount: (_rawDebts[_i].amount * _totalDebtAmount) / _totalDebtShares,
+        price: _price,
+        borrowingFactor: _tokenConfig.borrowingFactor
+      });
+    }
+  }
+
+  /// @dev Return the price of token0/token1, multiplied by 1e18
+  function getPrice(address _token0, address _token1) public view returns (uint256) {
+    IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
+    IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
+    return _getPrice(_oracleMedianizer, _token0, _token1);
+  }
+
+  /// @dev Return the price of `_token` in USD with 18 decimal places
+  function getPriceUSD(address _token) public view returns (uint256) {
+    // TODO: use real oracle
+    // IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
+    // IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
+    // return _getPrice(_oracleMedianizer, _token, _alpacaV2Oracle.usd());
+    return _getPrice(IPriceOracle(address(0)), _token, address(0));
+  }
 
   /// @dev use mock until deploy real oracle
   function _getPrice(
