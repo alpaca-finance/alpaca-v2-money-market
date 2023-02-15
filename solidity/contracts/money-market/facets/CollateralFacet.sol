@@ -132,7 +132,7 @@ contract CollateralFacet is ICollateralFacet {
 
     address _fromSubAccount = LibMoneyMarket01.getSubAccount(_account, _fromSubAccountId);
 
-    // Accure all the debt tokens under the origin subaccount
+    // Accrue all the debt tokens under the origin subaccount
     // This is to ensure that debt are updated and the health check is accurate
     LibMoneyMarket01.accrueBorrowedPositionsOf(_fromSubAccount, moneyMarketDs);
 
