@@ -49,26 +49,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
-  function _withdraw(address _ibToken, uint256 _shareAmount)
-    internal
-    returns (address _underlyingToken, uint256 _underlyingAmountReceived)
-  {
-    _underlyingToken = IViewFacet(moneyMarketDiamond).getTokenFromIbToken(_ibToken);
-    // cache the balanceOf before executing withdrawal
-    // This will be used to determine the actual amount of underlying token back from MoneyMarket
-    // if the input ibToken is not ERC20, this call should revert at this point
-    uint256 _underlyingTokenAmountBefore = IERC20(_underlyingToken).balanceOf(address(this));
-
-    // Exchange the ibToken back to the underlying token with some interest
-    // specifying to MoneyMarket that this withdraw is done on behalf of the caller
-    // ibToken will be burned during the process
-    ILendFacet(moneyMarketDiamond).withdraw(msg.sender, _ibToken, _shareAmount);
-
-    // Calculate the actual amount received by comparing balance after - balance before
-    // This is to accurately find the amount received even if the underlying token has fee on transfer
-    _underlyingAmountReceived = IERC20(_underlyingToken).balanceOf(address(this)) - _underlyingTokenAmountBefore;
-  }
-
   function addCollateralFor(
     address _account,
     uint256 _subAccountId,
@@ -100,26 +80,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
       // as this function won't proceed if input amount is 0
       IERC20(_token).safeTransfer(msg.sender, _removeCollateral(_subAccountId, _token, _amount));
     }
-  }
-
-  function _removeCollateral(
-    uint256 _subAccountId,
-    address _token,
-    uint256 _amount
-  ) internal returns (uint256 _collateralAmountReceived) {
-    // cache the balanceOf before executing remove collateral
-    // This will be used to determine the actual amount of token back from MoneyMarket
-    // if the input token is not ERC20, this call should revert at this point
-    uint256 _tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
-
-    // Remove collateral from the subaccount on behalf of user
-    // Will be reverted if removing collateral will violate the business rules based on
-    // how MoneyMarket was configured
-    ICollateralFacet(moneyMarketDiamond).removeCollateral(msg.sender, _subAccountId, _token, _amount);
-
-    // Calculate the actual amount received by comparing balance after - balance before
-    // This is to accurately find the amount received even if the underlying token has fee on transfer
-    _collateralAmountReceived = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
   }
 
   function depositAndAddCollateral(
@@ -233,5 +193,45 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // calculate the actual ibToken receive from deposit action
     // outstanding ibToken in the contract prior to the deposit action should not be included
     _amountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
+  }
+
+  function _withdraw(address _ibToken, uint256 _shareAmount)
+    internal
+    returns (address _underlyingToken, uint256 _underlyingAmountReceived)
+  {
+    _underlyingToken = IViewFacet(moneyMarketDiamond).getTokenFromIbToken(_ibToken);
+    // cache the balanceOf before executing withdrawal
+    // This will be used to determine the actual amount of underlying token back from MoneyMarket
+    // if the input ibToken is not ERC20, this call should revert at this point
+    uint256 _underlyingTokenAmountBefore = IERC20(_underlyingToken).balanceOf(address(this));
+
+    // Exchange the ibToken back to the underlying token with some interest
+    // specifying to MoneyMarket that this withdraw is done on behalf of the caller
+    // ibToken will be burned during the process
+    ILendFacet(moneyMarketDiamond).withdraw(msg.sender, _ibToken, _shareAmount);
+
+    // Calculate the actual amount received by comparing balance after - balance before
+    // This is to accurately find the amount received even if the underlying token has fee on transfer
+    _underlyingAmountReceived = IERC20(_underlyingToken).balanceOf(address(this)) - _underlyingTokenAmountBefore;
+  }
+
+  function _removeCollateral(
+    uint256 _subAccountId,
+    address _token,
+    uint256 _amount
+  ) internal returns (uint256 _collateralAmountReceived) {
+    // cache the balanceOf before executing remove collateral
+    // This will be used to determine the actual amount of token back from MoneyMarket
+    // if the input token is not ERC20, this call should revert at this point
+    uint256 _tokenBalanceBefore = IERC20(_token).balanceOf(address(this));
+
+    // Remove collateral from the subaccount on behalf of user
+    // Will be reverted if removing collateral will violate the business rules based on
+    // how MoneyMarket was configured
+    ICollateralFacet(moneyMarketDiamond).removeCollateral(msg.sender, _subAccountId, _token, _amount);
+
+    // Calculate the actual amount received by comparing balance after - balance before
+    // This is to accurately find the amount received even if the underlying token has fee on transfer
+    _collateralAmountReceived = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
   }
 }
