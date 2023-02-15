@@ -6,15 +6,14 @@ interface IMoneyMarketAccountManager {
 
   function withdraw(address _ibToken, uint256 _shareAmount) external;
 
-  function addCollatFor(
+  function addCollateralFor(
     address _account,
     uint256 _subAccountId,
     address _token,
     uint256 _amount
   ) external;
 
-  function removeCollatFor(
-    address _account,
+  function removeCollateral(
     uint256 _subAccountId,
     address _token,
     uint256 _amount

@@ -45,7 +45,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
@@ -67,8 +67,8 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     // withdraw weth and add ibWeth as collateral for simpler calculation
     accountManager.deposit(address(weth), 40 ether);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
-    accountManager.addCollatFor(ALICE, _subAccountId, address(ibWeth), 40 ether);
-    collateralFacet.removeCollateral(ALICE, _subAccountId, address(weth), 40 ether);
+    accountManager.addCollateralFor(ALICE, _subAccountId, address(ibWeth), 40 ether);
+    accountManager.removeCollateral(_subAccountId, address(weth), 40 ether);
     vm.stopPrank();
 
     // now 1 ibWeth = 1 weth

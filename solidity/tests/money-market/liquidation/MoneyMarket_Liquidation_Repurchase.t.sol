@@ -52,7 +52,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
@@ -158,7 +158,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
     // alice add more collateral
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice borrow more btc token as 30% of vault = 3 btc
     accountManager.borrow(0, address(btc), normalizeEther(3 ether, btcDecimal));
     vm.stopPrank();
@@ -275,7 +275,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   function testCorrectness_ShouldRepurchasePassedWithMoreThanDebtTokenAmount_TransferTokenCorrectly() external {
     // alice add more collateral
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(weth), normalizeEther(60 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(60 ether, wethDecimal));
     // alice borrow more btc token as 50% of vault = 5 btc
     accountManager.borrow(0, address(btc), normalizeEther(5 ether, btcDecimal));
     vm.stopPrank();
@@ -478,7 +478,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // alice add more collateral in other assets
     // then borrowing power will be increased by 100 * 10 * 9000 / 10000 = 900 ether USD
     // total borrowing power is 936 ether USD
-    accountManager.addCollatFor(ALICE, 0, address(btc), normalizeEther(100 ether, btcDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(btc), normalizeEther(100 ether, btcDecimal));
     // alice borrow more usdc token more 50% of vault = 50 usdc
     // alice used borrowed value is ~80
     accountManager.borrow(0, address(usdc), normalizeEther(50 ether, usdcDecimal));
@@ -518,7 +518,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenRepurchaseWithRepayTokenAndCollatTokenAreSameToken_TransferTokenCorrectly() external {
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(usdc), normalizeEther(20 ether, usdcDecimal));
 
     accountManager.borrow(0, address(usdc), normalizeEther(10 ether, usdcDecimal));
     // Now!!, alice borrowed 40% of vault then interest be 0.082352941146288000 per year

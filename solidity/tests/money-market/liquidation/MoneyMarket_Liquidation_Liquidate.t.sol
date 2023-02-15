@@ -66,7 +66,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
@@ -348,7 +348,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      */
 
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, 0, address(btc), 100 ether);
+    accountManager.addCollateralFor(ALICE, 0, address(btc), 100 ether);
     accountManager.borrow(0, address(usdc), normalizeEther(50 ether, usdcDecimal));
     vm.stopPrank();
 

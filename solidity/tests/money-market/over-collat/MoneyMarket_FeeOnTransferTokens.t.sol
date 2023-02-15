@@ -81,7 +81,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     fotToken.approve(address(accountManager), type(uint256).max);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
-    accountManager.addCollatFor(BOB, subAccount0, address(fotToken), 1 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, address(fotToken), 1 ether);
     vm.stopPrank();
   }
 
@@ -93,7 +93,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     lateFotToken.mint(address(accountManager), 1 ether);
 
     vm.startPrank(BOB);
-    accountManager.addCollatFor(BOB, subAccount0, address(weth), 10 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), 10 ether);
     accountManager.borrow(subAccount0, address(lateFotToken), _borrowAmount);
     vm.stopPrank();
 
@@ -119,7 +119,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     lateFotToken.mint(address(accountManager), 10 ether);
 
     vm.startPrank(BOB);
-    accountManager.addCollatFor(BOB, subAccount0, address(weth), 10 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), 10 ether);
     accountManager.borrow(subAccount0, address(lateFotToken), _borrowAmount);
     accountManager.repay(BOB, subAccount0, address(lateFotToken), 10 ether, _borrowAmount);
     vm.stopPrank();
@@ -152,7 +152,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     lateFotToken.mint(address(accountManager), 10 ether);
 
     vm.startPrank(BOB);
-    accountManager.addCollatFor(BOB, subAccount0, _collatToken, 2 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, _collatToken, 2 ether);
     accountManager.borrow(subAccount0, _debtToken, 1 ether);
     vm.stopPrank();
 

@@ -90,7 +90,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
 
     vm.startPrank(BOB);
-    accountManager.addCollatFor(BOB, subAccount0, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.addCollateralFor(BOB, subAccount0, address(usdc), normalizeEther(20 ether, usdcDecimal));
     accountManager.borrow(subAccount0, address(weth), 5 ether);
     vm.stopPrank();
 

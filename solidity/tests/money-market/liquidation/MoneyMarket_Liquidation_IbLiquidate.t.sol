@@ -98,7 +98,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
     accountManager.deposit(address(btc), 10 ether);
-    accountManager.addCollatFor(BOB, 0, address(btc), 10 ether);
+    accountManager.addCollateralFor(BOB, 0, address(btc), 10 ether);
     vm.stopPrank();
 
     // alice add ibWETh collat for 80 ether
@@ -110,7 +110,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     The following block of code has the same effect as above
     // accountManager.deposit(address(weth), 80 ether);
     // ibWeth.approve(address(accountManager), 40 ether);
-    // accountManager.addCollatFor(ALICE, 0, address(ibWeth), 40 ether);
+    // accountManager.addCollateralFor(ALICE, 0, address(ibWeth), 40 ether);
     */
     vm.stopPrank();
 
@@ -405,8 +405,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(40 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
-    collateralFacet.removeCollateral(ALICE, _aliceSubAccountId, _ibCollatToken, 30 ether);
+    accountManager.addCollateralFor(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
+    accountManager.removeCollateral(_aliceSubAccountId, _ibCollatToken, 30 ether);
     vm.stopPrank();
     // | After Alice adjust Collateral state will changed a bit
     // | ---------------------------------------------- |

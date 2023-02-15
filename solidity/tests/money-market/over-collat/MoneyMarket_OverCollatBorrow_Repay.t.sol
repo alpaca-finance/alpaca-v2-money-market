@@ -36,7 +36,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     // set up borrow first
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, subAccount0, address(weth), 100 ether);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), 100 ether);
     accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
     vm.stopPrank();
 

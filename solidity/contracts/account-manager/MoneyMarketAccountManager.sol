@@ -63,7 +63,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     );
   }
 
-  function addCollatFor(
+  function addCollateralFor(
     address _account,
     uint256 _subAccountId,
     address _token,
@@ -81,8 +81,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_token).safeApprove(moneyMarketDiamond, 0);
   }
 
-  function removeCollatFor(
-    address _account,
+  function removeCollateral(
     uint256 _subAccountId,
     address _token,
     uint256 _amount
@@ -99,7 +98,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Remove collateral from the subaccount on behalf of user
     // Will be reverted if removing collateral will violate the business rules based on
     // how MoneyMarket was configured
-    ICollateralFacet(moneyMarketDiamond).removeCollateral(_account, _subAccountId, _token, _amount);
+    ICollateralFacet(moneyMarketDiamond).removeCollateral(msg.sender, _subAccountId, _token, _amount);
 
     // Calculate the actual amount received by comparing balance after - balance before
     // This is to accurately find the amount received even if the underlying token has fee on transfer

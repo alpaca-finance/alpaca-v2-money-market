@@ -41,8 +41,8 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
     uint256 _usdcBorrowAmount = normalizeEther(10 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    accountManager.addCollatFor(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
-    accountManager.addCollatFor(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
     vm.stopPrank();
 
     // ALICE borrow
@@ -56,7 +56,8 @@ contract MoneyMarket_AccrueInterest_RemoveCollateralTest is MoneyMarket_BaseTest
 
     vm.startPrank(ALICE);
     // remove collateral will trigger accrue interest on all borrowed token
-    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 0);
+    // remove 1 wei so it won't be skipped at account manager
+    accountManager.removeCollateral(subAccount0, address(weth), 1);
     vm.stopPrank();
 
     // assert ALICE

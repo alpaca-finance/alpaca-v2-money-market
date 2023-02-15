@@ -244,7 +244,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // Over-collat borrow
     // BOB borrow weth upto Global limit
     vm.startPrank(BOB);
-    accountManager.addCollatFor(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
     accountManager.borrow(subAccount0, address(weth), _wethGlobalLimit);
     vm.stopPrank();
 
