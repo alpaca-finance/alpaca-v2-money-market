@@ -240,11 +240,11 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // This will be used to transfer the ibToken back to caller
     _ibToken = IViewFacet(moneyMarketDiamond).getIbTokenFromToken(_token);
 
-    // deposit to money market, expecting to get ibToken in return
     // approve money market as it will call safeTransferFrom to this address
     // since all of the allowance will be used, approve(0) afterward is not required
     IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
 
+    // deposit to money market, expecting to get ibToken in return
     _ibAmountReceived = ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
   }
 
