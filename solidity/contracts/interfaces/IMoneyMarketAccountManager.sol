@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 interface IMoneyMarketAccountManager {
   function deposit(address _token, uint256 _amount) external;
 
-  function withdraw(address _ibToken, uint256 _shareAmount) external;
+  function withdraw(address _ibToken, uint256 _ibAmount) external;
 
   function addCollateralFor(
     address _account,
@@ -35,7 +35,7 @@ interface IMoneyMarketAccountManager {
   function removeCollateralAndWithdraw(
     uint256 _subAccountId,
     address _ibToken,
-    uint256 _removeAmount
+    uint256 _ibAmount
   ) external;
 
   function depositAndStake(address _token, uint256 _amount) external;

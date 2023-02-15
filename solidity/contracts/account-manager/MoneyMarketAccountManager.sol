@@ -39,15 +39,15 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   /// @notice Withdraw the lended token by burning the interest bearing token on bahalf of the caller
   /// @param _ibToken The interest bearing token to burn
-  /// @param _shareAmount The amount of interest bearing token to burn
-  function withdraw(address _ibToken, uint256 _shareAmount) external {
+  /// @param _ibAmount The amount of interest bearing token to burn
+  function withdraw(address _ibToken, uint256 _ibAmount) external {
     // Abort if trying to withdraw 0
-    if (_shareAmount != 0) {
+    if (_ibAmount != 0) {
       // pull ibToken from the caller
-      IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _shareAmount);
+      IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _ibAmount);
 
       // Withdraw from MoneyMarket using the ibToken that was funded by the caller
-      (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _shareAmount);
+      (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibAmount);
 
       // Transfer the token back to the caller
       // The _acutalUnderlyingReceived is expected to be greater than 0
