@@ -26,6 +26,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     moneyMarketDiamond = _moneyMarketDiamond;
   }
 
+  /// @notice Deposit a token for lending on behalf of the caller
+  /// @param _token The token to lend
+  /// @param _amount The amount to lend
   function deposit(address _token, uint256 _amount) external {
     // pull funds from the caller and deposit to money market
     (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
@@ -34,6 +37,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
   }
 
+  /// @notice Withdraw the lended token by burning the interest bearing token on bahalf of the caller
+  /// @param _ibToken The interest bearing token to burn
+  /// @param _shareAmount The amount of interest bearing token to burn
   function withdraw(address _ibToken, uint256 _shareAmount) external {
     // Abort if trying to withdraw 0
     if (_shareAmount != 0) {
@@ -50,6 +56,11 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  /// @notice Add a token to a subaccount as a collateral
+  /// @param _account The account to add collateral to
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The collateral token
+  /// @param _amount The amount to add
   function addCollateralFor(
     address _account,
     uint256 _subAccountId,
@@ -68,6 +79,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_token).safeApprove(moneyMarketDiamond, 0);
   }
 
+  /// @notice Remove a collateral token from a subaccount on behalf of the caller
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The collateral token
+  /// @param _amount The amount to remove
   function removeCollateral(
     uint256 _subAccountId,
     address _token,
@@ -83,6 +98,11 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  /// @notice Transfer the collateral from one subaccount to another subaccount on behalf of the caller
+  /// @param _fromSubAccountId An index to derive the subaccount to transfer from
+  /// @param _toSubAccountId An index to derive the subaccount to transfer to
+  /// @param _token The token to transfer
+  /// @param _amount The amount to transfer
   function transferCollateral(
     uint256 _fromSubAccountId,
     uint256 _toSubAccountId,
@@ -99,6 +119,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     );
   }
 
+  /// @notice Deposit a token for lending and add all of ibToken to given subaccount id of the caller
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to lend
+  /// @param _amount The amount to lend
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,
@@ -114,6 +138,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_ibToken).safeApprove(moneyMarketDiamond, 0);
   }
 
+  /// @notice Remove a collateral token from a subaccount and withdraw ibToken
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _ibToken The collateral token specifically in ibToken form
+  /// @param _amount The amount to remove
   function removeCollateralAndWithdraw(
     uint256 _subAccountId,
     address _ibToken,
@@ -139,6 +167,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   function unstakeAndWithdraw(address _ibToken, uint256 _amount) external {}
 
+  /// @notice Borrow a token agaist the placed collaterals on behlaf of the caller
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to borrow
+  /// @param _amount The amount to borrow
   function borrow(
     uint256 _subAccountId,
     address _token,
@@ -154,6 +186,11 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
+  /// @notice Repay the debt for the subaccount
+  /// @param _account The account to repay for
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to repay
+  /// @param _debtShareToRepay The share amount of debt token to repay
   function repay(
     address _account,
     uint256 _subAccountId,
@@ -185,6 +222,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  /// @notice Repay the debt for the subaccount using the same token on behalf of the caller
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _token The token to repay
+  /// @param _debtShareToRepay The amount to repay
   function repayWithCollat(
     uint256 _subAccountId,
     address _token,
