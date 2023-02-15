@@ -74,7 +74,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenAddCollateralWithFeeOnTransferToken() external {
-    // inject token to account manager first, tryting to bypass exceed balance error at MM
+    // inject token to account manager first, trying to bypass exceed balance error at MM
     fotToken.mint(address(accountManager), 1 ether);
 
     vm.startPrank(BOB);
