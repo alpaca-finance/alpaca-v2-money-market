@@ -146,6 +146,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _amount
   ) external {
     // Skip if trying to remove 0
+    // The _underlyingAmountReceived is expected to be greater than 0
+    // making the ERC20.transfer impossible to revert on transfer 0 amount
     if (_amount != 0) {
       // Execute remove collateral first
       // Then withdraw all of the ibToken received from removal of collateral
@@ -154,9 +156,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
         _removeCollateral(_subAccountId, _ibToken, _amount)
       );
 
-      // Transfer the underlying token back to the caller
-      // The _underlyingAmountReceived is expected to be greater than 0
-      // as this function won't proceed if input shareAmount is 0
       IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
     }
   }
