@@ -2,6 +2,17 @@
 pragma solidity 0.8.17;
 
 interface IMoneyMarketAccountManager {
+  function deposit(address _token, uint256 _amount) external;
+
+  function withdraw(address _ibToken, uint256 _shareAmount) external;
+
+  function addCollatFor(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _amount
+  ) external;
+
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,
@@ -31,15 +42,4 @@ interface IMoneyMarketAccountManager {
     uint256 _repayAmount,
     uint256 _debtShareToRepay
   ) external;
-
-  function deposit(address _token, uint256 _amount) external;
-
-  function addCollatFor(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    uint256 _amount
-  ) external;
-
-  function withdraw(address _ibToken, uint256 _shareAmount) external;
 }

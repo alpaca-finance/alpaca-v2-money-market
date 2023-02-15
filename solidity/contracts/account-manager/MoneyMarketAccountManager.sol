@@ -25,6 +25,62 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     moneyMarketDiamond = _moneyMarketDiamond;
   }
 
+  function deposit(address _token, uint256 _amount) external {
+    // pull funds from the caller and deposit to money market
+    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+
+    // transfer ibToken received back to caller
+    IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+  }
+
+  function withdraw(address _ibToken, uint256 _shareAmount) external {
+    // Abort if trying to withdraw 0
+    if (_shareAmount == 0) {
+      return;
+    }
+    // pull ibToken from the caller
+    IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _shareAmount);
+
+    address _underlyingToken = IViewFacet(moneyMarketDiamond).getTokenFromIbToken(_ibToken);
+    // cache the balanceOf before executing withdrawal
+    // This will be used to determine the actual amount of underlying token back from MoneyMarket
+    // if the input ibToken is not ERC20, this call should revert at this point
+    uint256 _underlyingTokenAmountBefore = IERC20(_underlyingToken).balanceOf(address(this));
+
+    // Exchange the ibToken back to the underlying token with some interest
+    // specifying to MoneyMarket that this withdraw is done on behalf of the caller
+    // ibToken will be burned during the process
+    ILendFacet(moneyMarketDiamond).withdraw(msg.sender, _ibToken, _shareAmount);
+
+    // Calculate the actual amount received by comparing balance after - balance before
+    // This is to accurately find the amount received even if the underlying token has fee on transfer
+    uint256 _actualUnderlyingReceived = IERC20(_underlyingToken).balanceOf(address(this)) -
+      _underlyingTokenAmountBefore;
+
+    // Transfer the token back to the caller
+    // The _acutalUnderlyingReceived is expected to be greater than 0
+    // as this function won't proceed if input shareAmount is 0
+    IERC20(_underlyingToken).safeTransfer(msg.sender, _actualUnderlyingReceived);
+  }
+
+  function addCollatFor(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _amount
+  ) external {
+    // Deduct the fund from the caller to this contract
+    // assuming that there's no fee on transfer
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    // Add collateral on behalf of the caller
+    // This can be revert if by adding the amount of collateral will exceed the maximum collateral capcity
+    // and should be reverted at MoneyMarket
+    IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
+    ICollateralFacet(moneyMarketDiamond).addCollateral(_account, _subAccountId, _token, _amount);
+    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
+  }
+
   function depositAndAddCollateral(
     uint256 _subAccountId,
     address _token,
@@ -96,44 +152,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
-  function deposit(address _token, uint256 _amount) external {
-    // pull funds from the caller and deposit to money market
-    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
-
-    // transfer ibToken received back to caller
-    IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
-  }
-
-  function withdraw(address _ibToken, uint256 _shareAmount) external {
-    // Abort if trying to withdraw 0
-    if (_shareAmount == 0) {
-      return;
-    }
-    // pull ibToken from the caller
-    IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _shareAmount);
-
-    address _underlyingToken = IViewFacet(moneyMarketDiamond).getTokenFromIbToken(_ibToken);
-    // cache the balanceOf before executing withdrawal
-    // This will be used to determine the actual amount of underlying token back from MoneyMarket
-    // if the input ibToken is not ERC20, this call should revert at this point
-    uint256 _underlyingTokenAmountBefore = IERC20(_underlyingToken).balanceOf(address(this));
-
-    // Exchange the ibToken back to the underlying token with some interest
-    // specifying to MoneyMarket that this withdraw is done on behalf of the caller
-    // ibToken will be burned during the process
-    ILendFacet(moneyMarketDiamond).withdraw(msg.sender, _ibToken, _shareAmount);
-
-    // Calculate the actual amount received by comparing balance after - balance before
-    // This is to accurately find the amount received even if the underlying token has fee on transfer
-    uint256 _actualUnderlyingReceived = IERC20(_underlyingToken).balanceOf(address(this)) -
-      _underlyingTokenAmountBefore;
-
-    // Transfer the token back to the caller
-    // The _acutalUnderlyingReceived is expected to be greater than 0
-    // as this function won't proceed if input shareAmount is 0
-    IERC20(_underlyingToken).safeTransfer(msg.sender, _actualUnderlyingReceived);
-  }
-
   function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _amountReceived) {
     // Deduct the fund from caller to this contract
     // assuming that there's no fee on transfer
@@ -159,23 +177,5 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // calculate the actual ibToken receive from deposit action
     // outstanding ibToken in the contract prior to the deposit action should not be included
     _amountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
-  }
-
-  function addCollatFor(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    uint256 _amount
-  ) external {
-    // Deduct the fund from the caller to this contract
-    // assuming that there's no fee on transfer
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-
-    // Add collateral on behalf of the caller
-    // This can be revert if by adding the amount of collateral will exceed the maximum collateral capcity
-    // and should be reverted at MoneyMarket
-    IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
-    ICollateralFacet(moneyMarketDiamond).addCollateral(_account, _subAccountId, _token, _amount);
-    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
   }
 }
