@@ -62,7 +62,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     vm.prank(ALICE);
     // repay all debt share
-    accountManager.repay(ALICE, subAccount0, address(weth), 100 ether, _debtShare);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 100 ether, _debtShare);
 
     (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(weth));
@@ -100,7 +100,13 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
       .getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
 
     // after repay with all debt share, the debt share and debt token (in MiniFL) should be zero
-    accountManager.repay(ALICE, subAccount0, address(weth), _debtAmountAfterSecondBorrow, _debtShareAfterSecondBorrow);
+    accountManager.repayFor(
+      ALICE,
+      subAccount0,
+      address(weth),
+      _debtAmountAfterSecondBorrow,
+      _debtShareAfterSecondBorrow
+    );
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 0);
     assertEq(DebtToken(_debtToken).totalSupply(), 0);
     vm.stopPrank();
@@ -117,7 +123,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
     uint256 _totalTokenBefore = viewFacet.getTotalToken(address(weth));
     vm.prank(ALICE);
-    accountManager.repay(ALICE, subAccount0, address(weth), 20 ether, _repayShare);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 20 ether, _repayShare);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
     uint256 _totalTokenAfter = viewFacet.getTotalToken(address(weth));
 
@@ -152,7 +158,7 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
-    accountManager.repay(ALICE, subAccount0, address(weth), 5.5 ether, _repayShare);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 5.5 ether, _repayShare);
     uint256 _wethBalanceAfter = weth.balanceOf(ALICE);
 
     (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
@@ -182,18 +188,18 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     // totalBorrowingPowerAfterRepay < minDebtSize should revert
     vm.expectRevert(IBorrowFacet.BorrowFacet_BorrowLessThanMinDebtSize.selector);
-    accountManager.repay(ALICE, subAccount0, address(weth), 20 ether, 9.99 ether);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 20 ether, 9.99 ether);
 
     // totalBorrowingPowerAfterRepay > minDebtSize should not revert
-    accountManager.repay(ALICE, subAccount0, address(weth), 20 ether, 0.01 ether);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 20 ether, 0.01 ether);
 
     // weth debt remaining = 9.99
     // totalBorrowingPowerAfterRepay == minDebtSize should not revert
-    accountManager.repay(ALICE, subAccount0, address(weth), 20 ether, 9.89 ether);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 20 ether, 9.89 ether);
 
     // weth debt remaining = 0.1
     // repay entire debt should not revert
-    accountManager.repay(ALICE, subAccount0, address(weth), 20 ether, 0.1 ether);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 20 ether, 0.1 ether);
 
     (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     assertEq(_debtAmount, 0);

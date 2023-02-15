@@ -187,7 +187,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to repay
   /// @param _debtShareToRepay The share amount of debt token to repay
-  function repay(
+  function repayFor(
     address _account,
     uint256 _subAccountId,
     address _token,
@@ -240,21 +240,12 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // This will be used to transfer the ibToken back to caller
     _ibToken = IViewFacet(moneyMarketDiamond).getIbTokenFromToken(_token);
 
-    // Cache the balance of before interacting with money market
-    uint256 _ibBalanceBeforeDeposit = IERC20(_ibToken).balanceOf(address(this));
-
     // deposit to money market, expecting to get ibToken in return
-    // approve money market as it will cal safeTransferFrom to this address
-    // reset allowance afterward
+    // approve money market as it will call safeTransferFrom to this address
+    // since all of the allowance will be used, approve(0) afterward is not required
     IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
-    // If the token has fee on transfer, this should fail as the balance from caller
-    // to this account manager is lower than specified amount
-    // leading to ERC20: exceed balance error
-    ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
 
-    // calculate the actual ibToken receive from deposit action
-    // outstanding ibToken in the contract prior to the deposit action should not be included
-    _ibAmountReceived = IERC20(_ibToken).balanceOf(address(this)) - _ibBalanceBeforeDeposit;
+    _ibAmountReceived = ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
   }
 
   /// @dev This function expect this contract should have ibToken before calling

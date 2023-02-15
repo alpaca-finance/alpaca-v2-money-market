@@ -121,7 +121,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     accountManager.addCollateralFor(BOB, subAccount0, address(weth), 10 ether);
     accountManager.borrow(subAccount0, address(lateFotToken), _borrowAmount);
-    accountManager.repay(BOB, subAccount0, address(lateFotToken), 10 ether, _borrowAmount);
+    accountManager.repayFor(BOB, subAccount0, address(lateFotToken), 10 ether, _borrowAmount);
     vm.stopPrank();
 
     // BOB is left with _feeAmount short of starting point because _feeAmount is taken during borrow
