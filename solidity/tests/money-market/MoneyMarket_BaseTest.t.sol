@@ -78,10 +78,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set account manager to allow interactions
     accountManager = IMoneyMarketAccountManager(new MoneyMarketAccountManager(moneyMarketDiamond));
-    address[] memory _accountManagers = new address[](3);
-    _accountManagers[0] = ALICE;
-    _accountManagers[1] = BOB;
-    _accountManagers[2] = address(accountManager);
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = address(accountManager);
 
     adminFacet.setAccountManagersOk(_accountManagers, true);
 
