@@ -17,7 +17,7 @@ import { IRouterLike } from "./interfaces/IRouterLike.sol";
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
 
-  /// @dev Events
+  // Events
   event LogSetOracle(address indexed _caller, address _newOracle);
   event LogSetTokenConfig(
     address indexed _caller,
@@ -29,16 +29,16 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
   uint256 internal constant MAX_BPS = 10000;
 
-  /// @notice An address of chainlink usd token
+  // An address of chainlink usd token
   address public immutable usd;
 
-  /// @notice Stabletoken to compare value
+  // Stabletoken to compare value
   address public immutable baseStable;
 
-  /// @notice a OracleMedianizer interface to perform get price
+  // a OracleMedianizer interface to perform get price
   address public oracle;
 
-  /// @notice mapping of token to tokenConfig
+  // mapping of token to tokenConfig
   mapping(address => Config) public tokenConfigs;
 
   constructor(
