@@ -133,7 +133,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // This call can revert if added amount makes total collateral exceed maximum collateral capacity
     IERC20(_ibToken).safeApprove(moneyMarketDiamond, _amount);
     ICollateralFacet(moneyMarketDiamond).addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
-    IERC20(_ibToken).safeApprove(moneyMarketDiamond, 0);
   }
 
   /// @notice Remove a collateral token from a subaccount and withdraw ibToken
