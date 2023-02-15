@@ -67,7 +67,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     address _token,
     uint256 _amount
   ) external {
-    // Deduct the fund from the caller to this contract
+    // Transfer the fund from the caller to this contract
     // assuming that there's no fee on transfer
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
 
