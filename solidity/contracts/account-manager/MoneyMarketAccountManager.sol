@@ -37,7 +37,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
   }
 
-  /// @notice Withdraw the lended token by burning the interest bearing token on bahalf of the caller
+  /// @notice Withdraw the lent token by burning the interest bearing token on behalf of the caller
   /// @param _ibToken The interest bearing token to burn
   /// @param _ibAmount The amount of interest bearing token to burn
   function withdraw(address _ibToken, uint256 _ibAmount) external {
@@ -116,7 +116,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     );
   }
 
-  /// @notice Deposit a token for lending and add all of ibToken to given subaccount id of the caller
+  /// @notice Deposit a token for lending then add all of ibToken to given subaccount id of the caller as collateral
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to lend
   /// @param _amount The amount to lend
@@ -128,7 +128,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // pull funds from caller and deposit to money market
     (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
 
-    // Use the received ibToken and put it as a colltaral in given subaccount id
+    // Use the received ibToken and put it as a collateral in given subaccount id
     // expecting that all of the received ibToken successfully deposited as collateral
     // This call can revert if added amount makes total collateral exceed maximum collateral capacity
     IERC20(_ibToken).safeApprove(moneyMarketDiamond, _amount);
@@ -163,7 +163,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   function unstakeAndWithdraw(address _ibToken, uint256 _amount) external {}
 
-  /// @notice Borrow a token agaist the placed collaterals on behlaf of the caller
+  /// @notice Borrow a token against the placed collaterals on behalf of the caller
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to borrow
   /// @param _amount The amount to borrow
