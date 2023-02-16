@@ -47,7 +47,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogOnWithdraw(address indexed _user, uint256 indexed _pid, uint256 _amount);
   event LogHarvest(address indexed _user, uint256 indexed _pid, uint256 _amount);
   event LogAddPool(uint256 indexed _pid, uint256 _allocPoint);
-  event LogSetPool(uint256 indexed _pid, uint256 _allocPoint);
+  event LogSetPool(uint256 indexed _pid, uint256 _newAllocPoint);
   event LogUpdatePool(uint256 indexed _pid, uint64 _lastRewardTime, uint256 _stakedBalance, uint256 _accRewardPerShare);
   event LogRewardPerSecond(uint256 _newRewardPerSecond);
   event LogSetName(string _name);
