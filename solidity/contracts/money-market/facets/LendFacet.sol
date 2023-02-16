@@ -14,8 +14,6 @@ import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IAdminFacet } from "../interfaces/IAdminFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
-import { IWNative } from "../interfaces/IWNative.sol";
-import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 import { IInterestBearingToken } from "../interfaces/IInterestBearingToken.sol";
 

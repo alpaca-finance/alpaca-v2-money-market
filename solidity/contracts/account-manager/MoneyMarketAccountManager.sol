@@ -6,7 +6,8 @@ import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
 
 // ---- Interfaces ---- //
 import { IMoneyMarketAccountManager } from "../interfaces/IMoneyMarketAccountManager.sol";
-import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
+import { IWNative } from "../interfaces/IWNative.sol";
+import { IWNativeRelayer } from "../interfaces/IWNativeRelayer.sol";
 import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../money-market/interfaces/IERC20.sol";
 
@@ -14,6 +15,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   using LibSafeToken for IERC20;
 
   IMoneyMarket public moneyMarketDiamond;
+  address public nativeRelayer;
+  address public wNativeToken;
 
   constructor(address _moneyMarketDiamond) {
     // sanity call, should revert if the input didn't implement
@@ -277,5 +280,11 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Calculate the actual amount received by comparing balance after - balance before
     // This is to accurately find the amount received even if the underlying token has fee on transfer
     _collateralAmountReceived = IERC20(_token).balanceOf(address(this)) - _tokenBalanceBefore;
+  }
+
+  function _safeUnwrap(address _to, uint256 _amount) internal {
+    IERC20(wNativeToken).safeTransfer(nativeRelayer, _amount);
+    IWNativeRelayer(nativeRelayer).withdraw(_amount);
+    LibSafeToken.safeTransferETH(_to, _amount);
   }
 }

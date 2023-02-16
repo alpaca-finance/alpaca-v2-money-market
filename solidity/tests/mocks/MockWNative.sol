@@ -1,6 +1,6 @@
 pragma solidity 0.8.17;
 
-import { IWNative } from "../../contracts/money-market/interfaces/IWNative.sol";
+import { IWNative } from "../../contracts/interfaces/IWNative.sol";
 
 // Copyright (C) 2015, 2016, 2017 Dapphub
 
