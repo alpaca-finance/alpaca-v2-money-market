@@ -56,11 +56,12 @@ contract LendFacet is ILendFacet {
   /// @param _for The actual lender. Used only for tracking purpose
   /// @param _token The token to lend
   /// @param _amount The amount to lend
+  /// @return _shareAmount The share amount gained from deposit
   function deposit(
     address _for,
     address _token,
     uint256 _amount
-  ) external nonReentrant {
+  ) external nonReentrant returns (uint256 _shareAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     // This will revert if markets are paused
@@ -77,17 +78,17 @@ contract LendFacet is ILendFacet {
 
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-    (, uint256 _shareToMint) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _amount, moneyMarketDs);
+    (, _shareAmount) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _amount, moneyMarketDs);
 
     moneyMarketDs.reserves[_token] += _amount;
 
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
-    IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareToMint);
+    IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareAmount);
 
     // _for is purely used for event tracking purpose
     // since this function will be called from only AccountManager
     // we need a way to track the actual lender
-    emit LogDeposit(_for, _token, msg.sender, _ibToken, _amount, _shareToMint);
+    emit LogDeposit(_for, _token, msg.sender, _ibToken, _amount, _shareAmount);
   }
 
   /// @notice Withdraw the lended token by burning the interest bearing token

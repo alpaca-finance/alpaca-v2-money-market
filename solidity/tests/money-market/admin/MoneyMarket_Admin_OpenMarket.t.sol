@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
-import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
-import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
+import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
 
 // mocks
-import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockERC20 } from "../../mocks/MockERC20.sol";
 
 contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
   MockERC20 internal _testToken;
@@ -51,8 +51,8 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
     // able to deposit
     _testToken.mint(ALICE, normalizeEther(5 ether, _testToken.decimals()));
     vm.startPrank(ALICE);
-    _testToken.approve(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(ALICE, address(_testToken), normalizeEther(5 ether, _testToken.decimals()));
+    _testToken.approve(address(accountManager), type(uint256).max);
+    accountManager.deposit(address(_testToken), normalizeEther(5 ether, _testToken.decimals()));
     vm.stopPrank();
     assertEq(IERC20(_ibToken).balanceOf(ALICE), normalizeEther(5 ether, IERC20(_ibToken).decimals()));
   }

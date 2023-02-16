@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
+import { IERC20 } from "../../interfaces/IERC20.sol";
 
 // contract
-import { PancakeswapV2IbTokenLiquidationStrategy } from "../../contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";
+import { PancakeswapV2IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";
 
 // mocks
-import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
-import { MockBadLiquidationStrategy } from "../mocks/MockBadLiquidationStrategy.sol";
-import { MockInterestModel } from "../mocks/MockInterestModel.sol";
-import { MockLPToken } from "../mocks/MockLPToken.sol";
-import { MockRouter02 } from "../mocks/MockRouter02.sol";
+import { MockLiquidationStrategy } from "../../mocks/MockLiquidationStrategy.sol";
+import { MockBadLiquidationStrategy } from "../../mocks/MockBadLiquidationStrategy.sol";
+import { MockInterestModel } from "../../mocks/MockInterestModel.sol";
+import { MockLPToken } from "../../mocks/MockLPToken.sol";
+import { MockRouter02 } from "../../mocks/MockRouter02.sol";
 
 struct CacheState {
   // general
@@ -96,15 +96,22 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(BOB, address(btc), 10 ether);
-    collateralFacet.addCollateral(BOB, 0, address(btc), 10 ether);
+    accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    accountManager.deposit(address(btc), 10 ether);
+    accountManager.addCollateralFor(BOB, 0, address(btc), 10 ether);
     vm.stopPrank();
 
     // alice add ibWETh collat for 80 ether
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 80 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), 40 ether);
+
+    accountManager.deposit(address(weth), 40 ether);
+    accountManager.depositAndAddCollateral(0, address(weth), 40 ether);
+    /*
+    The following block of code has the same effect as above
+    // accountManager.deposit(address(weth), 80 ether);
+    // ibWeth.approve(address(accountManager), 40 ether);
+    // accountManager.addCollateralFor(ALICE, 0, address(ibWeth), 40 ether);
+    */
     vm.stopPrank();
 
     adminFacet.setNonCollatBorrowerOk(BOB, true);
@@ -134,7 +141,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     // | After Alice borrow 30 USDC
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -145,7 +152,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(BOB);
-    borrowFacet.borrow(BOB, 0, _underlyingToken, 24 ether);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
     // | After BOB borrow 24 WETH
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -266,7 +273,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(40 ether, usdcDecimal);
 
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     // | After Alice borrow 30 USDC
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -277,7 +284,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(BOB);
-    borrowFacet.borrow(BOB, 0, _underlyingToken, 24 ether);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
     // | After BOB borrow 24 WETH
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -398,8 +405,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(40 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
-    collateralFacet.removeCollateral(ALICE, _aliceSubAccountId, _ibCollatToken, 30 ether);
+    accountManager.addCollateralFor(ALICE, _aliceSubAccountId, _underlyingToken, 30 ether);
+    accountManager.removeCollateral(_aliceSubAccountId, _ibCollatToken, 30 ether);
     vm.stopPrank();
     // | After Alice adjust Collateral state will changed a bit
     // | ---------------------------------------------- |
@@ -410,7 +417,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     // | After Alice borrow 30 USDC
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -421,7 +428,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ---------------------------------------------- |
 
     vm.prank(BOB);
-    borrowFacet.borrow(BOB, 0, _underlyingToken, 24 ether);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
     // | After BOB borrow 24 WETH
     // | ---------------------------------------------- |
     // | State                        | AMOUNT (ether)  |
@@ -539,10 +546,10 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _repayAmountInput = normalizeEther(15 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(1 ether, usdcDecimal));
-    ibUsdc.approve(moneyMarketDiamond, normalizeEther(1 ether, ibUsdcDecimal));
-    collateralFacet.addCollateral(ALICE, 0, _ibCollatToken, normalizeEther(1 ether, usdcDecimal));
-    borrowFacet.borrow(ALICE, 0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+
+    accountManager.depositAndAddCollateral(0, address(usdc), normalizeEther(1 ether, usdcDecimal));
+
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
 
     // Time past for 1 day
@@ -574,12 +581,12 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenLiquidateIbWhileSubAccountIsHealthy() external {
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
 
     // increase shareValue of ibWeth by 2.5%
     // wouldn need 18.475609756097... ibWeth to redeem 18.9375 weth to repay debt
     vm.prank(BOB);
-    lendFacet.deposit(BOB, address(weth), 4 ether);
+    accountManager.deposit(address(weth), 4 ether);
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, 4 ether);
     // set price to weth from 1 to 0.8 ether USD
@@ -603,7 +610,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenIbLiquidateMoreThanThreshold() external {
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
 
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 
 // libraries
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
+import { ICollateralFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/CollateralFacet.sol";
 
 contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
   function setUp() public override {
@@ -20,7 +20,7 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     uint256 _MMbalanceBeforeTransfer = weth.balanceOf(moneyMarketDiamond);
     uint256 _balanceBeforeTransfer = weth.balanceOf(ALICE);
@@ -28,7 +28,7 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
 
     // alice transfer collateral from subAccount0 to subAccount1
     vm.prank(ALICE);
-    collateralFacet.transferCollateral(subAccount0, subAccount1, address(weth), _transferCollateralAmount);
+    accountManager.transferCollateral(subAccount0, subAccount1, address(weth), _transferCollateralAmount);
 
     LibDoublyLinkedList.Node[] memory subAccount0CollatList = viewFacet.getAllSubAccountCollats(ALICE, subAccount0);
 
@@ -60,11 +60,11 @@ contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     // alice transfer collateral from subAccount0 to subAccount0
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ICollateralFacet.CollateralFacet_NoSelfTransfer.selector));
-    collateralFacet.transferCollateral(subAccount0, subAccount0, address(weth), _transferCollateralAmount);
+    accountManager.transferCollateral(subAccount0, subAccount0, address(weth), _transferCollateralAmount);
   }
 }

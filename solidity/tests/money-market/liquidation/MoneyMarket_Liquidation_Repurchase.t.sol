@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
-import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
+import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 struct CacheState {
   uint256 collat;
@@ -47,18 +47,18 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(BOB, address(btc), normalizeEther(10 ether, btcDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    accountManager.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
     // alice borrowed 30% of vault then interest should be 0.0617647058676 per year
     // interest per day = 0.00016921837224
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
   }
 
@@ -158,9 +158,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   function testCorrectness_ShouldRepurchasePassedWithMoreThan50PercentOfDebtToken_TransferTokenCorrectly() external {
     // alice add more collateral
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice borrow more btc token as 30% of vault = 3 btc
-    borrowFacet.borrow(ALICE, 0, address(btc), normalizeEther(3 ether, btcDecimal));
+    accountManager.borrow(0, address(btc), normalizeEther(3 ether, btcDecimal));
     vm.stopPrank();
 
     // criteria
@@ -275,9 +275,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   function testCorrectness_ShouldRepurchasePassedWithMoreThanDebtTokenAmount_TransferTokenCorrectly() external {
     // alice add more collateral
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), normalizeEther(60 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(60 ether, wethDecimal));
     // alice borrow more btc token as 50% of vault = 5 btc
-    borrowFacet.borrow(ALICE, 0, address(btc), normalizeEther(5 ether, btcDecimal));
+    accountManager.borrow(0, address(btc), normalizeEther(5 ether, btcDecimal));
     vm.stopPrank();
 
     // criteria
@@ -414,7 +414,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // borrow more to increase usedBorrowingPower to be equal to totalBorrowingPower
     // ALICE borrow 32.4 usdc convert to usedBorrowingPower = 32.4 * 10000 / 9000 = 36 USD
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
 
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
@@ -478,10 +478,10 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // alice add more collateral in other assets
     // then borrowing power will be increased by 100 * 10 * 9000 / 10000 = 900 ether USD
     // total borrowing power is 936 ether USD
-    collateralFacet.addCollateral(ALICE, 0, address(btc), normalizeEther(100 ether, btcDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(btc), normalizeEther(100 ether, btcDecimal));
     // alice borrow more usdc token more 50% of vault = 50 usdc
     // alice used borrowed value is ~80
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(50 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(50 ether, usdcDecimal));
     vm.stopPrank();
 
     // criteria
@@ -518,9 +518,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenRepurchaseWithRepayTokenAndCollatTokenAreSameToken_TransferTokenCorrectly() external {
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(usdc), normalizeEther(20 ether, usdcDecimal));
 
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(10 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(10 ether, usdcDecimal));
     // Now!!, alice borrowed 40% of vault then interest be 0.082352941146288000 per year
     // interest per day ~ 0.000225624496291200
     vm.stopPrank();

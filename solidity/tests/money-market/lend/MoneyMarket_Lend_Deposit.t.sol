@@ -1,31 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
-import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { ILendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
+import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
 contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
+  uint256 internal _aliceWethStartingBalance;
+
   function setUp() public override {
     super.setUp();
+    _aliceWethStartingBalance = weth.balanceOf(ALICE);
   }
 
   function testCorrectness_WhenUserDeposit_TokenShouldSafeTransferFromUserToMM() external {
+    uint256 _depositAmount = 10 ether;
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
+    accountManager.deposit(address(weth), _depositAmount);
     vm.stopPrank();
 
-    assertEq(weth.balanceOf(ALICE), 990 ether);
-    assertEq(weth.balanceOf(moneyMarketDiamond), 10 ether);
+    assertEq(weth.balanceOf(ALICE), _aliceWethStartingBalance - _depositAmount);
+    assertEq(weth.balanceOf(moneyMarketDiamond), _depositAmount);
 
-    assertEq(ibWeth.balanceOf(ALICE), 10 ether);
+    assertEq(ibWeth.balanceOf(ALICE), _depositAmount);
   }
 
   function testCorrectness_WhenMultipleDeposit_ShouldMintShareCorrectly() external {
@@ -34,8 +37,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     uint256 _expectedTotalShare = 0;
 
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, _depositAmount1);
-    lendFacet.deposit(ALICE, address(weth), _depositAmount1);
+    accountManager.deposit(address(weth), _depositAmount1);
     vm.stopPrank();
 
     // frist deposit mintShare = depositAmount
@@ -44,8 +46,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
 
     weth.mint(BOB, _depositAmount2);
     vm.startPrank(BOB);
-    weth.approve(moneyMarketDiamond, _depositAmount2);
-    lendFacet.deposit(ALICE, address(weth), _depositAmount2);
+    accountManager.deposit(address(weth), _depositAmount2);
     vm.stopPrank();
 
     // mintShare = 20 * 10 / 10 = 20
@@ -57,7 +58,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserDepositInvalidToken_ShouldRevert() external {
     address _randomToken = address(10);
-    vm.startPrank(ALICE);
+    vm.startPrank(address(accountManager));
     vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_InvalidToken.selector, _randomToken));
     lendFacet.deposit(ALICE, _randomToken, 10 ether);
     vm.stopPrank();
@@ -83,14 +84,14 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     borrowFacet.accrueInterest(address(weth));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(ibWeth.balanceOf(ALICE), 10 ether);
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    borrowFacet.borrow(BOB, subAccount0, address(weth), 5 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, address(weth), 5 ether);
     vm.stopPrank();
 
     // advance time for interest
@@ -99,7 +100,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getGlobalPendingInterest(address(weth)), 0.25 ether);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 5 ether);
+    accountManager.deposit(address(weth), 5 ether);
     vm.stopPrank();
 
     assertEq(ibWeth.balanceOf(ALICE), 14.878048780487804878 ether);
@@ -109,6 +110,7 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     adminFacet.setEmergencyPaused(true);
 
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_EmergencyPaused.selector));
+    vm.prank(address(accountManager));
     lendFacet.deposit(ALICE, address(weth), 10 ether);
   }
 }

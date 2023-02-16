@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 
-import { FixedFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // mocks
-import { MockFeeOnTransferToken } from "../mocks/MockFeeOnTransferToken.sol";
+import { MockFeeOnTransferToken } from "../../mocks/MockFeeOnTransferToken.sol";
 
 // helpers
-import { TestHelper } from "../helper/TestHelper.sol";
+import { TestHelper } from "../../helper/TestHelper.sol";
 
 contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   MockFeeOnTransferToken internal fotToken;
@@ -26,16 +26,20 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
 
     fotToken.mint(ALICE, 100 ether);
     lateFotToken.mint(ALICE, 100 ether);
+
     vm.startPrank(ALICE);
     fotToken.approve(moneyMarketDiamond, type(uint256).max);
     lateFotToken.approve(moneyMarketDiamond, type(uint256).max);
+    lateFotToken.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     fotToken.mint(BOB, 100 ether);
     lateFotToken.mint(BOB, 100 ether);
+
     vm.startPrank(BOB);
     fotToken.approve(moneyMarketDiamond, type(uint256).max);
     lateFotToken.approve(moneyMarketDiamond, type(uint256).max);
+    lateFotToken.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(fotToken));
@@ -45,8 +49,10 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(lateFotToken), 1 ether);
 
     // setup fotToken that can be borrowed
-    vm.prank(ALICE);
-    lendFacet.deposit(ALICE, address(lateFotToken), 10 ether);
+    vm.startPrank(ALICE);
+
+    accountManager.deposit(address(lateFotToken), 10 ether);
+    vm.stopPrank();
 
     lateFotToken.setFee(100);
 
@@ -56,25 +62,39 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenDepositWithFeeOnTransferToken() external {
-    vm.prank(BOB);
+    // inject token to account manager first, trying to bypass exceed balance error at MM
+    fotToken.mint(address(accountManager), 1 ether);
+
+    vm.startPrank(BOB);
+
+    fotToken.approve(address(accountManager), type(uint256).max);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
-    lendFacet.deposit(BOB, address(fotToken), 1 ether);
+    accountManager.deposit(address(fotToken), 1 ether);
+    vm.stopPrank();
   }
 
   function testRevert_WhenAddCollateralWithFeeOnTransferToken() external {
-    vm.prank(BOB);
+    // inject token to account manager first, trying to bypass exceed balance error at MM
+    fotToken.mint(address(accountManager), 1 ether);
+
+    vm.startPrank(BOB);
+
+    fotToken.approve(address(accountManager), type(uint256).max);
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_FeeOnTransferTokensNotSupported.selector);
-    collateralFacet.addCollateral(BOB, subAccount0, address(fotToken), 1 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, address(fotToken), 1 ether);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenBorrowFeeOnTransferToken_ShouldAbleToBorrowButReceiveAmountAfterFee() external {
     uint256 _borrowAmount = 1 ether;
 
     uint256 _bobBalanceBefore = lateFotToken.balanceOf(BOB);
+    // inject directly to account manager to bypass !safeTransfer at account manager
+    lateFotToken.mint(address(accountManager), 1 ether);
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(BOB, subAccount0, address(lateFotToken), _borrowAmount);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), 10 ether);
+    accountManager.borrow(subAccount0, address(lateFotToken), _borrowAmount);
     vm.stopPrank();
 
     // after borrow should receive _borrowAmount - _transferFee
@@ -95,15 +115,22 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     // small debt is left after repayment
     adminFacet.setMinDebtSize(0);
 
+    // inject directly to account manager to bypass !safeTransfer at account manager
+    lateFotToken.mint(address(accountManager), 10 ether);
+
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), 10 ether);
-    borrowFacet.borrow(BOB, subAccount0, address(lateFotToken), _borrowAmount);
-    borrowFacet.repay(BOB, subAccount0, address(lateFotToken), _borrowAmount);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), 10 ether);
+    accountManager.borrow(subAccount0, address(lateFotToken), _borrowAmount);
+    accountManager.repayFor(BOB, subAccount0, address(lateFotToken), 10 ether, _borrowAmount);
     vm.stopPrank();
 
     // BOB is left with _feeAmount short of starting point because _feeAmount is taken during borrow
-    // currentBalance = startingBalance + borrowedAmount - repaidAmount = 100 + 0.99 - 1 = 99.99
-    assertEq(lateFotToken.balanceOf(BOB), 99.99 ether);
+    // due to the fact that token were transfer back and forth at account manager
+    // BOB got < 100 + 0.99 (subjected to fee during borrow) - 1 (repay) - (fee on transfer during repay)
+    // fee on transfer during repay = 10 * 0.99 = 9.99, transfer to repay 1 ether
+    // 8.9 left to transfer back => 8.9 * 0.99 = 8.811
+    // total left = 100 + 0.99 -10  + 8.811 => 99.801
+    assertEq(lateFotToken.balanceOf(BOB), 99.801000000000000000 ether);
 
     // can't repay entire debt because transfer fee during repayment is deduced
     uint256 _feeAmount = (_borrowAmount * (lateFotToken.transferFeeBps())) / 10000;
@@ -121,9 +148,12 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     uint256 _treasuryBalanceBefore = lateFotToken.balanceOf(liquidationTreasury);
     uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
 
+    // inject directly to account manager to bypass !safeTransfer at account manager
+    lateFotToken.mint(address(accountManager), 10 ether);
+
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, _collatToken, 2 ether);
-    borrowFacet.borrow(BOB, subAccount0, _debtToken, 1 ether);
+    accountManager.addCollateralFor(BOB, subAccount0, _collatToken, 2 ether);
+    accountManager.borrow(subAccount0, _debtToken, 1 ether);
     vm.stopPrank();
 
     mockOracle.setTokenPrice(_collatToken, 0.5 ether);

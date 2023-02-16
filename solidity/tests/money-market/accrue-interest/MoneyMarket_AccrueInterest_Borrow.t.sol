@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
+import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -36,10 +36,10 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     adminFacet.setNonCollatInterestModel(BOB, address(btc), address(tripleSlope7));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 50 ether);
-    lendFacet.deposit(ALICE, address(btc), 100 ether);
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), 20 ether);
+    accountManager.deposit(address(weth), 50 ether);
+    accountManager.deposit(address(btc), 100 ether);
+    accountManager.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 
@@ -50,10 +50,10 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _wethBorrowAmount = 10 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
@@ -85,7 +85,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, _aliceCollateralAmount);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), _aliceCollateralAmount);
+    accountManager.addCollateralFor(ALICE, 0, address(weth), _aliceCollateralAmount);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), _balanceAliceBefore - _aliceCollateralAmount);
@@ -96,10 +96,10 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     //when someone borrow
     uint256 _bobBorrowAmount = 10 ether;
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _bobBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _bobBorrowAmount * 2);
 
     uint256 _bobBalanceBeforeBorrow = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _bobBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _bobBorrowAmount);
 
     (, uint256 _actualBobDebtAmountBeforeWarp) = viewFacet.getOverCollatDebtShareAndAmountOf(
       BOB,
@@ -125,7 +125,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     uint256 wethAliceBeforeWithdraw = weth.balanceOf(ALICE);
     vm.prank(ALICE);
-    collateralFacet.removeCollateral(ALICE, 0, address(weth), 10 ether);
+    accountManager.removeCollateral(0, address(weth), 10 ether);
     uint256 wethAliceAfterWithdraw = weth.balanceOf(ALICE);
     assertEq(wethAliceAfterWithdraw - wethAliceBeforeWithdraw, 10 ether);
     LibDoublyLinkedList.Node[] memory collats = viewFacet.getAllSubAccountCollats(ALICE, 0);
@@ -144,15 +144,15 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _wethBorrowAmount = 10 ether;
 
     vm.prank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
 
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
 
     // BOB borrow
     vm.startPrank(BOB);
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
@@ -166,7 +166,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // ALICE borrow and bob's interest accrue
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = weth.balanceOf(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     vm.stopPrank();
 
     uint256 _aliceBalanceAfter = weth.balanceOf(ALICE);
@@ -199,7 +199,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _expectdAmount = 10.2 ether;
     _aliceBalanceBefore = weth.balanceOf(ALICE);
     vm.prank(ALICE);
-    lendFacet.withdraw(ALICE, address(ibWeth), _wethBorrowAmount);
+    accountManager.withdraw(address(ibWeth), _wethBorrowAmount);
     _aliceBalanceAfter = weth.balanceOf(ALICE);
 
     assertEq(_aliceBalanceAfter - _aliceBalanceBefore, _expectdAmount, "ALICE weth balance missmatch");
@@ -214,7 +214,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore + _secondPassed);
@@ -225,14 +225,14 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _secondPassed = 10;
 
     vm.prank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
 
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore);
 
     vm.warp(block.timestamp + _secondPassed);
 
     vm.prank(ALICE);
-    lendFacet.withdraw(ALICE, address(ibWeth), 10 ether);
+    accountManager.withdraw(address(ibWeth), 10 ether);
 
     assertEq(viewFacet.getDebtLastAccruedAt(address(weth)), _timeStampBefore + _secondPassed);
   }
@@ -245,15 +245,15 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _usdcBorrowAmount = normalizeEther(10 ether, usdcDecimal);
 
     vm.prank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(usdc), _usdcBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(usdc), _usdcBorrowAmount * 2);
 
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
 
     // BOB borrow
     vm.startPrank(BOB);
     uint256 _bobBalanceBefore = usdc.balanceOf(BOB);
-    borrowFacet.borrow(BOB, subAccount0, address(usdc), _usdcBorrowAmount);
+    accountManager.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     uint256 _bobBalanceAfter = usdc.balanceOf(BOB);
@@ -268,7 +268,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // ALICE borrow and bob's interest accrue
     vm.startPrank(ALICE);
     uint256 _aliceBalanceBefore = usdc.balanceOf(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _usdcBorrowAmount);
+    accountManager.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     uint256 _aliceBalanceAfter = usdc.balanceOf(ALICE);
@@ -308,13 +308,13 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     //can't withdraw because there's no reserve
     vm.expectRevert(abi.encodeWithSignature("LibMoneyMarket01_NotEnoughToken()"));
     vm.prank(ALICE);
-    lendFacet.withdraw(ALICE, address(ibUsdc), _usdcBorrowAmount);
+    accountManager.withdraw(address(ibUsdc), _usdcBorrowAmount);
 
     // once there's lender, alice can now withdraw
     vm.prank(BOB);
-    lendFacet.deposit(BOB, address(usdc), _expectdAmount);
+    accountManager.deposit(address(usdc), _expectdAmount);
     vm.prank(ALICE);
-    lendFacet.withdraw(ALICE, address(ibUsdc), _usdcBorrowAmount);
+    accountManager.withdraw(address(ibUsdc), _usdcBorrowAmount);
 
     _aliceBalanceAfter = usdc.balanceOf(ALICE);
 
@@ -329,11 +329,11 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _nonCollatBorrowAmount = 10 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     // bob borrow
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     //bob non collat borrow
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _nonCollatBorrowAmount);
     vm.stopPrank();
@@ -377,11 +377,11 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _nonCollatBorrowAmount = 10 ether;
 
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _wethBorrowAmount * 2);
 
     uint256 _bobBalanceBefore = weth.balanceOf(BOB);
     // bob borrow
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
     //bob non collat borrow
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), _nonCollatBorrowAmount);
     vm.stopPrank();
@@ -442,10 +442,10 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _bobBorrowAmount = 15 ether;
 
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), _aliceBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(btc), _aliceBorrowAmount * 2);
 
     vm.prank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(btc), _bobBorrowAmount * 2);
+    accountManager.addCollateralFor(BOB, subAccount0, address(btc), _bobBorrowAmount * 2);
 
     uint256 _aliceBalanceBefore = btc.balanceOf(ALICE);
     uint256 _bobBalanceBefore = btc.balanceOf(BOB);
@@ -487,7 +487,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenUserBorrowMultipleTokens_AllDebtTokenShouldAccrueInterest() external {
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(btc), 100 ether);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(btc), 100 ether);
 
     // add 100 btc, collateralFactor = 9000, weth price = 10
     // _borrowingPowerUSDValue = 100 * 10 * 9000/ 10000 = 900 ether USD
@@ -495,7 +495,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     // borrow 9 weth => with 9000 borrow factor
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), 9 ether);
+    accountManager.borrow(subAccount0, address(weth), 9 ether);
     // weth debt share = 9, debt value = 9
     // borrowed value = 9 * 9 / 9 = 9
     // the used borrowed power should be 9 * 10000 / 9000 = 10 ether
@@ -513,7 +513,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // alice borrow other asset, weth debt value should be accrued interest
     // borrow 9 usdc => with 9000 borrow factor
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), normalizeEther(9 ether, usdcDecimal));
+    accountManager.borrow(subAccount0, address(usdc), normalizeEther(9 ether, usdcDecimal));
 
     // weth debt value increased by 8.1
     // weth debt share = 9, debt value = 9 + 8.1 = 17.1

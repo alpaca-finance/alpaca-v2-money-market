@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
+import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
+import { IBorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -26,11 +26,11 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     adminFacet.setNonCollatBorrowerOk(BOB, true);
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), normalizeEther(50 ether, wethDecimal));
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(btc), normalizeEther(20 ether, btcDecimal));
-    lendFacet.deposit(ALICE, address(cake), normalizeEther(20 ether, cakeDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
+    accountManager.deposit(address(weth), normalizeEther(50 ether, wethDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.deposit(address(btc), normalizeEther(20 ether, btcDecimal));
+    accountManager.deposit(address(cake), normalizeEther(20 ether, cakeDecimal));
+    accountManager.deposit(address(isolateToken), normalizeEther(20 ether, isolateTokenDecimal));
     vm.stopPrank();
   }
 
@@ -174,7 +174,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     vm.startPrank(BOB);
     weth.approve(moneyMarketDiamond, type(uint256).max);
-    lendFacet.deposit(BOB, address(weth), _bobDepositAmount);
+    accountManager.deposit(address(weth), _bobDepositAmount);
 
     vm.stopPrank();
 
@@ -244,8 +244,8 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     // Over-collat borrow
     // BOB borrow weth upto Global limit
     vm.startPrank(BOB);
-    collateralFacet.addCollateral(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
-    borrowFacet.borrow(BOB, subAccount0, address(weth), _wethGlobalLimit);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _wethGlobalLimit * 2);
+    accountManager.borrow(subAccount0, address(weth), _wethGlobalLimit);
     vm.stopPrank();
 
     // Non-collat borrow

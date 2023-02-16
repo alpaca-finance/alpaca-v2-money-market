@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20 } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 
 // libraries
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ICollateralFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
+import { ICollateralFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/CollateralFacet.sol";
+import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   IMiniFL _miniFL;
@@ -19,25 +19,10 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     _miniFL = IMiniFL(address(miniFL));
   }
 
-  function _depositWETHAndAddibWETHAsCollat(address _caller, uint256 _amount) internal {
-    // LEND to get ibToken
-    vm.startPrank(_caller);
-
-    weth.approve(moneyMarketDiamond, _amount);
-    uint256 _ibBalanceBefore = ibWeth.balanceOf(_caller);
-    lendFacet.deposit(_caller, address(weth), _amount);
-    uint256 _ibReceived = ibWeth.balanceOf(_caller) - _ibBalanceBefore;
-
-    // Add collat by ibToken
-    ibWeth.approve(moneyMarketDiamond, _ibReceived);
-    collateralFacet.addCollateral(ALICE, 0, address(ibWeth), _ibReceived);
-    vm.stopPrank();
-  }
-
   function testRevert_WhenUserRemoveCollateralMoreThanExistingAmount_ShouldRevert() external {
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
+    accountManager.addCollateralFor(ALICE, 0, address(weth), 10 ether);
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), 990 ether);
@@ -45,29 +30,29 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_TooManyCollateralRemoved.selector));
-    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 10 ether + 1);
+    accountManager.removeCollateral(subAccount0, address(weth), 10 ether + 1);
   }
 
   function testRevert_WhenUserRemoveCollateral_BorrowingPowerLessThanUsedBorrowingPower_ShouldRevert() external {
     // BOB deposit 10 weth
     vm.startPrank(BOB);
-    lendFacet.deposit(BOB, address(weth), 10 ether);
+    accountManager.deposit(address(weth), 10 ether);
     vm.stopPrank();
 
     // alice add collateral 10 weth
     vm.startPrank(ALICE);
     weth.approve(moneyMarketDiamond, 10 ether);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), 10 ether);
     vm.stopPrank();
 
     vm.startPrank(ALICE);
     // alice borrow 1 weth
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), 1 ether);
+    accountManager.borrow(subAccount0, address(weth), 1 ether);
 
     // alice try to remove 10 weth, this will make alice's borrowingPower < usedBorrowingPower
     // should revert
     vm.expectRevert(abi.encodeWithSelector(LibMoneyMarket01.LibMoneyMarket01_BorrowingPowerTooLow.selector));
-    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), 10 ether);
+    accountManager.removeCollateral(subAccount0, address(weth), 10 ether);
     vm.stopPrank();
   }
 
@@ -80,14 +65,14 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
 
     // alice add collateral 10 weth
     vm.prank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _addCollateralAmount);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _addCollateralAmount);
 
     assertEq(weth.balanceOf(ALICE), _balanceBefore - _addCollateralAmount);
     assertEq(weth.balanceOf(moneyMarketDiamond), _MMbalanceBefore + _addCollateralAmount);
     assertEq(viewFacet.getTotalCollat(address(weth)), _addCollateralAmount);
 
     vm.prank(ALICE);
-    collateralFacet.removeCollateral(ALICE, subAccount0, address(weth), _removeCollateralAmount);
+    accountManager.removeCollateral(subAccount0, address(weth), _removeCollateralAmount);
 
     uint256 _borrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
@@ -101,7 +86,9 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
   function testCorrectness_WhenRemoveCollateralViaIbToken_ibTokenCollatShouldBeCorrect() external {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
 
-    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
+    vm.startPrank(ALICE);
+    accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
+    vm.stopPrank();
 
     // ibToken should be staked to MiniFL when add collat with ibToken
     assertEq(ibWeth.balanceOf(ALICE), 0 ether);
@@ -111,7 +98,8 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getCollatAmountOf(ALICE, subAccount0, address(ibWeth)), 10 ether);
 
     vm.startPrank(ALICE);
-    collateralFacet.removeCollateral(ALICE, 0, address(ibWeth), 10 ether);
+
+    accountManager.removeCollateral(0, address(ibWeth), 10 ether);
     vm.stopPrank();
 
     // check account ib token collat
@@ -125,7 +113,9 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(address(ibWeth));
     uint256 _removedAmount = 5 ether;
 
-    _depositWETHAndAddibWETHAsCollat(ALICE, 10 ether);
+    vm.startPrank(ALICE);
+    accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
+    vm.stopPrank();
 
     // ibToken should be staked to MiniFL when add collat with ibToken
     uint256 _balanceBefore = ibWeth.balanceOf(ALICE);
@@ -139,7 +129,7 @@ contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {
     assertEq(_collatAmountBefore, 10 ether);
 
     vm.startPrank(ALICE);
-    collateralFacet.removeCollateral(ALICE, 0, address(ibWeth), _removedAmount);
+    accountManager.removeCollateral(0, address(ibWeth), _removedAmount);
     vm.stopPrank();
 
     uint256 _balanceAfter = ibWeth.balanceOf(ALICE);
