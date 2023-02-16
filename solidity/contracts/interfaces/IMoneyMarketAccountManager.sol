@@ -46,6 +46,8 @@ interface IMoneyMarketAccountManager {
     uint256 _ibAmount
   ) external;
 
+  function removeCollateralAndWithdrawETH(uint256 _subAccountId, uint256 _amount) external;
+
   function depositAndStake(address _token, uint256 _amount) external;
 
   function unstakeAndWithdraw(address _ibToken, uint256 _amount) external;

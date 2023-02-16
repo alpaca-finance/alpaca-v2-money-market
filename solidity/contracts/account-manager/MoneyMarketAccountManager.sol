@@ -232,6 +232,25 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  /// @notice Remove an ibWNative token from a subaccount and withdraw as native token
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _amount The amount to remove
+  function removeCollateralAndWithdrawETH(uint256 _subAccountId, uint256 _amount) external {
+    // Skip if trying to remove 0
+    // The _underlyingAmountReceived is expected to be greater than 0
+    // making the ERC20.transfer impossible to revert on transfer 0 amount
+    if (_amount != 0) {
+      // remove ibWNative from collateral of the subaccount
+      uint256 _ibAmountRemoved = _removeCollateral(_subAccountId, ibWNativeToken, _amount);
+
+      // Withdraw from MoneyMarket using the ibToken that was funded by the caller
+      (, uint256 _underlyingAmountReceived) = _withdraw(ibWNativeToken, _ibAmountRemoved);
+
+      // unwrap the wNativeToken and send back to the msg.sender
+      _safeUnwrap(msg.sender, _underlyingAmountReceived);
+    }
+  }
+
   function depositAndStake(address _token, uint256 _amount) external {}
 
   function unstakeAndWithdraw(address _ibToken, uint256 _amount) external {}

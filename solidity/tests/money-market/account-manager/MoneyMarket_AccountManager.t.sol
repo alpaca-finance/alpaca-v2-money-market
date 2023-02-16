@@ -20,15 +20,28 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
     accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
   }
 
-  function test_depositNativeTokenAndAddCollateral_ShouldWork() external {
+  function test_depositETHTokenAndAddCollateral_ShouldWork() external {
     vm.prank(ALICE);
     accountManager.depositETHAndAddCollateral{ value: 10 ether }(0);
   }
 
   function test_RemoveCollatAndWithdraw_ShouldWork() external {
+    uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
     vm.startPrank(ALICE);
     accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
     accountManager.removeCollateralAndWithdraw(0, address(ibWeth), 10 ether);
     vm.stopPrank();
+
+    assertEq(weth.balanceOf(ALICE), _wethBalanceBefore);
+  }
+
+  function test_RemoveCollatAndWithdrawETH_ShouldWork() external {
+    uint256 _nativeBalanceBefore = ALICE.balance;
+    vm.startPrank(ALICE);
+    accountManager.depositETHAndAddCollateral{ value: 10 ether }(0);
+    accountManager.removeCollateralAndWithdrawETH(0, 10 ether);
+    vm.stopPrank();
+
+    assertEq(ALICE.balance, _nativeBalanceBefore);
   }
 }
