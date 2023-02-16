@@ -121,4 +121,6 @@ interface IViewFacet {
   function getLiquidationTreasury() external view returns (address _liquidationTreasury);
 
   function getOracle() external view returns (address);
+
+  function getMiniFL() external view returns (address);
 }

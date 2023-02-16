@@ -414,4 +414,10 @@ contract ViewFacet is IViewFacet {
   function getOracle() external view returns (address) {
     return address(LibMoneyMarket01.moneyMarketDiamondStorage().oracle);
   }
+
+  /// @notice Get miniFL address
+  /// @return miniFL address
+  function getMiniFL() external view returns (address) {
+    return address(LibMoneyMarket01.moneyMarketDiamondStorage().miniFL);
+  }
 }
