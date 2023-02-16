@@ -5,7 +5,7 @@ import "../BaseScript.sol";
 
 import { MoneyMarketReader } from "solidity/contracts/reader/MoneyMarketReader.sol";
 
-contract DeployMoneyMarketFacets is BaseScript {
+contract DeployMoneyMarketReaderScript is BaseScript {
   using stdJson for string;
 
   function run() public {

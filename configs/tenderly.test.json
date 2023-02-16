@@ -13,7 +13,8 @@
       "ownershipFacet": "0x8e2e5acc39F836Bb74Ef251a41cAE6490FA61C92",
       "diamondLoupeFacet": "0xa85a24f33E0Dc267634D9c29D2E184d9637eb961"
     },
-    "reader": "0x39A030625Df8842D1ff7Ca315be20206A09b93b1"
+    "reader": "0x39A030625Df8842D1ff7Ca315be20206A09b93b1",
+    "accountManager": "0x7163aDF3C0cD4521dDbb610A6d4537bD9416A7d0"
   },
   "ibTokens": {
     "ibBnb": "0x5a8B72b8b01B89192230bBf34a32D0a6f20bdB9a",
