@@ -77,7 +77,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
     // set account manager to allow interactions
-    accountManager = IMoneyMarketAccountManager(new MoneyMarketAccountManager(moneyMarketDiamond));
+    accountManager = IMoneyMarketAccountManager(
+      new MoneyMarketAccountManager(moneyMarketDiamond, address(wNativeToken), address(wNativeRelayer))
+    );
     address[] memory _accountManagers = new address[](1);
     _accountManagers[0] = address(accountManager);
 

@@ -15,14 +15,21 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   using LibSafeToken for IERC20;
 
   IMoneyMarket public moneyMarketDiamond;
-  address public nativeRelayer;
-  address public wNativeToken;
+  IWNativeRelayer public nativeRelayer;
+  IWNative public wNativeToken;
 
-  constructor(address _moneyMarketDiamond) {
+  constructor(
+    address _moneyMarketDiamond,
+    address _wNativeToken,
+    address _nativeRelayer
+  ) {
     // sanity call, should revert if the input didn't implement
     // this particular interface
     IMoneyMarket(_moneyMarketDiamond).getMinDebtSize();
     moneyMarketDiamond = IMoneyMarket(_moneyMarketDiamond);
+
+    nativeRelayer = IWNativeRelayer(_nativeRelayer);
+    wNativeToken = IWNative(_wNativeToken);
   }
 
   /// @notice Deposit a token for lending on behalf of the caller
@@ -283,7 +290,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   }
 
   function _safeUnwrap(address _to, uint256 _amount) internal {
-    IERC20(wNativeToken).safeTransfer(nativeRelayer, _amount);
+    IERC20(address(wNativeToken)).safeTransfer(address(nativeRelayer), _amount);
     IWNativeRelayer(nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);
   }
