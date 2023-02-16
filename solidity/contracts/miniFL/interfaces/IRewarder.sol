@@ -2,6 +2,11 @@
 pragma solidity 0.8.17;
 
 interface IRewarder {
+  error Rewarder1_BadArguments();
+  error Rewarder1_NotFL();
+  error Rewarder1_PoolExisted();
+  error Rewarder1_PoolNotExisted();
+
   function name() external view returns (string memory);
 
   function miniFL() external view returns (address);

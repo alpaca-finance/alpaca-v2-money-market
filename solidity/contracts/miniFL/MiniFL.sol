@@ -16,18 +16,18 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for int256;
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
-  event LogDeposit(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
-  event LogWithdraw(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
-  event LogEmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogHarvest(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogAddPool(uint256 indexed pid, uint256 allocPoint, address indexed stakingToken);
-  event LogSetPool(uint256 indexed pid, uint256 allocPoint);
-  event LogUpdatePool(uint256 indexed pid, uint64 lastRewardTime, uint256 stakedBalance, uint256 accAlpacaPerShare);
-  event LogAlpacaPerSecond(uint256 alpacaPerSecond);
-  event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool allow);
-  event LogSetMaxAlpacaPerSecond(uint256 maxAlpacaPerSecond);
-  event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
-  event LogSetWhitelistedCaller(address indexed caller, bool allow);
+  event LogDeposit(address indexed _caller, address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogWithdraw(address indexed _caller, address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogEmergencyWithdraw(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogHarvest(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogAddPool(uint256 indexed _pid, uint256 _allocPoint, address indexed _stakingToken);
+  event LogSetPool(uint256 indexed _pid, uint256 _newAllocPoint);
+  event LogUpdatePool(uint256 indexed _pid, uint64 _lastRewardTime, uint256 _stakedBalance, uint256 _accAlpacaPerShare);
+  event LogAlpacaPerSecond(uint256 _newAlpacaPerSecond);
+  event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool _allow);
+  event LogSetMaxAlpacaPerSecond(uint256 _maxAlpacaPerSecond);
+  event LogSetPoolRewarder(uint256 indexed _pid, address _rewarder);
+  event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
 
   struct UserInfo {
     mapping(address => uint256) fundedAmounts; // funders address => amount
