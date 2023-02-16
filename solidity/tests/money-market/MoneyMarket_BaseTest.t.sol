@@ -76,15 +76,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _whitelistedCallers[0] = moneyMarketDiamond;
     miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
-    // set account manager to allow interactions
-    accountManager = IMoneyMarketAccountManager(
-      new MoneyMarketAccountManager(moneyMarketDiamond, address(wNativeToken), address(wNativeRelayer))
-    );
-    address[] memory _accountManagers = new address[](1);
-    _accountManagers[0] = address(accountManager);
-
-    adminFacet.setAccountManagersOk(_accountManagers, true);
-
     // set ibToken and debtToken implementation
     // warning: this one should set before open market
     adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
@@ -154,6 +145,15 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
     adminFacet.openMarket(address(cake), _cakeTokenConfigInput, _cakeTokenConfigInput);
 
+    // set account manager to allow interactions
+    accountManager = IMoneyMarketAccountManager(
+      new MoneyMarketAccountManager(moneyMarketDiamond, address(wNativeToken), address(wNativeRelayer))
+    );
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = address(accountManager);
+
+    adminFacet.setAccountManagersOk(_accountManagers, true);
+
     ibWethDecimal = ibWeth.decimals();
     ibUsdcDecimal = ibUsdc.decimals();
     ibBtcDecimal = ibBtc.decimals();
@@ -161,13 +161,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibIsolateTokenDecimal = ibIsolateToken.decimals();
 
     vm.startPrank(ALICE);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
-    btc.approve(moneyMarketDiamond, type(uint256).max);
-    usdc.approve(moneyMarketDiamond, type(uint256).max);
-    isolateToken.approve(moneyMarketDiamond, type(uint256).max);
-    ibWeth.approve(moneyMarketDiamond, type(uint256).max);
-    cake.approve(moneyMarketDiamond, type(uint256).max);
-
     weth.approve(address(accountManager), type(uint256).max);
     btc.approve(address(accountManager), type(uint256).max);
     usdc.approve(address(accountManager), type(uint256).max);
@@ -175,13 +168,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibWeth.approve(address(accountManager), type(uint256).max);
     ibUsdc.approve(address(accountManager), type(uint256).max);
     cake.approve(address(accountManager), type(uint256).max);
+    ibWNative.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
-    weth.approve(moneyMarketDiamond, type(uint256).max);
-    btc.approve(moneyMarketDiamond, type(uint256).max);
-    usdc.approve(moneyMarketDiamond, type(uint256).max);
-    isolateToken.approve(moneyMarketDiamond, type(uint256).max);
 
     weth.approve(address(accountManager), type(uint256).max);
     btc.approve(address(accountManager), type(uint256).max);

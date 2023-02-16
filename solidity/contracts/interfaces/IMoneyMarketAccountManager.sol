@@ -2,11 +2,15 @@
 pragma solidity 0.8.17;
 
 interface IMoneyMarketAccountManager {
+  error MoneyMarketAccountManager_WNativeMarketNotOpen();
+
   function deposit(address _token, uint256 _amount) external;
 
   function depositETH() external payable;
 
   function withdraw(address _ibToken, uint256 _ibAmount) external;
+
+  function withdrawETH(uint256 _ibAmount) external;
 
   function addCollateralFor(
     address _account,

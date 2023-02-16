@@ -175,4 +175,26 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getTotalToken(_token), normalizeEther(1.809 ether, usdcDecimal));
     assertEq(viewFacet.getTotalTokenWithPendingInterest(_token), normalizeEther(1.809 ether, usdcDecimal));
   }
+
+  function testCorrectness_WhenUserWithdrawETH_ShareShouldBurnedAndTransferTokenBackCorrectly() external {
+    // deposit first
+    vm.prank(ALICE);
+    accountManager.depositETH{ value: 10 ether }();
+
+    assertEq(wNativeToken.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 990 ether);
+    assertEq(wNativeToken.balanceOf(moneyMarketDiamond), 10 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 10 ether);
+
+    // then withdraw 5
+    vm.prank(ALICE);
+    accountManager.withdrawETH(5 ether);
+
+    assertEq(wNativeToken.balanceOf(ALICE), 0 ether);
+    assertEq(ALICE.balance, 995 ether);
+    assertEq(wNativeToken.balanceOf(moneyMarketDiamond), 5 ether);
+
+    assertEq(ibWNative.balanceOf(ALICE), 5 ether);
+  }
 }
