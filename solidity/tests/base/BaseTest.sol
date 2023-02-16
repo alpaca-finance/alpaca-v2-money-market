@@ -9,6 +9,7 @@ import { console } from "../utils/console.sol";
 // interfaces
 import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
 import { IMiniFL } from "../../contracts/miniFL/interfaces/IMiniFL.sol";
+import { IPriceOracle } from "solidity/contracts/oracle/interfaces/IPriceOracle.sol";
 
 // miniFL
 import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
@@ -19,7 +20,7 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
-import { ChainLinkPriceOracle2, IPriceOracle } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
+import { ChainLinkPriceOracle2 } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 import { AlpacaV2Oracle, IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 

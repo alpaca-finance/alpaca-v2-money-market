@@ -9,6 +9,8 @@ contract DeployMoneyMarketFacets is BaseScript {
   using stdJson for string;
 
   function run() public {
+    _loadAddresses();
+
     _startDeployerBroadcast();
 
     address mmReader = address(new MoneyMarketReader(address(moneyMarket)));

@@ -3,11 +3,12 @@ pragma solidity 0.8.17;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+import { IOracleMedianizer } from "./interfaces/IOracleMedianizer.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 
 import { LibFullMath } from "./libraries/LibFullMath.sol";
 
-contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
+contract OracleMedianizer is OwnableUpgradeable, IOracleMedianizer {
   using LibFullMath for uint256;
 
   // Mapping from token0, token1 to number of sources
@@ -83,7 +84,8 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
       token0s.length != maxPriceStaleList.length
     ) revert OracleMedianizer_InconsistentLength();
 
-    for (uint256 idx = 0; idx < token0s.length; idx++) {
+    uint256 len = token0s.length;
+    for (uint256 idx; idx < len; ) {
       _setPrimarySources(
         token0s[idx],
         token1s[idx],
@@ -91,6 +93,9 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
         maxPriceStaleList[idx],
         allSources[idx]
       );
+      unchecked {
+        ++idx;
+      }
     }
   }
 
@@ -110,17 +115,21 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
     if (maxPriceDeviation > MAX_PRICE_DEVIATION || maxPriceDeviation < MIN_PRICE_DEVIATION)
       revert OracleMedianizer_BadMaxDeviation();
 
-    if (sources.length > 3) revert OracleMedianizer_SourceLengthExceed();
+    uint256 sourceLength = sources.length;
+    if (sourceLength > 3) revert OracleMedianizer_SourceLengthExceed();
 
-    primarySourceCount[token0][token1] = sources.length;
-    primarySourceCount[token1][token0] = sources.length;
+    primarySourceCount[token0][token1] = sourceLength;
+    primarySourceCount[token1][token0] = sourceLength;
     maxPriceDeviations[token0][token1] = maxPriceDeviation;
     maxPriceDeviations[token1][token0] = maxPriceDeviation;
     maxPriceStales[token0][token1] = maxPriceStale;
     maxPriceStales[token1][token0] = maxPriceStale;
-    for (uint256 idx = 0; idx < sources.length; idx++) {
+    for (uint256 idx; idx < sourceLength; ) {
       primarySources[token0][token1][idx] = sources[idx];
       primarySources[token1][token0][idx] = sources[idx];
+      unchecked {
+        ++idx;
+      }
     }
     emit SetPrimarySources(token0, token1, maxPriceDeviation, maxPriceStale, sources);
   }
@@ -134,26 +143,27 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
     if (candidateSourceCount == 0) revert OracleMedianizer_NoPrimarySource();
     uint256[] memory prices = new uint256[](candidateSourceCount);
     // Get valid oracle sources
-    uint256 validSourceCount = 0;
-    for (uint256 idx = 0; idx < candidateSourceCount; idx++) {
-      try primarySources[token0][token1][idx].getPrice(token0, token1) returns (uint256 price, uint256 lastUpdate) {
-        if (lastUpdate >= block.timestamp - maxPriceStales[token0][token1]) {
-          prices[validSourceCount++] = price;
-        }
-      } catch {}
+    uint256 validSourceCount;
+    unchecked {
+      for (uint256 idx; idx < candidateSourceCount; ++idx) {
+        try primarySources[token0][token1][idx].getPrice(token0, token1) returns (uint256 price, uint256 lastUpdate) {
+          if (lastUpdate >= block.timestamp - maxPriceStales[token0][token1]) {
+            prices[validSourceCount++] = price;
+          }
+        } catch {}
+      }
     }
     if (validSourceCount == 0) revert OracleMedianizer_NoValidSource();
     // Sort prices (asc)
-    for (uint256 _i; _i < validSourceCount - 1; ) {
-      for (uint256 _j; _j < validSourceCount - _i - 1; ) {
-        if (prices[_j] > prices[_j + 1]) {
-          (prices[_j], prices[_j + 1]) = (prices[_j + 1], prices[_j]);
-        }
-        unchecked {
+    unchecked {
+      uint256 iterationCount = validSourceCount - 1;
+      for (uint256 _i; _i < iterationCount; ) {
+        for (uint256 _j; _j < iterationCount - _i; ) {
+          if (prices[_j] > prices[_j + 1]) {
+            (prices[_j], prices[_j + 1]) = (prices[_j + 1], prices[_j]);
+          }
           ++_j;
         }
-      }
-      unchecked {
         ++_i;
       }
     }
@@ -167,11 +177,11 @@ contract OracleMedianizer is OwnableUpgradeable, IPriceOracle {
     //     --> if all within threshold, return median
     //     --> if one pair within threshold, return average of the pair
     if (validSourceCount == 1) return prices[0]; // if 1 valid source, return
+    bool midP0P1Ok = (prices[1] * 1e18) / prices[0] <= maxPriceDeviation;
     if (validSourceCount == 2) {
-      if ((prices[1] * 1e18) / prices[0] > maxPriceDeviation) revert OracleMedianizer_TooMuchDeviation();
+      if (!midP0P1Ok) revert OracleMedianizer_TooMuchDeviation();
       return (prices[0] + prices[1]) / 2; // if 2 valid sources, return average
     }
-    bool midP0P1Ok = (prices[1] * 1e18) / prices[0] <= maxPriceDeviation;
     bool midP1P2Ok = (prices[2] * 1e18) / prices[1] <= maxPriceDeviation;
     if (midP0P1Ok && midP1P2Ok) return prices[1]; // if 3 valid sources, and each pair is within thresh, return median
     if (midP0P1Ok) return (prices[0] + prices[1]) / 2; // return average of pair within thresh

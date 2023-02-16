@@ -14,10 +14,10 @@ pragma solidity 0.8.17;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
+import { IChainLinkPriceOracle2 } from "./interfaces/IChainLinkPriceOracle2.sol";
 import { IAggregatorV3 } from "./interfaces/IAggregatorV3.sol";
 
-contract ChainLinkPriceOracle2 is OwnableUpgradeable, IPriceOracle {
+contract ChainLinkPriceOracle2 is OwnableUpgradeable, IChainLinkPriceOracle2 {
   /// ---------------------------------------------------
   /// Errors
   /// ---------------------------------------------------

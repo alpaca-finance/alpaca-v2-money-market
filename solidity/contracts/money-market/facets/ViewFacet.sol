@@ -359,10 +359,10 @@ contract ViewFacet is IViewFacet {
   }
 
   /// @notice Get money market fees
-  /// @param _lendingFeeBps The lending fee imposed on interest collected
-  /// @param _repurchaseFeeBps The repurchase fee collected by the protocol
-  /// @param _liquidationFeeBps The total fee from liquidation
-  /// @param _liquidationRewardBps The fee collected by liquidator
+  /// @return _lendingFeeBps The lending fee imposed on interest collected
+  /// @return _repurchaseFeeBps The repurchase fee collected by the protocol
+  /// @return _liquidationFeeBps The total fee from liquidation
+  /// @return _liquidationRewardBps The fee collected by liquidator
   function getFeeParams()
     external
     view
@@ -403,8 +403,15 @@ contract ViewFacet is IViewFacet {
   }
 
   /// @notice Get the address of liquidation treasury
+  /// @return _liquidationTreasury liquidation treasury address
   function getLiquidationTreasury() external view returns (address _liquidationTreasury) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     _liquidationTreasury = moneyMarketDs.liquidationTreasury;
+  }
+
+  /// @notice Get oracle address
+  /// @return Oracle address
+  function getOracle() external view returns (address) {
+    return address(LibMoneyMarket01.moneyMarketDiamondStorage().oracle);
   }
 }

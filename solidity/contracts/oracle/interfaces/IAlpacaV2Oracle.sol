@@ -23,6 +23,10 @@ interface IAlpacaV2Oracle {
   /// @dev Return true if token price is stable.
   function isStable(address _tokenAddress) external view;
 
+  function oracle() external view returns (address);
+
+  function usd() external view returns (address);
+
   /// @dev Errors
   error AlpacaV2Oracle_InvalidLPAddress();
   error AlpacaV2Oracle_InvalidOracleAddress();
