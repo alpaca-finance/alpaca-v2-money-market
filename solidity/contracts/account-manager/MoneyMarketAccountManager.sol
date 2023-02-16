@@ -16,7 +16,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   IMoneyMarket public moneyMarketDiamond;
   IWNativeRelayer public nativeRelayer;
-  IWNative public wNativeToken;
+  address public wNativeToken;
 
   constructor(
     address _moneyMarketDiamond,
@@ -29,18 +29,34 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     moneyMarketDiamond = IMoneyMarket(_moneyMarketDiamond);
 
     nativeRelayer = IWNativeRelayer(_nativeRelayer);
-    wNativeToken = IWNative(_wNativeToken);
+    wNativeToken = _wNativeToken;
   }
 
   /// @notice Deposit a token for lending on behalf of the caller
   /// @param _token The token to lend
   /// @param _amount The amount to lend
   function deposit(address _token, uint256 _amount) external {
-    // pull funds from the caller and deposit to money market
-    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+    // skip if trying to deposit 0 amount
+    if (_amount != 0) {
+      // pull funds from the caller and deposit to money market
+      (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
 
-    // transfer ibToken received back to caller
-    IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+      // transfer ibToken received back to caller
+      IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+    }
+  }
+
+  /// @notice Deposit native token for lending
+  function depositETH() external payable {
+    // skip if trying to deposit 0 amount
+    if (msg.value != 0) {
+      // Wrap the native token as MoneyMarket only accepts ERC20
+      IWNative(wNativeToken).deposit{ value: msg.value }();
+
+      (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
+      // transfer ibToken received back to caller
+      IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+    }
   }
 
   /// @notice Withdraw the lent token by burning the interest bearing token on behalf of the caller
@@ -290,7 +306,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   }
 
   function _safeUnwrap(address _to, uint256 _amount) internal {
-    IERC20(address(wNativeToken)).safeTransfer(address(nativeRelayer), _amount);
+    IERC20(wNativeToken).safeTransfer(address(nativeRelayer), _amount);
     IWNativeRelayer(nativeRelayer).withdraw(_amount);
     LibSafeToken.safeTransferETH(_to, _amount);
   }
