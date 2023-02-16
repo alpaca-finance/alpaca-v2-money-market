@@ -16,18 +16,18 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for int256;
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
-  event LogDeposit(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
-  event LogWithdraw(address indexed caller, address indexed user, uint256 indexed pid, uint256 amount);
-  event LogEmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogHarvest(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogAddPool(uint256 indexed pid, uint256 allocPoint, address indexed stakingToken);
-  event LogSetPool(uint256 indexed pid, uint256 allocPoint);
-  event LogUpdatePool(uint256 indexed pid, uint64 lastRewardTime, uint256 stakedBalance, uint256 accAlpacaPerShare);
-  event LogAlpacaPerSecond(uint256 alpacaPerSecond);
-  event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool allow);
-  event LogSetMaxAlpacaPerSecond(uint256 maxAlpacaPerSecond);
-  event LogSetPoolRewarder(uint256 indexed pid, address rewarder);
-  event LogSetWhitelistedCaller(address indexed caller, bool allow);
+  event LogDeposit(address indexed _caller, address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogWithdraw(address indexed _caller, address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogEmergencyWithdraw(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogHarvest(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogAddPool(uint256 indexed _pid, uint256 _allocPoint, address indexed _stakingToken);
+  event LogSetPool(uint256 indexed _pid, uint256 _newAllocPoint);
+  event LogUpdatePool(uint256 indexed _pid, uint64 _lastRewardTime, uint256 _stakedBalance, uint256 _accAlpacaPerShare);
+  event LogAlpacaPerSecond(uint256 _newAlpacaPerSecond);
+  event LogApproveStakeDebtToken(uint256 indexed _pid, address indexed _staker, bool _allow);
+  event LogSetMaxAlpacaPerSecond(uint256 _maxAlpacaPerSecond);
+  event LogSetPoolRewarder(uint256 indexed _pid, address _rewarder);
+  event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
 
   struct UserInfo {
     mapping(address => uint256) fundedAmounts; // funders address => amount
@@ -128,33 +128,33 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Update the given pool's ALPACA allocation point and `IRewarder` contract.
   /// @dev Can only be called by the owner.
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _allocPoint New AP of the pool.
+  /// @param _newAllocPoint New AP of the pool.
   /// @param _withUpdate If true, do mass update pools
   function setPool(
     uint256 _pid,
-    uint256 _allocPoint,
+    uint256 _newAllocPoint,
     bool _withUpdate
   ) external onlyOwner {
     // prevent setting allocPoint of dummy pool
     if (_pid == 0) revert MiniFL_InvalidArguments();
     if (_withUpdate) massUpdatePools();
 
-    totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;
-    poolInfo[_pid].allocPoint = _allocPoint.toUint64();
+    totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _newAllocPoint;
+    poolInfo[_pid].allocPoint = _newAllocPoint.toUint64();
 
-    emit LogSetPool(_pid, _allocPoint);
+    emit LogSetPool(_pid, _newAllocPoint);
   }
 
   /// @notice Sets the ALPACA per second to be distributed. Can only be called by the owner.
-  /// @param _alpacaPerSecond The amount of ALPACA to be distributed per second.
+  /// @param _newAlpacaPerSecond The amount of ALPACA to be distributed per second.
   /// @param _withUpdate If true, do mass update pools
-  function setAlpacaPerSecond(uint256 _alpacaPerSecond, bool _withUpdate) external onlyOwner {
-    if (_alpacaPerSecond > maxAlpacaPerSecond) {
+  function setAlpacaPerSecond(uint256 _newAlpacaPerSecond, bool _withUpdate) external onlyOwner {
+    if (_newAlpacaPerSecond > maxAlpacaPerSecond) {
       revert MiniFL_InvalidArguments();
     }
     if (_withUpdate) massUpdatePools();
-    alpacaPerSecond = _alpacaPerSecond;
-    emit LogAlpacaPerSecond(_alpacaPerSecond);
+    alpacaPerSecond = _newAlpacaPerSecond;
+    emit LogAlpacaPerSecond(_newAlpacaPerSecond);
   }
 
   /// @notice View function to see pending ALPACA on frontend.
@@ -356,23 +356,23 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   /// @notice Set max reward per second
-  /// @param _maxAlpacaPerSecond The max reward per second
-  function setMaxAlpacaPerSecond(uint256 _maxAlpacaPerSecond) external onlyOwner {
-    if (_maxAlpacaPerSecond < alpacaPerSecond) {
+  /// @param _newMaxAlpacaPerSecond The max reward per second
+  function setMaxAlpacaPerSecond(uint256 _newMaxAlpacaPerSecond) external onlyOwner {
+    if (_newMaxAlpacaPerSecond < alpacaPerSecond) {
       revert MiniFL_InvalidArguments();
     }
-    maxAlpacaPerSecond = _maxAlpacaPerSecond;
-    emit LogSetMaxAlpacaPerSecond(_maxAlpacaPerSecond);
+    maxAlpacaPerSecond = _newMaxAlpacaPerSecond;
+    emit LogSetMaxAlpacaPerSecond(_newMaxAlpacaPerSecond);
   }
 
   /// @notice Set rewarders in Pool
   /// @param _pid pool id
-  /// @param _rewarders rewarders
-  function setPoolRewarders(uint256 _pid, address[] calldata _rewarders) external onlyOwner {
-    uint256 _length = _rewarders.length;
+  /// @param _newRewarders rewarders
+  function setPoolRewarders(uint256 _pid, address[] calldata _newRewarders) external onlyOwner {
+    uint256 _length = _newRewarders.length;
     // loop to check rewarder should be belong to this MiniFL only
     for (uint256 _i; _i < _length; ) {
-      if (IRewarder(_rewarders[_i]).miniFL() != address(this)) {
+      if (IRewarder(_newRewarders[_i]).miniFL() != address(this)) {
         revert MiniFL_BadRewarder();
       }
 
@@ -381,7 +381,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       }
     }
 
-    rewarders[_pid] = _rewarders;
+    rewarders[_pid] = _newRewarders;
   }
 
   /// @notice Get amount of total staking token at pid
