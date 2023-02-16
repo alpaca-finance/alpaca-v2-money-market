@@ -52,4 +52,9 @@ contract MiniFL_SetPoolRewardersTest is MiniFL_BaseTest {
     vm.expectRevert(abi.encodeWithSelector(IMiniFL.MiniFL_BadRewarder.selector));
     miniFL.setPoolRewarders(dtokenPoolID, _poolDebtTokenRewarders);
   }
+
+  function testRevert_TryingToSetPoolThatHasNotBeenAdded_ShouldRevert() external {
+    vm.expectRevert(abi.encodeWithSelector(IRewarder.Rewarder1_PoolNotExisted.selector));
+    rewarder1.setPool(9999, 1000, false);
+  }
 }
