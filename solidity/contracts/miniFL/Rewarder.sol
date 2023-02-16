@@ -189,18 +189,18 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Update the given pool's allocation point.
   /// @dev Can only be called by the owner.
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _allocPoint The allocation point of the pool.
+  /// @param _newAllocPoint The allocation point of the pool.
   /// @param _withUpdate If true, do mass update pools
   function setPool(
     uint256 _pid,
-    uint256 _allocPoint,
+    uint256 _newAllocPoint,
     bool _withUpdate
   ) external onlyOwner {
     if (poolInfo[_pid].lastRewardTime == 0) revert Rewarder1_PoolNotExisted();
     if (_withUpdate) _massUpdatePools();
-    totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;
-    poolInfo[_pid].allocPoint = _allocPoint.toUint64();
-    emit LogSetPool(_pid, _allocPoint);
+    totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _newAllocPoint;
+    poolInfo[_pid].allocPoint = _newAllocPoint.toUint64();
+    emit LogSetPool(_pid, _newAllocPoint);
   }
 
   /// @notice View function to see pending rewards for a given pool.
