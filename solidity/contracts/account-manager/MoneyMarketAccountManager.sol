@@ -6,24 +6,20 @@ import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
 
 // ---- Interfaces ---- //
 import { IMoneyMarketAccountManager } from "../interfaces/IMoneyMarketAccountManager.sol";
-import { ILendFacet } from "../money-market/interfaces/ILendFacet.sol";
-import { IViewFacet } from "../money-market/interfaces/IViewFacet.sol";
-import { IBorrowFacet } from "../money-market/interfaces/IBorrowFacet.sol";
-import { ICollateralFacet } from "../money-market/interfaces/ICollateralFacet.sol";
 import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
+import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../money-market/interfaces/IERC20.sol";
 
 contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   using LibSafeToken for IERC20;
 
-  // todo: change to IMoneyMarket interface and remove all facet interfaces
-  address moneyMarketDiamond;
+  IMoneyMarket public moneyMarketDiamond;
 
   constructor(address _moneyMarketDiamond) {
     // sanity call, should revert if the input didn't implement
     // this particular interface
-    IViewFacet(_moneyMarketDiamond).getMinDebtSize();
-    moneyMarketDiamond = _moneyMarketDiamond;
+    IMoneyMarket(_moneyMarketDiamond).getMinDebtSize();
+    moneyMarketDiamond = IMoneyMarket(_moneyMarketDiamond);
   }
 
   /// @notice Deposit a token for lending on behalf of the caller
@@ -73,8 +69,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
     // Add collateral for `_account`
     // This call can revert if added amount makes total collateral exceed maximum collateral capacity
-    IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
-    ICollateralFacet(moneyMarketDiamond).addCollateral(_account, _subAccountId, _token, _amount);
+    IERC20(_token).safeApprove(address(moneyMarketDiamond), _amount);
+    moneyMarketDiamond.addCollateral(_account, _subAccountId, _token, _amount);
   }
 
   /// @notice Remove a collateral token from a subaccount on behalf of the caller
@@ -107,13 +103,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _amount
   ) external {
     // Simply forward the call
-    ICollateralFacet(moneyMarketDiamond).transferCollateral(
-      msg.sender,
-      _fromSubAccountId,
-      _toSubAccountId,
-      _token,
-      _amount
-    );
+    moneyMarketDiamond.transferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
 
   /// @notice Deposit a token for lending then add all of ibToken to given subaccount id of the caller as collateral
@@ -131,8 +121,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Use the received ibToken and put it as a collateral in given subaccount id
     // expecting that all of the received ibToken successfully deposited as collateral
     // This call can revert if added amount makes total collateral exceed maximum collateral capacity
-    IERC20(_ibToken).safeApprove(moneyMarketDiamond, _amount);
-    ICollateralFacet(moneyMarketDiamond).addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
+    IERC20(_ibToken).safeApprove(address(moneyMarketDiamond), _amount);
+    moneyMarketDiamond.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
   }
 
   /// @notice Remove a collateral token from a subaccount and withdraw ibToken
@@ -173,7 +163,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _amount
   ) external {
     // borrow token out on behalf of caller's subaccount
-    IBorrowFacet(moneyMarketDiamond).borrow(msg.sender, _subAccountId, _token, _amount);
+    moneyMarketDiamond.borrow(msg.sender, _subAccountId, _token, _amount);
 
     // transfer borrowed token back to caller
     // If there's fee on transfer on the token, generally this should revert
@@ -204,9 +194,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Call repay by forwarding input _debtShareToRepay
     // Money Market should deduct the fund as much as possible
     // If there's excess amount left, transfer back to user
-    IERC20(_token).safeApprove(moneyMarketDiamond, _repayAmount);
-    IBorrowFacet(moneyMarketDiamond).repay(_account, _subAccountId, _token, _debtShareToRepay);
-    IERC20(_token).safeApprove(moneyMarketDiamond, 0);
+    IERC20(_token).safeApprove(address(moneyMarketDiamond), _repayAmount);
+    moneyMarketDiamond.repay(_account, _subAccountId, _token, _debtShareToRepay);
+    IERC20(_token).safeApprove(address(moneyMarketDiamond), 0);
 
     // Calculate the excess amount left in the contract
     // This will revert if the input repay amount has lower value than _debtShareToRepay
@@ -228,7 +218,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     uint256 _debtShareToRepay
   ) external {
     // Simply forward the call to MoneyMarket
-    IBorrowFacet(moneyMarketDiamond).repayWithCollat(msg.sender, _subAccountId, _token, _debtShareToRepay);
+    moneyMarketDiamond.repayWithCollat(msg.sender, _subAccountId, _token, _debtShareToRepay);
   }
 
   function _deposit(address _token, uint256 _amount) internal returns (address _ibToken, uint256 _ibAmountReceived) {
@@ -238,14 +228,14 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
     // Get the ibToken address from money market
     // This will be used to transfer the ibToken back to caller
-    _ibToken = IViewFacet(moneyMarketDiamond).getIbTokenFromToken(_token);
+    _ibToken = moneyMarketDiamond.getIbTokenFromToken(_token);
 
     // approve money market as it will call safeTransferFrom to this address
     // since all of the allowance will be used, approve(0) afterward is not required
-    IERC20(_token).safeApprove(moneyMarketDiamond, _amount);
+    IERC20(_token).safeApprove(address(moneyMarketDiamond), _amount);
 
     // deposit to money market, expecting to get ibToken in return
-    _ibAmountReceived = ILendFacet(moneyMarketDiamond).deposit(msg.sender, _token, _amount);
+    _ibAmountReceived = moneyMarketDiamond.deposit(msg.sender, _token, _amount);
   }
 
   /// @dev This function expect this contract should have ibToken before calling
@@ -253,7 +243,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     internal
     returns (address _underlyingToken, uint256 _underlyingAmountReceived)
   {
-    _underlyingToken = IViewFacet(moneyMarketDiamond).getTokenFromIbToken(_ibToken);
+    _underlyingToken = moneyMarketDiamond.getTokenFromIbToken(_ibToken);
     // cache the balanceOf before executing withdrawal
     // This will be used to determine the actual amount of underlying token back from MoneyMarket
     // if the input ibToken is not ERC20, this call should revert at this point
@@ -262,7 +252,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Exchange the ibToken back to the underlying token with some interest
     // specifying to MoneyMarket that this withdraw is done on behalf of the caller
     // ibToken will be burned during the process
-    ILendFacet(moneyMarketDiamond).withdraw(msg.sender, _ibToken, _shareAmount);
+    moneyMarketDiamond.withdraw(msg.sender, _ibToken, _shareAmount);
 
     // Calculate the actual amount received by comparing balance after - balance before
     // This is to accurately find the amount received even if the underlying token has fee on transfer
@@ -282,7 +272,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // Remove collateral from the subaccount on behalf of user
     // Will be reverted if removing collateral will violate the business rules based on
     // how MoneyMarket was configured
-    ICollateralFacet(moneyMarketDiamond).removeCollateral(msg.sender, _subAccountId, _token, _amount);
+    moneyMarketDiamond.removeCollateral(msg.sender, _subAccountId, _token, _amount);
 
     // Calculate the actual amount received by comparing balance after - balance before
     // This is to accurately find the amount received even if the underlying token has fee on transfer
