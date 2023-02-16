@@ -161,6 +161,13 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibIsolateTokenDecimal = ibIsolateToken.decimals();
 
     vm.startPrank(ALICE);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    btc.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    isolateToken.approve(moneyMarketDiamond, type(uint256).max);
+    ibWeth.approve(moneyMarketDiamond, type(uint256).max);
+    cake.approve(moneyMarketDiamond, type(uint256).max);
+
     weth.approve(address(accountManager), type(uint256).max);
     btc.approve(address(accountManager), type(uint256).max);
     usdc.approve(address(accountManager), type(uint256).max);
@@ -172,6 +179,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     vm.stopPrank();
 
     vm.startPrank(BOB);
+    weth.approve(moneyMarketDiamond, type(uint256).max);
+    btc.approve(moneyMarketDiamond, type(uint256).max);
+    usdc.approve(moneyMarketDiamond, type(uint256).max);
+    isolateToken.approve(moneyMarketDiamond, type(uint256).max);
 
     weth.approve(address(accountManager), type(uint256).max);
     btc.approve(address(accountManager), type(uint256).max);

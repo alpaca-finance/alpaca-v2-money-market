@@ -175,16 +175,19 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     address _token,
     uint256 _amount
   ) external {
-    // pull funds from caller and deposit to money market
-    // assuming that there's no fee on transfer
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+    // skip if deposit 0 amount
+    if (_amount != 0) {
+      // pull funds from caller and deposit to money market
+      // assuming that there's no fee on transfer
+      IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+      (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
 
-    // Use the received ibToken and put it as a collateral in given subaccount id
-    // expecting that all of the received ibToken successfully deposited as collateral
-    // This call can revert if added amount makes total collateral exceed maximum collateral capacity
-    IERC20(_ibToken).safeApprove(address(moneyMarketDiamond), _amount);
-    moneyMarketDiamond.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
+      // Use the received ibToken and put it as a collateral in given subaccount id
+      // expecting that all of the received ibToken successfully deposited as collateral
+      // This call can revert if added amount makes total collateral exceed maximum collateral capacity
+      IERC20(_ibToken).safeApprove(address(moneyMarketDiamond), _amountReceived);
+      moneyMarketDiamond.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
+    }
   }
 
   /// @notice Remove a collateral token from a subaccount and withdraw ibToken
@@ -208,6 +211,24 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
       );
 
       IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
+    }
+  }
+
+  /// @notice Deposit native token for lending then add all of ibToken to given subaccount id of the caller as collateral
+  /// @param _subAccountId An index to derive the subaccount
+  function depositETHAndAddCollateral(uint256 _subAccountId) external payable {
+    if (msg.value != 0) {
+      // Wrap the native token as MoneyMarket only accepts ERC20
+      IWNative(wNativeToken).deposit{ value: msg.value }();
+
+      // deposit wrapped native token to MoneyMarket
+      (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
+
+      // Use the received ibToken and put it as a collateral in given subaccount id
+      // expecting that all of the received ibToken successfully deposited as collateral
+      // This call can revert if added amount makes total collateral exceed maximum collateral capacity
+      IERC20(_ibToken).safeApprove(address(moneyMarketDiamond), _amountReceived);
+      moneyMarketDiamond.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
     }
   }
 

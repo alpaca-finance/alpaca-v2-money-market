@@ -38,6 +38,8 @@ interface IMoneyMarketAccountManager {
     uint256 _amount
   ) external;
 
+  function depositETHAndAddCollateral(uint256 _subAccountId) external payable;
+
   function removeCollateralAndWithdraw(
     uint256 _subAccountId,
     address _ibToken,
