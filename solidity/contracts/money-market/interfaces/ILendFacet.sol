@@ -10,7 +10,7 @@ interface ILendFacet {
     address _for,
     address _token,
     uint256 _amount
-  ) external;
+  ) external returns (uint256 _shareAmount);
 
   function withdraw(
     address _for,

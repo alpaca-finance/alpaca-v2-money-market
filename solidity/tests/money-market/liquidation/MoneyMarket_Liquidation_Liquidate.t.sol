@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 // mocks
-import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
-import { MockBadLiquidationStrategy } from "../mocks/MockBadLiquidationStrategy.sol";
+import { MockLiquidationStrategy } from "../../mocks/MockLiquidationStrategy.sol";
+import { MockBadLiquidationStrategy } from "../../mocks/MockBadLiquidationStrategy.sol";
 
 struct CacheState {
   uint256 collat;
@@ -61,18 +61,18 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(BOB, address(btc), normalizeEther(10 ether, btcDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    accountManager.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
     // alice borrowed 30% of vault then interest should be 0.0617647058676 per year
     // interest per day = 0.00016921837224
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
   }
 
@@ -348,8 +348,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      */
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(btc), 100 ether);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(50 ether, usdcDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(btc), 100 ether);
+    accountManager.borrow(0, address(usdc), normalizeEther(50 ether, usdcDecimal));
     vm.stopPrank();
 
     address _debtToken = address(usdc);
@@ -485,7 +485,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     // try to make usedBorrowingPower / borrowingPower = threshold
     // borrow more to increase usedBorrowingPower to 36 ether
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(2.4 ether, usdcDecimal));
 
     // decrease price to lower borrowingPower so that 36 / (40 * Price * 0.9) = 1.1111
     // Price = 0.900009

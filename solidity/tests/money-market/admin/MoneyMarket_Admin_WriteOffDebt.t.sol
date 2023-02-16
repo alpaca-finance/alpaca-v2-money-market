@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 
 // mocks
-import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
+import { MockLiquidationStrategy } from "../../mocks/MockLiquidationStrategy.sol";
 
 contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
   event LogWriteOffSubAccountDebt(
@@ -27,7 +27,7 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
 
     // seed mm for ALICE to borrow
     vm.prank(BOB);
-    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
 
     // setup liquidationStrategy
     mockLiquidationStrategy = new MockLiquidationStrategy(address(mockOracle));
@@ -55,10 +55,10 @@ contract MoneyMarket_Admin_WriteOffDebtTest is MoneyMarket_BaseTest {
      * 1 weth = 1 usdc
      */
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 2 ether);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
-    collateralFacet.addCollateral(ALICE, subAccount1, address(weth), 10 ether);
-    borrowFacet.borrow(ALICE, subAccount1, address(usdc), normalizeEther(2 ether, usdcDecimal));
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), 2 ether);
+    accountManager.borrow(subAccount0, address(usdc), normalizeEther(1 ether, usdcDecimal));
+    accountManager.addCollateralFor(ALICE, subAccount1, address(weth), 10 ether);
+    accountManager.borrow(subAccount1, address(usdc), normalizeEther(2 ether, usdcDecimal));
     vm.stopPrank();
   }
 

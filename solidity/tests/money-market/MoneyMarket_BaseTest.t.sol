@@ -27,6 +27,7 @@ import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFac
 import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 import { IOwnershipFacet } from "../../contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { IMoneyMarketAccountManager } from "../../contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
 // mocks
@@ -37,6 +38,9 @@ import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 // libs
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
+
+// router
+import { MoneyMarketAccountManager } from "../../contracts/account-manager/MoneyMarketAccountManager.sol";
 
 abstract contract MoneyMarket_BaseTest is BaseTest {
   address internal moneyMarketDiamond;
@@ -54,6 +58,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
   MockAlpacaV2Oracle internal mockOracle;
 
+  IMoneyMarketAccountManager internal accountManager;
+
   function setUp() public virtual {
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
 
@@ -69,6 +75,13 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = moneyMarketDiamond;
     miniFL.setWhitelistedCallers(_whitelistedCallers, true);
+
+    // set account manager to allow interactions
+    accountManager = IMoneyMarketAccountManager(new MoneyMarketAccountManager(moneyMarketDiamond));
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = address(accountManager);
+
+    adminFacet.setAccountManagersOk(_accountManagers, true);
 
     // set ibToken and debtToken implementation
     // warning: this one should set before open market
@@ -152,6 +165,14 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
     cake.approve(moneyMarketDiamond, type(uint256).max);
+
+    weth.approve(address(accountManager), type(uint256).max);
+    btc.approve(address(accountManager), type(uint256).max);
+    usdc.approve(address(accountManager), type(uint256).max);
+    isolateToken.approve(address(accountManager), type(uint256).max);
+    ibWeth.approve(address(accountManager), type(uint256).max);
+    ibUsdc.approve(address(accountManager), type(uint256).max);
+    cake.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);
@@ -159,6 +180,12 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     btc.approve(moneyMarketDiamond, type(uint256).max);
     usdc.approve(moneyMarketDiamond, type(uint256).max);
     isolateToken.approve(moneyMarketDiamond, type(uint256).max);
+
+    weth.approve(address(accountManager), type(uint256).max);
+    btc.approve(address(accountManager), type(uint256).max);
+    usdc.approve(address(accountManager), type(uint256).max);
+    isolateToken.approve(address(accountManager), type(uint256).max);
+    ibWeth.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
@@ -223,12 +250,5 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set minimum debt required to borrow
     adminFacet.setMinDebtSize(normalizeEther(0.1 ether, usdDecimal));
-
-    // set account manager to allow interactions
-    address[] memory _accountManagers = new address[](2);
-    _accountManagers[0] = ALICE;
-    _accountManagers[1] = BOB;
-
-    adminFacet.setAccountManagersOk(_accountManagers, true);
   }
 }

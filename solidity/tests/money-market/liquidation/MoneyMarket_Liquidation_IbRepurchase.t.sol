@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { FixedFeeModel, IFeeModel } from "../../contracts/money-market/fee-models/FixedFeeModel.sol";
-import { IMiniFL } from "../../contracts/money-market/interfaces/IMiniFL.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 struct CacheState {
   uint256 collat;
@@ -40,18 +40,18 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
 
     // bob deposit 100 usdc and 10 btc
     vm.startPrank(BOB);
-    lendFacet.deposit(BOB, address(usdc), normalizeEther(100 ether, usdcDecimal));
-    lendFacet.deposit(BOB, address(btc), normalizeEther(10 ether, btcDecimal));
+    accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
+    accountManager.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
+    accountManager.addCollateralFor(ALICE, 0, address(weth), normalizeEther(40 ether, wethDecimal));
     // alice added collat 40 ether
     // given collateralFactor = 9000, weth price = 1
     // then alice got power = 40 * 1 * 9000 / 10000 = 36 ether USD
     // alice borrowed 30% of vault then interest should be 0.0617647058676 per year
     // interest per day = 0.00016921837224
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
     vm.stopPrank();
   }
 
@@ -65,22 +65,22 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     weth.mint(ALICE, 40 ether);
     vm.startPrank(ALICE);
     // withdraw weth and add ibWeth as collateral for simpler calculation
-    lendFacet.deposit(ALICE, address(weth), 40 ether);
+    accountManager.deposit(address(weth), 40 ether);
     ibWeth.approve(moneyMarketDiamond, type(uint256).max);
-    collateralFacet.addCollateral(ALICE, _subAccountId, address(ibWeth), 40 ether);
-    collateralFacet.removeCollateral(ALICE, _subAccountId, address(weth), 40 ether);
+    accountManager.addCollateralFor(ALICE, _subAccountId, address(ibWeth), 40 ether);
+    accountManager.removeCollateral(_subAccountId, address(weth), 40 ether);
     vm.stopPrank();
 
     // now 1 ibWeth = 1 weth
     // make 1 ibWeth = 2 weth by inflating MM with 40 weth
     vm.prank(BOB);
-    lendFacet.deposit(BOB, address(weth), 40 ether);
+    accountManager.deposit(address(weth), 40 ether);
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, 40 ether);
 
     // ALICE borrow another 30 USDC = 60 USDC in debt
     vm.prank(ALICE);
-    borrowFacet.borrow(ALICE, 0, address(usdc), normalizeEther(30 ether, usdcDecimal));
+    accountManager.borrow(0, address(usdc), normalizeEther(30 ether, usdcDecimal));
 
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
     uint256 _bobIbWethBalanceBefore = ibWeth.balanceOf(BOB);

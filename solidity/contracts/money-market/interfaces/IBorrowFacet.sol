@@ -28,13 +28,14 @@ interface IBorrowFacet {
     address _account,
     uint256 _subAccountId,
     address _token,
-    uint256 _repayAmount
+    uint256 _debtShareAmount
   ) external;
 
   function repayWithCollat(
+    address _account,
     uint256 _subAccountId,
     address _token,
-    uint256 _repayAmount
+    uint256 _debtShareAmount
   ) external;
 
   function accrueInterest(address _token) external;

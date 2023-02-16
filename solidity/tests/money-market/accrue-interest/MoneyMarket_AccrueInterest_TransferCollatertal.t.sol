@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { MoneyMarket_BaseTest, MockERC20, console } from "./MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
-import { TripleSlopeModel6, IInterestRateModel } from "../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { TripleSlopeModel7 } from "../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
+import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -26,10 +26,10 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     adminFacet.setInterestModel(address(isolateToken), address(model));
 
     vm.startPrank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), 50 ether);
-    lendFacet.deposit(ALICE, address(btc), 100 ether);
-    lendFacet.deposit(ALICE, address(usdc), normalizeEther(20 ether, usdcDecimal));
-    lendFacet.deposit(ALICE, address(isolateToken), 20 ether);
+    accountManager.deposit(address(weth), 50 ether);
+    accountManager.deposit(address(btc), 100 ether);
+    accountManager.deposit(address(usdc), normalizeEther(20 ether, usdcDecimal));
+    accountManager.deposit(address(isolateToken), 20 ether);
     vm.stopPrank();
   }
 
@@ -41,14 +41,14 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
     uint256 _usdcBorrowAmount = normalizeEther(10 ether, usdcDecimal);
 
     vm.startPrank(ALICE);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
-    collateralFacet.addCollateral(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _wethBorrowAmount * 2);
+    accountManager.addCollateralFor(ALICE, subAccount0, address(usdc), _usdcBorrowAmount * 2);
     vm.stopPrank();
 
     // BOB borrow
     vm.startPrank(ALICE);
-    borrowFacet.borrow(ALICE, subAccount0, address(weth), _wethBorrowAmount);
-    borrowFacet.borrow(ALICE, subAccount0, address(usdc), _usdcBorrowAmount);
+    accountManager.borrow(subAccount0, address(weth), _wethBorrowAmount);
+    accountManager.borrow(subAccount0, address(usdc), _usdcBorrowAmount);
     vm.stopPrank();
 
     // time past
@@ -56,7 +56,7 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
 
     vm.startPrank(ALICE);
     // transfer collateral will trigger accrue interest on all borrowed token
-    collateralFacet.transferCollateral(0, 1, address(weth), 0);
+    accountManager.transferCollateral(0, 1, address(weth), 0);
     vm.stopPrank();
 
     // assert ALICE

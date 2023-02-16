@@ -51,7 +51,7 @@ contract InterestBearingToken_ERC4626Test is InterestBearingTokenBaseTest {
     // need to do like this because ibWeth deployed by diamond is not the same as ibToken deployed in this test
     // 1 ibToken = 2 weth
     vm.prank(ALICE);
-    lendFacet.deposit(ALICE, address(weth), normalizeEther(2 ether, _ibTokenDecimal));
+    accountManager.deposit(address(weth), normalizeEther(2 ether, _ibTokenDecimal));
     vm.prank(moneyMarketDiamond);
     ibToken.onDeposit(ALICE, 0, normalizeEther(1 ether, _ibTokenDecimal));
 
