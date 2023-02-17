@@ -17,11 +17,6 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   using SafeCastUpgradeable for int256;
   using SafeERC20Upgradeable for IERC20Upgradeable;
 
-  error Rewarder1_BadArguments();
-  error Rewarder1_NotFL();
-  error Rewarder1_PoolExisted();
-  error Rewarder1_PoolNotExisted();
-
   address public rewardToken;
 
   struct UserInfo {
@@ -48,15 +43,15 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   uint256 public maxRewardPerSecond;
 
-  event LogOnDeposit(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogOnWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogHarvest(address indexed user, uint256 indexed pid, uint256 amount);
-  event LogAddPool(uint256 indexed pid, uint256 allocPoint);
-  event LogSetPool(uint256 indexed pid, uint256 allocPoint);
-  event LogUpdatePool(uint256 indexed pid, uint64 lastRewardTime, uint256 stakedBalance, uint256 accRewardPerShare);
-  event LogRewardPerSecond(uint256 rewardPerSecond);
-  event LogSetName(string name);
-  event LogSetMaxRewardPerSecond(uint256 maxRewardPerSecond);
+  event LogOnDeposit(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogOnWithdraw(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogHarvest(address indexed _user, uint256 indexed _pid, uint256 _amount);
+  event LogAddPool(uint256 indexed _pid, uint256 _allocPoint);
+  event LogSetPool(uint256 indexed _pid, uint256 _newAllocPoint);
+  event LogUpdatePool(uint256 indexed _pid, uint64 _lastRewardTime, uint256 _stakedBalance, uint256 _accRewardPerShare);
+  event LogRewardPerSecond(uint256 _newRewardPerSecond);
+  event LogSetName(string _name);
+  event LogSetMaxRewardPerSecond(uint256 _newMaxRewardPerSecond);
 
   modifier onlyFL() {
     if (msg.sender != miniFL) revert Rewarder1_NotFL();
@@ -152,14 +147,14 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
   /// @notice Sets the reward per second to be distributed.
   /// @dev Can only be called by the owner.
-  /// @param _rewardPerSecond The amount of reward token to be distributed per second.
+  /// @param _newRewardPerSecond The amount of reward token to be distributed per second.
   /// @param _withUpdate If true, do mass update pools
-  function setRewardPerSecond(uint256 _rewardPerSecond, bool _withUpdate) external onlyOwner {
-    if (_rewardPerSecond > maxRewardPerSecond) revert Rewarder1_BadArguments();
+  function setRewardPerSecond(uint256 _newRewardPerSecond, bool _withUpdate) external onlyOwner {
+    if (_newRewardPerSecond > maxRewardPerSecond) revert Rewarder1_BadArguments();
 
     if (_withUpdate) _massUpdatePools();
-    rewardPerSecond = _rewardPerSecond;
-    emit LogRewardPerSecond(_rewardPerSecond);
+    rewardPerSecond = _newRewardPerSecond;
+    emit LogRewardPerSecond(_newRewardPerSecond);
   }
 
   /// @notice Returns the number of pools.
@@ -194,17 +189,18 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Update the given pool's allocation point.
   /// @dev Can only be called by the owner.
   /// @param _pid The index of the pool. See `poolInfo`.
-  /// @param _allocPoint The allocation point of the pool.
+  /// @param _newAllocPoint The allocation point of the pool.
   /// @param _withUpdate If true, do mass update pools
   function setPool(
     uint256 _pid,
-    uint256 _allocPoint,
+    uint256 _newAllocPoint,
     bool _withUpdate
   ) external onlyOwner {
+    if (poolInfo[_pid].lastRewardTime == 0) revert Rewarder1_PoolNotExisted();
     if (_withUpdate) _massUpdatePools();
-    totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _allocPoint;
-    poolInfo[_pid].allocPoint = _allocPoint.toUint64();
-    emit LogSetPool(_pid, _allocPoint);
+    totalAllocPoint = totalAllocPoint - poolInfo[_pid].allocPoint + _newAllocPoint;
+    poolInfo[_pid].allocPoint = _newAllocPoint.toUint64();
+    emit LogSetPool(_pid, _newAllocPoint);
   }
 
   /// @notice View function to see pending rewards for a given pool.
@@ -295,11 +291,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   /// @notice Set max reward per second
-  /// @param _maxRewardPerSecond The max reward per second
-  function setMaxRewardPerSecond(uint256 _maxRewardPerSecond) external onlyOwner {
-    if (_maxRewardPerSecond <= rewardPerSecond) revert Rewarder1_BadArguments();
+  /// @param _newMaxRewardPerSecond The max reward per second
+  function setMaxRewardPerSecond(uint256 _newMaxRewardPerSecond) external onlyOwner {
+    if (_newMaxRewardPerSecond <= rewardPerSecond) revert Rewarder1_BadArguments();
 
-    maxRewardPerSecond = _maxRewardPerSecond;
-    emit LogSetMaxRewardPerSecond(_maxRewardPerSecond);
+    maxRewardPerSecond = _newMaxRewardPerSecond;
+    emit LogSetMaxRewardPerSecond(_newMaxRewardPerSecond);
   }
 }
