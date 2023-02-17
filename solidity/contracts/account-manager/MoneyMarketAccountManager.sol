@@ -251,6 +251,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
+  /// @notice Deposit token to Money Market and stake the ibToken to miniFL
+  /// @param _token The token to deposit
+  /// @param _amount The amount to deposit
   function depositAndStake(address _token, uint256 _amount) external {
     // skip if deposit 0 amount
     if (_amount != 0) {
@@ -265,19 +268,23 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
-  function unstakeAndWithdraw(address _ibToken, uint256 _amount) external {
+  /// @notice Unstake ibToken from miniFL and withdraw from MoneyMarket
+  /// @param _ibToken The ibToken token to withdraw
+  /// @param _ibTokenAmount The amount to withdraw
+  function unstakeAndWithdraw(address _ibToken, uint256 _ibTokenAmount) external {
     // Skip if trying to remove 0
     // The _underlyingAmountReceived is expected to be greater than 0
     // making the ERC20.transfer impossible to revert on transfer 0 amount
-    if (_amount != 0) {
-      // Execute remove collateral first
-      // Then withdraw all of the ibToken received from removal of collateral
-      // todo: get amount out from miniFL
-      // (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(
-      //   _ibToken,
-      //   _removeCollateral(_subAccountId, _ibToken, _amount)
-      // );
-      // IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
+    if (_ibTokenAmount != 0) {
+      // unstake from miniFL with given amount
+      // If the transaction went through, the amount received will always equals to the _amount
+      miniFl.withdraw(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _ibTokenAmount);
+
+      //  withdraw all of the ibToken received from unstaking from miniFL
+      (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibTokenAmount);
+
+      // Transfer the underlying token back to the caller
+      IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
     }
   }
 
