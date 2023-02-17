@@ -162,12 +162,6 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
-    // Ensure that ultimately the subaccount will still remain healthy
-    // meaning total borrowing power is greather or equal to what has been used
-    // While repaying should always result in subaccount being healthier than before
-    // This line is for code consistency
-    LibMoneyMarket01.validateSubaccountIsHealthy(_subAccount, moneyMarketDs);
-
     emit LogRepay(_account, _subAccountId, _token, msg.sender, _actualAmountToRepay);
   }
 

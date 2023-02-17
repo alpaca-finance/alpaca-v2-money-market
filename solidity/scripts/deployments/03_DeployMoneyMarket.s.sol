@@ -12,7 +12,7 @@ import { PancakeswapV2IbTokenLiquidationStrategy } from "solidity/contracts/mone
 import { FixedFeeModel } from "solidity/contracts/money-market/fee-models/FixedFeeModel.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
-contract DeployMoneyMarket is BaseScript {
+contract DeployMoneyMarketScript is BaseScript {
   using stdJson for string;
 
   function run() public {

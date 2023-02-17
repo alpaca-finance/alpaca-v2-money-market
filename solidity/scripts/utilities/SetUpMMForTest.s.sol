@@ -49,26 +49,23 @@ contract SetUpMMForTestScript is BaseScript {
       maxBorrow: 30 ether,
       maxCollateral: 100 ether
     });
-    address ibBnb = moneyMarket.openMarket(bnb, tokenConfigInput, tokenConfigInput);
+    IAdminFacet.TokenConfigInput memory ibTokenConfigInput = tokenConfigInput;
+    address ibBnb = moneyMarket.openMarket(bnb, tokenConfigInput, ibTokenConfigInput);
     tokenConfigInput.token = busd;
-    address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, tokenConfigInput);
+    address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
     tokenConfigInput.token = mock6DecimalsToken;
-    address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, tokenConfigInput);
+    address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, ibTokenConfigInput);
     tokenConfigInput.token = dodo;
     tokenConfigInput.tier = LibMoneyMarket01.AssetTier.CROSS;
     tokenConfigInput.collateralFactor = 0;
     tokenConfigInput.maxCollateral = 0;
-    address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, tokenConfigInput);
+    ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.UNLISTED;
+    ibTokenConfigInput.collateralFactor = 0;
+    ibTokenConfigInput.maxCollateral = 0;
+    address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
     tokenConfigInput.token = pstake;
     tokenConfigInput.tier = LibMoneyMarket01.AssetTier.ISOLATE;
-    address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, tokenConfigInput);
-
-    // TEMP: set user as account manager. to be migrated to router
-    {
-      address[] memory _accountManagers = new address[](1);
-      _accountManagers[0] = userAddress;
-      moneyMarket.setAccountManagersOk(_accountManagers, true);
-    }
+    address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, ibTokenConfigInput);
 
     _stopBroadcast();
 
@@ -82,28 +79,30 @@ contract SetUpMMForTestScript is BaseScript {
     MockERC20(dodo).mint(userAddress, 100 ether);
     MockERC20(pstake).mint(userAddress, 100 ether);
 
-    MockERC20(bnb).approve(address(moneyMarket), type(uint256).max);
-    MockERC20(busd).approve(address(moneyMarket), type(uint256).max);
-    MockERC20(mock6DecimalsToken).approve(address(moneyMarket), type(uint256).max);
-    MockERC20(dodo).approve(address(moneyMarket), type(uint256).max);
-    MockERC20(pstake).approve(address(moneyMarket), type(uint256).max);
+    MockERC20(bnb).approve(address(accountManager), type(uint256).max);
+    MockERC20(busd).approve(address(accountManager), type(uint256).max);
+    MockERC20(mock6DecimalsToken).approve(address(accountManager), type(uint256).max);
+    MockERC20(dodo).approve(address(accountManager), type(uint256).max);
+    MockERC20(pstake).approve(address(accountManager), type(uint256).max);
 
     // seed money market
-    moneyMarket.deposit(userAddress, dodo, 10 ether);
-    moneyMarket.deposit(userAddress, pstake, 10 ether);
-    moneyMarket.deposit(userAddress, mock6DecimalsToken, 10e6);
+    accountManager.deposit(dodo, 10 ether);
+    accountManager.deposit(pstake, 10 ether);
+    accountManager.deposit(mock6DecimalsToken, 10e6);
 
     // subAccount 0
-    moneyMarket.addCollateral(userAddress, 0, bnb, 99.9 ether);
-    moneyMarket.addCollateral(userAddress, 0, busd, 10 ether);
+    accountManager.depositAndAddCollateral(0, bnb, 0.345 ether);
 
-    moneyMarket.borrow(userAddress, 0, dodo, 3.14159 ether);
-    moneyMarket.borrow(userAddress, 0, mock6DecimalsToken, 12e5);
+    accountManager.addCollateralFor(userAddress, 0, bnb, 97.9 ether);
+    accountManager.addCollateralFor(userAddress, 0, busd, 10 ether);
+
+    accountManager.borrow(0, dodo, 3.14159 ether);
+    accountManager.borrow(0, mock6DecimalsToken, 12e5);
 
     // subAccount 1
-    moneyMarket.addCollateral(userAddress, 1, mock6DecimalsToken, 10e6);
+    accountManager.addCollateralFor(userAddress, 1, mock6DecimalsToken, 10e6);
 
-    moneyMarket.borrow(userAddress, 1, pstake, 2.34 ether);
+    accountManager.borrow(1, pstake, 2.34 ether);
 
     _stopBroadcast();
 

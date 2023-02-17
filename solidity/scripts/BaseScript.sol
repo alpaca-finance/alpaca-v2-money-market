@@ -15,6 +15,7 @@ import { IBorrowFacet } from "solidity/contracts/money-market/interfaces/IBorrow
 import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFacet.sol";
 import { IOwnershipFacet } from "solidity/contracts/money-market/interfaces/IOwnershipFacet.sol";
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
+import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
@@ -31,6 +32,7 @@ abstract contract BaseScript is Script {
 
   IMoneyMarket internal moneyMarket;
   IMiniFL internal miniFL;
+  IMoneyMarketAccountManager internal accountManager;
   address internal deployerAddress;
   address internal userAddress;
   address internal proxyAdminAddress;
@@ -43,6 +45,7 @@ abstract contract BaseScript is Script {
     moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
+    accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager"), (IMoneyMarketAccountManager));
   }
 
   // function _pretendMM() internal {
