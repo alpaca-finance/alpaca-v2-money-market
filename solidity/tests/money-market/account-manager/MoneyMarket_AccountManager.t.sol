@@ -15,17 +15,17 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
     super.setUp();
   }
 
-  function test_depositAndAddCollateral_ShouldWork() external {
+  function testCorrectness_depositAndAddCollateral_ShouldWork() external {
     vm.prank(ALICE);
     accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
   }
 
-  function test_depositETHTokenAndAddCollateral_ShouldWork() external {
+  function testCorrectness_depositETHTokenAndAddCollateral_ShouldWork() external {
     vm.prank(ALICE);
     accountManager.depositETHAndAddCollateral{ value: 10 ether }(0);
   }
 
-  function test_RemoveCollatAndWithdraw_ShouldWork() external {
+  function testCorrectness_RemoveCollatAndWithdraw_ShouldWork() external {
     uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
     vm.startPrank(ALICE);
     accountManager.depositAndAddCollateral(0, address(weth), 10 ether);
@@ -35,7 +35,7 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE), _wethBalanceBefore);
   }
 
-  function test_RemoveCollatAndWithdrawETH_ShouldWork() external {
+  function testCorrectness_RemoveCollatAndWithdrawETH_ShouldWork() external {
     uint256 _nativeBalanceBefore = ALICE.balance;
     vm.startPrank(ALICE);
     accountManager.depositETHAndAddCollateral{ value: 10 ether }(0);
@@ -43,5 +43,15 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     assertEq(ALICE.balance, _nativeBalanceBefore);
+  }
+
+  function testCorrectness_UnstakeAndWithdraw_ShouldWork() external {
+    uint256 _wethBalanceBefore = weth.balanceOf(ALICE);
+    vm.startPrank(ALICE);
+    accountManager.depositAndStake(address(weth), 10 ether);
+    accountManager.unstakeAndWithdraw(address(ibWeth), 10 ether);
+    vm.stopPrank();
+
+    assertEq(weth.balanceOf(ALICE), _wethBalanceBefore);
   }
 }

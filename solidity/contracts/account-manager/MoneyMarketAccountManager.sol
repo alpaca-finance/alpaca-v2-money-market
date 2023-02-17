@@ -17,7 +17,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
 
   IMoneyMarket public moneyMarket;
   IWNativeRelayer public nativeRelayer;
-  IMiniFL public miniFl;
+  IMiniFL public miniFL;
   address public wNativeToken;
   address public ibWNativeToken;
 
@@ -40,7 +40,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     ibWNativeToken = _ibWNativeToken;
     nativeRelayer = IWNativeRelayer(_nativeRelayer);
     wNativeToken = _wNativeToken;
-    miniFl = IMiniFL(IMoneyMarket(_moneyMarket).getMiniFL());
+    miniFL = IMiniFL(IMoneyMarket(_moneyMarket).getMiniFL());
     moneyMarket = IMoneyMarket(_moneyMarket);
   }
 
@@ -263,8 +263,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
       (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
 
       // Use the received ibToken and stake it at miniFL on bahalf of the caller
-      IERC20(_ibToken).safeApprove(address(moneyMarket), _amountReceived);
-      miniFl.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
+      IERC20(_ibToken).safeApprove(address(miniFL), _amountReceived);
+      miniFL.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
     }
   }
 
@@ -278,7 +278,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     if (_ibTokenAmount != 0) {
       // unstake from miniFL with given amount
       // If the transaction went through, the amount received will always equals to the _amount
-      miniFl.withdraw(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _ibTokenAmount);
+      miniFL.withdraw(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _ibTokenAmount);
 
       //  withdraw all of the ibToken received from unstaking from miniFL
       (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibTokenAmount);

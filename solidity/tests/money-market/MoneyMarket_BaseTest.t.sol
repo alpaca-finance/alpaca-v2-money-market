@@ -152,7 +152,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     address[] memory _accountManagers = new address[](1);
     _accountManagers[0] = address(accountManager);
 
+    // Need this for AM to be able to interact with MM
     adminFacet.setAccountManagersOk(_accountManagers, true);
+    // Need this for depositAndStake
+    miniFL.setWhitelistedCallers(_accountManagers, true);
 
     ibWethDecimal = ibWeth.decimals();
     ibUsdcDecimal = ibUsdc.decimals();
