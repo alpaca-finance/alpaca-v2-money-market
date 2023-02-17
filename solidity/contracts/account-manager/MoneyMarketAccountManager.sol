@@ -106,7 +106,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     }
   }
 
-  /// @notice Withdraw the lended native token by burning the interest bearing token
+  /// @notice Withdraw the lent native token by burning the interest bearing token
   /// @param _ibAmount The amount of interest bearing token to burn
   function withdrawETH(uint256 _ibAmount) external {
     // skip if trying to withdraw 0 amount
