@@ -14,6 +14,7 @@ import { IPriceOracle } from "solidity/contracts/oracle/interfaces/IPriceOracle.
 // miniFL
 import { MiniFL } from "../../contracts/miniFL/MiniFL.sol";
 import { Rewarder } from "../../contracts/miniFL/Rewarder.sol";
+import { MoneyMarketAccountManager } from "../../contracts/account-manager/MoneyMarketAccountManager.sol";
 
 // mm contract
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
@@ -181,6 +182,24 @@ contract BaseTest is DSTest {
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return MiniFL(_proxy);
+  }
+
+  function deployMoneyMarketAccountManager(
+    address _moneyMarket,
+    address _wNativeToken,
+    address _nativeRelayer
+  ) internal returns (MoneyMarketAccountManager) {
+    bytes memory _logicBytecode = abi.encodePacked(
+      vm.getCode("./out/MoneyMarketAccountManager.sol/MoneyMarketAccountManager.json")
+    );
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,address,address)")),
+      _moneyMarket,
+      _wNativeToken,
+      _nativeRelayer
+    );
+    address payable _proxy = payable(_setupUpgradeable(_logicBytecode, _initializer));
+    return MoneyMarketAccountManager(_proxy);
   }
 
   function deployRewarder(

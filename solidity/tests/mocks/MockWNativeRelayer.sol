@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { IWNative } from "../../contracts/money-market/interfaces/IWNative.sol";
+import { IWNative } from "../../contracts/interfaces/IWNative.sol";
 
 contract MockWNativeRelayer {
   address private wnative;

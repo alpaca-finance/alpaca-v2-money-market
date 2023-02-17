@@ -16,33 +16,25 @@ contract MoneyMarket_ReentrancyGuardTest is MoneyMarket_BaseTest {
 
   function setUp() public override {
     super.setUp();
-    attacker = new MockAttacker(moneyMarketDiamond, address(ibWNative));
+    attacker = new MockAttacker();
   }
 
   function testRevert_WhenMMGetReentrance_ShouldRevert() external {
     // wrong error message since it is expected message inside contract called.
     vm.expectRevert();
-    attacker.attack(2 ether);
+    attacker.attack{ value: 2 ether }();
   }
 }
 
-contract MockAttacker is BaseTest {
-  address public moneyMarket;
-  address public ibWNativeToken;
-
-  constructor(address _moneyMarket, address _ibWNativeToken) {
-    moneyMarket = _moneyMarket;
-    ibWNativeToken = _ibWNativeToken;
-  }
-
-  function attack(uint256 _amount) external payable {
-    ILendFacet(moneyMarket).deposit(ALICE, address(weth), _amount);
-    ILendFacet(moneyMarket).withdraw(ALICE, address(ibWeth), 1 ether);
+contract MockAttacker is MoneyMarket_BaseTest {
+  function attack() external payable {
+    accountManager.depositETH{ value: address(this).balance }();
+    accountManager.withdrawETH(1 ether);
   }
 
   //@dev Fallback function to accept BNB.
   receive() external payable {
     vm.expectRevert(abi.encodeWithSelector(LibReentrancyGuard.LibReentrancyGuard_ReentrantCall.selector));
-    ILendFacet(moneyMarket).withdraw(ALICE, ibWNativeToken, 1 ether);
+    accountManager.withdraw(address(ibWNative), 1 ether);
   }
 }

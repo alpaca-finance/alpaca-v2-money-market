@@ -76,13 +76,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _whitelistedCallers[0] = moneyMarketDiamond;
     miniFL.setWhitelistedCallers(_whitelistedCallers, true);
 
-    // set account manager to allow interactions
-    accountManager = IMoneyMarketAccountManager(new MoneyMarketAccountManager(moneyMarketDiamond));
-    address[] memory _accountManagers = new address[](1);
-    _accountManagers[0] = address(accountManager);
-
-    adminFacet.setAccountManagersOk(_accountManagers, true);
-
     // set ibToken and debtToken implementation
     // warning: this one should set before open market
     adminFacet.setIbTokenImplementation(address(new InterestBearingToken()));
@@ -152,6 +145,19 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     });
     adminFacet.openMarket(address(cake), _cakeTokenConfigInput, _cakeTokenConfigInput);
 
+    // set account manager to allow interactions
+    accountManager = IMoneyMarketAccountManager(
+      deployMoneyMarketAccountManager(moneyMarketDiamond, address(wNativeToken), address(wNativeRelayer))
+    );
+
+    address[] memory _accountManagers = new address[](1);
+    _accountManagers[0] = address(accountManager);
+
+    // Need this for AM to be able to interact with MM
+    adminFacet.setAccountManagersOk(_accountManagers, true);
+    // Need this for depositAndStake
+    miniFL.setWhitelistedCallers(_accountManagers, true);
+
     ibWethDecimal = ibWeth.decimals();
     ibUsdcDecimal = ibUsdc.decimals();
     ibBtcDecimal = ibBtc.decimals();
@@ -173,6 +179,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibWeth.approve(address(accountManager), type(uint256).max);
     ibUsdc.approve(address(accountManager), type(uint256).max);
     cake.approve(address(accountManager), type(uint256).max);
+    ibWNative.approve(address(accountManager), type(uint256).max);
     vm.stopPrank();
 
     vm.startPrank(BOB);

@@ -10,6 +10,18 @@ interface IMiniFL {
   error MiniFL_InsufficientFundedAmount();
   error MiniFL_Unauthorized();
 
+  function deposit(
+    address _for,
+    uint256 _pid,
+    uint256 _amountToDeposit
+  ) external;
+
+  function withdraw(
+    address _from,
+    uint256 _pid,
+    uint256 _amountToWithdraw
+  ) external;
+
   function poolLength() external view returns (uint256);
 
   function stakingTokens(uint256 _pid) external view returns (address);
