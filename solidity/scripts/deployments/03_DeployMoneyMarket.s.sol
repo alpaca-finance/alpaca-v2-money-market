@@ -19,6 +19,7 @@ contract DeployMoneyMarketScript is BaseScript {
     _loadAddresses();
 
     _startDeployerBroadcast();
+
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
       .deployMoneyMarketDiamond(address(miniFL));
