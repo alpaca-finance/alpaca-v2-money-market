@@ -331,6 +331,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     // If there's excess amount left, transfer back to user
     IERC20(_token).safeApprove(address(moneyMarket), _repayAmount);
     moneyMarket.repay(_account, _subAccountId, _token, _debtShareToRepay);
+    // Reset allowance as moneyMarket.repay() might not used all the allowance
     IERC20(_token).safeApprove(address(moneyMarket), 0);
 
     // Calculate the excess amount left in the contract
