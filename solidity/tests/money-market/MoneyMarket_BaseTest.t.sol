@@ -147,8 +147,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set account manager to allow interactions
     accountManager = IMoneyMarketAccountManager(
-      new MoneyMarketAccountManager(moneyMarketDiamond, address(wNativeToken), address(wNativeRelayer))
+      deployMoneyMarketAccountManager(moneyMarketDiamond, address(wNativeToken), address(wNativeRelayer))
     );
+
     address[] memory _accountManagers = new address[](1);
     _accountManagers[0] = address(accountManager);
 
