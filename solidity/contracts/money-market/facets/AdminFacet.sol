@@ -49,12 +49,8 @@ contract AdminFacet is IAdminFacet {
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetDebtTokenImplementation(address indexed _newImplementation);
-  event LogSetProtocolConfig(
-    address indexed _account,
-    address indexed _token,
-    uint256 maxTokenBorrow,
-    uint256 borrowLimitUSDValue
-  );
+  event LogSetProtocolTokenBorrowLimit(address indexed _account, address indexed _token, uint256 maxTokenBorrow);
+  event LogSetProtocolConfig(address _account, uint256 _borrowLimitUSDValue);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
@@ -445,17 +441,16 @@ contract AdminFacet is IAdminFacet {
         _tokenBorrowLimit = _protocolConfigInput.tokenBorrowLimit[_j];
         protocolConfig.maxTokenBorrow[_tokenBorrowLimit.token] = _tokenBorrowLimit.maxTokenBorrow;
 
-        // TODO: revise this log
-        emit LogSetProtocolConfig(
+        emit LogSetProtocolTokenBorrowLimit(
           _protocolConfigInput.account,
           _tokenBorrowLimit.token,
-          _tokenBorrowLimit.maxTokenBorrow,
-          _protocolConfigInput.borrowLimitUSDValue
+          _tokenBorrowLimit.maxTokenBorrow
         );
         unchecked {
           ++_j;
         }
       }
+      emit LogSetProtocolConfig(_protocolConfigInput.account, _protocolConfigInput.borrowLimitUSDValue);
       unchecked {
         ++_i;
       }
