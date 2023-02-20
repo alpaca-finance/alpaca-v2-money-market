@@ -533,7 +533,7 @@ contract AdminFacet is IAdminFacet {
         moneyMarketDs
       );
 
-      // Remove all token debt of subAccount
+      // Reset debts of the token under subAccount
       LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
         _account,
         _subAccount,
