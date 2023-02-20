@@ -462,8 +462,7 @@ contract AdminFacet is IAdminFacet {
   /// @param _newLiquidationThreshold The threshold that need to reach to allow liquidation
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
     // Revert if `_newMaxLiquidateBps` exceed max bps because can't liquidate more than full position (100%)
-    // Revert if `_newLiquidationThreshold` is less than max bps because
-    // liquidation must happen before position is underwater (100%)
+    // Revert if `_newLiquidationThreshold` is less than max bps
     if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold < LibMoneyMarket01.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
     }
