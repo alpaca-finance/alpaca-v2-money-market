@@ -155,19 +155,20 @@ abstract contract AV_BaseTest is BaseTest {
     ibUsdc = TestHelper.openMarketWithDefaultTokenConfig(moneyMarketDiamond, address(usdc));
 
     mmAdminFacet.setNonCollatBorrowerOk(avDiamond, true);
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
 
+    address[] memory _tokens = new address[](2);
+    _tokens[0] = address(weth);
+    _tokens[1] = address(usdc);
+
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
       maxCollateral: 100e18
     });
-
     _inputs[1] = IAdminFacet.TokenConfigInput({
-      token: address(usdc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -175,7 +176,7 @@ abstract contract AV_BaseTest is BaseTest {
       maxCollateral: normalizeEther(10e24, usdcDecimal)
     });
 
-    mmAdminFacet.setTokenConfigs(_inputs);
+    mmAdminFacet.setTokenConfigs(_tokens, _inputs);
 
     IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](3);
     _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({

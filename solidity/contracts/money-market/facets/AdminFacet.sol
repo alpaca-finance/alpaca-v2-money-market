@@ -81,8 +81,8 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Open a new market for new token
   /// @param _token The token for lending/borrowing
-  /// @param _tokenConfigInput Initial config for underlying token, ignore token provided in input struct
-  /// @param _ibTokenConfigInput Initial config for the new ib token, ignore token provided in input struct
+  /// @param _tokenConfigInput Initial config for underlying token
+  /// @param _ibTokenConfigInput Initial config for the new ib token
   /// @return _newIbToken The address of interest bearing token created for this market
   function openMarket(
     address _token,
@@ -125,9 +125,6 @@ contract AdminFacet is IAdminFacet {
     IDebtToken(_newDebtToken).setOkHolders(_okHolders, true);
 
     // Set tokenConfig for underlyingToken and the new ibToken
-    // Ignoring provided field `token` in input struct since
-    // the input struct is shared with `setTokenConfigs` function
-    // Use local `_token` param and newly created `_newIbToken` instead
     _setTokenConfig(_token, _tokenConfigInput, moneyMarketDs);
     _setTokenConfig(_newIbToken, _ibTokenConfigInput, moneyMarketDs);
 
@@ -147,13 +144,21 @@ contract AdminFacet is IAdminFacet {
   }
 
   /// @notice Set token-specific configuration
-  /// @param _tokenConfigInputs Array of struct of parameters for the token
-  // TODO: I think should remove token from input struct and accept array instead
-  function setTokenConfigs(TokenConfigInput[] calldata _tokenConfigInputs) external onlyOwner {
+  /// @param _tokens Array of token to set config for
+  /// @param _tokenConfigInputs Array of struct of parameters for the token, ordering should match `_tokens`
+  function setTokenConfigs(address[] calldata _tokens, TokenConfigInput[] calldata _tokenConfigInputs)
+    external
+    onlyOwner
+  {
+    // Revert if tokens and inputs length mismatch
+    if (_tokens.length != _tokenConfigInputs.length) {
+      revert AdminFacet_InvalidArguments();
+    }
+
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     uint256 _inputLength = _tokenConfigInputs.length;
     for (uint256 _i; _i < _inputLength; ) {
-      _setTokenConfig(_tokenConfigInputs[_i].token, _tokenConfigInputs[_i], moneyMarketDs);
+      _setTokenConfig(_tokens[_i], _tokenConfigInputs[_i], moneyMarketDs);
 
       unchecked {
         ++_i;
@@ -166,14 +171,14 @@ contract AdminFacet is IAdminFacet {
     TokenConfigInput memory _tokenConfigInput,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
-    // R=revert if factors exceed MAX_BPS
+    // Revert if factors exceed MAX_BPS
     if (
       _tokenConfigInput.collateralFactor > LibMoneyMarket01.MAX_BPS ||
       _tokenConfigInput.borrowingFactor > LibMoneyMarket01.MAX_BPS
     ) {
       revert AdminFacet_InvalidArguments();
     }
-    // BorrowingFactor can't be zero otherwise will cause divide by zero error
+    // borrowingFactor can't be zero otherwise will cause divide by zero error
     if (_tokenConfigInput.borrowingFactor == 0) {
       revert AdminFacet_InvalidArguments();
     }
@@ -191,7 +196,7 @@ contract AdminFacet is IAdminFacet {
       borrowingFactor: _tokenConfigInput.borrowingFactor,
       maxCollateral: _tokenConfigInput.maxCollateral,
       maxBorrow: _tokenConfigInput.maxBorrow,
-      to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_tokenConfigInput.token)
+      to18ConversionFactor: LibMoneyMarket01.to18ConversionFactor(_token)
     });
 
     moneyMarketDs.tokenConfigs[_token] = _tokenConfig;
