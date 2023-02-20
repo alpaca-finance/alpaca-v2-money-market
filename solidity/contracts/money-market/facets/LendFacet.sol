@@ -56,12 +56,12 @@ contract LendFacet is ILendFacet {
   /// @param _for The actual lender. Used only for tracking purpose
   /// @param _token The token to lend
   /// @param _amount The amount to lend
-  /// @return _shareAmount The share amount gained from deposit
+  /// @return _ibAmount The share amount gained from deposit
   function deposit(
     address _for,
     address _token,
     uint256 _amount
-  ) external nonReentrant returns (uint256 _shareAmount) {
+  ) external nonReentrant returns (uint256 _ibAmount) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     // This will revert if markets are paused
@@ -81,7 +81,11 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     // Calculate ib amount from underlyingAmount
-    (, _shareAmount) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _amount, moneyMarketDs);
+    _ibAmount = LibShareUtil.valueToShare(
+      _amount,
+      IInterestBearingToken(_ibToken).totalSupply(),
+      LibMoneyMarket01.getTotalToken(_token, moneyMarketDs) // already accrue
+    );
 
     // Increase underlying token balance
     // Safe to use unchecked because amount can't overflow (amount <= totalSupply)
@@ -91,13 +95,13 @@ contract LendFacet is ILendFacet {
 
     // Transfer token in, Revert if fee on transfer
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
-    // Callback to ibToken to mint ibToken to msg.sender and emit ERC-4626 Deposit event
-    IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareAmount);
+    // Callback to mint ibToken to msg.sender and emit ERC-4626 Deposit event
+    IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _ibAmount);
 
     // _for is purely used for event tracking purpose
     // since this function will be called from only AccountManager
     // we need a way to track the actual lender
-    emit LogDeposit(_for, _token, msg.sender, _ibToken, _amount, _shareAmount);
+    emit LogDeposit(_for, _token, msg.sender, _ibToken, _amount, _ibAmount);
   }
 
   /// @notice Withdraw the lended token by burning the interest bearing token
@@ -125,14 +129,25 @@ contract LendFacet is ILendFacet {
     // Accrue interest so that ib amount calculation would be correct
     LibMoneyMarket01.accrueInterest(_underlyingToken, moneyMarketDs);
 
-    // TODO: move withdraw from lib to here and comment
-    _withdrawAmount = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, moneyMarketDs);
+    // Calculate `_underlyingToken` amount from ib amount
+    _withdrawAmount = LibShareUtil.shareToValue(
+      _shareAmount,
+      LibMoneyMarket01.getTotalToken(_underlyingToken, moneyMarketDs), // already accrue
+      IInterestBearingToken(_ibToken).totalSupply()
+    );
 
-    // Reduce _underlyingToken balance
+    // Revert if try to withdraw more than available balance
+    if (_withdrawAmount > moneyMarketDs.reserves[_underlyingToken]) {
+      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
+
+    // Reduce `_underlyingToken` balance
     // Safe to use unchecked here because we already check that `_withdrawAmount < reserves`
     unchecked {
       moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
     }
+    // Callback to burn ibToken from msg.sender and emit ERC-4626 Withdraw event
+    IInterestBearingToken(_ibToken).onWithdraw(msg.sender, msg.sender, _withdrawAmount, _shareAmount);
 
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
 
