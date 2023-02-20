@@ -44,6 +44,8 @@ contract LendFacet is ILendFacet {
     LibReentrancyGuard.unlock();
   }
 
+  /// @dev separate reentrancy lock to allow liquidation strategies
+  ///      to do reentrant withdraw during liquidation process
   modifier nonReentrantWithdraw() {
     LibReentrancyGuard.lockWithdraw();
     _;
@@ -70,17 +72,26 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
 
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
+    // Revert if market doesn't exist for _token
     if (_ibToken == address(0)) {
       revert LendFacet_InvalidToken(_token);
     }
 
+    // Accrue interest so that ib amount calculation would be correct
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
+    // Calculate ib amount from underlyingAmount
     (, _shareAmount) = LibMoneyMarket01.getShareAmountFromValue(_token, _ibToken, _amount, moneyMarketDs);
 
-    moneyMarketDs.reserves[_token] += _amount;
+    // Increase underlying token balance
+    // Safe to use unchecked because amount can't overflow (amount <= totalSupply)
+    unchecked {
+      moneyMarketDs.reserves[_token] += _amount;
+    }
 
+    // Transfer token in, Revert if fee on transfer
     LibMoneyMarket01.pullExactTokens(_token, msg.sender, _amount);
+    // Callback to ibToken to mint ibToken to msg.sender and emit ERC-4626 Deposit event
     IInterestBearingToken(_ibToken).onDeposit(msg.sender, _amount, _shareAmount);
 
     // _for is purely used for event tracking purpose
@@ -93,6 +104,7 @@ contract LendFacet is ILendFacet {
   /// @param _for The actual owner. Used only for tracking purpose
   /// @param _ibToken The interest bearing token to burn
   /// @param _shareAmount The amount of interest bearing token to burn
+  /// @return _withdrawAmount The amount withdrawn
   function withdraw(
     address _for,
     address _ibToken,
@@ -105,16 +117,22 @@ contract LendFacet is ILendFacet {
     LibMoneyMarket01.onlyAccountManager(moneyMarketDs);
 
     address _underlyingToken = moneyMarketDs.ibTokenToTokens[_ibToken];
-
+    // Revert if market doesn't exist for _ibToken
     if (_underlyingToken == address(0)) {
       revert LendFacet_InvalidToken(_ibToken);
     }
 
+    // Accrue interest so that ib amount calculation would be correct
     LibMoneyMarket01.accrueInterest(_underlyingToken, moneyMarketDs);
 
+    // TODO: move withdraw from lib to here and comment
     _withdrawAmount = LibMoneyMarket01.withdraw(_underlyingToken, _ibToken, _shareAmount, moneyMarketDs);
 
-    moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
+    // Reduce _underlyingToken balance
+    // Safe to use unchecked here because we already check that `_withdrawAmount < reserves`
+    unchecked {
+      moneyMarketDs.reserves[_underlyingToken] -= _withdrawAmount;
+    }
 
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
 
