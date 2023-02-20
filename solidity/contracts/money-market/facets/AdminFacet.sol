@@ -560,7 +560,7 @@ contract AdminFacet is IAdminFacet {
     // Prevent topup token that didn't have market
     if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) revert AdminFacet_InvalidToken(_token);
 
-    // Allow topup for fee on transfer tokens
+    // Allow topup for token that has fee on transfer
     uint256 _actualAmountReceived = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _amount);
     moneyMarketDs.reserves[_token] += _actualAmountReceived;
 
