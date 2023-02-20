@@ -34,8 +34,11 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   function nonCollatBorrow(address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // check if the money market is live
     LibMoneyMarket01.onlyLive(moneyMarketDs);
 
+    // check if the borrower is authorized
+    // non colateralized borrower have to be set via `AdminFacet`
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
     }
@@ -47,14 +50,22 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // total used borrowing power is calculated from all debt token of the account
     LibMoneyMarket01.accrueNonCollatBorrowedPositionsOf(msg.sender, moneyMarketDs);
 
+    // validate the all conditions for borrowing
+    //  1. check if the market is open for the token
+    //  2. check if the money market have enough token amount
+    //  3. check if the borrower has enough borrowing power
     _validate(msg.sender, _token, _amount, moneyMarketDs);
 
+    // update account debt values
     LibMoneyMarket01.nonCollatBorrow(msg.sender, _token, _amount, moneyMarketDs);
 
+    // check if the money market have enough token amount in reserve to borrow
     if (_amount > moneyMarketDs.reserves[_token]) {
       revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
     }
+    // update the global reserve of the token, as a result less borrowing can be made
     moneyMarketDs.reserves[_token] -= _amount;
+    // transfer the token to the borrower
     IERC20(_token).safeTransfer(msg.sender, _amount);
 
     emit LogNonCollatBorrow(msg.sender, _token, _amount);
@@ -70,22 +81,32 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _repayAmount
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // accrue interest for borrowed debt token, to mint share correctly
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
+    // get the existing debt value
     uint256 _oldDebtValue = LibMoneyMarket01.getNonCollatDebt(_account, _token, moneyMarketDs);
-
+    // if the amount to repay is more than the existing debt, repay only the existing debt
+    // otherwise repay debt for the amount to repay
     uint256 _debtToRemove = _oldDebtValue > _repayAmount ? _repayAmount : _oldDebtValue;
 
-    // transfer only amount to repay
+    // transfer only amount to repay to money market
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
 
+    // remove the debt from the account
     _removeDebt(_account, _token, _oldDebtValue, _debtToRemove, moneyMarketDs);
 
+    // update the global reserve of the token, as a result more borrowing can be made
     moneyMarketDs.reserves[_token] += _debtToRemove;
 
     emit LogNonCollatRepay(_account, _token, _debtToRemove);
   }
 
+  /// @dev Remove the debt from the account
+  /// @param _account The account to remove debt from
+  /// @param _token The token to remove debt for
+  /// @param _oldAccountDebtValue The old debt value of the account
+  /// @param _valueToRemove The amount to remove
   function _removeDebt(
     address _account,
     address _token,
@@ -96,39 +117,54 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // update account debt values
     moneyMarketDs.nonCollatAccountDebtValues[_account].updateOrRemove(_token, _oldAccountDebtValue - _valueToRemove);
 
+    // get the old token debt value
     uint256 _oldTokenDebt = moneyMarketDs.nonCollatTokenDebtValues[_token].getAmount(_account);
 
     // update token debt
     moneyMarketDs.nonCollatTokenDebtValues[_token].updateOrRemove(_account, _oldTokenDebt - _valueToRemove);
 
     // update global debt
-
     moneyMarketDs.globalDebts[_token] -= _valueToRemove;
 
     // emit event
     emit LogNonCollatRemoveDebt(_account, _token, _valueToRemove);
   }
 
+  /// @dev Validate the borrow
+  /// @param _account The borrower
+  /// @param _token The token to be borrowed
+  /// @param _amount The amount to borrow
+  /// @param moneyMarketDs The money market diamond storage
   function _validate(
     address _account,
     address _token,
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
+    // get ibToken address from _token
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 
     // check open market
+    // if the market is not open or , the address of _ibToken will be 0x0
     if (_ibToken == address(0)) {
       revert NonCollatBorrowFacet_InvalidToken(_token);
     }
 
+    // get total used borrowing power of the borrower
     uint256 _totalUsedBorrowingPower = LibMoneyMarket01.getTotalNonCollatUsedBorrowingPower(_account, moneyMarketDs);
 
+    // check capacity of money market for _token
     _checkCapacity(_token, _amount, moneyMarketDs);
 
+    // check borrowing power of the borrower
     _checkBorrowingPower(_totalUsedBorrowingPower, _token, _amount, moneyMarketDs);
   }
 
+  /// @dev Check if the borrower has enough borrowing power
+  /// @param _borrowedValue The total borrowed value of the borrower
+  /// @param _token The token to be borrowed
+  /// @param _amount The amount to borrow
+  /// @param moneyMarketDs The money market diamond storage
   function _checkBorrowingPower(
     uint256 _borrowedValue,
     address _token,
@@ -136,39 +172,55 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
     /// @dev: check the gas optimization on oracle call
+    // get price of the token in USD for borrowing power calculation
     uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
 
+    // get token config
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
+    // get borrowing power of the borrower
     uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowLimitUSDValue;
+    // get borrowing value of the new borrowing
     uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
       _amount,
       _tokenPrice,
       _tokenConfig.borrowingFactor,
       _tokenConfig.to18ConversionFactor
     );
+
+    // check if the borrower has enough borrowing power
+    // if used borrowing value + new borrowing value exceed borrowing power, the borrow is not allowed
     if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
       revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
     }
   }
 
+  /// @dev Check if the token has enough balance to borrow
+  /// @param _token The token to be borrowed
+  /// @param _borrowAmount The amount to borrow
+  /// @param moneyMarketDs The money market diamond storage
   function _checkCapacity(
     address _token,
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
+    // get money market _token balance
+    // balance = total _token balance - collateral _token balance
     uint256 _mmTokenBalance = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
 
+    // check if money market has enough _token balance to be borrowed
     if (_mmTokenBalance < _borrowAmount) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
     // check if accumulated borrowAmount exceed global limit
+    // if borrow amount + global debt exceed max borrow amount of _token, the borrow is not allowed
     if (_borrowAmount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }
 
     // check if accumulated borrowAmount exceed account limit
+    // if borrow amount + borrowed amount exceed max _token borrow amount of the account, the borrow is not allowed
     if (
       _borrowAmount + moneyMarketDs.nonCollatAccountDebtValues[msg.sender].getAmount(_token) >
       moneyMarketDs.protocolConfigs[msg.sender].maxTokenBorrow[_token]
