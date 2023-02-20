@@ -526,7 +526,7 @@ contract AdminFacet is IAdminFacet {
       // Accrue interest for token so debt share calculation would be correct
       LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
-      // Get all token debt of subAccount
+      // Get remaining debts of the token under subAccount
       (_shareToRemove, _amountToRemove) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
         _subAccount,
         _token,
