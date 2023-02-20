@@ -17,6 +17,8 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
 
     _startDeployerBroadcast();
 
+    // TODO: deploy wNativeToken or dump ibWNative address
+
     // deploy nativeRelayer
     // NOTE: remove this in prod
     nativeRelayer = address(new MockWNativeRelayer(wNativeToken));

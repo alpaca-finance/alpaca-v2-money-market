@@ -43,7 +43,7 @@ contract SetUpMMForTestScript is BaseScript {
 
     //---- setup mm configs ----//
     moneyMarket.setMinDebtSize(0.1 ether);
-    moneyMarket.setMaxNumOfToken(3, 3, 3);
+    moneyMarket.setMaxNumOfToken(10, 10, 10);
 
     moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
     moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
