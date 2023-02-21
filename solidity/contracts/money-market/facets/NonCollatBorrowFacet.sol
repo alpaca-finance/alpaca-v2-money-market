@@ -58,10 +58,6 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // update account debt values
     LibMoneyMarket01.nonCollatBorrow(msg.sender, _token, _amount, moneyMarketDs);
 
-    // check if the money market have enough token amount in reserve to borrow
-    if (_amount > moneyMarketDs.reserves[_token]) {
-      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
-    }
     // update the global reserve of the token
     moneyMarketDs.reserves[_token] -= _amount;
     // transfer the token to the borrower
@@ -90,15 +86,15 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _debtToRemove = _oldDebtValue > _repayAmount ? _repayAmount : _oldDebtValue;
 
     // transfer only amount to repay to money market
-    IERC20(_token).safeTransferFrom(msg.sender, address(this), _debtToRemove);
+    uint256 _actualDebtToRemove = LibMoneyMarket01.unsafePullTokens(msg.sender, address(this), _debtToRemove);
 
     // remove the debt from the account
-    _removeDebt(_account, _token, _oldDebtValue, _debtToRemove, moneyMarketDs);
+    _removeDebt(_account, _token, _oldDebtValue, _actualDebtToRemove, moneyMarketDs);
 
     // update the global reserve of the token, as a result more borrowing can be made
-    moneyMarketDs.reserves[_token] += _debtToRemove;
+    moneyMarketDs.reserves[_token] += _actualDebtToRemove;
 
-    emit LogNonCollatRepay(_account, _token, _debtToRemove);
+    emit LogNonCollatRepay(_account, _token, _actualDebtToRemove);
   }
 
   /// @dev Remove the debt from the account
@@ -203,12 +199,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _borrowAmount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    // get money market _token balance
-    // balance = total _token balance - collateral _token balance
-    uint256 _mmTokenBalance = IERC20(_token).balanceOf(address(this)) - moneyMarketDs.collats[_token];
-
-    // check if money market has enough _token balance to be borrowed
-    if (_mmTokenBalance < _borrowAmount) {
+    // check if the money market have enough token amount in reserve to borrow
+    if (_borrowAmount > moneyMarketDs.reserves[_token]) {
       revert NonCollatBorrowFacet_NotEnoughToken(_borrowAmount);
     }
 
