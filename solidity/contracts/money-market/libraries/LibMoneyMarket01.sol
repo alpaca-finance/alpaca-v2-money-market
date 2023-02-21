@@ -215,9 +215,11 @@ library LibMoneyMarket01 {
       // get collat token price in USD
       _tokenPrice = getPriceUSD(_collatToken, moneyMarketDs);
 
-      // get underlying token from _collatToken
+      // handle case where `_collatToken` might be ibToken
+      // if `_underlyingToken != address(0)` then `_collatToken` is ibToken
       _underlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-      // if _underlyingToken is address(0), then _collatToken get token config of _collatToken
+      // get token config accordingly
+      // TODO: not sure if we should use tokenConfig of underlyingToken when collatToken is ibToken
       _tokenConfig = moneyMarketDs.tokenConfigs[_underlyingToken == address(0) ? _collatToken : _underlyingToken];
 
       // calulation:
@@ -434,7 +436,7 @@ library LibMoneyMarket01 {
   {
     uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
 
-    // skip if no interest has accrued
+    // skip if interest has already been accrued within this block
     if (block.timestamp > _lastAccrualTimestamp) {
       // get a period of time since last accrual in seconds
       uint256 _secondsSinceLastAccrual;
@@ -553,7 +555,7 @@ library LibMoneyMarket01 {
   /// @param moneyMarketDs The storage of money market
   function accrueInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
     uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
-    // skip if no interest has accrued
+    // skip if interest has already been accrued within this block
     if (block.timestamp > _lastAccrualTimestamp) {
       // get a period of time since last accrual in seconds
       uint256 _secondsSinceLastAccrual;
@@ -716,14 +718,19 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     // calculation:
-    // totalTokenWithPendingInterest = totalToken + pendingInterest
+    // totalTokenWithPendingInterest = totalToken + ((pendingInterest * (MAX_BPS - lendingFeeBps)) / MAX_BPS)
     //
     // example:
     //  - totalToken                  = 550
     //  - pendingInterest             = 100
+    //  - lendingFeeBps               = 1900
+    //  - MAX_BPS                     = 10000
     //
-    //  totalTokenWithPendingInterest = 550 + 100
-    //                                = 650
+    //  totalTokenWithPendingInterest = 550 + ((100 * (10000 - 1900)) / 10000)
+    //                                = 550 + ((100 * 8100) / 10000)
+    //                                = 550 + (8.1e5 / 1e4)
+    //                                = 550 + 81
+    //                                = 631
     return
       getTotalToken(_token, moneyMarketDs) +
       ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
