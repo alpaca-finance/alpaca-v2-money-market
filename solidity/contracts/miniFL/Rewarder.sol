@@ -117,7 +117,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Hook Withdraw action from MiniFL.
   /// @param _pid The index of the pool. See `poolInfo`.
   /// @param _user Withdraw from who?
-  /// @param _newAmount Staking token amount to withdraw.
+  /// @param _newAmount new staking amount from MiniFL.
   function onWithdraw(
     uint256 _pid,
     address _user,
