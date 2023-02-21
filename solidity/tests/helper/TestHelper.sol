@@ -15,7 +15,6 @@ library TestHelper {
   {
     IAdminFacet _adminFacet = IAdminFacet(_moneyMarketDiamond);
     IAdminFacet.TokenConfigInput memory _defaultTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: _token,
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
