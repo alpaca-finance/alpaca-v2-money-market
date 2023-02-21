@@ -617,6 +617,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
 
+  // TODO: fix test case
   // function testWrongRepurchase() public {
   //   // reset ALICE state from setUp
   //   vm.startPrank(ALICE);
