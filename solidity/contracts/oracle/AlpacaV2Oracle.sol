@@ -69,7 +69,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       return (0, block.timestamp);
     }
 
-    // get lp fair price and oldest _lastUpdate betweem token0 and token1
+    // get lp fair price and oldest _lastUpdate between token0 and token1
     (uint256 _lpPrice, uint256 _lastUpdate) = _getLPPrice(_lpToken);
 
     return ((_lpAmount * _lpPrice) / (10**18), _lastUpdate);
@@ -103,7 +103,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     _getTokenPrice(_tokenAddress);
   }
 
-  /// @dev validate price stability of token
+  /// @dev validate price stability of token. Check token price from oracle against dex.
+  ///      It is unstable if prices of oracle and dex deviate too much
   /// @param _tokenAddress address of token
   /// @param _oraclePrice token price from oracleMedianizer
   function _validateStability(address _tokenAddress, uint256 _oraclePrice) internal view {
@@ -122,14 +123,27 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     (uint256 _basePrice, ) = IPriceOracle(oracle).getPrice(baseStable, usd);
 
     // calculating _dexPrice of token
-    // example
-    // swapRate = 300, _basePrice = 1.01
+    // example:
+    // - swapRate = 300, _basePrice = 1.01
     // _dexPrice = swapRate * basePrice = 300 = 1.01 = 303
     uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
 
-    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiffBps;
+    // example of unstable price:
+    //  - maxPriceDiffBps = 10500
+
+    // case1: price too high
+    //  - oraclePrice = 300, dexPrice = 330
+    //  330 * 10000 > 300 * 10500
+    //  3300000 > 3150000
+
+    // case2: price too low
+    //  - oraclePrice = 300, dexPrice = 270
+    //  270 * 10500 < 300 * 10000
+    //  2835000 < 3000000
+
     // _dexPrice/_oraclePrice > maxPriceDiffBps/10000
     // _dexPrice/_oraclePrice < 10000/maxPriceDiffBps
+    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiffBps;
     if (_dexPrice * MAX_BPS > _oraclePrice * _maxPriceDiff || _dexPrice * _maxPriceDiff < _oraclePrice * MAX_BPS) {
       revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
     }
