@@ -37,8 +37,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // check if the money market is live
     LibMoneyMarket01.onlyLive(moneyMarketDs);
 
-    // check if the borrower is authorized
-    // non colateralized borrower have to be set via `AdminFacet`
+    // revert if borrower not in the whitelisted
     if (!moneyMarketDs.nonCollatBorrowerOk[msg.sender]) {
       revert NonCollatBorrowFacet_Unauthorized();
     }
@@ -50,8 +49,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // total used borrowing power is calculated from all debt token of the account
     LibMoneyMarket01.accrueNonCollatBorrowedPositionsOf(msg.sender, moneyMarketDs);
 
-    // validate the all conditions for borrowing
-    //  1. check if the market is open for the token
+    // validate before borrowing
+    //  1. check if the market exists for the token
     //  2. check if the money market have enough token amount
     //  3. check if the borrower has enough borrowing power
     _validate(msg.sender, _token, _amount, moneyMarketDs);
@@ -63,7 +62,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     if (_amount > moneyMarketDs.reserves[_token]) {
       revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
     }
-    // update the global reserve of the token, as a result less borrowing can be made
+    // update the global reserve of the token
     moneyMarketDs.reserves[_token] -= _amount;
     // transfer the token to the borrower
     IERC20(_token).safeTransfer(msg.sender, _amount);
@@ -145,7 +144,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     address _ibToken = moneyMarketDs.tokenToIbTokens[_token];
 
     // check open market
-    // if the market is not open or , the address of _ibToken will be 0x0
+    // revert if the market is not exist , the address of _ibToken will be 0x0
     if (_ibToken == address(0)) {
       revert NonCollatBorrowFacet_InvalidToken(_token);
     }
@@ -161,12 +160,12 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   }
 
   /// @dev Check if the borrower has enough borrowing power
-  /// @param _borrowedValue The total borrowed value of the borrower
+  /// @param _usedBorrowingPower The total used borrowing power of the borrower
   /// @param _token The token to be borrowed
   /// @param _amount The amount to borrow
   /// @param moneyMarketDs The money market diamond storage
   function _checkBorrowingPower(
-    uint256 _borrowedValue,
+    uint256 _usedBorrowingPower,
     address _token,
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
@@ -180,8 +179,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
 
     // get borrowing power of the borrower
     uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowLimitUSDValue;
-    // get borrowing value of the new borrowing
-    uint256 _borrowingUSDValue = LibMoneyMarket01.usedBorrowingPower(
+    // get borrowing power of the new borrowing
+    uint256 _newUsedBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
       _amount,
       _tokenPrice,
       _tokenConfig.borrowingFactor,
@@ -189,13 +188,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     );
 
     // check if the borrower has enough borrowing power
-    // if used borrowing value + new borrowing value exceed borrowing power, the borrow is not allowed
-    if (_borrowingPower < _borrowedValue + _borrowingUSDValue) {
-      revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _borrowedValue, _borrowingUSDValue);
+    // if used borrowing power + new used borrowing power exceed borrowing power, the borrow is not allowed
+    if (_borrowingPower < _usedBorrowingPower + _newUsedBorrowingPower) {
+      revert NonCollatBorrowFacet_BorrowingValueTooHigh(_borrowingPower, _usedBorrowingPower, _newUsedBorrowingPower);
     }
   }
 
-  /// @dev Check if the token has enough balance to borrow
+  /// @dev Check if the token has enough capacity for borrower
   /// @param _token The token to be borrowed
   /// @param _borrowAmount The amount to borrow
   /// @param moneyMarketDs The money market diamond storage
@@ -214,13 +213,13 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     }
 
     // check if accumulated borrowAmount exceed global limit
-    // if borrow amount + global debt exceed max borrow amount of _token, the borrow is not allowed
+    // if borrowing amount + global debt exceed max borrow amount of _token, the borrow is not allowed
     if (_borrowAmount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert NonCollatBorrowFacet_ExceedBorrowLimit();
     }
 
     // check if accumulated borrowAmount exceed account limit
-    // if borrow amount + borrowed amount exceed max _token borrow amount of the account, the borrow is not allowed
+    // if borrowing amount + borrowed amount exceed max _token borrow amount of the account, the borrow is not allowed
     if (
       _borrowAmount + moneyMarketDs.nonCollatAccountDebtValues[msg.sender].getAmount(_token) >
       moneyMarketDs.protocolConfigs[msg.sender].maxTokenBorrow[_token]
