@@ -136,6 +136,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     vm.revertTo(snapshot);
 
     // only borrow
+    // TODO: remove unnecessary snapshot
     snapshot = vm.snapshot();
     vm.prank(ALICE);
     collateralFacet.addCollateral(ALICE, subAccount0, address(weth), 10 ether);

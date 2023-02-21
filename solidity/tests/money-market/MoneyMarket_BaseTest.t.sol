@@ -8,16 +8,6 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
-// facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
-import { LendFacet, ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/interfaces/ICollateralFacet.sol";
 import { IViewFacet } from "../../contracts/money-market/interfaces/IViewFacet.sol";
