@@ -228,10 +228,10 @@ library LibMoneyMarket01 {
       // example:
       //  - amount                = 100
       //  - tokenPrice            = 1
-      //  - collateralFactor      = 9000
+      //  - collateralFactor      = 0.9
       //
-      //  _totalBorrowingPower   += 100 * 1 * 9000
-      //                         += 900000
+      //  _totalBorrowingPower   += 100 * 1 * 0.9
+      //                         += 90
       _totalBorrowingPower += LibFullMath.mulDiv(
         _collats[_i].amount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
         _tokenPrice,
@@ -412,10 +412,10 @@ library LibMoneyMarket01 {
     // example:
     //  - borrowedAmountE18   = 100 (omit 1e18)
     //  - tokenPrice          = 1.5
-    //  - MAX_BPS             = 1e4
-    //  - borrowingFactor     = 9e3
+    //  - MAX_BPS             = 10000
+    //  - borrowingFactor     = 9000
     //
-    //  usedBorrowingPower    = 100 * 1.5 * (1e4 / 9e3)
+    //  usedBorrowingPower    = 100 * 1.5 * (10000 / 9000)
     //                        = 100 * 1.5 * 1.11111
     //                        = 166.67
     _usedBorrowingPower = LibFullMath.mulDiv(
@@ -440,6 +440,8 @@ library LibMoneyMarket01 {
     if (block.timestamp > _lastAccrualTimestamp) {
       // get a period of time since last accrual in seconds
       uint256 _secondsSinceLastAccrual;
+      // safe to use unchecked
+      //    because at this statement, block.timestamp is always greater than _lastAccrualTimestamp
       unchecked {
         _secondsSinceLastAccrual = block.timestamp - _lastAccrualTimestamp;
       }
@@ -550,7 +552,7 @@ library LibMoneyMarket01 {
     moneyMarketDs.overCollatDebtValues[_token] = _totalDebtValue + _overCollatInterest;
   }
 
-  /// @dev Accrue over collat and non over collat interest of a token
+  /// @dev Accrue over collat and non collat interest of a token
   /// @param _token The token address
   /// @param moneyMarketDs The storage of money market
   function accrueInterest(address _token, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
@@ -559,6 +561,8 @@ library LibMoneyMarket01 {
     if (block.timestamp > _lastAccrualTimestamp) {
       // get a period of time since last accrual in seconds
       uint256 _secondsSinceLastAccrual;
+      // safe to use unchecked
+      //    because at this statement, block.timestamp is always greater than _lastAccrualTimestamp
       unchecked {
         _secondsSinceLastAccrual = block.timestamp - _lastAccrualTimestamp;
       }
@@ -728,7 +732,7 @@ library LibMoneyMarket01 {
     //
     //  totalTokenWithPendingInterest = 550 + ((100 * (10000 - 1900)) / 10000)
     //                                = 550 + ((100 * 8100) / 10000)
-    //                                = 550 + (8.1e5 / 1e4)
+    //                                = 550 + (810000 / 10000)
     //                                = 550 + 81
     //                                = 631
     return
