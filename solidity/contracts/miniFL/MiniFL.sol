@@ -247,6 +247,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _amountToDeposit
   ) external onlyWhitelisted nonReentrant {
     UserInfo storage user = userInfo[_pid][_for];
+
+    // call _updatePool in order to update poolInfo.accAlpacaPerShare
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
     address _stakingToken = stakingTokens[_pid];
@@ -261,6 +263,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     // update user rewardDebt to separate new deposit share amount from pending reward in the pool
+    // example:
+    //  - accAlpacaPerShare    = 250
+    //  - _receivedAmount      = 100
+    //  - pendingAlpacaReward  = 25,000
+    //  rewardDebt = oldRewardDebt + (_receivedAmount * accAlpacaPerShare)= 0 + (100 * 250) = 25,000
+    //  This means newly deposit share does not eligible for 25,000 penidng rewards
     user.rewardDebt =
       user.rewardDebt +
       ((_receivedAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
@@ -290,6 +298,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _amountToWithdraw
   ) external onlyWhitelisted nonReentrant {
     UserInfo storage user = userInfo[_pid][_from];
+
+    // call _updatePool in order to update poolInfo.accAlpacaPerShare
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
     // caller couldn't withdraw more than their funded
@@ -308,6 +318,14 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       stakingReserves[_stakingToken] -= _amountToWithdraw;
     }
 
+    // date reward debt
+    // example:
+    //  - accAlpacaPerShare    = 300
+    //  - _amountToWithdraw    = 100
+    //  - oldRewardDebt        = 25,000
+    //  - pendingAlpacaReward  = 35,000
+    //  rewardDebt = oldRewardDebt - (_amountToWithdraw * accAlpacaPerShare) = 25,000 - (100 * 300) = -5000
+    //  This means withdrawn share is eligible for previous pending reward in the pool = 5000
     user.rewardDebt =
       user.rewardDebt -
       (((_amountToWithdraw * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
@@ -324,6 +342,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       }
     }
 
+    // transfer stakingToken to caller
     IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amountToWithdraw);
 
     emit LogWithdraw(msg.sender, _from, _pid, _amountToWithdraw);
@@ -333,11 +352,21 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _pid The index of the pool. See `poolInfo`.
   function harvest(uint256 _pid) external nonReentrant {
     UserInfo storage user = userInfo[_pid][msg.sender];
+
+    // call _updatePool in order to update poolInfo.accAlpacaPerShare
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
+    // example:
+    //  - totalAmount         = 100
+    //  - accAlpacaPerShare   = 250
+    //  - rewardDebt          = 0
+    //  accumulatedAlpaca     = totalAmount * accAlpacaPerShare = 100 * 250 = 25,000
+    //  _pendingAlpaca         = accumulatedAlpaca - rewardDebt = 25,000 - 0 = 25,000
+    //   Meaning user eligible for 25,000 rewards in this harvest
     int256 accumulatedAlpaca = ((user.totalAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
     uint256 _pendingAlpaca = (accumulatedAlpaca - user.rewardDebt).toUint256();
 
+    // update user.rewardDebt so that user no longer eligible for already harvest rewards
     // Effects
     user.rewardDebt = accumulatedAlpaca;
 
