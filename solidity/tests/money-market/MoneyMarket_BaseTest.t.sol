@@ -82,7 +82,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -92,7 +91,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibWeth = InterestBearingToken(adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _usdcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(usdc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -102,7 +100,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibUsdc = InterestBearingToken(adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _btcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(btc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -112,7 +109,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibBtc = InterestBearingToken(adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _wNativeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(wNativeToken),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -124,7 +120,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _isolateTokenTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(isolateToken),
       tier: LibMoneyMarket01.AssetTier.ISOLATE,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -136,7 +131,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _cakeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(cake),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
