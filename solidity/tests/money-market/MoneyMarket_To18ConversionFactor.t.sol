@@ -29,16 +29,19 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getTokenConfig(_token18).to18ConversionFactor, 1);
 
     // setTokenConfigs 18 decimals
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = _token18;
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: _token18,
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
       maxBorrow: 100e18
     });
-    adminFacet.setTokenConfigs(_inputs);
+
+    adminFacet.setTokenConfigs(_tokens, _inputs);
     assertEq(viewFacet.getTokenConfig(_token18).to18ConversionFactor, 1);
   }
 
@@ -52,16 +55,19 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getTokenConfig(_token12).to18ConversionFactor, 10**6);
 
     // setTokenConfigs 12 decimals
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = _token12;
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: _token12,
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
       maxBorrow: 100e18
     });
-    adminFacet.setTokenConfigs(_inputs);
+
+    adminFacet.setTokenConfigs(_tokens, _inputs);
     assertEq(viewFacet.getTokenConfig(_token12).to18ConversionFactor, 10**6);
 
     // openMarket 1 decimals
@@ -71,16 +77,10 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getTokenConfig(_token1).to18ConversionFactor, 10**17);
 
     // setTokenConfigs 1 decimals
-    _inputs = new IAdminFacet.TokenConfigInput[](1);
-    _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: _token1,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 5000,
-      borrowingFactor: 6000,
-      maxCollateral: 1000e18,
-      maxBorrow: 100e18
-    });
-    adminFacet.setTokenConfigs(_inputs);
+    _tokens[0] = _token1;
+    // reuse `_inputs`
+
+    adminFacet.setTokenConfigs(_tokens, _inputs);
     assertEq(viewFacet.getTokenConfig(_token1).to18ConversionFactor, 10**17);
   }
 
@@ -88,7 +88,6 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
     // openMarket 19 decimals
     address _token19 = address(new MockERC20("19 decimals", "19", 19));
     IAdminFacet.TokenConfigInput memory _tokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: _token19,
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -99,16 +98,19 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
     adminFacet.openMarket(_token19, _tokenConfigInput, _tokenConfigInput);
 
     // setTokenConfigs 19 decimals
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = _token19;
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: _token19,
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
       maxBorrow: 100e18
     });
+
     vm.expectRevert(LibMoneyMarket01.LibMoneyMarket01_UnsupportedDecimals.selector);
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
   }
 }
