@@ -23,6 +23,10 @@ library LibDoublyLinkedList {
   }
 
   function initIfNotExist(List storage list) internal {
+    // 1(START) <> 0(EMPTY)
+    // 1(START).next = 1(END)
+    // 1(END).prev = 1(START)
+    // 1(START) <> 1(END)
     if (list.next[START] == EMPTY) {
       list.next[START] = END;
       list.prev[END] = START;
@@ -33,6 +37,9 @@ library LibDoublyLinkedList {
     return list.next[addr] != EMPTY;
   }
 
+  /// @dev removing will cut `addr` from the link
+  /// ex. `addr` is BTC
+  ///     START <> ETH <> BTC <> END => START <> ETH <> END
   function updateOrRemove(
     List storage list,
     address addr,
@@ -46,6 +53,22 @@ library LibDoublyLinkedList {
     }
 
     // Effect
+    // skip removing if `amount` still remain
+    //
+    // ex. remove BTC:
+    //  START   = 1
+    //  BTC     = 2 (assume)
+    //  ETH     = 3 (assume)
+    //  END     = 1
+    //  Current link: 1 <> 3 <> 2 <> 1
+    //
+    //  3.next  = 1   -->   1 <- 3 -> 1
+    //  1.prev  = 3   -->   3 <- 1 -> 0
+    //  Current link: 1 <> 3 <> 1
+    //
+    //  2.prev = 0    -->   0 <- 2 -> 1
+    //  2.next = 0    -->   0 <- 2 -> 0
+    //  Current link: 1 <> 3 <> 1
     if (amount == 0) {
       address prevOfAddr = list.prev[addr];
 
@@ -77,6 +100,23 @@ library LibDoublyLinkedList {
     }
 
     // Effect
+    // skip adding if `addr` already existed
+    //
+    // ex. add `addr`:
+    //  START   = 1
+    //  BTC     = 2 (assume)
+    //  END     = 1
+    //  Current link: 1 <> 2 <> 1
+    //
+    //  `addr`  = 3 (assume)
+    //
+    //  3.next  = 2   -->   0 <- 3 -> 2
+    //  2.prev  = 3   -->   3 <- 2 -> 1
+    //  Current link: ? <> 3 <> 2 <> 1
+    //
+    //  3.prev = 1    -->   1 <- 3 -> 2
+    //  1.next = 3    -->   0 <- 1 -> 3
+    //  Current link: 1 <> 3 <> 2 <> 1
     if (!has(list, addr)) {
       // add `addr` to the link after `START`
       address nextOfStart = list.next[START];
