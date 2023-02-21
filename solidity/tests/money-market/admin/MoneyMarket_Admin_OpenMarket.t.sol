@@ -24,7 +24,6 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
 
     _testToken = new MockERC20("test", "TEST", 9);
     _defaultTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(_testToken),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,

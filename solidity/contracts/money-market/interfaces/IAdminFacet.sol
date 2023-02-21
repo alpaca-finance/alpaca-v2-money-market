@@ -24,7 +24,6 @@ interface IAdminFacet {
   }
 
   struct TokenConfigInput {
-    address token;
     LibMoneyMarket01.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
@@ -55,7 +54,7 @@ interface IAdminFacet {
     TokenConfigInput calldata _ibTokenConfigInput
   ) external returns (address);
 
-  function setTokenConfigs(TokenConfigInput[] memory _tokenConfigs) external;
+  function setTokenConfigs(address[] calldata _tokens, TokenConfigInput[] calldata _tokenConfigs) external;
 
   function setNonCollatBorrowerOk(address _borrower, bool _isOk) external;
 
@@ -63,7 +62,7 @@ interface IAdminFacet {
 
   function setOracle(address _oracle) external;
 
-  function setRepurchasersOk(address[] memory list, bool _isOk) external;
+  function setRepurchasersOk(address[] calldata list, bool _isOk) external;
 
   function setLiquidationStratsOk(address[] calldata list, bool _isOk) external;
 
