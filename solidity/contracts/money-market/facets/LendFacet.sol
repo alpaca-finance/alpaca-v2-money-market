@@ -56,7 +56,7 @@ contract LendFacet is ILendFacet {
   /// @param _for The actual lender. Used only for tracking purpose
   /// @param _token The token to lend
   /// @param _amount The amount to lend
-  /// @return _ibAmount The share amount gained from deposit
+  /// @return _ibAmount The ib amount gained from deposit
   function deposit(
     address _for,
     address _token,
