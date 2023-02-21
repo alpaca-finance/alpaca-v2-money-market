@@ -279,6 +279,22 @@ contract LiquidationFacet is ILiquidationFacet {
   }
 
   /// @notice Liquidate the collateral token in exchange of the debt token
+  ///
+  ///         liquidation process
+  ///           1) withdraw all specified collateral of subAccount and withdraw from MiniFL staking if applicable
+  ///           2) send all collateral to strategy to prepare for liquidation
+  ///           3) call `executeLiquidation` on strategy
+  ///               - strategy convert collateral to repay token
+  ///               - strategy transfer converted repay token and leftover collateral (if any) back to diamond
+  ///           4) calculate actual repayment and fees (fee to protocol and caller) based on
+  ///              amount received from strategy
+  ///           5) check if the repayment violate maximum amount allowed to be liquidated in single tx
+  ///           6) update states
+  ///               - increase repay token reserve by amount repaid
+  ///               - reduce subAccount's debt by amount repaid
+  ///               - if any collateral left, add them back to subAccount and stake to MiniFL if applicable
+  ///           7) transfer fee to treasury and caller
+  ///
   /// @param _liquidationStrat The address of strategy used in liqudation
   /// @param _account The account to be repurchased
   /// @param _subAccountId The index to derive the subaccount
