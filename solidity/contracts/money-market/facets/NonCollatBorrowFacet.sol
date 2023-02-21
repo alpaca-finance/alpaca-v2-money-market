@@ -86,7 +86,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _debtToRemove = _oldDebtValue > _repayAmount ? _repayAmount : _oldDebtValue;
 
     // transfer only amount to repay to money market
-    uint256 _actualDebtToRemove = LibMoneyMarket01.unsafePullTokens(msg.sender, address(this), _debtToRemove);
+    uint256 _actualDebtToRemove = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _debtToRemove);
 
     // remove the debt from the account
     _removeDebt(_account, _token, _oldDebtValue, _actualDebtToRemove, moneyMarketDs);
