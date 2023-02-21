@@ -125,7 +125,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // calculating _dexPrice of token
     // example:
     // - swapRate = 300, _basePrice = 1.01
-    // _dexPrice = swapRate * basePrice = 300 = 1.01 = 303
+    // _dexPrice = swapRate * basePrice = 300 * 1.01 = 303
     uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
 
     // example of unstable price:
@@ -170,6 +170,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @notice get LP price using internal only, return value in 1e18 format
   /// @dev getTokenPrice from address
   /// @param _lpToken lp token address
+  /// @return _totalValueIn18 value of lpToken in dollar
+  /// @return _olderLastUpdate older price update between token0 and token1 of LP
   function _getLPPrice(address _lpToken) internal view returns (uint256, uint256) {
     if (_lpToken == address(0)) {
       revert AlpacaV2Oracle_InvalidLPAddress();
