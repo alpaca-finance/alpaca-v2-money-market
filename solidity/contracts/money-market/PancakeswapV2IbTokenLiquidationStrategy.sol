@@ -33,7 +33,7 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   // tokenIn => tokenOut => path
   mapping(address => mapping(address => address[])) public paths;
 
-  /// @notice require that only allowed callers
+  /// @notice allow only whitelisted callers
   modifier onlyWhitelistedCallers() {
     if (!callersOk[msg.sender]) {
       revert PancakeswapV2IbTokenLiquidationStrategy_Unauthorized();
@@ -59,26 +59,35 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     uint256 _repayAmount,
     uint256 _minReceive
   ) external onlyWhitelistedCallers {
+    // get underlying tokenAddress from MoneyMarket
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
+
+    // Revert if _underlyingToken and _repayToken are the same address
     if (_underlyingToken == _repayToken) {
       revert PancakeswapV2IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
     address[] memory _path = paths[_underlyingToken][_repayToken];
+    // Revert if no swapPath config for _underlyingToken and _repayToken pair
     if (_path.length == 0) {
       revert PancakeswapV2IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
     }
 
+    // Get the underlyingToken amount needed for swapping to repayToken
     uint256 _requiredUnderlyingAmount = _getRequiredUnderlyingAmount(_repayAmount, _path);
 
+    // withdraw ibToken from Moneymarket for underlyingToken
     (uint256 _withdrawnIbTokenAmount, uint256 _withdrawnUnderlyingAmount) = _withdrawFromMoneyMarket(
       _ibToken,
       _ibTokenAmountIn,
       _requiredUnderlyingAmount
     );
 
+    // approve router for swapping
     IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
+    // swap ib's underlyingToken to repayToken
     router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
+    // reset approval
     IERC20(_underlyingToken).safeApprove(address(router), 0);
 
     // transfer ibToken back to caller if not withdraw all
@@ -87,6 +96,10 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     }
   }
 
+  /// @dev withdraw ibToken from moneymarket
+  /// @param _ibToken The address of ibToken
+  /// @param _maxIbTokenToWithdraw Total amount of ibToken sent from moneymarket
+  /// @param _requiredUnderlyingAmount The underlying amount needed
   function _withdrawFromMoneyMarket(
     address _ibToken,
     uint256 _maxIbTokenToWithdraw,
@@ -104,6 +117,9 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _withdrawnIbTokenAmount);
   }
 
+  /// @dev get required amount of token for swapping
+  /// @param _repayAmount The amount needed to repay
+  /// @param _path The path for collateralToken to repayToken
   function _getRequiredUnderlyingAmount(uint256 _repayAmount, address[] memory _path)
     internal
     view
