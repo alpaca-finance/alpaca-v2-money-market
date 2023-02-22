@@ -616,30 +616,4 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
   }
-
-  // TODO: fix test case
-  // function testWrongRepurchase() public {
-  //   // reset ALICE state from setUp
-  //   vm.startPrank(ALICE);
-  //   accountManager.repayFor(
-  //     ALICE,
-  //     subAccount0,
-  //     address(usdc),
-  //     normalizeEther(30 ether, usdcDecimal),
-  //     normalizeEther(30 ether, usdcDecimal)
-  //   );
-  //   accountManager.removeCollateral(subAccount0, address(weth), 40 ether);
-
-  //   mockOracle.setTokenPrice(address(weth), 1 ether);
-  //   accountManager.addCollateralFor(ALICE, subAccount0, address(usdc), normalizeEther(2 ether, usdcDecimal));
-  //   accountManager.borrow(subAccount0, address(weth), 1 ether);
-  //   vm.stopPrank();
-
-  //   adminFacet.setFees(0, 1000, 100, 5000);
-  //   adminFacet.setLiquidationParams(10000, 10000);
-
-  //   mockOracle.setTokenPrice(address(weth), 2 ether);
-  //   vm.startPrank(BOB);
-  //   liquidationFacet.repurchase(ALICE, subAccount0, address(weth), address(usdc), 1.2 ether);
-  // }
 }
