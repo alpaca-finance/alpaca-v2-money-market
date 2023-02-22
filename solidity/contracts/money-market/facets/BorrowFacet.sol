@@ -78,7 +78,7 @@ contract BorrowFacet is IBorrowFacet {
     // Book the debt under the subaccount that the account manager act on behalf of
     LibMoneyMarket01.overCollatBorrow(_account, _subAccount, _token, _amount, moneyMarketDs);
 
-    // Update the global reserve of the token, as a result less borrowing can be amde
+    // Update the global reserve of the token, as a result less borrowing can be made
     moneyMarketDs.reserves[_token] -= _amount;
 
     // Transfer the token back to account manager
