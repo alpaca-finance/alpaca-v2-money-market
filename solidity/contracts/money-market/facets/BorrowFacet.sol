@@ -68,7 +68,7 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     // accrue all debt tokens under subaccount
-    // because used borrowing power is calcualated from all debt token of sub account
+    // because used borrowing power is calculated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // Validate if this borrowing transaction will violate the business rules
@@ -105,7 +105,7 @@ contract BorrowFacet is IBorrowFacet {
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     // accrue all debt tokens under subaccount
-    // because used borrowing power is calcualated from all debt token of sub account
+    // because used borrowing power is calculated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // Get the current debt amount and share of this token under the subaccount

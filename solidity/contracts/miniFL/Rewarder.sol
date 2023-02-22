@@ -53,7 +53,8 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   event LogSetName(string _name);
   event LogSetMaxRewardPerSecond(uint256 _newMaxRewardPerSecond);
 
-  modifier onlyFL() {
+  /// @dev allow only MiniFL
+  modifier onlyMiniFL() {
     if (msg.sender != miniFL) revert Rewarder1_NotFL();
     _;
   }
@@ -81,27 +82,47 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     maxRewardPerSecond = _maxRewardPerSecond;
   }
 
+  /// @notice Hook deposit action from MiniFL.
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _user The beneficary address of the deposit.
+  /// @param _newAmount new staking amount from MiniFL.
   function onDeposit(
     uint256 _pid,
     address _user,
     uint256 _newAmount
-  ) external override onlyFL {
+  ) external override onlyMiniFL {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_user];
 
+    // calculate new staked amount
+    // example: if user deposit another 500 shares
+    //  - user.amount  = 100 => from previous deposit
+    //  - _newAmount   = 600 => updated staking amount from MiniFL
+    //  _amount = _newAmount - user.amount = 600 - 100 = 500
     uint256 _amount = _newAmount - user.amount;
 
     user.amount = _newAmount;
+    // update user rewardDebt to separate new deposit share amount from pending reward in the pool
+    // example:
+    //  - accAlpacaPerShare    = 250
+    //  - _receivedAmount      = 100
+    //  - pendingAlpacaReward  = 25,000
+    //  rewardDebt = oldRewardDebt + (_receivedAmount * accAlpacaPerShare)= 0 + (100 * 250) = 25,000
+    //  This means newly deposit share does not eligible for 25,000 pending rewards
     user.rewardDebt = user.rewardDebt + ((_amount * pool.accRewardPerShare) / ACC_REWARD_PRECISION).toInt256();
 
     emit LogOnDeposit(_user, _pid, _amount);
   }
 
+  /// @notice Hook Withdraw action from MiniFL.
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _user Withdraw from who?
+  /// @param _newAmount new staking amount from MiniFL.
   function onWithdraw(
     uint256 _pid,
     address _user,
     uint256 _newAmount
-  ) external override onlyFL {
+  ) external override onlyMiniFL {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_user];
 
@@ -113,6 +134,14 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         _withdrawAmount = _currentAmount - _newAmount;
       }
 
+      // update reward debt
+      // example:
+      //  - accAlpacaPerShare    = 300
+      //  - _amountToWithdraw    = 100
+      //  - oldRewardDebt        = 25,000
+      //  - pendingAlpacaReward  = 35,000
+      //  rewardDebt = oldRewardDebt - (_amountToWithdraw * accAlpacaPerShare) = 25,000 - (100 * 300) = -5000
+      //  This means withdrawn share is eligible for previous pending reward in the pool = 5000
       user.rewardDebt =
         user.rewardDebt -
         (((_withdrawAmount * pool.accRewardPerShare) / ACC_REWARD_PRECISION)).toInt256();
@@ -129,10 +158,20 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
   }
 
-  function onHarvest(uint256 _pid, address _user) external override onlyFL {
+  /// @notice Hook Harvest action from MiniFL.
+  /// @param _pid The index of the pool. See `poolInfo`.
+  /// @param _user The beneficary address.
+  function onHarvest(uint256 _pid, address _user) external override onlyMiniFL {
     PoolInfo memory pool = _updatePool(_pid);
     UserInfo storage user = userInfo[_pid][_user];
 
+    // example:
+    //  - totalAmount         = 100
+    //  - accAlpacaPerShare   = 250
+    //  - rewardDebt          = 0
+    //  accumulatedAlpaca     = totalAmount * accAlpacaPerShare = 100 * 250 = 25,000
+    //  _pendingAlpaca         = accumulatedAlpaca - rewardDebt = 25,000 - 0 = 25,000
+    //   Meaning user eligible for 25,000 rewards in this harvest
     int256 _accumulatedRewards = ((user.amount * pool.accRewardPerShare) / ACC_REWARD_PRECISION).toInt256();
     uint256 _pendingRewards = (_accumulatedRewards - user.rewardDebt).toUint256();
 
@@ -155,11 +194,6 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (_withUpdate) _massUpdatePools();
     rewardPerSecond = _newRewardPerSecond;
     emit LogRewardPerSecond(_newRewardPerSecond);
-  }
-
-  /// @notice Returns the number of pools.
-  function poolLength() public view returns (uint256 pools) {
-    pools = poolIds.length;
   }
 
   /// @notice Add a new pool. Can only be called by the owner.
@@ -224,6 +258,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       (((_userInfo.amount * _accRewardPerShare) / ACC_REWARD_PRECISION).toInt256() - _userInfo.rewardDebt).toUint256();
   }
 
+  /// @notice Update reward variables for all pools.
   function _massUpdatePools() internal {
     uint256 _len = poolLength();
     for (uint256 _i; _i < _len; ) {
@@ -234,7 +269,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
   }
 
-  /// @notice Perform the actual updatePool
+  /// @dev Perform the actual updatePool
   /// @param _pid The index of the pool. See `poolInfo`.
   function _updatePool(uint256 _pid) internal returns (PoolInfo memory) {
     PoolInfo memory _poolInfo = poolInfo[_pid];
@@ -249,6 +284,14 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
           _timePast = block.timestamp - _poolInfo.lastRewardTime;
         }
         uint256 _rewards = (_timePast * rewardPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+
+        // increase accRewardPerShare with `_rewards/stakedBalance` amount
+        // example:
+        //  - oldaccRewardPerShare = 0
+        //  - _rewards                = 2000
+        //  - stakedBalance               = 10000
+        //  _poolInfo.accRewardPerShare = oldaccRewardPerShare + (_rewards/stakedBalance)
+        //  _poolInfo.accRewardPerShare = 0 + 2000/10000 = 0.2
         _poolInfo.accRewardPerShare =
           _poolInfo.accRewardPerShare +
           ((_rewards * ACC_REWARD_PRECISION) / _stakedBalance).toUint128();
@@ -297,5 +340,10 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     maxRewardPerSecond = _newMaxRewardPerSecond;
     emit LogSetMaxRewardPerSecond(_newMaxRewardPerSecond);
+  }
+
+  /// @notice Returns the number of pools.
+  function poolLength() public view returns (uint256 _poolLength) {
+    _poolLength = poolIds.length;
   }
 }

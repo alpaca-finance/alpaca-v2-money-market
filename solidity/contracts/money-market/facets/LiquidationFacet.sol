@@ -101,6 +101,7 @@ contract LiquidationFacet is ILiquidationFacet {
   /// @param _repayToken The token that will be repurchase and repay the debt
   /// @param _collatToken The collateral token that will be used for exchange
   /// @param _desiredRepayAmount The amount of debt token that the repurchaser will provide
+  /// @return _collatAmountOut The amount of collateral returned to repurchaser
   function repurchase(
     address _account,
     uint256 _subAccountId,
@@ -110,6 +111,9 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // We only allow EOA or whitelisted contract to repurchase
+    // Revert if caller is contract that is not whitelisted
+    // `msg.sender != tx.origin` means that `msg.sender` is contract
     if (msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
@@ -118,18 +122,45 @@ contract LiquidationFacet is ILiquidationFacet {
 
     _vars.subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
+    // Accrue all debt tokens under subaccount
+    // Because used borrowing power is calculated from all debt token of the subaccount
     LibMoneyMarket01.accrueBorrowedPositionsOf(_vars.subAccount, moneyMarketDs);
 
-    // revert if position is healthy
     _vars.totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_vars.subAccount, moneyMarketDs);
     (_vars.usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_vars.subAccount, moneyMarketDs);
+    // Revert if position is not repurchasable (borrowingPower / usedBorrowingPower >= 1)
     if (_vars.totalBorrowingPower >= _vars.usedBorrowingPower) {
       revert LiquidationFacet_Healthy();
     }
 
-    // cap repurchase amount if needed and calculate fee
+    // Cap repurchase amount if needed and calculate fee
+    // ex. assume 1 eth = 2000 USD, 10% repurchase fee, ignore collat,borrowingFactor, no premium
+    //     collateral: 2000 USDC
+    //     debt      : 1 eth
+    //     maxAmountRepurchaseable = currentDebt * (1 + fee)
+    //                             = 1 * 1.1 = 1.1 eth
+    //
+    //     case 1: desiredRepayAmount exceeds maxAmountRepurchaseable
+    //     input : desiredRepayAmount = 1.2 eth, collatToken = USDC
+    //     repayAmountWithFee    = maxAmountRepurchaseable = 1.1 eth
+    //     repayAmountWithoutFee = currentDebt = 1 eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1.1 - 1 = 0.1 eth
+    //
+    //     case 2: desiredRepayAmount less than or equal to debt
+    //     input : desiredRepayAmount = 1 eth, collatToken = USDC
+    //     repayAmountWithFee    = desiredRepayAmount = 1 eth
+    //     repayAmountWithoutFee = desiredRepayAmount * (1 - fee)
+    //                           = 1 * 0.9 = 0.9 eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1 - 0.9 = 0.1 eth
+    //
+    //     case3: desiredRepayAmount exceeds debt but less than maxAmountRepurchaseable
+    //     input : desiredRepayAmount = 1.05 eth, collatToken = USDC
+    //     repayAmountWithFee = desiredRepayAmount = 1.05 eth
+    //     repayAmountWithoutFee = desiredRepayAmount * (1 - fee)
+    //                           = 1.05 * 0.9 = 0.945 eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1.05 - 0.945 = 0.105 eth
+    //     TODO: this is WRONG! all cases should never pay fee more than max fee (debt * feeBps)
     {
-      // _maxAmountRepurchaseable = current debt + fee
       (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
         _vars.subAccount,
         _repayToken,
@@ -140,10 +171,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
       // repay amount is capped if try to repay more than outstanding debt + fee
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
-        // repayAmountWithFee = _currentDebtAmount + fee
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
-        // calculate like this so we can close entire debt without dust
-        // repayAmountWithoutFee = _currentDebtAmount = repayAmountWithFee * _currentDebtAmount / _maxAmountRepurchaseable
         _vars.repayAmountWithoutFee = _currentDebtAmount;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
@@ -157,22 +185,23 @@ contract LiquidationFacet is ILiquidationFacet {
 
     _vars.repayTokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
 
-    // revert if repay > x% of totalUsedBorrowingPower
+    // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
     _validateBorrowingPower(_repayToken, _vars.repayAmountWithoutFee, _vars.usedBorrowingPower, moneyMarketDs);
 
+    // Get dynamic repurchase reward to further incentivize repurchase
     _vars.repurchaseRewardBps = moneyMarketDs.repurchaseRewardModel.getFeeBps(
       _vars.totalBorrowingPower,
       _vars.usedBorrowingPower
     );
 
-    // calculate payout (collateral + reward)
+    // Calculate payout for repurchaser (collateral with premium)
     {
       uint256 _collatTokenPrice = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
       uint256 _repayTokenPriceWithPremium = (_vars.repayTokenPrice *
         (LibMoneyMarket01.MAX_BPS + _vars.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
 
-      // 100(18) * 120 * 1 /
+      // collatAmountOut = repayAmount * repayTokenPriceWithPremium / collatTokenPrice
       _collatAmountOut =
         (_vars.repayAmountWithFee *
           _repayTokenPriceWithPremium *
@@ -181,21 +210,29 @@ contract LiquidationFacet is ILiquidationFacet {
 
       // revert if subAccount collat is not enough to cover desired repay amount
       // this could happen when there are multiple small collat and one large debt
+      // ex. assume 1 eth = 2000 USD, no repurchase fee or premium, ignore collat,borrowingFactor
+      //     collateral : 1000 USDT, 1000 USDC
+      //     debt       : 1 eth
+      //     input      : desiredRepayAmount = 0.6 eth, collatToken = USDC
+      //     collatAmountOut = repayAmount * repayTokenPrice / collatTokenPrice
+      //                     = 0.6 * 2000 / 1 = 1200 USDC
+      //     this should revert since there is not enough USDC collateral to be repurchased
       if (_collatAmountOut > moneyMarketDs.subAccountCollats[_vars.subAccount].getAmount(_collatToken)) {
         revert LiquidationFacet_InsufficientAmount();
       }
     }
 
-    // transfer tokens
-    // in case of fee on transfer tokens, debt would be repaid by amount after transfer fee
+    // Transfer repay token in
+    // In case of token with fee on transfer, debt would be repaid by amount after transfer fee
     // which won't be able to repurchase entire position
+    // repaidAmount = amountReceived - repurchaseFee
     uint256 _actualRepayAmountWithoutFee = LibMoneyMarket01.unsafePullTokens(
       _repayToken,
       msg.sender,
       _vars.repayAmountWithFee
     ) - _vars.repurchaseFeeToProtocol;
 
-    // update states
+    // Remove subAccount debt
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _account,
       _vars.subAccount,
@@ -217,9 +254,15 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs
     );
 
-    moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithoutFee;
+    // Increase reserves balance with repaid tokens
+    // Safe to use unchecked because _actualRepayAmountWithoutFee is derived from balanceOf
+    unchecked {
+      moneyMarketDs.reserves[_repayToken] += _actualRepayAmountWithoutFee;
+    }
 
+    // Transfer collat token with premium back to repurchaser
     IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountOut);
+    // Transfer protocol's repurchase fee to treasury
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.repurchaseFeeToProtocol);
 
     emit LogRepurchase(
@@ -236,12 +279,29 @@ contract LiquidationFacet is ILiquidationFacet {
   }
 
   /// @notice Liquidate the collateral token in exchange of the debt token
+  ///
+  ///         liquidation process
+  ///           1) withdraw all specified collateral of subAccount and withdraw from MiniFL staking if applicable
+  ///           2) send all collateral to strategy to prepare for liquidation
+  ///           3) call `executeLiquidation` on strategy
+  ///               - strategy convert collateral to repay token
+  ///               - strategy transfer converted repay token and leftover collateral (if any) back to diamond
+  ///           4) calculate actual repayment and fees (fee to protocol and caller) based on
+  ///              amount received from strategy
+  ///           5) check if the repayment violate maximum amount allowed to be liquidated in single tx
+  ///           6) update states
+  ///               - increase repay token reserve by amount repaid
+  ///               - reduce subAccount's debt by amount repaid
+  ///               - if any collateral left, add them back to subAccount and stake to MiniFL if applicable
+  ///           7) transfer fee to treasury and caller
+  ///
   /// @param _liquidationStrat The address of strategy used in liqudation
   /// @param _account The account to be repurchased
   /// @param _subAccountId The index to derive the subaccount
   /// @param _repayToken The token that will be repurchase and repay the debt
   /// @param _collatToken The collateral token that will be used for exchange
   /// @param _repayAmount The amount of debt token will be repaid after exchaing the collateral
+  /// @param _minReceive Minimum amount expected from liquidation in repayToken
   function liquidationCall(
     address _liquidationStrat,
     address _account,
@@ -253,22 +313,27 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // Revert if liquidationStrat or caller is not whitelisted
     if (!moneyMarketDs.liquidationStratOk[_liquidationStrat] || !moneyMarketDs.liquidatorsOk[msg.sender]) {
       revert LiquidationFacet_Unauthorized();
     }
 
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
     uint256 _collatAmount = moneyMarketDs.subAccountCollats[_subAccount].getAmount(_collatToken);
-
+    // Revert if subAccount doesn't have collateral to be liquidated
     if (_collatAmount == 0) {
       revert LiquidationFacet_InsufficientAmount();
     }
 
+    // Accrue all debt tokens under subaccount
+    // Because used borrowing power is calculated from all debt token of the subaccount
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
-    // 1. check if position is underwater and can be liquidated
     uint256 _borrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
     (uint256 _usedBorrowingPower, ) = LibMoneyMarket01.getTotalUsedBorrowingPower(_subAccount, moneyMarketDs);
+    // Revert if position is not liquidatable (borrowingPower / usedBorrowingPower > 1 / liquidationThreshold)
+    // This threshold should be lower than repurchase (liquidationThreshold > 1)
+    // because position must be repurchasable before liquidatable
     if ((_usedBorrowingPower * LibMoneyMarket01.MAX_BPS) < _borrowingPower * moneyMarketDs.liquidationThresholdBps) {
       revert LiquidationFacet_Healthy();
     }
@@ -289,15 +354,16 @@ contract LiquidationFacet is ILiquidationFacet {
     _liquidationCall(_params, moneyMarketDs);
   }
 
+  // TODO: merge to main function
   function _liquidationCall(
     InternalLiquidationCallParams memory _params,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     LiquidationLocalVars memory _vars;
 
-    // remove all collateral from the subaccount first
-    // In case the collateral is ibToken and currently staking in miniFL
-    // This will withdraw from miniFL so that the collat token can be transfered to strategy contract
+    // Remove all collateral from the subaccount first
+    // If applicable, this will withdraw staked collateral from miniFL
+    // so that it can be transfered to strategy contract
     LibMoneyMarket01.removeCollatFromSubAccount(
       _params.account,
       _params.subAccount,
@@ -306,15 +372,17 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs
     );
 
-    // cache the balance of tokens before executing strategy contract
-    // this will be used to find the actual collateral used and repay token back from the strategy
+    // Cache the balance of tokens before executing strategy contract
+    // This will be used to find the actual collateral used and repay token back from the strategy
     _vars.collatTokenBalanceBefore = IERC20(_params.collatToken).balanceOf(address(this));
     _vars.repayTokenBalaceBefore = IERC20(_params.repayToken).balanceOf(address(this));
 
-    // 2. send all collats under subaccount to strategy
+    // Send all collats under subaccount to strategy
     IERC20(_params.collatToken).safeTransfer(_params.liquidationStrat, _params.subAccountCollatAmount);
 
-    // 3. call executeLiquidation on strategy
+    // Calculated repayToken amount expected from liquidation
+    // Cap repay amount to current debt if input exceeds it
+    // maxPossibleRepayAmount = min(repayAmount, currentDebt)
     _vars.maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
       _params.subAccount,
       _params.repayToken,
@@ -322,11 +390,12 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs
     );
     _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
-
     unchecked {
       _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
     }
 
+    // Call executeLiquidation on strategy
+    // Strategy will convert collatToken to repayToken and send back here
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _params.collatToken,
       _params.repayToken,
@@ -335,7 +404,10 @@ contract LiquidationFacet is ILiquidationFacet {
       _params.minReceive
     );
 
-    // 4. check repaid amount, take fees, and update states
+    // Calculate actual repayment by comparing balance of repayToken before and after liquidation
+    // actualLiquidationFee = amountFromStrat * liquidationFee
+    //                      = amountFromStrat * maxPossibleFee / expectedMaxRepayAmount
+    // repaidAmount = amountFromStrat - actualLiquidationFee
     (_vars.repaidAmount, _vars.actualLiquidationFee) = _calculateActualRepayAmountAndFee(
       _params.repayToken,
       _vars.repayTokenBalaceBefore,
@@ -343,17 +415,28 @@ contract LiquidationFacet is ILiquidationFacet {
       _vars.maxPossibleFee
     );
 
-    // 5. split fee between liquidator and treasury
+    // Split fee between liquidator and treasury
+    // ex. liquidationReward = 40%
+    //     40% of actualLiquidationFee will go to liquidator aka. caller
+    //     60% of actualLiquidationFee will go to treasury
     _vars.feeToLiquidator =
       (_vars.actualLiquidationFee * moneyMarketDs.liquidationRewardBps) /
       LibMoneyMarket01.MAX_BPS;
-    _vars.feeToTreasury = _vars.actualLiquidationFee - _vars.feeToLiquidator;
+    // Safe to use unchecked because `feeToLiquidator` is fraction of `actualLiquidationFee`
+    unchecked {
+      _vars.feeToTreasury = _vars.actualLiquidationFee - _vars.feeToLiquidator;
+    }
 
+    // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
     _validateBorrowingPower(_params.repayToken, _vars.repaidAmount, _params.usedBorrowingPower, moneyMarketDs);
 
-    moneyMarketDs.reserves[_params.repayToken] += _vars.repaidAmount;
+    // Increase repayToken reserve balance
+    // Safe to use unchecked because repaidAmount is derived from balanceOf
+    unchecked {
+      moneyMarketDs.reserves[_params.repayToken] += _vars.repaidAmount;
+    }
 
-    // give priority to fee
+    // Remove repaid debt from subAccount
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
       _params.account,
       _params.subAccount,
@@ -370,15 +453,19 @@ contract LiquidationFacet is ILiquidationFacet {
     // Calculate the actual collateral used in liquidation strategy by comparing balance before and after
     _vars.collatSold = _vars.collatTokenBalanceBefore - IERC20(_params.collatToken).balanceOf(address(this));
 
-    // add remaining collateral back to the subaccount since we have removed all collateral earlier
-    // this should also deposit collateral back to miniFL if applicable
-    LibMoneyMarket01.addCollatToSubAccount(
-      _params.account,
-      _params.subAccount,
-      _params.collatToken,
-      _params.subAccountCollatAmount - _vars.collatSold,
-      moneyMarketDs
-    );
+    // Add remaining collateral back to the subaccount since we have removed all collateral earlier
+    // This should deposit collateral back to miniFL if applicable
+    if (_params.subAccountCollatAmount > _vars.collatSold) {
+      unchecked {
+        LibMoneyMarket01.addCollatToSubAccount(
+          _params.account,
+          _params.subAccount,
+          _params.collatToken,
+          _params.subAccountCollatAmount - _vars.collatSold,
+          moneyMarketDs
+        );
+      }
+    }
 
     IERC20(_params.repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
     IERC20(_params.repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
@@ -428,6 +515,7 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs.tokenConfigs[_repayToken].borrowingFactor,
       moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor
     );
+    // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
     if (_repaidBorrowingPower * LibMoneyMarket01.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
       revert LiquidationFacet_RepayAmountExceedThreshold();
     }

@@ -173,7 +173,8 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     // get token config
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    // get borrowing power of the borrower
+    // get borrowing power limit of the borrower
+    // TODO: rename `borrowLimitUSDValue` to `borrowingPowerLimit`
     uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowLimitUSDValue;
     // get borrowing power of the new borrowing
     uint256 _newUsedBorrowingPower = LibMoneyMarket01.usedBorrowingPower(
@@ -191,6 +192,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
   }
 
   /// @dev Check if the token has enough capacity for borrower
+  ///      Capacity is the amount of token that can be borrowed
   /// @param _token The token to be borrowed
   /// @param _borrowAmount The amount to borrow
   /// @param moneyMarketDs The money market diamond storage
