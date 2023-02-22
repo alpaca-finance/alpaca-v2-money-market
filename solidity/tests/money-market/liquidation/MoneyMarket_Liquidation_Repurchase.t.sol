@@ -49,7 +49,6 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     vm.startPrank(BOB);
     accountManager.deposit(address(usdc), normalizeEther(100 ether, usdcDecimal));
     accountManager.deposit(address(btc), normalizeEther(10 ether, btcDecimal));
-    accountManager.deposit(address(weth), normalizeEther(10 ether, wethDecimal));
     vm.stopPrank();
 
     vm.startPrank(ALICE);
@@ -82,6 +81,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
       subAccountDebtShare: 0
     });
     (_stateBefore.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
+    console.log(_stateBefore.debtShare);
+    console.log(_stateBefore.debtValue);
+    console.log(MockERC20(_debtToken).balanceOf(liquidationTreasury));
 
     uint256 _treasuryFeeBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
@@ -101,8 +103,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // reward = 1%
     // repurchase fee = 1%
     // timestamp increased by 1 day, debt value should increased to 30.005076
-    // fee amount = 15 * 0.01 = 0.15
-    uint256 _expectedFee = normalizeEther(0.15 ether, usdcDecimal);
+    // repaid = desired / (1 + feePct) = 15 / (1 + 0.01) = 14.85[1485]...
+    // fee amount = desired - repaid = 15 - 14.85[1485]... = 0.1485[1485]... ~ 0.148515 usdc
+    uint256 _expectedFee = normalizeEther(0.148515 ether, usdcDecimal);
     vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(15 ether, usdcDecimal));
 
@@ -133,17 +136,17 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // collat debt share should be = 30
     // then after repurchase
     // collat amount should be = 40 - (_collatAmountOut) = 40 - 18.9375 = 21.0625
-    // actual repaid debt amount = _repayAmount - fee = 15 - 0.15 = 14.85
-    // collat debt value should be = 30.005076 - (actual repaid debt amount) = 30.005076 - 14.85 = 15.155076
-    // _repayShare = actual repaid debt amount * totalDebtShare / totalDebtValue = 14.85 * 30 / 30.005076 = 14.847487
-    // collat debt share should be = 30 - (_repayShare) = 30 - 14.847487 = 15.152513
+    // actual repaid debt amount = 14.85[1485]...
+    // collat debt value should be = 30.005076 - (actual repaid debt amount) = 30.005076 - 14.85[1485]... = 15.15359085[1485]...
+    // _repayShare = actual repaid debt amount * totalDebtShare / totalDebtValue = 14.85[1485]... * 30 / 30.005076 = 14.84897270233
+    // collat debt share should be = 30 - (_repayShare) = 30 - 14.84897270233 = 15.151027
     assertEq(_stateAfter.collat, normalizeEther(21.0625 ether, wethDecimal));
     assertEq(_stateAfter.subAccountCollat, normalizeEther(21.0625 ether, wethDecimal));
-    assertEq(_stateAfter.debtValue, normalizeEther(15.155076 ether, usdcDecimal));
-    assertEq(_stateAfter.debtShare, normalizeEther(15.152513 ether, usdcDecimal));
-    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(15.152513 ether, usdcDecimal));
+    assertEq(_stateAfter.debtValue, normalizeEther(15.153591 ether, usdcDecimal));
+    assertEq(_stateAfter.debtShare, normalizeEther(15.151028 ether, usdcDecimal));
+    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(15.151028 ether, usdcDecimal));
     // globalDebt should equal to debtValue since there is only 1 position
-    assertEq(viewFacet.getGlobalDebtValue(_debtToken), normalizeEther(15.155076 ether, usdcDecimal));
+    assertEq(viewFacet.getGlobalDebtValue(_debtToken), normalizeEther(15.153591 ether, usdcDecimal));
     vm.stopPrank();
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
@@ -206,8 +209,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // repurchase fee = 1%
     // timestamp increased by 1 day, usdc debt value should increased to 30.0050765511672
     // timestamp increased by 1 day, btc value should increased to 3.00050765511672
-    // fee amount = 20 * 0.01 = 0.2
-    uint256 _expectedFee = normalizeEther(0.2 ether, usdcDecimal);
+    // repaid = desired / (1 + feePct) = 20 / (1 + 0.01) = 19.801[9801]...
+    // fee amount = desired - repaid = 20 - 19.801[9801]... = 0.19801[9801]... ~ 0.198020 usdc
+    uint256 _expectedFee = normalizeEther(0.198020 ether, usdcDecimal);
     vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(20 ether, usdcDecimal));
 
@@ -239,15 +243,15 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // collat debt share should be | usdc: 30 | btc: 3 |
     // then after repurchase
     // collat amount should be = 80 - (_collatAmountOut) = 80 - 25.25 = 54.75
-    // actual repaid debt amount = (_repayAmount - fee) = 20 - 0.2 = 19.8
-    // collat debt value should be = 30.005076 - (actual repaid debt amount) = 30.005076 - 19.8 = 10.205076
-    // _repayShare = (actual repaid debt amount) * totalDebtShare / totalDebtValue = 19.8 * 30 / 30.005076 = 19.796650
-    // collat debt share should be = 30 - (_repayShare) = 30 - 19.796650 = 10.203350
+    // actual repaid debt amount = 20 / (1 + 0.01)
+    // collat debt value should be = 30.005076 - (actual repaid debt amount) = 30.005076 - 20 / (1 + 0.01) ~ 10.203096
+    // _repayShare = (actual repaid debt amount) * totalDebtShare / totalDebtValue = 20 / (1 + 0.01) * 30 / 30.005076
+    // collat debt share should be = 30 - (_repayShare) = 30 - (20 / (1 + 0.01) * 30 / 30.005076) ~ 10.201370
     assertEq(_stateAfter.collat, normalizeEther(54.75 ether, wethDecimal));
     assertEq(_stateAfter.subAccountCollat, normalizeEther(54.75 ether, wethDecimal));
-    assertEq(_stateAfter.debtValue, normalizeEther(10.205076 ether, usdcDecimal));
-    assertEq(_stateAfter.debtShare, normalizeEther(10.203350 ether, usdcDecimal));
-    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(10.203350 ether, usdcDecimal));
+    assertEq(_stateAfter.debtValue, normalizeEther(10.203096 ether, usdcDecimal));
+    assertEq(_stateAfter.debtShare, normalizeEther(10.201370 ether, usdcDecimal));
+    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(10.201370 ether, usdcDecimal));
 
     // check state for btc should not be changed
     CacheState memory _btcState = CacheState({
@@ -565,8 +569,9 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // reward = 1%
     // repurchase fee = 1%
     // timestamp increased by 1 day, debt value should increased to 30.009024979851648
-    // fee amount = 15 * 0.01 = 0.15
-    uint256 _expectedFee = normalizeEther(0.15 ether, usdcDecimal);
+    // repaid = desired / (1 + feePct) = 15 / (1 + 0.01) = 14.85[1485]...
+    // fee amount = desired - repaid = 15 - 14.85[1485]... = 0.1485[1485]... ~ 0.148515 usdc
+    uint256 _expectedFee = normalizeEther(0.148515 ether, usdcDecimal);
     vm.prank(BOB, BOB);
     liquidationFacet.repurchase(ALICE, _subAccountId, _debtToken, _collatToken, normalizeEther(15 ether, usdcDecimal));
 
@@ -577,7 +582,8 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     uint256 _bobUsdcBalanceAfter = usdc.balanceOf(BOB);
 
     // check bob balance
-    assertEq(_bobUsdcBalanceAfter - _bobUsdcBalanceBefore, _expectedFee); // pay 15 usdc and get reward 15.15 usdc
+    // pay 15 usdc and get reward 15.15 usdc net increase 0.15 usdc
+    assertEq(_bobUsdcBalanceAfter - _bobUsdcBalanceBefore, normalizeEther(0.15 ether, usdcDecimal));
 
     CacheState memory _stateAfter = CacheState({
       collat: viewFacet.getTotalCollat(_collatToken),
@@ -595,17 +601,17 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // collat debt share should be = 40
     // then after repurchase
     // collat amount should be = 20 - (_collatAmountOut) = 20 - 15.15 = 4.85
-    // actual repaid debt amount = _repayAmount - fee = 15 - 0.15 = 14.85
-    // collat debt value should be = 40.009024 - (actual repaid debt amount) = 40.009024 - 14.85 = 25.159024
-    // _repayShare = actual repaid debt amount * totalDebtShare / totalDebtValue = 14.85 * 40 / 40.009024 = 14.846650
-    // collat debt share should be = 40 - (_repayShare) = 40 - 14.846650 = 25.15335
+    // actual repaid debt amount = 15 / (1 + 0.01)
+    // collat debt value should be = 40.009024 - (actual repaid debt amount) = 40.009024 - (15 / (1 + 0.01)) = 25.157539
+    // _repayShare = actual repaid debt amount * totalDebtShare / totalDebtValue = 15 / (1 + 0.01) * 40 / 40.009024
+    // collat debt share should be = 40 - (_repayShare) = 40 - (15 / (1 + 0.01) * 40 / 40.009024) = 25.151865
     assertEq(_stateAfter.collat, normalizeEther(4.85 ether, usdcDecimal));
     assertEq(_stateAfter.subAccountCollat, normalizeEther(4.85 ether, usdcDecimal));
-    assertEq(_stateAfter.debtValue, normalizeEther(25.159024 ether, usdcDecimal));
-    assertEq(_stateAfter.debtShare, normalizeEther(25.15335 ether, usdcDecimal));
-    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(25.15335 ether, usdcDecimal));
+    assertEq(_stateAfter.debtValue, normalizeEther(25.157539 ether, usdcDecimal));
+    assertEq(_stateAfter.debtShare, normalizeEther(25.151865 ether, usdcDecimal));
+    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(25.151865 ether, usdcDecimal));
     // globalDebt should equal to debtValue since there is only 1 position
-    assertEq(viewFacet.getGlobalDebtValue(_debtToken), normalizeEther(25.159024 ether, usdcDecimal));
+    assertEq(viewFacet.getGlobalDebtValue(_debtToken), normalizeEther(25.157539 ether, usdcDecimal));
 
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryFeeBefore, _expectedFee);
 

@@ -46,7 +46,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
      *  - initial prices: 1 weth = 1 usd, 1 usdc = 1 usd
      *  - all token have collatFactor 9000, borrowFactor 9000
      *  - 10% fee, 1% reward
-     *  - allow to liquidate 100% of position
+     *  - allow to repurchase up to 100% of position
      *  - no interest
      */
     mockOracle.setTokenPrice(address(weth), 1 ether);
@@ -101,7 +101,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
     mockOracle.setTokenPrice(address(weth), 2 ether);
 
     /**
-     * BOB repurchase: desiredRepayAmount = 0.1 weth
+     * BOB repurchase
      *  - currentDebt = 1 weth
      *  - maxAmountRepurchaseable = currentDebt * (1 + feePct)
      *                            = 1 * (1 + 0.1) = 1.1 weth
@@ -110,13 +110,13 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
      *                               = 2 * (1 + 0.01) = 2.02 usd
      *  - collatAmountOut = repayAmountWithFee * repayTokenPriceWithPremium / collatTokenPrice
      *
-     * case 1: desiredRepayAmount <= maxAmountRepurchaseable
-     *  - repayAmountWithFee = desiredRepayAmount
-     *  - repayAmountWithoutFee = desiredRepayAmount / maxAmountRepurchaseable
-     *
-     * case 2: desiredRepayAmount > maxAmountRepurchaseable
+     * case 1: desiredRepayAmount > maxAmountRepurchaseable
      *  - repayAmountWithFee = maxAmountRepurchaseable
      *  - repayAmountWithoutFee = currentDebt
+     *
+     * case 2: desiredRepayAmount <= maxAmountRepurchaseable
+     *  - repayAmountWithFee = desiredRepayAmount
+     *  - repayAmountWithoutFee = desiredRepayAmount / (1 + feePct)
      */
     uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
     uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
@@ -134,7 +134,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
     } else {
       // case 1
       _repayAmountWithFee = _desiredRepayAmount;
-      _repayAmountWithoutFee = (_desiredRepayAmount * 1e18) / _maxAmountRepurchasable;
+      _repayAmountWithoutFee = (_desiredRepayAmount * 100) / (110);
     }
 
     uint256 _repayTokenPriceWithPremium = 2.02 ether;
@@ -151,7 +151,6 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
       normalizeEther(_initialCollateralAmount, usdcDecimal) - normalizeEther(_collatSold, usdcDecimal),
       "usdc collat"
     );
-
     (, uint256 _debtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     assertEq(_debtAmountAfter, _initialDebtAmount - _repayAmountWithoutFee, "weth debt");
 
