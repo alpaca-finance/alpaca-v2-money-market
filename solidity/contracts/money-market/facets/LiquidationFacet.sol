@@ -176,8 +176,8 @@ contract LiquidationFacet is ILiquidationFacet {
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
-          (_desiredRepayAmount * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps)) /
-          LibMoneyMarket01.MAX_BPS;
+          (_desiredRepayAmount * 1e18) /
+          (_maxAmountRepurchaseable * moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor);
       }
 
       _vars.repurchaseFeeToProtocol = _vars.repayAmountWithFee - _vars.repayAmountWithoutFee;
