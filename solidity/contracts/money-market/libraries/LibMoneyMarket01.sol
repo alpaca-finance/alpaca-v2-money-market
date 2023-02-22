@@ -228,9 +228,9 @@ library LibMoneyMarket01 {
       // example:
       //  - amount                = 100
       //  - tokenPrice            = 1
-      //  - collateralFactor      = 0.9
+      //  - collateralFactor      = 9000 (need to divide by MAX_BPS)
       //
-      //  _totalBorrowingPower   += 100 * 1 * 0.9
+      //  _totalBorrowingPower   += 100 * 1 * (9000/10000)
       //                         += 90
       _totalBorrowingPower += LibFullMath.mulDiv(
         _collats[_i].amount * _tokenConfig.to18ConversionFactor * _tokenConfig.collateralFactor,
