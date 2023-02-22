@@ -108,7 +108,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     //  - _receivedAmount      = 100
     //  - pendingAlpacaReward  = 25,000
     //  rewardDebt = oldRewardDebt + (_receivedAmount * accAlpacaPerShare)= 0 + (100 * 250) = 25,000
-    //  This means newly deposit share does not eligible for 25,000 penidng rewards
+    //  This means newly deposit share does not eligible for 25,000 pending rewards
     user.rewardDebt = user.rewardDebt + ((_amount * pool.accRewardPerShare) / ACC_REWARD_PRECISION).toInt256();
 
     emit LogOnDeposit(_user, _pid, _amount);
@@ -134,7 +134,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         _withdrawAmount = _currentAmount - _newAmount;
       }
 
-      // date reward debt
+      // update reward debt
       // example:
       //  - accAlpacaPerShare    = 300
       //  - _amountToWithdraw    = 100
@@ -284,6 +284,14 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
           _timePast = block.timestamp - _poolInfo.lastRewardTime;
         }
         uint256 _rewards = (_timePast * rewardPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+
+        // increase accRewardPerShare with `_rewards/stakedBalance` amount
+        // example:
+        //  - oldaccRewardPerShare = 0
+        //  - _rewards                = 2000
+        //  - stakedBalance               = 10000
+        //  _poolInfo.accRewardPerShare = oldaccRewardPerShare + (_rewards/stakedBalance)
+        //  _poolInfo.accRewardPerShare = 0 + 2000/10000 = 0.2
         _poolInfo.accRewardPerShare =
           _poolInfo.accRewardPerShare +
           ((_rewards * ACC_REWARD_PRECISION) / _stakedBalance).toUint128();

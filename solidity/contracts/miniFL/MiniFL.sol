@@ -197,6 +197,12 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
           : 0;
 
         // increase accAlpacaPerShare with `alpacaReward/stakedBalance` amount
+        // example:
+        //  - oldAccAlpacaPerShare = 0
+        //  - alpacaReward                = 2000
+        //  - stakedBalance               = 10000
+        //  _poolInfo.accAlpacaPerShare = oldAccAlpacaPerShare + (alpacaReward/stakedBalance)
+        //  _poolInfo.accAlpacaPerShare = 0 + 2000/10000 = 0.2
         _poolInfo.accAlpacaPerShare =
           _poolInfo.accAlpacaPerShare +
           ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance).toUint128();
@@ -268,7 +274,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     //  - _receivedAmount      = 100
     //  - pendingAlpacaReward  = 25,000
     //  rewardDebt = oldRewardDebt + (_receivedAmount * accAlpacaPerShare)= 0 + (100 * 250) = 25,000
-    //  This means newly deposit share does not eligible for 25,000 penidng rewards
+    //  This means newly deposit share does not eligible for 25,000 pending rewards
     user.rewardDebt =
       user.rewardDebt +
       ((_receivedAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
@@ -318,7 +324,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       stakingReserves[_stakingToken] -= _amountToWithdraw;
     }
 
-    // date reward debt
+    // update reward debt
     // example:
     //  - accAlpacaPerShare    = 300
     //  - _amountToWithdraw    = 100
