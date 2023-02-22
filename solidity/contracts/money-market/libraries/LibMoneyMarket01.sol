@@ -550,27 +550,6 @@ library LibMoneyMarket01 {
     }
   }
 
-  /// @dev must accrue interest for underlying token before withdraw
-  function withdraw(
-    address _underlyingToken,
-    address _ibToken,
-    uint256 _shareAmount,
-    MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal returns (uint256 _withdrawAmount) {
-    _withdrawAmount = LibShareUtil.shareToValue(
-      _shareAmount,
-      getTotalToken(_underlyingToken, moneyMarketDs), // ok to use getTotalToken here because we need to call accrueInterest before withdraw
-      IERC20(_ibToken).totalSupply()
-    );
-
-    if (_withdrawAmount > moneyMarketDs.reserves[_underlyingToken]) {
-      revert LibMoneyMarket01_NotEnoughToken();
-    }
-
-    // burn ibToken
-    IInterestBearingToken(_ibToken).onWithdraw(msg.sender, msg.sender, _withdrawAmount, _shareAmount);
-  }
-
   function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) {
@@ -726,17 +705,6 @@ library LibMoneyMarket01 {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view returns (uint256 _debtAmount) {
     _debtAmount = moneyMarketDs.nonCollatAccountDebtValues[_account].getAmount(_token);
-  }
-
-  function getShareAmountFromValue(
-    address _underlyingToken,
-    address _ibToken,
-    uint256 _value,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _totalSupply, uint256 _ibShareAmount) {
-    _totalSupply = IInterestBearingToken(_ibToken).totalSupply();
-    uint256 _totalToken = LibMoneyMarket01.getTotalTokenWithPendingInterest(_underlyingToken, moneyMarketDs);
-    _ibShareAmount = LibShareUtil.valueToShare(_value, _totalSupply, _totalToken);
   }
 
   function overCollatBorrow(
