@@ -160,6 +160,82 @@ contract LiquidationFacet is ILiquidationFacet {
     //                           = 1.05 * 0.9 = 0.945 eth
     //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1.05 - 0.945 = 0.105 eth
     //     TODO: this is WRONG! all cases should never pay fee more than max fee (debt * feeBps)
+
+    // maxAmountRepurchaseable = currentDebt * (1 + feePct)
+    //
+    // case 1: desiredRepayAmount >= maxAmountRepurchaseable
+    // desiredRepayAmount = 1.2 eth
+    // repaid = currentDebt
+    //        = 1 eth
+    // fee = currentDebt * feePct = repaid * feePct
+    //     = 1 * 0.1 = 0.1 eth
+    //
+    // case 2: desiredRepayAmount < maxAmountRepurchaseable
+    // desiredRepayAmount = 0.9 eth
+    // fee = desiredRepayAmount * feePct
+    //     = 0.9 * 0.1 = 0.09
+    // repaid = desiredRepayAmount - fee
+    //        = 0.9 - 0.09 = 0.81
+    //
+    // desiredRepayAmount = 1 eth
+    // fee = desiredRepayAmount * feePct
+    //     = 1 * 0.1 = 0.1
+    // repaid = desiredRepayAmount - fee
+    //        = 1 - 0.1 = 0.9
+    //
+    // desiredRepayAmount = 1.1 eth
+    // fee = desiredRepayAmount * feePct
+    //     = 1.1 * 0.1 = 0.11
+    // repaid = desiredRepayAmount - fee
+    //        = 1.1 - 0.11 = 0.99
+
+    // maxAmountRepurchaseable = debt + maxFee
+    // maxFee = (1 + feePct * debt) / (1 - feePct)
+    // repaid = desiredRepayAmount - fee
+    // fee = desiredRepayAmount * feePct
+    //
+    // maxFee = (1 + 0.1 * 1) / (1 - 0.1) = 1.222...
+    // maxAmountRepurchaseable = 1 +
+    //
+    // R = 1 - feePct = 1 - 0.1 = 0.9
+    // maxFee = debt * (1 - R) / R = 1 * (1 - 0.9) / 0.9 = 0.1111...
+    // maxAmountRepurchaseable = 1 + 0.111 = 1.1111...
+    //
+    // case 1: desiredRepayAmount >= maxAmountRepurchaseable
+    // desiredRepayAmount = 1.2 eth
+    // repaid = debt = 1
+    // fee = input
+
+    // maxAmountRepurchaseable = currentDebt * (1 + feePct)
+    //
+    // case 1: desiredRepayAmount >= maxAmountRepurchaseable
+    // desiredRepayAmount = 1.2 eth
+    // repaid = currentDebt
+    //        = 1 eth
+    // fee = currentDebt * feePct = repaid * feePct
+    //     = 1 * 0.1 = 0.1 eth
+    //
+    // case 2: desiredRepayAmount <= debt
+    // desiredRepayAmount = 0.9 eth
+    // repaid = desiredRepayAmount / (1 + feePct)
+    //        = 0.9 / (1 + 0.1) = 0.[81]...
+    // fee = repaid * feePct = desiredRepayAmount - repaid
+    //     = 0.9 - 0.[81]... = 0.0[81]...
+    //
+    // desiredRepayAmount = 1 eth
+    // repaid = desiredRepayAmount / (1 + feePct)
+    //        = 1 / (1 + 0.1) = 0.[90]...
+    // fee = repaid * feePct = desiredRepayAmount - repaid
+    //     = 1 - 0.[90]... = 0.0[90]...
+    //
+    // case 3: debt < desiredRepayAmount < max
+    // desiredRepayAmount = 1.05 eth
+    // repaid = desiredRepayAmount / (1 + feePct)
+    //        = 1.05 / (1 + 0.1) = 0.9[54]...
+    // fee = repaid * feePct = desiredRepayAmount - repaid
+    //     = 1.05 - 0.9[54]... = 0.09[54]...
+    //
+
     {
       (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
         _vars.subAccount,
@@ -175,9 +251,12 @@ contract LiquidationFacet is ILiquidationFacet {
         _vars.repayAmountWithoutFee = _currentDebtAmount;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
+        // _vars.repayAmountWithoutFee =
+        //   (_desiredRepayAmount * 1e18) /
+        //   (_maxAmountRepurchaseable * moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor);
         _vars.repayAmountWithoutFee =
-          (_desiredRepayAmount * 1e18) /
-          (_maxAmountRepurchaseable * moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor);
+          (_desiredRepayAmount * LibMoneyMarket01.MAX_BPS) /
+          (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS);
       }
 
       _vars.repurchaseFeeToProtocol = _vars.repayAmountWithFee - _vars.repayAmountWithoutFee;
