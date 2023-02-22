@@ -178,7 +178,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     return (((user.totalAmount * accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256() - user.rewardDebt).toUint256();
   }
 
-  /// @notice Perform actual update pool.
+  /// @dev Perform actual update pool.
   /// @param _pid The index of the pool. See `poolInfo`.
   /// @return _poolInfo Returns the pool that was updated.
   function _updatePool(uint256 _pid) internal returns (PoolInfo memory _poolInfo) {

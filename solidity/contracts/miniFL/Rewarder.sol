@@ -269,7 +269,7 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
   }
 
-  /// @notice Perform the actual updatePool
+  /// @dev Perform the actual updatePool
   /// @param _pid The index of the pool. See `poolInfo`.
   function _updatePool(uint256 _pid) internal returns (PoolInfo memory) {
     PoolInfo memory _poolInfo = poolInfo[_pid];
