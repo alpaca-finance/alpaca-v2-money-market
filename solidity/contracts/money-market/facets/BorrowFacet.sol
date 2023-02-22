@@ -68,7 +68,7 @@ contract BorrowFacet is IBorrowFacet {
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
     // accrue all debt tokens under subaccount
-    // because used borrowing power is calcualated from all debt token of sub account
+    // because used borrowing power is calculated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // Validate if this borrowing transaction will violate the business rules
@@ -105,7 +105,7 @@ contract BorrowFacet is IBorrowFacet {
     address _subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
 
     // accrue all debt tokens under subaccount
-    // because used borrowing power is calcualated from all debt token of sub account
+    // because used borrowing power is calculated from all debt token of sub account
     LibMoneyMarket01.accrueBorrowedPositionsOf(_subAccount, moneyMarketDs);
 
     // Get the current debt amount and share of this token under the subaccount
@@ -263,7 +263,7 @@ contract BorrowFacet is IBorrowFacet {
     // no check if repay entire debt
     if (_currentSubAccountDebtShare > _shareToRepay) {
       uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_repayToken, moneyMarketDs);
-
+      // Revert if debt size in USD after repaid is less than minDebtSize
       if (
         ((_currentSubAccountDebtAmount - _amountToRepay) *
           moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor *
@@ -282,7 +282,7 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _amount,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal view {
-    // check open market
+    // Revert if market doesn't exist for `_token`
     if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) {
       revert BorrowFacet_InvalidToken(_token);
     }
@@ -290,12 +290,14 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
     LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
-    // check borrow + currentDebt < minDebtSize
     (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
       _subAccount,
       _token,
       moneyMarketDs
     );
+    // Revert if new debt size in USD is going to be less than minDebtSize
+    // Existing debt could initially be greater than minDebtSize
+    // but as price fall it could become smaller than minDebtSize
     if (
       ((_amount + _currentDebtAmount) * _tokenConfig.to18ConversionFactor * _tokenPrice) / 1e18 <
       moneyMarketDs.minDebtSize
@@ -303,34 +305,37 @@ contract BorrowFacet is IBorrowFacet {
       revert BorrowFacet_BorrowLessThanMinDebtSize();
     }
 
-    // check asset tier
     (uint256 _totalUsedBorrowingPower, bool _hasIsolateAsset) = LibMoneyMarket01.getTotalUsedBorrowingPower(
       _subAccount,
       moneyMarketDs
     );
-
+    // check that ISOLATE tier can't be borrowed with other token
     if (moneyMarketDs.tokenConfigs[_token].tier == LibMoneyMarket01.AssetTier.ISOLATE) {
+      // Revert if trying to borrow ISOLATE token while borrowing other token (incl. other ISOLATE token)
+      // Only allow to borrow more of same ISOLATE token
+      // NOTE: in case token got demoted from higher tier to ISOLATE tier
+      //       users will still be able to borrow more of that token but not other
       if (
         !moneyMarketDs.subAccountDebtShares[_subAccount].has(_token) &&
         moneyMarketDs.subAccountDebtShares[_subAccount].size > 0
       ) {
         revert BorrowFacet_InvalidAssetTier();
       }
+      // Revert if trying to borrow other tier while borrowing ISOLATE token
     } else if (_hasIsolateAsset) {
       revert BorrowFacet_InvalidAssetTier();
     }
 
-    // check if tokens in reserve is enough to be borrowed
+    // Revert if tokens in reserve is not enough to be borrowed
     if (moneyMarketDs.reserves[_token] < _amount) {
       revert BorrowFacet_NotEnoughToken(_amount);
     }
 
-    // check global borrowing limit
+    // Revert if total borrow exceed global borrowing limit
     if (_amount + moneyMarketDs.globalDebts[_token] > moneyMarketDs.tokenConfigs[_token].maxBorrow) {
       revert BorrowFacet_ExceedBorrowLimit();
     }
 
-    // check used borrowing power after borrow exceed total borrowing power
     uint256 _borrowingPowerToBeUsed = LibMoneyMarket01.usedBorrowingPower(
       _amount,
       _tokenPrice,
@@ -338,12 +343,14 @@ contract BorrowFacet is IBorrowFacet {
       _tokenConfig.to18ConversionFactor
     );
     uint256 _totalBorrowingPower = LibMoneyMarket01.getTotalBorrowingPower(_subAccount, moneyMarketDs);
-
+    // Revert if usedBorrowoingPower after borrow exceed totalBorrowingPower
     if (_totalBorrowingPower < _totalUsedBorrowingPower + _borrowingPowerToBeUsed) {
       revert BorrowFacet_BorrowingValueTooHigh(_totalBorrowingPower, _totalUsedBorrowingPower, _borrowingPowerToBeUsed);
     }
   }
 
+  /// @notice Accrue interest for a token
+  /// @param _token Token to accrue interest for
   function accrueInterest(address _token) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);

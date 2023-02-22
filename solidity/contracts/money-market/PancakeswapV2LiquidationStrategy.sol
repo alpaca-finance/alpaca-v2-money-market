@@ -28,7 +28,7 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   // tokenIn => tokenOut => path
   mapping(address => mapping(address => address[])) public paths;
 
-  /// @notice require that only allowed callers
+  /// @notice allow only whitelisted callers
   modifier onlyWhitelistedCallers() {
     if (!callersOk[msg.sender]) {
       revert PancakeswapV2LiquidationStrategy_Unauthorized();
@@ -55,22 +55,28 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
   ) external onlyWhitelistedCallers {
     address[] memory _path = paths[_collatToken][_repayToken];
 
+    // Revert if no swapPath config for _collatToken and _repayToken pair
     if (_path.length == 0) {
       revert PancakeswapV2LiquidationStrategy_PathConfigNotFound(_collatToken, _repayToken);
     }
 
+    // approve router for swapping
     IERC20(_collatToken).safeApprove(address(router), _collatAmountIn);
 
+    // _amountsIn[0] = collateral amount required to swap for _repayAmount
     uint256[] memory _amountsIn = router.getAmountsIn(_repayAmount, _path);
-    // _amountsIn[0] = collat that is required to swap for _repayAmount
+
     if (_collatAmountIn > _amountsIn[0]) {
+      // swap collateralToken to repayToken
       router.swapExactTokensForTokens(_amountsIn[0], _minReceive, _path, msg.sender, block.timestamp);
       // transfer remaining collateral back to caller
       IERC20(_collatToken).safeTransfer(msg.sender, _collatAmountIn - _amountsIn[0]);
     } else {
+      // swap collateralToken to repayToken
       router.swapExactTokensForTokens(_collatAmountIn, _minReceive, _path, msg.sender, block.timestamp);
     }
 
+    // reset approval
     IERC20(_collatToken).safeApprove(address(router), 0);
   }
 

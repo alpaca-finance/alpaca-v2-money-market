@@ -15,10 +15,11 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenAdminSetTokenConfig_ShouldWork() external {
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
 
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
@@ -26,7 +27,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
       maxBorrow: 100e18
     });
 
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = viewFacet.getTokenConfig(address(weth));
 
@@ -37,9 +38,11 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenNonOwnerSetTokenConfig() external {
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(9998),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
@@ -49,13 +52,15 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
   }
 
   function testRevert_WhenSetTokenConfigWithInvalidCollateralFactor() external {
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(9998),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 12000,
       borrowingFactor: 5000,
@@ -64,13 +69,15 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
     });
 
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
   }
 
   function testRevert_WhenSetTokenConfigWithInvalidBorrowingFactor() external {
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(9998),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 6000,
       borrowingFactor: 12000,
@@ -80,18 +87,20 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     // borrowing factor is more than MAX_BPS
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
 
     // borrowing factor is zero
     _inputs[0].borrowingFactor = 0;
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
   }
 
   function testRevert_WhenSetTokenConfigWithInvalidMaxCollateral() external {
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(9998),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 12000,
       borrowingFactor: 5000,
@@ -101,13 +110,15 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     // maxCollateral is more than MAX_BPS
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
   }
 
   function testRevert_WhenSetTokenConfigWithInvalidMaxBorrow() external {
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(9998),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 12000,
       borrowingFactor: 5000,
@@ -117,7 +128,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     // maxBorrow is more than MAX_BPS
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_InvalidArguments.selector));
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _inputs);
   }
 
   function testRevert_FailedSanityCheck() external {

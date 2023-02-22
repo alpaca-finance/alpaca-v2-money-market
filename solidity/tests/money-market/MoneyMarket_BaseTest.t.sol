@@ -8,16 +8,6 @@ import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiam
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
-// facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/money-market/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/money-market/facets/DiamondLoupeFacet.sol";
-import { LendFacet, ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
-import { CollateralFacet, ICollateralFacet } from "../../contracts/money-market/facets/CollateralFacet.sol";
-import { BorrowFacet, IBorrowFacet } from "../../contracts/money-market/facets/BorrowFacet.sol";
-import { NonCollatBorrowFacet, INonCollatBorrowFacet } from "../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { AdminFacet, IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
-import { LiquidationFacet, ILiquidationFacet } from "../../contracts/money-market/facets/LiquidationFacet.sol";
-
 // interfaces
 import { ICollateralFacet } from "../../contracts/money-market/interfaces/ICollateralFacet.sol";
 import { IViewFacet } from "../../contracts/money-market/interfaces/IViewFacet.sol";
@@ -82,7 +72,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -92,7 +81,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibWeth = InterestBearingToken(adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _usdcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(usdc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -102,7 +90,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibUsdc = InterestBearingToken(adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _btcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(btc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -112,7 +99,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibBtc = InterestBearingToken(adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _wNativeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(wNativeToken),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -124,7 +110,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _isolateTokenTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(isolateToken),
       tier: LibMoneyMarket01.AssetTier.ISOLATE,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -136,7 +121,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _cakeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: address(cake),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
