@@ -204,11 +204,11 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     accountManager.addCollateralFor(ALICE, subAccount0, address(weth), _aliceCollatAmount);
 
-    uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
-    // _borrowingPowerUSDValue = 5 * 1 * 9000/ 10000 = 4.5 ether USD
-    assertEq(_borrowingPowerUSDValue, normalizeEther(4.5 ether, usdDecimal));
+    // _borrowingPower = 5 * 1 * 9000/ 10000 = 4.5 ether
+    assertEq(_borrowingPower, normalizeEther(4.5 ether, usdDecimal));
 
     // borrow 2.025 weth => with 9000 borrow factor
     // the used borrowed power should be 2.025 * 10000 / 9000 = 2.25
@@ -220,8 +220,8 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     accountManager.borrow(subAccount0, address(usdc), normalizeEther(2.025 ether, usdcDecimal));
     vm.stopPrank();
 
-    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
-    assertEq(_borrowedUSDValue, normalizeEther(4.5 ether, usdDecimal));
+    (uint256 _usedBorrowingPower, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    assertEq(_usedBorrowingPower, normalizeEther(4.5 ether, usdDecimal));
   }
 
   function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectlyWithIbTokenCollat()
@@ -240,27 +240,27 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     accountManager.depositAndAddCollateral(subAccount0, address(weth), _aliceDepositAmount);
     vm.stopPrank();
 
-    uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
-    // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // _borrowingPower = 5 * 1 * 9000 / 10000 = 4.5 ether
     // totalSupply = 50 + 5 (init + new deposit) = 55
     // totalToken = 60 - 5 (balance - collat) = 55
     // ibCollatAmount = 5 (from `depositAndAddCollateral(_aliceDepositAmount)`)
     // borrowIbTokenAmountInToken = 5 * (55 / 55) (ibCollatAmount * (totalSupply / totalToken)) = 5
-    // _borrowingPowerUSDValue of ibToken = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // _borrowingPower of ibToken = 5 * 1 * 9000 / 10000 = 4.5 ether
     // then 4.5 + 4.5 = 9
-    assertEq(_borrowingPowerUSDValue, normalizeEther(9 ether, usdDecimal));
+    assertEq(_borrowingPower, normalizeEther(9 ether, usdDecimal));
 
     // borrowFactor = 1000, weth price = 1
-    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = 9 USD
+    // maximumBorrowedUSDValue = _borrowingPower = 9 USD
     // maximumBorrowed weth amount = 9 * 9000/10000 = 8.1
-    // _borrowedUSDValue = 8.1 * 10000 /9000 = 9
+    // _usedBorrowingPower = 8.1 * 10000 /9000 = 9
     vm.prank(ALICE);
     accountManager.borrow(subAccount0, address(weth), normalizeEther(8.1 ether, wethDecimal));
 
-    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
-    assertEq(_borrowedUSDValue, normalizeEther(9 ether, usdDecimal));
+    (uint256 _usedBorrowingPower, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    assertEq(_usedBorrowingPower, normalizeEther(9 ether, usdDecimal));
   }
 
   function testCorrectness_WhenUserBorrowToken_BorrowingPowerAndBorrowedValueShouldCalculateCorrectlyWithIbTokenCollat_ibTokenIsNot1to1WithToken()
@@ -285,27 +285,27 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     vm.prank(moneyMarketDiamond);
     ibWeth.onWithdraw(BOB, BOB, 0, normalizeEther(50 ether, ibWethDecimal));
 
-    uint256 _borrowingPowerUSDValue = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
+    uint256 _borrowingPower = viewFacet.getTotalBorrowingPower(ALICE, subAccount0);
 
     // add 5 weth, collateralFactor = 9000, weth price = 1
-    // _borrowingPowerUSDValue = 5 * 1 * 9000 / 10000 = 4.5 ether USD
+    // _borrowingPower = 5 * 1 * 9000 / 10000 = 4.5 ether
     // totalSupply = 50 + 5 (init + new deposit) = 55
     // totalToken = 110 - 5 (balance - collat) = 105
     // ibCollatAmount = 5 (from `depositAndAddCollateral(_aliceDepositAmount)`)
     // borrowIbTokenAmountInToken = 5 * (105 / 55) (ibCollatAmount * (totalToken / totalSupply )) = ~9.55
-    // _borrowingPowerUSDValue of ibToken = ~9.545454.. * 1 * 9000 / 10000 = ~8.59 ether USD
+    // _borrowingPower of ibToken = ~9.545454.. * 1 * 9000 / 10000 = ~8.59 ether
     // then 4.5 + ~8.59 = ~13.09
-    assertEq(_borrowingPowerUSDValue, 13090909090909090905);
+    assertEq(_borrowingPower, 13090909090909090905);
 
     // borrowFactor = 1000, weth price = 1
-    // maximumBorrowedUSDValue = _borrowingPowerUSDValue = ~13.09 USD
+    // maximumBorrowedUSDValue = _borrowingPower = ~13.09 USD
     // maximumBorrowed weth amount = ~13.09 * 9000/10000 = ~11.78
-    // _borrowedUSDValue = ~11.78 * 10000 / 9000 = ~13.09
+    // _usedBorrowingPower = ~11.78 * 10000 / 9000 = ~13.09
     vm.prank(ALICE);
     accountManager.borrow(subAccount0, address(weth), 11.781818181818181815 ether);
 
-    (uint256 _borrowedUSDValue, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
-    assertEq(_borrowedUSDValue, 13090909090909090905);
+    (uint256 _usedBorrowingPower, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, subAccount0);
+    assertEq(_usedBorrowingPower, 13090909090909090905);
   }
 
   function testRevert_WhenUserBorrowMoreThanLimit_ShouldRevertBorrowFacetExceedBorrowLimit() external {
