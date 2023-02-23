@@ -38,24 +38,25 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
      */
     mockOracle.setTokenPrice(address(weth), 1 ether);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
-    _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
+    address[] memory _tokens = new address[](2);
+    _tokens[0] = address(weth);
+    _tokens[1] = address(usdc);
+    IAdminFacet.TokenConfigInput[] memory _tokenConfigInputs = new IAdminFacet.TokenConfigInput[](2);
+    _tokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 1e40,
       maxBorrow: 1e40
     });
-    _inputs[1] = IAdminFacet.TokenConfigInput({
-      token: address(usdc),
+    _tokenConfigInputs[1] = IAdminFacet.TokenConfigInput({
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 1e40,
       maxBorrow: 1e40
     });
-    adminFacet.setTokenConfigs(_inputs);
+    adminFacet.setTokenConfigs(_tokens, _tokenConfigInputs);
     adminFacet.setFees(0, 1000, 0, 0);
     adminFacet.setLiquidationParams(10000, 10000);
     FixedFeeModel fixedFeeModel = new FixedFeeModel();
