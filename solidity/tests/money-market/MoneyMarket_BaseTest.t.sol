@@ -201,12 +201,12 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: ALICE,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: normalizeEther(1e30, usdDecimal)
+      borrowingPowerLimit: normalizeEther(1e30, usdDecimal)
     });
     _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
       account: BOB,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: normalizeEther(1e30, usdDecimal)
+      borrowingPowerLimit: normalizeEther(1e30, usdDecimal)
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);
