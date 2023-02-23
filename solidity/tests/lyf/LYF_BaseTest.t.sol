@@ -392,7 +392,7 @@ abstract contract LYF_BaseTest is BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: lyfDiamond,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);

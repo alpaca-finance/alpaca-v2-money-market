@@ -34,7 +34,7 @@ interface IAdminFacet {
   struct ProtocolConfigInput {
     address account;
     TokenBorrowLimitInput[] tokenBorrowLimit;
-    uint256 borrowLimitUSDValue;
+    uint256 borrowingPowerLimit;
   }
 
   struct TokenBorrowLimitInput {
