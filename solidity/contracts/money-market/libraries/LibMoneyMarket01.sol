@@ -94,7 +94,7 @@ library LibMoneyMarket01 {
 
   struct ProtocolConfig {
     mapping(address => uint256) maxTokenBorrow; // token limit per account
-    uint256 borrowLimitUSDValue;
+    uint256 borrowingPowerLimit;
   }
 
   // Storage

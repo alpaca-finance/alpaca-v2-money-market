@@ -273,7 +273,7 @@ contract ViewFacet is IViewFacet {
   /// @return The borrowing power
   function getNonCollatBorrowingPower(address _account) external view returns (uint256) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    return moneyMarketDs.protocolConfigs[_account].borrowLimitUSDValue;
+    return moneyMarketDs.protocolConfigs[_account].borrowingPowerLimit;
   }
 
   /// @notice Get the interest rate specific on token for a particular non collateralized borrower
