@@ -15,6 +15,7 @@ import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.s
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
+import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 
 contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdUtils, StdAssertions {
   function setUp() public override {
@@ -30,6 +31,109 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
     accountManager.deposit(address(btc), normalizeEther(100 ether, btcDecimal));
     accountManager.deposit(address(weth), normalizeEther(100 ether, wethDecimal));
     vm.stopPrank();
+  }
+
+  struct TestRepurchaseParams {
+    address borrower;
+    address repurchaser;
+    address collatToken;
+    address debtToken;
+    uint256 desiredRepayAmount;
+    uint256 repurchaserCollatTokenBalanceBefore;
+    uint256 repurchaserDebtTokenBalanceBefore;
+    uint256 initialDebtAmount;
+    uint256 initialCollateralAmount;
+    uint256 repurchaseFeeBps;
+    uint256 collatTokenPrice;
+    uint256 debtTokenPriceDuringRepurchase;
+  }
+
+  function _testRepurchase(TestRepurchaseParams memory vars) internal {
+    /**
+     * calculation
+     *  - maxAmountRepurchaseable = currentDebt * (1 + feePct)
+     *  - fee = repayAmountWithFee - repayAmountWithoutFee
+     *  - repayTokenPriceWithPremium = repayTokenPrice * (1 + rewardPct)
+     *  - collatAmountOut = repayAmountWithFee * repayTokenPriceWithPremium / collatTokenPrice
+     *
+     * case 1: desiredRepayAmount > maxAmountRepurchaseable
+     *  - repayAmountWithFee = maxAmountRepurchaseable
+     *  - repayAmountWithoutFee = currentDebt
+     *
+     * case 2: desiredRepayAmount <= maxAmountRepurchaseable
+     *  - repayAmountWithFee = desiredRepayAmount
+     *  - repayAmountWithoutFee = desiredRepayAmount / (1 + feePct)
+     */
+    vars.repurchaserDebtTokenBalanceBefore = weth.balanceOf(vars.repurchaser);
+    vars.repurchaserCollatTokenBalanceBefore = usdc.balanceOf(vars.repurchaser);
+
+    vm.prank(vars.repurchaser);
+    liquidationFacet.repurchase(vars.borrower, subAccount0, vars.debtToken, vars.collatToken, vars.desiredRepayAmount);
+
+    uint256 _maxAmountRepurchasable = (vars.initialDebtAmount * (10000 + vars.repurchaseFeeBps)) / 10000;
+    uint256 _repayAmountWithFee;
+    uint256 _repayAmountWithoutFee;
+    // case 1
+    if (vars.desiredRepayAmount > _maxAmountRepurchasable) {
+      _repayAmountWithFee = _maxAmountRepurchasable;
+      _repayAmountWithoutFee = vars.initialDebtAmount;
+    } else {
+      // case 2
+      _repayAmountWithFee = vars.desiredRepayAmount;
+      _repayAmountWithoutFee = (vars.desiredRepayAmount * 10000) / (10000 + (vars.repurchaseFeeBps));
+    }
+
+    // constant 1% premium
+    uint256 _repayTokenPriceWithPremium = (vars.debtTokenPriceDuringRepurchase * (10000 + 100)) / 10000;
+    uint256 _collatSold = (_repayAmountWithFee * _repayTokenPriceWithPremium) / vars.collatTokenPrice;
+
+    /**
+     * borrower final state
+     *  - collateral = initial - collatSold
+     *  - debt = initial - repayAmountWithoutFee
+     */
+    assertEq(
+      viewFacet.getCollatAmountOf(vars.borrower, subAccount0, vars.collatToken),
+      normalizeEther(vars.initialCollateralAmount, IERC20(vars.collatToken).decimals()) -
+        normalizeEther(_collatSold, IERC20(vars.collatToken).decimals()),
+      "borrower remaining collat"
+    );
+    (, uint256 _debtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      vars.borrower,
+      subAccount0,
+      vars.debtToken
+    );
+    console.log(vars.initialDebtAmount);
+    console.log(normalizeEther(vars.initialDebtAmount, IERC20(vars.debtToken).decimals()));
+    console.log(_repayAmountWithoutFee);
+    console.log(normalizeEther(_repayAmountWithoutFee, IERC20(vars.debtToken).decimals()));
+    console.log(vars.initialDebtAmount - _repayAmountWithoutFee);
+    console.log(
+      normalizeEther(vars.initialDebtAmount, IERC20(vars.debtToken).decimals()) -
+        normalizeEther(_repayAmountWithoutFee, IERC20(vars.debtToken).decimals())
+    );
+    assertEq(
+      _debtAmountAfter,
+      normalizeEther(vars.initialDebtAmount, IERC20(vars.debtToken).decimals()) -
+        normalizeEther(_repayAmountWithoutFee, IERC20(vars.debtToken).decimals()),
+      "borrower remaining debt"
+    );
+
+    /**
+     * repurchaser final state
+     *  - collateral = initial + payout
+     *  - debt = initial - repaid
+     */
+    assertEq(
+      IERC20(vars.collatToken).balanceOf(vars.repurchaser),
+      vars.repurchaserCollatTokenBalanceBefore + normalizeEther(_collatSold, usdcDecimal),
+      "repurchaser collatToken received"
+    );
+    assertEq(
+      IERC20(vars.debtToken).balanceOf(vars.repurchaser),
+      vars.repurchaserDebtTokenBalanceBefore - _repayAmountWithFee,
+      "repurchaser debtToken paid"
+    );
   }
 
   function testFuzz_RepurchaseCalculation(uint256 _desiredRepayAmount) public {
@@ -100,66 +204,17 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
      */
     mockOracle.setTokenPrice(address(weth), 2 ether);
 
-    /**
-     * BOB repurchase
-     *  - currentDebt = 1 weth
-     *  - maxAmountRepurchaseable = currentDebt * (1 + feePct)
-     *                            = 1 * (1 + 0.1) = 1.1 weth
-     *  - fee = repayAmountWithFee - repayAmountWithoutFee
-     *  - repayTokenPriceWithPremium = repayTokenPrice * (1 + rewardPct)
-     *                               = 2 * (1 + 0.01) = 2.02 usd
-     *  - collatAmountOut = repayAmountWithFee * repayTokenPriceWithPremium / collatTokenPrice
-     *
-     * case 1: desiredRepayAmount > maxAmountRepurchaseable
-     *  - repayAmountWithFee = maxAmountRepurchaseable
-     *  - repayAmountWithoutFee = currentDebt
-     *
-     * case 2: desiredRepayAmount <= maxAmountRepurchaseable
-     *  - repayAmountWithFee = desiredRepayAmount
-     *  - repayAmountWithoutFee = desiredRepayAmount / (1 + feePct)
-     */
-    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-    uint256 _bobUsdcBalanceBefore = usdc.balanceOf(BOB);
-
-    vm.prank(BOB);
-    liquidationFacet.repurchase(ALICE, subAccount0, address(weth), address(usdc), _desiredRepayAmount);
-
-    uint256 _maxAmountRepurchasable = 1.1 ether;
-    uint256 _repayAmountWithFee;
-    uint256 _repayAmountWithoutFee;
-    // case 1
-    if (_desiredRepayAmount > _maxAmountRepurchasable) {
-      _repayAmountWithFee = _maxAmountRepurchasable;
-      _repayAmountWithoutFee = _initialDebtAmount;
-    } else {
-      // case 2
-      _repayAmountWithFee = _desiredRepayAmount;
-      _repayAmountWithoutFee = (_desiredRepayAmount * 100) / (110);
-    }
-
-    uint256 _repayTokenPriceWithPremium = 2.02 ether;
-    uint256 _collatTokenPrice = 1 ether;
-    uint256 _collatSold = (_repayAmountWithFee * _repayTokenPriceWithPremium) / _collatTokenPrice;
-
-    /**
-     * ALICE final state
-     *  - collateral = initial - sold
-     *  - debt = initial - repayAmountWithoutFee
-     */
-    assertEq(
-      viewFacet.getCollatAmountOf(ALICE, subAccount0, address(usdc)),
-      normalizeEther(_initialCollateralAmount, usdcDecimal) - normalizeEther(_collatSold, usdcDecimal),
-      "usdc collat"
-    );
-    (, uint256 _debtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
-    assertEq(_debtAmountAfter, _initialDebtAmount - _repayAmountWithoutFee, "weth debt");
-
-    /**
-     * BOB final state
-     *  - weth = initial - repaid
-     *  - usdc = initial + collat + reward
-     */
-    assertEq(weth.balanceOf(BOB), _bobWethBalanceBefore - _repayAmountWithFee, "weth paid");
-    assertEq(usdc.balanceOf(BOB), _bobUsdcBalanceBefore + normalizeEther(_collatSold, usdcDecimal), "usdc received");
+    TestRepurchaseParams memory vars;
+    vars.borrower = ALICE;
+    vars.repurchaser = BOB;
+    vars.collatToken = address(usdc);
+    vars.debtToken = address(weth);
+    vars.desiredRepayAmount = _desiredRepayAmount;
+    vars.initialDebtAmount = _initialDebtAmount;
+    vars.initialCollateralAmount = _initialCollateralAmount;
+    vars.repurchaseFeeBps = 1000;
+    vars.collatTokenPrice = 1 ether;
+    vars.debtTokenPriceDuringRepurchase = 2 ether;
+    _testRepurchase(vars);
   }
 }
