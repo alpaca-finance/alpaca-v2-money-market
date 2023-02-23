@@ -38,6 +38,10 @@ abstract contract BaseScript is Script {
   address internal proxyAdminAddress;
   address internal wNativeToken;
   address internal nativeRelayer;
+  address internal wbnb;
+  address internal busd;
+  address internal dodo;
+  address internal pstake;
 
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
@@ -47,9 +51,14 @@ abstract contract BaseScript is Script {
     moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
-    accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager"), (IMoneyMarketAccountManager));
+    accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     wNativeToken = abi.decode(configJson.parseRaw(".wNativeToken"), (address));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
+    // tokens
+    wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
+    busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
+    dodo = abi.decode(configJson.parseRaw(".tokens.dodo"), (address));
+    pstake = abi.decode(configJson.parseRaw(".tokens.pstake"), (address));
   }
 
   // function _pretendMM() internal {

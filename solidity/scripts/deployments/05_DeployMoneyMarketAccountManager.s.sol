@@ -8,6 +8,7 @@ import { MoneyMarketAccountManager } from "solidity/contracts/account-manager/Mo
 import { MockWNativeRelayer } from "solidity/tests/mocks/MockWNativeRelayer.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
+import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract DeployMoneyMarketAccountManagerScript is BaseScript {
   using stdJson for string;
@@ -17,39 +18,48 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    // TODO: deploy wNativeToken or dump ibWNative address
-
     // deploy nativeRelayer
     // NOTE: remove this in prod
     nativeRelayer = address(new MockWNativeRelayer(wNativeToken));
 
-    // TODO: consider moving this somewhere else
-    // set implementation before open market
-    moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
-    moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
-
     // open market for wNativeToken
     IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: wNativeToken,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
+      tier: LibMoneyMarket01.AssetTier.CROSS,
+      collateralFactor: 0,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
       maxCollateral: 100 ether
     });
-    moneyMarket.openMarket(wNativeToken, tokenConfigInput, tokenConfigInput);
+    IAdminFacet.TokenConfigInput memory ibTokenConfigInput = tokenConfigInput;
+    ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.COLLATERAL;
+    ibTokenConfigInput.collateralFactor = 9000;
+    address ibWNative = moneyMarket.openMarket(wNativeToken, tokenConfigInput, ibTokenConfigInput);
+    _writeJson(vm.toString(address(ibWNative)), ".ibTokens.ibBnb");
 
-    accountManager = new MoneyMarketAccountManager(address(moneyMarket), wNativeToken, nativeRelayer);
+    // deploy implementation
+    address accountManagerImplementation = address(new MoneyMarketAccountManager());
+
+    // deploy proxy
+    bytes memory data = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,address,address)")),
+      address(moneyMarket),
+      wNativeToken,
+      nativeRelayer
+    );
+    address accountManagerProxy = address(
+      new TransparentUpgradeableProxy(accountManagerImplementation, proxyAdminAddress, data)
+    );
 
     // set account manager to allow interactions
     address[] memory _accountManagers = new address[](1);
-    _accountManagers[0] = address(accountManager);
+    _accountManagers[0] = accountManagerProxy;
 
     moneyMarket.setAccountManagersOk(_accountManagers, true);
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(address(accountManager)), ".moneyMarket.accountManager");
-    _writeJson(vm.toString(address(nativeRelayer)), ".nativeRelayer");
+    _writeJson(vm.toString(accountManagerImplementation), ".moneyMarket.accountManager.implementation");
+    _writeJson(vm.toString(accountManagerProxy), ".moneyMarket.accountManager.proxy");
+    _writeJson(vm.toString(nativeRelayer), ".nativeRelayer");
   }
 }
