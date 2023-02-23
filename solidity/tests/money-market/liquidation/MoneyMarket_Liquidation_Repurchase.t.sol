@@ -28,16 +28,10 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
 
     _miniFL = IMiniFL(address(miniFL));
 
-    /**
-     * setup
-     *  - initial prices: 1 weth = 1 usd, 1 usdc = 1 usd
-     *  - all token have collatFactor 9000, borrowFactor 9000
-     *  - 10% fee, 1% reward
-     *  - allow to repurchase up to 100% of position
-     *  - fixed 0.01% (1 bps) interest per block for all token
-     */
+    // initial prices: 1 weth = 1 usd, 1 usdc = 1 usd
     mockOracle.setTokenPrice(address(weth), 1 ether);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
+    // all token have collatFactor 9000, borrowFactor 9000
     address[] memory _tokens = new address[](2);
     _tokens[0] = address(weth);
     _tokens[1] = address(usdc);
@@ -57,11 +51,14 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
       maxBorrow: 1e40
     });
     adminFacet.setTokenConfigs(_tokens, _tokenConfigInputs);
+    // 10% repurchase fee
     adminFacet.setFees(0, 1000, 0, 0);
-    adminFacet.setLiquidationParams(10000, 10000);
+    // 1% repurchase reward (hard-coded in FixedFeeModel)
     FixedFeeModel fixedFeeModel = new FixedFeeModel();
     adminFacet.setRepurchaseRewardModel(fixedFeeModel);
-    // 1e16 = 0.01% interest per block
+    // allow to repurchase up to 100% of position
+    adminFacet.setLiquidationParams(10000, 10000);
+    // fixed 0.01% (1 bps = 1e16) interest per block for all token
     MockInterestModel interestModel = new MockInterestModel(1e16);
     adminFacet.setInterestModel(address(usdc), address(interestModel));
     adminFacet.setInterestModel(address(weth), address(interestModel));
@@ -74,7 +71,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     vm.stopPrank();
   }
 
-  modifier makeAliceUnderwater() {
+  function _makeAliceUnderwater() internal {
     /**
      * setup ALICE initial state
      *  - collateral 2.4 usdc (max collateral that would still allow position
@@ -102,8 +99,6 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
      *                       = 1 * 2 / 0.9 = 22222
      */
     mockOracle.setTokenPrice(address(weth), 2 ether);
-
-    _;
   }
 
   struct TestRepurchaseContext {
@@ -321,7 +316,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), viewFacet.getOverCollatTokenDebtShares(ctx.debtToken));
   }
 
-  function testCorrectness_WhenRepurchaseDesiredLessThanDebt_ShouldWork() public makeAliceUnderwater {
+  function testCorrectness_WhenRepurchaseDesiredLessThanDebt_ShouldWork() public {
+    _makeAliceUnderwater();
+
     // 0.1% interest
     skip(10);
 
@@ -340,7 +337,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     _testRepurchase(ctx);
   }
 
-  function testCorrectness_WhenRepurchaseDesiredEqualToDebt_ShouldWork() public makeAliceUnderwater {
+  function testCorrectness_WhenRepurchaseDesiredEqualToDebt_ShouldWork() public {
+    _makeAliceUnderwater();
+
     // 0.1% interest
     skip(10);
 
@@ -359,10 +358,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     _testRepurchase(ctx);
   }
 
-  function testCorrectness_WhenRepurchaseDesiredMoreThanDebtLessThanMaxRepurchasable_ShouldWork()
-    public
-    makeAliceUnderwater
-  {
+  function testCorrectness_WhenRepurchaseDesiredMoreThanDebtLessThanMaxRepurchasable_ShouldWork() public {
+    _makeAliceUnderwater();
+
     // 0.1% interest
     skip(10);
 
@@ -381,7 +379,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     _testRepurchase(ctx);
   }
 
-  function testCorrectness_WhenRepurchaseDesiredMoreThanMaxRepurchasable_ShouldWork() public makeAliceUnderwater {
+  function testCorrectness_WhenRepurchaseDesiredMoreThanMaxRepurchasable_ShouldWork() public {
+    _makeAliceUnderwater();
+
     // 0.01% interest
     skip(1);
 
@@ -400,10 +400,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     _testRepurchase(ctx);
   }
 
-  function testCorrectness_WhenRepurchaseDesiredLessThanDebt_DebtAndCollatSameToken_ShouldWork()
-    public
-    makeAliceUnderwater
-  {
+  function testCorrectness_WhenRepurchaseDesiredLessThanDebt_DebtAndCollatSameToken_ShouldWork() public {
+    _makeAliceUnderwater();
+
     // add little weth collateral so we repurchase weth debt with weth collateral
     vm.prank(ALICE);
     accountManager.addCollateralFor(ALICE, subAccount0, address(weth), normalizeEther(0.02 ether, wethDecimal));
@@ -432,23 +431,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenRepurchaseHealthySubAccount() public {
-    /**
-     * setup ALICE initial state
-     *  - collateral 2.4 usdc (max collateral that would still allow position
-     *                         to be liquidated when weth = 2 usd is 2.469... usdc)
-     *  - debt 1 weth
-     */
-    uint256 _initialCollateralAmount = 2.4 ether;
-    uint256 _initialDebtAmount = 1 ether;
-    vm.startPrank(ALICE);
-    accountManager.addCollateralFor(
-      ALICE,
-      subAccount0,
-      address(usdc),
-      normalizeEther(_initialCollateralAmount, usdcDecimal)
-    );
-    accountManager.borrow(subAccount0, address(weth), _initialDebtAmount);
-    vm.stopPrank();
+    _makeAliceUnderwater();
+
+    mockOracle.setTokenPrice(address(weth), 1 ether);
 
     /**
      * weth price 1 usd
@@ -469,9 +454,12 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testRevert_WhenRepurchaserIsNotOk() public makeAliceUnderwater {
+  function testRevert_WhenRepurchaserIsNotOk() public {
+    _makeAliceUnderwater();
+
     // make sure that BOB is not ok
     address[] memory _repurchasers = new address[](1);
+
     _repurchasers[0] = BOB;
     adminFacet.setRepurchasersOk(_repurchasers, false);
 
@@ -486,7 +474,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testRevert_WhenRepurchaseRepayAmountExceedThreshold() public makeAliceUnderwater {
+  function testRevert_WhenRepurchaseRepayAmountExceedThreshold() public {
+    _makeAliceUnderwater();
+
     // can't repay more than 0.01% of borrowingPower
     adminFacet.setLiquidationParams(1, 10000);
 
@@ -501,9 +491,12 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testRevert_WhenRepurchaseCollateralNotEnoughToCoverDesiredRepayAmount() public makeAliceUnderwater {
+  function testRevert_WhenRepurchaseCollateralNotEnoughToCoverDesiredRepayAmount() public {
+    _makeAliceUnderwater();
+
     // reset weth price back 1 usd to allow ALICE to remove collateral
     mockOracle.setTokenPrice(address(weth), 1 ether);
+
     vm.prank(ALICE);
     // remove 0.4 usdc collateral to make it insufficient for desiredRepayAmount > 1 weth
     accountManager.removeCollateral(subAccount0, address(usdc), normalizeEther(0.4 ether, usdcDecimal));
@@ -536,9 +529,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testFuzz_RepurchaseCalculation(uint256 _desiredRepayAmount) public makeAliceUnderwater {
-    // assume no interest
-
+  function testFuzz_RepurchaseCalculation(uint256 _desiredRepayAmount) public {
     /**
      * this input setup will cover 2 cases for desiredRepayAmount
      *   1) desiredRepayAmount <= maxAmountRepurchaseable
@@ -546,6 +537,10 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
      * where maxAmountRepurchaseable = 1.1 ether (calculation below)
      */
     _desiredRepayAmount = bound(_desiredRepayAmount, 0, 1.6 ether);
+
+    _makeAliceUnderwater();
+
+    // assume no interest
 
     TestRepurchaseContext memory ctx;
     ctx.borrower = ALICE;
@@ -559,14 +554,16 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     _testRepurchase(ctx);
   }
 
-  function testFuzz_ConsecutiveRepurchase(uint256[3] memory desiredRepayAmounts) public makeAliceUnderwater {
-    // assume no interest
-
+  function testFuzz_ConsecutiveRepurchase(uint256[3] memory desiredRepayAmounts) public {
     // bound input to small amount to partially repurchase while
     // not making position healthy to allow final full repurchase
     for (uint256 i; i < desiredRepayAmounts.length; ++i) {
       desiredRepayAmounts[i] = bound(desiredRepayAmounts[i], 0, 0.05 ether);
     }
+
+    // assume no interest
+
+    _makeAliceUnderwater();
 
     TestRepurchaseContext memory ctx;
     ctx.borrower = ALICE;
