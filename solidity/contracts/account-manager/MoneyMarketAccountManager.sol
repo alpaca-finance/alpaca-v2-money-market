@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// ---- External Libraries ---- //
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 // ---- Libraries ---- //
 import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
 
@@ -12,7 +16,7 @@ import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IERC20 } from "../money-market/interfaces/IERC20.sol";
 import { IMiniFL } from "../miniFL/interfaces/IMiniFL.sol";
 
-contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
+contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgradeable {
   using LibSafeToken for IERC20;
 
   IMoneyMarket public moneyMarket;
@@ -21,14 +25,20 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
   address public wNativeToken;
   address public ibWNativeToken;
 
-  constructor(
+  constructor() {
+    _disableInitializers();
+  }
+
+  function initialize(
     address _moneyMarket,
     address _wNativeToken,
     address _nativeRelayer
-  ) {
+  ) external initializer {
     // sanity call, should revert if the input address didn't implement
     // this particular interface
     IMoneyMarket(_moneyMarket).getMinDebtSize();
+
+    OwnableUpgradeable.__Ownable_init();
 
     address _ibWNativeToken = IMoneyMarket(_moneyMarket).getIbTokenFromToken(_wNativeToken);
 
@@ -96,7 +106,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager {
     }
   }
 
-  /// @notice Withdraw the lended native token by burning the interest bearing token
+  /// @notice Withdraw the lent native token by burning the interest bearing token
   /// @param _ibAmount The amount of interest bearing token to burn
   function withdrawETH(uint256 _ibAmount) external {
     // skip if trying to withdraw 0 amount

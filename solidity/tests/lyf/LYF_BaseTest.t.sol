@@ -331,37 +331,36 @@ abstract contract LYF_BaseTest is BaseTest {
     ibWNativeDecimal = ibWNative.decimals();
 
     mmAdminFacet.setNonCollatBorrowerOk(lyfDiamond, true);
-    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
 
+    address[] memory _tokens = new address[](4);
+    _tokens[0] = address(weth);
+    _tokens[1] = address(usdc);
+    _tokens[2] = address(btc);
+    _tokens[3] = address(cake);
+
+    IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(10000 ether, wethDecimal),
       maxCollateral: normalizeEther(10000 ether, wethDecimal)
     });
-
     _inputs[1] = IAdminFacet.TokenConfigInput({
-      token: address(usdc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(10000 ether, usdcDecimal),
       maxCollateral: normalizeEther(10000 ether, usdcDecimal)
     });
-
     _inputs[2] = IAdminFacet.TokenConfigInput({
-      token: address(btc),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(100 ether, btcDecimal),
       maxCollateral: normalizeEther(100 ether, btcDecimal)
     });
-
     _inputs[3] = IAdminFacet.TokenConfigInput({
-      token: address(cake),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -369,7 +368,7 @@ abstract contract LYF_BaseTest is BaseTest {
       maxCollateral: normalizeEther(100 ether, cakeDecimal)
     });
 
-    mmAdminFacet.setTokenConfigs(_inputs);
+    mmAdminFacet.setTokenConfigs(_tokens, _inputs);
 
     IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](4);
     _tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
@@ -393,7 +392,7 @@ abstract contract LYF_BaseTest is BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: lyfDiamond,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);

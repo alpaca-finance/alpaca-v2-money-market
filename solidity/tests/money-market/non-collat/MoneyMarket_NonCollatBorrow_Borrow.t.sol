@@ -192,7 +192,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: ALICE,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: _aliceBorrowLimit
+      borrowingPowerLimit: _aliceBorrowLimit
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);
@@ -211,16 +211,20 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenProtocolBorrowMoreThanTokenGlobalLimit_ShouldRevert() external {
     uint256 _wethGlobalLimit = normalizeEther(10 ether, wethDecimal);
+
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
       maxCollateral: normalizeEther(100 ether, wethDecimal)
     });
-    adminFacet.setTokenConfigs(_inputs);
+
+    adminFacet.setTokenConfigs(_tokens, _inputs);
 
     uint256 _aliceBorrowAmount = _wethGlobalLimit + 1;
     vm.prank(ALICE);
@@ -230,16 +234,20 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenUserBorrowUpToTokenGlobalLimit_ThenProtocolBorrowSameToken_ShouldRevert() external {
     uint256 _wethGlobalLimit = normalizeEther(10 ether, wethDecimal);
+
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(weth);
+
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      token: address(weth),
       tier: LibMoneyMarket01.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
       maxCollateral: 100 ether
     });
-    adminFacet.setTokenConfigs(_inputs);
+
+    adminFacet.setTokenConfigs(_tokens, _inputs);
 
     // Over-collat borrow
     // BOB borrow weth upto Global limit
@@ -276,13 +284,13 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: ALICE,
       tokenBorrowLimit: _aliceTokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
       account: BOB,
       tokenBorrowLimit: _bobTokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);

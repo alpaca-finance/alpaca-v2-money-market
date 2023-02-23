@@ -57,6 +57,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   uint256 private constant ACC_ALPACA_PRECISION = 1e12;
   uint256 public maxAlpacaPerSecond;
 
+  /// @dev allow only whitelised callers
   modifier onlyWhitelisted() {
     if (!whitelistedCallers[msg.sender]) {
       revert MiniFL_Unauthorized();
@@ -82,11 +83,6 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     stakingTokens.push(address(0));
   }
 
-  /// @notice Returns the number of pools.
-  function poolLength() public view returns (uint256 pools) {
-    pools = poolInfo.length;
-  }
-
   /// @notice Add a new staking token pool. Can only be called by the owner.
   /// @param _allocPoint AP of the new pool.
   /// @param _stakingToken Address of the staking token.
@@ -100,6 +96,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     if (_stakingToken == ALPACA) {
       revert MiniFL_InvalidArguments();
     }
+
+    // Revert if a pool for _stakingToken already exists
     if (isStakingToken[_stakingToken]) {
       revert MiniFL_DuplicatePool();
     }
@@ -180,7 +178,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     return (((user.totalAmount * accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256() - user.rewardDebt).toUint256();
   }
 
-  /// @notice Perform actual update pool.
+  /// @dev Perform actual update pool.
   /// @param _pid The index of the pool. See `poolInfo`.
   /// @return _poolInfo Returns the pool that was updated.
   function _updatePool(uint256 _pid) internal returns (PoolInfo memory _poolInfo) {
@@ -189,12 +187,22 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       uint256 stakedBalance = stakingReserves[stakingTokens[_pid]];
       if (stakedBalance > 0) {
         uint256 timePast;
+        // can do unchecked since always block.timestamp >= lastRewardTime
         unchecked {
           timePast = block.timestamp - _poolInfo.lastRewardTime;
         }
+        // calculate total alpacaReward since lastRewardTime for this _pid
         uint256 alpacaReward = totalAllocPoint != 0
           ? (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint
           : 0;
+
+        // increase accAlpacaPerShare with `alpacaReward/stakedBalance` amount
+        // example:
+        //  - oldAccAlpacaPerShare = 0
+        //  - alpacaReward                = 2000
+        //  - stakedBalance               = 10000
+        //  _poolInfo.accAlpacaPerShare = oldAccAlpacaPerShare + (alpacaReward/stakedBalance)
+        //  _poolInfo.accAlpacaPerShare = 0 + 2000/10000 = 0.2
         _poolInfo.accAlpacaPerShare =
           _poolInfo.accAlpacaPerShare +
           ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance).toUint128();
@@ -245,17 +253,28 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _amountToDeposit
   ) external onlyWhitelisted nonReentrant {
     UserInfo storage user = userInfo[_pid][_for];
+
+    // call _updatePool in order to update poolInfo.accAlpacaPerShare
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
     address _stakingToken = stakingTokens[_pid];
     uint256 _receivedAmount = _unsafePullToken(msg.sender, _stakingToken, _amountToDeposit);
 
     // Effects
+    // can do unchecked since staked token totalSuply < max(uint256)
     unchecked {
       user.fundedAmounts[msg.sender] += _receivedAmount;
       user.totalAmount = user.totalAmount + _receivedAmount;
       stakingReserves[_stakingToken] += _receivedAmount;
     }
+
+    // update user rewardDebt to separate new deposit share amount from pending reward in the pool
+    // example:
+    //  - accAlpacaPerShare    = 250
+    //  - _receivedAmount      = 100
+    //  - pendingAlpacaReward  = 25,000
+    //  rewardDebt = oldRewardDebt + (_receivedAmount * accAlpacaPerShare)= 0 + (100 * 250) = 25,000
+    //  This means newly deposit share does not eligible for 25,000 pending rewards
     user.rewardDebt =
       user.rewardDebt +
       ((_receivedAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
@@ -285,6 +304,8 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 _amountToWithdraw
   ) external onlyWhitelisted nonReentrant {
     UserInfo storage user = userInfo[_pid][_from];
+
+    // call _updatePool in order to update poolInfo.accAlpacaPerShare
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
     // caller couldn't withdraw more than their funded
@@ -303,6 +324,14 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       stakingReserves[_stakingToken] -= _amountToWithdraw;
     }
 
+    // update reward debt
+    // example:
+    //  - accAlpacaPerShare    = 300
+    //  - _amountToWithdraw    = 100
+    //  - oldRewardDebt        = 25,000
+    //  - pendingAlpacaReward  = 35,000
+    //  rewardDebt = oldRewardDebt - (_amountToWithdraw * accAlpacaPerShare) = 25,000 - (100 * 300) = -5000
+    //  This means withdrawn share is eligible for previous pending reward in the pool = 5000
     user.rewardDebt =
       user.rewardDebt -
       (((_amountToWithdraw * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION)).toInt256();
@@ -319,6 +348,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       }
     }
 
+    // transfer stakingToken to caller
     IERC20Upgradeable(_stakingToken).safeTransfer(msg.sender, _amountToWithdraw);
 
     emit LogWithdraw(msg.sender, _from, _pid, _amountToWithdraw);
@@ -328,11 +358,21 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _pid The index of the pool. See `poolInfo`.
   function harvest(uint256 _pid) external nonReentrant {
     UserInfo storage user = userInfo[_pid][msg.sender];
+
+    // call _updatePool in order to update poolInfo.accAlpacaPerShare
     PoolInfo memory _poolInfo = _updatePool(_pid);
 
+    // example:
+    //  - totalAmount         = 100
+    //  - accAlpacaPerShare   = 250
+    //  - rewardDebt          = 0
+    //  accumulatedAlpaca     = totalAmount * accAlpacaPerShare = 100 * 250 = 25,000
+    //  _pendingAlpaca         = accumulatedAlpaca - rewardDebt = 25,000 - 0 = 25,000
+    //   Meaning user eligible for 25,000 rewards in this harvest
     int256 accumulatedAlpaca = ((user.totalAmount * _poolInfo.accAlpacaPerShare) / ACC_ALPACA_PRECISION).toInt256();
     uint256 _pendingAlpaca = (accumulatedAlpaca - user.rewardDebt).toUint256();
 
+    // update user.rewardDebt so that user no longer eligible for already harvest rewards
     // Effects
     user.rewardDebt = accumulatedAlpaca;
 
@@ -402,6 +442,11 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     _stakingAmount = userInfo[_pid][_for].fundedAmounts[_funder];
   }
 
+  /// @dev A routine for tranfering token in. Prevent wrong accounting when token has fee on tranfer
+  /// @param _from The address to transfer token from
+  /// @param _token The address of token to transfer
+  /// @param _amount The amount to transfer
+  /// @return _receivedAmount The actual amount received after transfer
   function _unsafePullToken(
     address _from,
     address _token,
@@ -439,5 +484,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _user The address of the user.
   function getUserRewardDebtOf(uint256 _pid, address _user) external view returns (int256 _rewardDebt) {
     _rewardDebt = userInfo[_pid][_user].rewardDebt;
+  }
+
+  /// @notice Returns the number of pools.
+  function poolLength() public view returns (uint256 _poolLength) {
+    _poolLength = poolInfo.length;
   }
 }
