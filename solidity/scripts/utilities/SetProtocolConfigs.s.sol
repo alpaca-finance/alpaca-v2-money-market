@@ -19,7 +19,7 @@ contract SetProtocolConfigsScript is BaseUtilsScript {
     protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: address(0),
       tokenBorrowLimit: tokenBorrowLimitInputs,
-      borrowLimitUSDValue: 1e30
+      borrowLimitUSDValue: 1e30 // note that this is usd value
     });
 
     //---- execution ----//
