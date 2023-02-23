@@ -62,12 +62,10 @@ contract SetUpMMForTestScript is BaseScript {
       tokenConfigInput.tier = LibMoneyMarket01.AssetTier.ISOLATE;
       address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, ibTokenConfigInput);
 
-      string memory configJson;
-      configJson.serialize("ibBusd", ibBusd);
-      configJson.serialize("ibDodo", ibDodo);
-      configJson.serialize("ibPstake", ibPstake);
-      configJson = configJson.serialize("ibMock6", ibMock6);
-      _writeJson(configJson, ".ibTokens");
+      _writeJson(vm.toString(ibBusd), ".ibTokens.ibBusd");
+      _writeJson(vm.toString(ibDodo), ".ibTokens.ibDodo");
+      _writeJson(vm.toString(ibPstake), ".ibTokens.ibPstake");
+      _writeJson(vm.toString(ibMock6), ".ibTokens.ibMock6");
     }
 
     _stopBroadcast();
