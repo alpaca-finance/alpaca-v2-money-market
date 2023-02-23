@@ -127,12 +127,12 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdU
     uint256 _maxAmountRepurchasable = 1.1 ether;
     uint256 _repayAmountWithFee;
     uint256 _repayAmountWithoutFee;
-    // case 2
+    // case 1
     if (_desiredRepayAmount > _maxAmountRepurchasable) {
       _repayAmountWithFee = _maxAmountRepurchasable;
       _repayAmountWithoutFee = _initialDebtAmount;
     } else {
-      // case 1
+      // case 2
       _repayAmountWithFee = _desiredRepayAmount;
       _repayAmountWithoutFee = (_desiredRepayAmount * 100) / (110);
     }
