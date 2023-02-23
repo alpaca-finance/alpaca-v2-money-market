@@ -356,12 +356,16 @@ contract LiquidationFacet is ILiquidationFacet {
     // Calculated repayToken amount expected from liquidation
     // Cap repay amount to current debt if input exceeds it
     // maxPossibleRepayAmount = min(repayAmount, currentDebt)
-    _vars.maxPossibleRepayAmount = _calculateMaxPossibleRepayAmount(
-      _vars.subAccount,
-      _repayToken,
-      _repayAmount,
-      moneyMarketDs
-    );
+    {
+      uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_vars.subAccount].getAmount(_repayToken);
+      // for ib debtValue is in ib shares not in underlying
+      uint256 _debtValue = LibShareUtil.shareToValue(
+        _debtShare,
+        moneyMarketDs.overCollatDebtValues[_repayToken],
+        moneyMarketDs.overCollatDebtShares[_repayToken]
+      );
+      _vars.maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
+    }
     _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
     unchecked {
       _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
@@ -381,12 +385,16 @@ contract LiquidationFacet is ILiquidationFacet {
     // actualLiquidationFee = amountFromStrat * liquidationFee
     //                      = amountFromStrat * maxPossibleFee / expectedMaxRepayAmount
     // repaidAmount = amountFromStrat - actualLiquidationFee
-    (_vars.repaidAmount, _vars.actualLiquidationFee) = _calculateActualRepayAmountAndFee(
-      _repayToken,
-      _vars.repayTokenBalaceBefore,
-      _vars.expectedMaxRepayAmount,
-      _vars.maxPossibleFee
-    );
+    {
+      // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
+      uint256 _amountFromLiquidationStrat = IERC20(_repayToken).balanceOf(address(this)) - _vars.repayTokenBalaceBefore;
+      // find the actual fee through the rule of three
+      // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
+      _vars.actualLiquidationFee = (_amountFromLiquidationStrat * _vars.maxPossibleFee) / _vars.expectedMaxRepayAmount;
+      unchecked {
+        _vars.repaidAmount = _amountFromLiquidationStrat - _vars.actualLiquidationFee;
+      }
+    }
 
     // Split fee between liquidator and treasury
     // ex. liquidationReward = 40%
@@ -457,24 +465,6 @@ contract LiquidationFacet is ILiquidationFacet {
     );
   }
 
-  /// @dev min(repayAmount, debtValue)
-  function _calculateMaxPossibleRepayAmount(
-    address _subAccount,
-    address _repayToken,
-    uint256 _repayAmount,
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
-  ) internal view returns (uint256 _maxPossibleRepayAmount) {
-    uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
-    // for ib debtValue is in ib shares not in underlying
-    uint256 _debtValue = LibShareUtil.shareToValue(
-      _debtShare,
-      moneyMarketDs.overCollatDebtValues[_repayToken],
-      moneyMarketDs.overCollatDebtShares[_repayToken]
-    );
-
-    _maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
-  }
-
   function _validateBorrowingPower(
     address _repayToken,
     uint256 _repaidAmount,
@@ -491,22 +481,6 @@ contract LiquidationFacet is ILiquidationFacet {
     // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
     if (_repaidBorrowingPower * LibMoneyMarket01.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
       revert LiquidationFacet_RepayAmountExceedThreshold();
-    }
-  }
-
-  function _calculateActualRepayAmountAndFee(
-    address _repayToken,
-    uint256 _repayTokenBalanceBefore,
-    uint256 _expectedMaxRepayAmount,
-    uint256 _maxFeePossible
-  ) internal view returns (uint256 _actualRepayAmount, uint256 _actualLiquidationFee) {
-    // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
-    uint256 _amountFromLiquidationStrat = IERC20(_repayToken).balanceOf(address(this)) - _repayTokenBalanceBefore;
-    // find the actual fee through the rule of three
-    // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
-    _actualLiquidationFee = (_amountFromLiquidationStrat * _maxFeePossible) / _expectedMaxRepayAmount;
-    unchecked {
-      _actualRepayAmount = _amountFromLiquidationStrat - _actualLiquidationFee;
     }
   }
 }
