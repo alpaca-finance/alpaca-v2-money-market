@@ -50,7 +50,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetDebtTokenImplementation(address indexed _newImplementation);
   event LogSetProtocolTokenBorrowLimit(address indexed _account, address indexed _token, uint256 maxTokenBorrow);
-  event LogSetProtocolConfig(address _account, uint256 _borrowLimitUSDValue);
+  event LogSetProtocolConfig(address _account, uint256 _borrowingPowerLimit);
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
@@ -433,7 +433,7 @@ contract AdminFacet is IAdminFacet {
 
       protocolConfig = moneyMarketDs.protocolConfigs[_protocolConfigInput.account];
       // set total borrow limit in usd for a protocol
-      protocolConfig.borrowLimitUSDValue = _protocolConfigInput.borrowLimitUSDValue;
+      protocolConfig.borrowingPowerLimit = _protocolConfigInput.borrowingPowerLimit;
 
       // set per token borrow limit
       _tokenBorrowLimitLength = _protocolConfigInput.tokenBorrowLimit.length;
@@ -450,7 +450,7 @@ contract AdminFacet is IAdminFacet {
           ++_j;
         }
       }
-      emit LogSetProtocolConfig(_protocolConfigInput.account, _protocolConfigInput.borrowLimitUSDValue);
+      emit LogSetProtocolConfig(_protocolConfigInput.account, _protocolConfigInput.borrowingPowerLimit);
       unchecked {
         ++_i;
       }

@@ -192,7 +192,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: ALICE,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: _aliceBorrowLimit
+      borrowingPowerLimit: _aliceBorrowLimit
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);
@@ -284,13 +284,13 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: ALICE,
       tokenBorrowLimit: _aliceTokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     _protocolConfigInputs[1] = IAdminFacet.ProtocolConfigInput({
       account: BOB,
       tokenBorrowLimit: _bobTokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     adminFacet.setProtocolConfigs(_protocolConfigInputs);

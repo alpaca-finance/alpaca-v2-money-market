@@ -196,7 +196,7 @@ abstract contract AV_BaseTest is BaseTest {
     _protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
       account: avDiamond,
       tokenBorrowLimit: _tokenBorrowLimitInputs,
-      borrowLimitUSDValue: type(uint256).max
+      borrowingPowerLimit: type(uint256).max
     });
 
     mmAdminFacet.setProtocolConfigs(_protocolConfigInputs);
