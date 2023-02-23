@@ -422,7 +422,7 @@ contract LiquidationFacet is ILiquidationFacet {
     }
 
     // Call executeLiquidation on strategy
-    // Strategy should convert all of collatToken in there to repayToken and send back here
+    // Strategy will convert collatToken to repayToken and send back here
     ILiquidationStrategy(_params.liquidationStrat).executeLiquidation(
       _params.collatToken,
       _params.repayToken,

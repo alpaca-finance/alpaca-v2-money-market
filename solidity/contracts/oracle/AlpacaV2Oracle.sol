@@ -46,6 +46,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     address _baseStable,
     address _usd
   ) {
+    // Revert if baseStable token doesn't have 18 decimal
     if (IERC20(_baseStable).decimals() != 18) {
       revert AlpacaV2Oracle_InvalidBaseStableTokenDecimal();
     }
@@ -63,10 +64,14 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @param _lpAmount in ether format
   /// @param _lpToken address of LP token
   function lpToDollar(uint256 _lpAmount, address _lpToken) external view returns (uint256, uint256) {
+    // if _lpAmount = 0 no need to convert
     if (_lpAmount == 0) {
       return (0, block.timestamp);
     }
+
+    // get lp fair price and oldest _lastUpdate between token0 and token1
     (uint256 _lpPrice, uint256 _lastUpdate) = _getLPPrice(_lpToken);
+
     return ((_lpAmount * _lpPrice) / (10**18), _lastUpdate);
   }
 
@@ -75,10 +80,13 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @param _dollarAmount in ether format
   /// @param _lpToken address of LP token
   function dollarToLp(uint256 _dollarAmount, address _lpToken) external view returns (uint256, uint256) {
+    // if _dollarAmount = 0 no need to convert
     if (_dollarAmount == 0) {
       return (0, block.timestamp);
     }
+    // get lp fair price and oldest _lastUpdate between token0 and token1
     (uint256 _lpPrice, uint256 _lastUpdate) = _getLPPrice(_lpToken);
+
     return (((_dollarAmount * (10**18)) / _lpPrice), _lastUpdate);
   }
 
@@ -95,28 +103,54 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     _getTokenPrice(_tokenAddress);
   }
 
+  /// @dev validate price stability of token. Check token price from oracle against dex.
+  ///      It is unstable if prices of oracle and dex deviate too much
+  /// @param _tokenAddress address of token
+  /// @param _oraclePrice token price from oracleMedianizer
   function _validateStability(address _tokenAddress, uint256 _oraclePrice) internal view {
+    // if _tokenAddress is baseStable no need to validate
     if (_tokenAddress == baseStable) {
       return;
     }
 
+    // call router for getting swap rate between token and baseStableToken
     uint256[] memory _amounts = IRouterLike(tokenConfigs[_tokenAddress].router).getAmountsOut(
       10**IERC20(_tokenAddress).decimals(),
       tokenConfigs[_tokenAddress].path
     );
 
+    // get baseStable price usd from OracleMedianizer
     (uint256 _basePrice, ) = IPriceOracle(oracle).getPrice(baseStable, usd);
 
+    // calculating _dexPrice of token
+    // example:
+    // - swapRate = 300, _basePrice = 1.01
+    // _dexPrice = swapRate * basePrice = 300 * 1.01 = 303
     uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
 
-    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiffBps;
+    // example of unstable price:
+    //  - maxPriceDiffBps = 10500
+
+    // case1: price too high
+    //  - oraclePrice = 300, dexPrice = 330
+    //  330 * 10000 > 300 * 10500
+    //  3300000 > 3150000
+
+    // case2: price too low
+    //  - oraclePrice = 300, dexPrice = 270
+    //  270 * 10500 < 300 * 10000
+    //  2835000 < 3000000
+
     // _dexPrice/_oraclePrice > maxPriceDiffBps/10000
     // _dexPrice/_oraclePrice < 10000/maxPriceDiffBps
+    uint256 _maxPriceDiff = tokenConfigs[_tokenAddress].maxPriceDiffBps;
     if (_dexPrice * MAX_BPS > _oraclePrice * _maxPriceDiff || _dexPrice * _maxPriceDiff < _oraclePrice * MAX_BPS) {
       revert AlpacaV2Oracle_PriceTooDeviate(_dexPrice, _oraclePrice);
     }
   }
 
+  /// @dev get price of token in usd, will revert if price is not stable
+  /// @param _tokenAddress address of token
   function _getTokenPrice(address _tokenAddress) internal view returns (uint256 _price, uint256 _lastTimestamp) {
     (_price, _lastTimestamp) = IPriceOracle(oracle).getPrice(_tokenAddress, usd);
     _validateStability(_tokenAddress, _price);
@@ -136,6 +170,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @notice get LP price using internal only, return value in 1e18 format
   /// @dev getTokenPrice from address
   /// @param _lpToken lp token address
+  /// @return _totalValueIn18 value of lpToken in dollar
+  /// @return _olderLastUpdate older price update between token0 and token1 of LP
   function _getLPPrice(address _lpToken) internal view returns (uint256, uint256) {
     if (_lpToken == address(0)) {
       revert AlpacaV2Oracle_InvalidLPAddress();
@@ -203,6 +239,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external onlyOwner {
     uint256 _len = _tokens.length;
 
+    // Revert if array length mismatch
     if (_len != _configs.length) {
       revert AlpacaV2Oracle_InvalidConfigLength();
     }
@@ -211,10 +248,15 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     for (uint256 _i; _i < _len; ) {
       _path = _configs[_i].path;
 
+      // Validate swap path correctness
+      // Revert if swap path < 2
+      // Revert if source is not input token
+      // Revert if destination is not baseStable
       if (_path.length < 2 || _path[0] != _tokens[_i] || _path[_path.length - 1] != baseStable) {
         revert AlpacaV2Oracle_InvalidConfigPath();
       }
 
+      // Revert if maxPriceDiffBps < MAX_BPS
       if (_configs[_i].maxPriceDiffBps < MAX_BPS) {
         revert AlpacaV2Oracle_InvalidPriceDiffConfig();
       }
