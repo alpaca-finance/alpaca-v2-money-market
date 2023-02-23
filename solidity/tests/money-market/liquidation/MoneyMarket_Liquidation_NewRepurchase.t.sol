@@ -2,9 +2,6 @@
 pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
-import "solidity/tests/utils/StdUtils.sol";
-import "solidity/tests/utils/StdAssertions.sol";
-import "solidity/tests/utils/StdCheats.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -23,7 +20,7 @@ import { FixedFeeModel } from "../../../contracts/money-market/fee-models/FixedF
 // mocks
 import { MockInterestModel } from "solidity/tests/mocks/MockInterestModel.sol";
 
-contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest, StdUtils, StdAssertions, StdCheats {
+contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
   IMiniFL internal _miniFL;
 
   function setUp() public override {
