@@ -264,6 +264,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenLiquidateIbMoreThanDebt_ShouldLiquidateAllDebtOnThatToken() external {
+    console.log("failed test");
     adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
 
     // criteria
@@ -326,6 +327,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | ------------------------ |
 
     vm.prank(liquidator);
+    console.log("failed test: before liquidate");
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
       ALICE,

@@ -34,7 +34,8 @@ contract LYF_Collateral_AddCollateralTest is LYF_BaseTest {
     vm.startPrank(ALICE);
     weth.approve(lyfDiamond, 10 ether);
     collateralFacet.addCollateral(ALICE, 0, address(weth), 10 ether);
-    usdc.approve(lyfDiamond, 10 ether);
+    // skip approve since already approved in base test
+    // Tether USD (MockNonERC20Compliance) expects to approve(0) before do new approval
     collateralFacet.addCollateral(ALICE, 0, address(usdc), normalizeEther(10 ether, usdcDecimal));
     btc.approve(lyfDiamond, 10 ether);
     collateralFacet.addCollateral(ALICE, 0, address(btc), 10 ether);

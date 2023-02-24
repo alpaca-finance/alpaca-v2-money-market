@@ -27,6 +27,7 @@ import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 
 // Mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
+import { TetherToken as MockNonERC20Compliance } from "../mocks/MockNonERC20Compliance.sol";
 import { MockWNative } from "../mocks/MockWNative.sol";
 import { MockWNativeRelayer } from "../mocks/MockWNativeRelayer.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
@@ -48,7 +49,7 @@ contract BaseTest is DSTest {
   MockWNative internal wNativeToken;
   MockERC20 internal cake;
   MockERC20 internal weth;
-  MockERC20 internal usdc;
+  MockNonERC20Compliance internal usdc;
   MockERC20 internal busd;
   MockERC20 internal btc;
   MockERC20 internal alpaca;
@@ -103,7 +104,7 @@ contract BaseTest is DSTest {
     cake = deployMockErc20("CAKE", "CAKE", 18);
     weth = deployMockErc20("Wrapped Ethereum", "WETH", 18);
     btc = deployMockErc20("Bitcoin", "BTC", 18);
-    usdc = deployMockErc20("USD COIN", "USDC", 6);
+    usdc = deployMockNonErc20Compliance(0, "USD COIN", "USDC", 6);
     busd = deployMockErc20("BUSD", "BUSD", 18);
     alpaca = deployMockErc20("ALPACA TOKEN", "ALPACA", 18);
     isolateToken = deployMockErc20("ISOLATETOKEN", "ISOLATETOKEN", 18);
@@ -159,6 +160,16 @@ contract BaseTest is DSTest {
   ) internal returns (MockERC20 mockERC20) {
     mockERC20 = new MockERC20(name, symbol, decimals);
     vm.label(address(mockERC20), symbol);
+  }
+
+  function deployMockNonErc20Compliance(
+    uint256 initialSupply,
+    string memory name,
+    string memory symbol,
+    uint256 decimals
+  ) internal returns (MockNonERC20Compliance nonErc20Compliance) {
+    nonErc20Compliance = new MockNonERC20Compliance(initialSupply, name, symbol, decimals);
+    vm.label(address(nonErc20Compliance), symbol);
   }
 
   function deployMockWNative() internal returns (MockWNative) {

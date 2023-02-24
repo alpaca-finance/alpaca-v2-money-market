@@ -20,7 +20,8 @@ contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
     weth.approve(moneyMarketDiamond, 10 ether);
     accountManager.addCollateralFor(ALICE, 0, address(weth), 10 ether);
 
-    usdc.approve(moneyMarketDiamond, 10 ether);
+    // skip approve since already approved in base test
+    // Tether USD (MockNonERC20Compliance) expects to approve(0) before do new approval
     accountManager.addCollateralFor(ALICE, 0, address(usdc), normalizeEther(10 ether, usdcDecimal));
 
     btc.approve(moneyMarketDiamond, 10 ether);

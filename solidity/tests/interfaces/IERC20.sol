@@ -20,6 +20,8 @@ interface IERC20 {
 
   function approve(address spender, uint256 amount) external returns (bool);
 
+  // returns (bool) will make non-compliant ERC20 tokens fail
+  // since non-compliant ERC20 tokens do not return boolean value.
   function transfer(address recipient, uint256 amount) external returns (bool);
 
   function transferFrom(
