@@ -143,6 +143,16 @@ contract MoneyMarketReader is IMoneyMarketReader {
     // IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
     // IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
     // return _getPrice(_oracleMedianizer, _token, _alpacaV2Oracle.usd());
+
+    address _underlyingToken = _moneyMarket.getTokenFromIbToken(_token);
+    // `_token` is ibToken
+    if (_underlyingToken != address(0)) {
+      return
+        IInterestBearingToken(_token).convertToAssets(
+          _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0))
+        );
+    }
+    // not ibToken
     return _getPrice(IPriceOracle(address(0)), _token, address(0));
   }
 
