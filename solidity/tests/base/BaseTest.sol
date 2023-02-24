@@ -3,8 +3,7 @@ pragma solidity 0.8.17;
 
 import { DSTest } from "./DSTest.sol";
 
-import { VM } from "../utils/VM.sol";
-import { console } from "../utils/console.sol";
+import "../utils/Components.sol";
 
 // interfaces
 import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
@@ -31,9 +30,7 @@ import { MockWNative } from "../mocks/MockWNative.sol";
 import { MockWNativeRelayer } from "../mocks/MockWNativeRelayer.sol";
 import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol";
 
-import { console } from "../utils/console.sol";
-
-contract BaseTest is DSTest {
+contract BaseTest is DSTest, StdUtils, StdAssertions, StdCheats {
   uint256 internal constant subAccount0 = 0;
   uint256 internal constant subAccount1 = 1;
 

@@ -124,32 +124,56 @@ contract LiquidationFacet is ILiquidationFacet {
     }
 
     // Cap repurchase amount if needed and calculate fee
-    // ex. assume 1 eth = 2000 USD, 10% repurchase fee, ignore collat,borrowingFactor, no premium
+    // Fee is calculated from repaid amount
+    //
+    // formulas:
+    //     maxAmountRepurchaseable  = currentDebt * (1 + fee)
+    //     repurchaseFee            = repayAmountWithFee - repayAmountWithoutFee
+    //     if desiredRepayAmount > maxAmountRepurchaseable
+    //        repayAmountWithFee    = maxAmountRepurchaseable
+    //        repayAmountWithoutFee = currentDebt
+    //     else
+    //        repayAmountWithFee    = desiredRepayAmount
+    //        repayAmountWithoutFee = desiredRepayAmount / (1 + fee)
+    //
+    // calculation example:
+    //     assume 1 eth = 2000 USD, 10% repurchase fee, ignore collat,borrowingFactor, no premium
     //     collateral: 2000 USDC
     //     debt      : 1 eth
     //     maxAmountRepurchaseable = currentDebt * (1 + fee)
-    //                             = 1 * 1.1 = 1.1 eth
+    //                             = 1 * (1 + 0.1) = 1.1 eth
     //
-    //     case 1: desiredRepayAmount exceeds maxAmountRepurchaseable
-    //     input : desiredRepayAmount = 1.2 eth, collatToken = USDC
+    //     ex 1: desiredRepayAmount > maxAmountRepurchaseable
+    //     input : desiredRepayAmount = 1.2 eth
     //     repayAmountWithFee    = maxAmountRepurchaseable = 1.1 eth
     //     repayAmountWithoutFee = currentDebt = 1 eth
-    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1.1 - 1 = 0.1 eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee
+    //                           = 1.1 - 1 = 0.1 eth
     //
-    //     case 2: desiredRepayAmount less than or equal to debt
-    //     input : desiredRepayAmount = 1 eth, collatToken = USDC
+    //     ex 2: desiredRepayAmount < currentDebt
+    //     input : desiredRepayAmount = 0.9 eth
+    //     repayAmountWithFee    = desiredRepayAmount = 0.9 eth
+    //     repayAmountWithoutFee = desiredRepayAmount / (1 + fee)
+    //                           = 0.9 / (1 + 0.1) = 0.818181.. eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee
+    //                           = 0.9 - 0.818181... = 0.0818181... eth
+    //
+    //     ex 3: desiredRepayAmount == currentDebt
+    //     input : desiredRepayAmount = 1 eth
     //     repayAmountWithFee    = desiredRepayAmount = 1 eth
-    //     repayAmountWithoutFee = desiredRepayAmount * (1 - fee)
-    //                           = 1 * 0.9 = 0.9 eth
-    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1 - 0.9 = 0.1 eth
+    //     repayAmountWithoutFee = desiredRepayAmount / (1 + fee)
+    //                           = 1 / (1 + 0.1) = 0.909090.. eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee
+    //                           = 1 - 0.909090... = 0.0909090... eth
     //
-    //     case3: desiredRepayAmount exceeds debt but less than maxAmountRepurchaseable
-    //     input : desiredRepayAmount = 1.05 eth, collatToken = USDC
+    //     ex 4: currentDebt < desiredRepayAmount < maxAmountRepurchaseable
+    //     input : desiredRepayAmount = 1.05 eth
     //     repayAmountWithFee = desiredRepayAmount = 1.05 eth
-    //     repayAmountWithoutFee = desiredRepayAmount * (1 - fee)
-    //                           = 1.05 * 0.9 = 0.945 eth
-    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee = 1.05 - 0.945 = 0.105 eth
-    //     TODO: this is WRONG! all cases should never pay fee more than max fee (debt * feeBps)
+    //     repayAmountWithoutFee = desiredRepayAmount / (1 + fee)
+    //                           = 1.05 / (1 + 0.1) = 0.9545454... eth
+    //     repurchaseFee         = repayAmountWithFee - repayAmountWithoutFee
+    //                           = 1.05 - 0.9545454... = 0.09545454... eth
+    //
     {
       (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
         _vars.subAccount,
@@ -159,15 +183,14 @@ contract LiquidationFacet is ILiquidationFacet {
       uint256 _maxAmountRepurchaseable = (_currentDebtAmount *
         (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) / LibMoneyMarket01.MAX_BPS;
 
-      // repay amount is capped if try to repay more than outstanding debt + fee
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
         _vars.repayAmountWithoutFee = _currentDebtAmount;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
-          (_desiredRepayAmount * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.repurchaseFeeBps)) /
-          LibMoneyMarket01.MAX_BPS;
+          (_desiredRepayAmount * LibMoneyMarket01.MAX_BPS) /
+          (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS);
       }
 
       _vars.repurchaseFeeToProtocol = _vars.repayAmountWithFee - _vars.repayAmountWithoutFee;
@@ -211,6 +234,10 @@ contract LiquidationFacet is ILiquidationFacet {
         revert LiquidationFacet_InsufficientAmount();
       }
     }
+
+    /////////////////////////////////
+    // EFFECTS & INTERACTIONS
+    /////////////////////////////////
 
     // Transfer repay token in
     // In case of token with fee on transfer, debt would be repaid by amount after transfer fee
