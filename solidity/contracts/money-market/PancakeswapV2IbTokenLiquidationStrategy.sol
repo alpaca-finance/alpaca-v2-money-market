@@ -15,8 +15,6 @@ import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
@@ -87,10 +85,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
 
     // approve router for swapping
     IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
-    console.log("[C]:executeLiquidation:before::swapExactTokensForTokens");
     // swap ib's underlyingToken to repayToken
     router.swapExactTokensForTokens(_withdrawnUnderlyingAmount, _minReceive, _path, msg.sender, block.timestamp);
-    console.log("after:::::::::");
     // reset approval
     IERC20(_underlyingToken).safeApprove(address(router), 0);
 

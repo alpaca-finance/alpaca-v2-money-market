@@ -3,7 +3,6 @@ pragma solidity 0.8.17;
 
 import { IERC20 } from "../interfaces/IERC20.sol";
 import { MockAlpacaV2Oracle } from "./MockAlpacaV2Oracle.sol";
-import "solidity/tests/utils/console.sol";
 
 /// @title FakeRouter - swap with price from oracle
 contract MockRouter02 {
@@ -57,13 +56,10 @@ contract MockRouter02 {
     uint256 _normalizedAmountOut = (_normalizedAmountIn * _tokenInPrice) / _tokenOutPrice;
 
     IERC20(path[0]).transferFrom(msg.sender, address(this), amountIn);
-    console.log("MockRouter02:before::transfer");
-    uint256 _transferAmt = _normalizedAmountOut / 10**(18 - IERC20(path[path.length - 1]).decimals());
-    address _descToken = path[path.length - 1];
-    console.log("MockRouter02:before::transfer:_descToken", _descToken);
-    console.log("MockRouter02:before::transfer:_transferAmt", _transferAmt);
-    IERC20(_descToken).transfer(to, _transferAmt);
-    console.log("MockRouter02:after::transfer");
+    IERC20(path[path.length - 1]).transfer(
+      to,
+      _normalizedAmountOut / 10**(18 - IERC20(path[path.length - 1]).decimals())
+    );
   }
 
   function swapTokensForExactTokens(
