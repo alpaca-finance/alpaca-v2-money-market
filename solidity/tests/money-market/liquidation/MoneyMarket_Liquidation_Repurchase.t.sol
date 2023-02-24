@@ -20,8 +20,9 @@ import { FixedFeeModel } from "../../../contracts/money-market/fee-models/FixedF
 // mocks
 import { MockInterestModel } from "solidity/tests/mocks/MockInterestModel.sol";
 
-contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
+contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
   IMiniFL internal _miniFL;
+  uint16 internal constant REPURCHASE_FEE = 1000;
 
   function setUp() public override {
     super.setUp();
@@ -52,7 +53,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     });
     adminFacet.setTokenConfigs(_tokens, _tokenConfigInputs);
     // 10% repurchase fee
-    adminFacet.setFees(0, 1000, 0, 0);
+    adminFacet.setFees(0, REPURCHASE_FEE, 0, 0);
     // 1% repurchase reward (hard-coded in FixedFeeModel)
     FixedFeeModel fixedFeeModel = new FixedFeeModel();
     adminFacet.setRepurchaseRewardModel(fixedFeeModel);
@@ -94,9 +95,9 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
      * weth price change 1 usd -> 2 usd
      * ALICE position become repurchasable
      *  - totalBorrowingPower = sum(collatAmount * price * collatFactor)
-     *                        = 2.4 * 1 * 9000 = 21600
+     *                        = 2.4 * 1 * 0.9 = 2.16
      *  - usedBorrowingPower = sum(debtAmount * price / borrowFactor)
-     *                       = 1 * 2 / 0.9 = 22222
+     *                       = 1 * 2 / 0.9 = 1 * 2 / 0.9 = 2.222...
      */
     mockOracle.setTokenPrice(address(weth), 2 ether);
   }
@@ -329,7 +330,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.debtToken = address(weth);
     // less than 1 ether (+interest) debt set by `makeAliceUnderwater`
     ctx.desiredRepayAmount = 0.9 ether;
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 1 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
     // assume there is only 1 borrower so we can use globalPendingInterest
@@ -352,7 +353,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.borrowerPendingInterest = viewFacet.getGlobalPendingInterest(address(weth));
     // equal to 1 ether (+interest) debt set by `makeAliceUnderwater`
     ctx.desiredRepayAmount = 1 ether + ctx.borrowerPendingInterest;
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 1 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
     _testRepurchase(ctx);
@@ -371,7 +372,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.debtToken = address(weth);
     // more than 1 ether (+interest) debt set by `makeAliceUnderwater`
     ctx.desiredRepayAmount = 1.05 ether;
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 1 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
     // assume there is only 1 borrower so we can use globalPendingInterest
@@ -392,7 +393,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.debtToken = address(weth);
     // more than 1.1 ether (+interest) max repurchasable set by `makeAliceUnderwater`
     ctx.desiredRepayAmount = 2 ether;
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 1 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
     // assume there is only 1 borrower so we can use globalPendingInterest
@@ -422,7 +423,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.collatToken = address(weth);
     ctx.debtToken = address(weth);
     ctx.desiredRepayAmount = 0.01 ether;
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 2 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
     // assume there is only 1 borrower so we can use globalPendingInterest
@@ -548,7 +549,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.collatToken = address(usdc);
     ctx.debtToken = address(weth);
     ctx.desiredRepayAmount = _desiredRepayAmount;
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 1 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
     _testRepurchase(ctx);
@@ -570,7 +571,7 @@ contract MoneyMarket_Liquidation_NewRepurchaseTest is MoneyMarket_BaseTest {
     ctx.repurchaser = BOB;
     ctx.collatToken = address(usdc);
     ctx.debtToken = address(weth);
-    ctx.repurchaseFeeBps = 1000;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
     ctx.collatTokenPrice = 1 ether;
     ctx.debtTokenPriceDuringRepurchase = 2 ether;
 
