@@ -168,11 +168,17 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 0.202 ether);
 
     // repurchaseFee = 1%, transferFee = 1%
-    // check debt reduced = repurchaseAmount - repurchaseFee - transferFee = 0.1 - 0.001 - 0.001 = 0.098
+    // repaid = desiredRepay / (1 + repurchaseFeePct)
+    //        = 0.1 / (1 + 0.01)
+    // check debt reduced = repaid - transferFee
+    //                    = repaid - (desiredRepay * transferFeePct)
+    //                    = (0.1 / (1 + 0.01)) - (0.1 * 0.01) = 0.098009900990099009
     (, uint256 _debtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(BOB, subAccount0, _debtToken);
-    assertEq(_debtAmountBefore - _debtAmountAfter, 0.098 ether);
+    assertEq(_debtAmountBefore - _debtAmountAfter, 0.098009900990099009 ether);
 
-    // check fee to treasury = repurchaseFee - transferFee = 0.001 - (0.01 * 0.001) = 0.00099
-    assertEq(lateFotToken.balanceOf(liquidationTreasury) - _treasuryBalanceBefore, 0.00099 ether);
+    // check fee to treasury = repurchaseFee - transferFee
+    //                       = repaid * repurchaseFeePct * (1 - transferFeePct)
+    //                       = 0.1 / (1 + 0.01) * 0.01 * (1 - 0.01) = 0.000980198019801982
+    assertEq(lateFotToken.balanceOf(liquidationTreasury) - _treasuryBalanceBefore, 0.000980198019801982 ether);
   }
 }
