@@ -18,10 +18,6 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    // deploy nativeRelayer
-    // NOTE: remove this in prod
-    nativeRelayer = address(new MockWNativeRelayer(wNativeToken));
-
     // open market for wNativeToken
     IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
       tier: LibMoneyMarket01.AssetTier.CROSS,
@@ -60,6 +56,5 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
 
     _writeJson(vm.toString(accountManagerImplementation), ".moneyMarket.accountManager.implementation");
     _writeJson(vm.toString(accountManagerProxy), ".moneyMarket.accountManager.proxy");
-    _writeJson(vm.toString(nativeRelayer), ".nativeRelayer");
   }
 }
