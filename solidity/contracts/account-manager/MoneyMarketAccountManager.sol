@@ -34,10 +34,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     address _wNativeToken,
     address _nativeRelayer
   ) external initializer {
-    // sanity call, should revert if the input address didn't implement
-    // this particular interface
-    IMoneyMarket(_moneyMarket).getMinDebtSize();
-
     OwnableUpgradeable.__Ownable_init();
 
     address _ibWNativeToken = IMoneyMarket(_moneyMarket).getIbTokenFromToken(_wNativeToken);
