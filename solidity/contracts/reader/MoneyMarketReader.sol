@@ -34,8 +34,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
         ibTotalAsset: _ibToken.totalAssets(),
         ibAddress: _ibAddress,
         tierAsUInt: uint8(_tokenConfig.tier),
-        // in UI we need to show collateralFactor of ib but borrowingFactor of underlying
-        collateralFactor: _ibTokenConfig.collateralFactor,
+        // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
+        // so have to return both
+        ibCollateralFactor: _ibTokenConfig.collateralFactor,
+        ibBorrowingFactor: _ibTokenConfig.borrowingFactor,
+        collateralFactor: _tokenConfig.collateralFactor,
         borrowingFactor: _tokenConfig.borrowingFactor,
         to18ConversionFactor: _tokenConfig.to18ConversionFactor,
         maxCollateral: _ibTokenConfig.maxCollateral,

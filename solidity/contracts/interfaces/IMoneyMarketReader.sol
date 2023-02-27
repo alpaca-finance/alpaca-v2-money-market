@@ -7,6 +7,8 @@ interface IMoneyMarketReader {
     uint256 ibTotalSupply;
     uint256 ibTotalAsset;
     address ibAddress;
+    uint256 ibCollateralFactor;
+    uint256 ibBorrowingFactor;
     // ---- Token Config ---- //
     uint8 tierAsUInt;
     uint16 collateralFactor;
