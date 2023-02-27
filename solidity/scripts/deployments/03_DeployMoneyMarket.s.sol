@@ -6,6 +6,7 @@ import "../BaseScript.sol";
 
 import { LibMoneyMarketDeployment } from "./libraries/LibMoneyMarketDeployment.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
+import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel7.sol";
 import { PancakeswapV2LiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2LiquidationStrategy.sol";
 import { PancakeswapV2IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";
@@ -19,6 +20,7 @@ contract DeployMoneyMarketScript is BaseScript {
     _loadAddresses();
 
     _startDeployerBroadcast();
+
     // deploy money market
     (address _moneyMarket, LibMoneyMarketDeployment.FacetAddresses memory facetAddresses) = LibMoneyMarketDeployment
       .deployMoneyMarketDiamond(address(miniFL));
@@ -28,6 +30,10 @@ contract DeployMoneyMarketScript is BaseScript {
     address[] memory _callers = new address[](1);
     _callers[0] = address(moneyMarket);
     miniFL.setWhitelistedCallers(_callers, true);
+
+    // set implementation to be able to open market
+    moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
+    moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
 
     // setup oracles
 

@@ -16,16 +16,13 @@ contract SetUpMMForTestScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    //---- setup tokens ----//
-    address bnb = _setUpMockToken("MOCKBNB", 18);
-    address busd = _setUpMockToken("MOCKBUSD", 18);
-    address dodo = _setUpMockToken("MOCKDODO", 18);
-    address pstake = _setUpMockToken("MOCKPSTAKE", 18);
+    //---- setup mock token ----//
     address mock6DecimalsToken = _setUpMockToken("MOCK6", 6);
+    _writeJson(vm.toString(mock6DecimalsToken), ".tokens.mock6DecimalsToken");
 
     //---- setup mock oracle ----//
     MockAlpacaV2Oracle mockOracle = new MockAlpacaV2Oracle();
-    mockOracle.setTokenPrice(bnb, 300 ether);
+    mockOracle.setTokenPrice(wbnb, 300 ether);
     mockOracle.setTokenPrice(busd, 1 ether);
     mockOracle.setTokenPrice(dodo, 0.13 ether);
     mockOracle.setTokenPrice(pstake, 0.12 ether);
@@ -35,55 +32,55 @@ contract SetUpMMForTestScript is BaseScript {
 
     //---- setup mm configs ----//
     moneyMarket.setMinDebtSize(0.1 ether);
-    moneyMarket.setMaxNumOfToken(3, 3, 3);
+    moneyMarket.setMaxNumOfToken(10, 10, 10);
 
     moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
     moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
 
     //---- open markets ----//
-    IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: bnb,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 9000,
-      maxBorrow: 30 ether,
-      maxCollateral: 100 ether
-    });
-    IAdminFacet.TokenConfigInput memory ibTokenConfigInput = tokenConfigInput;
-    address ibBnb = moneyMarket.openMarket(bnb, tokenConfigInput, ibTokenConfigInput);
-    tokenConfigInput.token = busd;
-    address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
-    tokenConfigInput.token = mock6DecimalsToken;
-    address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, ibTokenConfigInput);
-    tokenConfigInput.token = dodo;
-    tokenConfigInput.tier = LibMoneyMarket01.AssetTier.CROSS;
-    tokenConfigInput.collateralFactor = 0;
-    tokenConfigInput.maxCollateral = 0;
-    ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.UNLISTED;
-    ibTokenConfigInput.collateralFactor = 0;
-    ibTokenConfigInput.maxCollateral = 0;
-    address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
-    tokenConfigInput.token = pstake;
-    tokenConfigInput.tier = LibMoneyMarket01.AssetTier.ISOLATE;
-    address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, ibTokenConfigInput);
+    // avoid stack too deep
+    {
+      IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
+        tier: LibMoneyMarket01.AssetTier.CROSS,
+        collateralFactor: 0,
+        borrowingFactor: 9000,
+        maxBorrow: 30 ether,
+        maxCollateral: 100 ether
+      });
+      IAdminFacet.TokenConfigInput memory ibTokenConfigInput = tokenConfigInput;
+      ibTokenConfigInput.collateralFactor = 9000;
+      ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.COLLATERAL;
+      address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
+      address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, ibTokenConfigInput);
+      tokenConfigInput.tier = LibMoneyMarket01.AssetTier.CROSS;
+      tokenConfigInput.collateralFactor = 0;
+      tokenConfigInput.maxCollateral = 0;
+      ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.UNLISTED;
+      ibTokenConfigInput.collateralFactor = 0;
+      ibTokenConfigInput.maxCollateral = 0;
+      address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
+      tokenConfigInput.tier = LibMoneyMarket01.AssetTier.ISOLATE;
+      address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, ibTokenConfigInput);
+
+      _writeJson(vm.toString(ibBusd), ".ibTokens.ibBusd");
+      _writeJson(vm.toString(ibDodo), ".ibTokens.ibDodo");
+      _writeJson(vm.toString(ibPstake), ".ibTokens.ibPstake");
+      _writeJson(vm.toString(ibMock6), ".ibTokens.ibMock6");
+    }
 
     _stopBroadcast();
 
     //---- setup user positions ----//
 
     _startUserBroadcast();
-    // prepare user's tokens
-    MockERC20(bnb).mint(userAddress, 100 ether);
-    MockERC20(busd).mint(userAddress, 100 ether);
-    MockERC20(mock6DecimalsToken).mint(userAddress, 100e6);
-    MockERC20(dodo).mint(userAddress, 100 ether);
-    MockERC20(pstake).mint(userAddress, 100 ether);
 
-    MockERC20(bnb).approve(address(accountManager), type(uint256).max);
+    MockERC20(mock6DecimalsToken).mint(userAddress, 100e6);
+
+    MockERC20(wbnb).approve(address(accountManager), type(uint256).max);
     MockERC20(busd).approve(address(accountManager), type(uint256).max);
-    MockERC20(mock6DecimalsToken).approve(address(accountManager), type(uint256).max);
     MockERC20(dodo).approve(address(accountManager), type(uint256).max);
     MockERC20(pstake).approve(address(accountManager), type(uint256).max);
+    MockERC20(mock6DecimalsToken).approve(address(accountManager), type(uint256).max);
 
     // seed money market
     accountManager.deposit(dodo, 10 ether);
@@ -91,13 +88,13 @@ contract SetUpMMForTestScript is BaseScript {
     accountManager.deposit(mock6DecimalsToken, 10e6);
 
     // subAccount 0
-    accountManager.depositAndAddCollateral(0, bnb, 0.345 ether);
+    accountManager.depositAndAddCollateral(0, wbnb, 78.09 ether);
 
-    accountManager.addCollateralFor(userAddress, 0, bnb, 97.9 ether);
+    accountManager.addCollateralFor(userAddress, 0, wbnb, 7.9 ether);
     accountManager.addCollateralFor(userAddress, 0, busd, 10 ether);
 
     accountManager.borrow(0, dodo, 3.14159 ether);
-    accountManager.borrow(0, mock6DecimalsToken, 12e5);
+    // accountManager.borrow(0, mock6DecimalsToken, 1.2e6);
 
     // subAccount 1
     accountManager.addCollateralFor(userAddress, 1, mock6DecimalsToken, 10e6);
@@ -105,23 +102,5 @@ contract SetUpMMForTestScript is BaseScript {
     accountManager.borrow(1, pstake, 2.34 ether);
 
     _stopBroadcast();
-
-    //---- write deployed addresses ----//
-
-    console.log("write output to", configFilePath);
-    string memory configJson;
-    configJson.serialize("ibBnb", ibBnb);
-    configJson.serialize("ibBusd", ibBusd);
-    configJson.serialize("ibDodo", ibDodo);
-    configJson.serialize("ibPstake", ibPstake);
-    configJson = configJson.serialize("ibMock6", ibMock6);
-    _writeJson(configJson, ".ibTokens");
-
-    configJson.serialize("bnb", bnb);
-    configJson.serialize("busd", busd);
-    configJson.serialize("dodo", dodo);
-    configJson.serialize("pstake", pstake);
-    configJson = configJson.serialize("mock6DecimalsToken", mock6DecimalsToken);
-    _writeJson(configJson, ".tokens");
   }
 }
