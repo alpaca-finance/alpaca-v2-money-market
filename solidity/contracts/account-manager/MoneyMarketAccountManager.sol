@@ -219,11 +219,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
       revert MoneyMarketAccountManager_InvalidAmount();
     }
     // Execute remove collateral first
+    // extra gas to use an extra local variable for readability
+    uint256 ibAmountRemoved = _removeCollateral(_subAccountId, _ibToken, _amount);
     // Then withdraw all of the ibToken received from removal of collateral
-    (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(
-      _ibToken,
-      _removeCollateral(_subAccountId, _ibToken, _amount)
-    );
+    (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, ibAmountRemoved);
     // The _underlyingAmountReceived is expected to be greater than 0
     // making the ERC20.transfer impossible to revert on transfer 0 amount
     IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
@@ -258,6 +257,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
       revert MoneyMarketAccountManager_InvalidAmount();
     }
     // remove ibWNative from collateral of the subaccount
+    // extra gas to use an extra local variable for readability
     uint256 _ibAmountRemoved = _removeCollateral(_subAccountId, ibWNativeToken, _amount);
 
     // Withdraw from MoneyMarket using the ibToken that was funded by the caller
