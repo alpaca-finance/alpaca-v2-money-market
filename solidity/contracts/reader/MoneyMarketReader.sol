@@ -26,6 +26,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
 
     LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
+    LibMoneyMarket01.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
 
     return
       MarketSummary({
@@ -33,10 +34,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
         ibTotalAsset: _ibToken.totalAssets(),
         ibAddress: _ibAddress,
         tierAsUInt: uint8(_tokenConfig.tier),
-        collateralFactor: _tokenConfig.collateralFactor,
+        // in UI we need to show collateralFactor of ib but borrowingFactor of underlying
+        collateralFactor: _ibTokenConfig.collateralFactor,
         borrowingFactor: _tokenConfig.borrowingFactor,
         to18ConversionFactor: _tokenConfig.to18ConversionFactor,
-        maxCollateral: _tokenConfig.maxCollateral,
+        maxCollateral: _ibTokenConfig.maxCollateral,
         maxBorrow: _tokenConfig.maxBorrow,
         tokenPrice: _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0)),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
