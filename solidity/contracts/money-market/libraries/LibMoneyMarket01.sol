@@ -202,7 +202,6 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _collats = moneyMarketDs.subAccountCollats[_subAccount].getAll();
 
     address _collatToken;
-    address _underlyingToken;
     uint256 _tokenPrice;
     TokenConfig memory _tokenConfig;
 
@@ -214,13 +213,7 @@ library LibMoneyMarket01 {
 
       // get collat token price in USD
       _tokenPrice = getPriceUSD(_collatToken, moneyMarketDs);
-
-      // handle case where `_collatToken` might be ibToken
-      // if `_underlyingToken != address(0)` then `_collatToken` is ibToken
-      _underlyingToken = moneyMarketDs.ibTokenToTokens[_collatToken];
-      // get token config accordingly
-      // TODO: not sure if we should use tokenConfig of underlyingToken when collatToken is ibToken
-      _tokenConfig = moneyMarketDs.tokenConfigs[_underlyingToken == address(0) ? _collatToken : _underlyingToken];
+      _tokenConfig = moneyMarketDs.tokenConfigs[_collatToken];
 
       // calulation:
       // _totalBorrowingPower += amount * tokenPrice * collateralFactor
