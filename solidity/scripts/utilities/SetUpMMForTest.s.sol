@@ -45,16 +45,17 @@ contract SetUpMMForTestScript is BaseScript {
         collateralFactor: 0,
         borrowingFactor: 9000,
         maxBorrow: 30 ether,
+        maxCollateral: 0
+      });
+      IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
+        tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+        collateralFactor: 9000,
+        borrowingFactor: 9000,
+        maxBorrow: 30 ether,
         maxCollateral: 100 ether
       });
-      IAdminFacet.TokenConfigInput memory ibTokenConfigInput = tokenConfigInput;
-      ibTokenConfigInput.collateralFactor = 9000;
-      ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.COLLATERAL;
       address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
       address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, ibTokenConfigInput);
-      tokenConfigInput.tier = LibMoneyMarket01.AssetTier.CROSS;
-      tokenConfigInput.collateralFactor = 0;
-      tokenConfigInput.maxCollateral = 0;
       ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.UNLISTED;
       ibTokenConfigInput.collateralFactor = 0;
       ibTokenConfigInput.maxCollateral = 0;
@@ -89,15 +90,13 @@ contract SetUpMMForTestScript is BaseScript {
 
     // subAccount 0
     accountManager.depositAndAddCollateral(0, wbnb, 78.09 ether);
-
-    accountManager.addCollateralFor(userAddress, 0, wbnb, 7.9 ether);
-    accountManager.addCollateralFor(userAddress, 0, busd, 10 ether);
+    accountManager.depositAndAddCollateral(0, busd, 12.2831207 ether);
 
     accountManager.borrow(0, dodo, 3.14159 ether);
     // accountManager.borrow(0, mock6DecimalsToken, 1.2e6);
 
     // subAccount 1
-    accountManager.addCollateralFor(userAddress, 1, mock6DecimalsToken, 10e6);
+    accountManager.depositAndAddCollateral(1, mock6DecimalsToken, 10e6);
 
     accountManager.borrow(1, pstake, 2.34 ether);
 
