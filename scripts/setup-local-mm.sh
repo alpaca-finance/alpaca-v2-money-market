@@ -29,4 +29,6 @@ forge script solidity/scripts/deployments/03_DeployMoneyMarket.s.sol --rpc-url $
 forge script solidity/scripts/deployments/04_DeployMoneyMarketReader.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/deployments/05_DeployMoneyMarketAccountManager.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/utilities/SetUpMMForTest.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+
+# save snapshot to facilitate chain state reversion
 cast rpc evm_snapshot
