@@ -863,7 +863,7 @@ library LibMoneyMarket01 {
       }
     }
 
-    emit LogAddCollateral(_account, _subAccount, _token, _account, _addAmount);
+    emit LogAddCollateral(_account, _subAccount, _token, msg.sender, _addAmount);
   }
 
   /// @dev Remove collat from sub account
