@@ -1052,13 +1052,12 @@ library LibMoneyMarket01 {
 
     // mint debt token to money market and stake to miniFL
     address _debtToken = moneyMarketDs.tokenToDebtTokens[_token];
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_debtToken];
 
     // pool for debt token always exist
     // since pool is created during AdminFacet.openMarket()
     IDebtToken(_debtToken).mint(address(this), _shareToAdd);
     IERC20(_debtToken).safeApprove(address(_miniFL), _shareToAdd);
-    _miniFL.deposit(_account, _poolId, _shareToAdd);
+    _miniFL.deposit(_account, moneyMarketDs.miniFLPoolIds[_debtToken], _shareToAdd);
 
     emit LogOverCollatBorrow(msg.sender, _subAccount, _token, _amount, _shareToAdd);
   }
