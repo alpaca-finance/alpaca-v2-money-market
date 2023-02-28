@@ -788,6 +788,11 @@ library LibMoneyMarket01 {
     if (_decimals > 18) {
       revert LibMoneyMarket01_UnsupportedDecimals();
     }
+    // in case the decimal is in 18 digits, the factor is 1
+    // and can skip the below calculation
+    if (_decimals == 18) {
+      return 1;
+    }
     // calculate conversion factor
     // calculation:
     // conversionFactor = 10^(18 - decimals)
