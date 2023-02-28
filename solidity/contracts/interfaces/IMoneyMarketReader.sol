@@ -30,9 +30,11 @@ interface IMoneyMarketReader {
   }
 
   struct CollateralPosition {
-    address token;
+    address ibToken;
+    address underlyingToken;
     uint256 amount;
-    uint256 price;
+    uint256 ibTokenPrice;
+    uint256 underlyingTokenPrice;
     uint16 collateralFactor;
   }
   struct DebtPosition {
