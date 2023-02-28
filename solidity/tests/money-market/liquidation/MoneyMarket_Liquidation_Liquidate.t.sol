@@ -539,7 +539,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     address _debtToken = address(usdc);
 
     vm.prank(liquidator);
-    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_InsufficientAmount.selector));
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_CollateralNotExist.selector));
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
       ALICE,
