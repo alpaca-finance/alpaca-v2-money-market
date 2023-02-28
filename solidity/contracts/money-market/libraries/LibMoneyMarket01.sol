@@ -818,6 +818,7 @@ library LibMoneyMarket01 {
     address _subAccount,
     address _token,
     uint256 _addAmount,
+    bool _skipMiniFL,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // validation
@@ -846,16 +847,20 @@ library LibMoneyMarket01 {
     //  2. update total collateral amount of a token in money market
     moneyMarketDs.collats[_token] += _addAmount;
 
-    // stake token to miniFL, when user add collateral by ibToken
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
-    IMiniFL _miniFL = moneyMarketDs.miniFL;
+    // if called by transferCollateral, does not need to deposit to miniFL
+    // as during removeCollateral in transfer, token wasn't withdrawn from miniFL
+    if (!_skipMiniFL) {
+      // stake token to miniFL, when user add collateral by ibToken
+      uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+      IMiniFL _miniFL = moneyMarketDs.miniFL;
 
-    // If the collateral token has no miniFL's poolID associated with it
-    // skip the deposit to miniFL process
-    // This generally applies to non-ibToken collateral
-    if (_poolId != 0) {
-      IERC20(_token).safeApprove(address(_miniFL), _addAmount);
-      _miniFL.deposit(_account, _poolId, _addAmount);
+      // If the collateral token has no miniFL's poolID associated with it
+      // skip the deposit to miniFL process
+      // This generally applies to non-ibToken collateral
+      if (_poolId != 0) {
+        IERC20(_token).safeApprove(address(_miniFL), _addAmount);
+        _miniFL.deposit(_account, _poolId, _addAmount);
+      }
     }
 
     emit LogAddCollateral(_account, _subAccount, _token, _account, _addAmount);
@@ -872,6 +877,7 @@ library LibMoneyMarket01 {
     address _subAccount,
     address _token,
     uint256 _removeAmount,
+    bool _skipMiniFl,
     MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
     // get current collateral amount of a token
@@ -888,15 +894,18 @@ library LibMoneyMarket01 {
     //  2. update total collateral amount of a token in money market
     moneyMarketDs.collats[_token] -= _removeAmount;
 
-    // In the subsequent call, money market should get hold of physical token to proceed
-    // Thus, we need to withdraw the physical token from miniFL first
-    uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
+    // if called by transferCollateral, does not need to withdraw from miniFL
+    if (!_skipMiniFl) {
+      // In the subsequent call, money market should get hold of physical token to proceed
+      // Thus, we need to withdraw the physical token from miniFL first
+      uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
 
-    // If the collateral token has no miniFL's poolID associated with it
-    // skip the withdrawal from miniFL process
-    // This generally applies to non-ibToken collateral
-    if (_poolId != 0) {
-      moneyMarketDs.miniFL.withdraw(_account, _poolId, _removeAmount);
+      // If the collateral token has no miniFL's poolID associated with it
+      // skip the withdrawal from miniFL process
+      // This generally applies to non-ibToken collateral
+      if (_poolId != 0) {
+        moneyMarketDs.miniFL.withdraw(_account, _poolId, _removeAmount);
+      }
     }
 
     emit LogRemoveCollateral(_account, _subAccount, _token, _removeAmount);

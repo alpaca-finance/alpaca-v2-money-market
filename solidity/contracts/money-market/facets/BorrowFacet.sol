@@ -243,7 +243,7 @@ contract BorrowFacet is IBorrowFacet {
     // Additionally, withdraw the collateral token that should have been
     // staked at miniFL specifically if the collateral was ibToken
     // The physical token of collateral token should now have been at MM Diamond
-    LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _amountToRepay, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _amountToRepay, false, moneyMarketDs);
 
     // Increase the reserves as the token has freed up
     moneyMarketDs.reserves[_token] += _amountToRepay;

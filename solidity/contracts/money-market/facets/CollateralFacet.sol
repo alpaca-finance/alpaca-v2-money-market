@@ -65,7 +65,7 @@ contract CollateralFacet is ICollateralFacet {
 
     // Book the collateral to subaccount's accounting
     // If the collateral token is ibToken, the ibToken should be staked at miniFL contract
-    LibMoneyMarket01.addCollatToSubAccount(_account, _subAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.addCollatToSubAccount(_account, _subAccount, _token, _amount, false, moneyMarketDs);
   }
 
   /// @notice Remove a collateral token from a subaccount
@@ -96,7 +96,7 @@ contract CollateralFacet is ICollateralFacet {
     // Additionally, withdraw the collateral token that should have been
     // staked at miniFL specifically if the collateral was ibToken
     // The physical token of collateral token should now have been at MM Diamond
-    LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _removeAmount, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(_account, _subAccount, _token, _removeAmount, false, moneyMarketDs);
 
     // Do a final subaccount health check as the subaccount should not be at risk of liquidation
     // after the collateral was removed
@@ -137,7 +137,7 @@ contract CollateralFacet is ICollateralFacet {
     LibMoneyMarket01.accrueBorrowedPositionsOf(_fromSubAccount, moneyMarketDs);
 
     // Remove the collateral from the origin subaccount
-    LibMoneyMarket01.removeCollatFromSubAccount(_account, _fromSubAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.removeCollatFromSubAccount(_account, _fromSubAccount, _token, _amount, true, moneyMarketDs);
 
     // before proceeding to add the recently removed collateral to the destination subaccount's accounting
     // perform a health check. This should revert if the remove collateral operation result in
@@ -149,7 +149,7 @@ contract CollateralFacet is ICollateralFacet {
     // Add the collateral to destination subaccount's accounting
     // The health check on the destination subaccount is not required as adding collateral
     // will always benefit the subaccount or at worst changes nothing
-    LibMoneyMarket01.addCollatToSubAccount(_account, _toSubAccount, _token, _amount, moneyMarketDs);
+    LibMoneyMarket01.addCollatToSubAccount(_account, _toSubAccount, _token, _amount, true, moneyMarketDs);
 
     emit LogTransferCollateral(_account, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
