@@ -56,7 +56,7 @@ contract MoneyMarket_AccrueInterest_TransferCollatertalTest is MoneyMarket_BaseT
 
     vm.startPrank(ALICE);
     // transfer collateral will trigger accrue interest on all borrowed token
-    accountManager.transferCollateral(0, 1, address(weth), 0);
+    accountManager.transferCollateral(0, 1, address(weth), 1);
     vm.stopPrank();
 
     // assert ALICE

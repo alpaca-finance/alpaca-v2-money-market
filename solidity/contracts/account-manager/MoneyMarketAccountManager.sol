@@ -34,10 +34,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     address _wNativeToken,
     address _nativeRelayer
   ) external initializer {
-    // sanity call, should revert if the input address didn't implement
-    // this particular interface
-    IMoneyMarket(_moneyMarket).getMinDebtSize();
-
     OwnableUpgradeable.__Ownable_init();
 
     address _ibWNativeToken = IMoneyMarket(_moneyMarket).getIbTokenFromToken(_wNativeToken);
@@ -58,68 +54,72 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
   /// @param _token The token to lend
   /// @param _amount The amount to lend
   function deposit(address _token, uint256 _amount) external {
-    // skip if trying to deposit 0 amount
-    if (_amount != 0) {
-      // pull the fund from caller to this contract
-      // assuming that there's no fee on transfer
-      IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-
-      // deposit the recently received fund to MoneyMarket
-      (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
-
-      // transfer ibToken received back to caller
-      IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+    // revert if trying to deposit 0 amount
+    if (_amount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // pull the fund from caller to this contract
+    // assuming that there's no fee on transfer
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+
+    // deposit the recently received fund to MoneyMarket
+    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+
+    // transfer ibToken received back to caller
+    IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
   }
 
   /// @notice Deposit native token for lending
   function depositETH() external payable {
-    // skip if trying to deposit 0 amount
-    if (msg.value != 0) {
-      // Wrap the native token as MoneyMarket only accepts ERC20
-      IWNative(wNativeToken).deposit{ value: msg.value }();
-
-      // Deposit the wNative token to MoneyMarket
-      (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
-
-      // transfer ibToken received back to caller
-      IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
+    // revert if trying to deposit 0 amount
+    if (msg.value == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // Wrap the native token as MoneyMarket only accepts ERC20
+    IWNative(wNativeToken).deposit{ value: msg.value }();
+
+    // Deposit the wNative token to MoneyMarket
+    (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
+
+    // transfer ibToken received back to caller
+    IERC20(_ibToken).safeTransfer(msg.sender, _amountReceived);
   }
 
   /// @notice Withdraw the lent token by burning the interest bearing token on behalf of the caller
   /// @param _ibToken The interest bearing token to burn
   /// @param _ibAmount The amount of interest bearing token to burn
   function withdraw(address _ibToken, uint256 _ibAmount) external {
-    // Skio if trying to withdraw 0
-    if (_ibAmount != 0) {
-      // pull ibToken from the caller
-      IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _ibAmount);
-
-      // Withdraw from MoneyMarket using the ibToken that was funded by the caller
-      (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibAmount);
-
-      // Transfer the token back to the caller
-      // The _underlyingAmountReceived is expected to be greater than 0
-      // as this function won't proceed if input shareAmount is 0
-      IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
+    // revert if trying to withdraw 0
+    if (_ibAmount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // pull ibToken from the caller
+    IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _ibAmount);
+
+    // Withdraw from MoneyMarket using the ibToken that was funded by the caller
+    (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibAmount);
+
+    // Transfer the token back to the caller
+    // The _underlyingAmountReceived is expected to be greater than 0
+    // as this function won't proceed if input shareAmount is 0
+    IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
   }
 
   /// @notice Withdraw the lent native token by burning the interest bearing token
   /// @param _ibAmount The amount of interest bearing token to burn
   function withdrawETH(uint256 _ibAmount) external {
-    // skip if trying to withdraw 0 amount
-    if (_ibAmount != 0) {
-      // pull ibToken from the caller
-      IERC20(ibWNativeToken).safeTransferFrom(msg.sender, address(this), _ibAmount);
-
-      // Withdraw from MoneyMarket using the ibToken that was funded by the caller
-      (, uint256 _underlyingAmountReceived) = _withdraw(ibWNativeToken, _ibAmount);
-
-      // unwrap the wNativeToken and send back to the msg.sender
-      _safeUnwrap(msg.sender, _underlyingAmountReceived);
+    // revert if trying to withdraw 0 amount
+    if (_ibAmount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // pull ibToken from the caller
+    IERC20(ibWNativeToken).safeTransferFrom(msg.sender, address(this), _ibAmount);
+
+    // Withdraw from MoneyMarket using the ibToken that was funded by the caller
+    (, uint256 _underlyingAmountReceived) = _withdraw(ibWNativeToken, _ibAmount);
+
+    // unwrap the wNativeToken and send back to the msg.sender
+    _safeUnwrap(msg.sender, _underlyingAmountReceived);
   }
 
   /// @notice Add a token to a subaccount as a collateral
@@ -172,6 +172,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     address _token,
     uint256 _amount
   ) external {
+    // revert if trying to trasnfer amount 0
+    if (_amount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
     // Simply forward the call
     moneyMarket.transferCollateral(msg.sender, _fromSubAccountId, _toSubAccountId, _token, _amount);
   }
@@ -185,19 +189,20 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     address _token,
     uint256 _amount
   ) external {
-    // skip if deposit 0 amount
-    if (_amount != 0) {
-      // pull funds from caller and deposit to money market
-      // assuming that there's no fee on transfer
-      IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-      (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
-
-      // Use the received ibToken and put it as a collateral in given subaccount id
-      // expecting that all of the received ibToken successfully deposited as collateral
-      // This call can revert if added amount makes total collateral exceed maximum collateral capacity
-      IERC20(_ibToken).safeApprove(address(moneyMarket), _amountReceived);
-      moneyMarket.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
+    // revert if deposit 0 amount
+    if (_amount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // pull funds from caller and deposit to money market
+    // assuming that there's no fee on transfer
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+
+    // Use the received ibToken and put it as a collateral in given subaccount id
+    // expecting that all of the received ibToken successfully deposited as collateral
+    // This call can revert if added amount makes total collateral exceed maximum collateral capacity
+    IERC20(_ibToken).safeApprove(address(moneyMarket), _amountReceived);
+    moneyMarket.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
   }
 
   /// @notice Remove a collateral token from a subaccount and withdraw ibToken
@@ -209,93 +214,99 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     address _ibToken,
     uint256 _amount
   ) external {
-    // Skip if trying to remove 0
+    // revert if trying to remove 0
+    if (_amount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
+    // Execute remove collateral first
+    // extra gas to use an extra local variable for readability
+    uint256 ibAmountRemoved = _removeCollateral(_subAccountId, _ibToken, _amount);
+    // Then withdraw all of the ibToken received from removal of collateral
+    (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, ibAmountRemoved);
     // The _underlyingAmountReceived is expected to be greater than 0
     // making the ERC20.transfer impossible to revert on transfer 0 amount
-    if (_amount != 0) {
-      // Execute remove collateral first
-      // Then withdraw all of the ibToken received from removal of collateral
-      (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(
-        _ibToken,
-        _removeCollateral(_subAccountId, _ibToken, _amount)
-      );
-
-      IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
-    }
+    IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
   }
 
   /// @notice Deposit native token for lending then add all of ibToken to given subaccount id of the caller as collateral
   /// @param _subAccountId An index to derive the subaccount
   function depositETHAndAddCollateral(uint256 _subAccountId) external payable {
-    if (msg.value != 0) {
-      // Wrap the native token as MoneyMarket only accepts ERC20
-      IWNative(wNativeToken).deposit{ value: msg.value }();
-
-      // deposit wrapped native token to MoneyMarket
-      (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
-
-      // Use the received ibToken and put it as a collateral in given subaccount id
-      // expecting that all of the received ibToken successfully deposited as collateral
-      // This call can revert if added amount makes total collateral exceed maximum collateral capacity
-      IERC20(_ibToken).safeApprove(address(moneyMarket), _amountReceived);
-      moneyMarket.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
+    // revert if trying to deposit 0
+    if (msg.value == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // Wrap the native token as MoneyMarket only accepts ERC20
+    IWNative(wNativeToken).deposit{ value: msg.value }();
+
+    // deposit wrapped native token to MoneyMarket
+    (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
+
+    // Use the received ibToken and put it as a collateral in given subaccount id
+    // expecting that all of the received ibToken successfully deposited as collateral
+    // This call can revert if added amount makes total collateral exceed maximum collateral capacity
+    IERC20(_ibToken).safeApprove(address(moneyMarket), _amountReceived);
+    moneyMarket.addCollateral(msg.sender, _subAccountId, _ibToken, _amountReceived);
   }
 
   /// @notice Remove an ibWNative token from a subaccount and withdraw as native token
   /// @param _subAccountId An index to derive the subaccount
   /// @param _amount The amount to remove
   function removeCollateralAndWithdrawETH(uint256 _subAccountId, uint256 _amount) external {
-    // Skip if trying to remove 0
+    // revert if trying to remove 0
+    if (_amount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
+    // remove ibWNative from collateral of the subaccount
+    // extra gas to use an extra local variable for readability
+    uint256 _ibAmountRemoved = _removeCollateral(_subAccountId, ibWNativeToken, _amount);
+
+    // Withdraw from MoneyMarket using the ibToken that was funded by the caller
+    (, uint256 _underlyingAmountReceived) = _withdraw(ibWNativeToken, _ibAmountRemoved);
+
     // The _underlyingAmountReceived is expected to be greater than 0
     // making the ERC20.transfer impossible to revert on transfer 0 amount
-    if (_amount != 0) {
-      // remove ibWNative from collateral of the subaccount
-      uint256 _ibAmountRemoved = _removeCollateral(_subAccountId, ibWNativeToken, _amount);
-
-      // Withdraw from MoneyMarket using the ibToken that was funded by the caller
-      (, uint256 _underlyingAmountReceived) = _withdraw(ibWNativeToken, _ibAmountRemoved);
-
-      // unwrap the wNativeToken and send back to the msg.sender
-      _safeUnwrap(msg.sender, _underlyingAmountReceived);
-    }
+    // unwrap the wNativeToken and send back to the msg.sender
+    _safeUnwrap(msg.sender, _underlyingAmountReceived);
   }
 
   /// @notice Deposit token to Money Market and stake the ibToken to miniFL
   /// @param _token The token to deposit
   /// @param _amount The amount to deposit
   function depositAndStake(address _token, uint256 _amount) external {
-    // skip if deposit 0 amount
-    if (_amount != 0) {
-      // pull funds from caller and deposit to money market
-      // assuming that there's no fee on transfer
-      IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
-      (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
-
-      // Use the received ibToken and stake it at miniFL on bahalf of the caller
-      IERC20(_ibToken).safeApprove(address(miniFL), _amountReceived);
-      miniFL.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
+    // revert if deposit 0 amount
+    if (_amount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
     }
+    // pull funds from caller and deposit to money market
+    // assuming that there's no fee on transfer
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+    (address _ibToken, uint256 _amountReceived) = _deposit(_token, _amount);
+
+    // Use the received ibToken and stake it at miniFL on bahalf of the caller
+    IERC20(_ibToken).safeApprove(address(miniFL), _amountReceived);
+    miniFL.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
   }
 
   /// @notice Unstake ibToken from miniFL and withdraw from MoneyMarket
   /// @param _ibToken The ibToken token to withdraw
   /// @param _ibTokenAmount The amount to withdraw
   function unstakeAndWithdraw(address _ibToken, uint256 _ibTokenAmount) external {
-    // Skip if trying to remove 0
+    // revert if trying to remove 0
+
+    if (_ibTokenAmount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
+    // unstake from miniFL with given amount
+    // If the transaction went through, the amount received will always equals to the _amount
+    miniFL.withdraw(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _ibTokenAmount);
+
+    //  withdraw all of the ibToken received from unstaking from miniFL
+    (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibTokenAmount);
+
+    // Transfer the underlying token back to the caller
     // The _underlyingAmountReceived is expected to be greater than 0
     // making the ERC20.transfer impossible to revert on transfer 0 amount
-    if (_ibTokenAmount != 0) {
-      // unstake from miniFL with given amount
-      // If the transaction went through, the amount received will always equals to the _amount
-      miniFL.withdraw(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _ibTokenAmount);
-
-      //  withdraw all of the ibToken received from unstaking from miniFL
-      (address _underlyingToken, uint256 _underlyingAmountReceived) = _withdraw(_ibToken, _ibTokenAmount);
-
-      // Transfer the underlying token back to the caller
-      IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
-    }
+    IERC20(_underlyingToken).safeTransfer(msg.sender, _underlyingAmountReceived);
   }
 
   /// @notice Borrow a token against the placed collaterals on behalf of the caller
@@ -339,6 +350,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     uint256 _repayAmount,
     uint256 _debtShareToRepay
   ) external {
+    // revert if trying to repay amount 0
+    if (_repayAmount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
     // cache the balance of token before proceeding
     uint256 _amountBefore = IERC20(_token).balanceOf(address(this));
 
@@ -373,6 +388,10 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     address _token,
     uint256 _debtShareToRepay
   ) external {
+    // revert if trying to repay 0
+    if (_debtShareToRepay == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
     // Simply forward the call to MoneyMarket
     moneyMarket.repayWithCollat(msg.sender, _subAccountId, _token, _debtShareToRepay);
   }

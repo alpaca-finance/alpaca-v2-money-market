@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 interface IMoneyMarketAccountManager {
   error MoneyMarketAccountManager_WNativeMarketNotOpen();
+  error MoneyMarketAccountManager_InvalidAmount();
 
   function deposit(address _token, uint256 _amount) external;
 

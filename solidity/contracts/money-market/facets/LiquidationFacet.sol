@@ -268,6 +268,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _vars.subAccount,
       _collatToken,
       _collatAmountOut,
+      false,
       moneyMarketDs
     );
 
@@ -369,6 +370,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _vars.subAccount,
       _collatToken,
       _vars.subAccountCollatAmount,
+      false,
       moneyMarketDs
     );
 
@@ -470,6 +472,7 @@ contract LiquidationFacet is ILiquidationFacet {
           _vars.subAccount,
           _collatToken,
           _vars.subAccountCollatAmount - _vars.collatSold,
+          false,
           moneyMarketDs
         );
       }
