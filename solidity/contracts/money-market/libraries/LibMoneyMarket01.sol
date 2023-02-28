@@ -845,12 +845,12 @@ library LibMoneyMarket01 {
     if (!_skipMiniFL) {
       // stake token to miniFL, when user add collateral by ibToken
       uint256 _poolId = moneyMarketDs.miniFLPoolIds[_token];
-      IMiniFL _miniFL = moneyMarketDs.miniFL;
 
       // If the collateral token has no miniFL's poolID associated with it
       // skip the deposit to miniFL process
       // This generally applies to non-ibToken collateral
       if (_poolId != 0) {
+        IMiniFL _miniFL = moneyMarketDs.miniFL;
         IERC20(_token).safeApprove(address(_miniFL), _addAmount);
         _miniFL.deposit(_account, _poolId, _addAmount);
       }
