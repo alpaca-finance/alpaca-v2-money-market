@@ -317,6 +317,9 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     IERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
+  /// @notice Borrow native token against the placed collaterals on behalf of the caller
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _amount The amount to borrow
   function borrowETH(uint256 _subAccountId, uint256 _amount) external {
     // borrow token out on behalf of caller's subaccount
     moneyMarket.borrow(msg.sender, _subAccountId, wNativeToken, _amount);
