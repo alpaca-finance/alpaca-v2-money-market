@@ -58,6 +58,8 @@ interface IMoneyMarketAccountManager {
     uint256 _amount
   ) external;
 
+  function borrowETH(uint256 _subAccountId, uint256 _amount) external;
+
   function repayFor(
     address _account,
     uint256 _subAccountId,
