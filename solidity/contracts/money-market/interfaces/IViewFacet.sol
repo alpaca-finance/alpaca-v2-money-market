@@ -125,4 +125,9 @@ interface IViewFacet {
   function getOracle() external view returns (address);
 
   function getMiniFL() external view returns (address);
+
+  function getTokenAmountFromIbAmount(address _ibToken, uint256 _amount)
+    external
+    view
+    returns (uint256 _underlyingAmount);
 }

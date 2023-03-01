@@ -14,12 +14,14 @@ import { IAlpacaV2Oracle } from "../oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IMiniFL } from "../money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarketReader is IMoneyMarketReader {
-  IMoneyMarket private _moneyMarket;
-  IMiniFL private _miniFL;
+  IMoneyMarket private immutable _moneyMarket;
+  IMiniFL private immutable _miniFL;
+  address private immutable _moneyMarketAccountManager;
 
-  constructor(address moneyMarket_) {
+  constructor(address moneyMarket_, address moneyMarketAccountManager_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
     _miniFL = IMiniFL(_moneyMarket.getMiniFL());
+    _moneyMarketAccountManager = moneyMarketAccountManager_;
   }
 
   /// @dev Get the market summary
@@ -102,12 +104,14 @@ contract MoneyMarketReader is IMoneyMarketReader {
   {
     address _ibTokenAddress = _moneyMarket.getIbTokenFromToken(_underlyingTokenAddress);
     uint256 _pid = _moneyMarket.getMiniFLPoolIdOfToken(_ibTokenAddress);
+    uint256 _supplyIbAmount = _miniFL.getFundedAmount(_moneyMarketAccountManager, _account, _pid);
 
     _supplyAccountDetail = SupplyAccountDetail({
       ibTokenAddress: _ibTokenAddress,
       underlyingToken: _underlyingTokenAddress,
-      totalIbAmount: _miniFL.getUserTotalAmountOf(_pid, _account),
+      supplyIbAmount: _supplyIbAmount,
       ibTokenPrice: getPriceUSD(_ibTokenAddress),
+      underlyingAmount: _moneyMarket.getTokenAmountFromIbAmount(_ibTokenAddress, _supplyIbAmount),
       underlyingTokenPrice: getPriceUSD(_underlyingTokenAddress)
     });
   }
@@ -168,8 +172,9 @@ contract MoneyMarketReader is IMoneyMarketReader {
       uint256 _price = getPriceUSD(_token);
       LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
       (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
-      
-      uint256 _actualDebtAmount =  (_rawDebts[_i].amount * (_totalDebtAmount + _moneyMarket.getOverCollatPendingInterest(_token))) / _totalDebtShares;
+
+      uint256 _actualDebtAmount = (_rawDebts[_i].amount *
+        (_totalDebtAmount + _moneyMarket.getOverCollatPendingInterest(_token))) / _totalDebtShares;
 
       uint256 _valueUSD = (_price * _actualDebtAmount * _tokenConfig.to18ConversionFactor) / 1e18;
       _totalBorrowedValue += _valueUSD;

@@ -4,8 +4,10 @@ pragma solidity 0.8.17;
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
+import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 
 // ---- Interfaces ---- //
+import { IERC20 } from "../interfaces/IERC20.sol";
 import { IViewFacet } from "../interfaces/IViewFacet.sol";
 
 /// @title ViewFacet is dediciated to all view function used by external sources
@@ -442,5 +444,24 @@ contract ViewFacet is IViewFacet {
   /// @return miniFL address
   function getMiniFL() external view returns (address) {
     return address(LibMoneyMarket01.moneyMarketDiamondStorage().miniFL);
+  }
+
+  /// @notice Get underlyingToken amount from ibToken amount
+  /// @param _ibToken IbToken address
+  /// @param _amount Amount to convert
+  /// @return _underlyingAmount Amount of converted underlyingToken
+  function getTokenAmountFromIbAmount(address _ibToken, uint256 _amount)
+    external
+    view
+    returns (uint256 _underlyingAmount)
+  {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    address _underlyingToken = moneyMarketDs.ibTokenToTokens[_ibToken];
+
+    _underlyingAmount = LibShareUtil.shareToValue(
+      _amount,
+      LibMoneyMarket01.getTotalTokenWithPendingInterest(_underlyingToken, moneyMarketDs),
+      IERC20(_ibToken).totalSupply()
+    );
   }
 }

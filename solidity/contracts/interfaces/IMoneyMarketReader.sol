@@ -57,9 +57,11 @@ interface IMoneyMarketReader {
   struct SupplyAccountDetail {
     address ibTokenAddress;
     address underlyingToken;
-    // Amount staked in MiniFL
-    uint256 totalIbAmount;
+    // Amount staked in MiniFL by AccountManager
+    uint256 supplyIbAmount;
     uint256 ibTokenPrice;
+    // Amount of underlyingToken converted from ibToken amount
+    uint256 underlyingAmount;
     uint256 underlyingTokenPrice;
   }
 
