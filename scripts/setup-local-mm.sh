@@ -23,12 +23,12 @@ cast rpc anvil_impersonateAccount $USER_ADDRESS
 cast send 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c --from $USER_ADDRESS --value $HUNDRED_ETHER "deposit()"
 cast rpc anvil_stopImpersonatingAccount $USER_ADDRESS
 
+# save snapshot before deployment to facilitate chain state reversion
+cast rpc evm_snapshot
+
 forge script solidity/scripts/deployments/01_DeployProxyAdmin.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/deployments/02_DeployMiniFL.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/deployments/03_DeployMoneyMarket.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/deployments/04_DeployMoneyMarketReader.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/deployments/05_DeployMoneyMarketAccountManager.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/utilities/SetUpMMForTest.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
-
-# save snapshot to facilitate chain state reversion
-cast rpc evm_snapshot

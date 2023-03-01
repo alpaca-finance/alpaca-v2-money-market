@@ -84,19 +84,26 @@ contract MoneyMarketReader is IMoneyMarketReader {
     uint256 _collatLen = _rawCollats.length;
     _collaterals = new CollateralPosition[](_collatLen);
 
+    // currently only accept ib as collateral
+    // if there is non-ib collat it would revert because get price for address 0
     for (uint256 _i; _i < _collatLen; ++_i) {
-      address _token = _rawCollats[_i].token;
-      uint256 _price = getPriceUSD(_token);
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
+      address _ibToken = _rawCollats[_i].token;
+      address _underlyingToken = _moneyMarket.getTokenFromIbToken(_ibToken);
 
-      uint256 _valueUSD = (_price * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
+      uint256 _ibTokenPrice = getPriceUSD(_ibToken);
+      uint256 _underlyingTokenPrice = getPriceUSD(_underlyingToken);
+      LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_ibToken);
+
+      uint256 _valueUSD = (_ibTokenPrice * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
       _totalCollateralValue += _valueUSD;
       _totalBorrowingPower += (_valueUSD * _tokenConfig.collateralFactor) / LibMoneyMarket01.MAX_BPS;
 
       _collaterals[_i] = CollateralPosition({
-        token: _token,
+        ibToken: _ibToken,
+        underlyingToken: _underlyingToken,
         amount: _rawCollats[_i].amount,
-        price: _price,
+        ibTokenPrice: _ibTokenPrice,
+        underlyingTokenPrice: _underlyingTokenPrice,
         collateralFactor: _tokenConfig.collateralFactor
       });
     }
