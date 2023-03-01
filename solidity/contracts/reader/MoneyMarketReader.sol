@@ -11,12 +11,15 @@ import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
 import { IPriceOracle } from "../oracle/interfaces/IPriceOracle.sol";
 import { IAlpacaV2Oracle } from "../oracle/interfaces/IAlpacaV2Oracle.sol";
+import { IMiniFL } from "../money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarketReader is IMoneyMarketReader {
   IMoneyMarket private _moneyMarket;
+  IMiniFL private _miniFL;
 
   constructor(address moneyMarket_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
+    _miniFL = IMiniFL(_moneyMarket.getMiniFL());
   }
 
   /// @dev Get the market summary
@@ -28,14 +31,14 @@ contract MoneyMarketReader is IMoneyMarketReader {
     LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
     LibMoneyMarket01.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
 
+    // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
+    // so have to return both
     return
       MarketSummary({
         ibTotalSupply: _ibToken.totalSupply(),
         ibTotalAsset: _ibToken.totalAssets(),
         ibAddress: _ibAddress,
         tierAsUInt: uint8(_tokenConfig.tier),
-        // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
-        // so have to return both
         ibCollateralFactor: _ibTokenConfig.collateralFactor,
         ibBorrowingFactor: _ibTokenConfig.borrowingFactor,
         collateralFactor: _tokenConfig.collateralFactor,
@@ -69,6 +72,43 @@ contract MoneyMarketReader is IMoneyMarketReader {
       _account,
       _subAccountId
     );
+  }
+
+  /// @dev Get supply account summary
+  function getMainAccountSummary(address _account, address[] calldata _underlyingTokenAddresses)
+    external
+    view
+    returns (MainAccountSummary memory _mainAccountSummary)
+  {
+    uint256 marketLength = _underlyingTokenAddresses.length;
+
+    // MainAccountSummary _mainAccountSummary = new MainAccountSummary
+    SupplyAccountDetail[] memory _supplyAccountDetails = new SupplyAccountDetail[](marketLength);
+    address _underlyingTokenAddress;
+
+    for (uint256 _i; _i < marketLength; _i++) {
+      _underlyingTokenAddress = _underlyingTokenAddresses[_i];
+
+      _supplyAccountDetails[_i] = _getSupplyAccountDetail(_account, _underlyingTokenAddress);
+    }
+
+    _mainAccountSummary = MainAccountSummary({ supplyAccountDetails: _supplyAccountDetails });
+  }
+
+  function _getSupplyAccountDetail(address _account, address _underlyingTokenAddress)
+    internal
+    view
+    returns (SupplyAccountDetail memory _supplyAccountDetail)
+  {
+    address _ibTokenAddress = _moneyMarket.getIbTokenFromToken(_underlyingTokenAddress);
+    uint256 _pid = _moneyMarket.getMiniFLPoolIdOfToken(_ibTokenAddress);
+
+    _supplyAccountDetail = SupplyAccountDetail({
+      ibToken: _ibTokenAddress,
+      underlyingToken: _underlyingTokenAddress,
+      totalIbAmount: _miniFL.getUserTotalAmountOf(_pid, _account),
+      underlyingTokenPrice: getPriceUSD(_underlyingTokenAddress)
+    });
   }
 
   function _getSubAccountCollatSummary(address _account, uint256 _subAccountId)
