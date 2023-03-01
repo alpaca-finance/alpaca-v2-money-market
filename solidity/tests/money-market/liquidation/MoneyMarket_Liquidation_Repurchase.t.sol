@@ -598,6 +598,12 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     uint256 _maxFee = 0.1 ether;
     assertApproxEqAbs(weth.balanceOf(liquidationTreasury), _treasuryBalanceBefore + _maxFee, 3, "max fee");
   }
+
+  function testRevert_SelfRepurchase_ShouldRevert() external {
+    vm.prank(ALICE);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
+    liquidationFacet.repurchase(ALICE, 0, address(usdc), address(usdc), 1);
+  }
 }
 
 // pragma solidity 0.8.17;
