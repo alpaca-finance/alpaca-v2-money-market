@@ -104,9 +104,10 @@ contract MoneyMarketReader is IMoneyMarketReader {
     uint256 _pid = _moneyMarket.getMiniFLPoolIdOfToken(_ibTokenAddress);
 
     _supplyAccountDetail = SupplyAccountDetail({
-      ibToken: _ibTokenAddress,
+      ibTokenAddress: _ibTokenAddress,
       underlyingToken: _underlyingTokenAddress,
       totalIbAmount: _miniFL.getUserTotalAmountOf(_pid, _account),
+      ibTokenPrice: getPriceUSD(_ibTokenAddress),
       underlyingTokenPrice: getPriceUSD(_underlyingTokenAddress)
     });
   }

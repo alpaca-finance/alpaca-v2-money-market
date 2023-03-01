@@ -53,10 +53,11 @@ interface IMoneyMarketReader {
   }
 
   struct SupplyAccountDetail {
-    address ibToken;
+    address ibTokenAddress;
     address underlyingToken;
     // Amount staked in MiniFL
     uint256 totalIbAmount;
+    uint256 ibTokenPrice;
     uint256 underlyingTokenPrice;
   }
 
