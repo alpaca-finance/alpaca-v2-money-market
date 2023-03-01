@@ -84,6 +84,8 @@ contract MoneyMarketReader is IMoneyMarketReader {
     uint256 _collatLen = _rawCollats.length;
     _collaterals = new CollateralPosition[](_collatLen);
 
+    // currently only accept ib as collateral
+    // if there is non-ib collat it would revert because get price for address 0
     for (uint256 _i; _i < _collatLen; ++_i) {
       address _ibToken = _rawCollats[_i].token;
       address _underlyingToken = _moneyMarket.getTokenFromIbToken(_ibToken);
