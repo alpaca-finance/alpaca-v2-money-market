@@ -120,15 +120,17 @@ contract MoneyMarketReader is IMoneyMarketReader {
       uint256 _price = getPriceUSD(_token);
       LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
       (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
+      
+      uint256 _actualDebtAmount =  (_rawDebts[_i].amount * (_totalDebtAmount + _moneyMarket.getOverCollatPendingInterest(_token))) / _totalDebtShares;
 
-      uint256 _valueUSD = (_price * _rawDebts[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
+      uint256 _valueUSD = (_price * _actualDebtAmount * _tokenConfig.to18ConversionFactor) / 1e18;
       _totalBorrowedValue += _valueUSD;
       _totalUsedBorrowingPower += (_valueUSD * LibMoneyMarket01.MAX_BPS) / _tokenConfig.borrowingFactor;
 
       _debts[_i] = DebtPosition({
         token: _token,
         shares: _rawDebts[_i].amount,
-        amount: (_rawDebts[_i].amount * _totalDebtAmount) / _totalDebtShares,
+        amount: _actualDebtAmount,
         price: _price,
         borrowingFactor: _tokenConfig.borrowingFactor
       });
