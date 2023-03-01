@@ -44,17 +44,26 @@ contract InterestBearingToken_TransferTest is InterestBearingTokenBaseTest {
 
   function testRevert_WhenSelfTransferWithTransfer() external {
     vm.prank(BOB);
-    vm.expectRevert(InterestBearingToken.InterestBearingToken_NoSelfTransfer.selector);
+    vm.expectRevert(InterestBearingToken.InterestBearingToken_InvalidDestination.selector);
     ibToken.transfer(BOB, 1 ether);
 
     assertEq(ibToken.balanceOf(BOB), 1 ether);
   }
 
   function testRevert_WhenSelfTransferWithTransferFrom() external {
-    vm.expectRevert(InterestBearingToken.InterestBearingToken_NoSelfTransfer.selector);
+    vm.expectRevert(InterestBearingToken.InterestBearingToken_InvalidDestination.selector);
     ibToken.transferFrom(BOB, BOB, 1 ether);
 
     assertEq(ibToken.balanceOf(BOB), 1 ether);
+  }
+
+  function testRevert_WhenTransferToIbTokenContract() external {
+    vm.expectRevert(InterestBearingToken.InterestBearingToken_InvalidDestination.selector);
+    ibToken.transferFrom(BOB, address(ibToken), 1 ether);
+
+    vm.prank(BOB);
+    vm.expectRevert(InterestBearingToken.InterestBearingToken_InvalidDestination.selector);
+    ibToken.transfer(address(ibToken), 1 ether);
   }
 
   /**
@@ -62,7 +71,7 @@ contract InterestBearingToken_TransferTest is InterestBearingTokenBaseTest {
    * `vm.expectRevert()` can catch only 1 revert so another revert will cause test to fail.
    *
    * First revert by low-level call to `InterestBearingToken.transfer` by `safeTransfer`
-   * with `InterestBearingToken_NoSelfTransfer` custom error.
+   * with `InterestBearingToken_InvalidDestination` custom error.
    *
    * Second revert by safeTransfer itself from internal function `_callOptionalReturn`
    * with "SafeERC20: ERC20 operation did not succeed" error message.

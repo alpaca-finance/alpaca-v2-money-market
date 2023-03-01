@@ -104,7 +104,10 @@ contract LiquidationFacet is ILiquidationFacet {
     // We only allow EOA or whitelisted contract to repurchase
     // Revert if caller is contract that is not whitelisted
     // `msg.sender != tx.origin` means that `msg.sender` is contract
-    if (msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) {
+    // We also disallow repurchaser to be the same address with the account owner
+    // While our contract wouldn't suffer such an action, it's better to be on the safe side
+    // note: refer the original issue in "Compound's self liquidation bug"
+    if ((msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) || msg.sender == _account) {
       revert LiquidationFacet_Unauthorized();
     }
 
@@ -342,7 +345,7 @@ contract LiquidationFacet is ILiquidationFacet {
     _vars.subAccountCollatAmount = moneyMarketDs.subAccountCollats[_vars.subAccount].getAmount(_collatToken);
     // Revert if subAccount doesn't have collateral to be liquidated
     if (_vars.subAccountCollatAmount == 0) {
-      revert LiquidationFacet_InsufficientAmount();
+      revert LiquidationFacet_CollateralNotExist();
     }
 
     // Accrue all debt tokens under subaccount
@@ -396,9 +399,8 @@ contract LiquidationFacet is ILiquidationFacet {
       _vars.maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
     }
     _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
-    unchecked {
-      _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
-    }
+
+    _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
 
     // Call executeLiquidation on strategy
     // Strategy will convert collatToken to repayToken and send back here
@@ -420,9 +422,8 @@ contract LiquidationFacet is ILiquidationFacet {
       // find the actual fee through the rule of three
       // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
       _vars.actualLiquidationFee = (_amountFromLiquidationStrat * _vars.maxPossibleFee) / _vars.expectedMaxRepayAmount;
-      unchecked {
-        _vars.repaidAmount = _amountFromLiquidationStrat - _vars.actualLiquidationFee;
-      }
+
+      _vars.repaidAmount = _amountFromLiquidationStrat - _vars.actualLiquidationFee;
     }
 
     // Split fee between liquidator and treasury
