@@ -125,6 +125,29 @@ contract ViewFacet is IViewFacet {
     return LibMoneyMarket01.getGlobalPendingInterest(_token, moneyMarketDs);
   }
 
+  /// @notice Get pending interest of over collateralized borrowed token
+  /// @param _token The token that has collected the interest
+  /// @return _pendingInterest The total amount of over collateralized pending interest
+  function getOverCollatPendingInterest(address _token) external view returns (uint256 _pendingInterest) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _lastAccrualTimestamp = moneyMarketDs.debtLastAccruedAt[_token];
+    if (block.timestamp > _lastAccrualTimestamp) {
+      // get a period of time since last accrual in seconds
+      uint256 _secondsSinceLastAccrual;
+      // safe to use unchecked
+      // because at this statement, block.timestamp is always greater than _lastAccrualTimestamp
+      unchecked {
+        _secondsSinceLastAccrual = block.timestamp - _lastAccrualTimestamp;
+      }
+
+      // pendingInterest = ratePerSecond * secondPast * CurrentDebtValue
+      _pendingInterest =
+        ((LibMoneyMarket01.getOverCollatInterestRate(_token, moneyMarketDs) *
+          moneyMarketDs.overCollatDebtValues[_token]) * _secondsSinceLastAccrual) /
+        1e18;
+    }
+  }
+
   /// @notice Get the total amount of borrowed token include both over and non collateralized
   /// @param _token The token that has been borrowed
   /// @return The total amount of debt
