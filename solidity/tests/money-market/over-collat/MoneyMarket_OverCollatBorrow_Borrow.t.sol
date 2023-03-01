@@ -52,6 +52,28 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     assertEq(_debtAmount, 0);
   }
 
+  function testCorrectness_WhenUserBorrowETHFromMM_ShouldTransferETHToUser() external {
+    uint256 _borrowAmount = 10 ether;
+    vm.prank(ALICE);
+    accountManager.depositETH{ value: 50 ether }();
+    mockOracle.setTokenPrice(address(wNativeToken), 1 ether);
+
+    vm.startPrank(BOB);
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), _borrowAmount * 2);
+
+    uint256 _bobBalanceBefore = BOB.balance;
+    uint256 _moneyMarketBalanceBefore = wNativeToken.balanceOf(moneyMarketDiamond);
+
+    accountManager.borrowETH(subAccount0, _borrowAmount);
+    vm.stopPrank();
+
+    uint256 _bobBalanceAfter = BOB.balance;
+    uint256 _moneyMarketBalanceAfter = wNativeToken.balanceOf(moneyMarketDiamond);
+
+    assertEq(_bobBalanceAfter - _bobBalanceBefore, _borrowAmount);
+    assertEq(_moneyMarketBalanceBefore - _moneyMarketBalanceAfter, _borrowAmount);
+  }
+
   function testRevert_WhenUserBorrowNonAvailableToken_ShouldRevert() external {
     uint256 _borrowAmount = normalizeEther(10 ether, mockToken.decimals());
     vm.startPrank(BOB);

@@ -74,13 +74,13 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
   }
 
   function transfer(address to, uint256 amount) public override returns (bool) {
-    if (!(okHolders[msg.sender] && okHolders[to])) {
+    if (!(okHolders[_msgSender()] && okHolders[to])) {
       revert DebtToken_UnApprovedHolder();
     }
-    if (msg.sender == to) {
+    if (_msgSender() == to) {
       revert DebtToken_NoSelfTransfer();
     }
-    _transfer(msg.sender, to, amount);
+    _transfer(_msgSender(), to, amount);
     return true;
   }
 
@@ -89,7 +89,7 @@ contract DebtToken is IDebtToken, ERC20, Ownable, Initializable {
     address to,
     uint256 amount
   ) public override returns (bool) {
-    if (!(okHolders[msg.sender] && okHolders[from] && okHolders[to])) {
+    if (!(okHolders[_msgSender()] && okHolders[from] && okHolders[to])) {
       revert DebtToken_UnApprovedHolder();
     }
     if (from == to) {
