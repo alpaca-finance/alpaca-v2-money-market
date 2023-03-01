@@ -7,6 +7,7 @@ interface ILiquidationFacet {
   error LiquidationFacet_RepayAmountExceedThreshold();
   error LiquidationFacet_InsufficientAmount();
   error LiquidationFacet_RepayAmountMismatch();
+  error LiquidationFacet_CollateralNotExist();
 
   function repurchase(
     address _account,
