@@ -4,15 +4,15 @@
   "moneyMarket": {
     "moneyMarketDiamond": "0xE147D4AFbe9a0526F904b2f1B003A877f16Ac0b5",
     "facets": {
-      "diamondLoupeFacet": "0x6451833F9D2Fc9e1CFD98d57385242E70023a98C",
-      "adminFacet": "0x06bF3948E40172a284cB48d0216c54C751552DBa",
-      "nonCollatBorrowFacet": "0x3E792534F1ec4C1c50c6f402617ca5Ad49bCa9de",
-      "lendFacet": "0x829d57661dD52E5c630fa6158d9d77B23b0Da083",
       "liquidationFacet": "0xBd6b2527cd3c410F78451263683921a0C2e9bd4b",
-      "ownershipFacet": "0x107c51B6A5627501c63E1bC08A2982785912A383",
-      "diamondCutFacet": "0xCEaA6cb3Eb09865D55a35954f8E13A33A5C32066",
-      "viewFacet": "0xC5FE7CA4C495d2a093ffD5A64f09C23Ba39C7F19",
       "borrowFacet": "0x145c28533d0129862C59b803e801D07382f7CA31",
+      "lendFacet": "0x829d57661dD52E5c630fa6158d9d77B23b0Da083",
+      "viewFacet": "0xC5FE7CA4C495d2a093ffD5A64f09C23Ba39C7F19",
+      "nonCollatBorrowFacet": "0x3E792534F1ec4C1c50c6f402617ca5Ad49bCa9de",
+      "diamondLoupeFacet": "0x6451833F9D2Fc9e1CFD98d57385242E70023a98C",
+      "ownershipFacet": "0x107c51B6A5627501c63E1bC08A2982785912A383",
+      "adminFacet": "0x06bF3948E40172a284cB48d0216c54C751552DBa",
+      "diamondCutFacet": "0xCEaA6cb3Eb09865D55a35954f8E13A33A5C32066",
       "collateralFacet": "0x801fFa550261308BeE80D629Bc9cb94Aa1f14662"
     },
     "reader": "0x72932Be9473E40d727646fE5f68db972a432904f",
