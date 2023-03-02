@@ -8,7 +8,7 @@ interface IMiniFL {
 
   function getUserTotalAmountOf(uint256 _pid, address _user) external view returns (uint256 _totalAmount);
 
-  function getFundedAmount(
+  function getUserAmountFundedBy(
     address _funder,
     address _for,
     uint256 _pid
