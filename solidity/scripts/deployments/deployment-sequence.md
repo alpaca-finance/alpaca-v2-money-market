@@ -7,11 +7,11 @@
 - deploy moneyMarket diamond
 - diamond cut on moneyMarket
 - whitelist moneyMarket on miniFL to allow openMarket
-- (optional) deploy reader
 - (optional) deploy nativeRelayer
 - set ibToken, debtToken implementation
 - openMarket for wNativeToken
 - deploy accountManager
+- (optional) deploy reader
 - allow accountManager on moneyMarket
 
 ## Dependencies

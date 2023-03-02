@@ -9,6 +9,7 @@ import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet
 
 // libraries
 import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -34,7 +35,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
@@ -60,7 +61,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
@@ -88,7 +89,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
     // openMarket 19 decimals
     address _token19 = address(new MockERC20("19 decimals", "19", 19));
     IAdminFacet.TokenConfigInput memory _tokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 1,
@@ -103,7 +104,7 @@ contract MoneyMarket_To18ConversionFactorTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,

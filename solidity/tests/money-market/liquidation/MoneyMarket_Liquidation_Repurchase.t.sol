@@ -4,12 +4,12 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 import { LibShareUtil } from "../../../contracts/money-market/libraries/LibShareUtil.sol";
 
 // interfaces
-import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
-import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
@@ -38,14 +38,14 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     _tokens[1] = address(usdc);
     IAdminFacet.TokenConfigInput[] memory _tokenConfigInputs = new IAdminFacet.TokenConfigInput[](2);
     _tokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 1e40,
       maxBorrow: 1e40
     });
     _tokenConfigInputs[1] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 1e40,
@@ -615,8 +615,8 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
 // // interfaces
 // import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-// import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
-// import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+// import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
+// import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 // import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 // import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
 // import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";

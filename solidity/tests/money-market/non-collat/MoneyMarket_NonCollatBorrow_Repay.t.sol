@@ -4,14 +4,8 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { IBorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
-
-// libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 contract MoneyMarket_NonCollatBorrow_RepayTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;

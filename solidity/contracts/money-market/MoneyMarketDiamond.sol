@@ -2,9 +2,8 @@
 pragma solidity 0.8.17;
 
 // interfaces
-import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
-import { IDiamondLoupe } from "./interfaces/IDiamondLoupe.sol";
-import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
+import { IMMDiamondLoupe } from "./interfaces/IMMDiamondLoupe.sol";
+import { IMMDiamondCut } from "./interfaces/IMMDiamondCut.sol";
 import { IMiniFL } from "./interfaces/IMiniFL.sol";
 import { IERC173 } from "./interfaces/IERC173.sol";
 import { IERC165 } from "./interfaces/IERC165.sol";
@@ -21,12 +20,12 @@ contract MoneyMarketDiamond {
     LibDiamond.setContractOwner(msg.sender);
 
     // register DiamondCut facet
-    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+    IMMDiamondCut.FacetCut[] memory cut = new IMMDiamondCut.FacetCut[](1);
     bytes4[] memory functionSelectors = new bytes4[](1);
-    functionSelectors[0] = IDiamondCut.diamondCut.selector;
-    cut[0] = IDiamondCut.FacetCut({
+    functionSelectors[0] = IMMDiamondCut.diamondCut.selector;
+    cut[0] = IMMDiamondCut.FacetCut({
       facetAddress: _diamondCutFacet,
-      action: IDiamondCut.FacetCutAction.Add,
+      action: IMMDiamondCut.FacetCutAction.Add,
       functionSelectors: functionSelectors
     });
     LibDiamond.diamondCut(cut, address(0), "");
@@ -34,8 +33,8 @@ contract MoneyMarketDiamond {
     // adding ERC165 data
     LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
     ds.supportedInterfaces[type(IERC165).interfaceId] = true;
-    ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
-    ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
+    ds.supportedInterfaces[type(IMMDiamondCut).interfaceId] = true;
+    ds.supportedInterfaces[type(IMMDiamondLoupe).interfaceId] = true;
     ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
     // initialize money market states

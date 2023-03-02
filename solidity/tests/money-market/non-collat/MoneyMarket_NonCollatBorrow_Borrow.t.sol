@@ -3,15 +3,18 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
+// libs
+import { LibDoublyLinkedList } from "../../../contracts/money-market/libraries/LibDoublyLinkedList.sol";
+
 // interfaces
-import { INonCollatBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { IBorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { INonCollatBorrowFacet } from "../../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 
 contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
@@ -217,7 +220,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,
@@ -240,7 +243,7 @@ contract MoneyMarket_NonCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: _wethGlobalLimit,

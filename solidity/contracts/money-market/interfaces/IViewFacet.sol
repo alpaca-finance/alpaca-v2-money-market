@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 // libs
-import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 interface IViewFacet {
@@ -14,7 +14,7 @@ interface IViewFacet {
 
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
-  function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory);
+  function getTokenConfig(address _token) external view returns (LibConstant.TokenConfig memory);
 
   function getOverCollatDebtSharesOf(address _account, uint256 _subAccountId)
     external

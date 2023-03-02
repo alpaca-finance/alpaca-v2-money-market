@@ -35,9 +35,16 @@
     "busd": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
     "dodo": "0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2"
   },
+<<<<<<< HEAD
   "proxyAdmin": "0x8e991C2B84D7Be42a697FDc8315F8a28A59c9F8D",
   "miniFL": {
     "implementation": "0xE797b517d0a819d3556cBAcf4F736d2Fe8Be3A7D",
     "proxy": "0x7C068A4d8FFBfFBEf998Cb5265182FABa0EBbf59"
+=======
+  "proxyAdmin": "0x4743159783b2Dea6bA32d86C0C8F9aA8E168AD84",
+  "miniFL": {
+    "implementation": "0x9567E9f20cBCDD41535ca4a4c2b4d5d07BaE8639",
+    "proxy": "0x8C01264854f4A1FD7529307783D94D393918FB4C"
+>>>>>>> main
   }
 }

@@ -434,7 +434,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _funder funder address
   /// @param _for user address
   /// @param _pid pool id
-  function getFundedAmount(
+  function getUserAmountFundedBy(
     address _funder,
     address _for,
     uint256 _pid

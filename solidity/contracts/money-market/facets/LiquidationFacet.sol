@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -183,8 +184,8 @@ contract LiquidationFacet is ILiquidationFacet {
         _repayToken,
         moneyMarketDs
       );
-      uint256 _maxAmountRepurchaseable = (_currentDebtAmount *
-        (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS)) / LibMoneyMarket01.MAX_BPS;
+      uint256 _maxAmountRepurchaseable = (_currentDebtAmount * (moneyMarketDs.repurchaseFeeBps + LibConstant.MAX_BPS)) /
+        LibConstant.MAX_BPS;
 
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
@@ -192,8 +193,8 @@ contract LiquidationFacet is ILiquidationFacet {
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
-          (_desiredRepayAmount * LibMoneyMarket01.MAX_BPS) /
-          (moneyMarketDs.repurchaseFeeBps + LibMoneyMarket01.MAX_BPS);
+          (_desiredRepayAmount * LibConstant.MAX_BPS) /
+          (moneyMarketDs.repurchaseFeeBps + LibConstant.MAX_BPS);
       }
 
       _vars.repurchaseFeeToProtocol = _vars.repayAmountWithFee - _vars.repayAmountWithoutFee;
@@ -215,7 +216,7 @@ contract LiquidationFacet is ILiquidationFacet {
       uint256 _collatTokenPrice = LibMoneyMarket01.getPriceUSD(_collatToken, moneyMarketDs);
 
       uint256 _repayTokenPriceWithPremium = (_vars.repayTokenPrice *
-        (LibMoneyMarket01.MAX_BPS + _vars.repurchaseRewardBps)) / LibMoneyMarket01.MAX_BPS;
+        (LibConstant.MAX_BPS + _vars.repurchaseRewardBps)) / LibConstant.MAX_BPS;
 
       // collatAmountOut = repayAmount * repayTokenPriceWithPremium / collatTokenPrice
       _collatAmountOut =
@@ -295,7 +296,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _actualRepayAmountWithoutFee,
       _collatAmountOut,
       _vars.repurchaseFeeToProtocol,
-      (_collatAmountOut * _vars.repurchaseRewardBps) / LibMoneyMarket01.MAX_BPS
+      (_collatAmountOut * _vars.repurchaseRewardBps) / LibConstant.MAX_BPS
     );
   }
 
@@ -358,9 +359,7 @@ contract LiquidationFacet is ILiquidationFacet {
       // Revert if position is not liquidatable (borrowingPower / usedBorrowingPower > 1 / liquidationThreshold)
       // This threshold should be lower than repurchase (liquidationThreshold > 1)
       // because position must be repurchasable before liquidatable
-      if (
-        (_vars.usedBorrowingPower * LibMoneyMarket01.MAX_BPS) < _borrowingPower * moneyMarketDs.liquidationThresholdBps
-      ) {
+      if ((_vars.usedBorrowingPower * LibConstant.MAX_BPS) < _borrowingPower * moneyMarketDs.liquidationThresholdBps) {
         revert LiquidationFacet_Healthy();
       }
     }
@@ -398,7 +397,7 @@ contract LiquidationFacet is ILiquidationFacet {
       );
       _vars.maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
     }
-    _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibMoneyMarket01.MAX_BPS;
+    _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibConstant.MAX_BPS;
 
     _vars.expectedMaxRepayAmount = _vars.maxPossibleRepayAmount + _vars.maxPossibleFee;
 
@@ -430,9 +429,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // ex. liquidationReward = 40%
     //     40% of actualLiquidationFee will go to liquidator aka. caller
     //     60% of actualLiquidationFee will go to treasury
-    _vars.feeToLiquidator =
-      (_vars.actualLiquidationFee * moneyMarketDs.liquidationRewardBps) /
-      LibMoneyMarket01.MAX_BPS;
+    _vars.feeToLiquidator = (_vars.actualLiquidationFee * moneyMarketDs.liquidationRewardBps) / LibConstant.MAX_BPS;
     // Safe to use unchecked because `feeToLiquidator` is fraction of `actualLiquidationFee`
     unchecked {
       _vars.feeToTreasury = _vars.actualLiquidationFee - _vars.feeToLiquidator;
@@ -510,7 +507,7 @@ contract LiquidationFacet is ILiquidationFacet {
       moneyMarketDs.tokenConfigs[_repayToken].to18ConversionFactor
     );
     // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
-    if (_repaidBorrowingPower * LibMoneyMarket01.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
+    if (_repaidBorrowingPower * LibConstant.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
       revert LiquidationFacet_RepayAmountExceedThreshold();
     }
   }

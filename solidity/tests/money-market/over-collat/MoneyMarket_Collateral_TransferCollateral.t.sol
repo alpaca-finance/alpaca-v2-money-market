@@ -3,11 +3,10 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 
-// libraries
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
+// libs
+import { LibDoublyLinkedList } from "../../../contracts/money-market/libraries/LibDoublyLinkedList.sol";
 // interfaces
-import { ICollateralFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/CollateralFacet.sol";
+import { ICollateralFacet } from "../../../contracts/money-market/interfaces/ICollateralFacet.sol";
 
 contract MoneyMarket_Collateral_TransferCollateralTest is MoneyMarket_BaseTest {
   function setUp() public override {

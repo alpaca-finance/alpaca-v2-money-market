@@ -5,7 +5,7 @@ import "../BaseScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
-import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
 
 contract SetUpMMForTestScript is BaseScript {
@@ -41,14 +41,14 @@ contract SetUpMMForTestScript is BaseScript {
     // avoid stack too deep
     {
       IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
-        tier: LibMoneyMarket01.AssetTier.CROSS,
+        tier: LibConstant.AssetTier.CROSS,
         collateralFactor: 0,
         borrowingFactor: 9000,
         maxBorrow: 30 ether,
         maxCollateral: 0
       });
       IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
-        tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+        tier: LibConstant.AssetTier.COLLATERAL,
         collateralFactor: 9000,
         borrowingFactor: 9000,
         maxBorrow: 30 ether,
@@ -56,11 +56,11 @@ contract SetUpMMForTestScript is BaseScript {
       });
       address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
       address ibMock6 = moneyMarket.openMarket(mock6DecimalsToken, tokenConfigInput, ibTokenConfigInput);
-      ibTokenConfigInput.tier = LibMoneyMarket01.AssetTier.UNLISTED;
+      ibTokenConfigInput.tier = LibConstant.AssetTier.UNLISTED;
       ibTokenConfigInput.collateralFactor = 0;
       ibTokenConfigInput.maxCollateral = 0;
       address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
-      tokenConfigInput.tier = LibMoneyMarket01.AssetTier.ISOLATE;
+      tokenConfigInput.tier = LibConstant.AssetTier.ISOLATE;
       address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, ibTokenConfigInput);
 
       _writeJson(vm.toString(ibBusd), ".ibTokens.ibBusd");
