@@ -3,8 +3,7 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
-// libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 
 // interfaces
 import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
@@ -32,10 +31,10 @@ contract MoneyMarket_Admin_LiquidationParamsTest is MoneyMarket_BaseTest {
 
   function testRevert_WhenAdminSetLiquidationParamsExceedMaxBps() external {
     vm.expectRevert(IAdminFacet.AdminFacet_InvalidArguments.selector);
-    adminFacet.setLiquidationParams(uint16(LibMoneyMarket01.MAX_BPS + 1), 0);
+    adminFacet.setLiquidationParams(uint16(LibConstant.MAX_BPS + 1), 0);
 
     vm.expectRevert(IAdminFacet.AdminFacet_InvalidArguments.selector);
-    adminFacet.setLiquidationParams(0, uint16(LibMoneyMarket01.MAX_BPS - 1));
+    adminFacet.setLiquidationParams(0, uint16(LibConstant.MAX_BPS - 1));
   }
 
   function testRevert_WhenNonAdminSetLiquidationParams() external {

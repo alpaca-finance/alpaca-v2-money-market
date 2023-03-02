@@ -5,7 +5,7 @@ import "./BaseUtilsScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
-import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 contract OpenMarketScript is BaseUtilsScript {
   using stdJson for string;
@@ -21,7 +21,7 @@ contract OpenMarketScript is BaseUtilsScript {
     address underlyingToken = mockTokenForLocalRun;
     IAdminFacet.TokenConfigInput memory underlyingTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: underlyingToken,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -29,7 +29,7 @@ contract OpenMarketScript is BaseUtilsScript {
     });
     IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
       token: underlyingToken,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,

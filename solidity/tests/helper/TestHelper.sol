@@ -6,7 +6,7 @@ import { InterestBearingToken } from "solidity/contracts/money-market/InterestBe
 import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFacet.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 
-import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 library TestHelper {
   function openMarketWithDefaultTokenConfig(address _moneyMarketDiamond, address _token)
@@ -15,7 +15,7 @@ library TestHelper {
   {
     IAdminFacet _adminFacet = IAdminFacet(_moneyMarketDiamond);
     IAdminFacet.TokenConfigInput memory _defaultTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(30 ether, IERC20(_token).decimals()),

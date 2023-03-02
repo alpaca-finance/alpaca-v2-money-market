@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 
 // interfaces
 import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
@@ -24,7 +24,7 @@ contract MoneyMarket_Admin_OpenMarketTest is MoneyMarket_BaseTest {
 
     _testToken = new MockERC20("test", "TEST", 9);
     _defaultTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(30 ether, _testToken.decimals()),

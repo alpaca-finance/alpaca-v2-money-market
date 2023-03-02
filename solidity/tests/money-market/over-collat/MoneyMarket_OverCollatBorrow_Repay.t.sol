@@ -4,8 +4,8 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { IBorrowFacet } from "../../../contracts/money-market/interfaces/IBorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 import { FixedInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";

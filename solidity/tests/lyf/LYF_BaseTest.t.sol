@@ -5,7 +5,6 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // core
 import { LYFDiamond } from "../../contracts/lyf/LYFDiamond.sol";
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // contracts
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
@@ -49,7 +48,7 @@ import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // peripherals
 import { PancakeswapV2Strategy } from "../../contracts/lyf/strats/PancakeswapV2Strategy.sol";
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
 
 // helper
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
@@ -340,28 +339,28 @@ abstract contract LYF_BaseTest is BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](4);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(10000 ether, wethDecimal),
       maxCollateral: normalizeEther(10000 ether, wethDecimal)
     });
     _inputs[1] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(10000 ether, usdcDecimal),
       maxCollateral: normalizeEther(10000 ether, usdcDecimal)
     });
     _inputs[2] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(100 ether, btcDecimal),
       maxCollateral: normalizeEther(100 ether, btcDecimal)
     });
     _inputs[3] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(100 ether, cakeDecimal),

@@ -5,10 +5,10 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTes
 
 // libraries
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
+import { LibDoublyLinkedList } from "../../../contracts/money-market/libraries/LibDoublyLinkedList.sol";
 // interfaces
-import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { IBorrowFacet } from "../../../contracts/money-market/interfaces/IBorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {

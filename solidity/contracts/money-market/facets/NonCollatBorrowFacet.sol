@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
@@ -171,7 +172,7 @@ contract NonCollatBorrowFacet is INonCollatBorrowFacet {
     uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
 
     // get token config
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
+    LibConstant.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     // get borrowing power limit of the borrower
     uint256 _borrowingPower = moneyMarketDs.protocolConfigs[msg.sender].borrowingPowerLimit;

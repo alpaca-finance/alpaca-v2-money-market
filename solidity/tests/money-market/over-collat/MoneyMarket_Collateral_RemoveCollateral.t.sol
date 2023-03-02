@@ -7,7 +7,7 @@ import { MoneyMarket_BaseTest, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 
 // interfaces
-import { ICollateralFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/CollateralFacet.sol";
+import { ICollateralFacet } from "../../../contracts/money-market/interfaces/ICollateralFacet.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_Collateral_RemoveCollateralTest is MoneyMarket_BaseTest {

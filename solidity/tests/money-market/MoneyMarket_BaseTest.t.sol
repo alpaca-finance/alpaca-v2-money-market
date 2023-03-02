@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import { BaseTest, console } from "../base/BaseTest.sol";
 
 // core
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
@@ -16,7 +15,7 @@ import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet
 import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
-import { IOwnershipFacet } from "../../contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { IMMOwnershipFacet } from "../../contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMoneyMarketAccountManager } from "../../contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
@@ -26,7 +25,7 @@ import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol"
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
 import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // router
@@ -44,7 +43,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
   ILiquidationFacet internal liquidationFacet;
-  IOwnershipFacet internal ownershipFacet;
+  IMMOwnershipFacet internal MMOwnershipFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -60,7 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
-    ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
+    MMOwnershipFacet = IMMOwnershipFacet(moneyMarketDiamond);
 
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = moneyMarketDiamond;
@@ -72,7 +71,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -81,7 +80,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibWeth = InterestBearingToken(adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _usdcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(100 ether, 6),
@@ -90,7 +89,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibUsdc = InterestBearingToken(adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _btcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -99,7 +98,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibBtc = InterestBearingToken(adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _wNativeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -110,7 +109,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _isolateTokenTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.ISOLATE,
+      tier: LibConstant.AssetTier.ISOLATE,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -121,7 +120,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _cakeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,

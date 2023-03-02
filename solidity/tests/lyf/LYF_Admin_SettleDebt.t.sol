@@ -7,7 +7,7 @@ import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.so
 import { ILYFViewFacet } from "../../contracts/lyf/interfaces/ILYFViewFacet.sol";
 import { ILYFFarmFacet } from "../../contracts/lyf/interfaces/ILYFFarmFacet.sol";
 import { FixedInterestRateModel, IInterestRateModel } from "../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
-import { IAdminFacet } from "../../contracts/money-market/facets/AdminFacet.sol";
+import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 contract LYF_Admin_SettleDebtTest is LYF_BaseTest {

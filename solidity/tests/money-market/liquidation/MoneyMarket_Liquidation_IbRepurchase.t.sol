@@ -3,9 +3,6 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
-// libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
 // interfaces
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
@@ -21,7 +18,7 @@ struct CacheState {
 
 contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
   uint256 _subAccountId = 0;
-  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
+  address _aliceSubAccount0 = address(uint160(ALICE) ^ uint160(_subAccountId));
 
   function setUp() public override {
     super.setUp();

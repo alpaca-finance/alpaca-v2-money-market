@@ -4,11 +4,8 @@ pragma solidity 0.8.17;
 import { BaseTest, console } from "../base/BaseTest.sol";
 import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 
-// core
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
-
 // interfaces
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 import { LibReentrancyGuard } from "../../contracts/money-market/libraries/LibReentrancyGuard.sol";
 
 contract MoneyMarket_ReentrancyGuardTest is MoneyMarket_BaseTest {

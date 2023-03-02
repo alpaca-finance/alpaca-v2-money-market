@@ -7,7 +7,7 @@ import { InterestBearingTokenBaseTest, console } from "./InterestBearingTokenBas
 import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
 
 // interfaces
-import { IAdminFacet, LibMoneyMarket01 } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 
 // libs
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
