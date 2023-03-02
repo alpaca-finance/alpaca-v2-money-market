@@ -5,7 +5,7 @@ pragma solidity 0.8.17;
 import { VM } from "solidity/tests/utils/VM.sol";
 
 // facets
-// import { IDiamondCut } from "../../../contracts/money-market/interfaces/IDiamondCut.sol";
+import { IDiamondCut } from "../../../contracts/money-market/interfaces/IDiamondCut.sol";
 import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 import { IViewFacet } from "../../../contracts/money-market/interfaces/IViewFacet.sol";
 import { ILendFacet } from "../../../contracts/money-market/interfaces/ILendFacet.sol";
@@ -17,8 +17,7 @@ import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/IL
 import { IOwnershipFacet } from "../../../contracts/money-market/interfaces/IOwnershipFacet.sol";
 
 /// @dev Older version of deployment will always compile the contract(s)
-import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
-
+// import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
 // import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 // import { ViewFacet } from "../../../contracts/money-market/facets/ViewFacet.sol";
 // import { LendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
@@ -73,7 +72,7 @@ library LibMoneyMarketDeployment {
   }
 
   function deployMoneyMarketFacets() internal returns (FacetAddresses memory _facetAddresses) {
-    // _facetAddresses.diamondCutFacet = deployContract("./out/DiamondCutFacet.sol/DiamondCutFacet.json");
+    _facetAddresses.diamondCutFacet = deployContract("./out/DiamondCutFacet.sol/DiamondCutFacet.json");
     _facetAddresses.diamondLoupeFacet = deployContract("./out/DiamondLoupeFacet.sol/DiamondLoupeFacet.json");
     _facetAddresses.viewFacet = deployContract("./out/ViewFacet.sol/ViewFacet.json");
     _facetAddresses.lendFacet = deployContract("./out/LendFacet.sol/LendFacet.json");
@@ -85,7 +84,7 @@ library LibMoneyMarketDeployment {
     _facetAddresses.ownershipFacet = deployContract("./out/OwnershipFacet.sol/OwnershipFacet.json");
 
     /// @dev Older version of deployment approach
-    _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
+    // _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
     // _facetAddresses.diamondLoupeFacet = address(new DiamondLoupeFacet());
     // _facetAddresses.viewFacet = address(new ViewFacet());
     // _facetAddresses.lendFacet = address(new LendFacet());
