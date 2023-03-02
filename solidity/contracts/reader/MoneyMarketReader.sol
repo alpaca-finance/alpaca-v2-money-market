@@ -111,7 +111,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
       underlyingToken: _underlyingTokenAddress,
       supplyIbAmount: _supplyIbAmount,
       ibTokenPrice: getPriceUSD(_ibTokenAddress),
-      underlyingAmount: _moneyMarket.getTokenAmountFromIbAmount(_ibTokenAddress, _supplyIbAmount),
+      underlyingAmount: IInterestBearingToken(_ibTokenAddress).convertToAssets(_supplyIbAmount),
       underlyingTokenPrice: getPriceUSD(_underlyingTokenAddress)
     });
   }
