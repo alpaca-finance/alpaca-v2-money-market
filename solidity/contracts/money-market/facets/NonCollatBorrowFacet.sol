@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
-import { LibConstant } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
