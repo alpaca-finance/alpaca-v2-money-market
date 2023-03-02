@@ -1,22 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+// utils
+import { VM } from "solidity/tests/utils/VM.sol";
+
 // core
 import { MoneyMarketDiamond } from "../../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // facets
 import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
 import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
-import { ViewFacet } from "../../../contracts/money-market/facets/ViewFacet.sol";
-import { LendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
-import { CollateralFacet } from "../../../contracts/money-market/facets/CollateralFacet.sol";
-import { BorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-import { NonCollatBorrowFacet } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-import { AdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
-import { LiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IViewFacet } from "../../../contracts/money-market/interfaces/IViewFacet.sol";
+import { ILendFacet } from "../../../contracts/money-market/interfaces/ILendFacet.sol";
+import { ICollateralFacet } from "../../../contracts/money-market/interfaces/ICollateralFacet.sol";
+import { IBorrowFacet } from "../../../contracts/money-market/interfaces/IBorrowFacet.sol";
+import { INonCollatBorrowFacet } from "../../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
+import { IOwnershipFacet } from "../../../contracts/money-market/interfaces/IOwnershipFacet.sol";
+
+/// @dev Older version of deployment will always compile the contracts
+// import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
+// import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
+// import { ViewFacet } from "../../../contracts/money-market/facets/ViewFacet.sol";
+// import { LendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
+// import { CollateralFacet } from "../../../contracts/money-market/facets/CollateralFacet.sol";
+// import { BorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
+// import { NonCollatBorrowFacet } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
+// import { AdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+// import { LiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
 import { OwnershipFacet } from "../../../contracts/money-market/facets/OwnershipFacet.sol";
 
 library LibMoneyMarketDeployment {
+  VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
   struct FacetAddresses {
     address diamondCutFacet;
     address diamondLoupeFacet;
@@ -47,16 +63,36 @@ library LibMoneyMarketDeployment {
   }
 
   function deployMoneyMarketFacets() internal returns (FacetAddresses memory _facetAddresses) {
-    _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
-    _facetAddresses.diamondLoupeFacet = address(new DiamondLoupeFacet());
-    _facetAddresses.viewFacet = address(new ViewFacet());
-    _facetAddresses.lendFacet = address(new LendFacet());
-    _facetAddresses.collateralFacet = address(new CollateralFacet());
-    _facetAddresses.borrowFacet = address(new BorrowFacet());
-    _facetAddresses.nonCollatBorrowFacet = address(new NonCollatBorrowFacet());
-    _facetAddresses.adminFacet = address(new AdminFacet());
-    _facetAddresses.liquidationFacet = address(new LiquidationFacet());
+    _facetAddresses.diamondCutFacet = deployContract("./out/DiamondCutFacet.sol/DiamondCutFacet.json");
+    _facetAddresses.diamondLoupeFacet = deployContract("./out/DiamondLoupeFacet.sol/DiamondLoupeFacet.json");
+    _facetAddresses.viewFacet = deployContract("./out/ViewFacet.sol/ViewFacet.json");
+    _facetAddresses.lendFacet = deployContract("./out/LendFacet.sol/LendFacet.json");
+    _facetAddresses.collateralFacet = deployContract("./out/CollateralFacet.sol/CollateralFacet.json");
+    _facetAddresses.borrowFacet = deployContract("./out/BorrowFacet.sol/BorrowFacet.json");
+    _facetAddresses.nonCollatBorrowFacet = deployContract("./out/NonCollatBorrowFacet.sol/NonCollatBorrowFacet.json");
+    _facetAddresses.adminFacet = deployContract("./out/AdminFacet.sol/AdminFacet.json");
+    _facetAddresses.liquidationFacet = deployContract("./out/LiquidationFacet.sol/LiquidationFacet.json");
+    // _facetAddresses.ownershipFacet = deployContract("./out/OwnershipFacet.sol/OwnershipFacet.json");
+
+    /// @dev Older version of deployment approach
+    // _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
+    // _facetAddresses.diamondLoupeFacet = address(new DiamondLoupeFacet());
+    // _facetAddresses.viewFacet = address(new ViewFacet());
+    // _facetAddresses.lendFacet = address(new LendFacet());
+    // _facetAddresses.collateralFacet = address(new CollateralFacet());
+    // _facetAddresses.borrowFacet = address(new BorrowFacet());
+    // _facetAddresses.nonCollatBorrowFacet = address(new NonCollatBorrowFacet());
+    // _facetAddresses.adminFacet = address(new AdminFacet());
+    // _facetAddresses.liquidationFacet = address(new LiquidationFacet());
     _facetAddresses.ownershipFacet = address(new OwnershipFacet());
+  }
+
+  function deployContract(string memory _path) internal returns (address _deployedAddress) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode(_path));
+
+    assembly {
+      _deployedAddress := create(0, add(_logicBytecode, 0x20), mload(_logicBytecode))
+    }
   }
 
   function diamondCutAllMoneyMarketFacets(address _moneyMarketDiamond, FacetAddresses memory _facetAddresses) internal {
@@ -134,113 +170,113 @@ library LibMoneyMarketDeployment {
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](40);
-    _selectors[0] = ViewFacet.getProtocolReserve.selector;
-    _selectors[1] = ViewFacet.getTokenConfig.selector;
-    _selectors[2] = ViewFacet.getOverCollatDebtSharesOf.selector;
-    _selectors[3] = ViewFacet.getTotalBorrowingPower.selector;
-    _selectors[4] = ViewFacet.getTotalUsedBorrowingPower.selector;
-    _selectors[5] = ViewFacet.getOverCollatTokenDebt.selector;
-    _selectors[6] = ViewFacet.getDebtLastAccruedAt.selector;
-    _selectors[7] = ViewFacet.getGlobalPendingInterest.selector;
-    _selectors[8] = ViewFacet.getOverCollatTokenDebtValue.selector;
-    _selectors[9] = ViewFacet.getOverCollatTokenDebtShares.selector;
-    _selectors[10] = ViewFacet.getFloatingBalance.selector;
-    _selectors[11] = ViewFacet.getOverCollatDebtShareAndAmountOf.selector;
-    _selectors[12] = ViewFacet.getAllSubAccountCollats.selector;
-    _selectors[13] = ViewFacet.getTotalCollat.selector;
-    _selectors[14] = ViewFacet.getCollatAmountOf.selector;
-    _selectors[15] = ViewFacet.getTotalToken.selector;
-    _selectors[16] = ViewFacet.getRepurchaseRewardModel.selector;
-    _selectors[17] = ViewFacet.getTotalTokenWithPendingInterest.selector;
-    _selectors[18] = ViewFacet.getNonCollatAccountDebtValues.selector;
-    _selectors[19] = ViewFacet.getNonCollatAccountDebt.selector;
-    _selectors[20] = ViewFacet.getNonCollatTokenDebt.selector;
-    _selectors[21] = ViewFacet.getNonCollatBorrowingPower.selector;
-    _selectors[22] = ViewFacet.getIbTokenFromToken.selector;
-    _selectors[23] = ViewFacet.getTokenFromIbToken.selector;
-    _selectors[24] = ViewFacet.getTotalNonCollatUsedBorrowingPower.selector;
-    _selectors[25] = ViewFacet.getLiquidationParams.selector;
-    _selectors[26] = ViewFacet.getMaxNumOfToken.selector;
-    _selectors[27] = ViewFacet.getGlobalDebtValue.selector;
-    _selectors[28] = ViewFacet.getMinDebtSize.selector;
-    _selectors[29] = ViewFacet.getSubAccount.selector;
-    _selectors[30] = ViewFacet.getFeeParams.selector;
-    _selectors[31] = ViewFacet.getGlobalDebtValueWithPendingInterest.selector;
-    _selectors[32] = ViewFacet.getIbTokenImplementation.selector;
-    _selectors[33] = ViewFacet.getLiquidationTreasury.selector;
-    _selectors[34] = ViewFacet.getDebtTokenFromToken.selector;
-    _selectors[35] = ViewFacet.getDebtTokenImplementation.selector;
-    _selectors[36] = ViewFacet.getMiniFLPoolIdOfToken.selector;
-    _selectors[37] = ViewFacet.getOracle.selector;
-    _selectors[38] = ViewFacet.getMiniFL.selector;
-    _selectors[39] = ViewFacet.getOverCollatPendingInterest.selector;
+    _selectors[0] = IViewFacet.getProtocolReserve.selector;
+    _selectors[1] = IViewFacet.getTokenConfig.selector;
+    _selectors[2] = IViewFacet.getOverCollatDebtSharesOf.selector;
+    _selectors[3] = IViewFacet.getTotalBorrowingPower.selector;
+    _selectors[4] = IViewFacet.getTotalUsedBorrowingPower.selector;
+    _selectors[5] = IViewFacet.getOverCollatTokenDebt.selector;
+    _selectors[6] = IViewFacet.getDebtLastAccruedAt.selector;
+    _selectors[7] = IViewFacet.getGlobalPendingInterest.selector;
+    _selectors[8] = IViewFacet.getOverCollatTokenDebtValue.selector;
+    _selectors[9] = IViewFacet.getOverCollatTokenDebtShares.selector;
+    _selectors[10] = IViewFacet.getFloatingBalance.selector;
+    _selectors[11] = IViewFacet.getOverCollatDebtShareAndAmountOf.selector;
+    _selectors[12] = IViewFacet.getAllSubAccountCollats.selector;
+    _selectors[13] = IViewFacet.getTotalCollat.selector;
+    _selectors[14] = IViewFacet.getCollatAmountOf.selector;
+    _selectors[15] = IViewFacet.getTotalToken.selector;
+    _selectors[16] = IViewFacet.getRepurchaseRewardModel.selector;
+    _selectors[17] = IViewFacet.getTotalTokenWithPendingInterest.selector;
+    _selectors[18] = IViewFacet.getNonCollatAccountDebtValues.selector;
+    _selectors[19] = IViewFacet.getNonCollatAccountDebt.selector;
+    _selectors[20] = IViewFacet.getNonCollatTokenDebt.selector;
+    _selectors[21] = IViewFacet.getNonCollatBorrowingPower.selector;
+    _selectors[22] = IViewFacet.getIbTokenFromToken.selector;
+    _selectors[23] = IViewFacet.getTokenFromIbToken.selector;
+    _selectors[24] = IViewFacet.getTotalNonCollatUsedBorrowingPower.selector;
+    _selectors[25] = IViewFacet.getLiquidationParams.selector;
+    _selectors[26] = IViewFacet.getMaxNumOfToken.selector;
+    _selectors[27] = IViewFacet.getGlobalDebtValue.selector;
+    _selectors[28] = IViewFacet.getMinDebtSize.selector;
+    _selectors[29] = IViewFacet.getSubAccount.selector;
+    _selectors[30] = IViewFacet.getFeeParams.selector;
+    _selectors[31] = IViewFacet.getGlobalDebtValueWithPendingInterest.selector;
+    _selectors[32] = IViewFacet.getIbTokenImplementation.selector;
+    _selectors[33] = IViewFacet.getLiquidationTreasury.selector;
+    _selectors[34] = IViewFacet.getDebtTokenFromToken.selector;
+    _selectors[35] = IViewFacet.getDebtTokenImplementation.selector;
+    _selectors[36] = IViewFacet.getMiniFLPoolIdOfToken.selector;
+    _selectors[37] = IViewFacet.getOracle.selector;
+    _selectors[38] = IViewFacet.getMiniFL.selector;
+    _selectors[39] = IViewFacet.getOverCollatPendingInterest.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](2);
-    _selectors[0] = LendFacet.deposit.selector;
-    _selectors[1] = LendFacet.withdraw.selector;
+    _selectors[0] = ILendFacet.deposit.selector;
+    _selectors[1] = ILendFacet.withdraw.selector;
   }
 
   function getCollateralFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](3);
-    _selectors[0] = CollateralFacet.addCollateral.selector;
-    _selectors[1] = CollateralFacet.removeCollateral.selector;
-    _selectors[2] = CollateralFacet.transferCollateral.selector;
+    _selectors[0] = ICollateralFacet.addCollateral.selector;
+    _selectors[1] = ICollateralFacet.removeCollateral.selector;
+    _selectors[2] = ICollateralFacet.transferCollateral.selector;
   }
 
   function getBorrowFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](4);
-    _selectors[0] = BorrowFacet.borrow.selector;
-    _selectors[1] = BorrowFacet.repay.selector;
-    _selectors[2] = BorrowFacet.accrueInterest.selector;
-    _selectors[3] = BorrowFacet.repayWithCollat.selector;
+    _selectors[0] = IBorrowFacet.borrow.selector;
+    _selectors[1] = IBorrowFacet.repay.selector;
+    _selectors[2] = IBorrowFacet.accrueInterest.selector;
+    _selectors[3] = IBorrowFacet.repayWithCollat.selector;
   }
 
   function getNonCollatBorrowFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](2);
-    _selectors[0] = NonCollatBorrowFacet.nonCollatBorrow.selector;
-    _selectors[1] = NonCollatBorrowFacet.nonCollatRepay.selector;
+    _selectors[0] = INonCollatBorrowFacet.nonCollatBorrow.selector;
+    _selectors[1] = INonCollatBorrowFacet.nonCollatRepay.selector;
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](23);
-    _selectors[0] = AdminFacet.openMarket.selector;
-    _selectors[1] = AdminFacet.setTokenConfigs.selector;
-    _selectors[2] = AdminFacet.setNonCollatBorrowerOk.selector;
-    _selectors[3] = AdminFacet.setInterestModel.selector;
-    _selectors[4] = AdminFacet.setOracle.selector;
-    _selectors[5] = AdminFacet.setRepurchasersOk.selector;
-    _selectors[6] = AdminFacet.setNonCollatInterestModel.selector;
-    _selectors[7] = AdminFacet.setLiquidationStratsOk.selector;
-    _selectors[8] = AdminFacet.setLiquidatorsOk.selector;
-    _selectors[9] = AdminFacet.setLiquidationTreasury.selector;
-    _selectors[10] = AdminFacet.setFees.selector;
-    _selectors[11] = AdminFacet.withdrawProtocolReserve.selector;
-    _selectors[12] = AdminFacet.setProtocolConfigs.selector;
-    _selectors[13] = AdminFacet.setIbTokenImplementation.selector;
-    _selectors[14] = AdminFacet.setLiquidationParams.selector;
-    _selectors[15] = AdminFacet.setMaxNumOfToken.selector;
-    _selectors[16] = AdminFacet.setMinDebtSize.selector;
-    _selectors[17] = AdminFacet.writeOffSubAccountsDebt.selector;
-    _selectors[18] = AdminFacet.topUpTokenReserve.selector;
-    _selectors[19] = AdminFacet.setRepurchaseRewardModel.selector;
-    _selectors[20] = AdminFacet.setEmergencyPaused.selector;
-    _selectors[21] = AdminFacet.setAccountManagersOk.selector;
-    _selectors[22] = AdminFacet.setDebtTokenImplementation.selector;
+    _selectors[0] = IAdminFacet.openMarket.selector;
+    _selectors[1] = IAdminFacet.setTokenConfigs.selector;
+    _selectors[2] = IAdminFacet.setNonCollatBorrowerOk.selector;
+    _selectors[3] = IAdminFacet.setInterestModel.selector;
+    _selectors[4] = IAdminFacet.setOracle.selector;
+    _selectors[5] = IAdminFacet.setRepurchasersOk.selector;
+    _selectors[6] = IAdminFacet.setNonCollatInterestModel.selector;
+    _selectors[7] = IAdminFacet.setLiquidationStratsOk.selector;
+    _selectors[8] = IAdminFacet.setLiquidatorsOk.selector;
+    _selectors[9] = IAdminFacet.setLiquidationTreasury.selector;
+    _selectors[10] = IAdminFacet.setFees.selector;
+    _selectors[11] = IAdminFacet.withdrawProtocolReserve.selector;
+    _selectors[12] = IAdminFacet.setProtocolConfigs.selector;
+    _selectors[13] = IAdminFacet.setIbTokenImplementation.selector;
+    _selectors[14] = IAdminFacet.setLiquidationParams.selector;
+    _selectors[15] = IAdminFacet.setMaxNumOfToken.selector;
+    _selectors[16] = IAdminFacet.setMinDebtSize.selector;
+    _selectors[17] = IAdminFacet.writeOffSubAccountsDebt.selector;
+    _selectors[18] = IAdminFacet.topUpTokenReserve.selector;
+    _selectors[19] = IAdminFacet.setRepurchaseRewardModel.selector;
+    _selectors[20] = IAdminFacet.setEmergencyPaused.selector;
+    _selectors[21] = IAdminFacet.setAccountManagersOk.selector;
+    _selectors[22] = IAdminFacet.setDebtTokenImplementation.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](2);
-    _selectors[0] = LiquidationFacet.repurchase.selector;
-    _selectors[1] = LiquidationFacet.liquidationCall.selector;
+    _selectors[0] = ILiquidationFacet.repurchase.selector;
+    _selectors[1] = ILiquidationFacet.liquidationCall.selector;
   }
 
   function getOwnershipFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](4);
-    _selectors[0] = OwnershipFacet.transferOwnership.selector;
-    _selectors[1] = OwnershipFacet.acceptOwnership.selector;
-    _selectors[2] = OwnershipFacet.owner.selector;
-    _selectors[3] = OwnershipFacet.pendingOwner.selector;
+    _selectors[0] = IOwnershipFacet.transferOwnership.selector;
+    _selectors[1] = IOwnershipFacet.acceptOwnership.selector;
+    _selectors[2] = IOwnershipFacet.owner.selector;
+    _selectors[3] = IOwnershipFacet.pendingOwner.selector;
   }
 }
