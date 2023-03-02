@@ -84,7 +84,6 @@ contract MoneyMarketReader is IMoneyMarketReader {
   {
     uint256 marketLength = _underlyingTokenAddresses.length;
 
-    // MainAccountSummary _mainAccountSummary = new MainAccountSummary
     SupplyAccountDetail[] memory _supplyAccountDetails = new SupplyAccountDetail[](marketLength);
     address _underlyingTokenAddress;
 
