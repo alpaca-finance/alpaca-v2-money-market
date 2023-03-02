@@ -15,7 +15,7 @@ import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet
 import { IBorrowFacet } from "../../contracts/money-market/interfaces/IBorrowFacet.sol";
 import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
 import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
-import { IOwnershipFacet } from "../../contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { IMMOwnershipFacet } from "../../contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMoneyMarketAccountManager } from "../../contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
@@ -43,7 +43,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   IBorrowFacet internal borrowFacet;
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
   ILiquidationFacet internal liquidationFacet;
-  IOwnershipFacet internal ownershipFacet;
+  IMMOwnershipFacet internal MMOwnershipFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -59,7 +59,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     borrowFacet = IBorrowFacet(moneyMarketDiamond);
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
-    ownershipFacet = IOwnershipFacet(moneyMarketDiamond);
+    MMOwnershipFacet = IMMOwnershipFacet(moneyMarketDiamond);
 
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = moneyMarketDiamond;

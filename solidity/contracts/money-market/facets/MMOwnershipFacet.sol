@@ -5,9 +5,9 @@ pragma solidity 0.8.17;
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 // ---- Interfaces ---- //
-import { IOwnershipFacet } from "../interfaces/IOwnershipFacet.sol";
+import { IMMOwnershipFacet } from "../interfaces/IMMOwnershipFacet.sol";
 
-contract OwnershipFacet is IOwnershipFacet {
+contract MMOwnershipFacet is IMMOwnershipFacet {
   /**
    * @dev Transfer ownership by set new owner as pending owner
    */
@@ -25,7 +25,7 @@ contract OwnershipFacet is IOwnershipFacet {
   function acceptOwnership() external {
     address _pendingOwner = LibDiamond.pendingOwner();
     if (msg.sender != _pendingOwner) {
-      revert OwnershipFacet_CallerIsNotPendingOwner();
+      revert MMOwnershipFacet_CallerIsNotPendingOwner();
     }
 
     address _previousOwner = LibDiamond.contractOwner();
