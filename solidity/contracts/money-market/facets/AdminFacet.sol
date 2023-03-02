@@ -7,6 +7,7 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
@@ -30,7 +31,7 @@ contract AdminFacet is IAdminFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
   event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken, address _debtToken);
-  event LogSetTokenConfig(address indexed _token, LibMoneyMarket01.TokenConfig _config);
+  event LogSetTokenConfig(address indexed _token, LibConstant.TokenConfig _config);
   event LogsetNonCollatBorrowerOk(address indexed _account, bool isOk);
   event LogSetInterestModel(address indexed _token, address _interestModel);
   event LogSetNonCollatInterestModel(address indexed _account, address indexed _token, address _interestModel);
@@ -169,8 +170,8 @@ contract AdminFacet is IAdminFacet {
   ) internal {
     // Revert if factors exceed MAX_BPS
     if (
-      _tokenConfigInput.collateralFactor > LibMoneyMarket01.MAX_BPS ||
-      _tokenConfigInput.borrowingFactor > LibMoneyMarket01.MAX_BPS
+      _tokenConfigInput.collateralFactor > LibConstant.MAX_BPS ||
+      _tokenConfigInput.borrowingFactor > LibConstant.MAX_BPS
     ) {
       revert AdminFacet_InvalidArguments();
     }
@@ -186,7 +187,7 @@ contract AdminFacet is IAdminFacet {
       revert AdminFacet_InvalidArguments();
     }
 
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = LibMoneyMarket01.TokenConfig({
+    LibConstant.TokenConfig memory _tokenConfig = LibConstant.TokenConfig({
       tier: _tokenConfigInput.tier,
       collateralFactor: _tokenConfigInput.collateralFactor,
       borrowingFactor: _tokenConfigInput.borrowingFactor,
@@ -363,10 +364,10 @@ contract AdminFacet is IAdminFacet {
   ) external onlyOwner {
     // Revert if fees exceed max bps
     if (
-      _newLendingFeeBps > LibMoneyMarket01.MAX_BPS ||
-      _newRepurchaseFeeBps > LibMoneyMarket01.MAX_BPS ||
-      _newLiquidationFeeBps > LibMoneyMarket01.MAX_BPS ||
-      _newLiquidationRewardBps > LibMoneyMarket01.MAX_BPS
+      _newLendingFeeBps > LibConstant.MAX_BPS ||
+      _newRepurchaseFeeBps > LibConstant.MAX_BPS ||
+      _newLiquidationFeeBps > LibConstant.MAX_BPS ||
+      _newLiquidationRewardBps > LibConstant.MAX_BPS
     ) {
       revert AdminFacet_InvalidArguments();
     }
@@ -463,7 +464,7 @@ contract AdminFacet is IAdminFacet {
   function setLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold) external onlyOwner {
     // Revert if `_newMaxLiquidateBps` exceed max bps because can't liquidate more than full position (100%)
     // Revert if `_newLiquidationThreshold` is less than max bps because if it is less than max bps would allow to liquidation to happen before repurchase
-    if (_newMaxLiquidateBps > LibMoneyMarket01.MAX_BPS || _newLiquidationThreshold < LibMoneyMarket01.MAX_BPS) {
+    if (_newMaxLiquidateBps > LibConstant.MAX_BPS || _newLiquidationThreshold < LibConstant.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
     }
 

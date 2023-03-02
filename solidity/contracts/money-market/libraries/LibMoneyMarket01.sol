@@ -28,7 +28,6 @@ library LibMoneyMarket01 {
   bytes32 internal constant MONEY_MARKET_STORAGE_POSITION =
     0x2758c6926500ec9dc8ab8cea4053d172d4f50d9b78a6c2ee56aa5dd18d2c800b;
 
-  uint256 internal constant MAX_BPS = 10000;
   uint256 internal constant MAX_REPURCHASE_FEE_BPS = 1000;
 
   error LibMoneyMarket01_BadSubAccountId();
@@ -77,15 +76,6 @@ library LibMoneyMarket01 {
     uint256 _debtShare
   );
 
-  struct TokenConfig {
-    LibConstant.AssetTier tier;
-    uint16 collateralFactor;
-    uint16 borrowingFactor;
-    uint64 to18ConversionFactor;
-    uint256 maxCollateral;
-    uint256 maxBorrow; // shared global limit
-  }
-
   struct ProtocolConfig {
     mapping(address => uint256) maxTokenBorrow; // token limit per account
     uint256 borrowingPowerLimit;
@@ -125,7 +115,7 @@ library LibMoneyMarket01 {
     mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => list of subAccount's all collateral
     mapping(address => LibDoublyLinkedList.List) subAccountDebtShares; // subAccount => list of subAccount's all debt
     // ---- tokens ---- //
-    mapping(address => TokenConfig) tokenConfigs; // token address => config
+    mapping(address => LibConstant.TokenConfig) tokenConfigs; // token address => config
     mapping(address => uint256) debtLastAccruedAt; // token address => last interest accrual timestamp, shared between over and non collat
     // ---- whitelists ---- //
     mapping(address => bool) repurchasersOk; // is this address allowed to repurchase
@@ -197,7 +187,7 @@ library LibMoneyMarket01 {
 
     address _collatToken;
     uint256 _tokenPrice;
-    TokenConfig memory _tokenConfig;
+    LibConstant.TokenConfig memory _tokenConfig;
 
     uint256 _collatsLength = _collats.length;
 
@@ -215,7 +205,7 @@ library LibMoneyMarket01 {
       // example:
       //  - amount                = 100
       //  - tokenPrice            = 1
-      //  - collateralFactor      = 9000 (need to divide by MAX_BPS)
+      //  - collateralFactor      = 9000 (need to divide by LibConstant.MAX_BPS)
       //
       //  _totalBorrowingPower   += 100 * 1 * (9000/10000)
       //                         += 90
@@ -271,7 +261,7 @@ library LibMoneyMarket01 {
     uint256 _borrowedLength = _borrowed.length;
 
     address _borrowedToken;
-    TokenConfig memory _tokenConfig;
+    LibConstant.TokenConfig memory _tokenConfig;
 
     // sum up total used borrowing power from each borrowed token
     for (uint256 _i; _i < _borrowedLength; ) {
@@ -313,7 +303,7 @@ library LibMoneyMarket01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    TokenConfig memory _tokenConfig;
+    LibConstant.TokenConfig memory _tokenConfig;
     address _borrowedToken;
 
     // sum up total used borrowing power from each borrowed token
@@ -394,12 +384,12 @@ library LibMoneyMarket01 {
     uint256 _to18ConversionFactor
   ) internal pure returns (uint256 _usedBorrowingPower) {
     // calulation:
-    // usedBorrowingPower = borrowedAmountE18 * tokenPrice * (MAX_BPS / borrowingFactor)
+    // usedBorrowingPower = borrowedAmountE18 * tokenPrice * (LibConstant.MAX_BPS / borrowingFactor)
     //
     // example:
     //  - borrowedAmountE18   = 100 (omit 1e18)
     //  - tokenPrice          = 1.5
-    //  - MAX_BPS             = 10000
+    //  - LibConstant.MAX_BPS             = 10000
     //  - borrowingFactor     = 9000
     //
     //  usedBorrowingPower    = 100 * 1.5 * (10000 / 9000)
@@ -408,7 +398,7 @@ library LibMoneyMarket01 {
     _usedBorrowingPower = LibFullMath.mulDiv(
       _borrowedAmount * _to18ConversionFactor,
       _tokenPrice,
-      1e14 * _borrowingFactor // gas savings: 1e14 = 1e18 / MAX_BPS
+      1e14 * _borrowingFactor // gas savings: 1e14 = 1e18 / LibConstant.MAX_BPS
     );
   }
 
@@ -566,16 +556,16 @@ library LibMoneyMarket01 {
 
       // book protocol's revenue
       // calculation:
-      // _protocolFee = (_totalInterest * lendingFeeBps) / MAX_BPS
+      // _protocolFee = (_totalInterest * lendingFeeBps) / LibConstant.MAX_BPS
       //
       // example:
       //  - _totalInterest = 1
       //  - lendingFeeBps  = 1900
-      //  - MAX_BPS        = 10000
+      //  - LibConstant.MAX_BPS        = 10000
       //
       //  _protocolFee     = (1 * 1900) / 10000
       //                   = 0.19
-      uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / MAX_BPS;
+      uint256 _protocolFee = (_totalInterest * moneyMarketDs.lendingFeeBps) / LibConstant.MAX_BPS;
       moneyMarketDs.protocolReserves[_token] += _protocolFee;
 
       emit LogAccrueInterest(_token, _totalInterest, _protocolFee);
@@ -709,13 +699,13 @@ library LibMoneyMarket01 {
     returns (uint256)
   {
     // calculation:
-    // totalTokenWithPendingInterest = totalToken + ((pendingInterest * (MAX_BPS - lendingFeeBps)) / MAX_BPS)
+    // totalTokenWithPendingInterest = totalToken + ((pendingInterest * (LibConstant.MAX_BPS - lendingFeeBps)) / LibConstant.MAX_BPS)
     //
     // example:
     //  - totalToken                  = 550
     //  - pendingInterest             = 100
     //  - lendingFeeBps               = 1900
-    //  - MAX_BPS                     = 10000
+    //  - LibConstant.MAX_BPS                     = 10000
     //
     //  totalTokenWithPendingInterest = 550 + ((100 * (10000 - 1900)) / 10000)
     //                                = 550 + ((100 * 8100) / 10000)
@@ -724,8 +714,8 @@ library LibMoneyMarket01 {
     //                                = 631
     return
       getTotalToken(_token, moneyMarketDs) +
-      ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibMoneyMarket01.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
-        LibMoneyMarket01.MAX_BPS);
+      ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibConstant.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
+        LibConstant.MAX_BPS);
   }
 
   /// @dev Get the reserve amount of a token in money market

@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 
 // ---- Interfaces ---- //
@@ -54,7 +55,7 @@ contract ViewFacet is IViewFacet {
   /// @notice Get the configuration of the lending token
   /// @param _token The token
   /// @return The struct of TokenConfig
-  function getTokenConfig(address _token) external view returns (LibMoneyMarket01.TokenConfig memory) {
+  function getTokenConfig(address _token) external view returns (LibConstant.TokenConfig memory) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     return moneyMarketDs.tokenConfigs[_token];

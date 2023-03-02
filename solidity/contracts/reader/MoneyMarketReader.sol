@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../money-market/libraries/LibConstant.sol";
 import { LibDoublyLinkedList } from "../money-market/libraries/LibDoublyLinkedList.sol";
 
 // ---- Interfaces ---- //
@@ -25,8 +26,8 @@ contract MoneyMarketReader is IMoneyMarketReader {
     address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
     IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
 
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
-    LibMoneyMarket01.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
+    LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
+    LibConstant.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
 
     return
       MarketSummary({
@@ -92,11 +93,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
       uint256 _ibTokenPrice = getPriceUSD(_ibToken);
       uint256 _underlyingTokenPrice = getPriceUSD(_underlyingToken);
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_ibToken);
+      LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_ibToken);
 
       uint256 _valueUSD = (_ibTokenPrice * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
       _totalCollateralValue += _valueUSD;
-      _totalBorrowingPower += (_valueUSD * _tokenConfig.collateralFactor) / LibMoneyMarket01.MAX_BPS;
+      _totalBorrowingPower += (_valueUSD * _tokenConfig.collateralFactor) / LibConstant.MAX_BPS;
 
       _collaterals[_i] = CollateralPosition({
         ibToken: _ibToken,
@@ -125,14 +126,14 @@ contract MoneyMarketReader is IMoneyMarketReader {
     for (uint256 _i; _i < _debtLen; ++_i) {
       address _token = _rawDebts[_i].token;
       uint256 _price = getPriceUSD(_token);
-      LibMoneyMarket01.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
+      LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
       (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
       
       uint256 _actualDebtAmount =  (_rawDebts[_i].amount * (_totalDebtAmount + _moneyMarket.getOverCollatPendingInterest(_token))) / _totalDebtShares;
 
       uint256 _valueUSD = (_price * _actualDebtAmount * _tokenConfig.to18ConversionFactor) / 1e18;
       _totalBorrowedValue += _valueUSD;
-      _totalUsedBorrowingPower += (_valueUSD * LibMoneyMarket01.MAX_BPS) / _tokenConfig.borrowingFactor;
+      _totalUsedBorrowingPower += (_valueUSD * LibConstant.MAX_BPS) / _tokenConfig.borrowingFactor;
 
       _debts[_i] = DebtPosition({
         token: _token,

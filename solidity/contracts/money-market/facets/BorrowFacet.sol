@@ -289,7 +289,7 @@ contract BorrowFacet is IBorrowFacet {
     }
 
     uint256 _tokenPrice = LibMoneyMarket01.getPriceUSD(_token, moneyMarketDs);
-    LibMoneyMarket01.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
+    LibConstant.TokenConfig memory _tokenConfig = moneyMarketDs.tokenConfigs[_token];
 
     (, uint256 _currentDebtAmount) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
       _subAccount,
