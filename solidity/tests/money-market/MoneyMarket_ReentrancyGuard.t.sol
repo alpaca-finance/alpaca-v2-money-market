@@ -8,7 +8,7 @@ import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";
 import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // interfaces
-import { ILendFacet } from "../../contracts/money-market/facets/LendFacet.sol";
+import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 import { LibReentrancyGuard } from "../../contracts/money-market/libraries/LibReentrancyGuard.sol";
 
 contract MoneyMarket_ReentrancyGuardTest is MoneyMarket_BaseTest {

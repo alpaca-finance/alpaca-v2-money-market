@@ -8,7 +8,7 @@ import { DebtToken_BaseTest } from "./DebtToken_BaseTest.t.sol";
 import { DebtToken } from "../../../contracts/money-market/DebtToken.sol";
 
 // interfaces
-import { IDebtToken } from "../../../contracts/money-market/facets/AdminFacet.sol";
+import { IDebtToken } from "../../../contracts/money-market/interfaces/IDebtToken.sol";
 
 // libs
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";

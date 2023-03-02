@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { ILendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
+import { ILendFacet } from "../../../contracts/money-market/interfaces/ILendFacet.sol";
 import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
 
 // mocks

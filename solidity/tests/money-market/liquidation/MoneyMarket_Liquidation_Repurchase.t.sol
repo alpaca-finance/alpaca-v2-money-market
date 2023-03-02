@@ -8,8 +8,8 @@ import { LibConstant } from "../../../contracts/money-market/libraries/LibConsta
 import { LibShareUtil } from "../../../contracts/money-market/libraries/LibShareUtil.sol";
 
 // interfaces
-import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
-import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
@@ -615,8 +615,8 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
 
 // // interfaces
 // import { IBorrowFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-// import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
-// import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
+// import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
+// import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 // import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 // import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
 // import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";

@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
-import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
+import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 import { IERC20 } from "../../interfaces/IERC20.sol";

@@ -5,9 +5,8 @@ import { MoneyMarket_BaseTest, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 
 // libraries
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
+import { LibDoublyLinkedList } from "../../../contracts/money-market/libraries/LibDoublyLinkedList.sol";
 // interfaces
-import { ICollateralFacet, LibDoublyLinkedList } from "../../../contracts/money-market/facets/CollateralFacet.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarket_Collateral_AddCollateralTest is MoneyMarket_BaseTest {
