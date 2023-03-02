@@ -10,9 +10,6 @@ import { IAdminFacet } from "../../../contracts/money-market/facets/AdminFacet.s
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "../../../contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
-// libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
 contract MoneyMarket_NonCollatBorrow_RepayTest is MoneyMarket_BaseTest {
   MockERC20 mockToken;
 

@@ -90,7 +90,7 @@ library LibMoneyMarket01 {
     IAlpacaV2Oracle oracle;
     IFeeModel repurchaseRewardModel;
     IMiniFL miniFL;
-    bool emergencyPaused; // flag for pausing deposit and borrow on moeny market
+    bool emergencyPaused; // flag for pausing deposit and borrow on money market
     // ---- ib tokens ---- //
     mapping(address => address) tokenToIbTokens; // token address => ibToken address
     mapping(address => address) ibTokenToTokens; // ibToken address => token address

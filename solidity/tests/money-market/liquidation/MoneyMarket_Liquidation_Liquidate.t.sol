@@ -3,9 +3,6 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
 
-// libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
 // interfaces
 import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
@@ -25,7 +22,7 @@ struct CacheState {
 
 contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
   uint256 _subAccountId = 0;
-  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _subAccountId);
+  address _aliceSubAccount0 = address(uint160(ALICE) ^ uint160(_subAccountId));
   MockLiquidationStrategy internal mockLiquidationStrategy;
   MockBadLiquidationStrategy internal mockBadLiquidationStrategy;
   IMiniFL internal _miniFL;

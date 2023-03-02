@@ -3,9 +3,6 @@ pragma solidity 0.8.17;
 
 import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
 
-// libs
-import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
-
 // interfaces
 import { ILiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
@@ -45,7 +42,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
   IMiniFL internal _miniFL;
 
   uint256 _aliceSubAccountId = 0;
-  address _aliceSubAccount0 = LibMoneyMarket01.getSubAccount(ALICE, _aliceSubAccountId);
+  address _aliceSubAccount0 = address(uint160(ALICE) ^ uint160(_aliceSubAccountId));
 
   function setUp() public override {
     super.setUp();
