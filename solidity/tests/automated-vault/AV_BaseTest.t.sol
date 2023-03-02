@@ -24,7 +24,7 @@ import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.s
 
 // libraries
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
 import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // mocks
@@ -162,14 +162,14 @@ abstract contract AV_BaseTest is BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](2);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18,
       maxCollateral: 100e18
     });
     _inputs[1] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(1e24, usdcDecimal),

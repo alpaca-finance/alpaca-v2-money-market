@@ -2,6 +2,7 @@
 pragma solidity 0.8.17;
 
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 
 // ---- Interfaces ---- //
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
@@ -24,7 +25,7 @@ interface IAdminFacet {
   }
 
   struct TokenConfigInput {
-    LibMoneyMarket01.AssetTier tier;
+    LibConstant.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint256 maxCollateral;

@@ -5,6 +5,7 @@ import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 
 // interfaces
 import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
@@ -20,7 +21,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
@@ -32,7 +33,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
     LibMoneyMarket01.TokenConfig memory _tokenConfig = viewFacet.getTokenConfig(address(weth));
 
     // assertEq not accept enum
-    assertTrue(_tokenConfig.tier == LibMoneyMarket01.AssetTier.COLLATERAL);
+    assertTrue(_tokenConfig.tier == LibConstant.AssetTier.COLLATERAL);
     assertEq(_tokenConfig.collateralFactor, 5000);
     assertEq(_tokenConfig.borrowingFactor, 6000);
   }
@@ -43,7 +44,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 5000,
       borrowingFactor: 6000,
       maxCollateral: 1000e18,
@@ -61,7 +62,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 12000,
       borrowingFactor: 5000,
       maxCollateral: 1000e18,
@@ -78,7 +79,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 6000,
       borrowingFactor: 12000,
       maxCollateral: 1000e18,
@@ -101,7 +102,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 12000,
       borrowingFactor: 5000,
       maxCollateral: 1e41,
@@ -119,7 +120,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
 
     IAdminFacet.TokenConfigInput[] memory _inputs = new IAdminFacet.TokenConfigInput[](1);
     _inputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 12000,
       borrowingFactor: 5000,
       maxCollateral: 1000e18,

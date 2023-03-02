@@ -26,7 +26,7 @@ import { MockChainLinkPriceOracle } from "../mocks/MockChainLinkPriceOracle.sol"
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
-import { LibMoneyMarket01 } from "../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
 import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // router
@@ -72,7 +72,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setDebtTokenImplementation(address(new DebtToken()));
 
     IAdminFacet.TokenConfigInput memory _wethTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -81,7 +81,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibWeth = InterestBearingToken(adminFacet.openMarket(address(weth), _wethTokenConfigInput, _wethTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _usdcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: normalizeEther(100 ether, 6),
@@ -90,7 +90,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibUsdc = InterestBearingToken(adminFacet.openMarket(address(usdc), _usdcTokenConfigInput, _usdcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _btcTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -99,7 +99,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     ibBtc = InterestBearingToken(adminFacet.openMarket(address(btc), _btcTokenConfigInput, _btcTokenConfigInput));
 
     IAdminFacet.TokenConfigInput memory _wNativeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -110,7 +110,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _isolateTokenTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.ISOLATE,
+      tier: LibConstant.AssetTier.ISOLATE,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
@@ -121,7 +121,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     );
 
     IAdminFacet.TokenConfigInput memory _cakeTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,

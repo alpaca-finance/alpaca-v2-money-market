@@ -7,6 +7,7 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { LibDoublyLinkedList } from "./LibDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibConstant } from "./LibConstant.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 
 // interfaces
@@ -76,15 +77,8 @@ library LibMoneyMarket01 {
     uint256 _debtShare
   );
 
-  enum AssetTier {
-    UNLISTED,
-    ISOLATE,
-    CROSS,
-    COLLATERAL
-  }
-
   struct TokenConfig {
-    LibMoneyMarket01.AssetTier tier;
+    LibConstant.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint64 to18ConversionFactor;
@@ -284,7 +278,7 @@ library LibMoneyMarket01 {
       _borrowedToken = _borrowed[_i].token;
       _tokenConfig = moneyMarketDs.tokenConfigs[_borrowedToken];
 
-      if (_tokenConfig.tier == LibMoneyMarket01.AssetTier.ISOLATE) {
+      if (_tokenConfig.tier == LibConstant.AssetTier.ISOLATE) {
         _hasIsolateAsset = true;
       }
 
@@ -816,7 +810,7 @@ library LibMoneyMarket01 {
   ) internal {
     // validation
     //  1. revert if token is not collateral
-    if (moneyMarketDs.tokenConfigs[_token].tier != AssetTier.COLLATERAL) {
+    if (moneyMarketDs.tokenConfigs[_token].tier != LibConstant.AssetTier.COLLATERAL) {
       revert LibMoneyMarket01_InvalidAssetTier();
     }
     //  2. revert if _addAmount + currentCollatAmount exceed max collateral amount of a token

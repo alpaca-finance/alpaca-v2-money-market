@@ -6,6 +6,7 @@ import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../libraries/LibConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
@@ -310,7 +311,7 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
     // check that ISOLATE tier can't be borrowed with other token
-    if (moneyMarketDs.tokenConfigs[_token].tier == LibMoneyMarket01.AssetTier.ISOLATE) {
+    if (moneyMarketDs.tokenConfigs[_token].tier == LibConstant.AssetTier.ISOLATE) {
       // Revert if trying to borrow ISOLATE token while borrowing other token (incl. other ISOLATE token)
       // Only allow to borrow more of same ISOLATE token
       // NOTE: in case token got demoted from higher tier to ISOLATE tier
