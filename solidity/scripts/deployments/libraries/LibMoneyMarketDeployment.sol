@@ -133,7 +133,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](40);
+    _selectors = new bytes4[](41);
     _selectors[0] = ViewFacet.getProtocolReserve.selector;
     _selectors[1] = ViewFacet.getTokenConfig.selector;
     _selectors[2] = ViewFacet.getOverCollatDebtSharesOf.selector;
@@ -174,6 +174,7 @@ library LibMoneyMarketDeployment {
     _selectors[37] = ViewFacet.getOracle.selector;
     _selectors[38] = ViewFacet.getMiniFL.selector;
     _selectors[39] = ViewFacet.getOverCollatPendingInterest.selector;
+    _selectors[40] = ViewFacet.getTokenAmountFromIbAmount.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
