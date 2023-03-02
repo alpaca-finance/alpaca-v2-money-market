@@ -12,12 +12,17 @@ import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
 import { IPriceOracle } from "../oracle/interfaces/IPriceOracle.sol";
 import { IAlpacaV2Oracle } from "../oracle/interfaces/IAlpacaV2Oracle.sol";
+import { IMiniFL } from "../money-market/interfaces/IMiniFL.sol";
 
 contract MoneyMarketReader is IMoneyMarketReader {
-  IMoneyMarket private _moneyMarket;
+  IMoneyMarket private immutable _moneyMarket;
+  IMiniFL private immutable _miniFL;
+  address private immutable _moneyMarketAccountManager;
 
-  constructor(address moneyMarket_) {
+  constructor(address moneyMarket_, address moneyMarketAccountManager_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
+    _miniFL = IMiniFL(_moneyMarket.getMiniFL());
+    _moneyMarketAccountManager = moneyMarketAccountManager_;
   }
 
   /// @dev Get the market summary
@@ -29,14 +34,14 @@ contract MoneyMarketReader is IMoneyMarketReader {
     LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
     LibConstant.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
 
+    // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
+    // so have to return both
     return
       MarketSummary({
         ibTotalSupply: _ibToken.totalSupply(),
         ibTotalAsset: _ibToken.totalAssets(),
         ibAddress: _ibAddress,
         tierAsUInt: uint8(_tokenConfig.tier),
-        // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
-        // so have to return both
         ibCollateralFactor: _ibTokenConfig.collateralFactor,
         ibBorrowingFactor: _ibTokenConfig.borrowingFactor,
         collateralFactor: _tokenConfig.collateralFactor,
@@ -70,6 +75,45 @@ contract MoneyMarketReader is IMoneyMarketReader {
       _account,
       _subAccountId
     );
+  }
+
+  /// @dev Get supply account summary
+  function getMainAccountSummary(address _account, address[] calldata _underlyingTokenAddresses)
+    external
+    view
+    returns (MainAccountSummary memory _mainAccountSummary)
+  {
+    uint256 marketLength = _underlyingTokenAddresses.length;
+
+    SupplyAccountDetail[] memory _supplyAccountDetails = new SupplyAccountDetail[](marketLength);
+    address _underlyingTokenAddress;
+
+    for (uint256 _i; _i < marketLength; _i++) {
+      _underlyingTokenAddress = _underlyingTokenAddresses[_i];
+
+      _supplyAccountDetails[_i] = _getSupplyAccountDetail(_account, _underlyingTokenAddress);
+    }
+
+    _mainAccountSummary = MainAccountSummary({ supplyAccountDetails: _supplyAccountDetails });
+  }
+
+  function _getSupplyAccountDetail(address _account, address _underlyingTokenAddress)
+    internal
+    view
+    returns (SupplyAccountDetail memory _supplyAccountDetail)
+  {
+    address _ibTokenAddress = _moneyMarket.getIbTokenFromToken(_underlyingTokenAddress);
+    uint256 _pid = _moneyMarket.getMiniFLPoolIdOfToken(_ibTokenAddress);
+    uint256 _supplyIbAmount = _miniFL.getUserAmountFundedBy(_moneyMarketAccountManager, _account, _pid);
+
+    _supplyAccountDetail = SupplyAccountDetail({
+      ibTokenAddress: _ibTokenAddress,
+      underlyingToken: _underlyingTokenAddress,
+      supplyIbAmount: _supplyIbAmount,
+      ibTokenPrice: getPriceUSD(_ibTokenAddress),
+      underlyingAmount: IInterestBearingToken(_ibTokenAddress).convertToAssets(_supplyIbAmount),
+      underlyingTokenPrice: getPriceUSD(_underlyingTokenAddress)
+    });
   }
 
   function _getSubAccountCollatSummary(address _account, uint256 _subAccountId)
@@ -128,8 +172,9 @@ contract MoneyMarketReader is IMoneyMarketReader {
       uint256 _price = getPriceUSD(_token);
       LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
       (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
-      
-      uint256 _actualDebtAmount =  (_rawDebts[_i].amount * (_totalDebtAmount + _moneyMarket.getOverCollatPendingInterest(_token))) / _totalDebtShares;
+
+      uint256 _actualDebtAmount = (_rawDebts[_i].amount *
+        (_totalDebtAmount + _moneyMarket.getOverCollatPendingInterest(_token))) / _totalDebtShares;
 
       uint256 _valueUSD = (_price * _actualDebtAmount * _tokenConfig.to18ConversionFactor) / 1e18;
       _totalBorrowedValue += _valueUSD;

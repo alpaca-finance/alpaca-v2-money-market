@@ -54,12 +54,32 @@ interface IMoneyMarketReader {
     DebtPosition[] debts;
   }
 
+  struct SupplyAccountDetail {
+    address ibTokenAddress;
+    address underlyingToken;
+    // Amount staked in MiniFL by AccountManager
+    uint256 supplyIbAmount;
+    uint256 ibTokenPrice;
+    // Amount of underlyingToken converted from ibToken amount
+    uint256 underlyingAmount;
+    uint256 underlyingTokenPrice;
+  }
+
+  struct MainAccountSummary {
+    SupplyAccountDetail[] supplyAccountDetails;
+  }
+
   function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory);
 
   function getSubAccountSummary(address _account, uint256 _subAccountId)
     external
     view
     returns (SubAccountSummary memory);
+
+  function getMainAccountSummary(address _account, address[] calldata _underlyingTokenAddresses)
+    external
+    view
+    returns (MainAccountSummary memory _mainAccountSummary);
 
   function moneyMarket() external view returns (address);
 }

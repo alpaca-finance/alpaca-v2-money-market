@@ -8,6 +8,12 @@ interface IMiniFL {
 
   function getUserTotalAmountOf(uint256 _pid, address _user) external view returns (uint256 _totalAmount);
 
+  function getUserAmountFundedBy(
+    address _funder,
+    address _for,
+    uint256 _pid
+  ) external view returns (uint256 _stakingAmount);
+
   function addPool(
     uint256 _allocPoint,
     address _stakingToken,
