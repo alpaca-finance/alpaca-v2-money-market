@@ -19,7 +19,7 @@ import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFa
 import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 import { IOwnershipFacet } from "../../../contracts/money-market/interfaces/IOwnershipFacet.sol";
 
-/// @dev Older version of deployment will always compile the contracts
+/// @dev Older version of deployment will always compile the contract(s)
 // import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
 // import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 // import { ViewFacet } from "../../../contracts/money-market/facets/ViewFacet.sol";
@@ -72,7 +72,7 @@ library LibMoneyMarketDeployment {
     _facetAddresses.nonCollatBorrowFacet = deployContract("./out/NonCollatBorrowFacet.sol/NonCollatBorrowFacet.json");
     _facetAddresses.adminFacet = deployContract("./out/AdminFacet.sol/AdminFacet.json");
     _facetAddresses.liquidationFacet = deployContract("./out/LiquidationFacet.sol/LiquidationFacet.json");
-    // _facetAddresses.ownershipFacet = deployContract("./out/OwnershipFacet.sol/OwnershipFacet.json");
+    _facetAddresses.ownershipFacet = deployContract("./out/OwnershipFacet.sol/OwnershipFacet.json");
 
     /// @dev Older version of deployment approach
     // _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
@@ -84,7 +84,7 @@ library LibMoneyMarketDeployment {
     // _facetAddresses.nonCollatBorrowFacet = address(new NonCollatBorrowFacet());
     // _facetAddresses.adminFacet = address(new AdminFacet());
     // _facetAddresses.liquidationFacet = address(new LiquidationFacet());
-    _facetAddresses.ownershipFacet = address(new OwnershipFacet());
+    // _facetAddresses.ownershipFacet = address(new OwnershipFacet());
   }
 
   function deployContract(string memory _path) internal returns (address _deployedAddress) {
@@ -92,6 +92,9 @@ library LibMoneyMarketDeployment {
 
     assembly {
       _deployedAddress := create(0, add(_logicBytecode, 0x20), mload(_logicBytecode))
+      if iszero(extcodesize(_deployedAddress)) {
+        revert(0, 0)
+      }
     }
   }
 
