@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import "./BaseUtilsScript.sol";
 
-import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 
 contract SetTokenConfigsScript is BaseUtilsScript {
@@ -16,7 +16,7 @@ contract SetTokenConfigsScript is BaseUtilsScript {
     IAdminFacet.TokenConfigInput[] memory tokenConfigInputs = new IAdminFacet.TokenConfigInput[](1);
     tokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
       token: mockTokenForLocalRun,
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30e18, // be careful on decimals

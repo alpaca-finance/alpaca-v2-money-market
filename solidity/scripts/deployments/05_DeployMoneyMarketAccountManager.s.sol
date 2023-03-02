@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import "../BaseScript.sol";
 
-import { LibMoneyMarket01 } from "solidity/contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { MoneyMarketAccountManager } from "solidity/contracts/account-manager/MoneyMarketAccountManager.sol";
 import { MockWNativeRelayer } from "solidity/tests/mocks/MockWNativeRelayer.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
@@ -20,14 +20,14 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
 
     // open market for wNativeToken
     IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.CROSS,
+      tier: LibConstant.AssetTier.CROSS,
       collateralFactor: 0,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,
       maxCollateral: 0
     });
     IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibMoneyMarket01.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxBorrow: 30 ether,

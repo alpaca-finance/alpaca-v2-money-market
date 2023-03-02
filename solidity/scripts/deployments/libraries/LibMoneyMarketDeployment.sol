@@ -4,11 +4,8 @@ pragma solidity 0.8.17;
 // utils
 import { VM } from "solidity/tests/utils/VM.sol";
 
-// core
-import { MoneyMarketDiamond } from "../../../contracts/money-market/MoneyMarketDiamond.sol";
-
 // facets
-import { DiamondCutFacet, IDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
+import { IDiamondCut } from "../../../contracts/money-market/interfaces/IDiamondCut.sol";
 import { DiamondLoupeFacet } from "../../../contracts/money-market/facets/DiamondLoupeFacet.sol";
 import { IViewFacet } from "../../../contracts/money-market/interfaces/IViewFacet.sol";
 import { ILendFacet } from "../../../contracts/money-market/interfaces/ILendFacet.sol";
@@ -29,7 +26,7 @@ import { IOwnershipFacet } from "../../../contracts/money-market/interfaces/IOwn
 // import { NonCollatBorrowFacet } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
 // import { AdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
 // import { LiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
-import { OwnershipFacet } from "../../../contracts/money-market/facets/OwnershipFacet.sol";
+// import { OwnershipFacet } from "../../../contracts/money-market/facets/OwnershipFacet.sol";
 
 library LibMoneyMarketDeployment {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -54,7 +51,19 @@ library LibMoneyMarketDeployment {
     _facetAddresses = deployMoneyMarketFacets();
 
     // deploy MoneyMarketDiamond
-    _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _miniFL));
+    bytes memory _logicBytecode = abi.encodePacked(
+      vm.getCode("./out/MoneyMarketDiamond.sol/MoneyMarketDiamond.json"),
+      abi.encode(_facetAddresses.diamondCutFacet, _miniFL)
+    );
+
+    assembly {
+      _moneyMarketDiamond := create(0, add(_logicBytecode, 0x20), mload(_logicBytecode))
+      if iszero(extcodesize(_moneyMarketDiamond)) {
+        revert(0, 0)
+      }
+    }
+    /// @dev Old approach to deploy MoneyMarketDiamond
+    // _moneyMarketDiamond = address(new MoneyMarketDiamond(_facetAddresses.diamondCutFacet, _miniFL));
 
     // do diamondCut
     diamondCutAllMoneyMarketFacets(_moneyMarketDiamond, _facetAddresses);
@@ -160,7 +169,7 @@ library LibMoneyMarketDeployment {
 
     // perform diamond cut on deployed MoneyMarketDiamond
     // address(0) and empty string means no initialization / cleanup after diamond cut
-    DiamondCutFacet(_moneyMarketDiamond).diamondCut(_facetCuts, address(0), "");
+    IDiamondCut(_moneyMarketDiamond).diamondCut(_facetCuts, address(0), "");
   }
 
   function getDiamondLoupeFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
