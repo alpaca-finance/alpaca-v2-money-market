@@ -13,7 +13,7 @@ contract DeployMoneyMarketReaderScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    address mmReader = address(new MoneyMarketReader(address(moneyMarket)));
+    address mmReader = address(new MoneyMarketReader(address(moneyMarket), address(accountManager)));
 
     _stopBroadcast();
 
