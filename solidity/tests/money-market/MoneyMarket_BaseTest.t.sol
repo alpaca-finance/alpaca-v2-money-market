@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import { BaseTest, console } from "../base/BaseTest.sol";
 
 // core
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 

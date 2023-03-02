@@ -5,7 +5,6 @@ import { BaseTest, console } from "../base/BaseTest.sol";
 
 // core
 import { LYFDiamond } from "../../contracts/lyf/LYFDiamond.sol";
-import { MoneyMarketDiamond } from "../../contracts/money-market/MoneyMarketDiamond.sol";
 
 // contracts
 import { InterestBearingToken } from "../../contracts/money-market/InterestBearingToken.sol";
