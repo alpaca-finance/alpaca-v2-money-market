@@ -2,18 +2,18 @@
 pragma solidity 0.8.17;
 
 import { LibDiamond } from "./libraries/LibDiamond.sol";
-import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
+import { ILYFDiamondCut } from "./interfaces/ILYFDiamondCut.sol";
 
 contract LYFDiamond {
-  constructor(address _contractOwner, address _diamondCutFacet) {
+  constructor(address _contractOwner, address _LYFDiamondCutFacet) {
     LibDiamond.setContractOwner(_contractOwner);
 
-    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+    ILYFDiamondCut.FacetCut[] memory cut = new ILYFDiamondCut.FacetCut[](1);
     bytes4[] memory functionSelectors = new bytes4[](1);
-    functionSelectors[0] = IDiamondCut.diamondCut.selector;
-    cut[0] = IDiamondCut.FacetCut({
-      facetAddress: _diamondCutFacet,
-      action: IDiamondCut.FacetCutAction.Add,
+    functionSelectors[0] = ILYFDiamondCut.diamondCut.selector;
+    cut[0] = ILYFDiamondCut.FacetCut({
+      facetAddress: _LYFDiamondCutFacet,
+      action: ILYFDiamondCut.FacetCutAction.Add,
       functionSelectors: functionSelectors
     });
     LibDiamond.diamondCut(cut, address(0), "");

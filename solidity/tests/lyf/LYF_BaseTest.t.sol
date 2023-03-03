@@ -11,8 +11,8 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
+import { LYFDiamondCutFacet, ILYFDiamondCut } from "../../contracts/lyf/facets/LYFDiamondCutFacet.sol";
+import { LYFDiamondLoupeFacet } from "../../contracts/lyf/facets/LYFDiamondLoupeFacet.sol";
 import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
 import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";

@@ -8,8 +8,8 @@ pragma solidity 0.8.17;
 * Implementation of a diamond.
 /******************************************************************************/
 import { LibDiamond } from "../libraries/LibDiamond.sol";
-import { IDiamondLoupe } from "../interfaces/IDiamondLoupe.sol";
-import { IDiamondCut } from "../interfaces/IDiamondCut.sol";
+import { ILYFDiamondLoupe } from "../interfaces/ILYFDiamondLoupe.sol";
+import { ILYFDiamondCut } from "../interfaces/ILYFDiamondCut.sol";
 import { IERC173 } from "../interfaces/IERC173.sol";
 import { IERC165 } from "../interfaces/IERC165.sol";
 
@@ -29,8 +29,8 @@ contract DiamondInit {
     LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
     if (ds.diamondInitialized != 0) revert DiamondInit_Initialized();
     ds.supportedInterfaces[type(IERC165).interfaceId] = true;
-    ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
-    ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
+    ds.supportedInterfaces[type(ILYFDiamondCut).interfaceId] = true;
+    ds.supportedInterfaces[type(ILYFDiamondLoupe).interfaceId] = true;
     ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
     // add your own state variables
