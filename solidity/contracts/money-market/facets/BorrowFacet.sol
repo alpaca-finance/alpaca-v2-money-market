@@ -118,6 +118,11 @@ contract BorrowFacet is IBorrowFacet {
       moneyMarketDs
     );
 
+    // Revert if there's no debt under the subaccount
+    if (_currentDebtShare == 0 && _currentDebtAmount == 0) {
+      revert BorrowFacet_NoDebtToRepay();
+    }
+
     // The debt share that can be repaid should not exceed the current debt share
     // that the subaccount is holding
     uint256 _actualShareToRepay = LibFullMath.min(_currentDebtShare, _debtShareToRepay);

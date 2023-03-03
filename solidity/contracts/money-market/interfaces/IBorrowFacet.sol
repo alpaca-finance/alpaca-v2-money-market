@@ -16,6 +16,7 @@ interface IBorrowFacet {
   error BorrowFacet_ExceedBorrowLimit();
   error BorrowFacet_BorrowLessThanMinDebtSize();
   error BorrowFacet_TooManyCollateralRemoved();
+  error BorrowFacet_NoDebtToRepay();
 
   function borrow(
     address _account,
