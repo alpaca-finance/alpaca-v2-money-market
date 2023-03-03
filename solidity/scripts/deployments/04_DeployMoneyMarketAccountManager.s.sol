@@ -53,8 +53,10 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
     // set account manager to allow interactions
     address[] memory _accountManagers = new address[](1);
     _accountManagers[0] = accountManagerProxy;
-
     moneyMarket.setAccountManagersOk(_accountManagers, true);
+
+    // whitelist accountManager on miniFL
+    miniFL.setWhitelistedCallers(_accountManagers, true);
 
     _stopBroadcast();
 
