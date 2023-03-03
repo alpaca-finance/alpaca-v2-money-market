@@ -17,9 +17,6 @@ import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
 import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
 
-// initializers
-import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
-
 // interfaces
 import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";
