@@ -18,7 +18,7 @@ import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 import { LYFInit } from "../../contracts/lyf/initializers/LYFInit.sol";
 
 library LYFDiamondDeployer {
-  function deployPoolDiamond(address _moneyMarket) internal returns (address) {
+  function deployLYFDiamond(address _moneyMarket) internal returns (address) {
     // Deploy DimondCutFacet
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
