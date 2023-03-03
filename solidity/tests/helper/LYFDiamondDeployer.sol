@@ -35,24 +35,83 @@ library LYFDiamondDeployer {
     address ownershipFacet;
   }
 
-  function deployLYFDiamond(address _moneyMarket) internal returns (address) {
-    // Deploy DimondCutFacet
-    LYFDiamondCutFacet diamondCutFacet = new LYFDiamondCutFacet();
+  function deployLYFDiamond(address _moneyMarketDiamond)
+    internal
+    returns (address _lyfDiamond, FacetAddresses memory _facetAddresses)
+  {
+    // deploy facets
+    _facetAddresses = deployLYFFacets();
 
-    // Deploy LYF
-    LYFDiamond _lyfDiamond = new LYFDiamond(address(this), address(diamondCutFacet));
+    // deploy LYFDiamond
+    bytes memory _logicBytecode = abi.encodePacked(
+      vm.getCode("./out/LYFDiamond.sol/LYFDiamond.json"),
+      abi.encode(_facetAddresses.diamondCutFacet, _moneyMarketDiamond)
+    );
 
-    deployAdminFacet(LYFDiamondCutFacet(address(_lyfDiamond)));
-    deployLYFCollateralFacet(LYFDiamondCutFacet(address(_lyfDiamond)));
-    deployFarmFacet(LYFDiamondCutFacet(address(_lyfDiamond)));
-    deployLYFLiquidationFacet(LYFDiamondCutFacet(address(_lyfDiamond)));
-    deployLYFOwnershipFacet(LYFDiamondCutFacet(address(_lyfDiamond)));
-    deployLYFViewFacet(LYFDiamondCutFacet(address(_lyfDiamond)));
+    assembly {
+      _lyfDiamond := create(0, add(_logicBytecode, 0x20), mload(_logicBytecode))
+      if iszero(extcodesize(_lyfDiamond)) {
+        revert(0, 0)
+      }
+    }
 
-    initializeDiamond(LYFDiamondCutFacet(address(_lyfDiamond)));
-    initializeLYF(LYFDiamondCutFacet(address(_lyfDiamond)), _moneyMarket);
+    // do diamondCut
+    diamondCutAllLYFFacets(_lyfDiamond, _facetAddresses);
 
-    return (address(_lyfDiamond));
+    return (_lyfDiamond, _facetAddresses);
+  }
+
+  function diamondCutAllLYFFacets(address _lyf, FacetAddresses memory _facetAddresses) internal {
+    // prepare _selectors
+    bytes4[] memory _diamondLoupeFacetSelectors = getLYFDiamondLoupeFacetSelectors();
+    bytes4[] memory _viewFacetSelectors = getLYFViewFacetSelectors();
+    bytes4[] memory _collateralFacetSelectors = getLYFCollateralFacetSelectors();
+    bytes4[] memory _farmFacetSelectors = getLYFFarmFacetSelectors();
+    bytes4[] memory _adminFacetSelectors = getLYFAdminFacetSelectors();
+    bytes4[] memory _liquidationFacetSelectors = getLYFLiquidationFacetSelectors();
+    bytes4[] memory _ownershipFacetSelectors = getLYFOwnershipFacetSelectors();
+
+    // prepare FacetCuts
+    ILYFDiamondCut.FacetCut[] memory _facetCuts = new ILYFDiamondCut.FacetCut[](7);
+    _facetCuts[0] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.diamondLoupeFacet,
+      functionSelectors: _diamondLoupeFacetSelectors
+    });
+    _facetCuts[1] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.viewFacet,
+      functionSelectors: _viewFacetSelectors
+    });
+    _facetCuts[2] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.collateralFacet,
+      functionSelectors: _collateralFacetSelectors
+    });
+    _facetCuts[3] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.farmFacet,
+      functionSelectors: _farmFacetSelectors
+    });
+    _facetCuts[4] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.adminFacet,
+      functionSelectors: _adminFacetSelectors
+    });
+    _facetCuts[5] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.liquidationFacet,
+      functionSelectors: _liquidationFacetSelectors
+    });
+    _facetCuts[6] = ILYFDiamondCut.FacetCut({
+      action: ILYFDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.ownershipFacet,
+      functionSelectors: _ownershipFacetSelectors
+    });
+
+    // perform diamond cut on deployed MoneyMarketDiamond
+    // address(0) and empty string means no initialization / cleanup after diamond cut
+    ILYFDiamondCut(_lyf).diamondCut(_facetCuts, address(0), "");
   }
 
   function deployLYFFacets() internal returns (FacetAddresses memory _facetAddresses) {
@@ -66,176 +125,68 @@ library LYFDiamondDeployer {
     _facetAddresses.ownershipFacet = deployContract("./out/LYFOwnershipFacet.sol/LYFOwnershipFacet.json");
   }
 
-  function initializeDiamond(LYFDiamondCutFacet diamondCutFacet) internal {
-    // Deploy DiamondInit
-    DiamondInit diamondInitializer = new DiamondInit();
-    ILYFDiamondCut.FacetCut[] memory facetCuts = new ILYFDiamondCut.FacetCut[](0);
-
-    // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(diamondInitializer),
-      abi.encodeWithSelector(bytes4(keccak256("init()")))
-    );
+  function getLYFDiamondLoupeFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
+    _selectors = new bytes4[](4);
+    _selectors[0] = LYFDiamondLoupeFacet.facets.selector;
+    _selectors[1] = LYFDiamondLoupeFacet.facetFunctionSelectors.selector;
+    _selectors[2] = LYFDiamondLoupeFacet.facetAddresses.selector;
+    _selectors[3] = LYFDiamondLoupeFacet.facetAddress.selector;
   }
 
-  function initializeLYF(LYFDiamondCutFacet diamondCutFacet, address _moneyMarket) internal {
-    // Deploy DiamondInit
-    LYFInit _initializer = new LYFInit();
-    ILYFDiamondCut.FacetCut[] memory facetCuts = new ILYFDiamondCut.FacetCut[](0);
-
-    // make lib diamond call init
-    diamondCutFacet.diamondCut(
-      facetCuts,
-      address(_initializer),
-      abi.encodeWithSelector(bytes4(keccak256("init(address)")), _moneyMarket)
-    );
+  function getLYFFarmFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
+    _selectors = new bytes4[](6);
+    _selectors[0] = LYFFarmFacet.addFarmPosition.selector;
+    _selectors[1] = LYFFarmFacet.repay.selector;
+    _selectors[2] = LYFFarmFacet.accrueInterest.selector;
+    _selectors[3] = LYFFarmFacet.reducePosition.selector;
+    _selectors[4] = LYFFarmFacet.repayWithCollat.selector;
+    _selectors[5] = LYFFarmFacet.reinvest.selector;
   }
 
-  function deployLYFDiamondLoupeFacet(LYFDiamondCutFacet diamondCutFacet)
-    internal
-    returns (LYFDiamondLoupeFacet, bytes4[] memory)
-  {
-    LYFDiamondLoupeFacet _diamondLoupeFacet = new LYFDiamondLoupeFacet();
-
-    bytes4[] memory selectors = new bytes4[](4);
-    selectors[0] = LYFDiamondLoupeFacet.facets.selector;
-    selectors[1] = LYFDiamondLoupeFacet.facetFunctionSelectors.selector;
-    selectors[2] = LYFDiamondLoupeFacet.facetAddresses.selector;
-    selectors[3] = LYFDiamondLoupeFacet.facetAddress.selector;
-
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_diamondLoupeFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_diamondLoupeFacet, selectors);
+  function getLYFAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
+    _selectors = new bytes4[](17);
+    _selectors[0] = LYFAdminFacet.setOracle.selector;
+    _selectors[1] = LYFAdminFacet.setLiquidationTreasury.selector;
+    _selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
+    _selectors[3] = LYFAdminFacet.setLPConfigs.selector;
+    _selectors[4] = LYFAdminFacet.setDebtPoolId.selector;
+    _selectors[5] = LYFAdminFacet.setDebtPoolInterestModel.selector;
+    _selectors[6] = LYFAdminFacet.setReinvestorsOk.selector;
+    _selectors[7] = LYFAdminFacet.setLiquidationStratsOk.selector;
+    _selectors[8] = LYFAdminFacet.setLiquidatorsOk.selector;
+    _selectors[9] = LYFAdminFacet.setMaxNumOfToken.selector;
+    _selectors[10] = LYFAdminFacet.setMinDebtSize.selector;
+    _selectors[11] = LYFAdminFacet.withdrawProtocolReserve.selector;
+    _selectors[12] = LYFAdminFacet.setRevenueTreasury.selector;
+    _selectors[13] = LYFAdminFacet.setRewardConversionConfigs.selector;
+    _selectors[14] = LYFAdminFacet.settleDebt.selector;
+    _selectors[15] = LYFAdminFacet.topUpTokenReserve.selector;
+    _selectors[16] = LYFAdminFacet.writeOffSubAccountsDebt.selector;
   }
 
-  function deployFarmFacet(LYFDiamondCutFacet diamondCutFacet) internal returns (LYFFarmFacet, bytes4[] memory) {
-    LYFFarmFacet _farmFacet = new LYFFarmFacet();
-
-    bytes4[] memory selectors = new bytes4[](6);
-    selectors[0] = LYFFarmFacet.addFarmPosition.selector;
-    selectors[1] = LYFFarmFacet.repay.selector;
-    selectors[2] = LYFFarmFacet.accrueInterest.selector;
-    selectors[3] = LYFFarmFacet.reducePosition.selector;
-    selectors[4] = LYFFarmFacet.repayWithCollat.selector;
-    selectors[5] = LYFFarmFacet.reinvest.selector;
-
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_farmFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_farmFacet, selectors);
-  }
-
-  function deployAdminFacet(LYFDiamondCutFacet diamondCutFacet) internal returns (LYFAdminFacet, bytes4[] memory) {
-    LYFAdminFacet _adminFacet = new LYFAdminFacet();
-
-    bytes4[] memory selectors = new bytes4[](17);
-    selectors[0] = LYFAdminFacet.setOracle.selector;
-    selectors[1] = LYFAdminFacet.setLiquidationTreasury.selector;
-    selectors[2] = LYFAdminFacet.setTokenConfigs.selector;
-    selectors[3] = LYFAdminFacet.setLPConfigs.selector;
-    selectors[4] = LYFAdminFacet.setDebtPoolId.selector;
-    selectors[5] = LYFAdminFacet.setDebtPoolInterestModel.selector;
-    selectors[6] = LYFAdminFacet.setReinvestorsOk.selector;
-    selectors[7] = LYFAdminFacet.setLiquidationStratsOk.selector;
-    selectors[8] = LYFAdminFacet.setLiquidatorsOk.selector;
-    selectors[9] = LYFAdminFacet.setMaxNumOfToken.selector;
-    selectors[10] = LYFAdminFacet.setMinDebtSize.selector;
-    selectors[11] = LYFAdminFacet.withdrawProtocolReserve.selector;
-    selectors[12] = LYFAdminFacet.setRevenueTreasury.selector;
-    selectors[13] = LYFAdminFacet.setRewardConversionConfigs.selector;
-    selectors[14] = LYFAdminFacet.settleDebt.selector;
-    selectors[15] = LYFAdminFacet.topUpTokenReserve.selector;
-    selectors[16] = LYFAdminFacet.writeOffSubAccountsDebt.selector;
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_adminFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_adminFacet, selectors);
-  }
-
-  function deployLYFCollateralFacet(LYFDiamondCutFacet diamondCutFacet)
-    internal
-    returns (LYFCollateralFacet _collatFacet, bytes4[] memory _selectors)
-  {
-    _collatFacet = new LYFCollateralFacet();
-
+  function getLYFCollateralFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](3);
     _selectors[0] = LYFCollateralFacet.addCollateral.selector;
     _selectors[1] = LYFCollateralFacet.removeCollateral.selector;
     _selectors[2] = LYFCollateralFacet.transferCollateral.selector;
-
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_collatFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      _selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_collatFacet, _selectors);
   }
 
-  function deployLYFLiquidationFacet(LYFDiamondCutFacet diamondCutFacet)
-    internal
-    returns (LYFLiquidationFacet _liquidationFacet, bytes4[] memory _selectors)
-  {
-    _liquidationFacet = new LYFLiquidationFacet();
-
+  function getLYFLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](3);
     _selectors[0] = LYFLiquidationFacet.repurchase.selector;
     _selectors[1] = LYFLiquidationFacet.lpLiquidationCall.selector;
     _selectors[2] = LYFLiquidationFacet.liquidationCall.selector;
-
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_liquidationFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      _selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_liquidationFacet, _selectors);
   }
 
-  function deployLYFOwnershipFacet(LYFDiamondCutFacet diamondCutFacet)
-    internal
-    returns (LYFOwnershipFacet _ownershipFacet, bytes4[] memory _selectors)
-  {
-    _ownershipFacet = new LYFOwnershipFacet();
-
+  function getLYFOwnershipFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](4);
-    _selectors[0] = _ownershipFacet.transferOwnership.selector;
-    _selectors[1] = _ownershipFacet.acceptOwnership.selector;
-    _selectors[2] = _ownershipFacet.owner.selector;
-    _selectors[3] = _ownershipFacet.pendingOwner.selector;
-
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_ownershipFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      _selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_ownershipFacet, _selectors);
+    _selectors[0] = LYFOwnershipFacet.transferOwnership.selector;
+    _selectors[1] = LYFOwnershipFacet.acceptOwnership.selector;
+    _selectors[2] = LYFOwnershipFacet.owner.selector;
+    _selectors[3] = LYFOwnershipFacet.pendingOwner.selector;
   }
 
-  function deployLYFViewFacet(LYFDiamondCutFacet diamondCutFacet)
-    internal
-    returns (LYFViewFacet _viewFacet, bytes4[] memory _selectors)
-  {
-    _viewFacet = new LYFViewFacet();
-
+  function getLYFViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](25);
     _selectors[0] = LYFViewFacet.getOracle.selector;
     _selectors[1] = LYFViewFacet.getLpTokenConfig.selector;
@@ -262,26 +213,6 @@ library LYFDiamondDeployer {
     _selectors[22] = LYFViewFacet.getSubAccount.selector;
     _selectors[23] = LYFViewFacet.getDebtPoolIdOf.selector;
     _selectors[24] = LYFViewFacet.getRewardConversionConfig.selector;
-
-    ILYFDiamondCut.FacetCut[] memory facetCuts = buildFacetCut(
-      address(_viewFacet),
-      ILYFDiamondCut.FacetCutAction.Add,
-      _selectors
-    );
-
-    diamondCutFacet.diamondCut(facetCuts, address(0), "");
-    return (_viewFacet, _selectors);
-  }
-
-  function buildFacetCut(
-    address facet,
-    ILYFDiamondCut.FacetCutAction cutAction,
-    bytes4[] memory selectors
-  ) internal pure returns (ILYFDiamondCut.FacetCut[] memory) {
-    ILYFDiamondCut.FacetCut[] memory facetCuts = new ILYFDiamondCut.FacetCut[](1);
-    facetCuts[0] = ILYFDiamondCut.FacetCut({ action: cutAction, facetAddress: facet, functionSelectors: selectors });
-
-    return facetCuts;
   }
 
   function deployContract(string memory _path) internal returns (address _deployedAddress) {

@@ -89,7 +89,7 @@ abstract contract LYF_BaseTest is BaseTest {
   function setUp() public virtual {
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
 
-    lyfDiamond = LYFDiamondDeployer.deployLYFDiamond(moneyMarketDiamond);
+    (lyfDiamond, ) = LYFDiamondDeployer.deployLYFDiamond(moneyMarketDiamond);
     setUpMM(moneyMarketDiamond);
 
     adminFacet = LYFAdminFacet(lyfDiamond);
