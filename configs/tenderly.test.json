@@ -2,42 +2,42 @@
   "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "moneyMarket": {
-    "moneyMarketDiamond": "0x06d4F4c1C5e9159Fd562cB1e755319418BbA34e5",
+    "moneyMarketDiamond": "0x75249cB493309D8573350287a1d1EAC825316c4c",
     "facets": {
-      "diamondCutFacet": "0x5685DfeE947F27d762B89dA787144110f4C5FA54",
-      "lendFacet": "0x92db6455227d00a535e641f30b1E2C1bD89F47A5",
-      "adminFacet": "0x2F2a0fe917d81d7ED8C90551Cc73c52e6FC651Bc",
-      "liquidationFacet": "0x2e122Fe9080b0124127ce1829b424Dad40110f51",
-      "viewFacet": "0x1F552532dbb4EF0E343D3F9cD19A95FeF0b14582",
-      "nonCollatBorrowFacet": "0x12a85FA1A916560129645E502588deCC18052F1D",
-      "diamondLoupeFacet": "0x454B3C9D4cE8c568c33Ead9dc3dF6588DD9eE072",
-      "borrowFacet": "0x9adc7af330889d5D072F271aEbb9247aa08d083c",
-      "ownershipFacet": "0x75249cB493309D8573350287a1d1EAC825316c4c",
-      "collateralFacet": "0xD8a4E9F7930658c39A63109FCA446eb43078a3B2"
+      "borrowFacet": "0xD8a4E9F7930658c39A63109FCA446eb43078a3B2",
+      "ownershipFacet": "0x2e122Fe9080b0124127ce1829b424Dad40110f51",
+      "diamondLoupeFacet": "0x5685DfeE947F27d762B89dA787144110f4C5FA54",
+      "diamondCutFacet": "0xd2E84bD5804d3957C01a0Bd517584a5FE54b0AC2",
+      "viewFacet": "0x454B3C9D4cE8c568c33Ead9dc3dF6588DD9eE072",
+      "lendFacet": "0x1F552532dbb4EF0E343D3F9cD19A95FeF0b14582",
+      "nonCollatBorrowFacet": "0x9adc7af330889d5D072F271aEbb9247aa08d083c",
+      "liquidationFacet": "0x2F2a0fe917d81d7ED8C90551Cc73c52e6FC651Bc",
+      "collateralFacet": "0x92db6455227d00a535e641f30b1E2C1bD89F47A5",
+      "adminFacet": "0x12a85FA1A916560129645E502588deCC18052F1D"
     },
-    "reader": "0xb066590e143a74eB873C252b51afc3032880b888",
+    "reader": "0x8ce4359cf9C377966FAa69709faEe31ab3D08eA0",
     "accountManager": {
-      "implementation": "0xB6E55B09111e2569B3e8E73700043E6d4F7fF87A",
-      "proxy": "0x6398EBe82051e23f8d2606706BBF26cF12cE1885"
+      "implementation": "0xfA66e32AE6370e1842579fC80463d61034F7dBE8",
+      "proxy": "0xB6E55B09111e2569B3e8E73700043E6d4F7fF87A"
     }
   },
   "ibTokens": {
-    "ibDodo": "0x226657F88528F0Ee321299ecB3b5c4cd506a8441",
-    "ibMock6": "0xadFb08DFaA495BEecbbc0860C3F4A079b33c95Ad",
-    "ibBusd": "0x3Fa7A350c39c348C7a2e8331876190D08a4ddC93",
-    "ibPstake": "0xA01796E7ce3e313CcA965d44E8B4a918d0f8Bcd2",
-    "ibBnb": "0x29a1c3e2873ba01fcF9624583F9ef8156ADD1a58"
+    "ibDodo": "0xB20626DCA84392aef37CE86D572f947eB7938620",
+    "ibMock6": "0x6C6c67e3D3533f66DA4513Fa8e6937Fa49AF6Dfd",
+    "ibBusd": "0x7B854eA80f0bEB10c3eA4d4d0D1E4726705707cb",
+    "ibPstake": "0x34Add4A1D1F1D2c372b425B54C3b0329159EaE0B",
+    "ibBnb": "0x99660fC4B1B2b6436CC955C7d0F521B5CEED5044"
   },
   "tokens": {
     "pstake": "0x4C882ec256823eE773B25b414d36F92ef58a7c0C",
-    "mock6DecimalsToken": "0xcF0ea27167713e63df8EE6613A3592c7Dd3B6659",
+    "mock6DecimalsToken": "0xb066590e143a74eB873C252b51afc3032880b888",
     "wbnb": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
     "busd": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
     "dodo": "0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2"
   },
-  "proxyAdmin": "0xE797b517d0a819d3556cBAcf4F736d2Fe8Be3A7D",
+  "proxyAdmin": "0x8e991C2B84D7Be42a697FDc8315F8a28A59c9F8D",
   "miniFL": {
-    "implementation": "0x7C068A4d8FFBfFBEf998Cb5265182FABa0EBbf59",
-    "proxy": "0xd2E84bD5804d3957C01a0Bd517584a5FE54b0AC2"
+    "implementation": "0xE797b517d0a819d3556cBAcf4F736d2Fe8Be3A7D",
+    "proxy": "0x7C068A4d8FFBfFBEf998Cb5265182FABa0EBbf59"
   }
 }

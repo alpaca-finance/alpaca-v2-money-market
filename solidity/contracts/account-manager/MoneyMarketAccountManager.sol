@@ -363,8 +363,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     // repay the debt and get the excess amount if any
     uint256 _excessAmount = _repayFor(_account, _subAccountId, _token, _repayAmount, _debtShareToRepay, _balanceBefore);
 
-    // This will revert if the input repay amount has lower value than _debtShareToRepay
-    // And there's some token left in contract (can be done by inject token directly to this contract)
     if (_excessAmount != 0) {
       IERC20(_token).safeTransfer(msg.sender, _excessAmount);
     }
@@ -398,8 +396,6 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
       _balanceBefore
     );
 
-    // This will revert if the input repay amount has lower value than _debtShareToRepay
-    // And there's some token left in contract (can be done by inject token directly to this contract)
     if (_excessAmount != 0) {
       _safeUnwrap(msg.sender, _excessAmount);
     }
@@ -475,6 +471,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     IERC20(_token).safeApprove(address(moneyMarket), 0);
 
     // Calculate the excess amount left in the contract
+    // This will revert if the input repay amount has lower value than _debtShareToRepay
+    // And there's some token left in contract (can be done by inject token directly to this contract)
     _excessAmount = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
   }
 
