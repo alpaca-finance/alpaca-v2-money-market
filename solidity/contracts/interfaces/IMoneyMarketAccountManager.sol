@@ -69,6 +69,12 @@ interface IMoneyMarketAccountManager {
     uint256 _debtShareToRepay
   ) external;
 
+  function repayETHFor(
+    address _account,
+    uint256 _subAccountId,
+    uint256 _debtShareToRepay
+  ) external payable;
+
   function repayWithCollat(
     uint256 _subAccountId,
     address _token,

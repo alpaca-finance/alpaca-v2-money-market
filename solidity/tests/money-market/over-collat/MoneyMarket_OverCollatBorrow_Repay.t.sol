@@ -23,21 +23,26 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     _miniFL = IMiniFL(address(miniFL));
 
     // set interest to make sure that repay work correclty with share
-    FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
-    adminFacet.setInterestModel(address(weth), address(model));
+    FixedInterestRateModel wethModel = new FixedInterestRateModel(wethDecimal);
+    FixedInterestRateModel wNativeModel = new FixedInterestRateModel(wNativeTokenDecimal);
+    adminFacet.setInterestModel(address(weth), address(wethModel));
+    adminFacet.setInterestModel(address(wNativeToken), address(wNativeModel));
 
     vm.startPrank(ALICE);
     accountManager.deposit(address(weth), normalizeEther(40 ether, wethDecimal));
     accountManager.deposit(address(usdc), normalizeEther(40 ether, usdcDecimal));
     accountManager.deposit(address(isolateToken), normalizeEther(40 ether, isolateTokenDecimal));
+    accountManager.depositETH{ value: 40 ether }();
     vm.stopPrank();
 
     uint256 _aliceBorrowAmount = 10 ether;
+    mockOracle.setTokenPrice(address(wNativeToken), 1 ether);
 
     // set up borrow first
     vm.startPrank(ALICE);
     accountManager.addCollateralFor(ALICE, subAccount0, address(weth), 100 ether);
     accountManager.borrow(subAccount0, address(weth), _aliceBorrowAmount);
+    accountManager.borrowETH(subAccount0, _aliceBorrowAmount);
     vm.stopPrank();
 
     vm.warp(block.timestamp + 10);
@@ -66,6 +71,39 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(weth));
+    assertEq(_debtShare, 0);
+    assertEq(_debtAmount, 0);
+    assertEq(_globalDebtShare, 0);
+    assertEq(_globalDebtValue, 0);
+
+    // debt token in MiniFL should be zero (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _debtTokenBalanceAfter after burned
+    uint256 _debtTokenBalanceAfter = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
+    assertEq(_debtTokenBalanceAfter, _debtTokenBalanceBefore - _debtShareBefore);
+    assertEq(DebtToken(_debtToken).totalSupply(), _debtTokenBalanceAfter);
+  }
+
+  function testCorrectness_WhenUserRepayDebtWithNativeToken_DebtValueShouldDecrease() external {
+    uint256 _debtShare;
+    uint256 _debtAmount;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(wNativeToken));
+
+    // get debt token balance before repay
+    address _debtToken = viewFacet.getDebtTokenFromToken(address(wNativeToken));
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
+
+    uint256 _debtTokenBalanceBefore = _miniFL.getUserTotalAmountOf(_poolId, ALICE);
+    uint256 _debtShareBefore = _debtShare;
+    assertEq(_debtTokenBalanceBefore, _debtShareBefore);
+
+    vm.prank(ALICE);
+    // repay all debt share
+    accountManager.repayETHFor{ value: 100 ether }(ALICE, subAccount0, _debtShare);
+
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(wNativeToken));
+    (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(wNativeToken));
     assertEq(_debtShare, 0);
     assertEq(_debtAmount, 0);
     assertEq(_globalDebtShare, 0);
@@ -141,6 +179,37 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     assertEq(_globalDebtValue, 0);
   }
 
+  function testCorrectness_WhenUserRepayDebtWithNativeTokenMoreThanExistingDebt_ShouldTransferOnlyAcutualRepayAmount()
+    external
+  {
+    uint256 _debtAmount;
+    uint256 _debtShare;
+    uint256 _repayShare = 20 ether;
+    uint256 _globalDebtShare;
+    uint256 _globalDebtValue;
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(wNativeToken));
+
+    uint256 _balanceBefore = ALICE.balance;
+    uint256 _totalTokenBefore = viewFacet.getTotalToken(address(wNativeToken));
+    vm.prank(ALICE);
+    accountManager.repayETHFor{ value: 20 ether }(ALICE, subAccount0, _repayShare);
+    uint256 _balanceAfter = ALICE.balance;
+    uint256 _totalTokenAfter = viewFacet.getTotalToken(address(wNativeToken));
+
+    (_debtShare, _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(wNativeToken));
+    (_globalDebtShare, _globalDebtValue) = viewFacet.getOverCollatTokenDebt(address(wNativeToken));
+
+    // repay share = 10
+    // actual amount to repay = repayShare * debtValue / debtShare = 10 * 11 / 10 = 11 ether
+    uint256 _expectedActualRepayAmount = 11 ether;
+    assertEq(_balanceBefore - _balanceAfter, _expectedActualRepayAmount);
+    assertEq(_totalTokenAfter, _totalTokenBefore + 1 ether); // 1 ether is come from interest
+    assertEq(_debtShare, 0);
+    assertEq(_debtAmount, 0);
+    assertEq(_globalDebtShare, 0);
+    assertEq(_globalDebtValue, 0);
+  }
+
   function testCorrectness_WhenUserRepayWithTinyAmount_ShouldWork() external {
     uint256 _debtShare;
     uint256 _debtAmount;
@@ -201,7 +270,25 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
     // repay entire debt should not revert
     accountManager.repayFor(ALICE, subAccount0, address(weth), 20 ether, 0.1 ether);
 
+    vm.stopPrank();
+
     (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     assertEq(_debtAmount, 0);
+  }
+
+  function testRevert_WhenUserRepayDebtButNoDebtToRepay() external {
+    // ALICE never borrow BTC
+    // so there is no debt for BTC
+    (uint256 _debtShare, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      ALICE,
+      subAccount0,
+      address(btc)
+    );
+    assertEq(_debtShare, 0);
+    assertEq(_debtAmount, 0);
+
+    vm.prank(ALICE);
+    vm.expectRevert(IBorrowFacet.BorrowFacet_NoDebtToRepay.selector);
+    accountManager.repayFor(ALICE, subAccount0, address(btc), 20 ether, 10 ether);
   }
 }

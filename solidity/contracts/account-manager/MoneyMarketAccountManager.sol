@@ -355,27 +355,49 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
       revert MoneyMarketAccountManager_InvalidAmount();
     }
     // cache the balance of token before proceeding
-    uint256 _amountBefore = IERC20(_token).balanceOf(address(this));
+    uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
 
     // Fund this contract from caller
     // ignore the fact that there might be fee on transfer
     IERC20(_token).safeTransferFrom(msg.sender, address(this), _repayAmount);
-
-    // Call repay by forwarding input _debtShareToRepay
-    // Money Market should deduct the fund as much as possible
-    // If there's excess amount left, transfer back to user
-    IERC20(_token).safeApprove(address(moneyMarket), _repayAmount);
-    moneyMarket.repay(_account, _subAccountId, _token, _debtShareToRepay);
-    // Reset allowance as moneyMarket.repay() might not use all the allowance
-    IERC20(_token).safeApprove(address(moneyMarket), 0);
-
-    // Calculate the excess amount left in the contract
-    // This will revert if the input repay amount has lower value than _debtShareToRepay
-    // And there's some token left in contract (can be done by inject token directly to this contract)
-    uint256 _excessAmount = IERC20(_token).balanceOf(address(this)) - _amountBefore;
+    // repay the debt and get the excess amount if any
+    uint256 _excessAmount = _repayFor(_account, _subAccountId, _token, _repayAmount, _debtShareToRepay, _balanceBefore);
 
     if (_excessAmount != 0) {
       IERC20(_token).safeTransfer(msg.sender, _excessAmount);
+    }
+  }
+
+  /// @notice Repay the debt for the subaccount using native token
+  /// @param _account The account to repay for
+  /// @param _subAccountId An index to derive the subaccount
+  /// @param _debtShareToRepay The share amount of debt token to repay
+  function repayETHFor(
+    address _account,
+    uint256 _subAccountId,
+    uint256 _debtShareToRepay
+  ) external payable {
+    // revert if trying to repay amount 0
+    if (msg.value == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
+    // cache the balance of token before proceeding
+    uint256 _balanceBefore = IERC20(wNativeToken).balanceOf(address(this));
+
+    // Wrap the native token as MoneyMarket only accepts ERC20
+    IWNative(wNativeToken).deposit{ value: msg.value }();
+    // repay the debt and get the excess amount if any
+    uint256 _excessAmount = _repayFor(
+      _account,
+      _subAccountId,
+      wNativeToken,
+      msg.value,
+      _debtShareToRepay,
+      _balanceBefore
+    );
+
+    if (_excessAmount != 0) {
+      _safeUnwrap(msg.sender, _excessAmount);
     }
   }
 
@@ -429,6 +451,29 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     // Calculate the actual amount received by comparing balance after - balance before
     // This is to accurately find the amount received even if the underlying token has fee on transfer
     _underlyingAmountReceived = IERC20(_underlyingToken).balanceOf(address(this)) - _underlyingTokenAmountBefore;
+  }
+
+  /// @dev This should only be called once the token has been transfered from the caller to this contract
+  function _repayFor(
+    address _account,
+    uint256 _subAccountId,
+    address _token,
+    uint256 _repayAmount,
+    uint256 _debtShareToRepay,
+    uint256 _balanceBefore
+  ) internal returns (uint256 _excessAmount) {
+    // Call repay by forwarding input _debtShareToRepay
+    // Money Market should deduct the fund as much as possible
+    // If there's excess amount left, transfer back to user
+    IERC20(_token).safeApprove(address(moneyMarket), _repayAmount);
+    moneyMarket.repay(_account, _subAccountId, _token, _debtShareToRepay);
+    // Reset allowance as moneyMarket.repay() might not use all the allowance
+    IERC20(_token).safeApprove(address(moneyMarket), 0);
+
+    // Calculate the excess amount left in the contract
+    // This will revert if the input repay amount has lower value than _debtShareToRepay
+    // And there's some token left in contract (can be done by inject token directly to this contract)
+    _excessAmount = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
   }
 
   function _removeCollateral(
