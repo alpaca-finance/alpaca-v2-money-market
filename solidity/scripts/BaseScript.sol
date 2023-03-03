@@ -13,14 +13,14 @@ import { IViewFacet } from "solidity/contracts/money-market/interfaces/IViewFace
 import { ICollateralFacet } from "solidity/contracts/money-market/interfaces/ICollateralFacet.sol";
 import { IBorrowFacet } from "solidity/contracts/money-market/interfaces/IBorrowFacet.sol";
 import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFacet.sol";
-import { IOwnershipFacet } from "solidity/contracts/money-market/interfaces/IOwnershipFacet.sol";
+import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
-interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IOwnershipFacet {}
+interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IMMOwnershipFacet {}
 
 abstract contract BaseScript is Script {
   using stdJson for string;
