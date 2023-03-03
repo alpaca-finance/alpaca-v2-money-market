@@ -119,7 +119,7 @@ contract BorrowFacet is IBorrowFacet {
     );
 
     // Revert if there's no debt under the subaccount
-    if (_currentDebtShare == 0 && _currentDebtAmount == 0) {
+    if (_currentDebtShare == 0) {
       revert BorrowFacet_NoDebtToRepay();
     }
 
