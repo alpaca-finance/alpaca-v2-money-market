@@ -350,8 +350,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     uint256 _repayAmount,
     uint256 _debtShareToRepay
   ) external {
-    // revert if trying to repay amount 0
-    if (_repayAmount == 0) {
+    // revert if trying to repay amount or debt share to repay = 0
+    if (_repayAmount == 0 || _debtShareToRepay == 0) {
       revert MoneyMarketAccountManager_InvalidAmount();
     }
     // cache the balance of token before proceeding
@@ -377,8 +377,8 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     uint256 _subAccountId,
     uint256 _debtShareToRepay
   ) external payable {
-    // revert if trying to repay amount 0
-    if (msg.value == 0) {
+    // revert if trying to repay amount or debt share to repay = 0
+    if (msg.value == 0 || _debtShareToRepay == 0) {
       revert MoneyMarketAccountManager_InvalidAmount();
     }
     // cache the balance of token before proceeding
