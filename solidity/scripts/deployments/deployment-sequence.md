@@ -13,6 +13,7 @@
 - deploy accountManager
 - (optional) deploy reader
 - allow accountManager on moneyMarket
+- whitelist accountManager on miniFL to allow deposit and withdraw
 
 ## Dependencies
 
