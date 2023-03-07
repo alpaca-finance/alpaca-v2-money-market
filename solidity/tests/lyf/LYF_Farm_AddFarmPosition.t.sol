@@ -286,7 +286,7 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     vm.prank(ALICE);
     farmFacet.addFarmPosition(_input);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
     (uint256 _depositedLP, ) = masterChef.userInfo(_lpConfig.poolId, lyfDiamond);
     assertEq(_depositedLP, 1 ether);
   }

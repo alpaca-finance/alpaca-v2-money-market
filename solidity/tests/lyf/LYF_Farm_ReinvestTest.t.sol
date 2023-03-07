@@ -10,7 +10,6 @@ import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.so
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 contract LYF_Farm_ReinvestTest is LYF_BaseTest {
@@ -35,7 +34,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     uint256 _wethAmountDirect = 20 ether;
     uint256 _usdcAmountDirect = normalizeEther(30 ether, usdcDecimal);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
@@ -82,7 +81,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     assertEq(viewFacet.getPendingReward(address(wethUsdcLPToken)), 0);
 
     // treasury should received bounty in token specified in rewardConversionConfig
-    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+    LibLYFConstant.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
       _lpConfig.rewardToken
     );
     address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
@@ -95,7 +94,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     uint256 _wethAmountDirect = 20 ether;
     uint256 _usdcAmountDirect = normalizeEther(30 ether, usdcDecimal);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
     ILYFFarmFacet.AddFarmPositionInput memory _input = ILYFFarmFacet.AddFarmPositionInput({
       subAccountId: subAccount0,
@@ -158,7 +157,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     wethUsdcLPToken.mint(address(BOB), _bobLpAmount);
     wethUsdcLPToken.mint(address(ALICE), _aliceLpAmount);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
@@ -225,7 +224,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     );
 
     // treasury should received bounty in token specified in rewardConversionConfig
-    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+    LibLYFConstant.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
       _lpConfig.rewardToken
     );
     address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
@@ -255,7 +254,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     wethUsdcLPToken.mint(address(BOB), _bobLpAmount);
     wethUsdcLPToken.mint(address(ALICE), _aliceLpAmount);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
     vm.startPrank(BOB);
     wethUsdcLPToken.approve(address(lyfDiamond), type(uint256).max);
@@ -325,7 +324,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     assertEq(viewFacet.getLpTokenShare(address(wethUsdcLPToken)), 65 ether);
 
     // treasury should received bounty in token specified in rewardConversionConfig
-    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+    LibLYFConstant.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
       _lpConfig.rewardToken
     );
     address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
@@ -343,7 +342,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     _reinvestors[0] = ALICE;
     adminFacet.setReinvestorsOk(_reinvestors, true);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
     uint256 _rewardAmount = 3 ether;
     cake.mint(address(this), _rewardAmount);
@@ -368,7 +367,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     vm.prank(ALICE);
     farmFacet.reinvest(address(wethUsdcLPToken));
 
-    LibLYF01.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
+    LibLYFConstant.RewardConversionConfig memory _rewardConversionConfig = viewFacet.getRewardConversionConfig(
       _lpConfig.rewardToken
     );
     address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];

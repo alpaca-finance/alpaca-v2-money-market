@@ -2,14 +2,14 @@
 pragma solidity 0.8.17;
 
 // libraries
-import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 
 interface ILYFViewFacet {
   function getOracle() external view returns (address);
 
-  function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory);
+  function getLpTokenConfig(address _lpToken) external view returns (LibLYFConstant.LPConfig memory);
 
   function getLpTokenAmount(address _lpToken) external view returns (uint256);
 
@@ -32,7 +32,7 @@ interface ILYFViewFacet {
 
   function getDebtPoolIdOf(address _token, address _lpToken) external view returns (uint256);
 
-  function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYF01.DebtPoolInfo memory);
+  function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYFConstant.DebtPoolInfo memory);
 
   function getDebtPoolTotalValue(uint256 _debtPoolId) external view returns (uint256);
 
@@ -81,5 +81,5 @@ interface ILYFViewFacet {
   function getRewardConversionConfig(address _rewardToken)
     external
     view
-    returns (LibLYF01.RewardConversionConfig memory);
+    returns (LibLYFConstant.RewardConversionConfig memory);
 }

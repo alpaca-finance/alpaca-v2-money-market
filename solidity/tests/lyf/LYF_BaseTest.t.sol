@@ -44,7 +44,6 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 // peripherals

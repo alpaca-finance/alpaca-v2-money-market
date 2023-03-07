@@ -132,7 +132,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     {
       // check how much borrowing power reduced after repay (without fee)
-      LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
+      LibLYFConstant.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
       uint256 _repayTokenPrice = LibLYF01.getPriceUSD(_debtToken, lyfDs);
       uint256 _repaidBorrowingPower = LibLYF01.usedBorrowingPower(
         _actualRepayAmountWithFee - _actualFee,
@@ -318,7 +318,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       revert LYFLiquidationFacet_InvalidAssetTier();
     }
 
-    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+    LibLYFConstant.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     LiquidateLPLocalVars memory vars;
 
@@ -414,7 +414,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualToRepay) {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     // Note: precision loss 1 wei when convert share back to value
     uint256 _debtValue = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
@@ -468,7 +468,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _shareToRepay = LibShareUtil.valueToShare(_repayAmount, debtPoolInfo.totalShare, debtPoolInfo.totalValue);
 
     LibLYF01.removeDebt(_subAccount, _debtPoolId, _shareToRepay, _repayAmount, lyfDs);
@@ -480,7 +480,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _desiredRepayAmountWithFee,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualRepayAmountWithFee, uint256 _actualFee) {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _maxRepayShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     uint256 _maxRepayAmount = LibShareUtil.shareToValue(
       _maxRepayShare,

@@ -45,39 +45,6 @@ library LibLYF01 {
   error LibLYF01_LPCollateralExceedLimit();
   error LibLYF01_FeeOnTransferTokensNotSupported();
 
-  struct TokenConfig {
-    LibLYFConstant.AssetTier tier;
-    uint16 collateralFactor;
-    uint16 borrowingFactor;
-    uint64 to18ConversionFactor;
-    uint256 maxCollateral;
-  }
-
-  struct LPConfig {
-    address strategy;
-    address masterChef;
-    address router;
-    address rewardToken;
-    address[] reinvestPath;
-    uint256 poolId;
-    uint256 reinvestThreshold;
-    uint256 maxLpAmount;
-    uint256 reinvestTreasuryBountyBps;
-  }
-
-  struct DebtPoolInfo {
-    address token;
-    address interestModel;
-    uint256 totalShare;
-    uint256 totalValue;
-    uint256 lastAccruedAt;
-  }
-
-  struct RewardConversionConfig {
-    address router;
-    address[] path;
-  }
-
   // Storage
   struct LYFDiamondStorage {
     IMoneyMarket moneyMarket;
@@ -92,19 +59,19 @@ library LibLYF01 {
     mapping(address => uint256) reserves; // track token balance of protocol
     mapping(address => uint256) protocolReserves; // part of reserves that belongs to protocol
     mapping(address => uint256) collats; // collats = amount of collateral token
-    mapping(address => RewardConversionConfig) rewardConversionConfigs; // rewardToken => RewardConversionConfig
+    mapping(address => LibLYFConstant.RewardConversionConfig) rewardConversionConfigs; // rewardToken => RewardConversionConfig
     // ---- subAccounts ---- //
     mapping(address => LibDoublyLinkedList.List) subAccountCollats; // subAccount => linked list of collats
     mapping(address => LibUIntDoublyLinkedList.List) subAccountDebtShares; // subAccount => linked list of debtShares
     // ---- tokens ---- //
-    mapping(address => TokenConfig) tokenConfigs; // arbitrary token => config
+    mapping(address => LibLYFConstant.TokenConfig) tokenConfigs; // arbitrary token => config
     // ---- debtPools ---- //
     mapping(address => mapping(address => uint256)) debtPoolIds; // token => lp token => debtPoolId
-    mapping(uint256 => DebtPoolInfo) debtPoolInfos; // debtPoolId => DebtPoolInfo
+    mapping(uint256 => LibLYFConstant.DebtPoolInfo) debtPoolInfos; // debtPoolId => DebtPoolInfo
     // ---- lpTokens ---- //
     mapping(address => uint256) lpShares; // lpToken => total share that in protocol's control (collat + farm)
     mapping(address => uint256) lpAmounts; // lpToken => total amount that in protocol's control (collat + farm)
-    mapping(address => LPConfig) lpConfigs; // lpToken => config
+    mapping(address => LibLYFConstant.LPConfig) lpConfigs; // lpToken => config
     mapping(address => uint256) pendingRewards; // lpToken => pending reward amount to be reinvested
     // ---- whitelists ---- //
     mapping(address => bool) reinvestorsOk; // address that can call reinvest
@@ -140,7 +107,7 @@ library LibLYF01 {
 
   function accrueDebtPoolInterest(uint256 _debtPoolId, LYFDiamondStorage storage lyfDs) internal {
     // uint256 _secondsSinceLastAccrual = block.timestamp - lyfDs.debtLastAccrueTime[_debtPoolId];
-    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _secondsSinceLastAccrual = block.timestamp - debtPoolInfo.lastAccruedAt;
     if (_secondsSinceLastAccrual > 0) {
       uint256 _pendingInterest = getDebtPoolPendingInterest(
@@ -183,7 +150,7 @@ library LibLYF01 {
     address _collatToken;
     address _underlyingToken;
     uint256 _collatPrice;
-    TokenConfig memory _tokenConfig;
+    LibLYFConstant.TokenConfig memory _tokenConfig;
     IMoneyMarket _moneyMarket = lyfDs.moneyMarket;
 
     for (uint256 _i; _i < _collatsLength; ) {
@@ -225,8 +192,8 @@ library LibLYF01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    TokenConfig memory _tokenConfig;
-    DebtPoolInfo memory _debtPooInfo;
+    LibLYFConstant.TokenConfig memory _tokenConfig;
+    LibLYFConstant.DebtPoolInfo memory _debtPooInfo;
 
     for (uint256 _i; _i < _borrowedLength; ) {
       _debtPooInfo = lyfDs.debtPoolInfos[_borrowed[_i].index];
@@ -252,7 +219,7 @@ library LibLYF01 {
 
     uint256 _borrowedLength = _borrowed.length;
 
-    DebtPoolInfo memory _debtPooInfo;
+    LibLYFConstant.DebtPoolInfo memory _debtPooInfo;
 
     for (uint256 _i; _i < _borrowedLength; ) {
       _debtPooInfo = lyfDs.debtPoolInfos[_borrowed[_i].index];
@@ -343,7 +310,7 @@ library LibLYF01 {
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
     if (lyfDs.tokenConfigs[_token].tier == LibLYFConstant.AssetTier.LP) {
-      LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
+      LibLYFConstant.LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
 
       if (lyfDs.lpAmounts[_token] + _amountAdded > _lpConfig.maxLpAmount) {
         revert LibLYF01_LPCollateralExceedLimit();
@@ -451,7 +418,7 @@ library LibLYF01 {
     LYFDiamondStorage storage lyfDs
   ) internal view {
     // note: precision loss 1 wei when convert share back to value
-    DebtPoolInfo memory _debtPooInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo memory _debtPooInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _debtAmount = LibShareUtil.shareToValue(
       lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId),
       _debtPooInfo.totalValue,
@@ -492,7 +459,7 @@ library LibLYF01 {
 
   function harvest(
     address _lpToken,
-    LibLYF01.LPConfig memory _lpConfig,
+    LibLYFConstant.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
     uint256 _rewardBefore = IERC20(_lpConfig.rewardToken).balanceOf(address(this));
@@ -506,7 +473,7 @@ library LibLYF01 {
   function reinvest(
     address _lpToken,
     uint256 _reinvestThreshold,
-    LibLYF01.LPConfig memory _lpConfig,
+    LibLYFConstant.LPConfig memory _lpConfig,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
     harvest(_lpToken, _lpConfig, lyfDs);
@@ -573,7 +540,7 @@ library LibLYF01 {
     }
 
     // transfer bounty to treasury
-    RewardConversionConfig memory _swapConfig = lyfDs.rewardConversionConfigs[_lpConfig.rewardToken];
+    LibLYFConstant.RewardConversionConfig memory _swapConfig = lyfDs.rewardConversionConfigs[_lpConfig.rewardToken];
     address _treasuryDesiredToken = _swapConfig.path[_swapConfig.path.length - 1];
     if (_lpConfig.rewardToken == _treasuryDesiredToken) {
       // just transfer if reward and desired token are the same
@@ -616,7 +583,7 @@ library LibLYF01 {
     }
 
     LibUIntDoublyLinkedList.List storage userDebtShare = lyfDs.subAccountDebtShares[_subAccount];
-    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     userDebtShare.initIfNotExist();
 
@@ -657,7 +624,7 @@ library LibLYF01 {
     // update user debtShare
     lyfDs.subAccountDebtShares[_subAccount].updateOrRemove(_debtPoolId, _currentDebtShare - _debtShareToRemove);
 
-    DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     debtPoolInfo.totalShare -= _debtShareToRemove;
     debtPoolInfo.totalValue -= _debtAmountToRemove;
   }
@@ -692,7 +659,7 @@ library LibLYF01 {
     uint256 _debtPoolId,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) external view returns (uint256 _debtShare, uint256 _debtAmount) {
-    LibLYF01.DebtPoolInfo memory _debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo memory _debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     _debtAmount = LibShareUtil.shareToValue(_debtShare, _debtPoolInfo.totalValue, _debtPoolInfo.totalShare);

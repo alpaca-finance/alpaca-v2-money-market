@@ -7,6 +7,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -25,7 +26,7 @@ contract LYFViewFacet is ILYFViewFacet {
   /// @notice Get the configuration of LP token
   /// @param _lpToken The address of LP token
   /// @return Struct that contains configuration paramteres
-  function getLpTokenConfig(address _lpToken) external view returns (LibLYF01.LPConfig memory) {
+  function getLpTokenConfig(address _lpToken) external view returns (LibLYFConstant.LPConfig memory) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     return lyfDs.lpConfigs[_lpToken];
   }
@@ -104,7 +105,7 @@ contract LYFViewFacet is ILYFViewFacet {
   /// @notice Get the debt pool information
   /// @param _debtPoolId The id of the debt pool
   /// @return A struct of DebtPoolInfo
-  function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYF01.DebtPoolInfo memory) {
+  function getDebtPoolInfo(uint256 _debtPoolId) external view returns (LibLYFConstant.DebtPoolInfo memory) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     return lyfDs.debtPoolInfos[_debtPoolId];
   }
@@ -178,7 +179,7 @@ contract LYFViewFacet is ILYFViewFacet {
   /// @return The amount of outstanding interest that hasn't been accrued
   function getDebtPoolPendingInterest(uint256 _debtPoolId) external view returns (uint256) {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    LibLYF01.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo memory debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     return
       LibLYF01.getDebtPoolPendingInterest(
         lyfDs.moneyMarket,
@@ -275,7 +276,7 @@ contract LYFViewFacet is ILYFViewFacet {
   function getRewardConversionConfig(address _rewardToken)
     external
     view
-    returns (LibLYF01.RewardConversionConfig memory)
+    returns (LibLYFConstant.RewardConversionConfig memory)
   {
     return LibLYF01.lyfDiamondStorage().rewardConversionConfigs[_rewardToken];
   }
