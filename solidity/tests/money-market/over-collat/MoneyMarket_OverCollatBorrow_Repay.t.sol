@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import { MoneyMarket_BaseTest, MockERC20, DebtToken, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
+import { IMoneyMarketAccountManager } from "../../../contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IBorrowFacet } from "../../../contracts/money-market/interfaces/IBorrowFacet.sol";
 import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
@@ -274,6 +275,38 @@ contract MoneyMarket_OverCollatBorrow_RepayTest is MoneyMarket_BaseTest {
 
     (, uint256 _debtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, subAccount0, address(weth));
     assertEq(_debtAmount, 0);
+  }
+
+  function testRevert_WhenUserRepayWithZeroAmountOrZeroDebtShareToRepay() external {
+    vm.startPrank(ALICE);
+    // repay amount = 0 should revert
+    vm.expectRevert(IMoneyMarketAccountManager.MoneyMarketAccountManager_InvalidAmount.selector);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 0, 1 ether);
+
+    // repay debt share = 0 should revert
+    vm.expectRevert(IMoneyMarketAccountManager.MoneyMarketAccountManager_InvalidAmount.selector);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 1 ether, 0);
+
+    // combine both should revert
+    vm.expectRevert(IMoneyMarketAccountManager.MoneyMarketAccountManager_InvalidAmount.selector);
+    accountManager.repayFor(ALICE, subAccount0, address(weth), 0, 0);
+    vm.stopPrank();
+  }
+
+  function testRevert_WhenUserRepayNativeTokenWithZeroAmountOrZeroDebtShareToRepay() external {
+    vm.startPrank(ALICE);
+    // repay amount = 0 should revert
+    vm.expectRevert(IMoneyMarketAccountManager.MoneyMarketAccountManager_InvalidAmount.selector);
+    accountManager.repayETHFor{ value: 0 }(ALICE, subAccount0, 1 ether);
+
+    // repay debt share = 0 should revert
+    vm.expectRevert(IMoneyMarketAccountManager.MoneyMarketAccountManager_InvalidAmount.selector);
+    accountManager.repayETHFor{ value: 1 ether }(ALICE, subAccount0, 0);
+
+    // combine both should revert
+    vm.expectRevert(IMoneyMarketAccountManager.MoneyMarketAccountManager_InvalidAmount.selector);
+    accountManager.repayETHFor{ value: 0 }(ALICE, subAccount0, 0);
+    vm.stopPrank();
   }
 
   function testRevert_WhenUserRepayDebtButNoDebtToRepay() external {
