@@ -11,6 +11,7 @@ import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.so
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 contract LYF_Farm_ReinvestTest is LYF_BaseTest {
   struct AddFarmInputs {
@@ -373,7 +374,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     address _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
     assertEq(
       MockERC20(_desiredRewardToken).balanceOf(revenueTreasury),
-      (normalizeEther(_rewardAmount, usdcDecimal) * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS
+      (normalizeEther(_rewardAmount, usdcDecimal) * _lpConfig.reinvestTreasuryBountyBps) / LibLYFConstant.MAX_BPS
     );
 
     // case reward and desired are the same token
@@ -391,7 +392,7 @@ contract LYF_Farm_ReinvestTest is LYF_BaseTest {
     _desiredRewardToken = _rewardConversionConfig.path[_rewardConversionConfig.path.length - 1];
     assertEq(
       MockERC20(_desiredRewardToken).balanceOf(revenueTreasury),
-      (_rewardAmount * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS
+      (_rewardAmount * _lpConfig.reinvestTreasuryBountyBps) / LibLYFConstant.MAX_BPS
     );
   }
 }

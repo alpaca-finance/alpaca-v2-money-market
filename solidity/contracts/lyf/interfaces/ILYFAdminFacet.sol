@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 
 interface ILYFAdminFacet {
   error LYFAdminFacet_BadDebtPoolId();
@@ -12,7 +12,7 @@ interface ILYFAdminFacet {
   error LYFAdminFacet_SubAccountHealthy(address _account, uint256 _subAccountId);
 
   struct TokenConfigInput {
-    LibLYF01.AssetTier tier;
+    LibLYFConstant.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     address token;

@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
@@ -58,7 +59,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
-    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+    if (lyfDs.tokenConfigs[_token].tier != LibLYFConstant.AssetTier.COLLATERAL) {
       revert LYFCollateralFacet_OnlyCollateralTierAllowed();
     }
     if (_amount + lyfDs.collats[_token] > lyfDs.tokenConfigs[_token].maxCollateral) {
@@ -87,7 +88,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     // allow token to be removed if the tier's changed
-    if (lyfDs.tokenConfigs[_token].tier == LibLYF01.AssetTier.LP) {
+    if (lyfDs.tokenConfigs[_token].tier == LibLYFConstant.AssetTier.LP) {
       revert LYFCollateralFacet_RemoveLPCollateralNotAllowed();
     }
 
@@ -123,7 +124,7 @@ contract LYFCollateralFacet is ILYFCollateralFacet {
       revert LYFCollateralFacet_SelfCollatTransferNotAllowed();
     }
 
-    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+    if (lyfDs.tokenConfigs[_token].tier != LibLYFConstant.AssetTier.COLLATERAL) {
       revert LYFCollateralFacet_OnlyCollateralTierAllowed();
     }
 

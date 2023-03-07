@@ -10,6 +10,7 @@ import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 
 // libraries
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 import { LibFullMath } from "../../contracts/lyf/libraries/LibFullMath.sol";
 
 contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
@@ -391,14 +392,14 @@ contract LYF_Farm_AddFarmPositionTest is LYF_BaseTest {
     ILYFAdminFacet.TokenConfigInput[] memory _tokenConfigInputs = new ILYFAdminFacet.TokenConfigInput[](2);
     _tokenConfigInputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 100 ether
     });
     _tokenConfigInputs[1] = ILYFAdminFacet.TokenConfigInput({
       token: address(wethUsdcLPToken),
-      tier: LibLYF01.AssetTier.LP,
+      tier: LibLYFConstant.AssetTier.LP,
       collateralFactor: 8000,
       borrowingFactor: 1,
       maxCollateral: 100 ether

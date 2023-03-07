@@ -7,6 +7,7 @@ import { LibUIntDoublyLinkedList } from "./LibUIntDoublyLinkedList.sol";
 import { LibFullMath } from "./LibFullMath.sol";
 import { LibShareUtil } from "./LibShareUtil.sol";
 import { LibSafeToken } from "./LibSafeToken.sol";
+import { LibLYFConstant } from "./LibLYFConstant.sol";
 
 // interfaces
 import { IAlpacaV2Oracle } from "../interfaces/IAlpacaV2Oracle.sol";
@@ -26,8 +27,6 @@ library LibLYF01 {
   // keccak256("lyf.diamond.storage");
   bytes32 internal constant LYF_STORAGE_POSITION = 0x23ec0f04376c11672050f8fa65aa7cdd1b6edcb0149eaae973a7060e7ef8f3f4;
 
-  uint256 internal constant MAX_BPS = 10000;
-
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
   event LogReinvest(
     address indexed _rewardTo,
@@ -46,14 +45,8 @@ library LibLYF01 {
   error LibLYF01_LPCollateralExceedLimit();
   error LibLYF01_FeeOnTransferTokensNotSupported();
 
-  enum AssetTier {
-    UNLISTED,
-    COLLATERAL,
-    LP
-  }
-
   struct TokenConfig {
-    LibLYF01.AssetTier tier;
+    LibLYFConstant.AssetTier tier;
     uint16 collateralFactor;
     uint16 borrowingFactor;
     uint64 to18ConversionFactor;
@@ -279,7 +272,7 @@ library LibLYF01 {
   }
 
   function getPriceUSD(address _token, LYFDiamondStorage storage lyfDs) internal view returns (uint256 _price) {
-    if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+    if (lyfDs.tokenConfigs[_token].tier == LibLYFConstant.AssetTier.LP) {
       (_price, ) = lyfDs.oracle.lpToDollar(1e18, _token);
     } else {
       (_price, ) = lyfDs.oracle.getTokenPrice(_token);
@@ -308,7 +301,7 @@ library LibLYF01 {
     uint256 _to18ConversionFactor
   ) internal pure returns (uint256 _usedBorrowingPower) {
     _usedBorrowingPower = LibFullMath.mulDiv(
-      _borrowedAmount * MAX_BPS * _to18ConversionFactor,
+      _borrowedAmount * LibLYFConstant.MAX_BPS * _to18ConversionFactor,
       _tokenPrice,
       1e18 * uint256(_borrowingFactor)
     );
@@ -349,7 +342,7 @@ library LibLYF01 {
 
     _amountAdded = _amount;
     // If collat is LP take collat as a share, not direct amount
-    if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+    if (lyfDs.tokenConfigs[_token].tier == LibLYFConstant.AssetTier.LP) {
       LPConfig memory _lpConfig = lyfDs.lpConfigs[_token];
 
       if (lyfDs.lpAmounts[_token] + _amountAdded > _lpConfig.maxLpAmount) {
@@ -391,7 +384,7 @@ library LibLYF01 {
       _subAccountCollatList.updateOrRemove(_token, _collateralAmount - _amountRemoved);
 
       // If LP token, handle extra step
-      if (lyfDs.tokenConfigs[_token].tier == AssetTier.LP) {
+      if (lyfDs.tokenConfigs[_token].tier == LibLYFConstant.AssetTier.LP) {
         reinvest(_token, lyfDs.lpConfigs[_token].reinvestThreshold, lyfDs.lpConfigs[_token], lyfDs);
 
         uint256 _lpValueRemoved = LibShareUtil.shareToValue(
@@ -530,7 +523,7 @@ library LibLYF01 {
     address _token1 = ISwapPairLike(_lpToken).token1();
 
     // calcualate reinvest bounty
-    uint256 _reinvestBounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYF01.MAX_BPS;
+    uint256 _reinvestBounty = (_pendingReward * _lpConfig.reinvestTreasuryBountyBps) / LibLYFConstant.MAX_BPS;
 
     {
       uint256 _actualPendingReward = _pendingReward - _reinvestBounty;

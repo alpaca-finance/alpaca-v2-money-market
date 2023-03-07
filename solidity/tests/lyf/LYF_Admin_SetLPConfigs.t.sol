@@ -5,6 +5,7 @@ import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTes
 
 // interfaces
 import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
   function setUp() public override {
@@ -54,7 +55,7 @@ contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
       poolId: wethUsdcPoolId,
       maxLpAmount: 1_000 ether,
       reinvestThreshold: reinvestThreshold,
-      reinvestTreasuryBountyBps: uint16(LibLYF01.MAX_BPS) + 1
+      reinvestTreasuryBountyBps: uint16(LibLYFConstant.MAX_BPS) + 1
     });
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
     adminFacet.setLPConfigs(_lpConfigs);
@@ -82,7 +83,7 @@ contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
       poolId: wethUsdcPoolId,
       maxLpAmount: 1_000 ether,
       reinvestThreshold: reinvestThreshold,
-      reinvestTreasuryBountyBps: uint16(LibLYF01.MAX_BPS) + 1
+      reinvestTreasuryBountyBps: uint16(LibLYFConstant.MAX_BPS) + 1
     });
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");

@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
@@ -74,7 +75,8 @@ contract LYFAdminFacet is ILYFAdminFacet {
       _tokenConfigInput = _tokenConfigInputs[_i];
       // factors should not greater than MAX_BPS
       if (
-        _tokenConfigInput.collateralFactor > LibLYF01.MAX_BPS || _tokenConfigInput.borrowingFactor > LibLYF01.MAX_BPS
+        _tokenConfigInput.collateralFactor > LibLYFConstant.MAX_BPS ||
+        _tokenConfigInput.borrowingFactor > LibLYFConstant.MAX_BPS
       ) {
         revert LYFAdminFacet_InvalidArguments();
       }
@@ -117,7 +119,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     for (uint256 _i; _i < _len; ) {
       _input = _lpConfigInputs[_i];
-      if (_input.reinvestTreasuryBountyBps > LibLYF01.MAX_BPS) {
+      if (_input.reinvestTreasuryBountyBps > LibLYFConstant.MAX_BPS) {
         revert LYFAdminFacet_InvalidArguments();
       }
       if (_input.rewardToken != _input.reinvestPath[0]) {

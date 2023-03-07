@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -265,7 +266,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.accrueDebtSharesOf(_vars.subAccount, lyfDs);
 
-    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
+    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYFConstant.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
@@ -434,7 +435,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     // check asset tier, if not collat, revert
-    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+    if (lyfDs.tokenConfigs[_token].tier != LibLYFConstant.AssetTier.COLLATERAL) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
