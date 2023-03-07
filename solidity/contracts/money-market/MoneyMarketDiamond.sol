@@ -37,6 +37,8 @@ contract MoneyMarketDiamond {
     ds.supportedInterfaces[type(IMMDiamondLoupe).interfaceId] = true;
     ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
+    // todo: add mm interfaces
+
     // initialize money market states
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.miniFL = IMiniFL(_miniFL);

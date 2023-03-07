@@ -54,7 +54,7 @@ abstract contract AV_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    avDiamond = AVDiamondDeployer.deployPoolDiamond();
+    avDiamond = AVDiamondDeployer.deployAVDiamond();
 
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
 

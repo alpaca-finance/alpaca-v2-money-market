@@ -11,14 +11,11 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 
 // facets
-import { DiamondCutFacet, IDiamondCut } from "../../contracts/lyf/facets/DiamondCutFacet.sol";
-import { DiamondLoupeFacet } from "../../contracts/lyf/facets/DiamondLoupeFacet.sol";
+import { LYFDiamondCutFacet, ILYFDiamondCut } from "../../contracts/lyf/facets/LYFDiamondCutFacet.sol";
+import { LYFDiamondLoupeFacet } from "../../contracts/lyf/facets/LYFDiamondLoupeFacet.sol";
 import { LYFAdminFacet } from "../../contracts/lyf/facets/LYFAdminFacet.sol";
 import { LYFCollateralFacet } from "../../contracts/lyf/facets/LYFCollateralFacet.sol";
 import { LYFFarmFacet } from "../../contracts/lyf/facets/LYFFarmFacet.sol";
-
-// initializers
-import { DiamondInit } from "../../contracts/lyf/initializers/DiamondInit.sol";
 
 // interfaces
 import { ILYFAdminFacet } from "../../contracts/lyf/interfaces/ILYFAdminFacet.sol";
@@ -89,7 +86,7 @@ abstract contract LYF_BaseTest is BaseTest {
   function setUp() public virtual {
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
 
-    lyfDiamond = LYFDiamondDeployer.deployPoolDiamond(moneyMarketDiamond);
+    (lyfDiamond, ) = LYFDiamondDeployer.deployLYFDiamond(moneyMarketDiamond);
     setUpMM(moneyMarketDiamond);
 
     adminFacet = LYFAdminFacet(lyfDiamond);

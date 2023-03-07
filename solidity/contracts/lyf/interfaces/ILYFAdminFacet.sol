@@ -79,4 +79,10 @@ interface ILYFAdminFacet {
   function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
 
   function topUpTokenReserve(address _token, uint256 _amount) external;
+
+  function setLiquidationStratsOk(address[] calldata _strategies, bool _isOk) external;
+
+  function setLiquidatorsOk(address[] calldata _liquidators, bool _isOk) external;
+
+  function settleDebt(address _token, uint256 _repayAmount) external;
 }

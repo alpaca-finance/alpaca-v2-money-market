@@ -16,7 +16,7 @@ import { DiamondInit } from "../../contracts/automated-vault/initializers/Diamon
 import { AVInit } from "../../contracts/automated-vault/initializers/AVInit.sol";
 
 library AVDiamondDeployer {
-  function deployPoolDiamond() internal returns (address _avDiamondAddr) {
+  function deployAVDiamond() internal returns (address _avDiamondAddr) {
     // Deploy DimondCutFacet
     DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 

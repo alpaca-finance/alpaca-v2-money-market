@@ -6,7 +6,7 @@ pragma solidity 0.8.17;
 * EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
 /******************************************************************************/
 
-interface IDiamondCut {
+interface ILYFDiamondCut {
   enum FacetCutAction {
     Add,
     Replace,
