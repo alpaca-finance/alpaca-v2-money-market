@@ -8,6 +8,10 @@ interface ILYFOwnershipFacet is IERC173 {
 
   event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
 
+  function owner() external view returns (address);
+
+  function transferOwnership(address _newOwner) external;
+
   function acceptOwnership() external;
 
   function pendingOwner() external view returns (address);

@@ -698,7 +698,7 @@ library LibLYF01 {
     address _subAccount,
     uint256 _debtPoolId,
     LibLYF01.LYFDiamondStorage storage lyfDs
-  ) external view returns (uint256 _debtShare, uint256 _debtAmount) {
+  ) internal view returns (uint256 _debtShare, uint256 _debtAmount) {
     LibLYF01.DebtPoolInfo memory _debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
+// todo: move to other lib
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
 
 interface ILYFAdminFacet {
@@ -79,4 +80,10 @@ interface ILYFAdminFacet {
   function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
 
   function topUpTokenReserve(address _token, uint256 _amount) external;
+
+  function setLiquidationStratsOk(address[] calldata _strategies, bool _isOk) external;
+
+  function setLiquidatorsOk(address[] calldata _liquidators, bool _isOk) external;
+
+  function settleDebt(address _token, uint256 _repayAmount) external;
 }
