@@ -18,12 +18,13 @@ cast send 0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2 --from 0x3e19d726ed435AfD3A
 # busd
 cast rpc anvil_impersonateAccount 0x4B16c5dE96EB2117bBE5fd171E4d203624B014aa
 cast send 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56 --from 0x4B16c5dE96EB2117bBE5fd171E4d203624B014aa "transfer(address,uint256)" $USER_ADDRESS $THOUSAND_ETHER
-send alpaca to deployer to be used in miniFL setup
-cast rpc anvil_impersonateAccount 0x000000000000000000000000000000000000dEaD
-cast send 0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F --from 0x000000000000000000000000000000000000dEaD "transfer(address,uint256)" $DEPLOYER_ADDRESS $THOUSAND_ETHER
 # wrap bnb
 cast rpc anvil_impersonateAccount $USER_ADDRESS
 cast send 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c --from $USER_ADDRESS --value $THOUSAND_ETHER "deposit()"
+
+# send alpaca to deployer to be used in miniFL setup
+cast rpc anvil_impersonateAccount 0x000000000000000000000000000000000000dEaD
+cast send 0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F --from 0x000000000000000000000000000000000000dEaD "transfer(address,uint256)" $DEPLOYER_ADDRESS $THOUSAND_ETHER
 cast rpc anvil_stopImpersonatingAccount $USER_ADDRESS
 
 # save snapshot before deployment to facilitate chain state reversion

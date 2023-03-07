@@ -8,7 +8,7 @@ import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
 
-contract SetUpMMForTestScript is BaseScript {
+contract SetUpMiniFLForTestScript is BaseScript {
   using stdJson for string;
 
   uint256 internal alpacaPerSecond;
