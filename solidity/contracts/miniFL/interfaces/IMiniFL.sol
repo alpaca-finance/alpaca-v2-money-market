@@ -29,4 +29,12 @@ interface IMiniFL {
   function getStakingReserves(uint256 _pid) external view returns (uint256);
 
   function setWhitelistedCallers(address[] calldata _callers, bool _allow) external;
+
+  function setPool(
+    uint256 _pid,
+    uint256 _newAllocPoint,
+    bool _withUpdate
+  ) external;
+
+  function setAlpacaPerSecond(uint256 _newAlpacaPerSecond, bool _withUpdate) external;
 }
