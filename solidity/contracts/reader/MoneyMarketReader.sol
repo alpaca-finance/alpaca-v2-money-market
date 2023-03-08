@@ -123,9 +123,9 @@ contract MoneyMarketReader is IMoneyMarketReader {
       ibTokenAddress: _ibTokenAddress,
       underlyingToken: _underlyingTokenAddress,
       supplyIbAmount: _supplyIbAmount,
-      ibTokenPrice: getPriceUSD(_ibTokenAddress),
+      ibTokenPrice: _getPriceUSD(_ibTokenAddress),
       underlyingAmount: IInterestBearingToken(_ibTokenAddress).convertToAssets(_supplyIbAmount),
-      underlyingTokenPrice: getPriceUSD(_underlyingTokenAddress)
+      underlyingTokenPrice: _getPriceUSD(_underlyingTokenAddress)
     });
   }
 
@@ -148,8 +148,8 @@ contract MoneyMarketReader is IMoneyMarketReader {
       address _ibToken = _rawCollats[_i].token;
       address _underlyingToken = _moneyMarket.getTokenFromIbToken(_ibToken);
 
-      uint256 _ibTokenPrice = getPriceUSD(_ibToken);
-      uint256 _underlyingTokenPrice = getPriceUSD(_underlyingToken);
+      uint256 _ibTokenPrice = _getPriceUSD(_ibToken);
+      uint256 _underlyingTokenPrice = _getPriceUSD(_underlyingToken);
       LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_ibToken);
 
       uint256 _valueUSD = (_ibTokenPrice * _rawCollats[_i].amount * _tokenConfig.to18ConversionFactor) / 1e18;
@@ -182,7 +182,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
     for (uint256 _i; _i < _debtLen; ++_i) {
       address _token = _rawDebts[_i].token;
-      uint256 _price = getPriceUSD(_token);
+      uint256 _price = _getPriceUSD(_token);
       LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_token);
       (uint256 _totalDebtShares, uint256 _totalDebtAmount) = _moneyMarket.getOverCollatTokenDebt(_token);
 
@@ -210,8 +210,13 @@ contract MoneyMarketReader is IMoneyMarketReader {
     return _getPrice(_oracleMedianizer, _token0, _token1);
   }
 
+  /// @dev Simply forward calling _getPriceUSD
+  function getPriceUSD(address _token) external view returns (uint256) {
+    return _getPriceUSD(_token);
+  }
+
   /// @dev Return the price of `_token` in USD with 18 decimal places
-  function getPriceUSD(address _token) public view returns (uint256) {
+  function _getPriceUSD(address _token) internal view returns (uint256) {
     // TODO: use real oracle
     // IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
     // IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
