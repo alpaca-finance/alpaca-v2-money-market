@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // libs
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -114,7 +115,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // prepare data
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_input.lpToken];
+    LibLYFConstant.LPConfig memory _lpConfig = lyfDs.lpConfigs[_input.lpToken];
 
     _vars.account = msg.sender;
     _vars.subAccount = LibLYF01.getSubAccount(_vars.account, _input.subAccountId);
@@ -265,11 +266,11 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     LibLYF01.accrueDebtSharesOf(_vars.subAccount, lyfDs);
 
-    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
+    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYFConstant.AssetTier.LP) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
-    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
+    LibLYFConstant.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
 
     _vars.token0 = ISwapPairLike(_lpToken).token0();
     _vars.token1 = ISwapPairLike(_lpToken).token1();
@@ -365,7 +366,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _debtPoolId = lyfDs.debtPoolIds[_debtToken][_lpToken];
 
     // must use storage because interest accrual increase totalValue
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     // only need to accrue debtPool that is being repaid
     LibLYF01.accrueDebtPoolInterest(_debtPoolId, lyfDs);
@@ -413,7 +414,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
       revert LYFFarmFacet_Unauthorized();
     }
 
-    LibLYF01.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
+    LibLYFConstant.LPConfig memory _lpConfig = lyfDs.lpConfigs[_lpToken];
     if (_lpConfig.rewardToken == address(0)) {
       revert LYFFarmFacet_InvalidLP();
     }
@@ -434,7 +435,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
   ) external nonReentrant {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     // check asset tier, if not collat, revert
-    if (lyfDs.tokenConfigs[_token].tier != LibLYF01.AssetTier.COLLATERAL) {
+    if (lyfDs.tokenConfigs[_token].tier != LibLYFConstant.AssetTier.COLLATERAL) {
       revert LYFFarmFacet_InvalidAssetTier();
     }
 
@@ -449,7 +450,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
 
     // prevent repay 0
     if (_actualDebtShareToRemove > 0) {
-      LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+      LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
       // convert debtShare to debtAmount
       uint256 _actualDebtToRemove = LibShareUtil.shareToValue(
         _actualDebtShareToRemove,
@@ -496,7 +497,7 @@ contract LYFFarmFacet is ILYFFarmFacet {
     uint256 _desiredRepayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualShareToRepay, uint256 _actualToRepay) {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     // debt share of sub account
     _actualShareToRepay = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);

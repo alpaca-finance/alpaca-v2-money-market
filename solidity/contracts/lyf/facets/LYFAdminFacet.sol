@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // ---- Libraries ---- //
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibFullMath } from "../libraries/LibFullMath.sol";
@@ -22,9 +23,9 @@ contract LYFAdminFacet is ILYFAdminFacet {
   using LibUIntDoublyLinkedList for LibUIntDoublyLinkedList.List;
 
   event LogSetOracle(address indexed _oracle);
-  event LogSetTokenConfig(address indexed _token, LibLYF01.TokenConfig _config);
+  event LogSetTokenConfig(address indexed _token, LibLYFConstant.TokenConfig _config);
   event LogSetMoneyMarket(address indexed _moneyMarket);
-  event LogSetLPConfig(address indexed _lpToken, LibLYF01.LPConfig _config);
+  event LogSetLPConfig(address indexed _lpToken, LibLYFConstant.LPConfig _config);
   event LogSetDebtPoolId(address indexed _token, address indexed _lpToken, uint256 _debtPoolId);
   event LogSetDebtPoolInterestModel(uint256 indexed _debtPoolId, address _interestModel);
   event LogSetMinDebtSize(uint256 _newValue);
@@ -43,7 +44,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 debtValueWrittenOff
   );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
-  event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYF01.RewardConversionConfig _config);
+  event LogSetRewardConversionConfigs(address indexed _rewardToken, LibLYFConstant.RewardConversionConfig _config);
   event LogSettleDebt(address indexed _token, uint256 _amount);
 
   modifier onlyOwner() {
@@ -68,13 +69,14 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
 
     uint256 _inputLength = _tokenConfigInputs.length;
-    LibLYF01.TokenConfig memory _tokenConfig;
+    LibLYFConstant.TokenConfig memory _tokenConfig;
     TokenConfigInput memory _tokenConfigInput;
     for (uint256 _i; _i < _inputLength; ) {
       _tokenConfigInput = _tokenConfigInputs[_i];
       // factors should not greater than MAX_BPS
       if (
-        _tokenConfigInput.collateralFactor > LibLYF01.MAX_BPS || _tokenConfigInput.borrowingFactor > LibLYF01.MAX_BPS
+        _tokenConfigInput.collateralFactor > LibLYFConstant.MAX_BPS ||
+        _tokenConfigInput.borrowingFactor > LibLYFConstant.MAX_BPS
       ) {
         revert LYFAdminFacet_InvalidArguments();
       }
@@ -87,7 +89,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
         revert LYFAdminFacet_InvalidArguments();
       }
 
-      _tokenConfig = LibLYF01.TokenConfig({
+      _tokenConfig = LibLYFConstant.TokenConfig({
         tier: _tokenConfigInput.tier,
         collateralFactor: _tokenConfigInput.collateralFactor,
         borrowingFactor: _tokenConfigInput.borrowingFactor,
@@ -112,12 +114,12 @@ contract LYFAdminFacet is ILYFAdminFacet {
 
     uint256 _len = _lpConfigInputs.length;
 
-    LibLYF01.LPConfig memory _config;
+    LibLYFConstant.LPConfig memory _config;
     LPConfigInput memory _input;
 
     for (uint256 _i; _i < _len; ) {
       _input = _lpConfigInputs[_i];
-      if (_input.reinvestTreasuryBountyBps > LibLYF01.MAX_BPS) {
+      if (_input.reinvestTreasuryBountyBps > LibLYFConstant.MAX_BPS) {
         revert LYFAdminFacet_InvalidArguments();
       }
       if (_input.rewardToken != _input.reinvestPath[0]) {
@@ -127,7 +129,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
       // sanity check reinvestPath and router
       IRouterLike(_input.router).getAmountsIn(1 ether, _input.reinvestPath);
 
-      _config = LibLYF01.LPConfig({
+      _config = LibLYFConstant.LPConfig({
         strategy: _input.strategy,
         masterChef: _input.masterChef,
         router: _input.router,
@@ -159,7 +161,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     uint256 _debtPoolId
   ) external onlyOwner {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
 
     // validate token must not already set
     // validate if token exist but different lp
@@ -373,7 +375,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
     LibLYF01.LYFDiamondStorage storage lyfDs = LibLYF01.lyfDiamondStorage();
     uint256 _len = _inputs.length;
     ILYFAdminFacet.SetRewardConversionConfigInput memory _input;
-    LibLYF01.RewardConversionConfig memory _config;
+    LibLYFConstant.RewardConversionConfig memory _config;
     for (uint256 _i; _i < _len; ) {
       _input = _inputs[_i];
 
@@ -384,7 +386,7 @@ contract LYFAdminFacet is ILYFAdminFacet {
       // sanity check router and path
       IRouterLike(_input.router).getAmountsIn(1 ether, _input.path);
 
-      _config = LibLYF01.RewardConversionConfig({ router: _input.router, path: _input.path });
+      _config = LibLYFConstant.RewardConversionConfig({ router: _input.router, path: _input.path });
       lyfDs.rewardConversionConfigs[_input.rewardToken] = _config;
 
       emit LogSetRewardConversionConfigs(_input.rewardToken, _config);

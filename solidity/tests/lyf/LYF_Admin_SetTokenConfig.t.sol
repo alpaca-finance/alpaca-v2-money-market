@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
+import { LYF_BaseTest, console, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
 
-// interfaces
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+// lib
+import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 contract LYF_Admin_SetTokenConfigsTest is LYF_BaseTest {
   function setUp() public override {
@@ -15,7 +15,7 @@ contract LYF_Admin_SetTokenConfigsTest is LYF_BaseTest {
     ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](1);
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 100 ether
@@ -29,8 +29,8 @@ contract LYF_Admin_SetTokenConfigsTest is LYF_BaseTest {
     // invalid collatFactor
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
-      tier: LibLYF01.AssetTier.COLLATERAL,
-      collateralFactor: uint16(LibLYF01.MAX_BPS) + 1,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
+      collateralFactor: uint16(LibLYFConstant.MAX_BPS) + 1,
       borrowingFactor: 9000,
       maxCollateral: 100 ether
     });
@@ -39,7 +39,7 @@ contract LYF_Admin_SetTokenConfigsTest is LYF_BaseTest {
 
     // invalid borrowingFactor (exceed max bps)
     _inputs[0].collateralFactor = 9000;
-    _inputs[0].borrowingFactor = uint16(LibLYF01.MAX_BPS) + 1;
+    _inputs[0].borrowingFactor = uint16(LibLYFConstant.MAX_BPS) + 1;
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
     adminFacet.setTokenConfigs(_inputs);
 
@@ -59,7 +59,7 @@ contract LYF_Admin_SetTokenConfigsTest is LYF_BaseTest {
     ILYFAdminFacet.TokenConfigInput[] memory _inputs = new ILYFAdminFacet.TokenConfigInput[](1);
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 100 ether

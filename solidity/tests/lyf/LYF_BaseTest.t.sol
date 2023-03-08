@@ -41,7 +41,7 @@ import { MockInterestModel } from "../mocks/MockInterestModel.sol";
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 // peripherals
 import { PancakeswapV2Strategy } from "../../contracts/lyf/strats/PancakeswapV2Strategy.sol";
@@ -146,7 +146,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[0] = ILYFAdminFacet.TokenConfigInput({
       token: address(weth),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 100 ether
@@ -154,7 +154,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[1] = ILYFAdminFacet.TokenConfigInput({
       token: address(usdc),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: normalizeEther(100 ether, usdcDecimal)
@@ -162,7 +162,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[2] = ILYFAdminFacet.TokenConfigInput({
       token: address(ibWeth),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 1,
       maxCollateral: 10e24
@@ -170,7 +170,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[3] = ILYFAdminFacet.TokenConfigInput({
       token: address(wethUsdcLPToken),
-      tier: LibLYF01.AssetTier.LP,
+      tier: LibLYFConstant.AssetTier.LP,
       collateralFactor: 9000,
       borrowingFactor: 1,
       maxCollateral: 10e24
@@ -178,7 +178,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[4] = ILYFAdminFacet.TokenConfigInput({
       token: address(btcUsdcLPToken),
-      tier: LibLYF01.AssetTier.LP,
+      tier: LibLYFConstant.AssetTier.LP,
       collateralFactor: 9000,
       borrowingFactor: 1,
       maxCollateral: 10e24
@@ -186,7 +186,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[5] = ILYFAdminFacet.TokenConfigInput({
       token: address(ibUsdc),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 1,
       maxCollateral: normalizeEther(10e24, usdcDecimal)
@@ -194,7 +194,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[6] = ILYFAdminFacet.TokenConfigInput({
       token: address(btc),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 100e18
@@ -202,7 +202,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[7] = ILYFAdminFacet.TokenConfigInput({
       token: address(ibBtc),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 10e24
@@ -210,7 +210,7 @@ abstract contract LYF_BaseTest is BaseTest {
 
     _inputs[8] = ILYFAdminFacet.TokenConfigInput({
       token: address(cake),
-      tier: LibLYF01.AssetTier.COLLATERAL,
+      tier: LibLYFConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
       maxCollateral: 100e18
