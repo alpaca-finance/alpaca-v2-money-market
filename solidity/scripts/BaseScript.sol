@@ -42,6 +42,7 @@ abstract contract BaseScript is Script {
   address internal busd;
   address internal dodo;
   address internal pstake;
+  address internal alpaca;
 
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
@@ -59,6 +60,7 @@ abstract contract BaseScript is Script {
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
     dodo = abi.decode(configJson.parseRaw(".tokens.dodo"), (address));
     pstake = abi.decode(configJson.parseRaw(".tokens.pstake"), (address));
+    alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
   }
 
   // function _pretendMM() internal {
