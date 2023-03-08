@@ -85,4 +85,6 @@ interface IMoneyMarketReader {
     returns (MainAccountSummary memory _mainAccountSummary);
 
   function moneyMarket() external view returns (address);
+
+  function getPriceUSD(address _token) external view returns (uint256);
 }
