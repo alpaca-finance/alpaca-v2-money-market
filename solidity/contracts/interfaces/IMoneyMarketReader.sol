@@ -20,12 +20,15 @@ interface IMoneyMarketReader {
     // ---- Money Market ---- //
     uint256 globalDebtValue;
     uint256 totalToken;
+    uint256 totalDebtToken;
     uint256 pendingIntetest;
     uint256 lastAccruedAt;
     // ---- MiniFL ---- //
     uint256 allocPoint;
+    uint256 ibAllocPoint;
     uint256 totalAllocPoint;
     uint256 rewardPerSec;
+    uint256 totalIbTokenInPool;
     uint256 blockTimestamp;
   }
 

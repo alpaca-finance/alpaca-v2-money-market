@@ -29,10 +29,20 @@ contract MoneyMarketReader is IMoneyMarketReader {
   /// @param _underlyingToken The underlying token address
   function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory) {
     address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+    address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
     IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
 
     LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
     LibConstant.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
+
+    uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
+    uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
+
+    uint256 _ibReserveAmount = _miniFL.getStakingReserves(_ibPoolId);
+    // debtTokenShare is equal to totalSupply of debtToken
+    //  then we can use debtTokenValue as total amount
+    uint256 _totalDebtToken = _moneyMarket.getOverCollatTokenDebtValue(_underlyingToken) +
+      _moneyMarket.getOverCollatPendingInterest(_underlyingToken);
 
     // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
     // so have to return both
@@ -52,11 +62,14 @@ contract MoneyMarketReader is IMoneyMarketReader {
         tokenPrice: _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0)),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         totalToken: _moneyMarket.getTotalToken(_underlyingToken),
+        totalDebtToken: _totalDebtToken,
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
         lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
-        allocPoint: 0,
-        totalAllocPoint: 0,
-        rewardPerSec: 0,
+        allocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
+        ibAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
+        totalAllocPoint: _miniFL.totalAllocPoint(),
+        rewardPerSec: _miniFL.alpacaPerSecond(),
+        totalIbTokenInPool: _ibToken.convertToAssets(_ibReserveAmount),
         blockTimestamp: block.timestamp
       });
   }
