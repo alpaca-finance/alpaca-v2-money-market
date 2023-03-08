@@ -62,14 +62,14 @@ contract MoneyMarketReader is IMoneyMarketReader {
         tokenPrice: _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0)),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         totalToken: _moneyMarket.getTotalToken(_underlyingToken),
-        totalDebtToken: _totalDebtToken,
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
         lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
-        allocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
-        ibAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
+        debtTokenAllocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
+        ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
         totalAllocPoint: _miniFL.totalAllocPoint(),
         rewardPerSec: _miniFL.alpacaPerSecond(),
         totalIbTokenInPool: _ibToken.convertToAssets(_ibReserveAmount),
+        totalDebtTokenInPool: _totalDebtToken,
         blockTimestamp: block.timestamp
       });
   }
