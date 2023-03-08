@@ -12,9 +12,6 @@ import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { MockLiquidationStrategy } from "../mocks/MockLiquidationStrategy.sol";
 
-// libraries
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
-
 contract LYF_Liquidation_LpLiquidationCallTest is LYF_BaseTest {
   MockLiquidationStrategy internal mockLiquidationStrategy;
 

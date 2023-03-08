@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
+import { LYF_BaseTest, console, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
 
-// interfaces
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+// lib
+import { LibLYFConstant } from "../../contracts/lyf/libraries/LibLYFConstant.sol";
 
 contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
   function setUp() public override {
@@ -32,7 +32,7 @@ contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
 
     adminFacet.setLPConfigs(_lpConfigs);
 
-    LibLYF01.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
+    LibLYFConstant.LPConfig memory _lpConfig = viewFacet.getLpTokenConfig(address(wethUsdcLPToken));
 
     assertEq(_lpConfig.poolId, _lpConfigs[0].poolId);
   }
@@ -54,7 +54,7 @@ contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
       poolId: wethUsdcPoolId,
       maxLpAmount: 1_000 ether,
       reinvestThreshold: reinvestThreshold,
-      reinvestTreasuryBountyBps: uint16(LibLYF01.MAX_BPS) + 1
+      reinvestTreasuryBountyBps: uint16(LibLYFConstant.MAX_BPS) + 1
     });
     vm.expectRevert(ILYFAdminFacet.LYFAdminFacet_InvalidArguments.selector);
     adminFacet.setLPConfigs(_lpConfigs);
@@ -82,7 +82,7 @@ contract LYF_Admin_SetLpConfigsTest is LYF_BaseTest {
       poolId: wethUsdcPoolId,
       maxLpAmount: 1_000 ether,
       reinvestThreshold: reinvestThreshold,
-      reinvestTreasuryBountyBps: uint16(LibLYF01.MAX_BPS) + 1
+      reinvestTreasuryBountyBps: uint16(LibLYFConstant.MAX_BPS) + 1
     });
     vm.prank(ALICE);
     vm.expectRevert("LibDiamond: Must be contract owner");

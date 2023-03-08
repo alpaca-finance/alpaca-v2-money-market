@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
-
-// interfaces
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
 import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 import { MockInterestModel } from "../mocks/MockInterestModel.sol";

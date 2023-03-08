@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import { LYF_BaseTest, console, LYFDiamond, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
-
-// interfaces
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
+import { LYF_BaseTest, console, ILYFAdminFacet } from "./LYF_BaseTest.t.sol";
 
 contract LYF_Admin_SetDebtShareIdTest is LYF_BaseTest {
   function setUp() public override {

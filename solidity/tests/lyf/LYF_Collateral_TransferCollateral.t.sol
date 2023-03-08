@@ -5,7 +5,6 @@ import { LYF_BaseTest } from "./LYF_BaseTest.t.sol";
 
 // libraries
 import { LibDoublyLinkedList } from "../../contracts/lyf/libraries/LibDoublyLinkedList.sol";
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
 
 // interfaces
 import { ILYFCollateralFacet } from "../../contracts/lyf/interfaces/ILYFCollateralFacet.sol";

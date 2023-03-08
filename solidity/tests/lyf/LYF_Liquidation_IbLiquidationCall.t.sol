@@ -3,9 +3,6 @@ pragma solidity 0.8.17;
 
 import { LYF_BaseTest, console } from "./LYF_BaseTest.t.sol";
 
-// libraries
-import { LibLYF01 } from "../../contracts/lyf/libraries/LibLYF01.sol";
-
 // interfaces
 import { ILYFLiquidationFacet } from "../../contracts/lyf/interfaces/ILYFLiquidationFacet.sol";
 import { IMoneyMarket } from "../../contracts/lyf/interfaces/IMoneyMarket.sol";

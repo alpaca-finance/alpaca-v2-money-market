@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 // libraries
 import { LibLYF01 } from "../libraries/LibLYF01.sol";
+import { LibLYFConstant } from "../libraries/LibLYFConstant.sol";
 import { LibDoublyLinkedList } from "../libraries/LibDoublyLinkedList.sol";
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
@@ -131,7 +132,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
 
     {
       // check how much borrowing power reduced after repay (without fee)
-      LibLYF01.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
+      LibLYFConstant.TokenConfig memory _debtTokenConfig = lyfDs.tokenConfigs[_debtToken];
       uint256 _repayTokenPrice = LibLYF01.getPriceUSD(_debtToken, lyfDs);
       uint256 _repaidBorrowingPower = LibLYF01.usedBorrowingPower(
         _actualRepayAmountWithFee - _actualFee,
@@ -140,7 +141,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
         _debtTokenConfig.to18ConversionFactor
       );
 
-      if (_repaidBorrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * MAX_LIQUIDATE_BPS) {
+      if (_repaidBorrowingPower * LibLYFConstant.MAX_BPS > _usedBorrowingPower * MAX_LIQUIDATE_BPS) {
         revert LYFLiquidationFacet_RepayDebtValueTooHigh();
       }
 
@@ -209,7 +210,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // todo: threshold
     uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(_subAccount, lyfDs);
     uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(_subAccount, lyfDs);
-    if (_totalBorrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
+    if (_totalBorrowingPower * LibLYFConstant.MAX_BPS > _usedBorrowingPower * 9000) {
       revert LYFLiquidationFacet_Healthy();
     }
 
@@ -243,7 +244,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       _params.repayAmount,
       lyfDs
     );
-    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * LIQUIDATION_FEE_BPS) / LibLYF01.MAX_BPS;
+    uint256 _maxPossibleFee = (_maxPossibleRepayAmount * LIQUIDATION_FEE_BPS) / LibLYFConstant.MAX_BPS;
     uint256 _expectedMaxRepayAmountWithFee;
     unchecked {
       _expectedMaxRepayAmountWithFee = _maxPossibleRepayAmount + _maxPossibleFee;
@@ -265,7 +266,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     );
 
     // 5. split fee between liquidator and treasury
-    uint256 _feeToLiquidator = (_actualLiquidationFee * liquidationRewardBps) / LibLYF01.MAX_BPS;
+    uint256 _feeToLiquidator = (_actualLiquidationFee * liquidationRewardBps) / LibLYFConstant.MAX_BPS;
     uint256 _feeToTreasury;
     unchecked {
       _feeToTreasury = _actualLiquidationFee - _feeToLiquidator;
@@ -313,11 +314,11 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       revert LYFLiquidationFacet_Unauthorized();
     }
 
-    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYF01.AssetTier.LP) {
+    if (lyfDs.tokenConfigs[_lpToken].tier != LibLYFConstant.AssetTier.LP) {
       revert LYFLiquidationFacet_InvalidAssetTier();
     }
 
-    LibLYF01.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
+    LibLYFConstant.LPConfig memory lpConfig = lyfDs.lpConfigs[_lpToken];
 
     LiquidateLPLocalVars memory vars;
 
@@ -335,7 +336,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     // todo: threshold
     uint256 _totalBorrowingPower = LibLYF01.getTotalBorrowingPower(vars.subAccount, lyfDs);
     uint256 _usedBorrowingPower = LibLYF01.getTotalUsedBorrowingPower(vars.subAccount, lyfDs);
-    if (_totalBorrowingPower * LibLYF01.MAX_BPS > _usedBorrowingPower * 9000) {
+    if (_totalBorrowingPower * LibLYFConstant.MAX_BPS > _usedBorrowingPower * 9000) {
       revert LYFLiquidationFacet_Healthy();
     }
 
@@ -413,7 +414,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualToRepay) {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _debtShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     // Note: precision loss 1 wei when convert share back to value
     uint256 _debtValue = LibShareUtil.shareToValue(_debtShare, debtPoolInfo.totalValue, debtPoolInfo.totalShare);
@@ -442,8 +443,8 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       // _collatToken is normal ERC20 or LP token
       _collatTokenPrice = LibLYF01.getPriceUSD(_collatToken, lyfDs);
     }
-    uint256 _exectReceiveUSD = (_repaidAmountWithFeeUSD * (REPURCHASE_REWARD_BPS + LibLYF01.MAX_BPS)) /
-      LibLYF01.MAX_BPS;
+    uint256 _exectReceiveUSD = (_repaidAmountWithFeeUSD * (REPURCHASE_REWARD_BPS + LibLYFConstant.MAX_BPS)) /
+      LibLYFConstant.MAX_BPS;
 
     // _collatAmountOut = _collatValueInUSD + _rewardInUSD
     _collatAmountOut =
@@ -467,7 +468,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _repayAmount,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _shareToRepay = LibShareUtil.valueToShare(_repayAmount, debtPoolInfo.totalShare, debtPoolInfo.totalValue);
 
     LibLYF01.removeDebt(_subAccount, _debtPoolId, _shareToRepay, _repayAmount, lyfDs);
@@ -479,14 +480,14 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
     uint256 _desiredRepayAmountWithFee,
     LibLYF01.LYFDiamondStorage storage lyfDs
   ) internal view returns (uint256 _actualRepayAmountWithFee, uint256 _actualFee) {
-    LibLYF01.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
+    LibLYFConstant.DebtPoolInfo storage debtPoolInfo = lyfDs.debtPoolInfos[_debtPoolId];
     uint256 _maxRepayShare = lyfDs.subAccountDebtShares[_subAccount].getAmount(_debtPoolId);
     uint256 _maxRepayAmount = LibShareUtil.shareToValue(
       _maxRepayShare,
       debtPoolInfo.totalValue,
       debtPoolInfo.totalShare
     );
-    _actualFee = (_maxRepayAmount * REPURCHASE_FEE_BPS) / LibLYF01.MAX_BPS;
+    _actualFee = (_maxRepayAmount * REPURCHASE_FEE_BPS) / LibLYFConstant.MAX_BPS;
     // set actual as maximum possible to repay
     _actualRepayAmountWithFee = _maxRepayAmount + _actualFee;
 
@@ -512,7 +513,7 @@ contract LYFLiquidationFacet is ILYFLiquidationFacet {
       lyfDs.tokenConfigs[_repayToken].to18ConversionFactor
     );
 
-    if (_repaidBorrowingPower * LibLYF01.MAX_BPS > (_usedBorrowingPower * MAX_LIQUIDATE_BPS)) {
+    if (_repaidBorrowingPower * LibLYFConstant.MAX_BPS > (_usedBorrowingPower * MAX_LIQUIDATE_BPS)) {
       revert LYFLiquidationFacet_RepayAmountExceedThreshold();
     }
   }
