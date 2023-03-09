@@ -490,4 +490,10 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function poolLength() public view returns (uint256 _poolLength) {
     _poolLength = poolInfo.length;
   }
+
+  /// @notice Returns the allocation point of a pool.
+  /// @param _pid The index of the pool. See `poolInfo`.
+  function getPoolAllocPoint(uint256 _pid) external view returns (uint256 _allocPoint) {
+    _allocPoint = poolInfo[_pid].allocPoint;
+  }
 }

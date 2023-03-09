@@ -23,9 +23,12 @@ interface IMoneyMarketReader {
     uint256 pendingIntetest;
     uint256 lastAccruedAt;
     // ---- MiniFL ---- //
-    uint256 allocPoint;
+    uint256 debtTokenAllocPoint;
+    uint256 ibTokenAllocPoint;
     uint256 totalAllocPoint;
     uint256 rewardPerSec;
+    uint256 totalDebtTokenInPool;
+    uint256 totalUnderlyingTokenInPool;
     uint256 blockTimestamp;
   }
 
@@ -82,4 +85,6 @@ interface IMoneyMarketReader {
     returns (MainAccountSummary memory _mainAccountSummary);
 
   function moneyMarket() external view returns (address);
+
+  function getPriceUSD(address _token) external view returns (uint256);
 }

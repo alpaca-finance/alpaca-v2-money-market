@@ -6,7 +6,13 @@ interface IMiniFL {
 
   function totalAllocPoint() external view returns (uint256);
 
+  function alpacaPerSecond() external view returns (uint256);
+
   function getUserTotalAmountOf(uint256 _pid, address _user) external view returns (uint256 _totalAmount);
+
+  function getPoolAllocPoint(uint256 _pid) external view returns (uint256 _allocPoint);
+
+  function getStakingReserves(uint256 _pid) external view returns (uint256 _reserveAmount);
 
   function getUserAmountFundedBy(
     address _funder,
