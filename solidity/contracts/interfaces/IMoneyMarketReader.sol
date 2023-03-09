@@ -28,7 +28,7 @@ interface IMoneyMarketReader {
     uint256 totalAllocPoint;
     uint256 rewardPerSec;
     uint256 totalDebtTokenInPool;
-    uint256 totalIbTokenInPool;
+    uint256 totalUnderlyingTokenInPool;
     uint256 blockTimestamp;
   }
 

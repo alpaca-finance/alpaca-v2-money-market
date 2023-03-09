@@ -68,7 +68,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
         totalAllocPoint: _miniFL.totalAllocPoint(),
         rewardPerSec: _miniFL.alpacaPerSecond(),
-        totalIbTokenInPool: _ibToken.convertToAssets(_ibReserveAmount),
+        totalUnderlyingTokenInPool: _ibToken.convertToAssets(_ibReserveAmount),
         totalDebtTokenInPool: _totalDebtToken,
         blockTimestamp: block.timestamp
       });
