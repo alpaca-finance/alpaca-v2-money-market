@@ -7,12 +7,12 @@ import { VM } from "solidity/tests/utils/VM.sol";
 import { AVDiamond } from "../../contracts/automated-vault/AVDiamond.sol";
 
 // facets
-import { AVDiamondCutFacet, IAVDiamondCut } from "../../contracts/automated-vault/facets/AVDiamondCutFacet.sol";
-import { AVDiamondLoupeFacet } from "../../contracts/automated-vault/facets/AVDiamondLoupeFacet.sol";
-import { AVAdminFacet } from "../../contracts/automated-vault/facets/AVAdminFacet.sol";
-import { AVTradeFacet } from "../../contracts/automated-vault/facets/AVTradeFacet.sol";
-import { AVRebalanceFacet } from "../../contracts/automated-vault/facets/AVRebalanceFacet.sol";
-import { AVViewFacet } from "../../contracts/automated-vault/facets/AVViewFacet.sol";
+import { IAVDiamondCut } from "../../contracts/automated-vault/interfaces/IAVDiamondCut.sol";
+import { IAVDiamondLoupe } from "../../contracts/automated-vault/interfaces/IAVDiamondLoupe.sol";
+import { IAVAdminFacet } from "../../contracts/automated-vault/interfaces/IAVAdminFacet.sol";
+import { IAVTradeFacet } from "../../contracts/automated-vault/interfaces/IAVTradeFacet.sol";
+import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
+import { IAVViewFacet } from "../../contracts/automated-vault/interfaces/IAVViewFacet.sol";
 
 library AVDiamondDeployer {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -101,44 +101,44 @@ library AVDiamondDeployer {
 
   function getAVDiamondLoupeFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](4);
-    _selectors[0] = AVDiamondLoupeFacet.facets.selector;
-    _selectors[1] = AVDiamondLoupeFacet.facetFunctionSelectors.selector;
-    _selectors[2] = AVDiamondLoupeFacet.facetAddresses.selector;
-    _selectors[3] = AVDiamondLoupeFacet.facetAddress.selector;
+    _selectors[0] = IAVDiamondLoupe.facets.selector;
+    _selectors[1] = IAVDiamondLoupe.facetFunctionSelectors.selector;
+    _selectors[2] = IAVDiamondLoupe.facetAddresses.selector;
+    _selectors[3] = IAVDiamondLoupe.facetAddress.selector;
   }
 
   function getAVAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](10);
-    _selectors[0] = AVAdminFacet.openVault.selector;
-    _selectors[1] = AVAdminFacet.setTokenConfigs.selector;
-    _selectors[2] = AVAdminFacet.setOracle.selector;
-    _selectors[3] = AVAdminFacet.setMoneyMarket.selector;
-    _selectors[4] = AVAdminFacet.setTreasury.selector;
-    _selectors[5] = AVAdminFacet.setManagementFeePerSec.selector;
-    _selectors[6] = AVAdminFacet.setInterestRateModels.selector;
-    _selectors[7] = AVAdminFacet.setOperatorsOk.selector;
-    _selectors[8] = AVAdminFacet.setRepurchaseRewardBps.selector;
-    _selectors[9] = AVAdminFacet.setRepurchasersOk.selector;
+    _selectors[0] = IAVAdminFacet.openVault.selector;
+    _selectors[1] = IAVAdminFacet.setTokenConfigs.selector;
+    _selectors[2] = IAVAdminFacet.setOracle.selector;
+    _selectors[3] = IAVAdminFacet.setMoneyMarket.selector;
+    _selectors[4] = IAVAdminFacet.setTreasury.selector;
+    _selectors[5] = IAVAdminFacet.setManagementFeePerSec.selector;
+    _selectors[6] = IAVAdminFacet.setInterestRateModels.selector;
+    _selectors[7] = IAVAdminFacet.setOperatorsOk.selector;
+    _selectors[8] = IAVAdminFacet.setRepurchaseRewardBps.selector;
+    _selectors[9] = IAVAdminFacet.setRepurchasersOk.selector;
   }
 
   function getAVTradeFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](2);
-    _selectors[0] = AVTradeFacet.deposit.selector;
-    _selectors[1] = AVTradeFacet.withdraw.selector;
+    _selectors[0] = IAVTradeFacet.deposit.selector;
+    _selectors[1] = IAVTradeFacet.withdraw.selector;
   }
 
   function getAVRebalanceFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](2);
-    _selectors[0] = AVRebalanceFacet.retarget.selector;
-    _selectors[1] = AVRebalanceFacet.repurchase.selector;
+    _selectors[0] = IAVRebalanceFacet.retarget.selector;
+    _selectors[1] = IAVRebalanceFacet.repurchase.selector;
   }
 
   function getAVViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
     _selectors = new bytes4[](4);
-    _selectors[0] = AVViewFacet.getDebtValues.selector;
-    _selectors[1] = AVViewFacet.getPendingInterest.selector;
-    _selectors[2] = AVViewFacet.getLastAccrueInterestTimestamp.selector;
-    _selectors[3] = AVViewFacet.getPendingManagementFee.selector;
+    _selectors[0] = IAVViewFacet.getDebtValues.selector;
+    _selectors[1] = IAVViewFacet.getPendingInterest.selector;
+    _selectors[2] = IAVViewFacet.getLastAccrueInterestTimestamp.selector;
+    _selectors[3] = IAVViewFacet.getPendingManagementFee.selector;
   }
 
   function buildFacetCut(
