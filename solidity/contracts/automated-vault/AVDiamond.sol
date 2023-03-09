@@ -11,8 +11,8 @@ import { IERC173 } from "./interfaces/IERC173.sol";
 import { IERC165 } from "./interfaces/IERC165.sol";
 
 contract AVDiamond {
-  constructor(address _contractOwner, address _AVDiamondCutFacet) {
-    LibDiamond.setContractOwner(_contractOwner);
+  constructor(address _AVDiamondCutFacet) {
+    LibDiamond.setContractOwner(msg.sender);
 
     IAVDiamondCut.FacetCut[] memory cut = new IAVDiamondCut.FacetCut[](1);
     bytes4[] memory functionSelectors = new bytes4[](1);
@@ -30,14 +30,8 @@ contract AVDiamond {
     ds.supportedInterfaces[type(IAVDiamondLoupe).interfaceId] = true;
     ds.supportedInterfaces[type(IERC173).interfaceId] = true;
 
-    // add your own state variables
-    // EIP-2535 specifies that the `AVDiamondCut` function takes two optional
-    // arguments: address _init and bytes calldata _calldata
-    // These arguments are used to execute an arbitrary function using delegatecall
-    // in order to set state variables in the diamond during deployment or an upgrade
-    // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
-
     // add others facets
+    // todo: add AV facets interface
     ds.supportedInterfaces[type(IAVAdminFacet).interfaceId] = true;
   }
 
