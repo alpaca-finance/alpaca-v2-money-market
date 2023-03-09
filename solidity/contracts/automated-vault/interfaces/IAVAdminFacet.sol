@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.17;
 
-import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibAVConstant } from "../libraries/LibAVConstant.sol";
 
 interface IAVAdminFacet {
   error AVTradeFacet_InvalidToken(address _token);
@@ -27,7 +27,7 @@ interface IAVAdminFacet {
   }
 
   struct TokenConfigInput {
-    LibAV01.AssetTier tier;
+    LibAVConstant.AssetTier tier;
     address token;
   }
 

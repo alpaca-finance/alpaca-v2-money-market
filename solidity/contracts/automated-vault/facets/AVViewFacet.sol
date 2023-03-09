@@ -9,6 +9,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibAVConstant } from "../libraries/LibAVConstant.sol";
 
 contract AVViewFacet is IAVViewFacet {
   function getDebtValues(address _vaultToken)
@@ -17,7 +18,7 @@ contract AVViewFacet is IAVViewFacet {
     returns (uint256 _stableDebtValue, uint256 _assetDebtValue)
   {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    LibAV01.VaultConfig memory _config = avDs.vaultConfigs[_vaultToken];
+    LibAVConstant.VaultConfig memory _config = avDs.vaultConfigs[_vaultToken];
     _stableDebtValue = avDs.vaultDebts[_vaultToken][_config.stableToken];
     _assetDebtValue = avDs.vaultDebts[_vaultToken][_config.assetToken];
   }
@@ -31,7 +32,7 @@ contract AVViewFacet is IAVViewFacet {
     uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
 
     if (_timeSinceLastAccrual > 0) {
-      LibAV01.VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
+      LibAVConstant.VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
       address _moneyMarket = avDs.moneyMarket;
 
       _stablePendingInterest = LibAV01.getTokenPendingInterest(

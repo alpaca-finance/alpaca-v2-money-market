@@ -10,6 +10,7 @@ import { IAVHandler } from "../interfaces/IAVHandler.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibAVConstant } from "../libraries/LibAVConstant.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
@@ -51,7 +52,7 @@ contract AVTradeFacet is IAVTradeFacet {
 
     LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    LibAVConstant.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
     address _stableToken = _vaultConfig.stableToken;
     address _assetToken = _vaultConfig.assetToken;
 
@@ -104,7 +105,7 @@ contract AVTradeFacet is IAVTradeFacet {
     uint256 _minAssetTokenOut
   ) external nonReentrant {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    LibAVConstant.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
     WithdrawLocalVars memory vars;
 
     // 0. accrue interest, mint management fee

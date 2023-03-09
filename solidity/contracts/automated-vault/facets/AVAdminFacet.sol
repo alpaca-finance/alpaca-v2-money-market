@@ -11,6 +11,7 @@ import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibAVConstant } from "../libraries/LibAVConstant.sol";
 import { LibDiamond } from "../libraries/LibDiamond.sol";
 
 contract AVAdminFacet is IAVAdminFacet {
@@ -59,7 +60,7 @@ contract AVAdminFacet is IAVAdminFacet {
     IInterestRateModel(_stableTokenInterestModel).getInterestRate(1, 1);
     IInterestRateModel(_assetTokenInterestModel).getInterestRate(1, 1);
 
-    avDs.vaultConfigs[_newShareToken] = LibAV01.VaultConfig({
+    avDs.vaultConfigs[_newShareToken] = LibAVConstant.VaultConfig({
       vaultToken: _newShareToken,
       lpToken: _lpToken,
       stableToken: _stableToken,
@@ -82,7 +83,7 @@ contract AVAdminFacet is IAVAdminFacet {
     uint256 length = configs.length;
     for (uint256 _i; _i < length; ) {
       TokenConfigInput calldata config = configs[_i];
-      avDs.tokenConfigs[config.token] = LibAV01.TokenConfig({
+      avDs.tokenConfigs[config.token] = LibAVConstant.TokenConfig({
         tier: config.tier,
         to18ConversionFactor: LibAV01.to18ConversionFactor(config.token)
       });
@@ -163,7 +164,7 @@ contract AVAdminFacet is IAVAdminFacet {
 
   function setRepurchaseRewardBps(uint16 _newBps) external onlyOwner {
     LibAV01.AVDiamondStorage storage avDs = LibAV01.avDiamondStorage();
-    if (_newBps > LibAV01.MAX_BPS) {
+    if (_newBps > LibAVConstant.MAX_BPS) {
       revert AVAdminFacet_InvalidParams();
     }
     avDs.repurchaseRewardBps = _newBps;
