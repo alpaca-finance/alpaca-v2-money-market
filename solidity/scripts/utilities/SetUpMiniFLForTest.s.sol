@@ -27,7 +27,7 @@ contract SetUpMiniFLForTestScript is BaseScript {
     // seed alpaca to miniFL to be distribute as reward
     // alpaca tokens should be prepared for deployer beforehand
     // in this case bash script should handle it
-    MockERC20(alpaca).transfer(address(miniFL), 100 ether);
+    // MockERC20(alpaca).transfer(address(miniFL), 100 ether);
 
     miniFL.setAlpacaPerSecond(alpacaPerSecond, false);
 

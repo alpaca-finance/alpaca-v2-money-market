@@ -20,18 +20,18 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
 
     // open market for wNativeToken
     IAdminFacet.TokenConfigInput memory tokenConfigInput = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.CROSS,
+      tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 0,
       borrowingFactor: 9000,
-      maxBorrow: 30 ether,
+      maxBorrow: 10_000 ether,
       maxCollateral: 0
     });
     IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
       tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
-      maxBorrow: 30 ether,
-      maxCollateral: 100 ether
+      maxBorrow: 0,
+      maxCollateral: 1_000_000 ether
     });
     address ibWNative = moneyMarket.openMarket(wNativeToken, tokenConfigInput, ibTokenConfigInput);
     _writeJson(vm.toString(address(ibWNative)), ".ibTokens.ibBnb");
