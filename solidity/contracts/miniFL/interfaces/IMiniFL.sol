@@ -37,4 +37,8 @@ interface IMiniFL {
   ) external;
 
   function setAlpacaPerSecond(uint256 _newAlpacaPerSecond, bool _withUpdate) external;
+
+  function harvest(uint256 _pid) external;
+
+  function harvestMany(uint256[] calldata _pids) external;
 }

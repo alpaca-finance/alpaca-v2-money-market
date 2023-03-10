@@ -78,6 +78,31 @@ contract MiniFL_HarvestTest is MiniFL_BaseTest {
     assertEq(BOB.myBalanceOf(address(alpaca)) - _bobAlpacaBefore, 56000 ether);
   }
 
+  function testCorrectness_WhenTimepast_AndHarvestMany() external {
+    // timpast for 100 second
+    vm.warp(block.timestamp + 100);
+    uint256[] memory _pids = new uint256[](2);
+    _pids[0] = wethPoolID;
+    _pids[1] = dtokenPoolID;
+
+    uint256 _balanceBefore = ALICE.myBalanceOf(address(alpaca));
+    // alice pending alpaca on WETHPool = 40000
+    // alice pending alpaca on DTOKENPool = 4000
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 40000 ether);
+    assertEq(miniFL.pendingAlpaca(dtokenPoolID, ALICE), 4000 ether);
+
+    vm.prank(ALICE);
+    miniFL.harvestMany(_pids);
+
+    assertEq(miniFL.pendingAlpaca(wethPoolID, ALICE), 0);
+    assertTotalUserStakingAmountWithReward(ALICE, wethPoolID, _aliceTotalWethDeposited, 40000 ether);
+    assertTotalUserStakingAmountWithReward(ALICE, dtokenPoolID, _aliceDTokenDeposited, 4000 ether);
+
+    // assert all alpaca received
+    uint256 _balanceAfter = ALICE.myBalanceOf(address(alpaca));
+    assertEq(_balanceAfter - _balanceBefore, 44000 ether);
+  }
+
   function testRevert_AlpacaIsNotEnoughForHarvest() external {
     // timepast too far, made alpaca distributed 1000000 * 1000 = 1000,000,000 but alpaca in miniFL has only 10,000,000
     vm.warp(block.timestamp + 1000000);
