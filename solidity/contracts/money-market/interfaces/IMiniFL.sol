@@ -14,6 +14,8 @@ interface IMiniFL {
 
   function getStakingReserves(uint256 _pid) external view returns (uint256 _reserveAmount);
 
+  function pendingAlpaca(uint256 _pid, address _user) external view returns (uint256);
+
   function getUserAmountFundedBy(
     address _funder,
     address _for,

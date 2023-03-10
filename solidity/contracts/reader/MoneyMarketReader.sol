@@ -74,6 +74,25 @@ contract MoneyMarketReader is IMoneyMarketReader {
       });
   }
 
+  /// @dev Get the reward summary
+  /// @param _underlyingToken The underlying token address
+  /// @param _account The account address
+  function getRewardSummary(address _underlyingToken, address _account) external view returns (RewardSummary memory) {
+    address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+    address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
+
+    uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
+    uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
+
+    return
+      RewardSummary({
+        ibPoolId: _ibPoolId,
+        debtPoolId: _debtPoolId,
+        lendingPendingReward: _miniFL.pendingAlpaca(_ibPoolId, _account),
+        borrowingPendingReward: _miniFL.pendingAlpaca(_debtPoolId, _account)
+      });
+  }
+
   /// @dev Get subaccount summary of collaterals and debts
   function getSubAccountSummary(address _account, uint256 _subAccountId)
     external
