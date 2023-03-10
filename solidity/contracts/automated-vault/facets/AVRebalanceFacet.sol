@@ -9,6 +9,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 
 // libraries
 import { LibAV01 } from "../libraries/LibAV01.sol";
+import { LibAVConstant } from "../libraries/LibAVConstant.sol";
 import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 import { LibShareUtil } from "../libraries/LibShareUtil.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
@@ -35,7 +36,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
     LibAV01.accrueVaultInterest(_vaultToken, avDs);
     LibAV01.mintManagementFeeToTreasury(_vaultToken, avDs);
 
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    LibAVConstant.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
     uint256 _currentEquity = LibAV01.getEquity(_vaultToken, _vaultConfig.handler, avDs);
     // deltaDebt = targetDebt - currentDebt ; targetDebt = currentEquity * (leverage - 1)
@@ -104,7 +105,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       revert AVRebalanceFacet_Unauthorized(msg.sender);
     }
 
-    LibAV01.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    LibAVConstant.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
     address _tokenToBorrow;
     if (_tokenToRepay == _vaultConfig.stableToken) {
       _tokenToBorrow = _vaultConfig.assetToken;
@@ -127,7 +128,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       LibAV01.getTokenInUSD(_tokenToRepay, _amountToRepay, avDs),
       avDs
     );
-    uint256 _repurchaseRewardAmount = (_amountToBorrowForVault * avDs.repurchaseRewardBps) / LibAV01.MAX_BPS;
+    uint256 _repurchaseRewardAmount = (_amountToBorrowForVault * avDs.repurchaseRewardBps) / LibAVConstant.MAX_BPS;
     uint256 _amountToRepurchaser = _amountToBorrowForVault + _repurchaseRewardAmount;
     LibAV01.borrowMoneyMarket(_vaultToken, _tokenToBorrow, _amountToRepurchaser, avDs);
 

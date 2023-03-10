@@ -2,8 +2,9 @@
 pragma solidity 0.8.17;
 
 // libraries
-import { LibShareUtil } from "../libraries/LibShareUtil.sol";
-import { LibSafeToken } from "../libraries/LibSafeToken.sol";
+import { LibShareUtil } from "./LibShareUtil.sol";
+import { LibSafeToken } from "./LibSafeToken.sol";
+import { LibAVConstant } from "./LibAVConstant.sol";
 
 // interfaces
 import { IMoneyMarket } from "../interfaces/IMoneyMarket.sol";
@@ -20,8 +21,6 @@ library LibAV01 {
   // keccak256("av.diamond.storage");
   bytes32 internal constant AV_STORAGE_POSITION = 0x7829d0c15b32d5078302aaa27ee1e42f0bdf275e05094cc17e0f59b048312982;
 
-  uint256 internal constant MAX_BPS = 10000;
-
   event LogAccrueInterest(
     address indexed _vaultToken,
     address indexed _stableToken,
@@ -30,35 +29,13 @@ library LibAV01 {
     uint256 _assetInterest
   );
 
-  enum AssetTier {
-    TOKEN,
-    LP
-  }
-
-  struct VaultConfig {
-    uint8 leverageLevel;
-    uint16 managementFeePerSec;
-    address vaultToken;
-    address lpToken;
-    address stableToken;
-    address assetToken;
-    address stableTokenInterestModel;
-    address assetTokenInterestModel;
-    address handler;
-  }
-
-  struct TokenConfig {
-    AssetTier tier;
-    uint64 to18ConversionFactor;
-  }
-
   struct AVDiamondStorage {
     address moneyMarket;
     address oracle;
     address treasury;
     uint16 repurchaseRewardBps;
-    mapping(address => VaultConfig) vaultConfigs;
-    mapping(address => TokenConfig) tokenConfigs;
+    mapping(address => LibAVConstant.VaultConfig) vaultConfigs;
+    mapping(address => LibAVConstant.TokenConfig) tokenConfigs;
     mapping(address => uint256) lastFeeCollectionTimestamps;
     // vault token => debt token => debt amount
     mapping(address => mapping(address => uint256)) vaultDebts;
@@ -116,7 +93,7 @@ library LibAV01 {
     uint256 _lpToWithdraw,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
-    VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
+    LibAVConstant.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
     // (token0ReturnAmount, token1ReturnAmount)
     (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
@@ -141,7 +118,7 @@ library LibAV01 {
 
   /// @dev return price in 1e18
   function getPriceUSD(address _token, AVDiamondStorage storage avDs) internal view returns (uint256 _price) {
-    if (avDs.tokenConfigs[_token].tier == AssetTier.LP) {
+    if (avDs.tokenConfigs[_token].tier == LibAVConstant.AssetTier.LP) {
       (_price, ) = IAlpacaV2Oracle(avDs.oracle).lpToDollar(1e18, _token);
     } else {
       (_price, ) = IAlpacaV2Oracle(avDs.oracle).getTokenPrice(_token);
@@ -155,7 +132,7 @@ library LibAV01 {
     uint256 _timeSinceLastAccrual = block.timestamp - avDs.lastAccrueInterestTimestamps[_vaultToken];
 
     if (_timeSinceLastAccrual > 0) {
-      VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
+      LibAVConstant.VaultConfig memory vaultConfig = avDs.vaultConfigs[_vaultToken];
       address _moneyMarket = avDs.moneyMarket;
 
       _stablePendingInterest = getTokenPendingInterest(

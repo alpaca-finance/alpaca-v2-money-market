@@ -23,7 +23,7 @@ import { IAdminFacet } from "../../contracts/money-market/interfaces/IAdminFacet
 import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.sol";
 
 // libraries
-import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
+import { LibAVConstant } from "../../contracts/automated-vault/libraries/LibAVConstant.sol";
 import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
 import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
 
@@ -54,7 +54,7 @@ abstract contract AV_BaseTest is BaseTest {
   MockAlpacaV2Oracle internal mockOracle;
 
   function setUp() public virtual {
-    avDiamond = AVDiamondDeployer.deployAVDiamond();
+    (avDiamond, ) = AVDiamondDeployer.deployAVDiamond();
 
     (moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(miniFL));
 
@@ -109,10 +109,13 @@ abstract contract AV_BaseTest is BaseTest {
 
     // setup token configs
     IAVAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAVAdminFacet.TokenConfigInput[](3);
-    tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({ token: address(weth), tier: LibAV01.AssetTier.TOKEN });
-    tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({ token: address(usdc), tier: LibAV01.AssetTier.TOKEN });
+    tokenConfigs[0] = IAVAdminFacet.TokenConfigInput({ token: address(weth), tier: LibAVConstant.AssetTier.TOKEN });
+    tokenConfigs[1] = IAVAdminFacet.TokenConfigInput({ token: address(usdc), tier: LibAVConstant.AssetTier.TOKEN });
     // todo: should we set this in openVault
-    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({ token: address(usdcWethLPToken), tier: LibAV01.AssetTier.LP });
+    tokenConfigs[2] = IAVAdminFacet.TokenConfigInput({
+      token: address(usdcWethLPToken),
+      tier: LibAVConstant.AssetTier.LP
+    });
     adminFacet.setTokenConfigs(tokenConfigs);
 
     // setup oracle

@@ -2,21 +2,37 @@
 pragma solidity 0.8.17;
 
 import { LibDiamond } from "./libraries/LibDiamond.sol";
-import { IDiamondCut } from "./interfaces/IDiamondCut.sol";
+import { IAVDiamondCut } from "./interfaces/IAVDiamondCut.sol";
+import { IAVDiamondLoupe } from "./interfaces/IAVDiamondLoupe.sol";
+import { IAVAdminFacet } from "./interfaces/IAVAdminFacet.sol";
+import { IAVTradeFacet } from "./interfaces/IAVTradeFacet.sol";
+import { IAVViewFacet } from "./interfaces/IAVViewFacet.sol";
+import { IERC173 } from "./interfaces/IERC173.sol";
+import { IERC165 } from "./interfaces/IERC165.sol";
 
 contract AVDiamond {
-  constructor(address _contractOwner, address _diamondCutFacet) {
-    LibDiamond.setContractOwner(_contractOwner);
+  constructor(address _AVDiamondCutFacet) {
+    LibDiamond.setContractOwner(msg.sender);
 
-    IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+    IAVDiamondCut.FacetCut[] memory cut = new IAVDiamondCut.FacetCut[](1);
     bytes4[] memory functionSelectors = new bytes4[](1);
-    functionSelectors[0] = IDiamondCut.diamondCut.selector;
-    cut[0] = IDiamondCut.FacetCut({
-      facetAddress: _diamondCutFacet,
-      action: IDiamondCut.FacetCutAction.Add,
+    functionSelectors[0] = IAVDiamondCut.diamondCut.selector;
+    cut[0] = IAVDiamondCut.FacetCut({
+      facetAddress: _AVDiamondCutFacet,
+      action: IAVDiamondCut.FacetCutAction.Add,
       functionSelectors: functionSelectors
     });
     LibDiamond.diamondCut(cut, address(0), "");
+
+    LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+    ds.supportedInterfaces[type(IERC165).interfaceId] = true;
+    ds.supportedInterfaces[type(IAVDiamondCut).interfaceId] = true;
+    ds.supportedInterfaces[type(IAVDiamondLoupe).interfaceId] = true;
+    ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+
+    // add others facets
+    // todo: add AV facets interface
+    ds.supportedInterfaces[type(IAVAdminFacet).interfaceId] = true;
   }
 
   // Find facet for function that is called and execute the
