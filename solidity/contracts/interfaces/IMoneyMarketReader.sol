@@ -96,4 +96,51 @@ interface IMoneyMarketReader {
   function moneyMarket() external view returns (address);
 
   function getPriceUSD(address _token) external view returns (uint256);
+
+  function getPrice(address _token0, address _token1) external view returns (uint256);
+
+  struct TokenConfig {
+    uint8 tier;
+    uint16 collateralFactor;
+    uint16 borrowingFactor;
+    uint256 maxCollateral;
+    uint256 maxBorrow;
+  }
+
+  struct MarketMetadata {
+    address underlyingTokenAddress;
+    address ibTokenAddress;
+    TokenConfig underlyingTokenConfig;
+    TokenConfig ibTokenConfig;
+  }
+
+  function getMarketMetadata(address _underlyingToken) external view returns (MarketMetadata memory);
+
+  struct MarketStats {
+    uint256 ibTotalSupply;
+    uint256 ibTotalAsset;
+    uint256 globalDebtValue;
+    uint256 totalToken;
+    uint256 pendingIntetest;
+    uint256 lastAccruedAt;
+    uint256 blockTimestamp;
+  }
+
+  function getMarketStats(address _underlyingToken) external view returns (MarketStats memory);
+
+  struct MarketRewardInfo {
+    uint256 allocPoint;
+    uint256 totalAllocPoint;
+    uint256 rewardPerSec;
+  }
+
+  function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory);
+
+  struct MarketPriceInfo {
+    uint256 underlyingTokenPrice;
+    uint256 ibTokenPrice;
+    uint256 underlyingToIbRate;
+  }
+
+  function getMarketPriceInfo(address _underlyingToken) external view returns (MarketPriceInfo memory);
 }

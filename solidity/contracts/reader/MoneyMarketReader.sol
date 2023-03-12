@@ -330,4 +330,62 @@ contract MoneyMarketReader is IMoneyMarketReader {
   function moneyMarket() external view returns (address) {
     return address(_moneyMarket);
   }
+
+  function getMarketMetadata(address _underlyingToken) external view returns (MarketMetadata memory) {
+    MarketMetadata memory marketMetadata;
+
+    marketMetadata.underlyingTokenAddress = _underlyingToken;
+    marketMetadata.ibTokenAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+
+    LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
+    marketMetadata.underlyingTokenConfig = TokenConfig({
+      tier: uint8(_tokenConfig.tier),
+      collateralFactor: _tokenConfig.collateralFactor,
+      borrowingFactor: _tokenConfig.borrowingFactor,
+      maxCollateral: _tokenConfig.maxCollateral,
+      maxBorrow: _tokenConfig.maxBorrow
+    });
+    _tokenConfig = _moneyMarket.getTokenConfig(marketMetadata.ibTokenAddress);
+    marketMetadata.ibTokenConfig = TokenConfig({
+      tier: uint8(_tokenConfig.tier),
+      collateralFactor: _tokenConfig.collateralFactor,
+      borrowingFactor: _tokenConfig.borrowingFactor,
+      maxCollateral: _tokenConfig.maxCollateral,
+      maxBorrow: _tokenConfig.maxBorrow
+    });
+
+    return marketMetadata;
+  }
+
+  function getMarketStats(address _underlyingToken) external view returns (MarketStats memory) {
+    MarketStats memory marketStats;
+
+    IInterestBearingToken _ibToken = IInterestBearingToken(_moneyMarket.getIbTokenFromToken(_underlyingToken));
+
+    marketStats.ibTotalSupply = _ibToken.totalSupply();
+    marketStats.ibTotalAsset = _ibToken.totalAssets();
+    marketStats.globalDebtValue = _moneyMarket.getGlobalDebtValue(_underlyingToken);
+    marketStats.totalToken = _moneyMarket.getTotalToken(_underlyingToken);
+    marketStats.pendingIntetest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
+    marketStats.lastAccruedAt = _moneyMarket.getDebtLastAccruedAt(_underlyingToken);
+    marketStats.blockTimestamp = block.timestamp;
+
+    return marketStats;
+  }
+
+  function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory) {
+    return MarketRewardInfo({ allocPoint: 0, totalAllocPoint: 0, rewardPerSec: 0 });
+  }
+
+  function getMarketPriceInfo(address _underlyingToken) external view returns (MarketPriceInfo memory) {
+    MarketPriceInfo memory marketPriceInfo;
+
+    IInterestBearingToken _ibToken = IInterestBearingToken(_moneyMarket.getIbTokenFromToken(_underlyingToken));
+
+    marketPriceInfo.underlyingTokenPrice = getPriceUSD(_underlyingToken);
+    marketPriceInfo.underlyingToIbRate = _ibToken.convertToShares(1e18);
+    marketPriceInfo.ibTokenPrice = (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) / 1e18;
+
+    return marketPriceInfo;
+  }
 }
