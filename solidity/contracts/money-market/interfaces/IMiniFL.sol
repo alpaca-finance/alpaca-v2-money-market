@@ -39,4 +39,8 @@ interface IMiniFL {
     uint256 _pid,
     uint256 _amountToWithdraw
   ) external;
+
+  function harvest(uint256 _pid) external;
+
+  function harvestMany(uint256[] calldata _pids) external;
 }
