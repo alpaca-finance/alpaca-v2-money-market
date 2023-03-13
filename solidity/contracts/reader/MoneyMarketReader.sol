@@ -405,9 +405,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
     marketPriceInfo.underlyingTokenPrice = _getPriceUSD(_underlyingToken);
     marketPriceInfo.underlyingToIbRate = _ibToken.convertToShares(1e18);
-    marketPriceInfo.ibTokenPrice =
-      (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) /
-      10**_ibToken.decimals();
+    marketPriceInfo.ibTokenPrice = (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) / 1e18;
 
     return marketPriceInfo;
   }
