@@ -14,7 +14,7 @@ contract SetUpMiniFLForTestScript is BaseScript {
   uint256 internal alpacaPerSecond;
 
   constructor() {
-    alpacaPerSecond = 1 ether;
+    alpacaPerSecond = 5e16;
   }
 
   function run() public {
@@ -27,7 +27,7 @@ contract SetUpMiniFLForTestScript is BaseScript {
     // seed alpaca to miniFL to be distribute as reward
     // alpaca tokens should be prepared for deployer beforehand
     // in this case bash script should handle it
-    // MockERC20(alpaca).transfer(address(miniFL), 100 ether);
+    MockERC20(alpaca).transfer(address(miniFL), 1000 ether);
 
     miniFL.setAlpacaPerSecond(alpacaPerSecond, false);
 
