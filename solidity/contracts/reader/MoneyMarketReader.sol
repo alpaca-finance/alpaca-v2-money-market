@@ -373,6 +373,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     return marketStats;
   }
 
+  // TODO: implement
   function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory) {
     return MarketRewardInfo({ allocPoint: 0, totalAllocPoint: 0, rewardPerSec: 0 });
   }
@@ -384,7 +385,9 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
     marketPriceInfo.underlyingTokenPrice = _getPriceUSD(_underlyingToken);
     marketPriceInfo.underlyingToIbRate = _ibToken.convertToShares(1e18);
-    marketPriceInfo.ibTokenPrice = (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) / 1e18;
+    marketPriceInfo.ibTokenPrice =
+      (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) /
+      10**_ibToken.decimals();
 
     return marketPriceInfo;
   }
