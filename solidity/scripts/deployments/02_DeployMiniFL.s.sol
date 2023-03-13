@@ -18,7 +18,7 @@ contract DeployMiniFLScript is BaseScript {
     address miniFLImplementation = address(new MiniFL());
 
     // deploy proxy
-    address ALPACA = address(1);
+    address ALPACA = 0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F;
     uint256 maxAlpacaPerSecond = 1 ether;
     bytes memory data = abi.encodeWithSelector(
       bytes4(keccak256("initialize(address,uint256)")),
