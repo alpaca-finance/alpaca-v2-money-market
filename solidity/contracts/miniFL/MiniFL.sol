@@ -362,7 +362,7 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   /// @notice Harvest ALPACA rewards from multiple pools
-  /// @param _pids The index of the pools. See `poolInfo`.
+  /// @param _pids A list of index of the pools. See `poolInfo`.
   function harvestMany(uint256[] calldata _pids) external nonReentrant {
     uint256 length = _pids.length;
     for (uint256 _i; _i < length; ) {
