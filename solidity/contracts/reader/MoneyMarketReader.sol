@@ -25,6 +25,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     _moneyMarketAccountManager = moneyMarketAccountManager_;
   }
 
+  // TODO: deprecate this
   /// @dev Get the market summary
   /// @param _underlyingToken The underlying token address
   function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory) {
@@ -373,9 +374,28 @@ contract MoneyMarketReader is IMoneyMarketReader {
     return marketStats;
   }
 
-  // TODO: implement
   function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory) {
-    return MarketRewardInfo({ allocPoint: 0, totalAllocPoint: 0, rewardPerSec: 0 });
+    address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+    address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
+
+    uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
+    uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
+
+    uint256 _ibReserveAmount = _miniFL.getStakingReserves(_ibPoolId);
+    // debtTokenShare is equal to totalSupply of debtToken
+    // then we can use debtTokenValue as total amount
+    uint256 _totalDebtToken = _moneyMarket.getOverCollatTokenDebtValue(_underlyingToken) +
+      _moneyMarket.getOverCollatPendingInterest(_underlyingToken);
+
+    return
+      MarketRewardInfo({
+        debtTokenAllocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
+        ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
+        totalAllocPoint: _miniFL.totalAllocPoint(),
+        rewardPerSec: _miniFL.alpacaPerSecond(),
+        totalUnderlyingTokenInPool: IInterestBearingToken(_ibAddress).convertToAssets(_ibReserveAmount),
+        totalDebtTokenInPool: _totalDebtToken
+      });
   }
 
   function getMarketPriceInfo(address _underlyingToken) external view returns (MarketPriceInfo memory) {

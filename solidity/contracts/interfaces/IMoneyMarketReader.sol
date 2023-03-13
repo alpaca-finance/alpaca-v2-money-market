@@ -129,9 +129,12 @@ interface IMoneyMarketReader {
   function getMarketStats(address _underlyingToken) external view returns (MarketStats memory);
 
   struct MarketRewardInfo {
-    uint256 allocPoint;
+    uint256 debtTokenAllocPoint;
+    uint256 ibTokenAllocPoint;
     uint256 totalAllocPoint;
     uint256 rewardPerSec;
+    uint256 totalDebtTokenInPool;
+    uint256 totalUnderlyingTokenInPool;
   }
 
   function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory);
