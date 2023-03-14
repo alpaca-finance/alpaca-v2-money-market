@@ -7,6 +7,9 @@ import { InterestBearingToken } from "solidity/contracts/money-market/InterestBe
 import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
+import { FixedInterestRateModel } from "solidity/contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { TripleSlopeModel6 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel6.sol";
+import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
 contract SetUpMMForTestScript is BaseScript {
   using stdJson for string;
@@ -36,6 +39,15 @@ contract SetUpMMForTestScript is BaseScript {
 
     moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
     moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
+
+    address irm1 = address(new FixedInterestRateModel(18));
+    address irm2 = address(new TripleSlopeModel6());
+    address irm3 = address(new TripleSlopeModel7());
+
+    moneyMarket.setInterestModel(busd, irm1);
+    moneyMarket.setInterestModel(wbnb, irm2);
+    moneyMarket.setInterestModel(pstake, irm2);
+    moneyMarket.setInterestModel(dodo, irm3);
 
     //---- open markets ----//
     // avoid stack too deep
