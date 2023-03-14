@@ -83,8 +83,6 @@ contract SetUpMMForTestScript is BaseScript {
 
     _startUserBroadcast();
 
-    // MockERC20(mock6DecimalsToken).mint(userAddress, 100e6);
-
     MockERC20(wbnb).approve(address(accountManager), type(uint256).max);
     MockERC20(busd).approve(address(accountManager), type(uint256).max);
     MockERC20(dodo).approve(address(accountManager), type(uint256).max);
