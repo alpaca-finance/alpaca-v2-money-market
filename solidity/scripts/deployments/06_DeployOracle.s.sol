@@ -19,33 +19,27 @@ contract DeployOracleScript is BaseScript {
     alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, busd, usdPlaceholder);
 
     // set alpaca guard path
-    address[] memory tokens = new address[](4);
-    IAlpacaV2Oracle.Config[] memory configs = new IAlpacaV2Oracle.Config[](4);
-    address[] memory path = new address[](2);
+    address[] memory tokens = new address[](3);
+    IAlpacaV2Oracle.Config[] memory configs = new IAlpacaV2Oracle.Config[](3);
+    address[] memory path;
     // wbnb
     tokens[0] = wbnb;
     path = new address[](2);
     path[0] = wbnb;
     path[1] = busd;
     configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
-    // busd
-    tokens[1] = busd;
-    path = new address[](2);
-    path[0] = busd;
-    path[1] = busd;
-    configs[1] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
     // dodo
-    tokens[2] = dodo;
+    tokens[1] = dodo;
     path = new address[](2);
     path[0] = dodo;
     path[1] = busd;
-    configs[2] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+    configs[1] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
     // doge
-    tokens[3] = doge;
+    tokens[2] = doge;
     path = new address[](2);
     path[0] = doge;
     path[1] = busd;
-    configs[3] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+    configs[2] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
 
     alpacaV2Oracle.setTokenConfig(tokens, configs);
 
