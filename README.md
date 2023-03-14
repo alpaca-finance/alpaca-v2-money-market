@@ -50,26 +50,28 @@ If the used borrowing power / total borrowing power is greater than x%, the suba
 
 `AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
 
+## Contracts Call
+
 ### Lending
 
-To start lending
-`LendFacet.deposit()` Supply the token to mint the ibToken
-To withdraw
-`LendFacet.withdraw()` Burn the ibToken to get the deposited token back with interest
+- To start lending
+  `LendFacet.deposit()` Supply the token to mint the ibToken
+- To withdraw
+  `LendFacet.withdraw()` Burn the ibToken to get the deposited token back with interest
 
 ### Overcollateralized Borrowing
 
-To add collateral to the subaccount
-`CollateralFacet.addCollateral()` - Add a token as a collateral
-To borrow a token
-`BorrowFacet.borrow()` - Borrowing a token
+- To add collateral to the subaccount
+  `CollateralFacet.addCollateral()` - Add a token as a collateral
+- To borrow a token
+  `BorrowFacet.borrow()` - Borrowing a token
 
 ### Liquidation
 
-To repurchase
-`LiquidationFacet.repurchase()` - Repurchase an underwater subaccount
-To liquidate
-`LiquidationFacet.liquidationCall()` - Liquidate an underwater subaccount
+- To repurchase
+  `LiquidationFacet.repurchase()` - Repurchase an underwater subaccount
+- To liquidate
+  `LiquidationFacet.liquidationCall()` - Liquidate an underwater subaccount
 
 # Setting up the project
 
