@@ -15,14 +15,14 @@ contract DeployOracleScript is BaseScript {
     _startDeployerBroadcast();
 
     // deploy oracle
-    alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, usdt, usdPlaceholder);
+    alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, busd, usdPlaceholder);
 
     // set alpaca guard path
     address[] memory tokens = new address[](1);
-    tokens[0] = busd;
+    tokens[0] = wbnb;
     address[] memory path = new address[](2);
-    path[0] = busd;
-    path[1] = usdt;
+    path[0] = wbnb;
+    path[1] = busd;
     IAlpacaV2Oracle.Config[] memory configs = new IAlpacaV2Oracle.Config[](1);
     configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
     alpacaV2Oracle.setTokenConfig(tokens, configs);
