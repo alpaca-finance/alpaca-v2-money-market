@@ -145,3 +145,7 @@ forge script solidity/scripts/utilities/ScriptName.s.sol --rpc-url $RPC_URL
 ```
 forge script solidity/scripts/utilities/ScriptName.s.sol --broadcast --rpc-url $RPC_URL
 ```
+
+# Licensing
+
+The primary license for Alpaca Protocol 2.0 is the BUSL LICENSE, see [BUSL LICENSE](https://github.com/alpaca-finance/alpaca-v2-money-market/blob/main/LICENSE).
