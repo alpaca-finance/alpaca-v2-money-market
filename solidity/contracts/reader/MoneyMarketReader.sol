@@ -25,6 +25,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     _moneyMarketAccountManager = moneyMarketAccountManager_;
   }
 
+  // TODO: deprecate this
   /// @dev Get the market summary
   /// @param _underlyingToken The underlying token address
   function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory) {
@@ -329,5 +330,83 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
   function moneyMarket() external view returns (address) {
     return address(_moneyMarket);
+  }
+
+  function getMarketMetadata(address _underlyingToken) external view returns (MarketMetadata memory) {
+    MarketMetadata memory marketMetadata;
+
+    marketMetadata.underlyingTokenAddress = _underlyingToken;
+    marketMetadata.ibTokenAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+
+    LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
+    marketMetadata.underlyingTokenConfig = TokenConfig({
+      tier: uint8(_tokenConfig.tier),
+      collateralFactor: _tokenConfig.collateralFactor,
+      borrowingFactor: _tokenConfig.borrowingFactor,
+      maxCollateral: _tokenConfig.maxCollateral,
+      maxBorrow: _tokenConfig.maxBorrow
+    });
+    _tokenConfig = _moneyMarket.getTokenConfig(marketMetadata.ibTokenAddress);
+    marketMetadata.ibTokenConfig = TokenConfig({
+      tier: uint8(_tokenConfig.tier),
+      collateralFactor: _tokenConfig.collateralFactor,
+      borrowingFactor: _tokenConfig.borrowingFactor,
+      maxCollateral: _tokenConfig.maxCollateral,
+      maxBorrow: _tokenConfig.maxBorrow
+    });
+
+    return marketMetadata;
+  }
+
+  function getMarketStats(address _underlyingToken) external view returns (MarketStats memory) {
+    MarketStats memory marketStats;
+
+    IInterestBearingToken _ibToken = IInterestBearingToken(_moneyMarket.getIbTokenFromToken(_underlyingToken));
+
+    marketStats.ibTotalSupply = _ibToken.totalSupply();
+    marketStats.ibTotalAsset = _ibToken.totalAssets();
+    marketStats.globalDebtValue = _moneyMarket.getGlobalDebtValue(_underlyingToken);
+    marketStats.totalToken = _moneyMarket.getTotalToken(_underlyingToken);
+    marketStats.pendingIntetest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
+    marketStats.lastAccruedAt = _moneyMarket.getDebtLastAccruedAt(_underlyingToken);
+    marketStats.blockTimestamp = block.timestamp;
+
+    return marketStats;
+  }
+
+  function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory) {
+    address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
+    address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
+
+    uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
+    uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
+
+    uint256 _ibReserveAmount = _miniFL.getStakingReserves(_ibPoolId);
+    // debtTokenShare is equal to totalSupply of debtToken
+    // then we can use debtTokenValue as total amount
+    uint256 _totalDebtToken = _moneyMarket.getOverCollatTokenDebtValue(_underlyingToken) +
+      _moneyMarket.getOverCollatPendingInterest(_underlyingToken);
+
+    return
+      MarketRewardInfo({
+        debtTokenAllocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
+        ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
+        totalAllocPoint: _miniFL.totalAllocPoint(),
+        rewardPerSec: _miniFL.alpacaPerSecond(),
+        totalUnderlyingTokenInPool: IInterestBearingToken(_ibAddress).convertToAssets(_ibReserveAmount),
+        totalDebtTokenInPool: _totalDebtToken
+      });
+  }
+
+  function getMarketPriceInfo(address _underlyingToken) external view returns (MarketPriceInfo memory) {
+    MarketPriceInfo memory marketPriceInfo;
+
+    IInterestBearingToken _ibToken = IInterestBearingToken(_moneyMarket.getIbTokenFromToken(_underlyingToken));
+
+    marketPriceInfo.underlyingTokenPrice = _getPriceUSD(_underlyingToken);
+    marketPriceInfo.underlyingToIbRate = _ibToken.convertToShares(1e18);
+    marketPriceInfo.ibTokenPrice = (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) / 1e18;
+
+    return marketPriceInfo;
   }
 }
