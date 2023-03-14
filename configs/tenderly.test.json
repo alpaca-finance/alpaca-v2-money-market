@@ -3,7 +3,8 @@
   "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
-  "alpacaV2Oracle": "0x559a1A7133608424991d807B8cBaEEec6B9C2653",
+  "alpacaV2Oracle": "0x901dD9882393Ce7097778cEEcA41c13C4aD1CbD0",
+  "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   "moneyMarket": {
     "moneyMarketDiamond": "0xe2c439A1B59c7B36E9ff4d3120c7206df5c65131",
     "facets": {

@@ -16,6 +16,7 @@ import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFace
 import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
+import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
@@ -40,7 +41,8 @@ abstract contract BaseScript is Script {
   address internal nativeRelayer;
   address internal oracleMedianizer;
   address internal usdPlaceholder;
-  address internal alpacaV2Oracle;
+  IAlpacaV2Oracle internal alpacaV2Oracle;
+  address internal pancakeswapV2Router;
   address internal wbnb;
   address internal busd;
   address internal dodo;
@@ -61,7 +63,8 @@ abstract contract BaseScript is Script {
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracleMedianizer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
-    alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (address));
+    alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
+    pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
     // tokens
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
