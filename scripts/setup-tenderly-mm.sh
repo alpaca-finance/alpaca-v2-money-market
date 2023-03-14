@@ -103,6 +103,16 @@ done
 
 sleep 3
 
+echo "🚧 deploying oracle"
+forge script solidity/scripts/deployments/06_DeployOracle.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+while [[ $? -ne 0 ]]; do
+    echo "🙉 retrying oracle deployment"
+    forge script solidity/scripts/deployments/06_DeployOracle.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    sleep 2
+done
+
+sleep 3
+
 echo "🚧 setting mm state for test"
 forge script solidity/scripts/utilities/SetUpMMForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
