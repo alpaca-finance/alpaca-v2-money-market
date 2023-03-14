@@ -38,11 +38,15 @@ abstract contract BaseScript is Script {
   address internal proxyAdminAddress;
   address internal wNativeToken;
   address internal nativeRelayer;
+  address internal oracleMedianizer;
+  address internal usdPlaceholder;
+  address internal alpacaV2Oracle;
   address internal wbnb;
   address internal busd;
   address internal dodo;
   address internal pstake;
   address internal alpaca;
+  address internal usdt;
 
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
@@ -55,12 +59,16 @@ abstract contract BaseScript is Script {
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     wNativeToken = abi.decode(configJson.parseRaw(".wNativeToken"), (address));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
+    oracleMedianizer = abi.decode(configJson.parseRaw(".oracleMedianizer"), (address));
+    usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
+    alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (address));
     // tokens
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
     dodo = abi.decode(configJson.parseRaw(".tokens.dodo"), (address));
     pstake = abi.decode(configJson.parseRaw(".tokens.pstake"), (address));
     alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
+    usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
   }
 
   // function _pretendMM() internal {

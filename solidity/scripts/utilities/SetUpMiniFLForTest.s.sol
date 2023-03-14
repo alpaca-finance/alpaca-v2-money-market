@@ -22,7 +22,7 @@ contract SetUpMiniFLForTestScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    MockAlpacaV2Oracle(moneyMarket.getOracle()).setTokenPrice(alpaca, 0.2 ether);
+    // MockAlpacaV2Oracle(moneyMarket.getOracle()).setTokenPrice(alpaca, 0.2 ether);
 
     // seed alpaca to miniFL to be distribute as reward
     // alpaca tokens should be prepared for deployer beforehand
