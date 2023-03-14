@@ -15,6 +15,7 @@ contract DeployOracleScript is BaseScript {
     _startDeployerBroadcast();
 
     // deploy oracle
+    // NOTE: use v1 medianizer
     alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, busd, usdPlaceholder);
 
     // set alpaca guard path

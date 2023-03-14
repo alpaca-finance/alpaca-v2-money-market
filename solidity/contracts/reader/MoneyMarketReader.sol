@@ -19,6 +19,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
   IMoneyMarket private immutable _moneyMarket;
   IMiniFL private immutable _miniFL;
   address private immutable _moneyMarketAccountManager;
+  address private constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
   constructor(address moneyMarket_, address moneyMarketAccountManager_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
@@ -241,15 +242,13 @@ contract MoneyMarketReader is IMoneyMarketReader {
     IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
     IOracleMedianizer _oracleMedianizer = IOracleMedianizer(_alpacaV2Oracle.oracle());
 
-    address usd = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
-
     address _underlyingToken = _moneyMarket.getTokenFromIbToken(_token);
     // `_token` is ibToken
     if (_underlyingToken != address(0)) {
-      return IInterestBearingToken(_token).convertToAssets(_getPrice(_oracleMedianizer, _underlyingToken, usd));
+      return IInterestBearingToken(_token).convertToAssets(_getPrice(_oracleMedianizer, _underlyingToken, USD));
     }
     // not ibToken
-    return _getPrice(_oracleMedianizer, _token, usd);
+    return _getPrice(_oracleMedianizer, _token, USD);
   }
 
   /// @dev partially replicate `OracleMedianizer.getPrice` logic
