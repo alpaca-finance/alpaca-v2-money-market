@@ -98,7 +98,7 @@ contract SetUpMMForTestScript is BaseScript {
     accountManager.depositAndAddCollateral(0, wbnb, 78.09 ether);
     accountManager.depositAndAddCollateral(0, busd, 12.2831207 ether);
 
-    // accountManager.borrow(0, dodo, 3.14159 ether);
+    accountManager.borrow(0, dodo, 3.14159 ether);
 
     // subAccount 1
     accountManager.depositAndAddCollateral(1, busd, 10 ether);
