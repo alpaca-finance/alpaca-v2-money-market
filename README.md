@@ -44,34 +44,37 @@ Once the remaining borrowing power reach 0, the subaccount is available for repu
 
 ### Liquidation
 
-If the used borrowing power / total borrowing power is greater than x%, the subaccount is avalible for liquidation. Liquidation process is done through market selling an collateral at preconfigured DEX to repay the outstanding debt
+If the used borrowing power / total borrowing power is greater than x%, the subaccount is available for liquidation. Liquidation process is done through market selling an collateral at a pre-configured DEX to repay the outstanding debt
 
 ### Opening the market
 
-`AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
+- To create a market for lending and borrowing
+  `AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
+
+## Contracts Call
 
 ### Lending
 
-To start lending
-`LendFacet.deposit()` Supply the token to mint the ibToken
-To withdraw
-`LendFacet.withdraw()` Burn the ibToken to get the deposited token back with interest
+- To start lending
+  `LendFacet.deposit()` Supply the token to mint the ibToken
+- To withdraw
+  `LendFacet.withdraw()` Burn the ibToken to get the deposited token back with interest
 
 ### Overcollateralized Borrowing
 
-To add collateral to the subaccount
-`CollateralFacet.addCollateral()` - Add a token as a collateral
-To borrow a token
-`BorrowFacet.borrow()` - Borrowing a token
+- To add collateral to the subaccount
+  `CollateralFacet.addCollateral()` - Add a token as a collateral
+- To borrow a token
+  `BorrowFacet.borrow()` - Borrowing a token
 
 ### Liquidation
 
-To repurchase
-`LiquidationFacet.repurchase()` - Repurchase an underwater subaccount
-To liquidate
-`LiquidationFacet.liquidationCall()` - Liquidate an underwater subaccount
+- To repurchase
+  `LiquidationFacet.repurchase()` - Repurchase an underwater subaccount
+- To liquidate
+  `LiquidationFacet.liquidationCall()` - Liquidate an underwater subaccount
 
-# Seting up the project
+# Setting up the project
 
 - Install dependencies
   `yarn`
@@ -117,7 +120,7 @@ forge script solidity/scripts/deployments/01_DeployMoneyMarket.s.sol
 
 To make it work on Tenderly, add flag `--slow` for it wait for tx to be confirmed before submit next tx
 
-## Utilitiy scripts
+## Utility scripts
 
 ### Prerequisite
 
