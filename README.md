@@ -48,7 +48,8 @@ If the used borrowing power / total borrowing power is greater than x%, the suba
 
 ### Opening the market
 
-`AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
+- To create a market for lending and borrowing
+  `AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
 
 ## Contracts Call
 
