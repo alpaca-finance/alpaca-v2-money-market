@@ -61,7 +61,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         to18ConversionFactor: _tokenConfig.to18ConversionFactor,
         maxCollateral: _ibTokenConfig.maxCollateral,
         maxBorrow: _tokenConfig.maxBorrow,
-        tokenPrice: _getPrice(IOracleMedianizer(address(0)), _underlyingToken, address(0)),
+        tokenPrice: _getPriceUSD(_underlyingToken),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         totalToken: _moneyMarket.getTotalToken(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
