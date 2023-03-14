@@ -44,7 +44,7 @@ Once the remaining borrowing power reach 0, the subaccount is available for repu
 
 ### Liquidation
 
-If the used borrowing power / total borrowing power is greater than x%, the subaccount is avalible for liquidation. Liquidation process is done through market selling an collateral at preconfigured DEX to repay the outstanding debt
+If the used borrowing power / total borrowing power is greater than x%, the subaccount is available for liquidation. Liquidation process is done through market selling an collateral at a pre-configured DEX to repay the outstanding debt
 
 ### Opening the market
 
@@ -71,7 +71,7 @@ To repurchase
 To liquidate
 `LiquidationFacet.liquidationCall()` - Liquidate an underwater subaccount
 
-# Seting up the project
+# Setting up the project
 
 - Install dependencies
   `yarn`
@@ -117,7 +117,7 @@ forge script solidity/scripts/deployments/01_DeployMoneyMarket.s.sol
 
 To make it work on Tenderly, add flag `--slow` for it wait for tx to be confirmed before submit next tx
 
-## Utilitiy scripts
+## Utility scripts
 
 ### Prerequisite
 
