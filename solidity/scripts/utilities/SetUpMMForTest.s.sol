@@ -30,7 +30,7 @@ contract SetUpMMForTestScript is BaseScript {
 
     moneyMarket.setInterestModel(busd, irm1);
     moneyMarket.setInterestModel(wbnb, irm2);
-    moneyMarket.setInterestModel(pstake, irm1);
+    moneyMarket.setInterestModel(doge, irm1);
     moneyMarket.setInterestModel(dodo, irm2);
 
     //---- open markets ----//
@@ -62,7 +62,7 @@ contract SetUpMMForTestScript is BaseScript {
       ibTokenConfigInput.maxCollateral = 0;
       address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
 
-      // PSTAKE
+      // DOGE
       tokenConfigInput.tier = LibConstant.AssetTier.ISOLATE;
       tokenConfigInput.borrowingFactor = 8000;
       tokenConfigInput.maxBorrow = 1_000_000 ether;
@@ -70,11 +70,11 @@ contract SetUpMMForTestScript is BaseScript {
       ibTokenConfigInput.tier = LibConstant.AssetTier.ISOLATE;
       ibTokenConfigInput.collateralFactor = 0;
       ibTokenConfigInput.maxCollateral = 0;
-      address ibPstake = moneyMarket.openMarket(pstake, tokenConfigInput, ibTokenConfigInput);
+      address ibDoge = moneyMarket.openMarket(doge, tokenConfigInput, ibTokenConfigInput);
 
       _writeJson(vm.toString(ibBusd), ".ibTokens.ibBusd");
       _writeJson(vm.toString(ibDodo), ".ibTokens.ibDodo");
-      _writeJson(vm.toString(ibPstake), ".ibTokens.ibPstake");
+      _writeJson(vm.toString(ibDoge), ".ibTokens.ibDoge");
     }
 
     _stopBroadcast();
@@ -88,11 +88,11 @@ contract SetUpMMForTestScript is BaseScript {
     MockERC20(wbnb).approve(address(accountManager), type(uint256).max);
     MockERC20(busd).approve(address(accountManager), type(uint256).max);
     MockERC20(dodo).approve(address(accountManager), type(uint256).max);
-    MockERC20(pstake).approve(address(accountManager), type(uint256).max);
+    MockERC20(doge).approve(address(accountManager), type(uint256).max);
 
     // seed money market
     accountManager.deposit(dodo, 10 ether);
-    accountManager.deposit(pstake, 10 ether);
+    accountManager.deposit(doge, 10e8);
 
     // subAccount 0
     accountManager.depositAndAddCollateral(0, wbnb, 78.09 ether);
@@ -103,7 +103,7 @@ contract SetUpMMForTestScript is BaseScript {
     // subAccount 1
     accountManager.depositAndAddCollateral(1, busd, 10 ether);
 
-    // accountManager.borrow(1, pstake, 2.34 ether);
+    accountManager.borrow(1, doge, 2.34e8);
 
     _stopBroadcast();
   }

@@ -40,7 +40,7 @@ contract SetUpMiniFLForTestScript is BaseScript {
     miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getIbTokenFromToken(dodo)), 100, false);
     miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getDebtTokenFromToken(dodo)), 100, false);
 
-    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getIbTokenFromToken(pstake)), 100, false);
-    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getDebtTokenFromToken(pstake)), 100, false);
+    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getIbTokenFromToken(doge)), 100, false);
+    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getDebtTokenFromToken(doge)), 100, false);
   }
 }

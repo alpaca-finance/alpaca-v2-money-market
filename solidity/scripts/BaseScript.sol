@@ -46,7 +46,7 @@ abstract contract BaseScript is Script {
   address internal wbnb;
   address internal busd;
   address internal dodo;
-  address internal pstake;
+  address internal doge;
   address internal alpaca;
   address internal usdt;
 
@@ -69,7 +69,7 @@ abstract contract BaseScript is Script {
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
     dodo = abi.decode(configJson.parseRaw(".tokens.dodo"), (address));
-    pstake = abi.decode(configJson.parseRaw(".tokens.pstake"), (address));
+    doge = abi.decode(configJson.parseRaw(".tokens.doge"), (address));
     alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
   }
