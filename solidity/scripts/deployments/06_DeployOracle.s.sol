@@ -30,9 +30,10 @@ contract DeployOracleScript is BaseScript {
     configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
     // dodo
     tokens[1] = dodo;
-    path = new address[](2);
+    path = new address[](3);
     path[0] = dodo;
-    path[1] = busd;
+    path[1] = wbnb;
+    path[2] = busd;
     configs[1] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
     // doge
     tokens[2] = doge;
