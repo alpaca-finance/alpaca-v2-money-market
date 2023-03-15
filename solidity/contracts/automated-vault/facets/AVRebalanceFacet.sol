@@ -81,7 +81,7 @@ contract AVRebalanceFacet is IAVRebalanceFacet {
       (uint256 _withdrawalStableAmount, uint256 _withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
         _vaultToken,
         _vaultConfig.handler,
-        LibAV01.getTokenAmountFromUSDValue(_vaultConfig.lpToken, uint256(-_deltaDebt), avDs),
+        uint256(-_deltaDebt),
         avDs
       );
 

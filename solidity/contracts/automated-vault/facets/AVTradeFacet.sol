@@ -113,7 +113,7 @@ contract AVTradeFacet is IAVTradeFacet {
     (vars.withdrawalStableAmount, vars.withdrawalAssetAmount) = LibAV01.withdrawFromHandler(
       _vaultToken,
       _vaultConfig.handler,
-      (IAVHandler(_vaultConfig.handler).totalLpBalance() * _shareToWithdraw) / vars.totalShareSupply,
+      (IAVHandler(_vaultConfig.handler).getAUMinUSD() * _shareToWithdraw) / vars.totalShareSupply,
       avDs
     );
 

@@ -12,7 +12,7 @@ interface IAVHandler {
     uint256 _minLpAmount
   ) external returns (uint256);
 
-  function onWithdraw(uint256 _lpToRemove) external returns (uint256, uint256);
+  function onWithdraw(uint256 _valueToRemove) external returns (uint256, uint256);
 
   function setWhitelistedCallers(address[] calldata _callers, bool _isOk) external;
 

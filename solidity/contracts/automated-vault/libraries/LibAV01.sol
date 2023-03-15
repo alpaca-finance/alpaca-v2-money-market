@@ -90,13 +90,13 @@ library LibAV01 {
   function withdrawFromHandler(
     address _vaultToken,
     address _handler,
-    uint256 _lpToWithdraw,
+    uint256 _equityToRemove,
     AVDiamondStorage storage avDs
   ) internal returns (uint256 _stableReturnAmount, uint256 _assetReturnAmount) {
     LibAVConstant.VaultConfig memory _vaultConfig = avDs.vaultConfigs[_vaultToken];
 
     // (token0ReturnAmount, token1ReturnAmount)
-    (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_lpToWithdraw);
+    (_stableReturnAmount, _assetReturnAmount) = IAVHandler(_handler).onWithdraw(_equityToRemove);
 
     address _token0 = ISwapPairLike(_vaultConfig.lpToken).token0();
     if (_token0 != _vaultConfig.stableToken) {

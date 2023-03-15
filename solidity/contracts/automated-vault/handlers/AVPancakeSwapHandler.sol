@@ -84,13 +84,15 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     totalLpBalance += _mintedLpAmount;
   }
 
-  function onWithdraw(uint256 _lpAmountToWithdraw)
+  function onWithdraw(uint256 _valueToRemove)
     external
     onlyWhitelisted
     returns (uint256 _returnedToken0, uint256 _returnedToken1)
   {
     address _token0 = lpToken.token0();
     address _token1 = lpToken.token1();
+
+    uint256 _lpAmountToWithdraw = (_valueToRemove * totalLpBalance) / getAUMinUSD();
 
     (_returnedToken0, _returnedToken1) = removeLiquidity(_lpAmountToWithdraw, _token0, _token1);
 
@@ -256,7 +258,7 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
     _assetBorrowAmount = (_assetBorrowValue * 1e18) / (_assetPrice * assetTokenTo18ConversionFactor);
   }
 
-  function getAUMinUSD() external view returns (uint256 _value) {
+  function getAUMinUSD() public view returns (uint256 _value) {
     (_value, ) = oracle.lpToDollar(totalLpBalance, address(lpToken));
   }
 }

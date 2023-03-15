@@ -21,6 +21,8 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     assertEq(usdcWethLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
     assertEq(handler.totalLpBalance(), 10 ether);
+    // total aum should be 10 * 2(lp value) = 20 ether
+    assertEq(handler.getAUMinUSD(), 20 ether);
   }
 
   function testRevert_WhenDepositAndGetTooLessLiquidity_ShouldRevert() external {
@@ -45,6 +47,9 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     assertEq(usdcWethLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
     assertEq(handler.totalLpBalance(), 10 ether);
+    // total aum should be 10 * 2(lp value) = 20 ether
+    uint256 _tvl = handler.getAUMinUSD();
+    assertEq(_tvl, 20 ether);
 
     mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(5 ether, usdcDecimal), 5 ether);
 
@@ -52,7 +57,10 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     uint256 avDiamondWethBefore = weth.balanceOf(avDiamond);
 
     vm.prank(avDiamond);
-    (uint256 _token0Out, uint256 _token1Out) = handler.onWithdraw(5 ether);
+    // trying to remove half of the TVL
+    // since there's 20 USD, trying to remove half should get 5 usdc and 5 weth
+    (uint256 _token0Out, uint256 _token1Out) = handler.onWithdraw(_tvl / 2);
+
     // note: the amounts out is from mock
     assertEq(_token0Out, normalizeEther(5 ether, usdcDecimal));
     assertEq(_token1Out, 5 ether);
@@ -74,6 +82,9 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     assertEq(usdcWethLPToken.balanceOf(address(handler)), 10 ether);
     // total lp balance should same with balance of LPToken
     assertEq(handler.totalLpBalance(), 10 ether);
+    // total aum should be 10 * 2(lp value) = 20 ether
+    uint256 _tvl = handler.getAUMinUSD();
+    assertEq(_tvl, 20 ether);
 
     mockRouter.setRemoveLiquidityAmountsOut(normalizeEther(5 ether, usdcDecimal), 5 ether);
 
@@ -82,7 +93,9 @@ contract AVPancakeSwapHandlerTest is AV_BaseTest {
     usdc.transfer(address(handler), normalizeEther(2 ether, usdcDecimal));
     vm.stopPrank();
 
-    (uint256 _token0Out, uint256 _token1Out) = handler.onWithdraw(5 ether);
+    // trying to remove half of the TVL
+    // since there's 20 USD, trying to remove half should get 5 usdc and 5 weth
+    (uint256 _token0Out, uint256 _token1Out) = handler.onWithdraw(_tvl / 2);
     // note: the amounts out is from mock
     assertEq(_token0Out, normalizeEther(5 ether, usdcDecimal));
     assertEq(_token1Out, 5 ether);
