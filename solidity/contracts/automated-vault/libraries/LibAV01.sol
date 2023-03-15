@@ -220,32 +220,6 @@ library LibAV01 {
     avDs.vaultDebts[_vaultToken][_token] -= _repayAmount;
   }
 
-  function calculateBorrowAmount(
-    address _stableToken,
-    address _assetToken,
-    uint256 _stableDepositedAmount,
-    uint8 _leverageLevel,
-    LibAV01.AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) {
-    uint256 _stablePrice = getPriceUSD(_stableToken, avDs);
-    uint256 _assetPrice = getPriceUSD(_assetToken, avDs);
-
-    uint256 _stableTokenTo18ConversionFactor = avDs.tokenConfigs[_stableToken].to18ConversionFactor;
-
-    uint256 _stableDepositedValue = (_stableDepositedAmount * _stableTokenTo18ConversionFactor * _stablePrice) / 1e18;
-    uint256 _targetBorrowValue = _stableDepositedValue * _leverageLevel;
-
-    uint256 _stableBorrowValue = _targetBorrowValue / 2;
-    uint256 _assetBorrowValue = _targetBorrowValue - _stableBorrowValue;
-
-    _stableBorrowAmount =
-      ((_stableBorrowValue - _stableDepositedValue) * 1e18) /
-      (_stablePrice * _stableTokenTo18ConversionFactor);
-    _assetBorrowAmount =
-      (_assetBorrowValue * 1e18) /
-      (_assetPrice * avDs.tokenConfigs[_assetToken].to18ConversionFactor);
-  }
-
   function to18ConversionFactor(address _token) internal view returns (uint64) {
     uint256 _decimals = IERC20(_token).decimals();
     if (_decimals > 18) revert LibAV01_UnsupportedDecimals();

@@ -60,14 +60,6 @@ contract AVTradeFacet is IAVTradeFacet {
       _stableAmountIn
     );
 
-    // (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount) = LibAV01.calculateBorrowAmount(
-    //   _stableToken,
-    //   _assetToken,
-    //   _stableAmountIn,
-    //   _vaultConfig.leverageLevel,
-    //   avDs
-    // );
-
     // get fund from user
     IERC20(_stableToken).safeTransferFrom(msg.sender, address(this), _stableAmountIn);
 
