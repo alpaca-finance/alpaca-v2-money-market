@@ -15,4 +15,9 @@ interface IAVHandler {
   function onWithdraw(uint256 _lpToRemove) external returns (uint256, uint256);
 
   function setWhitelistedCallers(address[] calldata _callers, bool _isOk) external;
+
+  function calculateBorrowAmount(uint256 _stableDepositedAmount)
+    external
+    view
+    returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount);
 }

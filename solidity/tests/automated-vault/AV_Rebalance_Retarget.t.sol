@@ -5,7 +5,7 @@ import { AV_BaseTest, console, MockInterestModel, IAVVaultToken } from "./AV_Bas
 
 // interfaces
 import { IAVRebalanceFacet } from "../../contracts/automated-vault/interfaces/IAVRebalanceFacet.sol";
-
+import { IAVHandler } from "../../contracts/automated-vault/interfaces/IAVHandler.sol";
 // libraries
 import { LibAV01 } from "../../contracts/automated-vault/libraries/LibAV01.sol";
 
@@ -62,6 +62,25 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
   function testCorrectness_WhenAVRetarget_WhileDeltaDebtPositiveWithPrecisionLoss_ShouldIncreaseDebtToMatchTarget()
     external
   {
+    // deploy new handler
+    IAVHandler _handler = IAVHandler(
+      deployAVPancakeSwapHandler(
+        address(mockRouter),
+        address(usdcWethLPToken),
+        avDiamond,
+        address(mockOracle),
+        address(usdc),
+        address(weth),
+        4
+      )
+    );
+
+    // set avHandler whitelist
+    address[] memory _callersOk = new address[](2);
+    _callersOk[0] = address(this);
+    _callersOk[1] = address(avDiamond);
+    _handler.setWhitelistedCallers(_callersOk, true);
+
     MockInterestModel mockInterestModel1 = new MockInterestModel(0);
     MockInterestModel mockInterestModel2 = new MockInterestModel(0);
     address _newVaultToken = address(
@@ -70,7 +89,7 @@ contract AV_Rebalance_RetargetTest is AV_BaseTest {
           address(usdcWethLPToken),
           address(usdc),
           address(weth),
-          address(handler),
+          address(_handler),
           4,
           0,
           address(mockInterestModel1),

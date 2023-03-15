@@ -60,6 +60,9 @@ abstract contract AV_BaseTest is BaseTest {
 
     setUpMM();
 
+    // setup oracle
+    mockOracle = new MockAlpacaV2Oracle();
+
     // set av facets
     adminFacet = IAVAdminFacet(avDiamond);
     tradeFacet = IAVTradeFacet(avDiamond);
@@ -76,7 +79,17 @@ abstract contract AV_BaseTest is BaseTest {
     usdcWethLPToken.mint(address(mockRouter), 1000000 ether);
 
     // deploy handler
-    handler = IAVHandler(deployAVPancakeSwapHandler(address(mockRouter), address(usdcWethLPToken)));
+    handler = IAVHandler(
+      deployAVPancakeSwapHandler(
+        address(mockRouter),
+        address(usdcWethLPToken),
+        avDiamond,
+        address(mockOracle),
+        address(usdc),
+        address(weth),
+        3
+      )
+    );
 
     // setup interest rate models
     MockInterestModel mockInterestModel1 = new MockInterestModel(0);
@@ -118,8 +131,6 @@ abstract contract AV_BaseTest is BaseTest {
     });
     adminFacet.setTokenConfigs(tokenConfigs);
 
-    // setup oracle
-    mockOracle = new MockAlpacaV2Oracle();
     mockOracle.setTokenPrice(address(weth), 1e18);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
@@ -220,14 +231,27 @@ abstract contract AV_BaseTest is BaseTest {
     mmAdminFacet.setMaxNumOfToken(3, 3, 3);
   }
 
-  function deployAVPancakeSwapHandler(address _router, address _lpToken) internal returns (AVPancakeSwapHandler) {
+  function deployAVPancakeSwapHandler(
+    address _router,
+    address _lpToken,
+    address _avDiamond,
+    address _oracle,
+    address _stableToken,
+    address _assetToken,
+    uint8 _leverageLevel
+  ) internal returns (AVPancakeSwapHandler) {
     bytes memory _logicBytecode = abi.encodePacked(
       vm.getCode("./out/AVPancakeSwapHandler.sol/AVPancakeSwapHandler.json")
     );
     bytes memory _initializer = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address)")),
+      bytes4(keccak256("initialize(address,address,address,address,address,address,uint8)")),
       _router,
-      _lpToken
+      _lpToken,
+      _avDiamond,
+      _oracle,
+      _stableToken,
+      _assetToken,
+      _leverageLevel
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return AVPancakeSwapHandler(_proxy);
