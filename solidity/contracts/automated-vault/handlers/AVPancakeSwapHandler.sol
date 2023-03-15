@@ -255,4 +255,8 @@ contract AVPancakeSwapHandler is IAVPancakeSwapHandler, Initializable, OwnableUp
       (_stablePrice * stableTokenTo18ConversionFactor);
     _assetBorrowAmount = (_assetBorrowValue * 1e18) / (_assetPrice * assetTokenTo18ConversionFactor);
   }
+
+  function getAUMinUSD() external view returns (uint256 _value) {
+    (_value, ) = oracle.lpToDollar(totalLpBalance, address(lpToken));
+  }
 }

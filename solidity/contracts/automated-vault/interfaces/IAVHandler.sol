@@ -20,4 +20,6 @@ interface IAVHandler {
     external
     view
     returns (uint256 _stableBorrowAmount, uint256 _assetBorrowAmount);
+
+  function getAUMinUSD() external view returns (uint256);
 }

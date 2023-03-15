@@ -227,15 +227,6 @@ library LibAV01 {
     return uint64(_conversionFactor);
   }
 
-  function getHandlerTotalLPValueInUSD(
-    address _handler,
-    address _lpToken,
-    AVDiamondStorage storage avDs
-  ) internal view returns (uint256 _totalLPValueUSD) {
-    uint256 _lpAmount = IAVHandler(_handler).totalLpBalance();
-    _totalLPValueUSD = getTokenInUSD(_lpToken, _lpAmount, avDs);
-  }
-
   /// @dev beware that unaccrued pendingInterest affect the result
   function getVaultTotalDebtInUSD(
     address _vaultToken,
@@ -259,7 +250,7 @@ library LibAV01 {
   ) internal view returns (uint256 _equity) {
     address _lpToken = avDs.vaultConfigs[_vaultToken].lpToken;
 
-    uint256 _lpValue = getHandlerTotalLPValueInUSD(_handler, _lpToken, avDs);
+    uint256 _lpValue = IAVHandler(_handler).getAUMinUSD();
     uint256 _totalDebtValue = getVaultTotalDebtInUSD(_vaultToken, _lpToken, avDs);
 
     _equity = _lpValue > _totalDebtValue ? _lpValue - _totalDebtValue : 0;
