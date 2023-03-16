@@ -287,6 +287,10 @@ contract LiquidationFacet is ILiquidationFacet {
     // Transfer protocol's repurchase fee to treasury
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.repurchaseFeeToProtocol);
 
+    // Write off all debts under subaccount if there's no more collateral
+    // This would result in realizing the bad debts to lenders
+    LibMoneyMarket01.writeOffBadDebt(_vars.subAccount, moneyMarketDs);
+
     emit LogRepurchase(
       msg.sender,
       _account,
