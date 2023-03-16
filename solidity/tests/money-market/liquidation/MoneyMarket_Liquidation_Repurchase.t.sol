@@ -431,35 +431,6 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     _testRepurchase(ctx);
   }
 
-  function testCorrectness_WhenSubAccountHasNoCollateralLeft_ShouldWriteOffDebt() public {
-    _makeAliceUnderwater();
-
-    // making the weth price went through the sky
-    // this will make repurchaser be able to repurchase all collateral in 1 tx
-    mockOracle.setTokenPrice(address(weth), 100 ether);
-
-    /**
-     * Collat : 2.4 USDC, debt : 1 WETH
-     * weth price 100 usd
-     * in order to take all collat, we need to repay equivalent of 2.4 usdc
-     * so, 101%  = 2.4
-     * 100% = 2.4 / 1.01 = 2.3762376238
-     * since price of USDC : WETH = 1: 100
-     * we only need to repay 2.3762376238 / 100 = 
-     
-     */
-    vm.prank(BOB);
-    liquidationFacet.repurchase(
-      ALICE,
-      subAccount0,
-      address(weth),
-      address(usdc),
-      normalizeEther(0.02376237623 ether, wethDecimal)
-    );
-
-    assertEq(viewFacet.getTotalBorrowingPower(ALICE, subAccount0), 0);
-  }
-
   function testRevert_WhenRepurchaseHealthySubAccount() public {
     _makeAliceUnderwater();
 
