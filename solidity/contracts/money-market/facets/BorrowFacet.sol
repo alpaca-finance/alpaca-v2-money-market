@@ -132,7 +132,11 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _cachedDebtShare = moneyMarketDs.overCollatDebtShares[_token];
 
     // Find the actual underlying amount that need to be pulled from the share
-    uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
+    uint256 _actualAmountToRepay = LibShareUtil.shareToValueRoundingUp(
+      _actualShareToRepay,
+      _cachedDebtValue,
+      _cachedDebtShare
+    );
 
     // Pull the token from the account manager, the actual amount received will be used for debt accounting
     // In case somehow there's fee on transfer - which's might be introduced after the token was lent
@@ -140,6 +144,7 @@ contract BorrowFacet is IBorrowFacet {
     _actualAmountToRepay = LibMoneyMarket01.unsafePullTokens(_token, msg.sender, _actualAmountToRepay);
 
     // Recalculate the debt share to remove in case there's fee on transfer
+    // rounding up to prevent precision loss casuing revert at later state
     _actualShareToRepay = LibShareUtil.valueToShare(_actualAmountToRepay, _cachedDebtShare, _cachedDebtValue);
 
     // Increase the reserve amount of the token as there's new physical token coming in
