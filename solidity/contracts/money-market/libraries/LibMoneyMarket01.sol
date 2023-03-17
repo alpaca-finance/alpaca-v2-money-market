@@ -139,6 +139,8 @@ library LibMoneyMarket01 {
     uint8 maxNumOfCollatPerSubAccount;
     uint8 maxNumOfDebtPerSubAccount;
     uint8 maxNumOfDebtPerNonCollatAccount;
+    // counting of non collat borrowers
+    uint8 countNonCollatBorrowers;
     // liquidation params
     uint16 maxLiquidateBps; // maximum portion of debt that is allowed to be repurchased / liquidated per transaction
     uint16 liquidationThresholdBps; // threshold that allow subAccount to be liquidated if borrowing power goes below threshold

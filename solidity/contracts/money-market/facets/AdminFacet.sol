@@ -200,6 +200,22 @@ contract AdminFacet is IAdminFacet {
   /// @param _isOk A flag to determine if allowed or not
   function setNonCollatBorrowerOk(address _borrower, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (moneyMarketDs.countNonCollatBorrowers > 5) {
+      revert AdminFacet_ExceedMaxNonCollatBorrowers();
+    }
+    // if adding the borrower to the whitelist, increase the count
+    if (_isOk) {
+      if (!moneyMarketDs.nonCollatBorrowerOk[_borrower]) {
+        moneyMarketDs.countNonCollatBorrowers++;
+      }
+      // else, decrease the count
+    } else {
+      if (moneyMarketDs.nonCollatBorrowerOk[_borrower]) {
+        moneyMarketDs.countNonCollatBorrowers--;
+      }
+    }
+
     moneyMarketDs.nonCollatBorrowerOk[_borrower] = _isOk;
     emit LogsetNonCollatBorrowerOk(_borrower, _isOk);
   }

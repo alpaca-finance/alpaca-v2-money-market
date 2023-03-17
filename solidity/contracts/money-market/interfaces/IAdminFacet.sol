@@ -16,6 +16,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidIbTokenImplementation();
   error AdminFacet_InvalidDebtTokenImplementation();
   error AdminFacet_ExceedMaxRepurchaseReward();
+  error AdminFacet_ExceedMaxNonCollatBorrowers();
 
   struct IbPair {
     address token;

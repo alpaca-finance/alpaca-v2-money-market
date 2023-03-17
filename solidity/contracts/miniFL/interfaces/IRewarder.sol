@@ -26,4 +26,6 @@ interface IRewarder {
   function onHarvest(uint256 pid, address user) external;
 
   function pendingToken(uint256 pid, address user) external view returns (uint256);
+
+  function lastRewardTime(uint256 _pid) external view returns (uint256);
 }
