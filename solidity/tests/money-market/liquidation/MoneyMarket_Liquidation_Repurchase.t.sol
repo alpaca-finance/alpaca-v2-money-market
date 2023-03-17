@@ -128,6 +128,17 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     uint256 debtTokenGlobalDebtValue;
   }
 
+  struct TestRepurchaseLocalVarCalculation {
+    uint256 repayAmountWithFee;
+    uint256 repayAmountWithoutFee;
+    uint256 repayTokenPriceWithPremium;
+    uint256 collatSold;
+    uint256 repurchaseFee;
+    uint256 actualRepurchaserRepayAmount;
+    uint256 expectRepayShare;
+    uint256 actualDebtRepay;
+  }
+
   /// @dev this function will test
   ///         - repay amount and fee calculation
   ///         - collateral amount sold calculation
@@ -174,24 +185,42 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     ///////////////////////////////////
     // ghost variables calculation
     ///////////////////////////////////
-    uint256 _repayAmountWithFee;
-    uint256 _repayAmountWithoutFee;
+    TestRepurchaseLocalVarCalculation memory _vars;
     {
       uint256 _maxAmountRepurchasable = (ctx.stateBefore.borrowerDebtAmount * (10000 + ctx.repurchaseFeeBps)) / 10000;
       // case 1
       if (ctx.desiredRepayAmount > _maxAmountRepurchasable) {
-        _repayAmountWithFee = _maxAmountRepurchasable;
-        _repayAmountWithoutFee = ctx.stateBefore.borrowerDebtAmount;
+        _vars.repayAmountWithFee = _maxAmountRepurchasable;
+        _vars.repayAmountWithoutFee = ctx.stateBefore.borrowerDebtAmount;
       } else {
         // case 2
-        _repayAmountWithFee = ctx.desiredRepayAmount;
-        _repayAmountWithoutFee = (ctx.desiredRepayAmount * 10000) / (10000 + (ctx.repurchaseFeeBps));
+        _vars.repayAmountWithFee = ctx.desiredRepayAmount;
+        _vars.repayAmountWithoutFee = (ctx.desiredRepayAmount * 10000) / (10000 + (ctx.repurchaseFeeBps));
       }
     }
-    uint256 _repurchaseFee = _repayAmountWithFee - _repayAmountWithoutFee;
+    _vars.repurchaseFee = _vars.repayAmountWithFee - _vars.repayAmountWithoutFee;
+    _vars.actualRepurchaserRepayAmount = _vars.repayAmountWithFee;
+    _vars.actualDebtRepay = _vars.repayAmountWithoutFee;
+    {
+      uint256 _actualRepayShare = LibShareUtil.valueToShare(
+        _vars.repayAmountWithoutFee,
+        ctx.stateBefore.debtTokenOverCollatDebtShares,
+        ctx.stateBefore.debtTokenOverCollatDebtAmount
+      );
+
+      _vars.expectRepayShare = LibShareUtil.valueToShareRoundingUp(
+        _vars.repayAmountWithoutFee,
+        ctx.stateBefore.debtTokenOverCollatDebtShares,
+        ctx.stateBefore.debtTokenOverCollatDebtAmount
+      );
+      if (_actualRepayShare + 1 == _vars.expectRepayShare) {
+        _vars.actualRepurchaserRepayAmount = _vars.repayAmountWithFee + 1;
+        _vars.actualDebtRepay = _vars.repayAmountWithoutFee + 1;
+      }
+    }
     // constant 1% premium
-    uint256 _repayTokenPriceWithPremium = (ctx.debtTokenPriceDuringRepurchase * (10000 + 100)) / 10000;
-    uint256 _collatSold = (_repayAmountWithFee * _repayTokenPriceWithPremium) / ctx.collatTokenPrice;
+    _vars.repayTokenPriceWithPremium = (ctx.debtTokenPriceDuringRepurchase * (10000 + 100)) / 10000;
+    _vars.collatSold = (_vars.repayAmountWithFee * _vars.repayTokenPriceWithPremium) / ctx.collatTokenPrice;
 
     ///////////////////////////////////
     // repurchase
@@ -210,7 +239,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     {
       assertEq(
         viewFacet.getCollatAmountOf(ctx.borrower, subAccount0, ctx.collatToken),
-        ctx.stateBefore.borrowerCollateralAmount - normalizeEther(_collatSold, IERC20(ctx.collatToken).decimals()),
+        ctx.stateBefore.borrowerCollateralAmount - normalizeEther(_vars.collatSold, IERC20(ctx.collatToken).decimals()),
         "borrower remaining collat"
       );
       (uint256 _debtSharesAfter, uint256 _debtAmountAfter) = viewFacet.getOverCollatDebtShareAndAmountOf(
@@ -220,20 +249,13 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
       );
       assertEq(
         _debtAmountAfter,
-        ctx.stateBefore.borrowerDebtAmount - normalizeEther(_repayAmountWithoutFee, IERC20(ctx.debtToken).decimals()),
+        ctx.stateBefore.borrowerDebtAmount -
+          normalizeEther(_vars.repayAmountWithoutFee, IERC20(ctx.debtToken).decimals()),
         "borrower remaining debt amount"
       );
       assertEq(
         _debtSharesAfter,
-        ctx.stateBefore.borrowerDebtShares -
-          normalizeEther(
-            LibShareUtil.valueToShare(
-              _repayAmountWithoutFee,
-              ctx.stateBefore.debtTokenOverCollatDebtShares,
-              ctx.stateBefore.debtTokenOverCollatDebtAmount
-            ),
-            IERC20(ctx.debtToken).decimals()
-          ),
+        ctx.stateBefore.borrowerDebtShares - normalizeEther(_vars.expectRepayShare, IERC20(ctx.debtToken).decimals()),
         "borrower remaining debt shares"
       );
     }
@@ -247,20 +269,21 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
       assertEq(
         IERC20(ctx.collatToken).balanceOf(ctx.repurchaser),
         ctx.stateBefore.repurchaserCollatTokenBalance +
-          normalizeEther(_collatSold, IERC20(ctx.collatToken).decimals()) -
-          normalizeEther(_repayAmountWithFee, IERC20(ctx.debtToken).decimals()),
+          normalizeEther(_vars.collatSold, IERC20(ctx.collatToken).decimals()) -
+          normalizeEther(_vars.repayAmountWithFee, IERC20(ctx.debtToken).decimals()),
         "collatToken == debtToken: repurchaser collatToken received"
       );
     } else {
       assertEq(
         IERC20(ctx.collatToken).balanceOf(ctx.repurchaser),
-        ctx.stateBefore.repurchaserCollatTokenBalance + normalizeEther(_collatSold, IERC20(ctx.collatToken).decimals()),
+        ctx.stateBefore.repurchaserCollatTokenBalance +
+          normalizeEther(_vars.collatSold, IERC20(ctx.collatToken).decimals()),
         "repurchaser collatToken received"
       );
       assertEq(
         IERC20(ctx.debtToken).balanceOf(ctx.repurchaser),
         ctx.stateBefore.repurchaserDebtTokenBalance -
-          normalizeEther(_repayAmountWithFee, IERC20(ctx.debtToken).decimals()),
+          normalizeEther(_vars.actualRepurchaserRepayAmount, IERC20(ctx.debtToken).decimals()),
         "repurchaser debtToken paid"
       );
     }
@@ -274,38 +297,31 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     assertEq(
       viewFacet.getOverCollatTokenDebtValue(ctx.debtToken),
       ctx.stateBefore.debtTokenOverCollatDebtAmount -
-        normalizeEther(_repayAmountWithoutFee, IERC20(ctx.debtToken).decimals()),
+        normalizeEther(_vars.actualDebtRepay, IERC20(ctx.debtToken).decimals()),
       "money market debtToken overCollatDebtValue"
     );
     assertEq(
       viewFacet.getOverCollatTokenDebtShares(ctx.debtToken),
       ctx.stateBefore.debtTokenOverCollatDebtShares -
-        normalizeEther(
-          LibShareUtil.valueToShare(
-            _repayAmountWithoutFee,
-            ctx.stateBefore.debtTokenOverCollatDebtShares,
-            ctx.stateBefore.debtTokenOverCollatDebtAmount
-          ),
-          IERC20(ctx.debtToken).decimals()
-        ),
+        normalizeEther(_vars.expectRepayShare, IERC20(ctx.debtToken).decimals()),
       "money market debtToken overCollatDebtShares"
     );
     assertEq(
       viewFacet.getGlobalDebtValue(ctx.debtToken),
       ctx.stateBefore.debtTokenGlobalDebtValue -
-        normalizeEther(_repayAmountWithoutFee, IERC20(ctx.debtToken).decimals()),
+        normalizeEther(_vars.actualDebtRepay, IERC20(ctx.debtToken).decimals()),
       "money market debtToken globalDebtValue"
     );
     assertEq(
       viewFacet.getFloatingBalance(ctx.debtToken),
-      ctx.stateBefore.debtTokenReserve + normalizeEther(_repayAmountWithoutFee, IERC20(ctx.debtToken).decimals()),
+      ctx.stateBefore.debtTokenReserve + normalizeEther(_vars.actualDebtRepay, IERC20(ctx.debtToken).decimals()),
       "money market debtToken reserve"
     );
 
     // check fee in debtToken to liquidationTreasury
     assertEq(
       IERC20(ctx.debtToken).balanceOf(liquidationTreasury),
-      ctx.stateBefore.treasuryDebtTokenBalance + _repurchaseFee,
+      ctx.stateBefore.treasuryDebtTokenBalance + _vars.repurchaseFee,
       "repurchase fee"
     );
 
@@ -313,7 +329,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
     address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(ctx.debtToken);
     uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
-    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), viewFacet.getOverCollatTokenDebtShares(ctx.debtToken));
+    assertEq(_miniFL.getStakingReserves(_poolId), viewFacet.getOverCollatTokenDebtShares(ctx.debtToken));
     assertEq(DebtToken(_miniFLDebtToken).totalSupply(), viewFacet.getOverCollatTokenDebtShares(ctx.debtToken));
   }
 
@@ -603,6 +619,33 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     vm.prank(ALICE);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     liquidationFacet.repurchase(ALICE, 0, address(usdc), address(usdc), 1);
+  }
+
+  function testCorrectness_WhenRepurchaseEntireDebtWithPrecisionLoss_NoDebtRemainInSubAccount() public {
+    _makeAliceUnderwater();
+
+    // 0.01% interest
+    skip(1);
+
+    // make BOB borrow another 0.1 weth to cause precision loss when alice'debt got repurchase
+    adminFacet.setMinDebtSize(0);
+    vm.startPrank(BOB);
+    accountManager.depositAndAddCollateral(subAccount0, address(weth), 1 ether);
+    accountManager.borrow(subAccount0, address(weth), 0.1 ether);
+    vm.stopPrank();
+
+    TestRepurchaseContext memory ctx;
+    ctx.borrower = ALICE;
+    ctx.repurchaser = BOB;
+    ctx.collatToken = address(usdc);
+    ctx.debtToken = address(weth);
+    // more than 1.1 ether (+interest) max repurchasable set by `makeAliceUnderwater`
+    ctx.desiredRepayAmount = 2 ether;
+    ctx.repurchaseFeeBps = REPURCHASE_FEE;
+    ctx.collatTokenPrice = 1 ether;
+    ctx.debtTokenPriceDuringRepurchase = 2 ether;
+    ctx.borrowerPendingInterest = viewFacet.getGlobalPendingInterest(address(weth));
+    _testRepurchase(ctx);
   }
 }
 

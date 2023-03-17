@@ -16,6 +16,8 @@ import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
+import { console } from "solidity/tests/utils/console.sol";
+
 /// @title LiquidationFacet is dedicated to repurchasing and liquidating
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
@@ -54,6 +56,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repurchaseRewardBps;
     uint256 repayAmountWithoutFee;
     uint256 repayTokenPrice;
+    bool isPurchaseAll;
   }
 
   struct LiquidationLocalVars {
@@ -190,6 +193,8 @@ contract LiquidationFacet is ILiquidationFacet {
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
         _vars.repayAmountWithoutFee = _currentDebtAmount;
+        // set flag isRepurchaseAll = true for furthur use in _actualRepayAmountWithoutFee calculation
+        _vars.isPurchaseAll = true;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
@@ -247,11 +252,40 @@ contract LiquidationFacet is ILiquidationFacet {
     // In case of token with fee on transfer, debt would be repaid by amount after transfer fee
     // which won't be able to repurchase entire position
     // repaidAmount = amountReceived - repurchaseFee
-    uint256 _actualRepayAmountWithoutFee = LibMoneyMarket01.unsafePullTokens(
-      _repayToken,
-      msg.sender,
-      _vars.repayAmountWithFee
-    ) - _vars.repurchaseFeeToProtocol;
+    //
+    uint256 _actualRepayAmountWithoutFee;
+    {
+      // To prevent precision loss and leaving 1 wei debt in subAccount when user repurchase the entire debt
+      if (_vars.isPurchaseAll) {
+        uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
+        uint256 _actualRepayShare = LibShareUtil.valueToShare(
+          _repayAmountWithoutFee,
+          moneyMarketDs.overCollatDebtShares[_repayToken],
+          moneyMarketDs.overCollatDebtValues[_repayToken]
+        );
+        uint256 _expectRepayShare = LibShareUtil.valueToShareRoundingUp(
+          _repayAmountWithoutFee,
+          moneyMarketDs.overCollatDebtShares[_repayToken],
+          moneyMarketDs.overCollatDebtValues[_repayToken]
+        );
+        if (_actualRepayShare + 1 == _expectRepayShare) {
+          _vars.repayAmountWithFee += 1;
+        }
+
+        console.log("repurchase All");
+        console.log("repurchase _repayAmountWithoutFee", _repayAmountWithoutFee);
+        console.log(
+          "repurchase moneyMarketDs.overCollatDebtShares[_repayToken]",
+          moneyMarketDs.overCollatDebtShares[_repayToken]
+        );
+        console.log("moneyMarketDs.overCollatDebtValues[_repayToken]", moneyMarketDs.overCollatDebtValues[_repayToken]);
+        console.log("_actualRepayShare", _actualRepayShare);
+        console.log("_expectRepayShare", _expectRepayShare);
+      }
+      _actualRepayAmountWithoutFee =
+        LibMoneyMarket01.unsafePullTokens(_repayToken, msg.sender, _vars.repayAmountWithFee) -
+        _vars.repurchaseFeeToProtocol;
+    }
 
     // Remove subAccount debt
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
