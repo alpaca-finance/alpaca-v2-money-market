@@ -256,6 +256,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _actualRepayAmountWithoutFee;
     {
       // To prevent precision loss and leaving 1 wei debt in subAccount when user repurchase the entire debt
+      // By adding repayAmountWithFee by 1 wei when there is a precision loss in _actualRepayShare
       if (_vars.isPurchaseAll) {
         uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
         uint256 _actualRepayShare = LibShareUtil.valueToShare(
@@ -271,17 +272,8 @@ contract LiquidationFacet is ILiquidationFacet {
         if (_actualRepayShare + 1 == _expectRepayShare) {
           _vars.repayAmountWithFee += 1;
         }
-
-        console.log("repurchase All");
-        console.log("repurchase _repayAmountWithoutFee", _repayAmountWithoutFee);
-        console.log(
-          "repurchase moneyMarketDs.overCollatDebtShares[_repayToken]",
-          moneyMarketDs.overCollatDebtShares[_repayToken]
-        );
-        console.log("moneyMarketDs.overCollatDebtValues[_repayToken]", moneyMarketDs.overCollatDebtValues[_repayToken]);
-        console.log("_actualRepayShare", _actualRepayShare);
-        console.log("_expectRepayShare", _expectRepayShare);
       }
+
       _actualRepayAmountWithoutFee =
         LibMoneyMarket01.unsafePullTokens(_repayToken, msg.sender, _vars.repayAmountWithFee) -
         _vars.repurchaseFeeToProtocol;
