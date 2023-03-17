@@ -17,7 +17,7 @@ contract MockBadLiquidationStrategy is ILiquidationStrategy {
     uint256 _repayAmount,
     uint256 /*_minReceive*/
   ) external {
-    ERC20(_repayToken).safeTransfer(msg.sender, _repayAmount - 1);
+    ERC20(_repayToken).safeTransfer(msg.sender, _repayAmount / 2);
   }
 
   function setCallersOk(address[] calldata _callers, bool _isOk) external {}

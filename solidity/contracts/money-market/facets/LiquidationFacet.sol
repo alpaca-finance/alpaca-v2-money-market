@@ -481,7 +481,7 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // Write off all debts under subaccount if there's no more collateral
     // This would result in realizing the bad debts to lenders
-    LibMoneyMarket01.writeOffBadDebt(_vars.subAccount, moneyMarketDs);
+    LibMoneyMarket01.writeOffBadDebt(_account, _vars.subAccount, moneyMarketDs);
 
     emit LogLiquidate(
       msg.sender,

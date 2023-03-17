@@ -1156,7 +1156,11 @@ library LibMoneyMarket01 {
   /// WARNING: Only called this when all interests have been accrued
   /// @param _subAccount The subAccount to be writen off
   /// @param moneyMarketDs The storage of money market
-  function writeOffBadDebt(address _subAccount, MoneyMarketDiamondStorage storage moneyMarketDs) internal {
+  function writeOffBadDebt(
+    address _account,
+    address _subAccount,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
     // skip this if there're still collaterals under the subAccount
     if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
       return;
@@ -1165,7 +1169,6 @@ library LibMoneyMarket01 {
     LibDoublyLinkedList.Node[] memory _debt = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
     address _token;
-    address _account;
     uint256 _shareToRemove;
     uint256 _amountToRemove;
     uint256 _length = _debt.length;
@@ -1181,14 +1184,7 @@ library LibMoneyMarket01 {
       );
 
       // Reset debts of the token under subAccount
-      LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
-        _account,
-        _subAccount,
-        _token,
-        _shareToRemove,
-        _amountToRemove,
-        moneyMarketDs
-      );
+      removeOverCollatDebtFromSubAccount(_account, _subAccount, _token, _shareToRemove, _amountToRemove, moneyMarketDs);
 
       emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
 

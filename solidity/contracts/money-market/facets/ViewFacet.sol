@@ -52,6 +52,13 @@ contract ViewFacet is IViewFacet {
     return LibMoneyMarket01.moneyMarketDiamondStorage().protocolReserves[_token];
   }
 
+  /// @notice Get the reserve of a token
+  /// @param _token The token to lookup
+  /// @return _reserve The amount of reserve for that token
+  function getReserve(address _token) external view returns (uint256 _reserve) {
+    return LibMoneyMarket01.moneyMarketDiamondStorage().reserves[_token];
+  }
+
   /// @notice Get the configuration of the lending token
   /// @param _token The token
   /// @return The struct of TokenConfig
