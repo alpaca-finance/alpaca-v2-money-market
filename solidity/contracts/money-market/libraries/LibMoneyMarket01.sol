@@ -1168,17 +1168,17 @@ library LibMoneyMarket01 {
       return;
     }
 
-    LibDoublyLinkedList.Node[] memory _debt = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
 
     address _token;
     uint256 _shareToRemove;
     uint256 _amountToRemove;
-    uint256 _length = _debt.length;
+    uint256 _length = _borrowed.length;
 
     // loop over all outstanding debt
     for (uint256 _i; _i < _length; ) {
-      _token = _debt[_i].token;
-      _shareToRemove = _debt[_i].amount;
+      _token = _borrowed[_i].token;
+      _shareToRemove = _borrowed[_i].amount;
       _amountToRemove = LibShareUtil.shareToValue(
         _shareToRemove,
         moneyMarketDs.overCollatDebtValues[_token],
