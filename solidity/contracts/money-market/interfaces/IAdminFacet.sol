@@ -15,7 +15,6 @@ interface IAdminFacet {
   error AdminFacet_InvalidToken(address _token);
   error AdminFacet_InvalidIbTokenImplementation();
   error AdminFacet_InvalidDebtTokenImplementation();
-  error AdminFacet_SubAccountHealthy(address _subAccount);
   error AdminFacet_ExceedMaxRepurchaseReward();
 
   struct IbPair {
@@ -40,12 +39,6 @@ interface IAdminFacet {
   struct TokenBorrowLimitInput {
     address token;
     uint256 maxTokenBorrow;
-  }
-
-  struct WriteOffSubAccountDebtInput {
-    address account;
-    uint256 subAccountId;
-    address token;
   }
 
   function openMarket(
@@ -106,8 +99,6 @@ interface IAdminFacet {
     uint8 _numOfDebt,
     uint8 _numOfNonCollatDebt
   ) external;
-
-  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external;
 
   function topUpTokenReserve(address _token, uint256 _amount) external;
 
