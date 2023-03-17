@@ -101,6 +101,8 @@ contract MoneyMarketReader is IMoneyMarketReader {
     view
     returns (SubAccountSummary memory summary)
   {
+    summary.subAccountId = _subAccountId;
+
     (summary.totalCollateralValue, summary.totalBorrowingPower, summary.collaterals) = _getSubAccountCollatSummary(
       _account,
       _subAccountId

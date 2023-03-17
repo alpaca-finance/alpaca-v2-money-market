@@ -346,4 +346,10 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   function poolLength() public view returns (uint256 _poolLength) {
     _poolLength = poolIds.length;
   }
+
+  /// @notice Return the last reward time of the given pool id
+  /// @return Last reward time
+  function lastRewardTime(uint256 _pid) external view returns (uint256) {
+    return poolInfo[_pid].lastRewardTime;
+  }
 }
