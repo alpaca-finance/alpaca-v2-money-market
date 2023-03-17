@@ -1156,7 +1156,7 @@ library LibMoneyMarket01 {
 
   /// @dev Write off the subaccount's debt that has no collateral backed
   /// WARNING: Only called this when all interests have been accrued
-  /// @param _subAccount The subAccount to be writen off
+  /// @param _subAccount The subAccount to be written off
   /// @param moneyMarketDs The storage of money market
   function writeOffBadDebt(
     address _account,
@@ -1179,6 +1179,8 @@ library LibMoneyMarket01 {
     for (uint256 _i; _i < _length; ) {
       _token = _borrowed[_i].token;
       _shareToRemove = _borrowed[_i].amount;
+
+      // Price in the actual amount to be written off
       _amountToRemove = LibShareUtil.shareToValue(
         _shareToRemove,
         moneyMarketDs.overCollatDebtValues[_token],
