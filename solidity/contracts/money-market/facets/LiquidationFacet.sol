@@ -16,8 +16,6 @@ import { ILiquidationStrategy } from "../interfaces/ILiquidationStrategy.sol";
 import { ILendFacet } from "../interfaces/ILendFacet.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
-import { console } from "solidity/tests/utils/console.sol";
-
 /// @title LiquidationFacet is dedicated to repurchasing and liquidating
 contract LiquidationFacet is ILiquidationFacet {
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
