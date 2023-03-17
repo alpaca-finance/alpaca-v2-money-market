@@ -446,7 +446,9 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 0);
     assertEq(viewFacet.getTotalToken(_debtToken), normalizeEther(85 ether, usdcDecimal)); // 15 usdc bad debt
     assertEq(viewFacet.getReserve(_debtToken), normalizeEther(85 ether, usdcDecimal)); // since debt went to 0, reserve only has 85 left
-
+    (uint256 _totalUsedBorrowingPower, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId);
+    assertEq(_totalUsedBorrowingPower, 0);
+    // assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId), 0);
     // check liquidation fee funds flow
     assertEq(
       MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore,
