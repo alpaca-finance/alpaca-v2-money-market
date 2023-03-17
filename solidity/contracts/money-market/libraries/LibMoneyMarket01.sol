@@ -492,10 +492,7 @@ library LibMoneyMarket01 {
     if (address(_interestModel) == address(0)) {
       return 0;
     }
-    _interestRate = _interestModel.getInterestRate(
-      moneyMarketDs.globalDebts[_token],
-      getFloatingBalance(_token, moneyMarketDs)
-    );
+    _interestRate = _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], moneyMarketDs.reserves[_token]);
   }
 
   /// @dev Get non collat interest rate
@@ -515,10 +512,7 @@ library LibMoneyMarket01 {
     if (address(_interestModel) == address(0)) {
       return 0;
     }
-    _interestRate = _interestModel.getInterestRate(
-      moneyMarketDs.globalDebts[_token],
-      getFloatingBalance(_token, moneyMarketDs)
-    );
+    _interestRate = _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], moneyMarketDs.reserves[_token]);
   }
 
   /// @dev Accrue over collat interest of a token
@@ -726,18 +720,6 @@ library LibMoneyMarket01 {
       getTotalToken(_token, moneyMarketDs) +
       ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibConstant.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
         LibConstant.MAX_BPS);
-  }
-
-  /// @dev Get the reserve amount of a token in money market
-  /// @param _token The token address
-  /// @param moneyMarketDs The storage of money market
-  /// @return _floating The reserve amount of a token in money market
-  function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
-    internal
-    view
-    returns (uint256 _floating)
-  {
-    _floating = moneyMarketDs.reserves[_token];
   }
 
   /// @dev Get price of a token in USD

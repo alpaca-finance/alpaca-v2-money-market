@@ -14,8 +14,6 @@ interface IViewFacet {
 
   function getProtocolReserve(address _token) external view returns (uint256 _reserve);
 
-  function getReserve(address _token) external view returns (uint256 _reserve);
-
   function getTokenConfig(address _token) external view returns (LibConstant.TokenConfig memory);
 
   function getOverCollatDebtSharesOf(address _account, uint256 _subAccountId)

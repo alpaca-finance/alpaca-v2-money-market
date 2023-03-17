@@ -445,7 +445,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // total token should decrease due to the fact that bad debt was booked
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 0);
     assertEq(viewFacet.getTotalToken(_debtToken), normalizeEther(85 ether, usdcDecimal)); // 15 usdc bad debt
-    assertEq(viewFacet.getReserve(_debtToken), normalizeEther(85 ether, usdcDecimal)); // since debt went to 0, reserve only has 85 left
+    assertEq(viewFacet.getFloatingBalance(_debtToken), normalizeEther(85 ether, usdcDecimal)); // since debt went to 0, reserve only has 85 left
     (uint256 _totalUsedBorrowingPower, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId);
     assertEq(_totalUsedBorrowingPower, 0);
     // assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId), 0);
