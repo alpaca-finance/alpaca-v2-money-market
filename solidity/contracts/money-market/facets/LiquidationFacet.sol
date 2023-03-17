@@ -251,31 +251,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // which won't be able to repurchase entire position
     // repaidAmount = amountReceived - repurchaseFee
     //
-    uint256 _actualRepayAmountWithoutFee;
-    {
-      // To prevent precision loss and leaving 1 wei debt in subAccount when user repurchase the entire debt
-      // By adding repayAmountWithFee by 1 wei when there is a precision loss in _actualRepayShare
-      if (_vars.isPurchaseAll) {
-        uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
-        uint256 _actualRepayShare = LibShareUtil.valueToShare(
-          _repayAmountWithoutFee,
-          moneyMarketDs.overCollatDebtShares[_repayToken],
-          moneyMarketDs.overCollatDebtValues[_repayToken]
-        );
-        uint256 _expectRepayShare = LibShareUtil.valueToShareRoundingUp(
-          _repayAmountWithoutFee,
-          moneyMarketDs.overCollatDebtShares[_repayToken],
-          moneyMarketDs.overCollatDebtValues[_repayToken]
-        );
-        if (_actualRepayShare + 1 == _expectRepayShare) {
-          _vars.repayAmountWithFee += 1;
-        }
-      }
-
-      _actualRepayAmountWithoutFee =
-        LibMoneyMarket01.unsafePullTokens(_repayToken, msg.sender, _vars.repayAmountWithFee) -
-        _vars.repurchaseFeeToProtocol;
-    }
+    uint256 _actualRepayAmountWithoutFee = _calculateActualRepayAmountWithoutFee(_repayToken, _vars, moneyMarketDs);
 
     // Remove subAccount debt
     LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
@@ -534,5 +510,48 @@ contract LiquidationFacet is ILiquidationFacet {
     if (_repaidBorrowingPower * LibConstant.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
       revert LiquidationFacet_RepayAmountExceedThreshold();
     }
+  }
+
+  function _calculateActualRepayAmountWithoutFee(
+    address _repayToken,
+    RepurchaseLocalVars memory _vars,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal returns (uint256 _actualRepayAmountWithoutFee) {
+    // To prevent precision loss and leaving 1 wei debt in subAccount when user repurchase the entire debt
+    // assume totalDebtWithFee = 10 wei
+    // _repayAmountWithoutFee = 10 wei, overCollatDebtShares = 10 wei, overCollatDebtValues = 15 wei
+
+    // fully repurchase without adding extra wei
+    // _repayShare = 10 * 10 / 15 = 6.66666666667 => round down to 6 shares
+    // _repayShareToValue = 6 * 15 / 10 = 9 wei => result in 1 wei debt leftover
+
+    // fully repurchase with adding extra wei
+    // _repayShare = 10 * 10 / 15 = 6.66666666667
+    // _repayAmountWithoutFee = 11 wei
+    // _newRepayShare = 11 * 10 / 15 = 7.33333333333 =>  round down to 7 shares
+    // _newRepayShareToValue = 7 * 15 / 10 = 10.5 => round down to 10 wei and repay all debt
+
+    if (_vars.isPurchaseAll) {
+      uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
+      uint256 _actualRepayShare = LibShareUtil.valueToShare(
+        _repayAmountWithoutFee,
+        moneyMarketDs.overCollatDebtShares[_repayToken],
+        moneyMarketDs.overCollatDebtValues[_repayToken]
+      );
+      uint256 _expectRepayShare = LibShareUtil.valueToShareRoundingUp(
+        _repayAmountWithoutFee,
+        moneyMarketDs.overCollatDebtShares[_repayToken],
+        moneyMarketDs.overCollatDebtValues[_repayToken]
+      );
+
+      // Adding repayAmountWithFee by 1 wei when there is a precision loss in _actualRepayShare
+      if (_actualRepayShare + 1 == _expectRepayShare) {
+        _vars.repayAmountWithFee += 1;
+      }
+    }
+
+    _actualRepayAmountWithoutFee =
+      LibMoneyMarket01.unsafePullTokens(_repayToken, msg.sender, _vars.repayAmountWithFee) -
+      _vars.repurchaseFeeToProtocol;
   }
 }
