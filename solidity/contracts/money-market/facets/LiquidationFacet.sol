@@ -485,6 +485,10 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(_repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
 
+    // Write off all debts under the subaccount if there's no more collateral
+    // This would result in realizing the bad debts to lenders
+    LibMoneyMarket01.writeOffBadDebt(_account, _vars.subAccount, moneyMarketDs);
+
     emit LogLiquidate(
       msg.sender,
       _liquidationStrat,
