@@ -22,8 +22,6 @@ contract SetUpMiniFLForTestScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    MockAlpacaV2Oracle(moneyMarket.getOracle()).setTokenPrice(alpaca, 0.2 ether);
-
     // seed alpaca to miniFL to be distribute as reward
     // alpaca tokens should be prepared for deployer beforehand
     // in this case bash script should handle it
@@ -40,7 +38,7 @@ contract SetUpMiniFLForTestScript is BaseScript {
     miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getIbTokenFromToken(dodo)), 100, false);
     miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getDebtTokenFromToken(dodo)), 100, false);
 
-    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getIbTokenFromToken(pstake)), 100, false);
-    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getDebtTokenFromToken(pstake)), 100, false);
+    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getIbTokenFromToken(doge)), 100, false);
+    miniFL.setPool(moneyMarket.getMiniFLPoolIdOfToken(moneyMarket.getDebtTokenFromToken(doge)), 100, false);
   }
 }

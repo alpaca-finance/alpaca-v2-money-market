@@ -16,6 +16,7 @@ import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFace
 import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
+import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
@@ -38,11 +39,16 @@ abstract contract BaseScript is Script {
   address internal proxyAdminAddress;
   address internal wNativeToken;
   address internal nativeRelayer;
+  address internal oracleMedianizer;
+  address internal usdPlaceholder;
+  IAlpacaV2Oracle internal alpacaV2Oracle;
+  address internal pancakeswapV2Router;
   address internal wbnb;
   address internal busd;
   address internal dodo;
-  address internal pstake;
+  address internal doge;
   address internal alpaca;
+  address internal usdt;
 
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
@@ -55,12 +61,17 @@ abstract contract BaseScript is Script {
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     wNativeToken = abi.decode(configJson.parseRaw(".wNativeToken"), (address));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
+    oracleMedianizer = abi.decode(configJson.parseRaw(".oracleMedianizer"), (address));
+    usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
+    alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
+    pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
     // tokens
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
     dodo = abi.decode(configJson.parseRaw(".tokens.dodo"), (address));
-    pstake = abi.decode(configJson.parseRaw(".tokens.pstake"), (address));
+    doge = abi.decode(configJson.parseRaw(".tokens.doge"), (address));
     alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
+    usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
   }
 
   // function _pretendMM() internal {

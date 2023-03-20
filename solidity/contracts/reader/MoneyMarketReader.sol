@@ -10,7 +10,7 @@ import { LibDoublyLinkedList } from "../money-market/libraries/LibDoublyLinkedLi
 import { IMoneyMarketReader } from "../interfaces/IMoneyMarketReader.sol";
 import { IMoneyMarket } from "../money-market/interfaces/IMoneyMarket.sol";
 import { IInterestBearingToken } from "../money-market/interfaces/IInterestBearingToken.sol";
-import { IPriceOracle } from "../oracle/interfaces/IPriceOracle.sol";
+import { IOracleMedianizer } from "../oracle/interfaces/IOracleMedianizer.sol";
 import { IAlpacaV2Oracle } from "../oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IMiniFL } from "../money-market/interfaces/IMiniFL.sol";
 
@@ -18,6 +18,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
   IMoneyMarket private immutable _moneyMarket;
   IMiniFL private immutable _miniFL;
   address private immutable _moneyMarketAccountManager;
+  address private constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
   constructor(address moneyMarket_, address moneyMarketAccountManager_) {
     _moneyMarket = IMoneyMarket(moneyMarket_);
@@ -60,7 +61,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
         to18ConversionFactor: _tokenConfig.to18ConversionFactor,
         maxCollateral: _ibTokenConfig.maxCollateral,
         maxBorrow: _tokenConfig.maxBorrow,
-        tokenPrice: _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0)),
+        tokenPrice: _getPriceUSD(_underlyingToken),
         globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
         totalToken: _moneyMarket.getTotalToken(_underlyingToken),
         pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
@@ -100,6 +101,8 @@ contract MoneyMarketReader is IMoneyMarketReader {
     view
     returns (SubAccountSummary memory summary)
   {
+    summary.subAccountId = _subAccountId;
+
     (summary.totalCollateralValue, summary.totalBorrowingPower, summary.collaterals) = _getSubAccountCollatSummary(
       _account,
       _subAccountId
@@ -226,7 +229,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
   /// @dev Return the price of token0/token1, multiplied by 1e18
   function getPrice(address _token0, address _token1) public view returns (uint256) {
     IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
-    IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
+    IOracleMedianizer _oracleMedianizer = IOracleMedianizer(_alpacaV2Oracle.oracle());
     return _getPrice(_oracleMedianizer, _token0, _token1);
   }
 
@@ -237,96 +240,80 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
   /// @dev Return the price of `_token` in USD with 18 decimal places
   function _getPriceUSD(address _token) internal view returns (uint256) {
-    // TODO: use real oracle
-    // IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
-    // IPriceOracle _oracleMedianizer = IPriceOracle(_alpacaV2Oracle.oracle());
-    // return _getPrice(_oracleMedianizer, _token, _alpacaV2Oracle.usd());
+    IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
+    IOracleMedianizer _oracleMedianizer = IOracleMedianizer(_alpacaV2Oracle.oracle());
 
     address _underlyingToken = _moneyMarket.getTokenFromIbToken(_token);
     // `_token` is ibToken
     if (_underlyingToken != address(0)) {
-      return
-        IInterestBearingToken(_token).convertToAssets(
-          _getPrice(IPriceOracle(address(0)), _underlyingToken, address(0))
-        );
+      return IInterestBearingToken(_token).convertToAssets(_getPrice(_oracleMedianizer, _underlyingToken, USD));
     }
     // not ibToken
-    return _getPrice(IPriceOracle(address(0)), _token, address(0));
+    return _getPrice(_oracleMedianizer, _token, USD);
   }
 
-  /// @dev use mock until deploy real oracle
+  /// @dev partially replicate `OracleMedianizer.getPrice` logic
+  ///      differences from original implementation
+  ///      1) doesn't revert on no primary or valid source, returns 0 instead
+  ///      2) ignore price deviation, instead returns
+  ///        - the only valid price in case of 1 valid source
+  ///        - average price in case of 2 valid sources
+  ///        - median price in case of 3 valid sources
+  ///      this was modified to not revert for viewing purpose
+  ///      any error on price validity should be handled separately by presentation layer
+  ///
+  /// @return `token0Price / token1Price` in 18 decimals
+  ///         for 1 valid source, returns the only valid price
+  ///         for 2 valid sources, returns average of 2 valid price
+  ///         for 3 valid sources, returns median price
+  ///         return 0 upon no primary or valid source
   function _getPrice(
-    IPriceOracle, /* oracle */
+    IOracleMedianizer oracle,
     address token0,
-    address /* token1 */
-  ) internal view returns (uint256 price) {
-    // TODO: get ib price
-    (price, ) = IAlpacaV2Oracle(_moneyMarket.getOracle()).getTokenPrice(token0);
+    address token1
+  ) internal view returns (uint256) {
+    uint256 candidateSourceCount = oracle.primarySourceCount(token0, token1);
+    if (candidateSourceCount == 0) return 0;
+
+    uint256[] memory prices = new uint256[](candidateSourceCount);
+    // Get price from valid oracle sources
+    uint256 validSourceCount;
+    for (uint256 idx; idx < candidateSourceCount; ) {
+      try oracle.primarySources(token0, token1, idx).getPrice(token0, token1) returns (
+        uint256 price,
+        uint256 /* lastUpdate */
+      ) {
+        unchecked {
+          // ignore price stale
+          prices[validSourceCount++] = price;
+          ++idx;
+        }
+      } catch {}
+    }
+    if (validSourceCount == 0) return 0;
+
+    // Sort prices (asc)
+    for (uint256 _i; _i < validSourceCount - 1; ) {
+      for (uint256 _j; _j < validSourceCount - _i - 1; ) {
+        if (prices[_j] > prices[_j + 1]) {
+          (prices[_j], prices[_j + 1]) = (prices[_j + 1], prices[_j]);
+        }
+        unchecked {
+          ++_j;
+        }
+      }
+      unchecked {
+        ++_i;
+      }
+    }
+
+    // ignore price deviation
+    if (validSourceCount == 1) return prices[0]; // if 1 valid source, return price
+    if (validSourceCount == 2) {
+      return (prices[0] + prices[1]) / 2; // if 2 valid sources, return average
+    }
+    return prices[1]; // if 3 valid sources, return median
   }
-
-  // TODO: use real oracle
-  // /// @dev partially replicate `OracleMedianizer.getPrice` logic
-  // ///      differences from original implementation
-  // ///      1) doesn't revert on no primary or valid source, returns 0 instead
-  // ///      2) ignore price deviation, instead returns
-  // ///        - the only valid price in case of 1 valid source
-  // ///        - average price in case of 2 valid sources
-  // ///        - median price in case of 3 valid sources
-  // ///      this was modified to not revert for viewing purpose
-  // ///      any error on price validity should be handled separately by presentation layer
-  // ///
-  // /// @return `token0Price / token1Price` in 18 decimals
-  // ///         for 1 valid source, returns the only valid price
-  // ///         for 2 valid sources, returns average of 2 valid price
-  // ///         for 3 valid sources, returns median price
-  // ///         return 0 upon no primary or valid source
-  // function _getPrice(
-  //   IPriceOracle oracle,
-  //   address token0,
-  //   address token1
-  // ) internal view returns (uint256) {
-  //   uint256 candidateSourceCount = oracle.primarySourceCount(token0, token1);
-  //   if (candidateSourceCount == 0) return 0;
-
-  //   uint256[] memory prices = new uint256[](candidateSourceCount);
-  //   // Get price from valid oracle sources
-  //   uint256 validSourceCount;
-  //   for (uint256 idx; idx < candidateSourceCount; ) {
-  //     try oracle.primarySources(token0, token1, idx).getPrice(token0, token1) returns (
-  //       uint256 price,
-  //       uint256 /* lastUpdate */
-  //     ) {
-  //       unchecked {
-  //         // ignore price stale
-  //         prices[validSourceCount++] = price;
-  //         ++idx;
-  //       }
-  //     } catch {}
-  //   }
-  //   if (validSourceCount == 0) return 0;
-
-  //   // Sort prices (asc)
-  //   for (uint256 _i; _i < validSourceCount - 1; ) {
-  //     for (uint256 _j; _j < validSourceCount - _i - 1; ) {
-  //       if (prices[_j] > prices[_j + 1]) {
-  //         (prices[_j], prices[_j + 1]) = (prices[_j + 1], prices[_j]);
-  //       }
-  //       unchecked {
-  //         ++_j;
-  //       }
-  //     }
-  //     unchecked {
-  //       ++_i;
-  //     }
-  //   }
-
-  //   // ignore price deviation
-  //   if (validSourceCount == 1) return prices[0]; // if 1 valid source, return price
-  //   if (validSourceCount == 2) {
-  //     return (prices[0] + prices[1]) / 2; // if 2 valid sources, return average
-  //   }
-  //   return prices[1]; // if 3 valid sources, return median
-  // }
 
   function moneyMarket() external view returns (address) {
     return address(_moneyMarket);

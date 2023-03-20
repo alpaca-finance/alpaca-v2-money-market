@@ -49,6 +49,7 @@ interface IMoneyMarketReader {
   }
 
   struct SubAccountSummary {
+    uint256 subAccountId;
     uint256 totalBorrowedValue;
     uint256 totalCollateralValue;
     uint256 totalBorrowingPower;
