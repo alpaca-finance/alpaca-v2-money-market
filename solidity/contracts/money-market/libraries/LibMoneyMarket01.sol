@@ -42,6 +42,7 @@ library LibMoneyMarket01 {
   error LibMoneyMarket01_FeeOnTransferTokensNotSupported();
   error LibMoneyMarket01_EmergencyPaused();
   error LibMoneyMarket01_UnAuthorized();
+  error LibMoneyMarket01_SubAccountHealthy();
 
   event LogWithdraw(address indexed _user, address _token, address _ibToken, uint256 _amountIn, uint256 _amountOut);
   event LogAccrueInterest(address indexed _token, uint256 _totalInterest, uint256 _totalToProtocolReserve);
@@ -74,6 +75,13 @@ library LibMoneyMarket01 {
     address indexed _token,
     uint256 _borrowedAmount,
     uint256 _debtShare
+  );
+
+  event LogWriteOffSubAccountDebt(
+    address indexed subAccount,
+    address indexed token,
+    uint256 debtShareWrittenOff,
+    uint256 debtValueWrittenOff
   );
 
   struct ProtocolConfig {
@@ -484,10 +492,7 @@ library LibMoneyMarket01 {
     if (address(_interestModel) == address(0)) {
       return 0;
     }
-    _interestRate = _interestModel.getInterestRate(
-      moneyMarketDs.globalDebts[_token],
-      getFloatingBalance(_token, moneyMarketDs)
-    );
+    _interestRate = _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], moneyMarketDs.reserves[_token]);
   }
 
   /// @dev Get non collat interest rate
@@ -507,10 +512,7 @@ library LibMoneyMarket01 {
     if (address(_interestModel) == address(0)) {
       return 0;
     }
-    _interestRate = _interestModel.getInterestRate(
-      moneyMarketDs.globalDebts[_token],
-      getFloatingBalance(_token, moneyMarketDs)
-    );
+    _interestRate = _interestModel.getInterestRate(moneyMarketDs.globalDebts[_token], moneyMarketDs.reserves[_token]);
   }
 
   /// @dev Accrue over collat interest of a token
@@ -718,18 +720,6 @@ library LibMoneyMarket01 {
       getTotalToken(_token, moneyMarketDs) +
       ((getGlobalPendingInterest(_token, moneyMarketDs) * (LibConstant.MAX_BPS - moneyMarketDs.lendingFeeBps)) /
         LibConstant.MAX_BPS);
-  }
-
-  /// @dev Get the reserve amount of a token in money market
-  /// @param _token The token address
-  /// @param moneyMarketDs The storage of money market
-  /// @return _floating The reserve amount of a token in money market
-  function getFloatingBalance(address _token, MoneyMarketDiamondStorage storage moneyMarketDs)
-    internal
-    view
-    returns (uint256 _floating)
-  {
-    _floating = moneyMarketDs.reserves[_token];
   }
 
   /// @dev Get price of a token in USD
@@ -1143,6 +1133,50 @@ library LibMoneyMarket01 {
   function onlyAccountManager(MoneyMarketDiamondStorage storage moneyMarketDs) internal view {
     if (!moneyMarketDs.accountManagersOk[msg.sender]) {
       revert LibMoneyMarket01_UnAuthorized();
+    }
+  }
+
+  /// @dev Write off the subaccount's debt that has no collateral backed
+  /// WARNING: Only called this when all interests have been accrued
+  /// @param _subAccount The subAccount to be written off
+  /// @param moneyMarketDs The storage of money market
+  function writeOffBadDebt(
+    address _account,
+    address _subAccount,
+    MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal {
+    // skip this if there're still collaterals under the subAccount
+    if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
+      return;
+    }
+
+    LibDoublyLinkedList.Node[] memory _borrowed = moneyMarketDs.subAccountDebtShares[_subAccount].getAll();
+
+    address _token;
+    uint256 _shareToRemove;
+    uint256 _amountToRemove;
+    uint256 _length = _borrowed.length;
+
+    // loop over all outstanding debt
+    for (uint256 _i; _i < _length; ) {
+      _token = _borrowed[_i].token;
+      _shareToRemove = _borrowed[_i].amount;
+
+      // Price in the actual amount to be written off
+      _amountToRemove = LibShareUtil.shareToValue(
+        _shareToRemove,
+        moneyMarketDs.overCollatDebtValues[_token],
+        moneyMarketDs.overCollatDebtShares[_token]
+      );
+
+      // Reset debts of the token under subAccount
+      removeOverCollatDebtFromSubAccount(_account, _subAccount, _token, _shareToRemove, _amountToRemove, moneyMarketDs);
+
+      emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
+
+      unchecked {
+        ++_i;
+      }
     }
   }
 }
