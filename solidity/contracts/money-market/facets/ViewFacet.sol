@@ -177,8 +177,7 @@ contract ViewFacet is IViewFacet {
   /// @param _token The token that has been borrowed
   /// @return _floating The total amount of token left for borrowing
   function getFloatingBalance(address _token) external view returns (uint256 _floating) {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    _floating = LibMoneyMarket01.getFloatingBalance(_token, moneyMarketDs);
+    _floating = LibMoneyMarket01.moneyMarketDiamondStorage().reserves[_token];
   }
 
   /// @notice Get the total share in the over collateralized debt pool

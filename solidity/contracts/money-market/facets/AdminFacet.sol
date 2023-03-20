@@ -55,12 +55,6 @@ contract AdminFacet is IAdminFacet {
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
-  event LogWriteOffSubAccountDebt(
-    address indexed subAccount,
-    address indexed token,
-    uint256 debtShareWrittenOff,
-    uint256 debtValueWrittenOff
-  );
   event LogTopUpTokenReserve(address indexed token, uint256 amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed caller, bool _isPasued);
@@ -515,57 +509,6 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.minDebtSize = _newValue;
 
     emit LogSetMinDebtSize(_newValue);
-  }
-
-  /// @notice Write off subaccount's token debt in case of bad debt by resetting outstanding debt to zero
-  /// @param _inputs An array of input. Each should contain account, subAccountId, and token to write off for
-  function writeOffSubAccountsDebt(WriteOffSubAccountDebtInput[] calldata _inputs) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    uint256 _length = _inputs.length;
-
-    address _token;
-    address _account;
-    address _subAccount;
-    uint256 _shareToRemove;
-    uint256 _amountToRemove;
-
-    for (uint256 i; i < _length; ) {
-      _token = _inputs[i].token;
-      _account = _inputs[i].account;
-      _subAccount = LibMoneyMarket01.getSubAccount(_account, _inputs[i].subAccountId);
-
-      // Revert if the subAccount still have collateral left to be liquidated
-      if (moneyMarketDs.subAccountCollats[_subAccount].size != 0) {
-        revert AdminFacet_SubAccountHealthy(_subAccount);
-      }
-
-      // Accrue interest for token so debt share calculation would be correct
-      LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
-
-      // Get remaining debts of the token under subAccount
-      (_shareToRemove, _amountToRemove) = LibMoneyMarket01.getOverCollatDebtShareAndAmountOf(
-        _subAccount,
-        _token,
-        moneyMarketDs
-      );
-
-      // Reset debts of the token under subAccount
-      LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
-        _account,
-        _subAccount,
-        _token,
-        _shareToRemove,
-        _amountToRemove,
-        moneyMarketDs
-      );
-
-      emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
-
-      unchecked {
-        ++i;
-      }
-    }
   }
 
   /// @notice Transfer token to diamond to increase token reserves

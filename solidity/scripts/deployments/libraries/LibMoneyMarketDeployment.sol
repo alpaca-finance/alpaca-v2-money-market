@@ -252,7 +252,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](23);
+    _selectors = new bytes4[](22);
     _selectors[0] = IAdminFacet.openMarket.selector;
     _selectors[1] = IAdminFacet.setTokenConfigs.selector;
     _selectors[2] = IAdminFacet.setNonCollatBorrowerOk.selector;
@@ -270,12 +270,11 @@ library LibMoneyMarketDeployment {
     _selectors[14] = IAdminFacet.setLiquidationParams.selector;
     _selectors[15] = IAdminFacet.setMaxNumOfToken.selector;
     _selectors[16] = IAdminFacet.setMinDebtSize.selector;
-    _selectors[17] = IAdminFacet.writeOffSubAccountsDebt.selector;
+    _selectors[17] = IAdminFacet.setDebtTokenImplementation.selector;
     _selectors[18] = IAdminFacet.topUpTokenReserve.selector;
     _selectors[19] = IAdminFacet.setRepurchaseRewardModel.selector;
     _selectors[20] = IAdminFacet.setEmergencyPaused.selector;
     _selectors[21] = IAdminFacet.setAccountManagersOk.selector;
-    _selectors[22] = IAdminFacet.setDebtTokenImplementation.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
