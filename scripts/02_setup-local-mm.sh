@@ -49,11 +49,11 @@ cast rpc anvil_stopImpersonatingAccount $ALPACA_DEPLOYER
 # save snapshot before deployment to facilitate chain state reversion
 cast rpc evm_snapshot
 
-# forge script solidity/scripts/deployments/01_DeployProxyAdmin.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
-# forge script solidity/scripts/deployments/02_DeployMiniFL.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
-# forge script solidity/scripts/deployments/03_DeployMoneyMarket.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
-# forge script solidity/scripts/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
-# forge script solidity/scripts/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
-# forge script solidity/scripts/deployments/06_DeployOracle.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script solidity/scripts/deployments/01_DeployProxyAdmin.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script solidity/scripts/deployments/02_DeployMiniFL.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script solidity/scripts/deployments/03_DeployMoneyMarket.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script solidity/scripts/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script solidity/scripts/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script solidity/scripts/deployments/06_DeployOracle.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/utilities/SetUpMMForTest.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script solidity/scripts/utilities/SetUpMiniFLForTest.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
