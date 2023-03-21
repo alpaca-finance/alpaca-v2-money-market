@@ -1039,7 +1039,8 @@ library LibMoneyMarket01 {
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
     // revert if number of debt tokens exceed limit per sub account
-    if (userDebtShare.length() > moneyMarketDs.maxNumOfDebtPerSubAccount) {
+    uint256 _userDebtShareLen = userDebtShare.length();
+    if (_userDebtShareLen > moneyMarketDs.maxNumOfDebtPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
 
@@ -1052,7 +1053,7 @@ library LibMoneyMarket01 {
     IERC20(_debtToken).safeApprove(address(_miniFL), _shareToAdd);
     _miniFL.deposit(_account, moneyMarketDs.miniFLPoolIds[_debtToken], _shareToAdd);
 
-    emit LogOverCollatBorrow(_account, _subAccount, _token, _amount, _shareToAdd, userDebtShare.length());
+    emit LogOverCollatBorrow(_account, _subAccount, _token, _amount, _shareToAdd, _userDebtShareLen);
   }
 
   /// @dev Do non collat borrow
