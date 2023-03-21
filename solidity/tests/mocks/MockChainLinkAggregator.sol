@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { IAggregatorV3 } from "../../contracts/oracle/interfaces/IAggregatorV3.sol";
 

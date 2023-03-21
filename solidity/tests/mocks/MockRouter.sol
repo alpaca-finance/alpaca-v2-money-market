@@ -11,7 +11,7 @@
 Alpaca Fin Corporation
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -69,7 +69,6 @@ contract MockRouter {
 
     uint256 _normalizedAmountIn = amountIn * 10**(18 - IERC20(_tokenIn).decimals());
     uint256 _normalizedAmountOut = _normalizedAmountIn / 10**(18 - IERC20(_tokenOut).decimals());
-
 
     IERC20Upgradeable(_tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
     IERC20Upgradeable(_tokenOut).safeTransfer(to, _normalizedAmountOut);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol";
