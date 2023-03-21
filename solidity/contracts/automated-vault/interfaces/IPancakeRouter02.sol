@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IPancakeRouter02 {
   function factory() external pure returns (address);

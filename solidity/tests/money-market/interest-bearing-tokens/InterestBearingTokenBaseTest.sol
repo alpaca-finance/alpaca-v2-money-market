@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";

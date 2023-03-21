@@ -10,7 +10,7 @@
 　 ξ_ξξ_ξ　ξ_ξξ_ξ
 Alpaca Fin Corporation
 */
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IPriceOracle {
   /// @dev Return the wad price of token0/token1, multiplied by 1e18

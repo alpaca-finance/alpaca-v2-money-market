@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // interfaces
 import { IAVViewFacet } from "../interfaces/IAVViewFacet.sol";

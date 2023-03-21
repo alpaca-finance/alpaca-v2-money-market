@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- External Libraries ---- //
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";

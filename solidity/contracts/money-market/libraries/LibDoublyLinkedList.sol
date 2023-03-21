@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 library LibDoublyLinkedList {
   error LibDoublyLinkedList_Existed();
