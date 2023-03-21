@@ -3,8 +3,11 @@ pragma solidity 0.8.17;
 
 import { IERC20 } from "solidity/contracts/interfaces/IERC20.sol";
 import { IMoneyMarket } from "solidity/contracts/money-market/interfaces/IMoneyMarket.sol";
+import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IPancakeCallee } from "solidity/contracts/repurchase-bot/interfaces/IPancakeCallee.sol";
 import { IPancakeRouter01 } from "solidity/contracts/repurchase-bot/interfaces/IPancakeRouter01.sol";
+
+import "solidity/tests/utils/console.sol";
 
 contract RepurchaseBot is IPancakeCallee {
   error Unauthorized();
@@ -12,6 +15,7 @@ contract RepurchaseBot is IPancakeCallee {
   // TODO: change to constant when deploy
   address public immutable owner;
   IMoneyMarket public immutable moneyMarketDiamond;
+  IMoneyMarketAccountManager public immutable accountManager;
   IPancakeRouter01 public immutable pancakeRouter;
 
   modifier onlyOwner() {
@@ -19,9 +23,14 @@ contract RepurchaseBot is IPancakeCallee {
     _;
   }
 
-  constructor(address _moneyMarketDiamond, address _pancakeRouter) {
+  constructor(
+    address _moneyMarketDiamond,
+    address _accountManager,
+    address _pancakeRouter
+  ) {
     owner = msg.sender;
     moneyMarketDiamond = IMoneyMarket(_moneyMarketDiamond);
+    accountManager = IMoneyMarketAccountManager(_accountManager);
     pancakeRouter = IPancakeRouter01(_pancakeRouter);
   }
 
@@ -47,26 +56,44 @@ contract RepurchaseBot is IPancakeCallee {
       address _account,
       uint256 _subAccountId,
       address _debtToken,
-      address _collatToken,
+      address _underlyingOfCollatToken,
       uint256 _desiredRepayAmount
     ) = abi.decode(data, (address, uint256, address, address, uint256));
 
-    (address _token0, ) = sortTokens(_collatToken, _debtToken);
+    (address _token0, ) = sortTokens(_underlyingOfCollatToken, _debtToken);
     address[] memory _path = new address[](2);
     _path[0] = _debtToken;
-    _path[1] = _collatToken;
+    _path[1] = _underlyingOfCollatToken;
     uint256[] memory _amounts = pancakeRouter.getAmountsOut(_token0 == _debtToken ? amount0 : amount1, _path);
     uint256 _amountRepayFlashswap = _amounts[1];
 
-    uint256 _collatTokenBefore = IERC20(_collatToken).balanceOf(address(this));
+    console.log(_amounts[0]);
+    console.log(_amountRepayFlashswap);
 
-    moneyMarketDiamond.repurchase(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
+    address _collatToken = moneyMarketDiamond.getIbTokenFromToken(_underlyingOfCollatToken);
+    uint256 _underlyingBefore = IERC20(_underlyingOfCollatToken).balanceOf(address(this));
 
-    uint256 _collatTokenAfter = IERC20(_collatToken).balanceOf(address(this)) - _collatTokenBefore;
+    console.log("_underlyingBefore", _underlyingBefore);
 
-    if (_collatTokenAfter - _amountRepayFlashswap == 0) revert();
+    IERC20(_debtToken).approve(address(moneyMarketDiamond), type(uint256).max);
+    IERC20(_collatToken).approve(address(accountManager), type(uint256).max);
+    accountManager.withdraw(
+      _collatToken,
+      moneyMarketDiamond.repurchase(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount)
+    );
+    IERC20(_debtToken).approve(address(moneyMarketDiamond), 0);
+    IERC20(_collatToken).approve(address(accountManager), 0);
 
-    IERC20(_collatToken).transfer(msg.sender, _amountRepayFlashswap);
+    uint256 _underlyingAfter = IERC20(_underlyingOfCollatToken).balanceOf(address(this)) - _underlyingBefore;
+    console.log("_underlyingAfter", _underlyingAfter);
+
+    if (_underlyingAfter - _amountRepayFlashswap == 0) revert();
+
+    // TODO: investigate too much profit
+    console.log("profit", _underlyingAfter - _amountRepayFlashswap);
+
+    // TODO: investigate fee
+    IERC20(_underlyingOfCollatToken).transfer(msg.sender, (_amountRepayFlashswap * 110) / 100);
   }
 
   // returns sorted token addresses, used to handle return values from pairs sorted in this order
