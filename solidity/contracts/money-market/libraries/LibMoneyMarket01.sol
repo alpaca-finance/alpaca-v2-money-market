@@ -51,7 +51,8 @@ library LibMoneyMarket01 {
     address indexed _subAccount,
     address indexed _token,
     uint256 _removedDebtShare,
-    uint256 _removedDebtAmount
+    uint256 _removedDebtAmount,
+    uint256 _numOfDebt
   );
 
   event LogRemoveCollateral(
@@ -74,7 +75,8 @@ library LibMoneyMarket01 {
     address indexed _subAccount,
     address indexed _token,
     uint256 _borrowedAmount,
-    uint256 _debtShare
+    uint256 _debtShare,
+    uint256 _numOfDebt
   );
 
   event LogWriteOffSubAccountDebt(
@@ -911,12 +913,13 @@ library LibMoneyMarket01 {
     uint256 _debtValueToRemove,
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
   ) internal {
+    LibDoublyLinkedList.List storage userDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount];
     // get current debt share of a token
-    uint256 _currentDebtShare = moneyMarketDs.subAccountDebtShares[_subAccount].getAmount(_repayToken);
+    uint256 _currentDebtShare = userDebtShare.getAmount(_repayToken);
 
     // update states
     //  1. update sub account debt share
-    moneyMarketDs.subAccountDebtShares[_subAccount].updateOrRemove(_repayToken, _currentDebtShare - _debtShareToRemove);
+    userDebtShare.updateOrRemove(_repayToken, _currentDebtShare - _debtShareToRemove);
     //  2. update total over collat debt share of a token in money market
     moneyMarketDs.overCollatDebtShares[_repayToken] -= _debtShareToRemove;
     //  3. update total over collat debt value of a token in money market
@@ -932,7 +935,14 @@ library LibMoneyMarket01 {
     // burn debt token
     IDebtToken(_debtToken).burn(address(this), _debtShareToRemove);
 
-    emit LogRemoveDebt(_account, _subAccount, _repayToken, _debtShareToRemove, _debtValueToRemove);
+    emit LogRemoveDebt(
+      _account,
+      _subAccount,
+      _repayToken,
+      _debtShareToRemove,
+      _debtValueToRemove,
+      userDebtShare.length()
+    );
   }
 
   /// @dev Transfer collat from one sub account to another
@@ -1029,7 +1039,8 @@ library LibMoneyMarket01 {
     // update user's debtshare
     userDebtShare.addOrUpdate(_token, userDebtShare.getAmount(_token) + _shareToAdd);
     // revert if number of debt tokens exceed limit per sub account
-    if (userDebtShare.length() > moneyMarketDs.maxNumOfDebtPerSubAccount) {
+    uint256 _userDebtShareLen = userDebtShare.length();
+    if (_userDebtShareLen > moneyMarketDs.maxNumOfDebtPerSubAccount) {
       revert LibMoneyMarket01_NumberOfTokenExceedLimit();
     }
 
@@ -1042,7 +1053,7 @@ library LibMoneyMarket01 {
     IERC20(_debtToken).safeApprove(address(_miniFL), _shareToAdd);
     _miniFL.deposit(_account, moneyMarketDs.miniFLPoolIds[_debtToken], _shareToAdd);
 
-    emit LogOverCollatBorrow(_account, _subAccount, _token, _amount, _shareToAdd);
+    emit LogOverCollatBorrow(_account, _subAccount, _token, _amount, _shareToAdd, _userDebtShareLen);
   }
 
   /// @dev Do non collat borrow
