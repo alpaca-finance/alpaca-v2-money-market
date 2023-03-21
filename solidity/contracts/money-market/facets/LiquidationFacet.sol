@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
@@ -54,6 +54,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repurchaseRewardBps;
     uint256 repayAmountWithoutFee;
     uint256 repayTokenPrice;
+    bool isPurchaseAll;
   }
 
   struct LiquidationLocalVars {
@@ -190,6 +191,8 @@ contract LiquidationFacet is ILiquidationFacet {
       if (_desiredRepayAmount > _maxAmountRepurchaseable) {
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
         _vars.repayAmountWithoutFee = _currentDebtAmount;
+        // set flag `isRepurchaseAll` = true for further use in `_actualRepayAmountWithoutFee` calculation
+        _vars.isPurchaseAll = true;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
@@ -247,6 +250,9 @@ contract LiquidationFacet is ILiquidationFacet {
     // In case of token with fee on transfer, debt would be repaid by amount after transfer fee
     // which won't be able to repurchase entire position
     // repaidAmount = amountReceived - repurchaseFee
+    //
+    _vars.repayAmountWithFee = _calculateRepayAmountWithFeeRoundUp(_repayToken, _vars, moneyMarketDs);
+
     uint256 _actualRepayAmountWithoutFee = LibMoneyMarket01.unsafePullTokens(
       _repayToken,
       msg.sender,
@@ -479,6 +485,10 @@ contract LiquidationFacet is ILiquidationFacet {
     IERC20(_repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
     IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
 
+    // Write off all debts under the subaccount if there's no more collateral
+    // This would result in realizing the bad debts to lenders
+    LibMoneyMarket01.writeOffBadDebt(_account, _vars.subAccount, moneyMarketDs);
+
     emit LogLiquidate(
       msg.sender,
       _liquidationStrat,
@@ -509,6 +519,45 @@ contract LiquidationFacet is ILiquidationFacet {
     // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
     if (_repaidBorrowingPower * LibConstant.MAX_BPS > (_usedBorrowingPower * moneyMarketDs.maxLiquidateBps)) {
       revert LiquidationFacet_RepayAmountExceedThreshold();
+    }
+  }
+
+  function _calculateRepayAmountWithFeeRoundUp(
+    address _repayToken,
+    RepurchaseLocalVars memory _vars,
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs
+  ) internal view returns (uint256 _repayAmountWithFee) {
+    // To prevent precision loss and leaving 1 wei debt in subAccount when user repurchase the entire debt
+    // assume totalDebtWithFee = 10 wei
+    // _repayAmountWithoutFee = 10 wei, overCollatDebtShares = 10 wei, overCollatDebtValues = 15 wei
+
+    // fully repurchase without adding extra wei
+    // _repayShare = 10 * 10 / 15 = 6.66666666667 => round down to 6 shares
+    // _repayShareToValue = 6 * 15 / 10 = 9 wei => result in 1 wei debt leftover
+
+    // fully repurchase with adding extra wei
+    // _repayShare = 10 * 10 / 15 = 6.66666666667
+    // _repayAmountWithoutFee = 11 wei
+    // _newRepayShare = 11 * 10 / 15 = 7.33333333333 =>  round down to 7 shares
+    // _newRepayShareToValue = 7 * 15 / 10 = 10.5 => round down to 10 wei and repay all debt
+    _repayAmountWithFee = _vars.repayAmountWithFee;
+    if (_vars.isPurchaseAll) {
+      uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
+      uint256 _actualRepayShare = LibShareUtil.valueToShare(
+        _repayAmountWithoutFee,
+        moneyMarketDs.overCollatDebtShares[_repayToken],
+        moneyMarketDs.overCollatDebtValues[_repayToken]
+      );
+      uint256 _expectRepayShare = LibShareUtil.valueToShareRoundingUp(
+        _repayAmountWithoutFee,
+        moneyMarketDs.overCollatDebtShares[_repayToken],
+        moneyMarketDs.overCollatDebtValues[_repayToken]
+      );
+
+      // Adding repayAmountWithFee by 1 wei when there is a precision loss in _actualRepayShare
+      if (_actualRepayShare + 1 == _expectRepayShare) {
+        _repayAmountWithFee += 1;
+      }
     }
   }
 }

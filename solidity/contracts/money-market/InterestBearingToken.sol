@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- External Libraries ---- //
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -188,7 +188,7 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
   }
 
   function transfer(address to, uint256 amount) public virtual override(ERC20, IERC20) returns (bool) {
-    address owner = _msgSender();
+    address owner = msg.sender;
     if (owner == to || to == address(this)) {
       revert InterestBearingToken_InvalidDestination();
     }
@@ -204,7 +204,7 @@ contract InterestBearingToken is ERC20, IERC4626, Ownable, Initializable {
     if (from == to || to == address(this)) {
       revert InterestBearingToken_InvalidDestination();
     }
-    address spender = _msgSender();
+    address spender = msg.sender;
     _spendAllowance(from, spender, amount);
     _transfer(from, to, amount);
     return true;

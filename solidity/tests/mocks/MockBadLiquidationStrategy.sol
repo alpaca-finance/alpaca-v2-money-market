@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -17,7 +17,7 @@ contract MockBadLiquidationStrategy is ILiquidationStrategy {
     uint256 _repayAmount,
     uint256 /*_minReceive*/
   ) external {
-    ERC20(_repayToken).safeTransfer(msg.sender, _repayAmount - 1);
+    ERC20(_repayToken).safeTransfer(msg.sender, _repayAmount / 2);
   }
 
   function setCallersOk(address[] calldata _callers, bool _isOk) external {}

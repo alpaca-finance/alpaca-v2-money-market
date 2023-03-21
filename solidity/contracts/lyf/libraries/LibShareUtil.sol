@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { LibFullMath } from "./LibFullMath.sol";
 
@@ -37,5 +37,18 @@ library LibShareUtil {
       _shares += 1;
     }
     return _shares;
+  }
+
+  function shareToValueRoundingUp(
+    uint256 _shareAmount,
+    uint256 _totalValue,
+    uint256 _totalShare
+  ) internal pure returns (uint256) {
+    uint256 _values = shareToValue(_shareAmount, _totalValue, _totalShare);
+    uint256 _valueShares = valueToShare(_values, _totalShare, _totalValue);
+    if (_valueShares + 1 == _shareAmount) {
+      _values += 1;
+    }
+    return _values;
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -428,13 +428,17 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @param _pid pool id
   /// @param _newRewarders rewarders
   function setPoolRewarders(uint256 _pid, address[] calldata _newRewarders) external onlyOwner {
+    if (_pid == 0) {
+      revert MiniFL_InvalidArguments();
+    }
     uint256 _length = _newRewarders.length;
+    address _rewarder;
     // loop to check rewarder should be belong to this MiniFL only
     for (uint256 _i; _i < _length; ) {
-      if (IRewarder(_newRewarders[_i]).miniFL() != address(this)) {
+      _rewarder = _newRewarders[_i];
+      if ((IRewarder(_rewarder).miniFL() != address(this)) || (IRewarder(_rewarder).lastRewardTime(_pid) == 0)) {
         revert MiniFL_BadRewarder();
       }
-
       unchecked {
         ++_i;
       }

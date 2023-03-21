@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IRewarder {
   error Rewarder1_BadArguments();
@@ -26,4 +26,6 @@ interface IRewarder {
   function onHarvest(uint256 pid, address user) external;
 
   function pendingToken(uint256 pid, address user) external view returns (uint256);
+
+  function lastRewardTime(uint256 _pid) external view returns (uint256);
 }

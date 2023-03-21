@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -345,5 +345,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @notice Returns the number of pools.
   function poolLength() public view returns (uint256 _poolLength) {
     _poolLength = poolIds.length;
+  }
+
+  /// @notice Return the last reward time of the given pool id
+  /// @return Last reward time
+  function lastRewardTime(uint256 _pid) external view returns (uint256) {
+    return poolInfo[_pid].lastRewardTime;
   }
 }

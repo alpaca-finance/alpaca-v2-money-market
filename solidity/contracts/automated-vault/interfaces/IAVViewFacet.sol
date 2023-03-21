@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IAVViewFacet {
   function getDebtValues(address _vaultToken) external view returns (uint256 _stableDebtValue, uint256 _assetDebtValue);

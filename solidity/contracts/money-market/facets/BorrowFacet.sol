@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- External Libraries ---- //
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -132,7 +132,15 @@ contract BorrowFacet is IBorrowFacet {
     uint256 _cachedDebtShare = moneyMarketDs.overCollatDebtShares[_token];
 
     // Find the actual underlying amount that need to be pulled from the share
-    uint256 _actualAmountToRepay = LibShareUtil.shareToValue(_actualShareToRepay, _cachedDebtValue, _cachedDebtShare);
+    // rounding up to prevent precision loss and cause 1 wei left in the debt token
+    // This will happened if shareToValue got lower than the actual value (round down)
+    // Once we convert the lower value back to share, there will be 1 wei loss
+    // at the later stage, this will fail and revert once we do minimum debt size check
+    uint256 _actualAmountToRepay = LibShareUtil.shareToValueRoundingUp(
+      _actualShareToRepay,
+      _cachedDebtValue,
+      _cachedDebtShare
+    );
 
     // Pull the token from the account manager, the actual amount received will be used for debt accounting
     // In case somehow there's fee on transfer - which's might be introduced after the token was lent

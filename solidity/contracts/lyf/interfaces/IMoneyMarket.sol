@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IMoneyMarket {
   function getIbTokenFromToken(address _token) external view returns (address);

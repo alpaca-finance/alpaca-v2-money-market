@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- External Libraries ---- //
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
