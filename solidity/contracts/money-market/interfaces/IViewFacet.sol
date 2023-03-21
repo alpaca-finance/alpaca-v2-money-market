@@ -40,6 +40,8 @@ interface IViewFacet {
 
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
 
+  function getOverCollatInterestModel(address _token) external view returns (address);
+
   function getOverCollatPendingInterest(address _token) external view returns (uint256 _pendingInterest);
 
   function getGlobalPendingInterest(address _token) external view returns (uint256);
