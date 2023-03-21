@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { BaseTest, console } from "../base/BaseTest.sol";
 import { MoneyMarket_BaseTest } from "./MoneyMarket_BaseTest.t.sol";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 /******************************************************************************\
 * Imported from: https://github.com/mudgen/diamond-3-hardhat
