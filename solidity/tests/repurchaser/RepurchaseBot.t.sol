@@ -4,24 +4,24 @@ pragma solidity 0.8.19;
 import { DSTest } from "solidity/tests/base/DSTest.sol";
 import "solidity/tests/utils/Components.sol";
 
-import { RepurchaseBot } from "solidity/contracts/repurchase-bot/RepurchaseBot.sol";
+import { PancakeV2FlashLoanRepurchaser } from "solidity/contracts/repurchaser/PancakeV2FlashLoanRepurchaser.sol";
 import { FixedFeeModel } from "solidity/contracts/money-market/fee-models/FixedFeeModel.sol";
 import { IERC20 } from "solidity/contracts/interfaces/IERC20.sol";
 import { IMoneyMarket } from "solidity/contracts/money-market/interfaces/IMoneyMarket.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
-import { IPancakeRouter01 } from "solidity/contracts/repurchase-bot/interfaces/IPancakeRouter01.sol";
-import { IPancakePair } from "solidity/contracts/repurchase-bot/interfaces/IPancakePair.sol";
+import { IPancakeRouter01 } from "solidity/contracts/repurchaser/interfaces/IPancakeRouter01.sol";
+import { IPancakePair } from "solidity/contracts/repurchaser/interfaces/IPancakePair.sol";
 
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 // this test is not intended to be ran with normal test suite
 // as it requires local fork of bsc mainnet that has money market setup
-contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
+contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, StdCheats {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-  RepurchaseBot internal repurchaseBot;
+  PancakeV2FlashLoanRepurchaser internal pancakeV2FlashLoanRepurchaser;
 
   // update these addresses once you deploy new fork
   IMoneyMarket internal moneyMarket = IMoneyMarket(0x9B1afC17cF5DD3d216B0d2e7eBbc82D61a2f3629);
@@ -38,7 +38,11 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
   IERC20 internal busd = IERC20(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
 
   function setUp() public {
-    repurchaseBot = new RepurchaseBot(address(moneyMarket), address(accountManager), address(pancakeRouter));
+    pancakeV2FlashLoanRepurchaser = new PancakeV2FlashLoanRepurchaser(
+      address(moneyMarket),
+      address(accountManager),
+      address(pancakeRouter)
+    );
 
     // TODO: move these to setup script
     vm.startPrank(DEPLOYER);
@@ -49,7 +53,7 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
     moneyMarket.setLiquidationParams(5000, 11000);
 
     address[] memory repurchasers = new address[](1);
-    repurchasers[0] = address(repurchaseBot);
+    repurchasers[0] = address(pancakeV2FlashLoanRepurchaser);
     moneyMarket.setRepurchasersOk(repurchasers, true);
 
     moneyMarket.setRepurchaseRewardModel(new FixedFeeModel());
@@ -58,7 +62,7 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
     vm.stopPrank();
   }
 
-  function testCorrectness_RepurchaseBot() public {
+  function testCorrectness_PancakeV2FlashLoanRepurchaser() public {
     // get price from oracle
     (uint256 dogePrice, ) = oracle.getTokenPrice(address(doge));
     (uint256 busdPrice, ) = oracle.getTokenPrice(address(busd));
@@ -98,6 +102,11 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
     bytes memory data = abi.encode(USER, SUBACCOUNT_ID, address(doge), address(busd), ibBusd, repurchaseAmount, path);
     // have to flashloan repurchaseAmount of doge
     // doge is token0, busd is token1
-    IPancakePair(0xE27859308ae2424506D1ac7BF5bcb92D6a73e211).swap(repurchaseAmount, 0, address(repurchaseBot), data);
+    IPancakePair(0xE27859308ae2424506D1ac7BF5bcb92D6a73e211).swap(
+      repurchaseAmount,
+      0,
+      address(pancakeV2FlashLoanRepurchaser),
+      data
+    );
   }
 }
