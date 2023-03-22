@@ -6,7 +6,7 @@ import "../BaseScript.sol";
 
 import { LibMoneyMarketDeployment } from "./libraries/LibMoneyMarketDeployment.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
+import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel7.sol";
 import { PancakeswapV2LiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2LiquidationStrategy.sol";
 import { PancakeswapV2IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";

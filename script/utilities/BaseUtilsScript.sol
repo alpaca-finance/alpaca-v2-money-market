@@ -41,12 +41,6 @@ abstract contract BaseUtilsScript is Script {
     _run();
   }
 
-  /// @dev to run script locally pass flag --sig "runLocal()"
-  function runLocal() public {
-    _setUpForLocalRun();
-    _run();
-  }
-
   //
   // setups
   //
@@ -63,25 +57,6 @@ abstract contract BaseUtilsScript is Script {
     console.log("  money market :", address(moneyMarket));
   }
 
-  /// @dev setUp for local run in case that haven't deployed mm to network yet
-  function _setUpForLocalRun() internal virtual {
-    _startDeployerBroadcast();
-    console.log("deploy money market diamond for test run");
-    (address _moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(
-      address(1),
-      address(2),
-      address(3)
-    );
-    _stopBroadcast();
-    moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-    deployerAddress = vm.addr(deployerPrivateKey);
-    userAddress = vm.addr(userPrivateKey);
-    console.log("addresses");
-    console.log("  deployer     :", deployerAddress);
-    console.log("  user     :", userAddress);
-    console.log("  money market :", address(moneyMarket));
-  }
-
   function _setUpMockToken() internal returns (address) {
     return address(new MockERC20("", "TEST", 18));
   }
@@ -90,7 +65,7 @@ abstract contract BaseUtilsScript is Script {
   // utilities
   //
 
-  function _getConfig() internal returns (MoneyMarketConfig memory) {
+  function _getConfig() internal view returns (MoneyMarketConfig memory) {
     console.log("load config file from", configFilePath);
     string memory configJson = vm.readFile(configFilePath);
     return abi.decode(configJson.parseRaw("MoneyMarket"), (MoneyMarketConfig));

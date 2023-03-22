@@ -62,7 +62,7 @@ contract SetMoneyMarketConfigsScript is BaseUtilsScript {
     address newTreasury = address(0);
 
     //---- execution ----//
-    moneyMarket.setTreasury(newTreasury);
+    moneyMarket.setLiquidationTreasury(newTreasury);
     console.log("setTreasury");
     console.log("  newTreasury :", newTreasury);
 

@@ -7,7 +7,7 @@ import { LibConstant } from "solidity/contracts/money-market/libraries/LibConsta
 import { MoneyMarketAccountManager } from "solidity/contracts/account-manager/MoneyMarketAccountManager.sol";
 import { MockWNativeRelayer } from "solidity/tests/mocks/MockWNativeRelayer.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
+import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract DeployMoneyMarketAccountManagerScript is BaseScript {
