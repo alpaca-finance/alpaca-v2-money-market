@@ -71,79 +71,79 @@ cast send $MEDIANIZER --rpc-url $TENDERLY_RPC_URL --from $ALPACA_DEPLOYER "setPr
 # retry command until pass
 
 echo "🚧 deploying proxy admin"
-forge script scripts/deployments/01_DeployProxyAdmin.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/deployments/01_DeployProxyAdmin.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retrying proxy admin deployment"
-    forge script scripts/deployments/01_DeployProxyAdmin.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/deployments/01_DeployProxyAdmin.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 deploying minFL"
-forge script scripts/deployments/02_DeployMiniFL.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/deployments/02_DeployMiniFL.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retrying minFL deployment"
-    forge script scripts/deployments/02_DeployMiniFL.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/deployments/02_DeployMiniFL.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 deploying money market"
-forge script scripts/deployments/03_DeployMoneyMarket.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/deployments/03_DeployMoneyMarket.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retrying money market deployment"
-    forge script scripts/deployments/03_DeployMoneyMarket.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/deployments/03_DeployMoneyMarket.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 deploying money market account manager"
-forge script scripts/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retrying money market account manager deployment"
-    forge script scripts/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 deploying money market reader"
-forge script scripts/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retrying money market reader deployment"
-    forge script scripts/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 deploying oracle"
-forge script scripts/deployments/06_DeployOracle.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/deployments/06_DeployOracle.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retrying oracle deployment"
-    forge script scripts/deployments/06_DeployOracle.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/deployments/06_DeployOracle.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 setting mm state for test"
-forge script scripts/utilities/SetUpMMForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/utilities/SetUpMMForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retry setting mm state for test"
-    forge script scripts/utilities/SetUpMMForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/utilities/SetUpMMForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
 
 sleep 3
 
 echo "🚧 setting up miniFL for test"
-forge script scripts/utilities/SetUpMiniFLForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
+forge script script/utilities/SetUpMiniFLForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow
 while [[ $? -ne 0 ]]; do
     echo "🙉 retry setting up miniFL for test"
-    forge script scripts/utilities/SetUpMiniFLForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
+    forge script script/utilities/SetUpMiniFLForTest.s.sol --rpc-url $TENDERLY_RPC_URL --broadcast --slow --resume
     sleep 2
 done
