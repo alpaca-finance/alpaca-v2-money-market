@@ -123,6 +123,7 @@ interface IMoneyMarketReader {
     uint256 globalDebtValue;
     uint256 totalToken;
     uint256 pendingIntetest;
+    uint256 interestRate;
     uint256 lastAccruedAt;
     uint256 blockTimestamp;
   }

@@ -149,6 +149,14 @@ contract ViewFacet is IViewFacet {
     }
   }
 
+  /// @notice Get the interest rate per second of over collateralized borrowed token
+  /// @param _token The token address
+  /// @return The interest rate per second of token
+  function getOverCollatInterestRate(address _token) external view returns (uint256) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return LibMoneyMarket01.getOverCollatInterestRate(_token, moneyMarketDs);
+  }
+
   /// @notice Get the interest rate model of over collateralized borrowed token
   /// @param _token The token address
   /// @return The address of token's interest rate model
