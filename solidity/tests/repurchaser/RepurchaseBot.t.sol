@@ -39,6 +39,7 @@ contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
 
   function setUp() public {
     pancakeV2FlashLoanRepurchaser = new PancakeV2FlashLoanRepurchaser(
+      address(this),
       address(moneyMarket),
       address(accountManager),
       address(pancakeRouter)
@@ -96,10 +97,7 @@ contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
 
     // repurchase 10% of debt
     uint256 repurchaseAmount = maxBorrowDoge / 10;
-    address[] memory path = new address[](2);
-    path[0] = address(busd);
-    path[1] = address(doge);
-    bytes memory data = abi.encode(USER, SUBACCOUNT_ID, address(doge), address(busd), ibBusd, repurchaseAmount, path);
+    bytes memory data = abi.encode(USER, SUBACCOUNT_ID, address(doge), address(busd), ibBusd, repurchaseAmount);
     // have to flashloan repurchaseAmount of doge
     // doge is token0, busd is token1
     IPancakePair(0xE27859308ae2424506D1ac7BF5bcb92D6a73e211).swap(
