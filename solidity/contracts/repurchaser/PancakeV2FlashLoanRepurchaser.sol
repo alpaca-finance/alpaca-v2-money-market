@@ -49,6 +49,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
   ) external override {
     // only allow owner to initiate flashswap
     if (sender != owner) revert PancakeV2FlashLoanRepurchaser_Unauthorized();
+    // intentionally skip pair correctness check because we trust caller aka owner
 
     (
       address _account,
@@ -59,6 +60,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
       uint256 _desiredRepayAmount
     ) = abi.decode(data, (address, uint256, address, address, address, uint256));
 
+    // currently support only single-hop
     address[] memory _path = new address[](2);
     _path[0] = _underlyingOfCollatToken;
     _path[1] = _debtToken;
