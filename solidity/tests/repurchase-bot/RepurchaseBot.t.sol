@@ -39,6 +39,7 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
   function setUp() public {
     repurchaseBot = new RepurchaseBot(address(moneyMarket), address(accountManager), address(pancakeRouter));
 
+    // TODO: move these to setup script
     vm.startPrank(DEPLOYER);
 
     moneyMarket.setMinDebtSize(0);
@@ -79,8 +80,9 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
 
     vm.stopPrank();
 
-    // mockCall price to make position underwater
-    uint256 newDogePrice = dogePrice * 2;
+    // mockCall price at oracle to make position underwater
+    // note that price on dex is not affected
+    uint256 newDogePrice = (dogePrice * 105) / 100;
     vm.mockCall(
       address(oracle),
       abi.encodeWithSelector(IAlpacaV2Oracle.getTokenPrice.selector, address(doge)),

@@ -61,13 +61,17 @@ contract RepurchaseBot is IPancakeCallee {
     ) = abi.decode(data, (address, uint256, address, address, uint256));
 
     (address _token0, ) = sortTokens(_underlyingOfCollatToken, _debtToken);
+    // TODO: maybe accept path param
+    // we swap from underlyingCollat (tokenIn) to debt (tokenOut)
+    // kinda confusing here but basically we just get tokenOut before provide tokenIn back
     address[] memory _path = new address[](2);
-    _path[0] = _debtToken;
-    _path[1] = _underlyingOfCollatToken;
-    uint256[] memory _amounts = pancakeRouter.getAmountsOut(_token0 == _debtToken ? amount0 : amount1, _path);
-    uint256 _amountRepayFlashswap = _amounts[1];
+    _path[0] = _underlyingOfCollatToken;
+    _path[1] = _debtToken;
+    uint256[] memory _amounts = pancakeRouter.getAmountsIn(_token0 == _debtToken ? amount0 : amount1, _path);
+    uint256 _amountRepayFlashswap = _amounts[0];
 
     console.log(_amounts[0]);
+    console.log(_amounts[1]);
     console.log(_amountRepayFlashswap);
 
     address _collatToken = moneyMarketDiamond.getIbTokenFromToken(_underlyingOfCollatToken);
@@ -93,7 +97,9 @@ contract RepurchaseBot is IPancakeCallee {
     console.log("profit", _underlyingAfter - _amountRepayFlashswap);
 
     // TODO: investigate fee
-    IERC20(_underlyingOfCollatToken).transfer(msg.sender, (_amountRepayFlashswap * 110) / 100);
+    // how to calculate amount repay flash?
+    // IERC20(_underlyingOfCollatToken).transfer(msg.sender, (_amountRepayFlashswap * 10051) / 10000);
+    IERC20(_underlyingOfCollatToken).transfer(msg.sender, _amountRepayFlashswap);
   }
 
   // returns sorted token addresses, used to handle return values from pairs sorted in this order
