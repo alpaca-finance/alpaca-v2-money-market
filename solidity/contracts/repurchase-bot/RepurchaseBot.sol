@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { IERC20 } from "solidity/contracts/interfaces/IERC20.sol";
 import { IMoneyMarket } from "solidity/contracts/money-market/interfaces/IMoneyMarket.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IPancakeCallee } from "solidity/contracts/repurchase-bot/interfaces/IPancakeCallee.sol";
 import { IPancakeRouter01 } from "solidity/contracts/repurchase-bot/interfaces/IPancakeRouter01.sol";
-
-import "solidity/tests/utils/console.sol";
 
 contract RepurchaseBot is IPancakeCallee {
   error Unauthorized();
