@@ -23,6 +23,7 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
 
   RepurchaseBot internal repurchaseBot;
 
+  // update these addresses once you deploy new fork
   IMoneyMarket internal moneyMarket = IMoneyMarket(0x9B1afC17cF5DD3d216B0d2e7eBbc82D61a2f3629);
   IMoneyMarketAccountManager internal accountManager =
     IMoneyMarketAccountManager(0xb21Ec6AE6e9f95CA8b8f8f839B9d348C3c65B572);
@@ -57,12 +58,12 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
     vm.stopPrank();
   }
 
-  function testRunnable() public {
+  function testCorrectness_RepurchaseBot() public {
     // get price from oracle
     (uint256 dogePrice, ) = oracle.getTokenPrice(address(doge));
     (uint256 busdPrice, ) = oracle.getTokenPrice(address(busd));
 
-    // with 1 BUSD collat, how many doge can we max borrow?
+    // calculate how many doge can we max borrow with 1 BUSD collat
     LibConstant.TokenConfig memory dogeTokenConfig = moneyMarket.getTokenConfig(address(doge));
     address ibBusd = moneyMarket.getIbTokenFromToken(address(busd));
     LibConstant.TokenConfig memory ibBusdTokenConfig = moneyMarket.getTokenConfig(ibBusd);
@@ -88,13 +89,13 @@ contract RepurchaseBotTest is DSTest, StdUtils, StdAssertions, StdCheats {
       abi.encodeWithSelector(IAlpacaV2Oracle.getTokenPrice.selector, address(doge)),
       abi.encode(newDogePrice, block.timestamp)
     );
-    // mockCall to set repurhcase fee
-    // vm.mockCall(address)
 
-    // do repurchase
     // repurchase 10% of debt
     uint256 repurchaseAmount = maxBorrowDoge / 10;
-    bytes memory data = abi.encode(USER, SUBACCOUNT_ID, address(doge), address(busd), repurchaseAmount);
+    address[] memory path = new address[](2);
+    path[0] = address(busd);
+    path[1] = address(doge);
+    bytes memory data = abi.encode(USER, SUBACCOUNT_ID, address(doge), address(busd), ibBusd, repurchaseAmount, path);
     // have to flashloan repurchaseAmount of doge
     // doge is token0, busd is token1
     IPancakePair(0xE27859308ae2424506D1ac7BF5bcb92D6a73e211).swap(repurchaseAmount, 0, address(repurchaseBot), data);
