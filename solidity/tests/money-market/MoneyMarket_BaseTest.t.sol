@@ -26,7 +26,7 @@ import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
 import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
-import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "script/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // router
 import { MoneyMarketAccountManager } from "../../contracts/account-manager/MoneyMarketAccountManager.sol";
