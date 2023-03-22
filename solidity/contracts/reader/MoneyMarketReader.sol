@@ -356,6 +356,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     marketStats.globalDebtValue = _moneyMarket.getGlobalDebtValue(_underlyingToken);
     marketStats.totalToken = _moneyMarket.getTotalToken(_underlyingToken);
     marketStats.pendingIntetest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
+    marketStats.interestRate = _moneyMarket.getOverCollatInterestRate(_underlyingToken);
     marketStats.lastAccruedAt = _moneyMarket.getDebtLastAccruedAt(_underlyingToken);
     marketStats.blockTimestamp = block.timestamp;
 
