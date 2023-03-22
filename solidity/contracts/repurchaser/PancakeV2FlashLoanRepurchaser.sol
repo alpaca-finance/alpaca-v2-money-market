@@ -32,8 +32,10 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
     IERC20(_token).transfer(owner, IERC20(_token).balanceOf(address(this)));
   }
 
-  /// @param sender is original caller of pair `swap` function
-  //                while `msg.sender` is pair contract
+  /// @param sender is original caller of pair `swap` function. while `msg.sender` is pair contract
+  /// @param amount0 amount of token0 sent from pair
+  /// @param amount1 amount of token1 sent from pair
+  /// @param data extra data for callback
   function pancakeCall(
     address sender,
     uint256 amount0,
@@ -64,16 +66,9 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
     );
     uint256 _amountRepayFlashloan = _amounts[0];
 
-    uint256 _underlyingBefore = IERC20(_underlyingOfCollatToken).balanceOf(address(this));
-
     _repurchaseIbCollat(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
 
-    // TODO: profit threshold?
-    // revert if unprofitable
-    if (IERC20(_underlyingOfCollatToken).balanceOf(address(this)) - _underlyingBefore - _amountRepayFlashloan == 0)
-      revert();
-
-    // repay flashloan
+    // repay flashloan. will revert underflow if unprofitable
     IERC20(_underlyingOfCollatToken).transfer(msg.sender, _amountRepayFlashloan);
     // remaining profit after repay flashloan will remain in this contract until we call `withdrawToken`
   }
