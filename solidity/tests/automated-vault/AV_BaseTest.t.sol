@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { BaseTest, console } from "../base/BaseTest.sol";
 
@@ -25,7 +25,7 @@ import { ILendFacet } from "../../contracts/money-market/interfaces/ILendFacet.s
 // libraries
 import { LibAVConstant } from "../../contracts/automated-vault/libraries/LibAVConstant.sol";
 import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
-import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "script/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";

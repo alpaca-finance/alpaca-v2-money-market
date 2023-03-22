@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "../BaseScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
+import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
 

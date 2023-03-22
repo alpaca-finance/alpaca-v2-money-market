@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "./BaseUtilsScript.sol";
 
@@ -62,7 +62,7 @@ contract SetMoneyMarketConfigsScript is BaseUtilsScript {
     address newTreasury = address(0);
 
     //---- execution ----//
-    moneyMarket.setTreasury(newTreasury);
+    moneyMarket.setLiquidationTreasury(newTreasury);
     console.log("setTreasury");
     console.log("  newTreasury :", newTreasury);
 

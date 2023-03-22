@@ -11,7 +11,7 @@
 Alpaca Fin Corporation
 */
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 interface IPancakePair {
   event Approval(address indexed owner, address indexed spender, uint256 value);

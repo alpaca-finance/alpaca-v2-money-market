@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // interfaces
 import { IInterestRateModel } from "../interfaces/IInterestRateModel.sol";
 
-contract FixedInterestRateModel is IInterestRateModel {
+contract FixedInterestRateModel {
   uint256 decimal;
 
   constructor(uint256 _decimal) {

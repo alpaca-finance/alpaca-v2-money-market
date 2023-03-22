@@ -1,4 +1,6 @@
 [profile.default]
+optimizer = true
+optimizer-runs = 1
 src = 'solidity/contracts'
 out = 'out'
 libs = ['node_modules']

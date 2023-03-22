@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "./BaseUtilsScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-import { DebtToken } from "../../contracts/money-market/DebtToken.sol";
+import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 contract OpenMarketScript is BaseUtilsScript {
@@ -19,8 +19,8 @@ contract OpenMarketScript is BaseUtilsScript {
 
     //---- inputs ----//
     address underlyingToken = mockTokenForLocalRun;
+
     IAdminFacet.TokenConfigInput memory underlyingTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: underlyingToken,
       tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -28,7 +28,6 @@ contract OpenMarketScript is BaseUtilsScript {
       maxCollateral: 100 ether
     });
     IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
-      token: underlyingToken,
       tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -47,15 +46,5 @@ contract OpenMarketScript is BaseUtilsScript {
     string memory configJson;
     configJson = configJson.serialize("newIbToken", newIbToken);
     configJson.write(configFilePath, ".IbTokens");
-  }
-
-  function _setUpForLocalRun() internal override {
-    super._setUpForLocalRun();
-    mockTokenForLocalRun = _setUpMockToken();
-    address ibTokenImplementation = address(new InterestBearingToken());
-    address debtTokenImplemenation = address(new DebtToken());
-    vm.broadcast(deployerPrivateKey);
-    moneyMarket.setIbTokenImplementation(ibTokenImplementation);
-    moneyMarket.setDebtTokenImplementation(debtTokenImplemenation);
   }
 }

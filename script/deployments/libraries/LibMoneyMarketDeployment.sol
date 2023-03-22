@@ -1,32 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // utils
 import { VM } from "solidity/tests/utils/VM.sol";
 
 // facets
-import { IMMDiamondCut } from "../../../contracts/money-market/interfaces/IMMDiamondCut.sol";
-import { MMDiamondLoupeFacet } from "../../../contracts/money-market/facets/MMDiamondLoupeFacet.sol";
-import { IViewFacet } from "../../../contracts/money-market/interfaces/IViewFacet.sol";
-import { ILendFacet } from "../../../contracts/money-market/interfaces/ILendFacet.sol";
-import { ICollateralFacet } from "../../../contracts/money-market/interfaces/ICollateralFacet.sol";
-import { IBorrowFacet } from "../../../contracts/money-market/interfaces/IBorrowFacet.sol";
-import { INonCollatBorrowFacet } from "../../../contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
-import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
-import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
-import { IMMOwnershipFacet } from "../../../contracts/money-market/interfaces/IMMOwnershipFacet.sol";
-
-/// @dev Older version of deployment will always compile the contract(s)
-// import { DiamondCutFacet, IMMDiamondCut } from "../../../contracts/money-market/facets/DiamondCutFacet.sol";
-// import { MMDiamondLoupeFacet } from "../../../contracts/money-market/facets/MMDiamondLoupeFacet.sol";
-// import { ViewFacet } from "../../../contracts/money-market/facets/ViewFacet.sol";
-// import { LendFacet } from "../../../contracts/money-market/facets/LendFacet.sol";
-// import { CollateralFacet } from "../../../contracts/money-market/facets/CollateralFacet.sol";
-// import { BorrowFacet } from "../../../contracts/money-market/facets/BorrowFacet.sol";
-// import { NonCollatBorrowFacet } from "../../../contracts/money-market/facets/NonCollatBorrowFacet.sol";
-// import { AdminFacet } from "../../../contracts/money-market/facets/AdminFacet.sol";
-// import { LiquidationFacet } from "../../../contracts/money-market/facets/LiquidationFacet.sol";
-// import { OwnershipFacet } from "../../../contracts/money-market/facets/OwnershipFacet.sol";
+import { IMMDiamondCut } from "solidity/contracts/money-market/interfaces/IMMDiamondCut.sol";
+import { MMDiamondLoupeFacet } from "solidity/contracts/money-market/facets/MMDiamondLoupeFacet.sol";
+import { IViewFacet } from "solidity/contracts/money-market/interfaces/IViewFacet.sol";
+import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFacet.sol";
+import { ICollateralFacet } from "solidity/contracts/money-market/interfaces/ICollateralFacet.sol";
+import { IBorrowFacet } from "solidity/contracts/money-market/interfaces/IBorrowFacet.sol";
+import { INonCollatBorrowFacet } from "solidity/contracts/money-market/interfaces/INonCollatBorrowFacet.sol";
+import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFacet.sol";
+import { ILiquidationFacet } from "solidity/contracts/money-market/interfaces/ILiquidationFacet.sol";
+import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 
 library LibMoneyMarketDeployment {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -82,18 +70,6 @@ library LibMoneyMarketDeployment {
     _facetAddresses.adminFacet = deployContract("./out/AdminFacet.sol/AdminFacet.json");
     _facetAddresses.liquidationFacet = deployContract("./out/LiquidationFacet.sol/LiquidationFacet.json");
     _facetAddresses.ownershipFacet = deployContract("./out/MMOwnershipFacet.sol/MMOwnershipFacet.json");
-
-    /// @dev Older version of deployment approach
-    // _facetAddresses.diamondCutFacet = address(new DiamondCutFacet());
-    // _facetAddresses.diamondLoupeFacet = address(new MMDiamondLoupeFacet());
-    // _facetAddresses.viewFacet = address(new ViewFacet());
-    // _facetAddresses.lendFacet = address(new LendFacet());
-    // _facetAddresses.collateralFacet = address(new CollateralFacet());
-    // _facetAddresses.borrowFacet = address(new BorrowFacet());
-    // _facetAddresses.nonCollatBorrowFacet = address(new NonCollatBorrowFacet());
-    // _facetAddresses.adminFacet = address(new AdminFacet());
-    // _facetAddresses.liquidationFacet = address(new LiquidationFacet());
-    // _facetAddresses.ownershipFacet = address(new OwnershipFacet());
   }
 
   function deployContract(string memory _path) internal returns (address _deployedAddress) {
@@ -181,7 +157,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](40);
+    _selectors = new bytes4[](42);
     _selectors[0] = IViewFacet.getProtocolReserve.selector;
     _selectors[1] = IViewFacet.getTokenConfig.selector;
     _selectors[2] = IViewFacet.getOverCollatDebtSharesOf.selector;
@@ -222,6 +198,8 @@ library LibMoneyMarketDeployment {
     _selectors[37] = IViewFacet.getOracle.selector;
     _selectors[38] = IViewFacet.getMiniFL.selector;
     _selectors[39] = IViewFacet.getOverCollatPendingInterest.selector;
+    _selectors[40] = IViewFacet.getOverCollatInterestModel.selector;
+    _selectors[41] = IViewFacet.getOverCollatInterestRate.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

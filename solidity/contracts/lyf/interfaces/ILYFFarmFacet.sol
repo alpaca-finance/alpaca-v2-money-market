@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import { LibUIntDoublyLinkedList } from "../libraries/LibUIntDoublyLinkedList.sol";
 import { LibLYF01 } from "../libraries/LibLYF01.sol";

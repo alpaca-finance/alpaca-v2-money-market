@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import "./BaseUtilsScript.sol";
 
@@ -13,9 +13,11 @@ contract SetTokenConfigsScript is BaseUtilsScript {
     _startDeployerBroadcast();
 
     //---- inputs ----//
+    address[] memory tokens = new address[](1);
+    tokens[0] = mockTokenForLocalRun;
+
     IAdminFacet.TokenConfigInput[] memory tokenConfigInputs = new IAdminFacet.TokenConfigInput[](1);
     tokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
-      token: mockTokenForLocalRun,
       tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
       borrowingFactor: 9000,
@@ -24,18 +26,13 @@ contract SetTokenConfigsScript is BaseUtilsScript {
     });
 
     //---- execution ----//
-    moneyMarket.setTokenConfigs(tokenConfigInputs);
+    moneyMarket.setTokenConfigs(tokens, tokenConfigInputs);
 
     console.log("set config for", tokenConfigInputs.length, "tokens");
     for (uint256 i; i < tokenConfigInputs.length; i++) {
-      console.log(" ", IERC20(tokenConfigInputs[i].token).symbol());
+      console.log(" ", IERC20(tokens[i]).symbol());
     }
 
     _stopBroadcast();
-  }
-
-  function _setUpForLocalRun() internal override {
-    super._setUpForLocalRun();
-    mockTokenForLocalRun = _setUpMockToken();
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // ---- Libraries ---- //
 import { LibMoneyMarket01 } from "../money-market/libraries/LibMoneyMarket01.sol";
@@ -13,6 +13,7 @@ import { IInterestBearingToken } from "../money-market/interfaces/IInterestBeari
 import { IOracleMedianizer } from "../oracle/interfaces/IOracleMedianizer.sol";
 import { IAlpacaV2Oracle } from "../oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IMiniFL } from "../money-market/interfaces/IMiniFL.sol";
+import { IInterestRateModel } from "../money-market/interfaces/IInterestRateModel.sol";
 
 contract MoneyMarketReader is IMoneyMarketReader {
   IMoneyMarket private immutable _moneyMarket;
@@ -355,6 +356,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     marketStats.globalDebtValue = _moneyMarket.getGlobalDebtValue(_underlyingToken);
     marketStats.totalToken = _moneyMarket.getTotalToken(_underlyingToken);
     marketStats.pendingIntetest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
+    marketStats.interestRate = _moneyMarket.getOverCollatInterestRate(_underlyingToken);
     marketStats.lastAccruedAt = _moneyMarket.getDebtLastAccruedAt(_underlyingToken);
     marketStats.blockTimestamp = block.timestamp;
 
@@ -395,5 +397,21 @@ contract MoneyMarketReader is IMoneyMarketReader {
     marketPriceInfo.ibTokenPrice = (marketPriceInfo.underlyingTokenPrice * marketPriceInfo.underlyingToIbRate) / 1e18;
 
     return marketPriceInfo;
+  }
+
+  function getInterestRateModelConfig(address _underlyingToken) external view returns (TripleSlopeModelConfig memory) {
+    IInterestRateModel _interestRateModel = IInterestRateModel(
+      _moneyMarket.getOverCollatInterestModel(_underlyingToken)
+    );
+
+    return
+      TripleSlopeModelConfig({
+        ceilSlope1: _interestRateModel.CEIL_SLOPE_1(),
+        ceilSlope2: _interestRateModel.CEIL_SLOPE_2(),
+        ceilSlope3: _interestRateModel.CEIL_SLOPE_3(),
+        maxInterestSlope1: _interestRateModel.MAX_INTEREST_SLOPE_1(),
+        maxInterestSlope2: _interestRateModel.MAX_INTEREST_SLOPE_2(),
+        maxInterestSlope3: _interestRateModel.MAX_INTEREST_SLOPE_3()
+      });
   }
 }
