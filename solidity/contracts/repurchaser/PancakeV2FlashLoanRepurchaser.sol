@@ -8,7 +8,7 @@ import { IPancakeCallee } from "solidity/contracts/repurchaser/interfaces/IPanca
 import { IPancakeRouter01 } from "solidity/contracts/repurchaser/interfaces/IPancakeRouter01.sol";
 
 contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
-  error Unauthorized();
+  error PancakeV2FlashLoanRepurchaser_Unauthorized();
 
   // TODO: change to constant when deploy
   address public immutable owner;
@@ -28,7 +28,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
   }
 
   function withdrawToken(address _token) external {
-    if (msg.sender != owner) revert Unauthorized();
+    if (msg.sender != owner) revert PancakeV2FlashLoanRepurchaser_Unauthorized();
     IERC20(_token).transfer(owner, IERC20(_token).balanceOf(address(this)));
   }
 
@@ -41,7 +41,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
     bytes calldata data
   ) external override {
     // only allow owner to initiate flashswap
-    if (sender != owner) revert Unauthorized();
+    if (sender != owner) revert PancakeV2FlashLoanRepurchaser_Unauthorized();
 
     (
       address _account,
