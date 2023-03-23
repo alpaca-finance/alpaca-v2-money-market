@@ -5,7 +5,7 @@ import { IERC20 } from "solidity/contracts/interfaces/IERC20.sol";
 import { IMoneyMarket } from "solidity/contracts/money-market/interfaces/IMoneyMarket.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IPancakeCallee } from "solidity/contracts/repurchaser/interfaces/IPancakeCallee.sol";
-import { IPancakeRouter01 } from "solidity/contracts/repurchaser/interfaces/IPancakeRouter01.sol";
+import { IPancakeRouter02 } from "solidity/contracts/repurchaser/interfaces/IPancakeRouter02.sol";
 
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
@@ -18,7 +18,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
   address public immutable owner;
   IMoneyMarket public immutable moneyMarketDiamond;
   IMoneyMarketAccountManager public immutable accountManager;
-  IPancakeRouter01 public immutable pancakeRouter;
+  IPancakeRouter02 public immutable pancakeRouter;
 
   constructor(
     address _owner,
@@ -29,7 +29,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
     owner = _owner;
     moneyMarketDiamond = IMoneyMarket(_moneyMarketDiamond);
     accountManager = IMoneyMarketAccountManager(_accountManager);
-    pancakeRouter = IPancakeRouter01(_pancakeRouter);
+    pancakeRouter = IPancakeRouter02(_pancakeRouter);
   }
 
   function withdrawToken(address _token) external {
