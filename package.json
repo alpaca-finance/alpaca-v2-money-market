@@ -6,7 +6,16 @@
   "scripts": {
     "compile": "hardhat compile && yarn build",
     "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build": "yarn run build:cjs"
+    "build": "yarn run build:cjs",
+    "exec:bsc_mainnet:proxy-admin:deploy": "forge script script/deployments/ProxyAdmin/deploy/ProxyAdmin.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:deploy": "forge script script/deployments/MiniFL/deploy/MiniFL.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:open-market": "forge script script/deployments/MoneyMarket/config/OpeMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:mm-account-manager:deploy": "forge script script/deployments/MoneyMarketAccountManager/deploy/MoneyMarketAccountManager.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:alpaca-v2-oracle:deploy": "forge script script/deployments/AlpacaV2Oracle/deploy/AlpacaV2Oracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:alpaca-v2-oracle:config:set-token-config": "forge script script/deployments/AlpacaV2Oracle/config/SetTokenConfig.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",

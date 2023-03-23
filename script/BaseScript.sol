@@ -17,9 +17,7 @@ import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IM
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
-
-// mocks
-import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
+import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 
 interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IMMOwnershipFacet {}
 
@@ -29,7 +27,7 @@ abstract contract BaseScript is Script {
   uint256 internal deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
   uint256 internal userPrivateKey = vm.envUint("USER_PRIVATE_KEY");
   string internal configFilePath =
-    string.concat(vm.projectRoot(), string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
+    string.concat(vm.projectRoot(), string.concat("/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
   IMoneyMarket internal moneyMarket;
   IMiniFL internal miniFL;
@@ -72,30 +70,6 @@ abstract contract BaseScript is Script {
     doge = abi.decode(configJson.parseRaw(".tokens.doge"), (address));
     alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
-  }
-
-  // function _pretendMM() internal {
-  //   MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
-  //   address _moneyMarketDiamond = mmConfig.moneyMarketDiamond;
-  //   // setup mm if not exist for local simulation
-  //   uint256 size;
-  //   assembly {
-  //     size := extcodesize(_moneyMarketDiamond)
-  //   }
-  //   if (size > 0) {
-  //     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-  //   } else {
-  //     vm.startPrank(deployerAddress);
-  //     (_moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(1), address(2));
-  //     vm.stopPrank();
-  //     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-  //   }
-  // }
-
-  function _setUpMockToken(string memory symbol, uint8 decimals) internal returns (address) {
-    address newToken = address(new MockERC20("", symbol, decimals));
-    vm.label(newToken, symbol);
-    return newToken;
   }
 
   function _startDeployerBroadcast() internal {

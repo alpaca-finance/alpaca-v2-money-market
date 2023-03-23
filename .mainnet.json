@@ -1,26 +1,57 @@
 {
-  "MM": {
-    "MoneyMarketDiamond": "0xff97548aBfA4B82b8230273f6B55Ec1F038970f1",
-    "DiamondCutFacet": "0xB2835ceC6b58E51133090392691Bdccb06B4D188",
-    "DiamongLoupeFacet": "0x330e3471369D59EdC78A5b4514325aD2411D2389",
-    "LendFacet": "0x761ba77AA4a34E3ceFbE8a3ae833CD87fa489640",
-    "CollatFacet": "0xea81FC00B3E8CB23815E109153B7D0Db228539c8",
-    "BorrowFacet": "0x6A3C5ec52d9969CC2EE2c136B31635A6c66AE27f",
-    "NonCollatBorrowFacet": "0xFD84f29F655cED18f62b03C28c83A0b4B008Db21",
-    "AdminFacet": "0x9BfAb04dD186C058DE6B04083A17181b1f4604Cd",
-    "LiquidationFacet": "0x2A640C16b3A8a86ef7a801441904b8E64f2A66C3",
-    "DiamondInit": "0xd4893F6D28dF11aA718fF7842809880043B25404"
+  "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
+  "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
+  "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
+  "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
+  "alpacaV2Oracle": "0xd9AAfbF51D4E5393572D139614413090f5f58083",
+  "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+  "tokens": {
+    "doge": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+    "wbnb": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "busd": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    "dodo": "0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2",
+    "alpaca": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
+    "usdt": "0x55d398326f99059fF775485246999027B3197955"
   },
-  "Tokens": {
-    "BUSD": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-    "IBBUSD": "0x0087f7fa4b231de70b098d5b54254f1904784d50",
-    "USDT": "0x55d398326f99059fF775485246999027B3197955",
-    "IBUSDT": "0x37771d0a5ec670b09bfac1100e5d3922a63ad46c",
-    "USDC": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
-    "IBUSDC": "0x2e8c8b881bd5e15af8712130078c53fc90d6298a",
-    "USD": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff"
+  "moneyMarket": {
+    "moneyMarketDiamond": "0x06884EDCA162f34331c5A600D0aC12cF883d572e",
+    "facets": {
+      "adminFacet": "0x86A0E4f0f273a68dAFC8E85a08249E2eb61A9AB9",
+      "diamondCutFacet": "0xaba4F63be0a40A052aaA694F9bD6b4d8ACd5b245",
+      "liquidationFacet": "0x5fCA7fa207F3F70Fe28e37675578e3Bf51f284ab",
+      "ownershipFacet": "0x69Db33fb72f650b7c2cA5893126110A01F150cd0",
+      "diamondLoupeFacet": "0x23B5C449e22e8E8B08c8e3BFC9e6ea32599c4aEB",
+      "borrowFacet": "0xfa8F42012195e0A9d5465F7E26D47A3e22290c70",
+      "viewFacet": "0x8d3644898516274da3E855AC49289e96bb17201E",
+      "collateralFacet": "0xe53F244bDC41342BAB81aE45C9E6a3a378DEF036",
+      "nonCollatBorrowFacet": "0x299072A9aCaEae960AC48B7260Beb37Acef211d5",
+      "lendFacet": "0x3a1126e65893e1Bd0e886774892cAc38b8595a0c"
+    },
+    "accountManager": {
+      "implementation": "0xdC00fEfeDFc20007Fc387EEAD28B9caD3ad71834",
+      "proxy": "0xC4D6Db7b66966168f9F3437e42a8DDf65872fC76"
+    }
   },
-  "Oracle": {
-    "ChainLinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71"
-  }
+  "ibTokens": {
+    "ibDodo": "",
+    "ibMock6": "",
+    "ibBusd": "",
+    "ibDoge": "",
+    "ibBnb": ""
+  },
+  "proxyAdmin": "0x9c5a0Eb54240D3eE0235E41118A3f678f3ACF0Dd",
+  "miniFL": {
+    "implementation": "0x1dfF1f2808b657488316B3C7B54Ae019B8d3B308",
+    "proxy": "0xBDA1f77341704F1eBA5C35927E6dFAec25B3BBa8",
+    "pools": [
+      {
+        "id": 0,
+        "stakingToken": "",
+        "address": "",
+        "rewarders": []
+      }
+    ]
+  },
+  "reader": ""
 }
