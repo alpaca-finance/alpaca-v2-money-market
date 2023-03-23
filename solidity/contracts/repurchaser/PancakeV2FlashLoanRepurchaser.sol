@@ -71,6 +71,7 @@ contract PancakeV2FlashLoanRepurchaser is IPancakeCallee {
       _debtToken < _underlyingOfCollatToken ? amount0 : amount1,
       _path
     );
+    // need to swap lots of busd for doge to make
     uint256 _amountRepayFlashloan = _amounts[0];
 
     _repurchaseIbCollat(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);

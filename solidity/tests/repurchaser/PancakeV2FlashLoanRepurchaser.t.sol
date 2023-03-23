@@ -22,6 +22,7 @@ contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
   PancakeV2FlashLoanRepurchaser internal pancakeV2FlashLoanRepurchaser;
+  FixedFeeModel internal feeModel;
 
   // update these addresses once you deploy new fork
   IMoneyMarket internal moneyMarket = IMoneyMarket(0x9B1afC17cF5DD3d216B0d2e7eBbc82D61a2f3629);
@@ -57,7 +58,8 @@ contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
     repurchasers[0] = address(pancakeV2FlashLoanRepurchaser);
     moneyMarket.setRepurchasersOk(repurchasers, true);
 
-    moneyMarket.setRepurchaseRewardModel(new FixedFeeModel());
+    feeModel = new FixedFeeModel();
+    moneyMarket.setRepurchaseRewardModel(feeModel);
 
     moneyMarket.setLiquidationTreasury(address(this));
     vm.stopPrank();
@@ -88,18 +90,49 @@ contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
 
     // mockCall price at oracle to make position underwater
     // note that price on dex is not affected
-    uint256 newDogePrice = (dogePrice * 105) / 100;
+    uint256 newDogePrice = (dogePrice * 10001) / 10000;
     vm.mockCall(
       address(oracle),
       abi.encodeWithSelector(IAlpacaV2Oracle.getTokenPrice.selector, address(doge)),
       abi.encode(newDogePrice, block.timestamp)
     );
 
+    uint256 snapshot = vm.snapshot();
+
     // repurchase 10% of debt
     uint256 repurchaseAmount = maxBorrowDoge / 10;
     bytes memory data = abi.encode(USER, SUBACCOUNT_ID, address(doge), address(busd), ibBusd, repurchaseAmount);
     // have to flashloan repurchaseAmount of doge
     // doge is token0, busd is token1
+    IPancakePair(0xE27859308ae2424506D1ac7BF5bcb92D6a73e211).swap(
+      repurchaseAmount,
+      0,
+      address(pancakeV2FlashLoanRepurchaser),
+      data
+    );
+
+    vm.revertTo(snapshot);
+
+    // unprofitable case
+    // large account dump pool to make price bad
+    address[] memory swapPath = new address[](2);
+    swapPath[0] = address(busd);
+    swapPath[1] = address(doge);
+    vm.startPrank(0x8894E0a0c962CB723c1976a4421c95949bE2D4E3);
+    busd.approve(address(pancakeRouter), type(uint256).max);
+    pancakeRouter.swapExactTokensForTokens(
+      1e6 ether,
+      0,
+      swapPath,
+      0x8894E0a0c962CB723c1976a4421c95949bE2D4E3,
+      block.timestamp
+    );
+    vm.stopPrank();
+
+    // disable fee
+    vm.mockCall(address(feeModel), abi.encodeWithSelector(FixedFeeModel.getFeeBps.selector), abi.encode(0));
+    // should revert with undeflow so safeTransfer will throw !safeTransfer
+    vm.expectRevert("!safeTransfer");
     IPancakePair(0xE27859308ae2424506D1ac7BF5bcb92D6a73e211).swap(
       repurchaseAmount,
       0,
