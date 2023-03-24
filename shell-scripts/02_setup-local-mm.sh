@@ -55,5 +55,6 @@ forge script script/deployments/03_DeployMoneyMarket.s.sol --rpc-url $LOCAL_RPC_
 forge script script/deployments/04_DeployMoneyMarketAccountManager.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script script/deployments/05_DeployMoneyMarketReader.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script script/deployments/06_DeployOracle.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
+forge script script/deployments/99_DeployRepurchaser.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script script/utilities/SetUpMMForTest.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
 forge script script/utilities/SetUpMiniFLForTest.s.sol --rpc-url $LOCAL_RPC_URL --broadcast
