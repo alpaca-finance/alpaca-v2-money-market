@@ -39,6 +39,10 @@ abstract contract BaseScript is Script {
   address internal nativeRelayer;
   address internal oracleMedianizer;
   address internal usdPlaceholder;
+  address internal ibTokenImplementation;
+  address internal debtTokenImplementation;
+  address internal pancakeswapV2LiquidateStrat;
+  address internal pancakeswapV2IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   address internal pancakeswapV2Router;
   address internal wbnb;
@@ -63,6 +67,17 @@ abstract contract BaseScript is Script {
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
     pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
+
+    ibTokenImplementation = abi.decode(configJson.parseRaw(".moneyMarket.interestBearingToken"), (address));
+    debtTokenImplementation = abi.decode(configJson.parseRaw(".moneyMarket.debtToken"), (address));
+    pancakeswapV2LiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidate"),
+      (address)
+    );
+    pancakeswapV2IbLiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIb"),
+      (address)
+    );
     // tokens
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
@@ -90,6 +105,7 @@ abstract contract BaseScript is Script {
   }
 
   function _writeJson(string memory serializedJson, string memory path) internal {
+    console.log("writing to:", path, "value:", serializedJson);
     serializedJson.write(configFilePath, path);
   }
 }

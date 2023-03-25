@@ -1,4 +1,5 @@
 {
+  "proxyAdmin": "0x9c5a0Eb54240D3eE0235E41118A3f678f3ACF0Dd",
   "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
@@ -14,6 +15,15 @@
     "alpaca": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
     "usdt": "0x55d398326f99059fF775485246999027B3197955"
   },
+  "sharedConfig": {
+    "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
+  },
+  "sharedStrategies": {
+    "pancakeswap": {
+      "strategyLiquidate": "0x47ebD2745DDDed844BaE66DF9Ace9146F166cd6E",
+      "strategyLiquidateIb": "0x3C1eC5D6a88070D0377C95AeBac0dbb96E52099F"
+    }
+  },
   "moneyMarket": {
     "moneyMarketDiamond": "0x06884EDCA162f34331c5A600D0aC12cF883d572e",
     "facets": {
@@ -28,6 +38,8 @@
       "nonCollatBorrowFacet": "0x299072A9aCaEae960AC48B7260Beb37Acef211d5",
       "lendFacet": "0x3a1126e65893e1Bd0e886774892cAc38b8595a0c"
     },
+    "interestBearingToken": "0xdBfe522E0262117BD5e6863B1b4CcB36324B5275",
+    "debtToken": "0x4B410AF73D0dA778d34210e40D497DE091fDFdc2",
     "accountManager": {
       "implementation": "0xdC00fEfeDFc20007Fc387EEAD28B9caD3ad71834",
       "proxy": "0xC4D6Db7b66966168f9F3437e42a8DDf65872fC76"
@@ -40,7 +52,6 @@
     "ibDoge": "",
     "ibBnb": ""
   },
-  "proxyAdmin": "0x9c5a0Eb54240D3eE0235E41118A3f678f3ACF0Dd",
   "miniFL": {
     "implementation": "0x1dfF1f2808b657488316B3C7B54Ae019B8d3B308",
     "proxy": "0xBDA1f77341704F1eBA5C35927E6dFAec25B3BBa8",
