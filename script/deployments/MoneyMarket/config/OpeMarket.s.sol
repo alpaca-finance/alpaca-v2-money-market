@@ -42,14 +42,14 @@ contract OpenMarketScript is BaseScript {
 
     //---- execution ----//
     _startDeployerBroadcast();
-    // note: openMarket will ignore `token` provided in TokenConfigInput and use param instead
     address newIbToken = moneyMarket.openMarket(underlyingToken, underlyingTokenConfigInput, ibTokenConfigInput);
     _stopBroadcast();
 
     console.log("openMarket for", underlyingToken);
 
-    string memory configJson;
-    configJson = configJson.serialize("newIbToken", newIbToken);
-    configJson.write(configFilePath, ".IbTokens");
+    // TODO: add new ib and debt token in miniFL pools
+    // string memory configJson;
+    // configJson = configJson.serialize("newIbToken", newIbToken);
+    // configJson.write(configFilePath, ".IbTokens");
   }
 }
