@@ -52,6 +52,7 @@ abstract contract BaseScript is Script {
   address internal alpaca;
   address internal usdt;
 
+  // TODO: move to constructor
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
     userAddress = vm.addr(userPrivateKey);
