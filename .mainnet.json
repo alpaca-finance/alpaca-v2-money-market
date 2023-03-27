@@ -1,5 +1,5 @@
 {
-  "proxyAdmin": "0x9c5a0Eb54240D3eE0235E41118A3f678f3ACF0Dd",
+  "proxyAdmin": "",
   "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
@@ -20,29 +20,29 @@
   },
   "sharedStrategies": {
     "pancakeswap": {
-      "strategyLiquidate": "0x47ebD2745DDDed844BaE66DF9Ace9146F166cd6E",
-      "strategyLiquidateIb": "0x3C1eC5D6a88070D0377C95AeBac0dbb96E52099F"
+      "strategyLiquidate": "",
+      "strategyLiquidateIb": ""
     }
   },
   "moneyMarket": {
-    "moneyMarketDiamond": "0x06884EDCA162f34331c5A600D0aC12cF883d572e",
+    "moneyMarketDiamond": "",
     "facets": {
-      "adminFacet": "0x86A0E4f0f273a68dAFC8E85a08249E2eb61A9AB9",
-      "diamondCutFacet": "0xaba4F63be0a40A052aaA694F9bD6b4d8ACd5b245",
-      "liquidationFacet": "0x5fCA7fa207F3F70Fe28e37675578e3Bf51f284ab",
-      "ownershipFacet": "0x69Db33fb72f650b7c2cA5893126110A01F150cd0",
-      "diamondLoupeFacet": "0x23B5C449e22e8E8B08c8e3BFC9e6ea32599c4aEB",
-      "borrowFacet": "0xfa8F42012195e0A9d5465F7E26D47A3e22290c70",
-      "viewFacet": "0x8d3644898516274da3E855AC49289e96bb17201E",
-      "collateralFacet": "0xe53F244bDC41342BAB81aE45C9E6a3a378DEF036",
-      "nonCollatBorrowFacet": "0x299072A9aCaEae960AC48B7260Beb37Acef211d5",
-      "lendFacet": "0x3a1126e65893e1Bd0e886774892cAc38b8595a0c"
+      "adminFacet": "",
+      "diamondCutFacet": "",
+      "liquidationFacet": "",
+      "ownershipFacet": "",
+      "diamondLoupeFacet": "",
+      "borrowFacet": "",
+      "viewFacet": "",
+      "collateralFacet": "",
+      "nonCollatBorrowFacet": "",
+      "lendFacet": ""
     },
-    "interestBearingToken": "0xdBfe522E0262117BD5e6863B1b4CcB36324B5275",
-    "debtToken": "0x4B410AF73D0dA778d34210e40D497DE091fDFdc2",
+    "interestBearingToken": "",
+    "debtToken": "",
     "accountManager": {
-      "implementation": "0xdC00fEfeDFc20007Fc387EEAD28B9caD3ad71834",
-      "proxy": "0xC4D6Db7b66966168f9F3437e42a8DDf65872fC76"
+      "implementation": "",
+      "proxy": ""
     }
   },
   "ibTokens": {
@@ -53,8 +53,8 @@
     "ibBnb": ""
   },
   "miniFL": {
-    "implementation": "0x1dfF1f2808b657488316B3C7B54Ae019B8d3B308",
-    "proxy": "0xBDA1f77341704F1eBA5C35927E6dFAec25B3BBa8",
+    "implementation": "",
+    "proxy": "",
     "pools": [
       {
         "id": 0,

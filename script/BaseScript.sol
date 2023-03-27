@@ -88,15 +88,23 @@ abstract contract BaseScript is Script {
   }
 
   function _startDeployerBroadcast() internal {
-    vm.startBroadcast(deployerPrivateKey);
-    console.log("");
-    console.log("==== start broadcast as deployer ====");
+    _startBroadcast(deployerPrivateKey);
   }
 
   function _startUserBroadcast() internal {
-    vm.startBroadcast(userPrivateKey);
+    _startBroadcast(userPrivateKey);
+  }
+
+  function _startBroadcast(uint256 pK) internal {
     console.log("");
-    console.log("==== start broadcast as user ====");
+
+    try vm.envAddress("IMPERSONATE_AS") returns (address _impersonatedAs) {
+      console.log("==== start broadcast impersonated as: ", _impersonatedAs);
+      vm.startBroadcast(_impersonatedAs);
+    } catch {
+      console.log("==== start broadcast as: ", vm.addr(pK));
+      vm.startBroadcast(pK);
+    }
   }
 
   function _stopBroadcast() internal {

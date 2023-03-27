@@ -91,11 +91,16 @@ forge test
 
 # Deployment
 
+### To impersonate as deployer
+
+- set IMPERSONATE_AS in `.env`
+- yarn exec:bsc_mainnet:proxy-admin:deploy --unlocked --sender 0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51
+
 ### Prerequisite
 
 - Foundry installed
 - Setup deployment config file in `./configs/[filename].json`
-- Setup `.env` with `DEPLOYER_PRIVATE_KEY`, `RPC_URL`, and `DEPLOYMENT_CONFIG_FILENAME`
+- Setup `.env` with `DEPLOYER_PRIVATE_KEY`, `RPC_URL`
 - Load `.env` with command `source .env`
 
 ### Money market
