@@ -38,8 +38,8 @@
       "nonCollatBorrowFacet": "",
       "lendFacet": ""
     },
-    "interestBearingToken": "",
-    "debtToken": "",
+    "interestBearingTokenImplementation": "",
+    "debtTokenImplementation": "",
     "accountManager": {
       "implementation": "",
       "proxy": ""

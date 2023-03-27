@@ -68,8 +68,11 @@ abstract contract BaseScript is Script {
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
     pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
 
-    ibTokenImplementation = abi.decode(configJson.parseRaw(".moneyMarket.interestBearingToken"), (address));
-    debtTokenImplementation = abi.decode(configJson.parseRaw(".moneyMarket.debtToken"), (address));
+    ibTokenImplementation = abi.decode(
+      configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),
+      (address)
+    );
+    debtTokenImplementation = abi.decode(configJson.parseRaw(".moneyMarket.debtTokenImplementation"), (address));
     pancakeswapV2LiquidateStrat = abi.decode(
       configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidate"),
       (address)

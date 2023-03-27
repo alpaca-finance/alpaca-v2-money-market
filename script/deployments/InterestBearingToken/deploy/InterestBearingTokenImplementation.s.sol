@@ -2,9 +2,9 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
+import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 
-contract DeployDebtTokenScript is BaseScript {
+contract DeployInterestBearingTokenImplementationScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -22,9 +22,9 @@ contract DeployDebtTokenScript is BaseScript {
 
     _startDeployerBroadcast();
     // deploy implementation
-    address debtTokenImplementation = address(new DebtToken());
+    address interestBearingTokenImplementation = address(new InterestBearingToken());
     _stopBroadcast();
 
-    _writeJson(vm.toString(debtTokenImplementation), ".moneyMarket.debtToken");
+    _writeJson(vm.toString(interestBearingTokenImplementation), ".moneyMarket.interestBearingTokenImplementation");
   }
 }

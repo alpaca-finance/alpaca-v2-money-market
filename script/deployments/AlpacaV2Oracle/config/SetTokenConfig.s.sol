@@ -37,7 +37,5 @@ contract SetTokenConfigScript is BaseScript {
     _startDeployerBroadcast();
     alpacaV2Oracle.setTokenConfig(tokens, configs);
     _stopBroadcast();
-
-    _writeJson(vm.toString(address(alpacaV2Oracle)), ".alpacaV2Oracle");
   }
 }
