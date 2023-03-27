@@ -7,6 +7,10 @@ libs = ['node_modules']
 test = 'solidity/tests'
 fs_permissions = [{ access = "read-write", path = "./" }]
 
+
 [rpc_endpoints]
 bsc_mainnet = "${BSC_RPC_URL}"
+
+
+no-match-contract = "PancakeV2FlashLoanRepurchaserTest"
 
