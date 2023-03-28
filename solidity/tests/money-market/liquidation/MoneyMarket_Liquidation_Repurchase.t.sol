@@ -482,26 +482,6 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     );
   }
 
-  function testRevert_WhenRepurchaserIsNotOk() public {
-    _makeAliceUnderwater();
-
-    // make sure that BOB is not ok
-    address[] memory _repurchasers = new address[](1);
-
-    _repurchasers[0] = BOB;
-    adminFacet.setRepurchasersOk(_repurchasers, false);
-
-    vm.prank(BOB);
-    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
-    liquidationFacet.repurchase(
-      ALICE,
-      subAccount0,
-      address(weth),
-      address(usdc),
-      normalizeEther(0.1 ether, wethDecimal)
-    );
-  }
-
   function testRevert_WhenRepurchaseRepayAmountExceedThreshold() public {
     _makeAliceUnderwater();
 

@@ -230,29 +230,28 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](22);
+    _selectors = new bytes4[](21);
     _selectors[0] = IAdminFacet.openMarket.selector;
     _selectors[1] = IAdminFacet.setTokenConfigs.selector;
     _selectors[2] = IAdminFacet.setNonCollatBorrowerOk.selector;
     _selectors[3] = IAdminFacet.setInterestModel.selector;
     _selectors[4] = IAdminFacet.setOracle.selector;
-    _selectors[5] = IAdminFacet.setRepurchasersOk.selector;
-    _selectors[6] = IAdminFacet.setNonCollatInterestModel.selector;
-    _selectors[7] = IAdminFacet.setLiquidationStratsOk.selector;
-    _selectors[8] = IAdminFacet.setLiquidatorsOk.selector;
-    _selectors[9] = IAdminFacet.setLiquidationTreasury.selector;
-    _selectors[10] = IAdminFacet.setFees.selector;
-    _selectors[11] = IAdminFacet.withdrawProtocolReserve.selector;
-    _selectors[12] = IAdminFacet.setProtocolConfigs.selector;
-    _selectors[13] = IAdminFacet.setIbTokenImplementation.selector;
-    _selectors[14] = IAdminFacet.setLiquidationParams.selector;
-    _selectors[15] = IAdminFacet.setMaxNumOfToken.selector;
-    _selectors[16] = IAdminFacet.setMinDebtSize.selector;
-    _selectors[17] = IAdminFacet.setDebtTokenImplementation.selector;
-    _selectors[18] = IAdminFacet.topUpTokenReserve.selector;
-    _selectors[19] = IAdminFacet.setRepurchaseRewardModel.selector;
-    _selectors[20] = IAdminFacet.setEmergencyPaused.selector;
-    _selectors[21] = IAdminFacet.setAccountManagersOk.selector;
+    _selectors[5] = IAdminFacet.setNonCollatInterestModel.selector;
+    _selectors[6] = IAdminFacet.setLiquidationStratsOk.selector;
+    _selectors[7] = IAdminFacet.setLiquidatorsOk.selector;
+    _selectors[8] = IAdminFacet.setLiquidationTreasury.selector;
+    _selectors[9] = IAdminFacet.setFees.selector;
+    _selectors[10] = IAdminFacet.withdrawProtocolReserve.selector;
+    _selectors[11] = IAdminFacet.setProtocolConfigs.selector;
+    _selectors[12] = IAdminFacet.setIbTokenImplementation.selector;
+    _selectors[13] = IAdminFacet.setLiquidationParams.selector;
+    _selectors[14] = IAdminFacet.setMaxNumOfToken.selector;
+    _selectors[15] = IAdminFacet.setMinDebtSize.selector;
+    _selectors[16] = IAdminFacet.setDebtTokenImplementation.selector;
+    _selectors[17] = IAdminFacet.topUpTokenReserve.selector;
+    _selectors[18] = IAdminFacet.setRepurchaseRewardModel.selector;
+    _selectors[19] = IAdminFacet.setEmergencyPaused.selector;
+    _selectors[20] = IAdminFacet.setAccountManagersOk.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

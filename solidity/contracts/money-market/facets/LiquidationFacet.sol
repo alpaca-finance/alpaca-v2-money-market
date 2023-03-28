@@ -103,13 +103,10 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // We only allow EOA or whitelisted contract to repurchase
-    // Revert if caller is contract that is not whitelisted
-    // `msg.sender != tx.origin` means that `msg.sender` is contract
     // We also disallow repurchaser to be the same address with the account owner
     // While our contract wouldn't suffer such an action, it's better to be on the safe side
     // note: refer the original issue in "Compound's self liquidation bug"
-    if ((msg.sender != tx.origin && !moneyMarketDs.repurchasersOk[msg.sender]) || msg.sender == _account) {
+    if (msg.sender == _account) {
       revert LiquidationFacet_Unauthorized();
     }
 

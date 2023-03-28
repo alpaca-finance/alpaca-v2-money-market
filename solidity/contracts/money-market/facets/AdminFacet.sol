@@ -262,21 +262,6 @@ contract AdminFacet is IAdminFacet {
     emit LogSetOracle(_oracle);
   }
 
-  /// @notice Whitelist/Blacklist the address allowed for repurchasing
-  /// @param _repurchasers an array of address of repurchasers
-  /// @param _isOk a flag to allow or disallow
-  function setRepurchasersOk(address[] calldata _repurchasers, bool _isOk) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _repurchasers.length;
-    for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.repurchasersOk[_repurchasers[_i]] = _isOk;
-      emit LogSetRepurchaserOk(_repurchasers[_i], _isOk);
-      unchecked {
-        ++_i;
-      }
-    }
-  }
-
   /// @notice Whitelist/Blacklist the strategy contract used in liquidation
   /// @param _strats an array of liquidation strategy contract
   /// @param _isOk a flag to allow or disallow
