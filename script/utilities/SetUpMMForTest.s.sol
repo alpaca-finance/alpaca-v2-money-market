@@ -6,7 +6,6 @@ import "../BaseScript.sol";
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { MockAlpacaV2Oracle } from "solidity/tests/mocks/MockAlpacaV2Oracle.sol";
 import { TripleSlopeModel6 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel6.sol";
 import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel7.sol";
 
@@ -89,8 +88,8 @@ contract SetUpMMForTestScript is BaseScript {
     MockERC20(doge).approve(address(accountManager), type(uint256).max);
 
     // seed money market
-    accountManager.deposit(dodo, 10 ether);
-    accountManager.deposit(doge, 10e8);
+    accountManager.deposit(dodo, 100 ether);
+    accountManager.deposit(doge, 1000e8);
 
     // subAccount 0
     accountManager.depositAndAddCollateral(0, wbnb, 78.09 ether);
@@ -102,6 +101,20 @@ contract SetUpMMForTestScript is BaseScript {
     accountManager.depositAndAddCollateral(1, busd, 10 ether);
 
     accountManager.borrow(1, doge, 2.34e8);
+
+    // subAccount 2
+    accountManager.depositAndAddCollateral(2, busd, 1 ether);
+
+    // calculate how many doge can we max borrow with 1 BUSD collat
+    (uint256 dogePrice, ) = alpacaV2Oracle.getTokenPrice(address(doge));
+    (uint256 busdPrice, ) = alpacaV2Oracle.getTokenPrice(address(busd));
+    LibConstant.TokenConfig memory dogeTokenConfig = moneyMarket.getTokenConfig(address(doge));
+    address ibBusd = moneyMarket.getIbTokenFromToken(address(busd));
+    LibConstant.TokenConfig memory ibBusdTokenConfig = moneyMarket.getTokenConfig(ibBusd);
+    uint256 maxBorrowDoge = ((1e8 * (busdPrice * ibBusdTokenConfig.collateralFactor)) / LibConstant.MAX_BPS) /
+      ((dogePrice * LibConstant.MAX_BPS) / dogeTokenConfig.borrowingFactor);
+
+    accountManager.borrow(2, doge, maxBorrowDoge);
 
     _stopBroadcast();
   }
