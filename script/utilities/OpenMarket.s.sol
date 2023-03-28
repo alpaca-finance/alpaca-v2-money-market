@@ -36,7 +36,6 @@ contract OpenMarketScript is BaseUtilsScript {
     });
 
     //---- execution ----//
-    // note: openMarket will ignore `token` provided in TokenConfigInput and use param instead
     address newIbToken = moneyMarket.openMarket(underlyingToken, underlyingTokenConfigInput, ibTokenConfigInput);
     console.log("openMarket for", underlyingToken);
 

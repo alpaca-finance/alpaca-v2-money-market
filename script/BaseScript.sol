@@ -17,9 +17,7 @@ import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IM
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
-
-// mocks
-import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
+import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 
 interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IMMOwnershipFacet {}
 
@@ -29,7 +27,7 @@ abstract contract BaseScript is Script {
   uint256 internal deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
   uint256 internal userPrivateKey = vm.envUint("USER_PRIVATE_KEY");
   string internal configFilePath =
-    string.concat(vm.projectRoot(), string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
+    string.concat(vm.projectRoot(), string.concat("/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
   IMoneyMarket internal moneyMarket;
   IMiniFL internal miniFL;
@@ -41,6 +39,10 @@ abstract contract BaseScript is Script {
   address internal nativeRelayer;
   address internal oracleMedianizer;
   address internal usdPlaceholder;
+  address internal ibTokenImplementation;
+  address internal debtTokenImplementation;
+  address internal pancakeswapV2LiquidateStrat;
+  address internal pancakeswapV2IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   address internal pancakeswapV2Router;
   address internal wbnb;
@@ -50,6 +52,7 @@ abstract contract BaseScript is Script {
   address internal alpaca;
   address internal usdt;
 
+  // TODO: move to constructor
   function _loadAddresses() internal {
     deployerAddress = vm.addr(deployerPrivateKey);
     userAddress = vm.addr(userPrivateKey);
@@ -65,6 +68,20 @@ abstract contract BaseScript is Script {
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
     pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
+
+    ibTokenImplementation = abi.decode(
+      configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),
+      (address)
+    );
+    debtTokenImplementation = abi.decode(configJson.parseRaw(".moneyMarket.debtTokenImplementation"), (address));
+    pancakeswapV2LiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidate"),
+      (address)
+    );
+    pancakeswapV2IbLiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIb"),
+      (address)
+    );
     // tokens
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
@@ -74,40 +91,24 @@ abstract contract BaseScript is Script {
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
   }
 
-  // function _pretendMM() internal {
-  //   MoneyMarketConfig memory mmConfig = _getMoneyMarketConfig();
-  //   address _moneyMarketDiamond = mmConfig.moneyMarketDiamond;
-  //   // setup mm if not exist for local simulation
-  //   uint256 size;
-  //   assembly {
-  //     size := extcodesize(_moneyMarketDiamond)
-  //   }
-  //   if (size > 0) {
-  //     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-  //   } else {
-  //     vm.startPrank(deployerAddress);
-  //     (_moneyMarketDiamond, ) = LibMoneyMarketDeployment.deployMoneyMarketDiamond(address(1), address(2));
-  //     vm.stopPrank();
-  //     moneyMarket = IMoneyMarket(_moneyMarketDiamond);
-  //   }
-  // }
-
-  function _setUpMockToken(string memory symbol, uint8 decimals) internal returns (address) {
-    address newToken = address(new MockERC20("", symbol, decimals));
-    vm.label(newToken, symbol);
-    return newToken;
-  }
-
   function _startDeployerBroadcast() internal {
-    vm.startBroadcast(deployerPrivateKey);
-    console.log("");
-    console.log("==== start broadcast as deployer ====");
+    _startBroadcast(deployerPrivateKey);
   }
 
   function _startUserBroadcast() internal {
-    vm.startBroadcast(userPrivateKey);
+    _startBroadcast(userPrivateKey);
+  }
+
+  function _startBroadcast(uint256 pK) internal {
     console.log("");
-    console.log("==== start broadcast as user ====");
+
+    try vm.envAddress("IMPERSONATE_AS") returns (address _impersonatedAs) {
+      console.log("==== start broadcast impersonated as: ", _impersonatedAs);
+      vm.startBroadcast(_impersonatedAs);
+    } catch {
+      console.log("==== start broadcast as: ", vm.addr(pK));
+      vm.startBroadcast(pK);
+    }
   }
 
   function _stopBroadcast() internal {
@@ -116,6 +117,7 @@ abstract contract BaseScript is Script {
   }
 
   function _writeJson(string memory serializedJson, string memory path) internal {
+    console.log("writing to:", path, "value:", serializedJson);
     serializedJson.write(configFilePath, path);
   }
 }

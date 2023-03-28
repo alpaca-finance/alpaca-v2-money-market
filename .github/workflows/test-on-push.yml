@@ -48,6 +48,8 @@ jobs:
         id: build
 
       - name: Run Forge tests
+        env:
+          BSC_RPC_URL: https://bsc-dataseed.binance.org/
         run: |
           forge test -vvv
         id: test

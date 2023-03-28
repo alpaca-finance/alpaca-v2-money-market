@@ -82,10 +82,10 @@ contract SetUpMMForTestScript is BaseScript {
 
     _startUserBroadcast();
 
-    MockERC20(wbnb).approve(address(accountManager), type(uint256).max);
-    MockERC20(busd).approve(address(accountManager), type(uint256).max);
-    MockERC20(dodo).approve(address(accountManager), type(uint256).max);
-    MockERC20(doge).approve(address(accountManager), type(uint256).max);
+    IERC20(wbnb).approve(address(accountManager), type(uint256).max);
+    IERC20(busd).approve(address(accountManager), type(uint256).max);
+    IERC20(dodo).approve(address(accountManager), type(uint256).max);
+    IERC20(doge).approve(address(accountManager), type(uint256).max);
 
     // seed money market
     accountManager.deposit(dodo, 100 ether);
