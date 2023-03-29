@@ -103,7 +103,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ) external nonReentrant returns (uint256 _collatAmountOut) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // We also disallow repurchaser to be the same address with the account owner
+    // We disallow repurchaser to be the same address with the account owner
     // While our contract wouldn't suffer such an action, it's better to be on the safe side
     // note: refer the original issue in "Compound's self liquidation bug"
     if (msg.sender == _account) {
