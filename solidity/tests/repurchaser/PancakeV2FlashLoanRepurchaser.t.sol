@@ -54,10 +54,6 @@ contract PancakeV2FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
     // can liquidate up to 50% of used borrowing power
     moneyMarket.setLiquidationParams(5000, 11000);
 
-    address[] memory repurchasers = new address[](1);
-    repurchasers[0] = address(pancakeV2FlashLoanRepurchaser);
-    moneyMarket.setRepurchasersOk(repurchasers, true);
-
     feeModel = new FixedFeeModel();
     moneyMarket.setRepurchaseRewardModel(feeModel);
 

@@ -220,12 +220,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setOracle(address(mockOracle));
 
-    // set repurchases ok
-    address[] memory _repurchasers = new address[](2);
-    _repurchasers[0] = BOB;
-    _repurchasers[1] = ALICE;
-    adminFacet.setRepurchasersOk(_repurchasers, true);
-
     adminFacet.setLiquidationTreasury(liquidationTreasury);
 
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newLiquidationRewardBps);
