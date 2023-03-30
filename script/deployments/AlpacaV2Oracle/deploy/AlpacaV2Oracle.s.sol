@@ -16,9 +16,6 @@ contract DeployAlpacaV2OracleScript is BaseScript {
 
     alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, busd, usdPlaceholder);
 
-    // set mm oracle
-    moneyMarket.setOracle(address(alpacaV2Oracle));
-
     _stopBroadcast();
 
     _writeJson(vm.toString(address(alpacaV2Oracle)), ".alpacaV2Oracle");
