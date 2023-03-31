@@ -51,9 +51,9 @@ abstract contract BaseScript is Script {
   address internal doge;
   address internal alpaca;
   address internal usdt;
+  address internal cake;
 
-  // TODO: move to constructor
-  function _loadAddresses() internal {
+  constructor() {
     deployerAddress = vm.addr(deployerPrivateKey);
     userAddress = vm.addr(userPrivateKey);
 
@@ -89,6 +89,7 @@ abstract contract BaseScript is Script {
     doge = abi.decode(configJson.parseRaw(".tokens.doge"), (address));
     alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
+    cake = abi.decode(configJson.parseRaw(".tokens.cake"), (address));
   }
 
   function _startDeployerBroadcast() internal {

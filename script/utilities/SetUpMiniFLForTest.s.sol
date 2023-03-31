@@ -18,8 +18,6 @@ contract SetUpMiniFLForTestScript is BaseScript {
   }
 
   function run() public {
-    _loadAddresses();
-
     _startDeployerBroadcast();
 
     // seed alpaca to miniFL to be distribute as reward

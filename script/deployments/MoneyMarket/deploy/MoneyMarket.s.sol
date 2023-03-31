@@ -17,8 +17,6 @@ contract DeployMoneyMarketScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     _startDeployerBroadcast();
 
     // deploy money market

@@ -11,7 +11,6 @@ contract OpenMarketScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -23,29 +22,94 @@ contract OpenMarketScript is BaseScript {
     */
 
     //---- inputs ----//
-    address underlyingToken = wbnb;
+    uint8 newMarketLength = 4;
+    address[] memory underlyingTokens = new address[](newMarketLength);
+    IAdminFacet.TokenConfigInput[] memory underlyingTokenConfigInputs = new IAdminFacet.TokenConfigInput[](
+      newMarketLength
+    );
+    IAdminFacet.TokenConfigInput[] memory ibTokenConfigInputs = new IAdminFacet.TokenConfigInput[](newMarketLength);
 
-    IAdminFacet.TokenConfigInput memory underlyingTokenConfigInput = IAdminFacet.TokenConfigInput({
+    // WBNB
+    underlyingTokens[0] = wbnb;
+    underlyingTokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
       tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 0,
       borrowingFactor: 9000,
       maxBorrow: 10_000 ether,
       maxCollateral: 0 ether
     });
-    IAdminFacet.TokenConfigInput memory ibTokenConfigInput = IAdminFacet.TokenConfigInput({
+    ibTokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
       tier: LibConstant.AssetTier.COLLATERAL,
       collateralFactor: 9000,
+      borrowingFactor: 1,
+      maxBorrow: 0 ether,
+      maxCollateral: 1_000_000 ether
+    });
+
+    // BUSD
+    underlyingTokens[1] = busd;
+    underlyingTokenConfigInputs[1] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.COLLATERAL,
+      collateralFactor: 0,
       borrowingFactor: 9000,
+      maxBorrow: 10_000 ether,
+      maxCollateral: 0 ether
+    });
+    ibTokenConfigInputs[1] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 1,
+      maxBorrow: 0 ether,
+      maxCollateral: 1_000_000 ether
+    });
+
+    // // ALPACA
+    underlyingTokens[2] = alpaca;
+    underlyingTokenConfigInputs[2] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.COLLATERAL,
+      collateralFactor: 0,
+      borrowingFactor: 9000,
+      maxBorrow: 10_000 ether,
+      maxCollateral: 0 ether
+    });
+    ibTokenConfigInputs[2] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.COLLATERAL,
+      collateralFactor: 9000,
+      borrowingFactor: 1,
+      maxBorrow: 0 ether,
+      maxCollateral: 1_000_000 ether
+    });
+
+    // CAKE
+    underlyingTokens[3] = 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82;
+    underlyingTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.ISOLATE,
+      collateralFactor: 0,
+      borrowingFactor: 8500,
+      maxBorrow: 10_000 ether,
+      maxCollateral: 0 ether
+    });
+    ibTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.ISOLATE,
+      collateralFactor: 0,
+      borrowingFactor: 1,
       maxBorrow: 0 ether,
       maxCollateral: 1_000_000 ether
     });
 
     //---- execution ----//
     _startDeployerBroadcast();
-    address newIbToken = moneyMarket.openMarket(underlyingToken, underlyingTokenConfigInput, ibTokenConfigInput);
-    _stopBroadcast();
 
-    console.log("openMarket for", underlyingToken);
+    for (uint256 i; i < newMarketLength; i++) {
+      address newIbToken = moneyMarket.openMarket(
+        underlyingTokens[i],
+        underlyingTokenConfigInputs[i],
+        ibTokenConfigInputs[i]
+      );
+      console.log("openMarket for", underlyingTokens[i], "ibToken", newIbToken);
+    }
+
+    _stopBroadcast();
 
     // TODO: add new ib and debt token in miniFL pools
     // string memory configJson;

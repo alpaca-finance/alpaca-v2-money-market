@@ -9,8 +9,6 @@ contract DeployRepurchaserScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     _startDeployerBroadcast();
 
     address repurchaser = address(

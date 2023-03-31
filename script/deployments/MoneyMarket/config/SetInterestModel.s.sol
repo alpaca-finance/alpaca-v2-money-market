@@ -11,7 +11,6 @@ contract SetInterestModelScript is BaseScript {
   }
 
   function run() public {
-    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -22,9 +21,14 @@ contract SetInterestModelScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    SetInterestModelInput[2] memory _input = [
-      SetInterestModelInput({ token: address(0), interestModel: address(0) }),
-      SetInterestModelInput({ token: address(0), interestModel: address(0) })
+    SetInterestModelInput[4] memory _input = [
+      SetInterestModelInput({ token: wbnb, interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44 }),
+      SetInterestModelInput({ token: busd, interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44 }),
+      SetInterestModelInput({ token: alpaca, interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44 }),
+      SetInterestModelInput({
+        token: 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82,
+        interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44
+      })
     ];
 
     //---- execution ----//

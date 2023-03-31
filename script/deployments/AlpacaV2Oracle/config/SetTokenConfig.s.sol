@@ -10,8 +10,6 @@ contract SetTokenConfigScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -23,17 +21,36 @@ contract SetTokenConfigScript is BaseScript {
     */
 
     // set alpaca guard path
-    address[] memory tokens = new address[](1);
-    tokens[0] = wbnb;
+    uint8 configLength = 3;
+    address[] memory tokens = new address[](configLength);
+    IAlpacaV2Oracle.Config[] memory configs = new IAlpacaV2Oracle.Config[](configLength);
 
-    IAlpacaV2Oracle.Config[] memory configs = new IAlpacaV2Oracle.Config[](1);
     address[] memory path;
+    // WBNB
     path = new address[](2);
     path[0] = wbnb;
     path[1] = busd;
 
+    tokens[0] = wbnb;
     configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
 
+    // ALPACA
+    path = new address[](2);
+    path[0] = alpaca;
+    path[1] = busd;
+
+    tokens[1] = alpaca;
+    configs[1] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+
+    // CAKE
+    path = new address[](2);
+    path[0] = cake;
+    path[1] = busd;
+
+    tokens[2] = cake;
+    configs[2] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+
+    //---- execution ----//
     _startDeployerBroadcast();
     alpacaV2Oracle.setTokenConfig(tokens, configs);
     _stopBroadcast();

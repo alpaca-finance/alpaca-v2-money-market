@@ -6,7 +6,6 @@ contract SetDebtTokenImplementationScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░

@@ -8,8 +8,6 @@ contract DeployPancakeswapV2IbTokenLiquidationStrategyScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░

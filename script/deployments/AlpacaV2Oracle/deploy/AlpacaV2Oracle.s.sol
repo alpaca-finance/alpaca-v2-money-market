@@ -10,8 +10,6 @@ contract DeployAlpacaV2OracleScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     _startDeployerBroadcast();
 
     alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, busd, usdPlaceholder);

@@ -8,8 +8,6 @@ contract DeployDebtTokenImplementationScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░

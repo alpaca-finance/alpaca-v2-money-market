@@ -9,8 +9,6 @@ contract DeployMoneyMarketReaderScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -30,6 +28,6 @@ contract DeployMoneyMarketReaderScript is BaseScript {
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(mmReader), ".moneyMarket.reader");
+    _writeJson(vm.toString(mmReader), ".moneyMarketReader");
   }
 }

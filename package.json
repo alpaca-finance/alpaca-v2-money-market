@@ -32,6 +32,7 @@
     "exec:bsc_mainnet:liquidate-strat:config:set-path": "forge script script/deployments/PancakeswapV2LiquidationStrategy/config/SetPaths.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:deploy": "forge script script/deployments/AlpacaV2Oracle/deploy/AlpacaV2Oracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-token-config": "forge script script/deployments/AlpacaV2Oracle/config/SetTokenConfig.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:oracle-medianizer:config:set-multiple-primary-sources": "forge script script/deployments/OracleMedianizer/config/SetMultiPrimarySources.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow"
   },
