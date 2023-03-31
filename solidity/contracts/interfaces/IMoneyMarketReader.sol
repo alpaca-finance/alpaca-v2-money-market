@@ -123,6 +123,7 @@ interface IMoneyMarketReader {
     uint256 globalDebtValue;
     uint256 totalToken;
     uint256 pendingIntetest;
+    uint256 interestRate;
     uint256 lastAccruedAt;
     uint256 blockTimestamp;
   }
@@ -147,4 +148,15 @@ interface IMoneyMarketReader {
   }
 
   function getMarketPriceInfo(address _underlyingToken) external view returns (MarketPriceInfo memory);
+
+  struct TripleSlopeModelConfig {
+    uint256 ceilSlope1;
+    uint256 ceilSlope2;
+    uint256 ceilSlope3;
+    uint256 maxInterestSlope1;
+    uint256 maxInterestSlope2;
+    uint256 maxInterestSlope3;
+  }
+
+  function getInterestRateModelConfig(address _underlyingToken) external view returns (TripleSlopeModelConfig memory);
 }

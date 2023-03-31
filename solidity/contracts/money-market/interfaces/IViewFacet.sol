@@ -40,6 +40,10 @@ interface IViewFacet {
 
   function getDebtLastAccruedAt(address _token) external view returns (uint256);
 
+  function getOverCollatInterestRate(address _token) external view returns (uint256);
+
+  function getOverCollatInterestModel(address _token) external view returns (address);
+
   function getOverCollatPendingInterest(address _token) external view returns (uint256 _pendingInterest);
 
   function getGlobalPendingInterest(address _token) external view returns (uint256);
@@ -87,7 +91,7 @@ interface IViewFacet {
 
   function getNonCollatInterestRate(address _account, address _token) external view returns (uint256);
 
-  function getLiquidationParams() external view returns (uint16, uint16);
+  function getLiquidationParams() external view returns (uint16 maxLiquidateBps, uint16 liquidationThresholdBps);
 
   function getMaxNumOfToken()
     external

@@ -50,7 +50,7 @@ import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.
 // helper
 import { LYFDiamondDeployer } from "../helper/LYFDiamondDeployer.sol";
 import { TestHelper } from "../helper/TestHelper.sol";
-import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "script/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // oracle
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";

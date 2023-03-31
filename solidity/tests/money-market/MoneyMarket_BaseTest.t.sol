@@ -26,7 +26,7 @@ import { MockAlpacaV2Oracle } from "../mocks/MockAlpacaV2Oracle.sol";
 
 // libs
 import { LibConstant } from "../../contracts/money-market/libraries/LibConstant.sol";
-import { LibMoneyMarketDeployment } from "../../scripts/deployments/libraries/LibMoneyMarketDeployment.sol";
+import { LibMoneyMarketDeployment } from "script/deployments/libraries/LibMoneyMarketDeployment.sol";
 
 // router
 import { MoneyMarketAccountManager } from "../../contracts/account-manager/MoneyMarketAccountManager.sol";
@@ -219,12 +219,6 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     mockOracle.setTokenPrice(address(btc), normalizeEther(10 ether, usdDecimal));
 
     adminFacet.setOracle(address(mockOracle));
-
-    // set repurchases ok
-    address[] memory _repurchasers = new address[](2);
-    _repurchasers[0] = BOB;
-    _repurchasers[1] = ALICE;
-    adminFacet.setRepurchasersOk(_repurchasers, true);
 
     adminFacet.setLiquidationTreasury(liquidationTreasury);
 
