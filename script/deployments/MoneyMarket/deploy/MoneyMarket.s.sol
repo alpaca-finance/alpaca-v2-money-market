@@ -29,10 +29,6 @@ contract DeployMoneyMarketScript is BaseScript {
     _callers[0] = address(moneyMarket);
     miniFL.setWhitelistedCallers(_callers, true);
 
-    // set implementation to be able to open market
-    moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
-    moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
-
     _stopBroadcast();
 
     // money market
