@@ -12,7 +12,7 @@ contract DeployAlpacaV2OracleScript is BaseScript {
   function run() public {
     _startDeployerBroadcast();
 
-    alpacaV2Oracle = new AlpacaV2Oracle(oracleMedianizer, busd, usdPlaceholder);
+    alpacaV2Oracle = new AlpacaV2Oracle(0x634902128543b25265da350e2d961C7ff540fC71, busd, usdPlaceholder);
 
     _stopBroadcast();
 

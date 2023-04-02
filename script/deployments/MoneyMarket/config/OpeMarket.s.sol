@@ -22,7 +22,7 @@ contract OpenMarketScript is BaseScript {
     */
 
     //---- inputs ----//
-    uint8 newMarketLength = 4;
+    uint8 newMarketLength = 3;
     address[] memory underlyingTokens = new address[](newMarketLength);
     IAdminFacet.TokenConfigInput[] memory underlyingTokenConfigInputs = new IAdminFacet.TokenConfigInput[](
       newMarketLength
@@ -81,21 +81,21 @@ contract OpenMarketScript is BaseScript {
     });
 
     // CAKE
-    underlyingTokens[3] = 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82;
-    underlyingTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.ISOLATE,
-      collateralFactor: 0,
-      borrowingFactor: 8500,
-      maxBorrow: 10_000 ether,
-      maxCollateral: 0 ether
-    });
-    ibTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.ISOLATE,
-      collateralFactor: 0,
-      borrowingFactor: 1,
-      maxBorrow: 0 ether,
-      maxCollateral: 1_000_000 ether
-    });
+    // underlyingTokens[3] = 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82;
+    // underlyingTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
+    //   tier: LibConstant.AssetTier.ISOLATE,
+    //   collateralFactor: 0,
+    //   borrowingFactor: 8500,
+    //   maxBorrow: 10_000 ether,
+    //   maxCollateral: 0 ether
+    // });
+    // ibTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
+    //   tier: LibConstant.AssetTier.ISOLATE,
+    //   collateralFactor: 0,
+    //   borrowingFactor: 1,
+    //   maxBorrow: 0 ether,
+    //   maxCollateral: 1_000_000 ether
+    // });
 
     //---- execution ----//
     _startDeployerBroadcast();
@@ -106,7 +106,21 @@ contract OpenMarketScript is BaseScript {
         underlyingTokenConfigInputs[i],
         ibTokenConfigInputs[i]
       );
-      console.log("openMarket for", underlyingTokens[i], "ibToken", newIbToken);
+
+      address newDebtToken = moneyMarket.getDebtTokenFromToken(underlyingTokens[i]);
+
+      console.log("*** Open Market for ***");
+      console.log("underlyingToken", underlyingTokens[i]);
+
+      console.log("newIbToken:", newIbToken, "pId:", moneyMarket.getMiniFLPoolIdOfToken(newIbToken));
+
+      console.log(
+        "debtToken:",
+        moneyMarket.getDebtTokenFromToken(underlyingTokens[i]),
+        "pId:",
+        moneyMarket.getMiniFLPoolIdOfToken(newDebtToken)
+      );
+      console.log("");
     }
 
     _stopBroadcast();
