@@ -48,7 +48,7 @@
         "token": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
         "ibToken": "0xebC06FeCaA89a37d917F58bBD3aBc070668cE65e",
         "debtToken": "0xCF2488D80f266e5bADc3667c5C7d5D7F7e4ea23F",
-        "interestModel": ""
+        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
       },
       {
         "name": "BUSD Market",
@@ -56,7 +56,7 @@
         "token": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
         "ibToken": "0xbE4Fe9C9394B6b1153f88B54c54c5053f6Ae15aC",
         "debtToken": "0x6EFA254E2DEDFdB9e38EB11F3D8298da86FD45Da",
-        "interestModel": ""
+        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
       },
       {
         "name": "ALPACA Market",
@@ -64,7 +64,7 @@
         "token": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
         "ibToken": "0x7BdC4392D0c58a130212C6b9418E20e84B5AAF35",
         "debtToken": "0x3b023deD14344dB62A43818024c3d37EBd622A00",
-        "interestModel": ""
+        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
       }
     ],
     "accountManager": {
