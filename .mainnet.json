@@ -1,7 +1,7 @@
 {
   "proxyAdmin": "0x6AF55bB76C435F749C26E0D963cd0666A9BA4A31",
   "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-  "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
+  "nativeRelayer": "0x8d3644898516274da3e855ac49289e96bb17201e",
   "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
   "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
@@ -68,8 +68,8 @@
       }
     ],
     "accountManager": {
-      "implementation": "",
-      "proxy": ""
+      "implementation": "0x3a1126e65893e1Bd0e886774892cAc38b8595a0c",
+      "proxy": "0xe53F244bDC41342BAB81aE45C9E6a3a378DEF036"
     }
   },
   "ibTokens": {
@@ -113,5 +113,5 @@
       }
     ]
   },
-  "moneyMarketReader": ""
+  "moneyMarketReader": "0x5fCA7fa207F3F70Fe28e37675578e3Bf51f284ab"
 }
