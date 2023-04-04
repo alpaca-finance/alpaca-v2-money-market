@@ -9,11 +9,11 @@ import { IUniswapV3SwapCallback } from "./interfaces/IUniswapV3SwapCallback.sol"
 
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
-contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
+contract UniswapV3FlashLoanRepurchaser is IUniswapV3SwapCallback {
   using LibSafeToken for IERC20;
 
-  error UniswapV3FlashloanRepurchaser_Unauthorized();
-  error UniswapV3FlashloanRepurchaser_BadPool();
+  error UniswapV3FlashLoanRepurchaser_Unauthorized();
+  error UniswapV3FlashLoanRepurchaser_BadPool();
 
   address constant UNISWAP_V3_FACTORY = 0xdB1d10011AD0Ff90774D0C6Bb92e5C5c8b4461F7;
   bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
@@ -34,7 +34,7 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
   }
 
   function withdrawToken(address _token) external {
-    if (msg.sender != owner) revert UniswapV3FlashloanRepurchaser_Unauthorized();
+    if (msg.sender != owner) revert UniswapV3FlashLoanRepurchaser_Unauthorized();
     IERC20(_token).safeTransfer(owner, IERC20(_token).balanceOf(address(this)));
   }
 
@@ -89,7 +89,7 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
 
     // verify `msg.sender` is pool
     address pool = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _flashloanFee);
-    if (msg.sender != pool) revert UniswapV3FlashloanRepurchaser_BadPool();
+    if (msg.sender != pool) revert UniswapV3FlashLoanRepurchaser_BadPool();
 
     _repurchaseAndWithdrawIb(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
 

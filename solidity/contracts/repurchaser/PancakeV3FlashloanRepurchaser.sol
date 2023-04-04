@@ -9,11 +9,11 @@ import { IPancakeV3SwapCallback } from "./interfaces/IPancakeV3SwapCallback.sol"
 
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
-contract PancakeV3FlashloanRepurchaser is IPancakeV3SwapCallback {
+contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
   using LibSafeToken for IERC20;
 
-  error UniswapV3FlashloanRepurchaser_Unauthorized();
-  error UniswapV3FlashloanRepurchaser_BadPool();
+  error UniswapV3FlashLoanRepurchaser_Unauthorized();
+  error UniswapV3FlashLoanRepurchaser_BadPool();
 
   address constant PANCAKESWAP_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
   bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
@@ -34,7 +34,7 @@ contract PancakeV3FlashloanRepurchaser is IPancakeV3SwapCallback {
   }
 
   function withdrawToken(address _token) external {
-    if (msg.sender != owner) revert UniswapV3FlashloanRepurchaser_Unauthorized();
+    if (msg.sender != owner) revert UniswapV3FlashLoanRepurchaser_Unauthorized();
     IERC20(_token).safeTransfer(owner, IERC20(_token).balanceOf(address(this)));
   }
 
@@ -89,7 +89,7 @@ contract PancakeV3FlashloanRepurchaser is IPancakeV3SwapCallback {
 
     // verify `msg.sender` is pool
     address pool = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _flashloanFee);
-    if (msg.sender != pool) revert UniswapV3FlashloanRepurchaser_BadPool();
+    if (msg.sender != pool) revert UniswapV3FlashLoanRepurchaser_BadPool();
 
     _repurchaseAndWithdrawIb(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
 

@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import "./BaseRepurchaserForkTest.sol";
 
-import { PancakeV3FlashloanRepurchaser } from "solidity/contracts/repurchaser/PancakeV3FlashloanRepurchaser.sol";
+import { PancakeV3FlashLoanRepurchaser } from "solidity/contracts/repurchaser/PancakeV3FlashLoanRepurchaser.sol";
 
 import { IUniswapV3Pool } from "solidity/contracts/repurchaser/interfaces/IUniswapV3Pool.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
@@ -13,12 +13,12 @@ import { LibConstant } from "solidity/contracts/money-market/libraries/LibConsta
 // this test is not intended to be ran with normal test suite
 // as it requires local fork of bsc mainnet that has money market setup
 contract PancakeV3FlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
-  PancakeV3FlashloanRepurchaser internal pcsV3FlashLoanRepurchaser;
+  PancakeV3FlashLoanRepurchaser internal pcsV3FlashLoanRepurchaser;
 
   function setUp() public override {
     super.setUp();
 
-    pcsV3FlashLoanRepurchaser = new PancakeV3FlashloanRepurchaser(
+    pcsV3FlashLoanRepurchaser = new PancakeV3FlashLoanRepurchaser(
       address(this),
       address(moneyMarket),
       address(accountManager)
