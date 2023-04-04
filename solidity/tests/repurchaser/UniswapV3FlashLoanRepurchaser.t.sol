@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BaseRepurchaserForkTest } from "./BaseRepurchaserForkTest.sol";
+import "./BaseRepurchaserForkTest.sol";
 
 import { UniswapV3FlashloanRepurchaser } from "solidity/contracts/repurchaser/UniswapV3FlashloanRepurchaser.sol";
 
@@ -42,14 +42,16 @@ contract UniswapV3FlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
     // repurchase 10% of debt
     uint256 repurchaseAmount = borrowedAmount / 10;
 
-    uniV3FlashLoanRepurchaser.initRepurchase(
+    bytes memory data = abi.encode(
       USER,
       SUBACCOUNT_ID,
       address(wbnb),
       address(busd),
       moneyMarket.getIbTokenFromToken(address(busd)),
-      repurchaseAmount,
-      address(uniV3Pool)
+      uint24(3000),
+      repurchaseAmount
     );
+
+    uniV3FlashLoanRepurchaser.initRepurchase(data);
   }
 }

@@ -11,12 +11,14 @@ import { IUniswapV3SwapRouter } from "./interfaces/IUniswapV3SwapRouter.sol";
 
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
-import "solidity/tests/utils/console.sol";
-
 contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
   using LibSafeToken for IERC20;
 
-  address constant UNIV3_FACTORY = 0xdB1d10011AD0Ff90774D0C6Bb92e5C5c8b4461F7;
+  error UniswapV3FlashloanRepurchaser_Unauthorized();
+  error UniswapV3FlashloanRepurchaser_BadPool();
+
+  address constant UNISWAP_V3_FACTORY = 0xdB1d10011AD0Ff90774D0C6Bb92e5C5c8b4461F7;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
   // TODO: change to constant when deploy
   address public immutable owner;
@@ -33,23 +35,23 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
     accountManager = IMoneyMarketAccountManager(_accountManager);
   }
 
-  function initRepurchase(
-    address _account,
-    uint256 _subAccountId,
-    address _debtToken,
-    address _underlyingOfCollatToken,
-    address _collatToken,
-    uint256 _desiredRepayAmount,
-    address _poolAddress
-  ) external {
-    bytes memory data = abi.encode(
-      _account,
-      _subAccountId,
-      _debtToken,
-      _underlyingOfCollatToken,
-      _collatToken,
-      _desiredRepayAmount
-    );
+  function withdrawToken(address _token) external {
+    if (msg.sender != owner) revert UniswapV3FlashloanRepurchaser_Unauthorized();
+    IERC20(_token).safeTransfer(owner, IERC20(_token).balanceOf(address(this)));
+  }
+
+  function initRepurchase(bytes calldata data) external {
+    (
+      ,
+      ,
+      address _debtToken,
+      address _underlyingOfCollatToken,
+      ,
+      uint24 _fee,
+      uint256 _desiredRepayAmount
+    ) = _decodeData(data);
+
+    address _poolAddress = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _fee);
 
     // swap from underlyingOfColalt to debt aka flashloan debt, repurchase and repay underlyingOfCollat
     if (_debtToken < _underlyingOfCollatToken) {
@@ -72,51 +74,6 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
     }
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
-
-  /// @notice The identifying key of the pool
-  struct PoolKey {
-    address token0;
-    address token1;
-    uint24 fee;
-  }
-
-  /// @notice Deterministically computes the pool address given the factory and PoolKey
-  /// @param factory The Uniswap V3 factory contract address
-  /// @param key The PoolKey
-  /// @return pool The contract address of the V3 pool
-  function computeAddress(address factory, PoolKey memory key) internal pure returns (address pool) {
-    require(key.token0 < key.token1);
-    pool = address(
-      uint160(
-        uint256(
-          keccak256(
-            abi.encodePacked(
-              hex"ff",
-              factory,
-              keccak256(abi.encode(key.token0, key.token1, key.fee)),
-              POOL_INIT_CODE_HASH
-            )
-          )
-        )
-      )
-    );
-  }
-
-  /// @notice Returns PoolKey: the ordered tokens with the matched fee levels
-  /// @param tokenA The first token of a pool, unsorted
-  /// @param tokenB The second token of a pool, unsorted
-  /// @param fee The fee level of the pool
-  /// @return Poolkey The pool details with ordered token0 and token1 assignments
-  function getPoolKey(
-    address tokenA,
-    address tokenB,
-    uint24 fee
-  ) internal pure returns (PoolKey memory) {
-    if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA);
-    return PoolKey({ token0: tokenA, token1: tokenB, fee: fee });
-  }
-
   function uniswapV3SwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
@@ -126,34 +83,21 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
       address _account,
       uint256 _subAccountId,
       address _debtToken,
-      address _underlyingOfCollatToken, // underlying of ib collat
-      address _collatToken, // ib collat, pass from outside to save gas
+      address _underlyingOfCollatToken,
+      address _collatToken,
+      uint24 _flashloanFee,
       uint256 _desiredRepayAmount
-    ) = abi.decode(data, (address, uint256, address, address, address, uint256));
+    ) = _decodeData(data);
 
     // verify `msg.sender` is pool
-    // TODO: fee tier
-    address pool = computeAddress(UNIV3_FACTORY, getPoolKey(_debtToken, _underlyingOfCollatToken, 3000));
-    if (msg.sender != pool) revert();
-
-    console.log(IERC20(_debtToken).balanceOf(address(this)));
-    console.log(IERC20(_underlyingOfCollatToken).balanceOf(address(this)));
+    address pool = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _flashloanFee);
+    if (msg.sender != pool) revert UniswapV3FlashloanRepurchaser_BadPool();
 
     _repurchaseAndWithdrawIb(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
 
-    console.log(IERC20(_debtToken).balanceOf(address(this)));
-    console.log(IERC20(_underlyingOfCollatToken).balanceOf(address(this)));
-
-    // repay flashloan on positve amountDelta side. only one can be positive.
+    // repay flashloan on positve amountDelta side. only one side can be positive.
     IERC20(_underlyingOfCollatToken).safeTransfer(msg.sender, uint256(amount0Delta > 0 ? amount0Delta : amount1Delta));
-
-    console.log(IERC20(_debtToken).balanceOf(address(this)));
-    console.log(IERC20(_underlyingOfCollatToken).balanceOf(address(this)));
-
-    // if (IERC20(_debtToken).balanceOf(address(this)) > 0)
-    //   IERC20(_debtToken).transfer(owner, IERC20(_debtToken).balanceOf(address(this)));
-    // if (IERC20(_underlyingOfCollatToken).balanceOf(address(this)) > 0)
-    //   IERC20(_underlyingOfCollatToken).transfer(owner, IERC20(_underlyingOfCollatToken).balanceOf(address(this)));
+    // remaining profit after repay flashloan will remain in this contract until we call `withdrawToken`
   }
 
   function _repurchaseAndWithdrawIb(
@@ -177,6 +121,45 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
     // fine to approve exact amount because withdraw will spend it all
     IERC20(_collatToken).safeApprove(address(accountManager), _collatTokenReceived);
     accountManager.withdraw(_collatToken, _collatTokenReceived);
+  }
+
+  function _computePoolAddress(
+    address tokenA,
+    address tokenB,
+    uint24 fee
+  ) internal pure returns (address poolAddress) {
+    if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA);
+    return
+      address(
+        uint160(
+          uint256(
+            keccak256(
+              abi.encodePacked(
+                hex"ff",
+                UNISWAP_V3_FACTORY,
+                keccak256(abi.encode(tokenA, tokenB, fee)),
+                POOL_INIT_CODE_HASH
+              )
+            )
+          )
+        )
+      );
+  }
+
+  function _decodeData(bytes memory data)
+    internal
+    pure
+    returns (
+      address _account,
+      uint256 _subAccountId,
+      address _debtToken,
+      address _underlyingOfCollatToken, // underlying of ib collat
+      address _collatToken, // ib collat, pass from outside to save gas
+      uint24 _flashloanFee,
+      uint256 _desiredRepayAmount
+    )
+  {
+    return abi.decode(data, (address, uint256, address, address, address, uint24, uint256));
   }
 
   // might be used in future
