@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import "./BaseRepurchaserForkTest.sol";
 
-import { UniswapV3FlashloanRepurchaser } from "solidity/contracts/repurchaser/UniswapV3FlashloanRepurchaser.sol";
+import { PancakeV3FlashloanRepurchaser } from "solidity/contracts/repurchaser/PancakeV3FlashloanRepurchaser.sol";
 
 import { IUniswapV3Pool } from "solidity/contracts/repurchaser/interfaces/IUniswapV3Pool.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
@@ -12,20 +12,20 @@ import { LibConstant } from "solidity/contracts/money-market/libraries/LibConsta
 
 // this test is not intended to be ran with normal test suite
 // as it requires local fork of bsc mainnet that has money market setup
-contract UniswapV3FlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
-  UniswapV3FlashloanRepurchaser internal uniV3FlashLoanRepurchaser;
+contract PancakeV3FlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
+  PancakeV3FlashloanRepurchaser internal pcsV3FlashLoanRepurchaser;
 
   function setUp() public override {
     super.setUp();
 
-    uniV3FlashLoanRepurchaser = new UniswapV3FlashloanRepurchaser(
+    pcsV3FlashLoanRepurchaser = new PancakeV3FlashloanRepurchaser(
       address(this),
       address(moneyMarket),
       address(accountManager)
     );
   }
 
-  function testCorrectness_UniswapV3FlashLoanRepurchaser() public {
+  function testCorrectness_PancakeV3FlashLoanRepurchaser() public {
     // make position
     uint256 collatAmount = 1 ether;
 
@@ -46,10 +46,10 @@ contract UniswapV3FlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
       address(wbnb),
       address(busd),
       moneyMarket.getIbTokenFromToken(address(busd)),
-      uint24(3000),
+      uint24(500),
       repurchaseAmount
     );
 
-    uniV3FlashLoanRepurchaser.initRepurchase(data);
+    pcsV3FlashLoanRepurchaser.initRepurchase(data);
   }
 }

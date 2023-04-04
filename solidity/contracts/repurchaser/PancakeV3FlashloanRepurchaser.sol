@@ -5,18 +5,18 @@ import { IERC20 } from "solidity/contracts/interfaces/IERC20.sol";
 import { IMoneyMarket } from "solidity/contracts/money-market/interfaces/IMoneyMarket.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IUniswapV3Pool } from "./interfaces/IUniswapV3Pool.sol";
-import { IUniswapV3SwapCallback } from "./interfaces/IUniswapV3SwapCallback.sol";
+import { IPancakeV3SwapCallback } from "./interfaces/IPancakeV3SwapCallback.sol";
 
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
-contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
+contract PancakeV3FlashloanRepurchaser is IPancakeV3SwapCallback {
   using LibSafeToken for IERC20;
 
   error UniswapV3FlashloanRepurchaser_Unauthorized();
   error UniswapV3FlashloanRepurchaser_BadPool();
 
-  address constant UNISWAP_V3_FACTORY = 0xdB1d10011AD0Ff90774D0C6Bb92e5C5c8b4461F7;
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
+  address constant PANCAKESWAP_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
 
   // TODO: change to constant when deploy
   address public immutable owner;
@@ -72,7 +72,7 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
     }
   }
 
-  function uniswapV3SwapCallback(
+  function pancakeV3SwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
     bytes calldata data
@@ -134,7 +134,7 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
             keccak256(
               abi.encodePacked(
                 hex"ff",
-                UNISWAP_V3_FACTORY,
+                PANCAKESWAP_V3_POOL_DEPLOYER,
                 keccak256(abi.encode(tokenA, tokenB, fee)),
                 POOL_INIT_CODE_HASH
               )
@@ -159,51 +159,4 @@ contract UniswapV3FlashloanRepurchaser is IUniswapV3SwapCallback {
   {
     return abi.decode(data, (address, uint256, address, address, address, uint24, uint256));
   }
-
-  // might be used in future
-  // function uniswapV3FlashCallback(
-  //   uint256 fee0,
-  //   uint256 fee1,
-  //   bytes calldata data
-  // ) external override {
-  //   (
-  //     address _account,
-  //     uint256 _subAccountId,
-  //     address _debtToken,
-  //     address _underlyingOfCollatToken, // underlying of ib collat
-  //     address _collatToken, // ib collat, pass from outside to save gas
-  //     uint256 _desiredRepayAmount
-  //   ) = abi.decode(data, (address, uint256, address, address, address, uint256));
-
-  //   uint256 _debtTokenBalanceBefore = IERC20(_debtToken).balanceOf(address(this));
-  //   uint256 _underlyingOfCollatTokenBalanceBefore = IERC20(_underlyingOfCollatToken).balanceOf(address(this));
-
-  //   // repurchase (exchange `debtToken` for `underlyingOfCollatToken`)
-  //   _repurchaseIbCollat(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
-
-  //   uint256 _debtTokenRepurchased = _debtTokenBalanceBefore - IERC20(_debtToken).balanceOf(address(this));
-
-  //   // swap all `underlyingOfCollatToken` received from repurchasing back to `debtToken`
-  //   IUniswapV3SwapRouter.ExactInputSingleParams memory swapParams = IUniswapV3SwapRouter.ExactInputSingleParams({
-  //     tokenIn: _underlyingOfCollatToken,
-  //     tokenOut: _debtToken,
-  //     fee: 3000, // TODO: pick swap fee dynamically
-  //     recipient: address(this),
-  //     deadline: block.timestamp,
-  //     amountIn: IERC20(_underlyingOfCollatToken).balanceOf(address(this)) - _underlyingOfCollatTokenBalanceBefore, // TODO
-  //     amountOutMinimum: _debtTokenRepurchased,
-  //     sqrtPriceLimitX96: 0 // price agnostic as long as we get min amountOut
-  //   });
-  //   uniV3SwapRouter.exactInputSingle(swapParams);
-
-  //   IERC20(_debtToken).safeTransfer(msg.sender, _debtToken < _underlyingOfCollatToken ? fee0 : fee1);
-
-  //   // we want to keep `debtToken` in this contract
-  //   // when repurchased occured means `debtToken` is up or `collatToken` is down
-
-  //   // flash 100 debt, need to repay 101 debt
-  //   // repurchase only 80 debt, get 85 collat, 20 debt remaining
-  //   // swap 85 collat for 85 debt (have 105 debt, 0 collat now)
-  //   // repay 101 debt, profit 4 debt
-  // }
 }
