@@ -26,10 +26,10 @@ contract UniswapV3FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
   FixedFeeModel internal feeModel;
 
   // update these addresses once you deploy new fork
-  IMoneyMarket internal moneyMarket = IMoneyMarket(0xF15C0325C2A3007918904E336a92dB94A6E85FD2);
+  IMoneyMarket internal moneyMarket = IMoneyMarket(0xDD9c4acEB6324446878CdfD6DEC11b3BC4EF3e70);
   IMoneyMarketAccountManager internal accountManager =
-    IMoneyMarketAccountManager(0x6b99c180fc655a778Ddc98e8688896AfCF3BF954);
-  IAlpacaV2Oracle internal oracle = IAlpacaV2Oracle(0xb302411bd1e3b786afC1C235Fc305F23F101027f);
+    IMoneyMarketAccountManager(0x1e2F9B48889064252a492C52a87100c29C573cE7);
+  IAlpacaV2Oracle internal oracle = IAlpacaV2Oracle(0x8c14350965f851D0710610Debc57647696e8FbD3);
 
   address internal DEPLOYER = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
   address internal USER = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
@@ -101,7 +101,16 @@ contract UniswapV3FlashLoanRepurchaserTest is DSTest, StdUtils, StdAssertions, S
     // wbnb is token0, busd is token1, zeroForOne = false so we are swapping from busd to wbnb
     // amountSpecified is positve since we want to swap exact repurchaseAmount for collat
     // uniV3Pool.swap(address(uniV3FlashLoanRepurchaser), false, repurchaseAmount, 4295128739 + 1, data);
-    uniV3FlashLoanRepurchaser.initRepurchase(repurchaseAmount, data, address(uniV3Pool));
+    // uniV3FlashLoanRepurchaser.initRepurchase(repurchaseAmount, data, address(uniV3Pool));
+    uniV3FlashLoanRepurchaser.initRepurchase(
+      USER,
+      SUBACCOUNT_ID,
+      address(wbnb),
+      address(busd),
+      ibBusd,
+      repurchaseAmount,
+      address(uniV3Pool)
+    );
 
     // uint256 snapshot = vm.snapshot();
 
