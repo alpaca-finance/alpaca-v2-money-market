@@ -12,11 +12,13 @@ import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
   using LibSafeToken for IERC20;
 
-  error UniswapV3FlashLoanRepurchaser_Unauthorized();
-  error UniswapV3FlashLoanRepurchaser_BadPool();
+  error PancakeV3FlashLoanRepurchaser_Unauthorized();
+  error PancakeV3FlashLoanRepurchaser_BadPool();
 
-  address constant PANCAKESWAP_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
+  address internal constant PANCAKESWAP_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
   bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
+  uint160 internal constant MAX_SQRTX96_PRICE = 1461446703485210103287273052203988822378723970341;
+  uint160 internal constant MIN_SQRTX96_PRICE = 4295128740;
 
   // TODO: change to constant when deploy
   address public immutable owner;
@@ -34,11 +36,11 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
   }
 
   function withdrawToken(address _token) external {
-    if (msg.sender != owner) revert UniswapV3FlashLoanRepurchaser_Unauthorized();
+    if (msg.sender != owner) revert PancakeV3FlashLoanRepurchaser_Unauthorized();
     IERC20(_token).safeTransfer(owner, IERC20(_token).balanceOf(address(this)));
   }
 
-  function initRepurchase(bytes calldata data) external {
+  function initRepurchase(bytes calldata _data) external {
     (
       ,
       ,
@@ -47,35 +49,36 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
       ,
       uint24 _fee,
       uint256 _desiredRepayAmount
-    ) = _decodeData(data);
+    ) = _decodeData(_data);
 
     address _poolAddress = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _fee);
 
-    // swap from underlyingOfColalt to debt aka flashloan debt, repurchase and repay underlyingOfCollat
+    // exact input swap from underlyingOfCollat to debt aka flashloan debt, repurchase and repay underlyingOfCollat
     if (_debtToken < _underlyingOfCollatToken) {
       // debtToken is token0, underlyingOfCollatToken is token1
       IUniswapV3Pool(_poolAddress).swap(
         address(this),
         false, // swap token1 to token0
-        -int256(_desiredRepayAmount), // negative means exact output
-        1461446703485210103287273052203988822378723970341, // simulate SwapRouter's when `sqrtPriceLimitX96 = 0, zeroForOne = false`
-        data
+        int256(_desiredRepayAmount),
+        MAX_SQRTX96_PRICE, // simulate SwapRouter's when `sqrtPriceLimitX96 = 0, zeroForOne = false`
+        _data
       );
     } else {
+      // debtToken is token1, underlyingOfCollatToken is token0
       IUniswapV3Pool(_poolAddress).swap(
         address(this),
         true, // swap token0 to token1
-        int256(_desiredRepayAmount), // positive means exact input
-        4295128740, // simulate SwapRouter's when `sqrtPriceLimitX96 = 0, zeroForOne = true`
-        data
+        int256(_desiredRepayAmount),
+        MIN_SQRTX96_PRICE, // simulate SwapRouter's when `sqrtPriceLimitX96 = 0, zeroForOne = true`
+        _data
       );
     }
   }
 
   function pancakeV3SwapCallback(
-    int256 amount0Delta,
-    int256 amount1Delta,
-    bytes calldata data
+    int256 _amount0Delta,
+    int256 _amount1Delta,
+    bytes calldata _data
   ) external override {
     (
       address _account,
@@ -85,16 +88,19 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
       address _collatToken,
       uint24 _flashloanFee,
       uint256 _desiredRepayAmount
-    ) = _decodeData(data);
+    ) = _decodeData(_data);
 
     // verify `msg.sender` is pool
-    address pool = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _flashloanFee);
-    if (msg.sender != pool) revert UniswapV3FlashLoanRepurchaser_BadPool();
+    address _pool = _computePoolAddress(_debtToken, _underlyingOfCollatToken, _flashloanFee);
+    if (msg.sender != _pool) revert PancakeV3FlashLoanRepurchaser_BadPool();
 
     _repurchaseAndWithdrawIb(_account, _subAccountId, _debtToken, _collatToken, _desiredRepayAmount);
 
     // repay flashloan on positve amountDelta side. only one side can be positive.
-    IERC20(_underlyingOfCollatToken).safeTransfer(msg.sender, uint256(amount0Delta > 0 ? amount0Delta : amount1Delta));
+    IERC20(_underlyingOfCollatToken).safeTransfer(
+      msg.sender,
+      uint256(_amount0Delta > 0 ? _amount0Delta : _amount1Delta)
+    );
     // remaining profit after repay flashloan will remain in this contract until we call `withdrawToken`
   }
 
@@ -122,11 +128,11 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
   }
 
   function _computePoolAddress(
-    address tokenA,
-    address tokenB,
-    uint24 fee
-  ) internal pure returns (address poolAddress) {
-    if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA);
+    address _tokenA,
+    address _tokenB,
+    uint24 _fee
+  ) internal pure returns (address _poolAddress) {
+    if (_tokenA > _tokenB) (_tokenA, _tokenB) = (_tokenB, _tokenA);
     return
       address(
         uint160(
@@ -135,7 +141,7 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
               abi.encodePacked(
                 hex"ff",
                 PANCAKESWAP_V3_POOL_DEPLOYER,
-                keccak256(abi.encode(tokenA, tokenB, fee)),
+                keccak256(abi.encode(_tokenA, _tokenB, _fee)),
                 POOL_INIT_CODE_HASH
               )
             )
@@ -144,7 +150,7 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
       );
   }
 
-  function _decodeData(bytes memory data)
+  function _decodeData(bytes memory _data)
     internal
     pure
     returns (
@@ -157,6 +163,6 @@ contract PancakeV3FlashLoanRepurchaser is IPancakeV3SwapCallback {
       uint256 _desiredRepayAmount
     )
   {
-    return abi.decode(data, (address, uint256, address, address, address, uint24, uint256));
+    return abi.decode(_data, (address, uint256, address, address, address, uint24, uint256));
   }
 }
