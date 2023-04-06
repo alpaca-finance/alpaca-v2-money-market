@@ -76,10 +76,8 @@ contract FlashLoanRepurchaser is IPancakeV3SwapCallback, IPancakeCallee {
   // Pancakeswap V2
   // ==============
 
-  function pancakeV2SingleHopFlashSwapRepurchase(bytes calldata _data) external returns (uint256 _profit) {
+  function pancakeV2SingleHopFlashSwapRepurchase(bytes calldata _data) external {
     (, , address _debtToken, address _underlyingOfCollatToken, , uint256 _desiredRepayAmount) = _decodeV2Data(_data);
-
-    uint256 _underlyingOfCollatBefore = IERC20(_underlyingOfCollatToken).balanceOf(address(this));
 
     IPancakePair(_computeV2PoolAddress(_debtToken, _underlyingOfCollatToken)).swap(
       _desiredRepayAmount,
@@ -87,8 +85,6 @@ contract FlashLoanRepurchaser is IPancakeV3SwapCallback, IPancakeCallee {
       address(this),
       _data
     );
-
-    return IERC20(_underlyingOfCollatToken).balanceOf(address(this)) - _underlyingOfCollatBefore;
   }
 
   function pancakeCall(
@@ -167,7 +163,7 @@ contract FlashLoanRepurchaser is IPancakeV3SwapCallback, IPancakeCallee {
   // Pancakeswap V3
   // ==============
 
-  function pancakeV3SingleHopFlashSwapRepurchase(bytes calldata _data) external returns (uint256 _profit) {
+  function pancakeV3SingleHopFlashSwapRepurchase(bytes calldata _data) external {
     (
       ,
       ,
@@ -179,8 +175,6 @@ contract FlashLoanRepurchaser is IPancakeV3SwapCallback, IPancakeCallee {
     ) = _decodeV3Data(_data);
 
     address _poolAddress = _computeV3PoolAddress(_debtToken, _underlyingOfCollatToken, _fee);
-
-    uint256 _underlyingOfCollatBefore = IERC20(_underlyingOfCollatToken).balanceOf(address(this));
 
     // exact input swap from underlyingOfCollat to debt aka flashloan debt, repurchase and repay underlyingOfCollat
     if (_debtToken < _underlyingOfCollatToken) {
@@ -202,8 +196,6 @@ contract FlashLoanRepurchaser is IPancakeV3SwapCallback, IPancakeCallee {
         _data
       );
     }
-
-    return IERC20(_underlyingOfCollatToken).balanceOf(address(this)) - _underlyingOfCollatBefore;
   }
 
   function pancakeV3SwapCallback(

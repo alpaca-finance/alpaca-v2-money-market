@@ -50,7 +50,7 @@ contract AFlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
       uint24(0)
     );
     // have to flashloan repurchaseAmount of doge
-    console.log(flashLoanRepurchaser.pancakeV2SingleHopFlashSwapRepurchase(data));
+    flashLoanRepurchaser.pancakeV2SingleHopFlashSwapRepurchase(data);
 
     vm.revertTo(snapshot);
 
@@ -102,6 +102,6 @@ contract AFlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
       uint24(500)
     );
 
-    console.log(flashLoanRepurchaser.pancakeV3SingleHopFlashSwapRepurchase(data));
+    flashLoanRepurchaser.pancakeV3SingleHopFlashSwapRepurchase(data);
   }
 }
