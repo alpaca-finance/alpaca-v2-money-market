@@ -22,10 +22,10 @@ abstract contract BaseRepurchaserForkTest is DSTest, StdUtils, StdAssertions, St
   FixedFeeModel internal feeModel;
 
   // update these addresses once you deploy new fork
-  IMoneyMarket internal moneyMarket = IMoneyMarket(0xF15C0325C2A3007918904E336a92dB94A6E85FD2);
+  IMoneyMarket internal moneyMarket = IMoneyMarket(0x212BbbC23981b7Ae7B9B23aa1356d723d647Ce53);
   IMoneyMarketAccountManager internal accountManager =
-    IMoneyMarketAccountManager(0x6b99c180fc655a778Ddc98e8688896AfCF3BF954);
-  IAlpacaV2Oracle internal oracle = IAlpacaV2Oracle(0xb302411bd1e3b786afC1C235Fc305F23F101027f);
+    IMoneyMarketAccountManager(0x6e1a13224D759Ef6008da51848C114800E5C4a1b);
+  IAlpacaV2Oracle internal oracle = IAlpacaV2Oracle(0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C);
 
   address internal DEPLOYER = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
   address internal USER = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
