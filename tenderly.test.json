@@ -6,9 +6,7 @@
   "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
   "alpacaV2Oracle": "0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C",
   "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
-  "repurchaser": {
-    "pancakeV2": "0x313D4815447292e775716f507B3C5310829147C7"
-  },
+  "repurchaser": "",
   "moneyMarket": {
     "moneyMarketDiamond": "0x212BbbC23981b7Ae7B9B23aa1356d723d647Ce53",
     "facets": {

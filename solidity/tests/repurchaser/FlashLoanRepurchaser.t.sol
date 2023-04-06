@@ -12,7 +12,7 @@ import { LibConstant } from "solidity/contracts/money-market/libraries/LibConsta
 
 // this test is not intended to be ran with normal test suite
 // as it requires local fork of bsc mainnet that has money market setup
-contract AFlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
+contract FlashLoanRepurchaserForkTest is BaseRepurchaserForkTest {
   IPancakeRouter02 internal pancakeRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
 
   FlashLoanRepurchaser internal flashLoanRepurchaser;
