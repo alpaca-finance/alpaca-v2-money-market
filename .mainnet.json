@@ -72,42 +72,43 @@
       "proxy": "0xe53F244bDC41342BAB81aE45C9E6a3a378DEF036"
     }
   },
-  "ibTokens": {
-    "ibBnb": "0xebC06FeCaA89a37d917F58bBD3aBc070668cE65e",
-    "ibBusd": "0xbE4Fe9C9394B6b1153f88B54c54c5053f6Ae15aC",
-    "ibAlpaca": "0x7BdC4392D0c58a130212C6b9418E20e84B5AAF35"
-  },
   "miniFL": {
     "implementation": "0x8291B3c950825131ADCdD2d412a16950dCD2f2E0",
     "proxy": "0x0bdbe56EA26C2BB594A98452C162f215169237a6",
     "pools": [
       {
         "id": 1,
+        "name": "ibWBNB",
         "stakingToken": "0xebC06FeCaA89a37d917F58bBD3aBc070668cE65e",
         "rewarders": []
       },
       {
         "id": 2,
+        "name": "debtIbWBNB",
         "stakingToken": "0xCF2488D80f266e5bADc3667c5C7d5D7F7e4ea23F",
         "rewarders": []
       },
       {
         "id": 3,
+        "name": "ibBUSD",
         "stakingToken": "0xbE4Fe9C9394B6b1153f88B54c54c5053f6Ae15aC",
         "rewarders": []
       },
       {
         "id": 4,
+        "name": "debtIbBUSD",
         "stakingToken": "0x6EFA254E2DEDFdB9e38EB11F3D8298da86FD45Da",
         "rewarders": []
       },
       {
         "id": 5,
+        "name": "ibALPACA",
         "stakingToken": "0x7BdC4392D0c58a130212C6b9418E20e84B5AAF35",
         "rewarders": []
       },
       {
         "id": 6,
+        "name": "debtIbALPACA",
         "stakingToken": "0x3b023deD14344dB62A43818024c3d37EBd622A00",
         "rewarders": []
       }
