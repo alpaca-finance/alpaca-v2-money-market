@@ -367,6 +367,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // - priceIn18QuoteByToken1 = _non18Price * 10**token0Decimal / 10**token1Decimal
     //
     // example:
+    // - source = USDC, destination = ETH
     // - token0 = USDC, token1 = ETH
     // - sqrtPriceX96 = 1839650835463716126473692777239695
     //
@@ -387,6 +388,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // - priceIn18QuoteByToken0 = 1e36 / priceIn18QuoteByToken1
       //
       // example:
+      // - source = ETH, destination = USDC
       // - token0 = USDC, token1 = ETH
       // - priceIn18QuoteByToken1 = 539152516414308
       // - priceIn18QuoteByToken0 = 1e36 / 539152516414308 = 1854762742554941500000 (in 1e18 unit)
