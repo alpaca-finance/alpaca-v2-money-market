@@ -2,7 +2,7 @@
   "proxyAdmin": "0x6AF55bB76C435F749C26E0D963cd0666A9BA4A31",
   "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
   "nativeRelayer": "0x8d3644898516274da3e855ac49289e96bb17201e",
-  "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
+  "oracleMedianizer": "0x67e157c7aA71298f2cE1A3d004CF5944C06A2A40",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
   "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
   "alpacaV2Oracle": "0xa952932f1fF570CAa9c619068da4C32f8cF4755E",

@@ -20,6 +20,9 @@ interface IAlpacaV2Oracle {
   /// @dev Return value of given token in USD.
   function getTokenPrice(address _token) external view returns (uint256, uint256);
 
+  /// @dev Set new oracle.
+  function setOracle(address _oracle) external;
+
   /// @dev Return true if token price is stable.
   function isStable(address _tokenAddress) external view;
 

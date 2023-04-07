@@ -287,9 +287,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
         unchecked {
           // ignore price stale
           prices[validSourceCount++] = price;
-          ++idx;
         }
       } catch {}
+      unchecked {
+        ++idx;
+      }
     }
     if (validSourceCount == 0) return 0;
 
