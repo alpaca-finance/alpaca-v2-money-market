@@ -51,6 +51,10 @@ abstract contract BaseScript is Script {
   address internal doge;
   address internal alpaca;
   address internal usdt;
+  address internal ibBnb;
+  address internal ibBusd;
+  address internal ibDoge;
+  address internal ibDodo;
 
   // TODO: move to constructor
   function _loadAddresses() internal {
@@ -89,6 +93,11 @@ abstract contract BaseScript is Script {
     doge = abi.decode(configJson.parseRaw(".tokens.doge"), (address));
     alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
+    // ibTokens
+    ibBnb = abi.decode(configJson.parseRaw(".ibTokens.ibBnb"), (address));
+    ibBusd = abi.decode(configJson.parseRaw(".ibTokens.ibBusd"), (address));
+    ibDoge = abi.decode(configJson.parseRaw(".ibTokens.ibDoge"), (address));
+    ibDodo = abi.decode(configJson.parseRaw(".ibTokens.ibDodo"), (address));
   }
 
   function _startDeployerBroadcast() internal {
