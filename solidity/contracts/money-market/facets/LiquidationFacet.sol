@@ -54,7 +54,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repurchaseRewardBps;
     uint256 repayAmountWithoutFee;
     uint256 repayTokenPrice;
-    bool isPurchaseAll;
+    bool isRepurchaseAll;
   }
 
   struct LiquidationLocalVars {
@@ -189,7 +189,7 @@ contract LiquidationFacet is ILiquidationFacet {
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
         _vars.repayAmountWithoutFee = _currentDebtAmount;
         // set flag `isRepurchaseAll` = true for further use in `_actualRepayAmountWithoutFee` calculation
-        _vars.isPurchaseAll = true;
+        _vars.isRepurchaseAll = true;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
@@ -538,7 +538,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // _newRepayShare = 11 * 10 / 15 = 7.33333333333 =>  round down to 7 shares
     // _newRepayShareToValue = 7 * 15 / 10 = 10.5 => round down to 10 wei and repay all debt
     _repayAmountWithFee = _vars.repayAmountWithFee;
-    if (_vars.isPurchaseAll) {
+    if (_vars.isRepurchaseAll) {
       uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
       uint256 _actualRepayShare = LibShareUtil.valueToShare(
         _repayAmountWithoutFee,
