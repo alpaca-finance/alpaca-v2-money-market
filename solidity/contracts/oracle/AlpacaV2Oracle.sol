@@ -28,12 +28,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     uint64 _maxPriceDiffBps,
     bool _isUsingV3Pool
   );
-  event LogSetPool(
-    address indexed _caller,
-    address indexed _source,
-    address indexed _destination,
-    address _poolAddress
-  );
+  event LogSetPool(address indexed _source, address indexed _destination, address _poolAddress);
 
   uint256 internal constant MAX_BPS = 10000;
 
@@ -140,10 +135,11 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // - pool2 = ETH/USDT, price = 1850
       // _dexPrice = 15 * 1850 = 27750
       _dexPrice = 1;
-      for (uint256 i = 0; i < _tokenConfig.path.length - 1; ) {
-        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[i], _tokenConfig.path[i + 1]));
+      uint256 _len = _tokenConfig.path.length - 1;
+      for (uint256 _i = 0; _i < _len; ) {
+        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[_i], _tokenConfig.path[_i + 1]));
         unchecked {
-          i++;
+          ++_i;
         }
       }
     } else {
@@ -312,15 +308,30 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     }
   }
 
-  /// @notice Set pool address of uniswap v3
+  /// @notice Set pool addresses of uniswap v3
+  /// @param _poolConfigs List of poolConfig
+  function setPools(PoolConfig[] calldata _poolConfigs) external onlyOwner {
+    uint256 _len = _poolConfigs.length;
+
+    for (uint256 _i; _i < _len; ) {
+      _setPool(_poolConfigs[_i].source, _poolConfigs[_i].destination, _poolConfigs[_i].poolAddress);
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  /// @dev Set pool address of uniswap v3
   /// @param _source source token address
   /// @param _destination destination token address
-  /// @param _pool uniswap v3 pool
-  function setPool(
+  /// @param _poolAddress pool address
+  function _setPool(
     address _source,
     address _destination,
-    IUniswapV3Pool _pool
-  ) external onlyOwner {
+    address _poolAddress
+  ) internal {
+    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
     // verify that pool contain both source and destination token
     if (
       !(_pool.token0() == _source && _pool.token1() == _destination) ||
@@ -329,9 +340,11 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       revert AlpacaV2Oracle_InvalidPool();
     }
 
-    address _poolAddress = address(_pool);
     v3PoolAddreses[_source][_destination] = _poolAddress;
-    emit LogSetPool(msg.sender, _source, _destination, _poolAddress);
+    v3PoolAddreses[_destination][_source] = _poolAddress;
+
+    emit LogSetPool(_source, _destination, _poolAddress);
+    emit LogSetPool(_destination, _source, _poolAddress);
   }
 
   /// @notice Get price from uniswap v3 pool
@@ -371,11 +384,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
     uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, 1 << 96);
     uint256 _non18Price = LibFullMath.mulDiv(_sqrtPriceIn1e18, _sqrtPriceIn1e18, 1e18);
-    _price = LibFullMath.mulDiv(
-      _non18Price,
-      10**(IERC20(_pool.token0()).decimals()),
-      10**(IERC20(_pool.token1()).decimals())
-    );
+    _price = (_non18Price * 10**(IERC20(_pool.token0()).decimals())) / 10**(IERC20(_pool.token1()).decimals());
 
     // if source token is token0, then price is sqrtPriceX96, otherwise price is inverse of sqrtPriceX96
     if (_source > _destination) {
