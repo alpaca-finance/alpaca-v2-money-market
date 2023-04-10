@@ -27,56 +27,6 @@ contract MoneyMarketReader is IMoneyMarketReader {
     _moneyMarketAccountManager = moneyMarketAccountManager_;
   }
 
-  // TODO: deprecate this
-  /// @dev Get the market summary
-  /// @param _underlyingToken The underlying token address
-  function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory) {
-    address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
-    address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
-    IInterestBearingToken _ibToken = IInterestBearingToken(_ibAddress);
-
-    LibConstant.TokenConfig memory _tokenConfig = _moneyMarket.getTokenConfig(_underlyingToken);
-    LibConstant.TokenConfig memory _ibTokenConfig = _moneyMarket.getTokenConfig(_ibAddress);
-
-    uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
-    uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
-
-    uint256 _ibReserveAmount = _miniFL.getStakingReserves(_ibPoolId);
-    // debtTokenShare is equal to totalSupply of debtToken
-    //  then we can use debtTokenValue as total amount
-    uint256 _totalDebtToken = _moneyMarket.getOverCollatTokenDebtValue(_underlyingToken) +
-      _moneyMarket.getOverCollatPendingInterest(_underlyingToken);
-
-    // currently in UI we show collateralFactor of ib but borrowingFactor of underlying
-    // so have to return both
-    return
-      MarketSummary({
-        ibTotalSupply: _ibToken.totalSupply(),
-        ibTotalAsset: _ibToken.totalAssets(),
-        ibAddress: _ibAddress,
-        tierAsUInt: uint8(_tokenConfig.tier),
-        ibCollateralFactor: _ibTokenConfig.collateralFactor,
-        ibBorrowingFactor: _ibTokenConfig.borrowingFactor,
-        collateralFactor: _tokenConfig.collateralFactor,
-        borrowingFactor: _tokenConfig.borrowingFactor,
-        to18ConversionFactor: _tokenConfig.to18ConversionFactor,
-        maxCollateral: _ibTokenConfig.maxCollateral,
-        maxBorrow: _tokenConfig.maxBorrow,
-        tokenPrice: _getPriceUSD(_underlyingToken),
-        globalDebtValue: _moneyMarket.getGlobalDebtValue(_underlyingToken),
-        totalToken: _moneyMarket.getTotalToken(_underlyingToken),
-        pendingIntetest: _moneyMarket.getGlobalPendingInterest(_underlyingToken),
-        lastAccruedAt: _moneyMarket.getDebtLastAccruedAt(_underlyingToken),
-        debtTokenAllocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
-        ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
-        totalAllocPoint: _miniFL.totalAllocPoint(),
-        rewardPerSec: _miniFL.alpacaPerSecond(),
-        totalUnderlyingTokenInPool: _ibToken.convertToAssets(_ibReserveAmount),
-        totalDebtTokenInPool: _totalDebtToken,
-        blockTimestamp: block.timestamp
-      });
-  }
-
   /// @dev Get the reward summary
   /// @param _underlyingToken The underlying token address
   /// @param _account The account address
@@ -287,9 +237,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
         unchecked {
           // ignore price stale
           prices[validSourceCount++] = price;
-          ++idx;
         }
       } catch {}
+      unchecked {
+        ++idx;
+      }
     }
     if (validSourceCount == 0) return 0;
 
