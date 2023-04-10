@@ -6,7 +6,7 @@ interface IAlpacaV2Oracle {
     address router;
     uint64 maxPriceDiffBps;
     address[] path;
-    bool useV3;
+    bool isUsingV3Pool;
   }
 
   /// @dev Set tokenConfig for getting dex price.

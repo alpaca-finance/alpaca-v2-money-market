@@ -31,7 +31,12 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[1] = address(busd);
 
     IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 10500, path: _usdcPath, useV3: false });
+    _configs[0] = IAlpacaV2Oracle.Config({
+      router: address(0),
+      maxPriceDiffBps: 10500,
+      path: _usdcPath,
+      isUsingV3Pool: false
+    });
 
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
   }
@@ -62,7 +67,12 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[1] = address(btc);
 
     IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 10500, path: _usdcPath, useV3: false });
+    _configs[0] = IAlpacaV2Oracle.Config({
+      router: address(0),
+      maxPriceDiffBps: 10500,
+      path: _usdcPath,
+      isUsingV3Pool: false
+    });
 
     // destination not base stable
     vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidConfigPath.selector));
@@ -74,7 +84,12 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[0] = address(usdc);
     _usdcPath[1] = address(busd);
 
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 10500, path: _usdcPath, useV3: false });
+    _configs[0] = IAlpacaV2Oracle.Config({
+      router: address(0),
+      maxPriceDiffBps: 10500,
+      path: _usdcPath,
+      isUsingV3Pool: false
+    });
     vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidConfigPath.selector));
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);
   }
@@ -88,7 +103,12 @@ contract AlpacaV2Oracle_SetTokenConfigTest is BaseTest {
     _usdcPath[1] = address(busd);
 
     IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
-    _configs[0] = IAlpacaV2Oracle.Config({ router: address(0), maxPriceDiffBps: 9999, path: _usdcPath, useV3: false });
+    _configs[0] = IAlpacaV2Oracle.Config({
+      router: address(0),
+      maxPriceDiffBps: 9999,
+      path: _usdcPath,
+      isUsingV3Pool: false
+    });
 
     vm.expectRevert(abi.encodeWithSelector(IAlpacaV2Oracle.AlpacaV2Oracle_InvalidPriceDiffConfig.selector));
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);

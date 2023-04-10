@@ -31,7 +31,7 @@ contract DeployOracleScript is BaseScript {
       router: pancakeswapV2Router,
       maxPriceDiffBps: 10500,
       path: path,
-      useV3: false
+      isUsingV3Pool: false
     });
     // dodo
     tokens[1] = dodo;
@@ -43,7 +43,7 @@ contract DeployOracleScript is BaseScript {
       router: pancakeswapV2Router,
       maxPriceDiffBps: 10500,
       path: path,
-      useV3: false
+      isUsingV3Pool: false
     });
     // doge
     tokens[2] = doge;
@@ -54,7 +54,7 @@ contract DeployOracleScript is BaseScript {
       router: pancakeswapV2Router,
       maxPriceDiffBps: 10500,
       path: path,
-      useV3: false
+      isUsingV3Pool: false
     });
 
     alpacaV2Oracle.setTokenConfig(tokens, configs);

@@ -38,7 +38,7 @@ contract AlpacaV2Oracle_IsStableTest is BaseTest {
       router: mockRouter,
       maxPriceDiffBps: PRICE_DIFF,
       path: _usdcPath,
-      useV3: false
+      isUsingV3Pool: false
     });
 
     alpacaV2Oracle.setTokenConfig(_tokens, _configs);

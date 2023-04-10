@@ -36,7 +36,7 @@ contract SetTokenConfigScript is BaseScript {
       router: pancakeswapV2Router,
       maxPriceDiffBps: 10500,
       path: path,
-      useV3: false
+      isUsingV3Pool: false
     });
 
     _startDeployerBroadcast();

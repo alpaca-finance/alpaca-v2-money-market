@@ -25,8 +25,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     address indexed _token,
     address _router,
     address[] _path,
-    uint64 maxPriceDiffBps,
-    bool useV3
+    uint64 _maxPriceDiffBps,
+    bool _isUsingV3Pool
   );
   event LogSetPool(
     address indexed _caller,
@@ -131,7 +131,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
     uint256 _dexPrice;
 
-    if (_tokenConfig.useV3) {
+    if (_tokenConfig.isUsingV3Pool) {
       // calulating _dexPrice of token (v3)
       // product of price in each pool that need to hop through the path
       // example:
@@ -141,8 +141,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // _dexPrice = 15 * 1850 = 27750
       _dexPrice = 1;
       for (uint256 i = 0; i < _tokenConfig.path.length - 1; ) {
-        (uint256 _poolPrice, ) = _getPriceFromV3Pool(_tokenConfig.path[i], _tokenConfig.path[i + 1]);
-        _dexPrice = (_dexPrice * _poolPrice);
+        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[i], _tokenConfig.path[i + 1]));
         unchecked {
           i++;
         }
@@ -158,7 +157,9 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // example:
       // - swapRate = 300, _basePrice = 1.01
       // _dexPrice = swapRate * basePrice = 300 * 1.01 = 303
-      _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
+      _dexPrice =
+        (_amounts[_amounts.length - 1] * _basePrice) /
+        10**IERC20(_tokenConfig.path[_tokenConfig.path.length - 1]).decimals();
     }
 
     // example of unstable price:
@@ -302,7 +303,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
         _configs[_i].router,
         _configs[_i].path,
         _configs[_i].maxPriceDiffBps,
-        _configs[_i].useV3
+        _configs[_i].isUsingV3Pool
       );
 
       unchecked {
@@ -338,28 +339,20 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @param _source source token address
   /// @param _destination destination token address
   /// @return _price price in 1e18
-  /// @return _lastTimestamp last update timestamp
-  function getPriceFromV3Pool(address _source, address _destination)
-    external
-    view
-    returns (uint256 _price, uint256 _lastTimestamp)
-  {
-    (_price, _lastTimestamp) = _getPriceFromV3Pool(_source, _destination);
+  function getPriceFromV3Pool(address _source, address _destination) external view returns (uint256 _price) {
+    _price = _getPriceFromV3Pool(_source, _destination);
   }
 
   /// @dev Get price in 1e18 from uniswap v3 pool with last update timestamp
   /// @param _source source token address
   /// @param _destination destination token address
-  function _getPriceFromV3Pool(address _source, address _destination)
-    internal
-    view
-    returns (uint256 _price, uint256 _lastTimestamp)
-  {
+  function _getPriceFromV3Pool(address _source, address _destination) internal view returns (uint256 _price) {
     // assume that pool address is correct since it was verified when setPool
     address _poolAddress = v3PoolAddreses[_source][_destination];
+    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
 
     // get sqrtPriceX96 from uniswap v3 pool
-    (uint160 _sqrtPriceX96, , , , , , ) = IUniswapV3Pool(_poolAddress).slot0();
+    (uint160 _sqrtPriceX96, , , , , , ) = _pool.slot0();
 
     // calculation
     // - _sqrtPriceIn1e18 = sqrtX96 * 1e18 / 2**96
@@ -378,7 +371,11 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
     uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, 1 << 96);
     uint256 _non18Price = LibFullMath.mulDiv(_sqrtPriceIn1e18, _sqrtPriceIn1e18, 1e18);
-    _price = LibFullMath.mulDiv(_non18Price, 10**(IERC20(_source).decimals()), 10**(IERC20(_destination).decimals()));
+    _price = LibFullMath.mulDiv(
+      _non18Price,
+      10**(IERC20(_pool.token0()).decimals()),
+      10**(IERC20(_pool.token1()).decimals())
+    );
 
     // if source token is token0, then price is sqrtPriceX96, otherwise price is inverse of sqrtPriceX96
     if (_source > _destination) {
@@ -395,6 +392,5 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       //                          = 1854.76274 USDC/ETH
       _price = 10**36 / _price;
     }
-    _lastTimestamp = block.timestamp;
   }
 }
