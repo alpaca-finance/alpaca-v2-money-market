@@ -33,4 +33,8 @@ contract MockAlpacaV2Oracle {
   function getTokenPrice(address _token) external view returns (uint256, uint256) {
     return (mockTokenPrices[_token], block.timestamp);
   }
+
+  function oracle() external pure returns (address) {
+    return 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+  }
 }

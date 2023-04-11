@@ -203,6 +203,15 @@ contract MoneyMarketReader is IMoneyMarketReader {
     return _getPrice(_oracleMedianizer, _token, USD);
   }
 
+  /// @dev for repurchase / liquidation test scenario
+  // function _getPrice(
+  //   IOracleMedianizer, /* oracle */
+  //   address token0,
+  //   address /* token1 */
+  // ) internal view returns (uint256 _price) {
+  //   (_price, ) = IAlpacaV2Oracle(_moneyMarket.getOracle()).getTokenPrice(token0);
+  // }
+
   /// @dev partially replicate `OracleMedianizer.getPrice` logic
   ///      differences from original implementation
   ///      1) doesn't revert on no primary or valid source, returns 0 instead

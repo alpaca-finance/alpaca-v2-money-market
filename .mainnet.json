@@ -16,7 +16,8 @@
     "usdt": "0x55d398326f99059fF775485246999027B3197955"
   },
   "sharedConfig": {
-    "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
+    "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44",
+    "fixedRepurchaseRewardModel": ""
   },
   "sharedStrategies": {
     "pancakeswap": {
@@ -43,7 +44,8 @@
     "accountManager": {
       "implementation": "",
       "proxy": ""
-    }
+    },
+    "repurchaser": ""
   },
   "ibTokens": {
     "ibDodo": "",

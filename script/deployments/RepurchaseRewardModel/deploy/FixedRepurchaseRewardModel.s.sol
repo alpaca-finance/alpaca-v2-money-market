@@ -3,11 +3,14 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-contract SetDebtTokenImplementationScript is BaseScript {
+import { FixedFeeModel } from "solidity/contracts/money-market/fee-models/FixedFeeModel.sol";
+
+contract DeployFixedRepurchaseRewardModelScript is BaseScript {
   using stdJson for string;
 
   function run() public {
     _loadAddresses();
+
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -18,13 +21,11 @@ contract SetDebtTokenImplementationScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _debtTokenImplementation = address(debtTokenImplementation);
-
-    //---- execution ----//
     _startDeployerBroadcast();
-
-    moneyMarket.setDebtTokenImplementation(_debtTokenImplementation);
-
+    // deploy implementation
+    address fixedRepurchaseRewardModel = address(new FixedFeeModel());
     _stopBroadcast();
+
+    _writeJson(vm.toString(fixedRepurchaseRewardModel), ".sharedConfig.fixedRepurchaseRewardModel");
   }
 }

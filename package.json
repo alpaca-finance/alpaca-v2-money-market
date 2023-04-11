@@ -33,7 +33,9 @@
     "exec:bsc_mainnet:alpaca-v2-oracle:deploy": "forge script script/deployments/AlpacaV2Oracle/deploy/AlpacaV2Oracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-token-config": "forge script script/deployments/AlpacaV2Oracle/config/SetTokenConfig.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow"
+    "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:repurchase-reward-model:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:repurchase-reward-model:set-repurchase-reward-model": "forge script script/deployments/MoneyMarket/config/SetRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
