@@ -17,6 +17,6 @@ contract DeployRepurchaserScript is BaseScript {
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(repurchaser), ".repurchaser");
+    _writeJson(vm.toString(repurchaser), ".moneyMarket.repurchaser");
   }
 }

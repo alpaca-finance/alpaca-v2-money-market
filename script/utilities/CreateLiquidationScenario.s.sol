@@ -32,7 +32,7 @@ contract CreateLiquidationScenarioScript is BaseScript {
     // alpacaV2Oracle.setOracle(address(oracle));
 
     MockAlpacaV2Oracle oracle = new MockAlpacaV2Oracle();
-    oracle.setTokenPrice(wbnb, 500 ether);
+    oracle.setTokenPrice(wbnb, 700 ether);
     oracle.setTokenPrice(ibBnb, 500 ether);
     oracle.setTokenPrice(busd, 1 ether);
     oracle.setTokenPrice(ibBusd, 1 ether);
