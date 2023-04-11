@@ -27,20 +27,35 @@ contract DeployOracleScript is BaseScript {
     path = new address[](2);
     path[0] = wbnb;
     path[1] = busd;
-    configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+    configs[0] = IAlpacaV2Oracle.Config({
+      router: pancakeswapV2Router,
+      maxPriceDiffBps: 10500,
+      path: path,
+      isUsingV3Pool: false
+    });
     // dodo
     tokens[1] = dodo;
     path = new address[](3);
     path[0] = dodo;
     path[1] = wbnb;
     path[2] = busd;
-    configs[1] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+    configs[1] = IAlpacaV2Oracle.Config({
+      router: pancakeswapV2Router,
+      maxPriceDiffBps: 10500,
+      path: path,
+      isUsingV3Pool: false
+    });
     // doge
     tokens[2] = doge;
     path = new address[](2);
     path[0] = doge;
     path[1] = busd;
-    configs[2] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+    configs[2] = IAlpacaV2Oracle.Config({
+      router: pancakeswapV2Router,
+      maxPriceDiffBps: 10500,
+      path: path,
+      isUsingV3Pool: false
+    });
 
     alpacaV2Oracle.setTokenConfig(tokens, configs);
 

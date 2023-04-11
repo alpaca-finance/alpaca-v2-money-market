@@ -6,6 +6,13 @@ interface IAlpacaV2Oracle {
     address router;
     uint64 maxPriceDiffBps;
     address[] path;
+    bool isUsingV3Pool;
+  }
+
+  struct PoolConfig {
+    address source;
+    address destination;
+    address poolAddress;
   }
 
   /// @dev Set tokenConfig for getting dex price.
@@ -28,6 +35,7 @@ interface IAlpacaV2Oracle {
   function usd() external view returns (address);
 
   /// @dev Errors
+  error AlpacaV2Oracle_InvalidPool();
   error AlpacaV2Oracle_InvalidLPAddress();
   error AlpacaV2Oracle_InvalidOracleAddress();
   error AlpacaV2Oracle_InvalidConfigLength();

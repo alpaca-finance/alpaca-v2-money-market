@@ -13,6 +13,7 @@ import { IAlpacaV2Oracle } from "./interfaces/IAlpacaV2Oracle.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IRouterLike } from "./interfaces/IRouterLike.sol";
+import { IUniswapV3Pool } from "./interfaces/IUniswapV3Pool.sol";
 
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
@@ -24,8 +25,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     address indexed _token,
     address _router,
     address[] _path,
-    uint64 maxPriceDiffBps
+    uint64 _maxPriceDiffBps,
+    bool _isUsingV3Pool
   );
+  event LogSetPool(address indexed _source, address indexed _destination, address _poolAddress);
 
   uint256 internal constant MAX_BPS = 10000;
 
@@ -40,6 +43,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
   // mapping of token to tokenConfig
   mapping(address => Config) public tokenConfigs;
+
+  // mapping of uniswap v3 pool address
+  //  source => destination => poolAddress
+  mapping(address => mapping(address => address)) public v3PoolAddreses;
 
   constructor(
     address _oracle,
@@ -113,20 +120,43 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       return;
     }
 
-    // call router for getting swap rate between token and baseStableToken
-    uint256[] memory _amounts = IRouterLike(tokenConfigs[_tokenAddress].router).getAmountsOut(
-      10**IERC20(_tokenAddress).decimals(),
-      tokenConfigs[_tokenAddress].path
-    );
-
+    Config memory _tokenConfig = tokenConfigs[_tokenAddress];
     // get baseStable price usd from OracleMedianizer
     (uint256 _basePrice, ) = IPriceOracle(oracle).getPrice(baseStable, usd);
 
-    // calculating _dexPrice of token
-    // example:
-    // - swapRate = 300, _basePrice = 1.01
-    // _dexPrice = swapRate * basePrice = 300 * 1.01 = 303
-    uint256 _dexPrice = (_amounts[_amounts.length - 1] * _basePrice) / 1e18;
+    uint256 _dexPrice;
+
+    if (_tokenConfig.isUsingV3Pool) {
+      // calulating _dexPrice of token (v3)
+      // product of price in each pool that need to hop through the path
+      // example:
+      // - path = [BTC, ETH, USDT]
+      // - pool1 = BTC/ETH, price = 15
+      // - pool2 = ETH/USDT, price = 1850
+      // _dexPrice = 15 * 1850 = 27750
+      _dexPrice = 1;
+      uint256 _len = _tokenConfig.path.length - 1;
+      for (uint256 _i = 0; _i < _len; ) {
+        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[_i], _tokenConfig.path[_i + 1]));
+        unchecked {
+          ++_i;
+        }
+      }
+    } else {
+      // call router for getting swap rate between token and baseStableToken
+      uint256[] memory _amounts = IRouterLike(_tokenConfig.router).getAmountsOut(
+        10**IERC20(_tokenAddress).decimals(),
+        _tokenConfig.path
+      );
+
+      // calculating _dexPrice of token (v2)
+      // example:
+      // - swapRate = 300, _basePrice = 1.01
+      // _dexPrice = swapRate * basePrice = 300 * 1.01 = 303
+      _dexPrice =
+        (_amounts[_amounts.length - 1] * _basePrice) /
+        10**IERC20(_tokenConfig.path[_tokenConfig.path.length - 1]).decimals();
+    }
 
     // example of unstable price:
     //  - maxPriceDiffBps = 10500
@@ -268,12 +298,108 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
         _tokens[_i],
         _configs[_i].router,
         _configs[_i].path,
-        _configs[_i].maxPriceDiffBps
+        _configs[_i].maxPriceDiffBps,
+        _configs[_i].isUsingV3Pool
       );
 
       unchecked {
         ++_i;
       }
+    }
+  }
+
+  /// @notice Set pool addresses of uniswap v3
+  /// @param _poolConfigs List of poolConfig
+  function setPools(PoolConfig[] calldata _poolConfigs) external onlyOwner {
+    uint256 _len = _poolConfigs.length;
+
+    for (uint256 _i; _i < _len; ) {
+      _setPool(_poolConfigs[_i].source, _poolConfigs[_i].destination, _poolConfigs[_i].poolAddress);
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  /// @dev Set pool address of uniswap v3
+  /// @param _source source token address
+  /// @param _destination destination token address
+  /// @param _poolAddress pool address
+  function _setPool(
+    address _source,
+    address _destination,
+    address _poolAddress
+  ) internal {
+    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
+    // verify that pool contain both source and destination token
+    if (
+      !(_pool.token0() == _source && _pool.token1() == _destination) ||
+      !(_pool.token0() == _destination && _pool.token1() == _source)
+    ) {
+      revert AlpacaV2Oracle_InvalidPool();
+    }
+
+    v3PoolAddreses[_source][_destination] = _poolAddress;
+    v3PoolAddreses[_destination][_source] = _poolAddress;
+
+    emit LogSetPool(_source, _destination, _poolAddress);
+    emit LogSetPool(_destination, _source, _poolAddress);
+  }
+
+  /// @notice Get price from uniswap v3 pool
+  /// @dev To verify in fork test
+  /// @param _source source token address
+  /// @param _destination destination token address
+  /// @return _price price in 1e18
+  function getPriceFromV3Pool(address _source, address _destination) external view returns (uint256 _price) {
+    _price = _getPriceFromV3Pool(_source, _destination);
+  }
+
+  /// @dev Get price in 1e18 from uniswap v3 pool with last update timestamp
+  /// @param _source source token address
+  /// @param _destination destination token address
+  function _getPriceFromV3Pool(address _source, address _destination) internal view returns (uint256 _price) {
+    // assume that pool address is correct since it was verified when setPool
+    address _poolAddress = v3PoolAddreses[_source][_destination];
+    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
+
+    // get sqrtPriceX96 from uniswap v3 pool
+    (uint160 _sqrtPriceX96, , , , , , ) = _pool.slot0();
+
+    // calculation
+    // - _sqrtPriceIn1e18 = sqrtX96 * 1e18 / 2**96
+    // - _non18Price = _sqrtPriceIn1e18 ** 2 / 1e18
+    // - priceIn18QuoteByToken1 = _non18Price * 10**token0Decimal / 10**token1Decimal
+    //
+    // example:
+    // - source = USDC, destination = ETH
+    // - token0 = USDC, token1 = ETH
+    // - sqrtPriceX96 = 1839650835463716126473692777239695
+    //
+    // _sqrtPriceIn1e18 = 1839650835463716126473692777239695 * 1e18 / 2**96 = 2.3219657973671966e+22
+    // _non18Price = 2.3219657973671966e+22 ** 2 / 1e18 = 5.391525164143081e+26
+    // priceIn18QuoteByToken1 = 5.391525164143081e+26 * 10**6 / 10**18 = 539152516414308 (in 1e18 unit)
+    //                        = 0.00054 ETH/USDC
+
+    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, 1 << 96);
+    uint256 _non18Price = LibFullMath.mulDiv(_sqrtPriceIn1e18, _sqrtPriceIn1e18, 1e18);
+    _price = (_non18Price * 10**(IERC20(_pool.token0()).decimals())) / 10**(IERC20(_pool.token1()).decimals());
+
+    // if source token is token0, then price is sqrtPriceX96, otherwise price is inverse of sqrtPriceX96
+    if (_source > _destination) {
+      // use 1e36 to avoid underflow and keep unit in 1e18
+      //
+      // calculation:
+      // - priceIn18QuoteByToken0 = 1e36 / priceIn18QuoteByToken1
+      //
+      // example:
+      // - source = ETH, destination = USDC
+      // - token0 = USDC, token1 = ETH
+      // - priceIn18QuoteByToken1 = 539152516414308
+      // - priceIn18QuoteByToken0 = 1e36 / 539152516414308 = 1854762742554941500000 (in 1e18 unit)
+      //                          = 1854.76274 USDC/ETH
+      _price = 10**36 / _price;
     }
   }
 }
