@@ -173,7 +173,7 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
     address[] memory _adjudicators = new address[](1);
     _adjudicators[0] = ALICE;
 
-    adminFacet.setAdjudicatorsOk(_adjudicators, true);
+    adminFacet.setRiskManagersOk(_adjudicators, true);
     vm.prank(ALICE);
     adminFacet.setTokenMaximumCapacities(address(weth), 0, 0);
 
