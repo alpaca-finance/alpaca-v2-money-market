@@ -37,8 +37,6 @@ interface IAlpacaV2Oracle {
 
   function usd() external view returns (address);
 
-  function setOracle(address _oracle) external;
-
   /// @dev Errors
   error AlpacaV2Oracle_InvalidPool();
   error AlpacaV2Oracle_InvalidLPAddress();
