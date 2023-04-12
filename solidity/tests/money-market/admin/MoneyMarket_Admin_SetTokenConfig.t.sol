@@ -168,4 +168,21 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
     assertEq(_maxNumOfDebtAfter, 5);
     assertEq(_maxNumOfNonColaltDebtAfter, 6);
   }
+
+  function testCorrectness_WhenSetNewTokenMaximumCapacities_TokenConfigShouldBeUpdated() external {
+    address[] memory _adjudicators = new address[](1);
+    _adjudicators[0] = ALICE;
+
+    adminFacet.setAdjudicatorsOk(_adjudicators, true);
+    vm.prank(ALICE);
+    adminFacet.setTokenMaximumCapacities(address(weth), 0, 0);
+
+    assertEq(viewFacet.getTokenConfig(address(weth)).maxCollateral, 0);
+    assertEq(viewFacet.getTokenConfig(address(weth)).maxBorrow, 0);
+  }
+
+  function testRevert_WhenCallerIsNotWhitelisted_ShouldRevert() external {
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_Unauthorized.selector));
+    adminFacet.setTokenMaximumCapacities(address(weth), 0, 0);
+  }
 }
