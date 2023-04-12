@@ -307,7 +307,6 @@ contract LiquidationFacet is ILiquidationFacet {
   ///           2) send all collateral to strategy to prepare for liquidation
   ///           3) call `executeLiquidation` on strategy
   ///               - strategy convert collateral to repay token
-  ///               - strategy transfer converted repay token and leftover collateral (if any) back to diamond
   ///           4) calculate actual repayment and fees (fee to protocol and caller) based on
   ///              amount received from strategy
   ///           5) check if the repayment violate maximum amount allowed to be liquidated in single tx
@@ -322,7 +321,6 @@ contract LiquidationFacet is ILiquidationFacet {
   /// @param _subAccountId The index to derive the subaccount
   /// @param _repayToken The token that will be repurchase and repay the debt
   /// @param _collatToken The collateral token that will be used for exchange
-  /// @param _repayAmount The amount of debt token will be repaid after exchaing the collateral
   /// @param _minReceive Minimum amount expected from liquidation in repayToken
   function liquidationCall(
     address _liquidationStrat,
@@ -330,7 +328,6 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount,
     uint256 _minReceive
   ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
@@ -390,12 +387,11 @@ contract LiquidationFacet is ILiquidationFacet {
     {
       uint256 _debtShare = moneyMarketDs.subAccountDebtShares[_vars.subAccount].getAmount(_repayToken);
       // for ib debtValue is in ib shares not in underlying
-      uint256 _debtValue = LibShareUtil.shareToValue(
+      _vars.maxPossibleRepayAmount = LibShareUtil.shareToValue(
         _debtShare,
         moneyMarketDs.overCollatDebtValues[_repayToken],
         moneyMarketDs.overCollatDebtShares[_repayToken]
       );
-      _vars.maxPossibleRepayAmount = _repayAmount > _debtValue ? _debtValue : _repayAmount;
     }
     _vars.maxPossibleFee = (_vars.maxPossibleRepayAmount * moneyMarketDs.liquidationFeeBps) / LibConstant.MAX_BPS;
 
@@ -418,6 +414,11 @@ contract LiquidationFacet is ILiquidationFacet {
     {
       // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
       uint256 _amountFromLiquidationStrat = IERC20(_repayToken).balanceOf(address(this)) - _vars.repayTokenBalaceBefore;
+
+      // revert if executing a strategy result in excessive market selling
+      if (_amountFromLiquidationStrat > _vars.expectedMaxRepayAmount) {
+        revert LiquidationFacet_TooMuchRepayToken();
+      }
       // find the actual fee through the rule of three
       // _actualLiquidationFee = maxFee * (_amountFromLiquidationStrat / _expectedMaxRepayAmount)
       _vars.actualLiquidationFee = (_amountFromLiquidationStrat * _vars.maxPossibleFee) / _vars.expectedMaxRepayAmount;
