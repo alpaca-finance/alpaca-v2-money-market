@@ -24,6 +24,8 @@ contract SetUpMMForTestScript is BaseScript {
     moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
     moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
 
+    moneyMarket.setLiquidationParams(5000, 11111);
+
     address irm1 = address(new TripleSlopeModel6());
     address irm2 = address(new TripleSlopeModel7());
 
@@ -49,7 +51,7 @@ contract SetUpMMForTestScript is BaseScript {
         maxBorrow: 0,
         maxCollateral: 1_000_000 ether
       });
-      address ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
+      ibBusd = moneyMarket.openMarket(busd, tokenConfigInput, ibTokenConfigInput);
 
       // DODO
       tokenConfigInput.tier = LibConstant.AssetTier.CROSS;
@@ -59,7 +61,7 @@ contract SetUpMMForTestScript is BaseScript {
       ibTokenConfigInput.tier = LibConstant.AssetTier.CROSS;
       ibTokenConfigInput.collateralFactor = 0;
       ibTokenConfigInput.maxCollateral = 0;
-      address ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
+      ibDodo = moneyMarket.openMarket(dodo, tokenConfigInput, ibTokenConfigInput);
 
       // DOGE
       tokenConfigInput.tier = LibConstant.AssetTier.ISOLATE;
@@ -69,7 +71,7 @@ contract SetUpMMForTestScript is BaseScript {
       ibTokenConfigInput.tier = LibConstant.AssetTier.ISOLATE;
       ibTokenConfigInput.collateralFactor = 0;
       ibTokenConfigInput.maxCollateral = 0;
-      address ibDoge = moneyMarket.openMarket(doge, tokenConfigInput, ibTokenConfigInput);
+      ibDoge = moneyMarket.openMarket(doge, tokenConfigInput, ibTokenConfigInput);
 
       _writeJson(vm.toString(ibBusd), ".ibTokens.ibBusd");
       _writeJson(vm.toString(ibDodo), ".ibTokens.ibDodo");
@@ -105,11 +107,15 @@ contract SetUpMMForTestScript is BaseScript {
     // subAccount 2
     accountManager.depositAndAddCollateral(2, busd, 1 ether);
 
+    // subAccount 3 for testing repurchase
+    accountManager.depositAndAddCollateral(3, busd, 500 ether);
+    accountManager.borrow(3, wbnb, 1 ether);
+
     // calculate how many doge can we max borrow with 1 BUSD collat
     (uint256 dogePrice, ) = alpacaV2Oracle.getTokenPrice(address(doge));
     (uint256 busdPrice, ) = alpacaV2Oracle.getTokenPrice(address(busd));
     LibConstant.TokenConfig memory dogeTokenConfig = moneyMarket.getTokenConfig(address(doge));
-    address ibBusd = moneyMarket.getIbTokenFromToken(address(busd));
+    ibBusd = moneyMarket.getIbTokenFromToken(address(busd));
     LibConstant.TokenConfig memory ibBusdTokenConfig = moneyMarket.getTokenConfig(ibBusd);
     uint256 maxBorrowDoge = ((1e8 * (busdPrice * ibBusdTokenConfig.collateralFactor)) / LibConstant.MAX_BPS) /
       ((dogePrice * LibConstant.MAX_BPS) / dogeTokenConfig.borrowingFactor);

@@ -171,7 +171,9 @@ contract MiniFL is IMiniFL, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         timePast = block.timestamp - _poolInfo.lastRewardTime;
       }
 
-      uint256 alpacaReward = (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+      uint256 alpacaReward = totalAllocPoint != 0
+        ? (timePast * alpacaPerSecond * _poolInfo.allocPoint) / totalAllocPoint
+        : 0;
       accAlpacaPerShare = accAlpacaPerShare + ((alpacaReward * ACC_ALPACA_PRECISION) / stakedBalance);
     }
 

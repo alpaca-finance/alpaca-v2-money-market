@@ -2,8 +2,9 @@
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
+import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
-contract SetDebtTokenImplementationScript is BaseScript {
+contract SetRepurchaseRewardModelScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -18,12 +19,12 @@ contract SetDebtTokenImplementationScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _debtTokenImplementation = address(debtTokenImplementation);
+    IFeeModel _newModel = IFeeModel(repurchaseRewardModel);
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    moneyMarket.setDebtTokenImplementation(_debtTokenImplementation);
+    moneyMarket.setRepurchaseRewardModel(_newModel);
 
     _stopBroadcast();
   }
