@@ -4,11 +4,12 @@
   "nativeRelayer": "0x8d3644898516274da3e855ac49289e96bb17201e",
   "oracleMedianizer": "0x67e157c7aA71298f2cE1A3d004CF5944C06A2A40",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
-  "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
+  "chainlinkPriceOracle": "0xEe13333120968d13811Eb2FF7f434ae138578B3e",
   "alpacaV2Oracle": "0xa952932f1fF570CAa9c619068da4C32f8cF4755E",
   "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   "tokens": {
     "doge": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+    "dot": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
     "wbnb": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
     "busd": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
     "dodo": "0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2",
@@ -65,6 +66,22 @@
         "ibToken": "0x7BdC4392D0c58a130212C6b9418E20e84B5AAF35",
         "debtToken": "0x3b023deD14344dB62A43818024c3d37EBd622A00",
         "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
+      },
+      {
+        "name": "CAKE Market",
+        "tier": "CROSS",
+        "token": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+        "ibToken": "0xB46430A0b3c2bd975ac6315108Ca99c2C96B1251",
+        "debtToken": "0xF96a88f4729618e229718716ec8b0C86AC55Db63",
+        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
+      },
+      {
+        "name": "DOT Market",
+        "tier": "ISOLATE",
+        "token": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
+        "ibToken": "0x548F5d6b08c135e694dFE4B6ed0034a7159e72A8",
+        "debtToken": "0x9c6F65FD0C39b67051F05B06De4552d1cb000544",
+        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
       }
     ],
     "accountManager": {
@@ -110,6 +127,30 @@
         "id": 6,
         "name": "debtIbALPACA",
         "stakingToken": "0x3b023deD14344dB62A43818024c3d37EBd622A00",
+        "rewarders": []
+      },
+      {
+        "id": 7,
+        "name": "ibCAKE",
+        "stakingToken": "0xB46430A0b3c2bd975ac6315108Ca99c2C96B1251",
+        "rewarders": []
+      },
+      {
+        "id": 8,
+        "name": "debtIbCAKE",
+        "stakingToken": "0xF96a88f4729618e229718716ec8b0C86AC55Db63",
+        "rewarders": []
+      },
+      {
+        "id": 9,
+        "name": "ibDOT",
+        "stakingToken": "0x548F5d6b08c135e694dFE4B6ed0034a7159e72A8",
+        "rewarders": []
+      },
+      {
+        "id": 10,
+        "name": "debtIbDOT",
+        "stakingToken": "0x9c6F65FD0C39b67051F05B06De4552d1cb000544",
         "rewarders": []
       }
     ]

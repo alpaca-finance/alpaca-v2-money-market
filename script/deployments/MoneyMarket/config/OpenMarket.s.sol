@@ -22,80 +22,46 @@ contract OpenMarketScript is BaseScript {
     */
 
     //---- inputs ----//
-    uint8 newMarketLength = 3;
+    uint8 newMarketLength = 2;
     address[] memory underlyingTokens = new address[](newMarketLength);
     IAdminFacet.TokenConfigInput[] memory underlyingTokenConfigInputs = new IAdminFacet.TokenConfigInput[](
       newMarketLength
     );
     IAdminFacet.TokenConfigInput[] memory ibTokenConfigInputs = new IAdminFacet.TokenConfigInput[](newMarketLength);
 
-    // WBNB
-    underlyingTokens[0] = wbnb;
+    // cake
+    underlyingTokens[0] = cake;
     underlyingTokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.CROSS,
       collateralFactor: 0,
       borrowingFactor: 9000,
       maxBorrow: 10_000 ether,
       maxCollateral: 0 ether
     });
     ibTokenConfigInputs[0] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
+      tier: LibConstant.AssetTier.CROSS,
+      collateralFactor: 0,
       borrowingFactor: 1,
       maxBorrow: 0 ether,
-      maxCollateral: 1_000_000 ether
+      maxCollateral: 0 ether
     });
 
-    // BUSD
-    underlyingTokens[1] = busd;
+    // dot
+    underlyingTokens[1] = dot;
     underlyingTokenConfigInputs[1] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.COLLATERAL,
+      tier: LibConstant.AssetTier.ISOLATE,
       collateralFactor: 0,
-      borrowingFactor: 9000,
+      borrowingFactor: 8500,
       maxBorrow: 10_000 ether,
       maxCollateral: 0 ether
     });
     ibTokenConfigInputs[1] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
+      tier: LibConstant.AssetTier.ISOLATE,
+      collateralFactor: 0,
       borrowingFactor: 1,
       maxBorrow: 0 ether,
-      maxCollateral: 1_000_000 ether
-    });
-
-    // // ALPACA
-    underlyingTokens[2] = alpaca;
-    underlyingTokenConfigInputs[2] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.COLLATERAL,
-      collateralFactor: 0,
-      borrowingFactor: 9000,
-      maxBorrow: 10_000 ether,
       maxCollateral: 0 ether
     });
-    ibTokenConfigInputs[2] = IAdminFacet.TokenConfigInput({
-      tier: LibConstant.AssetTier.COLLATERAL,
-      collateralFactor: 9000,
-      borrowingFactor: 1,
-      maxBorrow: 0 ether,
-      maxCollateral: 1_000_000 ether
-    });
-
-    // CAKE
-    // underlyingTokens[3] = 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82;
-    // underlyingTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
-    //   tier: LibConstant.AssetTier.ISOLATE,
-    //   collateralFactor: 0,
-    //   borrowingFactor: 8500,
-    //   maxBorrow: 10_000 ether,
-    //   maxCollateral: 0 ether
-    // });
-    // ibTokenConfigInputs[3] = IAdminFacet.TokenConfigInput({
-    //   tier: LibConstant.AssetTier.ISOLATE,
-    //   collateralFactor: 0,
-    //   borrowingFactor: 1,
-    //   maxBorrow: 0 ether,
-    //   maxCollateral: 1_000_000 ether
-    // });
 
     //---- execution ----//
     _startDeployerBroadcast();

@@ -12,7 +12,7 @@
     "exec:bsc_mainnet:ib-token:deploy": "forge script script/deployments/InterestBearingToken/deploy/InterestBearingTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:debt-token:deploy": "forge script script/deployments/DebtToken/deploy/DebtTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:money-market:config:open-market": "forge script script/deployments/MoneyMarket/config/OpeMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:open-market": "forge script script/deployments/MoneyMarket/config/OpenMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-interest-model": "forge script script/deployments/MoneyMarket/config/SetInterestModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-fees": "forge script script/deployments/MoneyMarket/config/SetFees.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-max-num-token": "forge script script/deployments/MoneyMarket/config/SetMaxNumOfToken.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -36,7 +36,9 @@
     "exec:bsc_mainnet:oracle-medianizer:deploy": "forge script script/deployments/OracleMedianizer/deploy/OracleMedianizer.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:oracle-medianizer:config:set-multiple-primary-sources": "forge script script/deployments/OracleMedianizer/config/SetMultiPrimarySources.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow"
+    "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:chainlink-price-oracle2:deploy": "forge script script/deployments/ChainLinkOracle2/deploy/ChainlinkPriceOracle2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:chainlink-price-oracle2:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle2/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",

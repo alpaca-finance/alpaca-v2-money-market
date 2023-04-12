@@ -19,7 +19,7 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-    uint8 pairLength = 3;
+    uint8 pairLength = 2;
     address[] memory token0s = new address[](pairLength);
     address[] memory token1s = new address[](pairLength);
     uint256[] memory maxPriceDeviationList = new uint256[](pairLength);
@@ -27,37 +27,26 @@ contract SetMultiPrimarySourcesScript is BaseScript {
     IPriceOracle[][] memory allSources = new IPriceOracle[][](pairLength);
     IPriceOracle[] memory souces;
 
-    // BUSD
+    // CAKE
     souces = new IPriceOracle[](1);
-    souces[0] = IPriceOracle(0x634902128543b25265da350e2d961C7ff540fC71);
+    souces[0] = IPriceOracle(0xEe13333120968d13811Eb2FF7f434ae138578B3e);
 
-    token0s[0] = busd;
+    token0s[0] = cake;
     token1s[0] = usdPlaceholder;
     maxPriceDeviationList[0] = 1000000000000000000;
     maxPriceStaleList[0] = 86400;
     allSources[0] = souces;
 
-    // BNB
+    // DOT
     souces = new IPriceOracle[](1);
-    souces[0] = IPriceOracle(0x634902128543b25265da350e2d961C7ff540fC71);
+    souces[0] = IPriceOracle(0xEe13333120968d13811Eb2FF7f434ae138578B3e);
 
-    token0s[1] = wbnb;
+    token0s[1] = dot;
     token1s[1] = usdPlaceholder;
     maxPriceDeviationList[1] = 1000000000000000000;
     maxPriceStaleList[1] = 86400;
 
     allSources[1] = souces;
-
-    // ALPACA
-    souces = new IPriceOracle[](1);
-    souces[0] = IPriceOracle(0x634902128543b25265da350e2d961C7ff540fC71);
-
-    token0s[2] = alpaca;
-    token1s[2] = usdPlaceholder;
-    maxPriceDeviationList[2] = 1000000000000000000;
-    maxPriceStaleList[2] = 86400;
-
-    allSources[2] = souces;
 
     _startDeployerBroadcast();
 

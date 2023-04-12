@@ -26,20 +26,21 @@ contract SetTokenConfigScript is BaseScript {
     IAlpacaV2Oracle.Config[] memory configs = new IAlpacaV2Oracle.Config[](configLength);
 
     address[] memory path;
-    // WBNB
+    // CAKE
     path = new address[](2);
-    path[0] = wbnb;
+    path[0] = cake;
     path[1] = busd;
 
-    tokens[0] = wbnb;
+    tokens[0] = cake;
     configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
 
-    // ALPACA
-    path = new address[](2);
-    path[0] = alpaca;
-    path[1] = busd;
+    // DOT
+    path = new address[](3);
+    path[0] = dot;
+    path[1] = wbnb;
+    path[2] = busd;
 
-    tokens[1] = alpaca;
+    tokens[1] = dot;
     configs[1] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
 
     //---- execution ----//
