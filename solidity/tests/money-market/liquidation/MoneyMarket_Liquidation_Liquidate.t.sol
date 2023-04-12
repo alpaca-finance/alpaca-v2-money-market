@@ -238,8 +238,11 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
-    // return non, all debt is bad debt
-    mockBadLiquidationStrategy.setReturnRepayAmount(normalizeEther(0 ether, usdcDecimal));
+    // calculate max return plus fee round downed to simulate precision loss
+    uint256 _maxReturnWithFee = ((normalizeEther(30 ether, usdcDecimal) * 10100) / 10000) - 1;
+    // return 50% of debt plus liquidation fee
+
+    mockBadLiquidationStrategy.setReturnRepayAmount((_maxReturnWithFee) / 2);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(mockBadLiquidationStrategy), // this strategy always return repayToken as set prior
@@ -272,16 +275,15 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // total token should decrease due to the fact that bad debt was booked
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), 0);
 
-    assertEq(viewFacet.getTotalToken(_debtToken), normalizeEther(70 ether, usdcDecimal)); // 30 usdc bad debt
-    assertEq(viewFacet.getFloatingBalance(_debtToken), normalizeEther(70 ether, usdcDecimal)); // since debt went to 0, reserve only has 70 left
+    assertEq(viewFacet.getTotalToken(_debtToken), normalizeEther(85 ether, usdcDecimal)); // 30 usdc bad debt
+    assertEq(viewFacet.getFloatingBalance(_debtToken), normalizeEther(85 ether, usdcDecimal)); // since debt went to 0, reserve only has 70 left
     (uint256 _totalUsedBorrowingPower, ) = viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId);
     assertEq(_totalUsedBorrowingPower, 0);
     // assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId), 0);
     // check liquidation fee funds flow
-    // there's no liquidation fee due to the fact that the strat return nothing
     assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
-      normalizeEther(0 ether, usdcDecimal)
+      normalizeEther(0.149999 ether, usdcDecimal)
     );
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
