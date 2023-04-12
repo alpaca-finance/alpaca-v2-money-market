@@ -302,14 +302,14 @@ contract AdminFacet is IAdminFacet {
   }
 
   /// @notice Whitelist/Blacklist the address allowed for setting risk parameters
-  /// @param _adjudicators an array of address of adjudicators
+  /// @param _riskManagers an array of address of risk managers
   /// @param _isOk a flag to allow or disallow
-  function setRiskManagersOk(address[] calldata _adjudicators, bool _isOk) external onlyOwner {
+  function setRiskManagersOk(address[] calldata _riskManagers, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    uint256 _length = _adjudicators.length;
+    uint256 _length = _riskManagers.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.riskManagersOk[_adjudicators[_i]] = _isOk;
-      emit LogSetAdjudicatorOk(_adjudicators[_i], _isOk);
+      moneyMarketDs.riskManagersOk[_riskManagers[_i]] = _isOk;
+      emit LogSetAdjudicatorOk(_riskManagers[_i], _isOk);
       unchecked {
         ++_i;
       }
