@@ -2,11 +2,13 @@
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
+import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
-contract SetMinDebtSizeScript is BaseScript {
+contract SetRepurchaseRewardModelScript is BaseScript {
   using stdJson for string;
 
   function run() public {
+    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -17,12 +19,12 @@ contract SetMinDebtSizeScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint256 _minDebtSize = 10 ether;
+    IFeeModel _newModel = IFeeModel(repurchaseRewardModel);
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    moneyMarket.setMinDebtSize(_minDebtSize);
+    moneyMarket.setRepurchaseRewardModel(_newModel);
 
     _stopBroadcast();
   }

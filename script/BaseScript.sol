@@ -18,6 +18,7 @@ import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
+import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
 interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IMMOwnershipFacet {}
 
@@ -45,6 +46,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV2IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   address internal pancakeswapV2Router;
+  IFeeModel internal repurchaseRewardModel;
   address internal wbnb;
   address internal busd;
   address internal dodo;
@@ -69,6 +71,7 @@ abstract contract BaseScript is Script {
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
     pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
+    repurchaseRewardModel = abi.decode(configJson.parseRaw(".sharedConfig.fixedRepurchaseRewardModel"), (IFeeModel));
 
     ibTokenImplementation = abi.decode(
       configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),

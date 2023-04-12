@@ -41,8 +41,7 @@ contract LiquidationFacet is ILiquidationFacet {
     address _collatToken,
     uint256 _amountDebtRepaid,
     uint256 _amountCollatLiquidated,
-    uint256 _feeToTreasury,
-    uint256 _feeToLiquidator
+    uint256 _feeToTreasury
   );
 
   struct RepurchaseLocalVars {
@@ -54,7 +53,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 repurchaseRewardBps;
     uint256 repayAmountWithoutFee;
     uint256 repayTokenPrice;
-    bool isPurchaseAll;
+    bool isRepurchaseAll;
   }
 
   struct LiquidationLocalVars {
@@ -65,8 +64,6 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 expectedMaxRepayAmount;
     uint256 repaidAmount;
     uint256 actualLiquidationFee;
-    uint256 feeToLiquidator;
-    uint256 feeToTreasury;
     uint256 collatSold;
     uint256 collatTokenBalanceBefore;
     uint256 repayTokenBalaceBefore;
@@ -189,7 +186,7 @@ contract LiquidationFacet is ILiquidationFacet {
         _vars.repayAmountWithFee = _maxAmountRepurchaseable;
         _vars.repayAmountWithoutFee = _currentDebtAmount;
         // set flag `isRepurchaseAll` = true for further use in `_actualRepayAmountWithoutFee` calculation
-        _vars.isPurchaseAll = true;
+        _vars.isRepurchaseAll = true;
       } else {
         _vars.repayAmountWithFee = _desiredRepayAmount;
         _vars.repayAmountWithoutFee =
@@ -428,16 +425,6 @@ contract LiquidationFacet is ILiquidationFacet {
       _vars.repaidAmount = _amountFromLiquidationStrat - _vars.actualLiquidationFee;
     }
 
-    // Split fee between liquidator and treasury
-    // ex. liquidationReward = 40%
-    //     40% of actualLiquidationFee will go to liquidator aka. caller
-    //     60% of actualLiquidationFee will go to treasury
-    _vars.feeToLiquidator = (_vars.actualLiquidationFee * moneyMarketDs.liquidationRewardBps) / LibConstant.MAX_BPS;
-    // Safe to use unchecked because `feeToLiquidator` is fraction of `actualLiquidationFee`
-    unchecked {
-      _vars.feeToTreasury = _vars.actualLiquidationFee - _vars.feeToLiquidator;
-    }
-
     // Revert if repayment exceeds threshold (repayment > maxLiquidateThreshold * usedBorrowingPower)
     _validateBorrowingPower(_repayToken, _vars.repaidAmount, _vars.usedBorrowingPower, moneyMarketDs);
 
@@ -479,8 +466,7 @@ contract LiquidationFacet is ILiquidationFacet {
       }
     }
 
-    IERC20(_repayToken).safeTransfer(msg.sender, _vars.feeToLiquidator);
-    IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.feeToTreasury);
+    IERC20(_repayToken).safeTransfer(moneyMarketDs.liquidationTreasury, _vars.actualLiquidationFee);
 
     // Write off all debts under the subaccount if there's no more collateral
     // This would result in realizing the bad debts to lenders
@@ -495,8 +481,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _collatToken,
       _vars.repaidAmount,
       _vars.collatSold,
-      _vars.feeToTreasury,
-      _vars.feeToLiquidator
+      _vars.actualLiquidationFee
     );
   }
 
@@ -538,7 +523,7 @@ contract LiquidationFacet is ILiquidationFacet {
     // _newRepayShare = 11 * 10 / 15 = 7.33333333333 =>  round down to 7 shares
     // _newRepayShareToValue = 7 * 15 / 10 = 10.5 => round down to 10 wei and repay all debt
     _repayAmountWithFee = _vars.repayAmountWithFee;
-    if (_vars.isPurchaseAll) {
+    if (_vars.isRepurchaseAll) {
       uint256 _repayAmountWithoutFee = _vars.repayAmountWithFee - _vars.repurchaseFeeToProtocol;
       uint256 _actualRepayShare = LibShareUtil.valueToShare(
         _repayAmountWithoutFee,

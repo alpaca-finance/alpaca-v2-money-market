@@ -18,7 +18,8 @@
     "cake": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
   },
   "sharedConfig": {
-    "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
+    "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44",
+    "fixedRepurchaseRewardModel": ""
   },
   "sharedStrategies": {
     "pancakeswap": {
@@ -87,7 +88,8 @@
     "accountManager": {
       "implementation": "0x3a1126e65893e1Bd0e886774892cAc38b8595a0c",
       "proxy": "0xe53F244bDC41342BAB81aE45C9E6a3a378DEF036"
-    }
+    },
+    "repurchaser": ""
   },
   "miniFL": {
     "implementation": "0x8291B3c950825131ADCdD2d412a16950dCD2f2E0",

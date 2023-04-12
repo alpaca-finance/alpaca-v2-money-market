@@ -44,15 +44,13 @@ contract SetMoneyMarketConfigsScript is BaseUtilsScript {
     uint16 newLendingFeeBps = 0;
     uint16 newRepurchaseFeeBps = 0;
     uint16 newLiquidationFeeBps = 0;
-    uint16 newLiquidationRewardBps = 0;
 
     //---- execution ----//
-    moneyMarket.setFees(newLendingFeeBps, newRepurchaseFeeBps, newLiquidationFeeBps, newLiquidationRewardBps);
+    moneyMarket.setFees(newLendingFeeBps, newRepurchaseFeeBps, newLiquidationFeeBps);
     console.log("setFees");
     console.log("  newLendingFeeBps        :", newLendingFeeBps);
     console.log("  newRepurchaseFeeBps     :", newRepurchaseFeeBps);
-    console.log("  newLiquidationFeeBps    :", newLiquidationFeeBps);
-    console.log("  newLiquidationRewardBps :", newLiquidationRewardBps, "\n");
+    console.log("  newLiquidationFeeBps    :", newLiquidationFeeBps, "\n");
 
     //
     // setTreasury

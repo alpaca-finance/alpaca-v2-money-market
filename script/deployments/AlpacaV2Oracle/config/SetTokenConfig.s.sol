@@ -31,8 +31,12 @@ contract SetTokenConfigScript is BaseScript {
     path[0] = cake;
     path[1] = busd;
 
-    tokens[0] = cake;
-    configs[0] = IAlpacaV2Oracle.Config({ router: pancakeswapV2Router, maxPriceDiffBps: 10500, path: path });
+    configs[0] = IAlpacaV2Oracle.Config({
+      router: pancakeswapV2Router,
+      maxPriceDiffBps: 10500,
+      path: path,
+      isUsingV3Pool: false
+    });
 
     // DOT
     path = new address[](3);
