@@ -92,7 +92,7 @@
     "repurchaser": ""
   },
   "miniFL": {
-    "implementation": "0x8291B3c950825131ADCdD2d412a16950dCD2f2E0",
+    "implementation": "0x8Fd47B6db27EBFDda5C8F56710dBbAFCeEE7464f",
     "proxy": "0x0bdbe56EA26C2BB594A98452C162f215169237a6",
     "pools": [
       {

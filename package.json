@@ -9,6 +9,7 @@
     "build": "yarn run build:cjs",
     "exec:bsc_mainnet:proxy-admin:deploy": "forge script script/deployments/ProxyAdmin/deploy/ProxyAdmin.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:minifl:deploy": "forge script script/deployments/MiniFL/deploy/MiniFL.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:upgrade": "forge script script/deployments/MiniFL/upgrade/MiniFL.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:ib-token:deploy": "forge script script/deployments/InterestBearingToken/deploy/InterestBearingTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:debt-token:deploy": "forge script script/deployments/DebtToken/deploy/DebtTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
