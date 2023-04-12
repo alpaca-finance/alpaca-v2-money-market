@@ -53,7 +53,7 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     });
     adminFacet.setTokenConfigs(_tokens, _tokenConfigInputs);
     // 10% repurchase fee
-    adminFacet.setFees(0, REPURCHASE_FEE, 0, 0);
+    adminFacet.setFees(0, REPURCHASE_FEE, 0);
     // 1% repurchase reward (hard-coded in FixedFeeModel)
     FixedFeeModel fixedFeeModel = new FixedFeeModel();
     adminFacet.setRepurchaseRewardModel(fixedFeeModel);

@@ -105,7 +105,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
-    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -136,12 +135,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(viewFacet.getGlobalDebtValue(_debtToken), normalizeEther(15.005076 ether, usdcDecimal));
 
     assertEq(
-      MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore,
-      normalizeEther(0.075 ether, usdcDecimal)
-    );
-    assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
-      normalizeEther(0.075 ether, usdcDecimal)
+      normalizeEther(0.15 ether, usdcDecimal)
     );
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
@@ -187,7 +182,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     weth.mint(address(mockLiquidationStrategy), _injectedCollatAmount);
 
-    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
@@ -217,12 +211,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.subAccountDebtShare, normalizeEther(15.002538 ether, usdcDecimal));
 
     assertEq(
-      MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore,
-      normalizeEther(0.075 ether, usdcDecimal)
-    );
-    assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
-      normalizeEther(0.075 ether, usdcDecimal)
+      normalizeEther(0.15 ether, usdcDecimal)
     );
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
@@ -250,8 +240,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      *    - remaining collateral = 40 - 37.8814075 = 2.193605 weth
      *      - totalLiquidationFee = 30.005076 * 1% = 0.30005 usdc is taken to treasury as liquidation fee
      *      - @0.8 usdc/weth 30.305126 usdc (with fee) = 37.8814075 weth is liquidated
-     *      - feeToLiquidator = 0.300050 * 5000 / 10000 = 0.150025
-     *      - feeToTreasury = 0.300050 - 0.150025 = 0.150025
      *      - total weth liquidated = 37.8814075 + 0.300050 = 37.806395
      *    - remaining debt value = 0
      *    - remaining debt share = 0
@@ -271,7 +259,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // MockLiquidationStrategy need these to function
     mockOracle.setTokenPrice(address(weth), 8e17);
 
-    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
@@ -302,12 +289,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.subAccountDebtShare, 0);
 
     assertEq(
-      MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore,
-      normalizeEther(0.150025 ether, usdcDecimal)
-    );
-    assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
-      normalizeEther(0.150025 ether, usdcDecimal)
+      normalizeEther(0.30005 ether, usdcDecimal)
     );
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
@@ -337,8 +320,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      *    - remaining collateral = 0 weth
      *      - @1 usdc/weth 39.6 usdc = 39.6 weth is liquidated
      *      - totalLiquidationFee = 39.603960 * 1% = 0.396039
-     *      - feeToLiquidator = 0.396039 * 5000 / 10000 = 0.198019
-     *      - feeToTreasury = 0.396039 - 0.198019 = 0.19802
      *    - remaining debt value = 80.036099 - 39.603960 = 40.432139 usdc
      *    - remaining debt share = 80 - 39.586097209550105281 = 40.413902 shares
      *      - repaid debt shares = amountRepaid * totalDebtShare / totalDebtValue = 39.6 * 80 / 80.036099 = 39.582138599829150270272757155067956377008065689156955144328424412...
@@ -384,8 +365,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtShare, normalizeEther(40.413902 ether, usdcDecimal));
     assertEq(_stateAfter.subAccountDebtShare, normalizeEther(40.413902 ether, usdcDecimal));
 
-    assertEq(MockERC20(_debtToken).balanceOf(liquidator), normalizeEther(0.198019 ether, usdcDecimal));
-    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury), normalizeEther(0.19802 ether, usdcDecimal));
+    assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury), normalizeEther(0.396039 ether, usdcDecimal));
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
     // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
@@ -409,7 +389,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
-    uint256 _liquidatorBalanceBefore = MockERC20(_debtToken).balanceOf(liquidator);
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
     vm.prank(liquidator);
@@ -451,12 +430,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // assertEq(viewFacet.getTotalUsedBorrowingPower(ALICE, _subAccountId), 0);
     // check liquidation fee funds flow
     assertEq(
-      MockERC20(_debtToken).balanceOf(liquidator) - _liquidatorBalanceBefore,
-      normalizeEther(0.075 ether, usdcDecimal)
-    );
-    assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
-      normalizeEther(0.075 ether, usdcDecimal)
+      normalizeEther(0.15 ether, usdcDecimal)
     );
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)

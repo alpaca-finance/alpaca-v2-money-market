@@ -401,22 +401,19 @@ contract ViewFacet is IViewFacet {
   /// @return _lendingFeeBps The lending fee imposed on interest collected
   /// @return _repurchaseFeeBps The repurchase fee collected by the protocol
   /// @return _liquidationFeeBps The total fee from liquidation
-  /// @return _liquidationRewardBps The fee collected by liquidator
   function getFeeParams()
     external
     view
     returns (
       uint16 _lendingFeeBps,
       uint16 _repurchaseFeeBps,
-      uint16 _liquidationFeeBps,
-      uint16 _liquidationRewardBps
+      uint16 _liquidationFeeBps
     )
   {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     _lendingFeeBps = moneyMarketDs.lendingFeeBps;
     _repurchaseFeeBps = moneyMarketDs.repurchaseFeeBps;
     _liquidationFeeBps = moneyMarketDs.liquidationFeeBps;
-    _liquidationRewardBps = moneyMarketDs.liquidationRewardBps;
   }
 
   /// @notice Get the address of repurchase reward model

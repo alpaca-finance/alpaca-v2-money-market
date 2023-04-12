@@ -235,8 +235,6 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | Detail                     | Amount (ether)        | Note                                                     |
     // | -------------------------- | --------------------- | -------------------------------------------------------- |
     // | ActualLiquidationFee       | 0.149999              | 15.149999 * 0.15 / 15.15                                 |
-    // | FeeToLiquidator            | 0.074999              | 0.149999 * 5000 / 10000                                  |
-    // | FeeToTreasury              | 0.075                 | 0.149999 - 0.074999                                      |
     // | RepaidAmount (ShareValue)  | 15                    | RepayTokenFromStrat - ActualLiquidationFee               |
     // | RepaidShare                | 14.997462             | 15 * 30 / 30.005076                                      |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)   |
@@ -246,13 +244,11 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedRepaidAmount = normalizeEther(15 ether, usdcDecimal);
     uint256 _expectedIbTokenToWithdraw = 18.936538676924769296 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 18.937499999999999999 ether;
-    uint256 _expectedFeeToLiquidator = normalizeEther(0.074999 ether, usdcDecimal);
-    uint256 _expectedFeeToTreasury = normalizeEther(0.075 ether, usdcDecimal);
+    uint256 _expectedFeeToTreasury = normalizeEther(0.149999 ether, usdcDecimal);
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
 
     // check staking ib token in MiniFL
@@ -367,8 +363,6 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | Detail                     | Amount (ether)        | Note                                                   |
     // | -------------------------- | --------------------- | ------------------------------------------------------ |
     // | ActualLiquidationFee       | 0.300049              | 30.305125 / 30.305126 * 0.300050                       |
-    // | FeeToLiquidator            | 0.150024              | 0.300049 * 5000 / 1000                                 |
-    // | FeeToTreasury              | 0.150025              | 0.300049 - 0.150024                                    |
     // | RepaidAmount (ShareValue)  | 30.005076             | RepayTokenFromStrat - ActualLiquidationFee             |
     // | RepaidShare                | 30                    | 30.005076 * 30 / 30.005076                             |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC) |
@@ -378,13 +372,11 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedRepaidAmount = normalizeEther(30.005076 ether, usdcDecimal);
     uint256 _expectedIbTokenToWithdraw = 37.879484528586034722 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 37.881407499999999999 ether;
-    uint256 _expectedLiquidationFeeToLiquidator = normalizeEther(0.150024 ether, usdcDecimal);
-    uint256 _expectedLiquidationFeeToTrasury = normalizeEther(0.150025 ether, usdcDecimal);
+    uint256 _expectedLiquidationFeeToTrasury = normalizeEther(0.300049 ether, usdcDecimal);
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    _assertLiquidatorReward(_debtToken, _expectedLiquidationFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedLiquidationFeeToTrasury, _stateBefore);
 
     // check staking ib token in MiniFL
@@ -511,8 +503,6 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | Detail                     | Amount (ether)        | Note                                                        |
     // | -------------------------- | --------------------- | ----------------------------------------------------------- |
     // | ActualLiquidationFee       | 0.079211              | 8.000406 / 30.305127 * 0.300050                             |
-    // | FeeToLiquidator            | 0.039605              | 0.079211 * 5000 / 10000                                     |
-    // | FeeToTreasury              | 0.039606              | 0.079211 - 0.039605                                         |
     // | RepaidAmount (ShareValue)  | 7.921195              | RepayTokenFromStrat - ActualLiquidationFee                  |
     // | RepaidShare                | 7.919854              | 7.921195 * 30 / 30.005076                                   |
     // |                            |                       | RepaidAmount * DebtShare / DebtValue + interest (USDC)      |
@@ -522,13 +512,11 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedRepaidAmount = normalizeEther(7.921195 ether, usdcDecimal);
     uint256 _expectedIbTokenToWithdraw = 10 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 10.00050765511672 ether;
-    uint256 _expectedFeeToLiquidator = normalizeEther(0.039605 ether, usdcDecimal);
-    uint256 _expectedFeeToTreasury = normalizeEther(0.039606 ether, usdcDecimal);
+    uint256 _expectedFeeToTreasury = normalizeEther(0.079211 ether, usdcDecimal);
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
     _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
-    _assertLiquidatorReward(_debtToken, _expectedFeeToLiquidator, _stateBefore);
     _assertTreasuryFee(_debtToken, _expectedFeeToTreasury, _stateBefore);
 
     // check staking ib token in MiniFL
@@ -714,18 +702,6 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       MockERC20(_debtToken).balanceOf(liquidationTreasury),
       _cache.treasuryDebtTokenBalance + _feeToTreasury,
       "treasury"
-    );
-  }
-
-  function _assertLiquidatorReward(
-    address _debtToken,
-    uint256 _feeToLiquidator,
-    CacheState memory _cache
-  ) internal {
-    assertEq(
-      MockERC20(_debtToken).balanceOf(liquidator),
-      _cache.liquidatorDebtTokenBalance + _feeToLiquidator,
-      "liquidator reward"
     );
   }
 }
