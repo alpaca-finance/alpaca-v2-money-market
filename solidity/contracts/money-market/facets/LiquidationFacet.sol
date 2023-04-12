@@ -412,10 +412,10 @@ contract LiquidationFacet is ILiquidationFacet {
     //                      = amountFromStrat * maxPossibleFee / expectedMaxRepayAmount
     // repaidAmount = amountFromStrat - actualLiquidationFee
     {
-      // strategy will only swap exactly less than or equal to _expectedMaxRepayAmount
+      // calculate the repaid amount returned from strategy
       uint256 _amountFromLiquidationStrat = IERC20(_repayToken).balanceOf(address(this)) - _vars.repayTokenBalaceBefore;
-
       // revert if executing a strategy result in excessive market selling
+      // This implied that the collateral value is greater than the debt thus should not be used for liquidation
       if (_amountFromLiquidationStrat > _vars.expectedMaxRepayAmount) {
         revert LiquidationFacet_TooMuchRepayToken();
       }
