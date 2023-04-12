@@ -299,7 +299,7 @@ contract AdminFacet is IAdminFacet {
   }
 
   /// @notice Whitelist/Blacklist the address allowed for setting risk parameters
-  /// @param _adjudicators an array of address of adjudicator
+  /// @param _adjudicators an array of address of adjudicators
   /// @param _isOk a flag to allow or disallow
   function setAdjudicatorsOk(address[] calldata _adjudicators, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
