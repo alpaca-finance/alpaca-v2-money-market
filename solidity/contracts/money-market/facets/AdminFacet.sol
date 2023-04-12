@@ -53,7 +53,7 @@ contract AdminFacet is IAdminFacet {
   event LogTopUpTokenReserve(address indexed _token, uint256 _amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed _caller, bool _isPasued);
-  event SetTokenMaximumCapacities(address indexed _token, uint256 _newMaxCollateral, uint256 _newMaxBorrow);
+  event LogSetTokenMaximumCapacities(address indexed _token, uint256 _newMaxCollateral, uint256 _newMaxBorrow);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -175,7 +175,7 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.tokenConfigs[_token].maxCollateral = _newMaxCollateral;
     moneyMarketDs.tokenConfigs[_token].maxBorrow = _newMaxBorrow;
 
-    emit SetTokenMaximumCapacities(_token, _newMaxCollateral, _newMaxBorrow);
+    emit LogSetTokenMaximumCapacities(_token, _newMaxCollateral, _newMaxBorrow);
   }
 
   function _setTokenConfig(
