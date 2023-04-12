@@ -307,6 +307,7 @@ contract LiquidationFacet is ILiquidationFacet {
   ///           2) send all collateral to strategy to prepare for liquidation
   ///           3) call `executeLiquidation` on strategy
   ///               - strategy convert collateral to repay token
+  ///               - strategy transfer converted repay token and leftover collateral (if any) back to diamond
   ///           4) calculate actual repayment and fees (fee to protocol and caller) based on
   ///              amount received from strategy
   ///           5) check if the repayment violate maximum amount allowed to be liquidated in single tx
