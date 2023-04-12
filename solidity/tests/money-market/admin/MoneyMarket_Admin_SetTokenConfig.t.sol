@@ -170,10 +170,10 @@ contract MoneyMarket_Admin_SetTokenConfigTest is MoneyMarket_BaseTest {
   }
 
   function testCorrectness_WhenSetNewTokenMaximumCapacities_TokenConfigShouldBeUpdated() external {
-    address[] memory _adjudicators = new address[](1);
-    _adjudicators[0] = ALICE;
+    address[] memory _riskManagers = new address[](1);
+    _riskManagers[0] = ALICE;
 
-    adminFacet.setRiskManagersOk(_adjudicators, true);
+    adminFacet.setRiskManagersOk(_riskManagers, true);
     vm.prank(ALICE);
     adminFacet.setTokenMaximumCapacities(address(weth), 0, 0);
 

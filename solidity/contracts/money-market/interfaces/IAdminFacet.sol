@@ -63,7 +63,7 @@ interface IAdminFacet {
 
   function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
-  function setRiskManagersOk(address[] calldata _adjudicators, bool _isOk) external;
+  function setRiskManagersOk(address[] calldata _riskManagers, bool _isOk) external;
 
   function setLiquidationTreasury(address newTreasury) external;
 
