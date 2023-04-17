@@ -309,42 +309,27 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   }
 
   /// @notice Set pool addresses of uniswap v3
-  /// @param _poolConfigs List of poolConfig
-  function setPools(PoolConfig[] calldata _poolConfigs) external onlyOwner {
-    uint256 _len = _poolConfigs.length;
-
+  /// @param _pools List of uniswap v3 pools
+  function setPools(address[] calldata _pools) external onlyOwner {
+    uint256 _len = _pools.length;
+    address _token0;
+    address _token1;
+    address _poolAddress;
     for (uint256 _i; _i < _len; ) {
-      _setPool(_poolConfigs[_i].source, _poolConfigs[_i].destination, _poolConfigs[_i].poolAddress);
+      _poolAddress = _pools[_i];
+      _token0 = IUniswapV3Pool(_poolAddress).token0();
+      _token1 = IUniswapV3Pool(_poolAddress).token1();
+
+      v3PoolAddreses[_token0][_token1] = _poolAddress;
+      v3PoolAddreses[_token1][_token0] = _poolAddress;
+
+      emit LogSetPool(_token0, _token1, _poolAddress);
+      emit LogSetPool(_token1, _token0, _poolAddress);
 
       unchecked {
         ++_i;
       }
     }
-  }
-
-  /// @dev Set pool address of uniswap v3
-  /// @param _source source token address
-  /// @param _destination destination token address
-  /// @param _poolAddress pool address
-  function _setPool(
-    address _source,
-    address _destination,
-    address _poolAddress
-  ) internal {
-    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
-    // verify that pool contain both source and destination token
-    if (
-      !(_pool.token0() == _source && _pool.token1() == _destination) ||
-      !(_pool.token0() == _destination && _pool.token1() == _source)
-    ) {
-      revert AlpacaV2Oracle_InvalidPool();
-    }
-
-    v3PoolAddreses[_source][_destination] = _poolAddress;
-    v3PoolAddreses[_destination][_source] = _poolAddress;
-
-    emit LogSetPool(_source, _destination, _poolAddress);
-    emit LogSetPool(_destination, _source, _poolAddress);
   }
 
   /// @notice Get price from uniswap v3 pool

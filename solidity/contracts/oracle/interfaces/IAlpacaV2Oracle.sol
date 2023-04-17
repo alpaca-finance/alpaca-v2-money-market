@@ -9,12 +9,6 @@ interface IAlpacaV2Oracle {
     bool isUsingV3Pool;
   }
 
-  struct PoolConfig {
-    address source;
-    address destination;
-    address poolAddress;
-  }
-
   /// @dev Set tokenConfig for getting dex price.
   function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external;
 
@@ -37,7 +31,6 @@ interface IAlpacaV2Oracle {
   function setOracle(address _oracle) external;
 
   /// @dev Errors
-  error AlpacaV2Oracle_InvalidPool();
   error AlpacaV2Oracle_InvalidLPAddress();
   error AlpacaV2Oracle_InvalidOracleAddress();
   error AlpacaV2Oracle_InvalidConfigLength();
