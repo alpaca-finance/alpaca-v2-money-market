@@ -46,12 +46,12 @@ Once the remaining borrowing power reach 0, the subaccount is available for repu
 
 If the used borrowing power / total borrowing power is greater than x%, the subaccount is available for liquidation. Liquidation process is done through market selling an collateral at a pre-configured DEX to repay the outstanding debt
 
+## Contracts Call
+
 ### Opening the market
 
 - To create a market for lending and borrowing
   `AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
-
-## Contracts Call
 
 ### Lending
 
