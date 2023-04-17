@@ -36,9 +36,9 @@ contract AdminFacet is IAdminFacet {
   event LogSetInterestModel(address indexed _token, address _interestModel);
   event LogSetNonCollatInterestModel(address indexed _account, address indexed _token, address _interestModel);
   event LogSetOracle(address _oracle);
-  event LogSetRepurchaserOk(address indexed _account, bool isOk);
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
+  event LogSetRiskManagerOk(address indexed _account, bool isOk);
   event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(uint256 _lendingFeeBps, uint256 _repurchaseFeeBps, uint256 _liquidationFeeBps);
@@ -50,9 +50,9 @@ contract AdminFacet is IAdminFacet {
   event LogWitdrawReserve(address indexed _token, address indexed _to, uint256 _amount);
   event LogSetMaxNumOfToken(uint8 _maxNumOfCollat, uint8 _maxNumOfDebt, uint8 _maxNumOfOverCollatDebt);
   event LogSetLiquidationParams(uint16 _newMaxLiquidateBps, uint16 _newLiquidationThreshold);
-  event LogTopUpTokenReserve(address indexed token, uint256 amount);
+  event LogTopUpTokenReserve(address indexed _token, uint256 _amount);
   event LogSetMinDebtSize(uint256 _newValue);
-  event LogSetEmergencyPaused(address indexed caller, bool _isPasued);
+  event LogSetEmergencyPaused(address indexed _caller, bool _isPasued);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -150,6 +150,35 @@ contract AdminFacet is IAdminFacet {
         ++_i;
       }
     }
+  }
+
+  /// @notice Set the maximum capacities of token
+  /// @param _token The token to set
+  /// @param _newMaxCollateral The maximum capacity of this token as collateral
+  /// @param _newMaxBorrow The maximum capacity to borrow this token
+  function setTokenMaximumCapacities(
+    address _token,
+    uint256 _newMaxCollateral,
+    uint256 _newMaxBorrow
+  ) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (!moneyMarketDs.riskManagersOk[msg.sender]) {
+      revert AdminFacet_Unauthorized();
+    }
+
+    if (_newMaxCollateral > 1e40) // Prevent user add collat or borrow too much
+    {
+      revert AdminFacet_InvalidArguments();
+    }
+    if (_newMaxBorrow > 1e40) {
+      revert AdminFacet_InvalidArguments();
+    }
+    LibConstant.TokenConfig storage tokenConfig = moneyMarketDs.tokenConfigs[_token];
+    tokenConfig.maxCollateral = _newMaxCollateral;
+    tokenConfig.maxBorrow = _newMaxBorrow;
+
+    emit LogSetTokenConfig(_token, tokenConfig);
   }
 
   function _setTokenConfig(
@@ -266,6 +295,21 @@ contract AdminFacet is IAdminFacet {
     for (uint256 _i; _i < _length; ) {
       moneyMarketDs.liquidationStratOk[_strats[_i]] = _isOk;
       emit LogSetLiquidationStratOk(_strats[_i], _isOk);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  /// @notice Whitelist/Blacklist the address allowed for setting risk parameters
+  /// @param _riskManagers an array of address of risk managers
+  /// @param _isOk a flag to allow or disallow
+  function setRiskManagersOk(address[] calldata _riskManagers, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _riskManagers.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.riskManagersOk[_riskManagers[_i]] = _isOk;
+      emit LogSetRiskManagerOk(_riskManagers[_i], _isOk);
       unchecked {
         ++_i;
       }
