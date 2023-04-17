@@ -13,7 +13,7 @@ import { IAlpacaV2Oracle } from "./interfaces/IAlpacaV2Oracle.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IRouterLike } from "./interfaces/IRouterLike.sol";
-import { IUniswapV3Pool } from "./interfaces/IUniswapV3Pool.sol";
+import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
 
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
@@ -134,10 +134,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // - pool1 = BTC/ETH, price = 15
       // - pool2 = ETH/USDT, price = 1850
       // _dexPrice = 15 * 1850 = 27750
-      _dexPrice = 1;
+      _dexPrice = 1e18;
       uint256 _len = _tokenConfig.path.length - 1;
       for (uint256 _i = 0; _i < _len; ) {
-        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[_i], _tokenConfig.path[_i + 1]));
+        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[_i], _tokenConfig.path[_i + 1])) / 1e18;
         unchecked {
           ++_i;
         }
@@ -317,8 +317,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     address _poolAddress;
     for (uint256 _i; _i < _len; ) {
       _poolAddress = _pools[_i];
-      _token0 = IUniswapV3Pool(_poolAddress).token0();
-      _token1 = IUniswapV3Pool(_poolAddress).token1();
+      _token0 = IPancakeV3Pool(_poolAddress).token0();
+      _token1 = IPancakeV3Pool(_poolAddress).token1();
 
       v3PoolAddreses[_token0][_token1] = _poolAddress;
       v3PoolAddreses[_token1][_token0] = _poolAddress;
@@ -347,7 +347,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   function _getPriceFromV3Pool(address _source, address _destination) internal view returns (uint256 _price) {
     // assume that pool address is correct since it was verified when setPool
     address _poolAddress = v3PoolAddreses[_source][_destination];
-    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
+    IPancakeV3Pool _pool = IPancakeV3Pool(_poolAddress);
 
     // get sqrtPriceX96 from uniswap v3 pool
     (uint160 _sqrtPriceX96, , , , , , ) = _pool.slot0();
