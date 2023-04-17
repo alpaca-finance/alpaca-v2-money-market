@@ -32,7 +32,7 @@ Collaterals are token that eligible to allow users to borrow other tokens given 
 
 ### Borrowing Power
 
-Under a subaccount, each collateral will have a collateral factor. For example, depositing 1 BTC@$60,000 with a collateral factor of 0.9 will yield 0.9 \* 60,000 = 54,000 Borrowing Power. This is used to calculate how much user can borrow agaist this collateral
+Under a subaccount, each collateral will have a collateral factor. For example, depositing 1 BTC@$60,000 with a collateral factor of 0.9 will yield 0.9 \* 60,000 = 54,000 Borrowing Power. This is used to calculate how much user can borrow against this collateral
 
 Each borrowing token will also have a borrowing factor. For example, borrowing 1000 USDC@$1 with a borrowing factor of 0.8 will use 1000 / 0.8 = 1,250 Borrowing Power.
 
