@@ -9,15 +9,21 @@ import { ILiquidationStrategy } from "../../contracts/money-market/interfaces/IL
 contract MockBadLiquidationStrategy is ILiquidationStrategy {
   using SafeERC20 for ERC20;
 
+  uint256 public amountToReturn;
+
   /// @dev swap collat for exact repay amount and send remaining collat to caller
   function executeLiquidation(
     address, /* _collatToken */
     address _repayToken,
     uint256, /*_collatAmount*/
-    uint256 _repayAmount,
+    uint256, /*_repayAmount*/
     uint256 /*_minReceive*/
   ) external {
-    ERC20(_repayToken).safeTransfer(msg.sender, _repayAmount / 2);
+    ERC20(_repayToken).safeTransfer(msg.sender, amountToReturn);
+  }
+
+  function setReturnRepayAmount(uint256 _amount) external {
+    amountToReturn = _amount;
   }
 
   function setCallersOk(address[] calldata _callers, bool _isOk) external {}
