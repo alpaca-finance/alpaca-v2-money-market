@@ -38,7 +38,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetOracle(address _oracle);
   event LogSetLiquidationStratOk(address indexed _strat, bool isOk);
   event LogSetLiquidatorOk(address indexed _account, bool isOk);
-  event LogSetAdjudicatorOk(address indexed _account, bool isOk);
+  event LogSetRiskManagerOk(address indexed _account, bool isOk);
   event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(uint256 _lendingFeeBps, uint256 _repurchaseFeeBps, uint256 _liquidationFeeBps);
@@ -309,7 +309,7 @@ contract AdminFacet is IAdminFacet {
     uint256 _length = _riskManagers.length;
     for (uint256 _i; _i < _length; ) {
       moneyMarketDs.riskManagersOk[_riskManagers[_i]] = _isOk;
-      emit LogSetAdjudicatorOk(_riskManagers[_i], _isOk);
+      emit LogSetRiskManagerOk(_riskManagers[_i], _isOk);
       unchecked {
         ++_i;
       }
