@@ -18,7 +18,7 @@ import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
 
-  uint256 public constant TWO_X96 = 1 << 96;
+  uint256 private constant TWO_X96 = 1 << 96;
 
   // Events
   event LogSetOracle(address indexed _caller, address _newOracle);

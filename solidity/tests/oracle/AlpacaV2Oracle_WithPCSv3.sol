@@ -99,7 +99,7 @@ contract AlpacaV2Oracle_WithPCSv3 is BaseTest {
     alpacaV2Oracle.isStable(BTC);
   }
 
-  function testCorrectness_WhenV3PriceAndOraclePriceNotDiff_ShouldReturnTrue() external {
+  function testCorrectness_WhenV3PriceWithMultihopAndOraclePriceNotDiff_ShouldReturnTrue() external {
     address[] memory _pools = new address[](2);
     _pools[0] = BTC_USDT_POOL;
     _pools[1] = BUSD_USDT_POOL;
