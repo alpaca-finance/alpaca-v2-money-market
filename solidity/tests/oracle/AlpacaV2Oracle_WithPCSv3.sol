@@ -67,6 +67,38 @@ contract AlpacaV2Oracle_WithPCSv3 is BaseTest {
     assertEq(_btcPrice, 30007955032950052629317);
   }
 
+  function testCorrectness_WhenV3PriceWithSingleHopAndOraclePriceNotDiff_ShouldReturnTrue() external {
+    address[] memory _pools = new address[](1);
+    _pools[0] = BTC_BUSD_POOL;
+    alpacaV2Oracle.setPools(_pools);
+
+    address[] memory _paths = new address[](2);
+    _paths[0] = BTC;
+    _paths[1] = BUSD;
+
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = BTC;
+
+    IAlpacaV2Oracle.Config[] memory _configs = new IAlpacaV2Oracle.Config[](1);
+    _configs[0] = IAlpacaV2Oracle.Config({
+      router: address(0),
+      maxPriceDiffBps: PRICE_DIFF,
+      path: _paths,
+      isUsingV3Pool: true
+    });
+
+    alpacaV2Oracle.setTokenConfig(_tokens, _configs);
+
+    // mock price return from OracleMedianizer
+    vm.mockCall(
+      address(oracleMedianizer),
+      abi.encodeWithSelector(OracleMedianizer.getPrice.selector, BTC, usd),
+      abi.encode(30005142201163931868931, block.timestamp)
+    );
+
+    alpacaV2Oracle.isStable(BTC);
+  }
+
   function testCorrectness_WhenV3PriceAndOraclePriceNotDiff_ShouldReturnTrue() external {
     address[] memory _pools = new address[](2);
     _pools[0] = BTC_USDT_POOL;
