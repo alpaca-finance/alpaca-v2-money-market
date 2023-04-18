@@ -132,7 +132,7 @@ contract AlpacaV2Oracle_WithPCSv3 is BaseTest {
       abi.encode(32005142201163931868931, block.timestamp)
     );
 
-    // DEX price = 30005142201163931868931
+    // DEX price = 30007955032950052629317
     // Oracle price = 32005142201163931868931
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -175,8 +175,8 @@ contract AlpacaV2Oracle_WithPCSv3 is BaseTest {
       abi.encode(28005142201163931868931, block.timestamp)
     );
 
-    // DEX price = 30005142201163931868931
-    // Oracle price = 32005142201163931868931
+    // DEX price = 30007955032950052629317
+    // Oracle price = 28005142201163931868931
     vm.expectRevert(
       abi.encodeWithSelector(
         IAlpacaV2Oracle.AlpacaV2Oracle_PriceTooDeviate.selector,
