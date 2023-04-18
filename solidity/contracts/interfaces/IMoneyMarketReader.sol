@@ -121,6 +121,7 @@ interface IMoneyMarketReader {
     uint256 ibTotalSupply;
     uint256 ibTotalAsset;
     uint256 globalDebtValue;
+    uint256 reserve;
     uint256 totalToken;
     uint256 pendingIntetest;
     uint256 interestRate;

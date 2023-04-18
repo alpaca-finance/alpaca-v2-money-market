@@ -365,6 +365,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     marketStats.ibTotalSupply = _ibToken.totalSupply();
     marketStats.ibTotalAsset = _ibToken.totalAssets();
     marketStats.globalDebtValue = _moneyMarket.getGlobalDebtValue(_underlyingToken);
+    marketStats.reserve = _moneyMarket.getFloatingBalance(_underlyingToken);
     marketStats.totalToken = _moneyMarket.getTotalToken(_underlyingToken);
     marketStats.pendingIntetest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
     marketStats.interestRate = _moneyMarket.getOverCollatInterestRate(_underlyingToken);
