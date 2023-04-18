@@ -18,6 +18,8 @@ import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
 
+  uint256 public constant TWO_X96 = 1 << 96;
+
   // Events
   event LogSetOracle(address indexed _caller, address _newOracle);
   event LogSetTokenConfig(
@@ -367,7 +369,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // priceIn18QuoteByToken1 = 5.391525164143081e+26 * 10**6 / 10**18 = 539152516414308 (in 1e18 unit)
     //                        = 0.00054 ETH/USDC
 
-    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, 1 << 96);
+    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, TWO_X96);
     uint256 _non18Price = LibFullMath.mulDiv(_sqrtPriceIn1e18, _sqrtPriceIn1e18, 1e18);
     _price = (_non18Price * 10**(IERC20(_pool.token0()).decimals())) / 10**(IERC20(_pool.token1()).decimals());
 
