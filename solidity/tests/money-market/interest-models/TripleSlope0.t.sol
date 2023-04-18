@@ -19,10 +19,10 @@ contract TripleSlope0_Test is BaseTest {
   }
 
   function testCorrectness_getInterestRate() external {
-    // when utilization is 30%, interest should be 4%
+    // when utilization is 30%, interest should be 3.75%
     assertCloseBps(_findInterestPerYear(_tripleSlopeModel0.getInterestRate(30, 70)), 0.0375 ether, 1);
 
-    // when utilization is 60%, interest shuold be 8%
+    // when utilization is 60%, interest shuold be 7.5%
     assertCloseBps(_findInterestPerYear(_tripleSlopeModel0.getInterestRate(60, 40)), 0.075 ether, 1);
 
     // when utilization is 80%, interest should be 10%
