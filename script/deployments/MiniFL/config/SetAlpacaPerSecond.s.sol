@@ -3,9 +3,7 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-
-contract DeployInterestBearingTokenImplementationScript is BaseScript {
+contract SetAlpacaPerSecondScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -19,11 +17,14 @@ contract DeployInterestBearingTokenImplementationScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    _startDeployerBroadcast();
-    // deploy implementation
-    address interestBearingTokenImplementation = address(new InterestBearingToken());
-    _stopBroadcast();
+    uint256 _newAlpacaPerSecond = 50000000000000;
+    bool _withUpdate = true;
 
-    _writeJson(vm.toString(interestBearingTokenImplementation), ".moneyMarket.interestBearingTokenImplementation");
+    //---- execution ----//
+    _startDeployerBroadcast();
+
+    miniFL.setAlpacaPerSecond(_newAlpacaPerSecond, _withUpdate);
+
+    _stopBroadcast();
   }
 }

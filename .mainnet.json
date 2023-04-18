@@ -18,6 +18,7 @@
     "cake": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
   },
   "sharedConfig": {
+    "tripleSlope0": "0xd41ca0e6c44facbf30c97cd99aec2fa4fdce7a3c",
     "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44",
     "fixedRepurchaseRewardModel": ""
   },

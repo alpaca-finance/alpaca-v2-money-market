@@ -22,9 +22,12 @@ contract SetInterestModelScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    SetInterestModelInput[2] memory _input = [
-      SetInterestModelInput({ token: cake, interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44 }),
-      SetInterestModelInput({ token: dot, interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44 })
+    SetInterestModelInput[5] memory _input = [
+      SetInterestModelInput({ token: cake, interestModel: 0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C }),
+      SetInterestModelInput({ token: dot, interestModel: 0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C }),
+      SetInterestModelInput({ token: alpaca, interestModel: 0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C }),
+      SetInterestModelInput({ token: busd, interestModel: 0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C }),
+      SetInterestModelInput({ token: wbnb, interestModel: 0xd41cA0E6C44fACBf30c97CD99aeC2Fa4FdCe7a3C })
     ];
 
     //---- execution ----//
