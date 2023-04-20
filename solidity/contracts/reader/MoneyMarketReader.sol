@@ -376,4 +376,30 @@ contract MoneyMarketReader is IMoneyMarketReader {
         maxInterestSlope3: _interestRateModel.MAX_INTEREST_SLOPE_3()
       });
   }
+
+  ///@dev Return the list of alpaca guard status of underlying tokens, true if alpaca guard is enabled
+  function getAlpacaGuards(address[] calldata _underlyingTokens)
+    external
+    view
+    returns (AlpacaGuard[] memory _alpacaGuards)
+  {
+    IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
+    uint256 _len = _underlyingTokens.length;
+    _alpacaGuards = new AlpacaGuard[](_len);
+
+    for (uint256 _i; _i < _len; ) {
+      bool _isGuardActivated = false;
+      try _alpacaV2Oracle.isStable(_underlyingTokens[_i]) {
+        // if no error, alpaca guard is not activated
+      } catch {
+        _isGuardActivated = true;
+      }
+
+      _alpacaGuards[_i] = AlpacaGuard({ underlyingToken: _underlyingTokens[_i], isGuardActivated: _isGuardActivated });
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
 }
