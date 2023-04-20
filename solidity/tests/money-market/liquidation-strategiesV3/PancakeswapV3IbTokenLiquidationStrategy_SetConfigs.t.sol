@@ -1,12 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BaseLiqudationV3ForkTest, console, MockERC20, PancakeswapV3IbTokenLiquidationStrategy } from "./BaseLiqudationV3ForkTest.sol";
+import { BasePCSV3IbLiquidationForkTest } from "./BasePCSV3IbLiquidationForkTest.sol";
+import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // interfaces
 import { IV3SwapRouter } from "solidity/contracts/money-market/interfaces/IV3SwapRouter.sol";
+import { IPancakeV3Factory } from "solidity/contracts/money-market/interfaces/IPancakeV3Factory.sol";
+import { IBEP20 } from "solidity/contracts/money-market/interfaces/IBEP20.sol";
 
-contract PCSLiquidationV3_SetConfigs is BaseLiqudationV3ForkTest {
+// mocks
+import { MockRouter } from "../../mocks/MockRouter.sol";
+import { MockLPToken } from "../../mocks/MockLPToken.sol";
+import { MockERC20 } from "../../mocks/MockERC20.sol";
+import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
+import { MockMoneyMarketV3 } from "../../mocks/MockMoneyMarketV3.sol";
+
+// ib Setup
+import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFacet.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
+import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
+
+contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3IbLiquidationForkTest {
   function setUp() public override {
     super.setUp();
   }

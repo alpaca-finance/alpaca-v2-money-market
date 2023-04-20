@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BaseTest, console } from "../../base/BaseTest.sol";
+import { BasePCSV3IbLiquidationForkTest } from "./BasePCSV3IbLiquidationForkTest.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // interfaces
@@ -21,46 +21,19 @@ import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFa
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { InterestBearingToken } from "../../../contracts/money-market/InterestBearingToken.sol";
 
-contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest {
-  string internal BSC2_URL_RPC = "https://bsc-dataseed2.ninicoin.io";
-
-  IPancakeV3Factory internal PANCAKE_V3_FACTORY = IPancakeV3Factory(0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865);
-  IV3SwapRouter internal router = IV3SwapRouter(0x13f4EA83D0bd40E75C8222255bc855a974568Dd4);
-  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
-  MockMoneyMarketV3 internal moneyMarket;
-
+contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3IbLiquidationForkTest {
   uint256 _aliceIbTokenBalance;
   uint256 _aliceETHBalance;
   uint256 _aliceBTCBBalance;
 
-  IBEP20 constant ETH = IBEP20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
-  IBEP20 constant btcb = IBEP20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
-  MockERC20 internal ibETH;
-
-  uint256 internal ETHDecimal;
-  uint256 internal btcbDecimal;
-  uint256 internal ibETHDecimal;
-
-  function setUp() public virtual {
-    vm.selectFork(vm.createFork(BSC2_URL_RPC));
-    vm.rollFork(27_280_390); // block 27280390
-
-    ibETH = deployMockErc20("ibETH", "ibETH", 18);
-
-    ETHDecimal = ETH.decimals();
-    btcbDecimal = btcb.decimals();
-    ibETHDecimal = ibETH.decimals();
+  function setUp() public override {
+    super.setUp();
 
     // mint ibETH to alice
     ibETH.mint(ALICE, normalizeEther(1 ether, ibETHDecimal));
 
-    moneyMarket = new MockMoneyMarketV3();
     moneyMarket.setIbToken(address(ibETH), address(ETH));
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(
-      address(router),
-      address(moneyMarket),
-      address(PANCAKE_V3_FACTORY)
-    );
+
     address[] memory _callers = new address[](1);
     _callers[0] = ALICE;
     liquidationStrat.setCallersOk(_callers, true);
@@ -71,10 +44,10 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
     liquidationStrat.setPaths(_paths);
 
     vm.startPrank(0xF68a4b64162906efF0fF6aE34E2bB1Cd42FEf62d);
-    ETH.mint(normalizeEther(10 ether, wethDecimal)); // mint to mm
-    ETH.transfer(address(moneyMarket), normalizeEther(10 ether, wethDecimal));
-    btcb.mint(normalizeEther(10 ether, wethDecimal)); // mint to mm
-    btcb.transfer(address(moneyMarket), normalizeEther(10 ether, wethDecimal));
+    ETH.mint(normalizeEther(10 ether, ETHDecimal)); // mint to mm
+    ETH.transfer(address(moneyMarket), normalizeEther(10 ether, ETHDecimal));
+    btcb.mint(normalizeEther(10 ether, btcbDecimal)); // mint to mm
+    btcb.transfer(address(moneyMarket), normalizeEther(10 ether, btcbDecimal));
     vm.stopPrank();
   }
 
@@ -83,20 +56,20 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
     vm.expectRevert(
       abi.encodeWithSelector(
         PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound.selector,
-        [address(ETH), address(btc)]
+        [address(ETH), address(usdt)]
       )
     );
     liquidationStrat.executeLiquidation(
       address(ibETH),
-      address(btc),
+      address(usdt),
       normalizeEther(1 ether, ibETHDecimal),
-      normalizeEther(1 ether, btcDecimal),
+      normalizeEther(1 ether, usdtDecimal),
       0
     );
   }
 
   // expect ibWeth => ETH => btcb
-  function testCorrectness_WhenExecuteIbTokenLiquiationStratV3_ShouldWork() external {
+  function testCorrectness_WhenExecuteIbTokenLiquiationStratV345_ShouldWork() external {
     // prepare criteria
     address _ibToken = address(ibETH);
     address _debtToken = address(btcb);
@@ -150,7 +123,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
     // prepare criteria
     address _ibToken = address(ibETH);
     address _debtToken = address(ETH);
-    uint256 _ibTokenIn = normalizeEther(1 ether, ibWethDecimal);
+    uint256 _ibTokenIn = normalizeEther(1 ether, ibETHDecimal);
     uint256 _minReceive = 0 ether;
 
     // _ibTokenTotalSupply = 100 ether
