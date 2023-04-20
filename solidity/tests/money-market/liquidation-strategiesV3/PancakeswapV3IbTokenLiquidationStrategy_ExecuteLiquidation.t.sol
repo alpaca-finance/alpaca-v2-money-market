@@ -29,10 +29,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
   PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
   MockMoneyMarketV3 internal moneyMarket;
 
-  uint256 _routerUSDCBalance;
-  uint256 _aliceBTCBBalance;
-  uint256 _aliceWETHBalance;
   uint256 _aliceIbTokenBalance;
+  uint256 _aliceETHBalance;
+  uint256 _aliceBTCBBalance;
 
   IBEP20 constant ETH = IBEP20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
   IBEP20 constant btcb = IBEP20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
@@ -51,6 +50,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
     ETHDecimal = ETH.decimals();
     btcbDecimal = btcb.decimals();
     ibETHDecimal = ibETH.decimals();
+
+    // mint ibETH to alice
+    ibETH.mint(ALICE, normalizeEther(1 ether, ibETHDecimal));
 
     moneyMarket = new MockMoneyMarketV3();
     moneyMarket.setIbToken(address(ibETH), address(ETH));
@@ -99,11 +101,12 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
     address _ibToken = address(ibETH);
     address _debtToken = address(btcb);
     uint256 _ibTokenIn = normalizeEther(1 ether, ibETHDecimal);
-    // uint256 _repayAmount = normalizeEther(1 ether, btcbDecimal); // reflect to amountIns[0]
     uint256 _minReceive = 0;
 
-    // mint ibETH to alice
-    ibETH.mint(ALICE, normalizeEther(1 ether, ibETHDecimal));
+    // state before execution
+    _aliceIbTokenBalance = ibETH.balanceOf(ALICE);
+    _aliceETHBalance = ETH.balanceOf(ALICE);
+    _aliceBTCBBalance = btcb.balanceOf(ALICE);
 
     // _ibTokenTotalSupply = 100 ether
     // _totalTokenWithInterest = 100 ether
@@ -126,19 +129,46 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BaseTest 
     // NOTE: ibETH was not burnt. Since the MockMoneyMarketV3 has no onWithdraw
     // to check ibToken should not exists on liquidation strat
     // assertEq(ibETH.balanceOf(address(liquidationStrat)), 0, "ibETH balance of liquidationStrat");
+
     // to check underlyingToken should swap all
     assertEq(ETH.balanceOf(address(liquidationStrat)), 0, "ETH balance of liquidationStrat");
+
     // to check swapped token should be here
     assertEq(btcb.balanceOf(address(liquidationStrat)), 0, "btcb balance of liquidationStrat");
 
-    // to check router work correctly (we can remove this assertion because this is for mock)
-    // assertEq(btcb.balanceOf(address(router)), _routerUSDCBalance - _expectedSwapedAmount, "usdc balance of router");
+    // ALICE must get repay token
     assertGt(btcb.balanceOf(ALICE), _aliceBTCBBalance, "btcb balance of ALICE");
 
     // to check final ibToken should be corrected
-    // assertEq(ibETH.balanceOf(ALICE), _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw, "ibETH balance of ALICE");
-    // to check final underlying should be not affected
+    assertEq(ibETH.balanceOf(ALICE), _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw, "ibETH balance of ALICE");
 
-    // assertEq(ETH.balanceOf(ALICE), _aliceWETHBalance, "weth balance of ALICE");
+    // to check final underlying should be not affected
+    assertEq(ETH.balanceOf(ALICE), _aliceETHBalance, "ETH balance of ALICE");
+  }
+
+  function testRevert_WhenExecuteIbTokenLiquiationStratV3AndUnderlyingTokenAndRepayTokenAreSame() external {
+    // prepare criteria
+    address _ibToken = address(ibETH);
+    address _debtToken = address(ETH);
+    uint256 _ibTokenIn = normalizeEther(1 ether, ibWethDecimal);
+    uint256 _minReceive = 0 ether;
+
+    // _ibTokenTotalSupply = 100 ether
+    // _totalTokenWithInterest = 100 ether
+    // _requireAmountToWithdraw = repay amount = 1 ether
+    // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 1 ether
+
+    vm.startPrank(ALICE);
+    // transfer ib token to strat
+    ibETH.transfer(address(liquidationStrat), _ibTokenIn);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        PancakeswapV3IbTokenLiquidationStrategy
+          .PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken
+          .selector
+      )
+    );
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, 0, _minReceive);
+    vm.stopPrank();
   }
 }
