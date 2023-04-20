@@ -7,7 +7,6 @@ import "../../utils/Components.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // interfaces
-import { IPancakeV3Factory } from "solidity/contracts/money-market/interfaces/IPancakeV3Factory.sol";
 import { IV3SwapRouter } from "solidity/contracts/money-market/interfaces/IV3SwapRouter.sol";
 import { IQuoterV2 } from "solidity/tests/interfaces/IQuoterV2.sol";
 import { IBEP20 } from "solidity/tests/interfaces/IBEP20.sol";
@@ -44,7 +43,6 @@ contract BasePCSV3IbLiquidationForkTest is DSTest, StdUtils, StdAssertions, StdC
 
   uint24 internal poolFee = 2500;
 
-  IPancakeV3Factory internal PANCAKE_V3_FACTORY = IPancakeV3Factory(0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865);
   IV3SwapRouter internal router = IV3SwapRouter(0x13f4EA83D0bd40E75C8222255bc855a974568Dd4);
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
   MockMoneyMarket internal moneyMarket;
@@ -63,11 +61,7 @@ contract BasePCSV3IbLiquidationForkTest is DSTest, StdUtils, StdAssertions, StdC
     ibETHDecimal = ibETH.decimals();
 
     moneyMarket = new MockMoneyMarket();
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(
-      address(router),
-      address(moneyMarket),
-      address(PANCAKE_V3_FACTORY)
-    );
+    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
 
     vm.label(ALICE, "ALICE");
     vm.label(BOB, "BOB");

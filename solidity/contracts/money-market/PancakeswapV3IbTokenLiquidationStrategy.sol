@@ -16,7 +16,6 @@ import { IV3SwapRouter } from "./interfaces/IV3SwapRouter.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
-import { IPancakeV3Factory } from "./interfaces/IPancakeV3Factory.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
@@ -33,7 +32,10 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
 
   IV3SwapRouter internal immutable router;
   IMoneyMarket internal immutable moneyMarket;
-  IPancakeV3Factory internal immutable pancakeV3Factory;
+
+  address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
+  bytes32 internal constant PANCAKE_V3_POOL_INIT_CODE_HASH =
+    0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
 
   mapping(address => bool) public callersOk;
   // tokenIn => tokenOut => path
@@ -47,14 +49,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     _;
   }
 
-  constructor(
-    address _router,
-    address _moneyMarket,
-    address _factory
-  ) {
+  constructor(address _router, address _moneyMarket) {
     router = IV3SwapRouter(_router);
     moneyMarket = IMoneyMarket(_moneyMarket);
-    pancakeV3Factory = IPancakeV3Factory(_factory);
   }
 
   /// @notice Execute liquidate from collatToken to repayToken
@@ -110,16 +107,17 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       while (true) {
         bool hasMultiplePools = LibPath.hasMultiplePools(_path);
 
-        // encoded hop (token0, fee, token1)
+        // get first hop (token0, fee, token1)
         bytes memory _hop = _path.getFirstPool();
         // extract the token from encoded hop
         (address _token0, address _token1, uint24 _fee) = _hop.decodeFirstPool();
 
-        // get pool
-        address _pool = pancakeV3Factory.getPool(_token0, _token1, _fee);
+        // compute pool address from token0, token1 and fee
+        address _pool = _computeV3PoolAddress(_token0, _token1, _fee);
 
-        // revert if there's no liquidity
+        // revert EVM error if pool is not existing (cannot call liquidity)
         if (IPancakeV3Pool(_pool).liquidity() == 0) {
+          // revert no liquidity if there's no liquidity
           revert PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity(_token0, _token1, _fee);
         }
 
@@ -159,9 +157,26 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     }
   }
 
-  function _getPool(
-    address tokenA,
-    address tokenB,
-    uint24 fee
-  ) internal view returns (address pool) {}
+  function _computeV3PoolAddress(
+    address _tokenA,
+    address _tokenB,
+    uint24 _fee
+  ) internal pure returns (address _poolAddress) {
+    if (_tokenA > _tokenB) (_tokenA, _tokenB) = (_tokenB, _tokenA);
+    return
+      address(
+        uint160(
+          uint256(
+            keccak256(
+              abi.encodePacked(
+                hex"ff",
+                PANCAKE_V3_POOL_DEPLOYER,
+                keccak256(abi.encode(_tokenA, _tokenB, _fee)),
+                PANCAKE_V3_POOL_INIT_CODE_HASH
+              )
+            )
+          )
+        )
+      );
+  }
 }
