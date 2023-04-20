@@ -5,12 +5,10 @@ import { DSTest } from "solidity/tests/base/DSTest.sol";
 import "solidity/tests/utils/Components.sol";
 
 import { PancakeswapV3IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
-import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 
 // interfaces
 import { IPancakeV3Factory } from "solidity/contracts/money-market/interfaces/IPancakeV3Factory.sol";
 import { IV3SwapRouter } from "solidity/contracts/money-market/interfaces/IV3SwapRouter.sol";
-import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFacet.sol";
 import { IBEP20 } from "solidity/contracts/money-market/interfaces/IBEP20.sol";
 
 // Mock
