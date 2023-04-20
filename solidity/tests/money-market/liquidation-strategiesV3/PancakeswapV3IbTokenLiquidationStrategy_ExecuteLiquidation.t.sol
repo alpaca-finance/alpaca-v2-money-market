@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BasePCSV3IbLiquidationForkTest } from "./BasePCSV3IbLiquidationForkTest.sol";
+import { BasePCSV3IbLiquidationForkTest, console } from "./BasePCSV3IbLiquidationForkTest.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3IbLiquidationForkTest {
-  uint256 _aliceIbTokenBalance;
-  uint256 _aliceETHBalance;
-  uint256 _aliceBTCBBalance;
+  bytes[] internal paths = new bytes[](1);
 
   function setUp() public override {
     super.setUp();
@@ -25,9 +23,8 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     liquidationStrat.setCallersOk(_callers, true);
 
     // Set path
-    bytes[] memory _paths = new bytes[](1);
-    _paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
-    liquidationStrat.setPaths(_paths);
+    paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
+    liquidationStrat.setPaths(paths);
 
     vm.startPrank(BSC_TOKEN_OWNER);
     ETH.mint(normalizeEther(10 ether, ETHDecimal)); // mint to mm
@@ -82,19 +79,19 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     uint256 _minReceive = 0;
 
     // state before execution
-    _aliceIbTokenBalance = ibETH.balanceOf(ALICE);
-    _aliceETHBalance = ETH.balanceOf(ALICE);
-    _aliceBTCBBalance = btcb.balanceOf(ALICE);
+    uint256 _aliceIbTokenBalanceBefore = ibETH.balanceOf(ALICE);
+    uint256 _aliceETHBalanceBefore = ETH.balanceOf(ALICE);
+    uint256 _aliceBTCBBalanceBefore = btcb.balanceOf(ALICE);
 
-    // _ibTokenTotalSupply = 100 ether
-    // _totalTokenWithInterest = 100 ether
-    // _requireAmountToWithdraw = 1 (amountIns[0]) * 100 / 100 = 1 ether
-    // to withdraw, amount to withdraw = Min(_requireAmountToWithdraw, _ibTokenIn) = 1 ether
+    // all ib token will be swapped (no ib left in liquidationStrat)
 
     // mock withdrawal amount
     uint256 _expectedIbTokenAmountToWithdraw = normalizeEther(1 ether, ibETHDecimal);
     uint256 _expectedWithdrawalAmount = normalizeEther(1 ether, ETHDecimal);
     moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+
+    // expect amount out
+    (uint256 _expectedAmountOut, , , ) = quoterV2.quoteExactInput(paths[0], _ibTokenIn);
 
     vm.startPrank(ALICE);
     // transfer ib token to strat
@@ -103,6 +100,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, 0, _minReceive);
     vm.stopPrank();
 
+    // ALICE's balance after execution
+    uint256 _aliceBTCBBalanceAfter = btcb.balanceOf(ALICE);
+
     // nothing left in strat
     // to check underlyingToken should swap all
     assertEq(ETH.balanceOf(address(liquidationStrat)), 0, "ETH balance of liquidationStrat");
@@ -110,14 +110,18 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     // to check swapped token should be here
     assertEq(btcb.balanceOf(address(liquidationStrat)), 0, "btcb balance of liquidationStrat");
 
-    // ALICE must get repay token
-    assertGt(btcb.balanceOf(ALICE), _aliceBTCBBalance, "btcb balance of ALICE");
+    // to check swap work correctly
+    assertEq(_aliceBTCBBalanceAfter, _aliceBTCBBalanceBefore + _expectedAmountOut, "btcb balance of ALICE");
 
     // to check final ibToken should be corrected
-    assertEq(ibETH.balanceOf(ALICE), _aliceIbTokenBalance - _expectedIbTokenAmountToWithdraw, "ibETH balance of ALICE");
+    assertEq(
+      ibETH.balanceOf(ALICE),
+      _aliceIbTokenBalanceBefore - _expectedIbTokenAmountToWithdraw,
+      "ibETH balance of ALICE"
+    );
 
     // to check final underlying should be not affected
-    assertEq(ETH.balanceOf(ALICE), _aliceETHBalance, "ETH balance of ALICE");
+    assertEq(ETH.balanceOf(ALICE), _aliceETHBalanceBefore, "ETH balance of ALICE");
   }
 
   function testRevert_WhenExecuteIbTokenLiquiationStratV3AndUnderlyingTokenAndRepayTokenAreSame() external {
