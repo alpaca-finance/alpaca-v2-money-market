@@ -117,8 +117,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     vm.stopPrank();
 
     // nothing left in strat
-    // to check ibToken should not exists on liquidation strat
-    // assertEq(ibWeth.balanceOf(address(liquidationStrat)), 0, "ibWeth balance of liquidationStrat");
     // to check underlyingToken should swap all
     assertEq(weth.balanceOf(address(liquidationStrat)), 0, "weth balance of liquidationStrat");
     // to check swapped token should be here
@@ -228,8 +226,6 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     vm.stopPrank();
 
     // nothing left in strat
-    // to check ibToken should not exists on liquidation strat
-    // assertEq(ibWeth.balanceOf(address(liquidationStrat)), 0, "ibWeth balance of liquidationStrat");
     // to check underlyingToken should swap all
     assertEq(weth.balanceOf(address(liquidationStrat)), 0, "weth balance of liquidationStrat");
     // to check swapped token should be here

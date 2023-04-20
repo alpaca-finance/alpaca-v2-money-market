@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
-import "solidity/tests/utils/Components.sol";
-
 // ---- External Libraries ---- //
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -12,7 +10,7 @@ import { LibPath } from "./libraries/LibPath.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
-import { IV3SwapRouter } from "./interfaces/IV3SwapRouter.sol";
+import { IV3PancakeSwapRouter } from "./interfaces/IV3PancakeSwapRouter.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
@@ -30,7 +28,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   error PancakeswapV3IbTokenLiquidationStrategy_PoolNotExist(address tokenA, address tokenB, uint24 fee);
   error PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity(address tokenA, address tokenB, uint24 fee);
 
-  IV3SwapRouter internal immutable router;
+  IV3PancakeSwapRouter internal immutable router;
   IMoneyMarket internal immutable moneyMarket;
 
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
@@ -50,7 +48,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   }
 
   constructor(address _router, address _moneyMarket) {
-    router = IV3SwapRouter(_router);
+    router = IV3PancakeSwapRouter(_router);
     moneyMarket = IMoneyMarket(_moneyMarket);
   }
 
@@ -84,7 +82,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     uint256 _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _ibTokenAmountIn);
 
     // setup params from swap
-    IV3SwapRouter.ExactInputParams memory params = IV3SwapRouter.ExactInputParams({
+    IV3PancakeSwapRouter.ExactInputParams memory params = IV3PancakeSwapRouter.ExactInputParams({
       path: _path,
       recipient: msg.sender,
       amountIn: _withdrawnUnderlyingAmount,
