@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
+import "solidity/tests/utils/Components.sol";
+
 // ---- External Libraries ---- //
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ---- Libraries ---- //
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
-import { LibShareUtil } from "./libraries/LibShareUtil.sol";
 import { LibPath } from "./libraries/LibPath.sol";
-import { LibPoolAddress } from "./libraries/LibPoolAddress.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
-import { IInterestBearingToken } from "./interfaces/IInterestBearingToken.sol";
 import { IV3SwapRouter } from "./interfaces/IV3SwapRouter.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
@@ -23,9 +22,13 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   using LibSafeToken for IERC20;
   using LibPath for bytes;
 
+  event LogSetCaller(address _caller, bool _isOk);
+  event LogSetPath(address _token0, address _token1, bytes _path);
+
   error PancakeswapV3IbTokenLiquidationStrategy_Unauthorized();
   error PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
   error PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
+  error PancakeswapV3IbTokenLiquidationStrategy_PoolNotExist(address tokenA, address tokenB, uint24 fee);
   error PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity(address tokenA, address tokenB, uint24 fee);
 
   IV3SwapRouter internal immutable router;
@@ -93,10 +96,8 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
 
     // approve router for swapping
     IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
-    // swap ib's underlyingToken to repayToken
+    // swap all ib's underlyingToken to repayToken
     router.exactInput(params);
-    // reset approval
-    IERC20(_underlyingToken).safeApprove(address(router), 0);
   }
 
   /// @notice Set paths config to be used during swap step in executeLiquidation
@@ -110,13 +111,14 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
         bool hasMultiplePools = LibPath.hasMultiplePools(_path);
 
         // encoded hop (token0, fee, token1)
-        bytes memory hop = _path.getFirstPool();
+        bytes memory _hop = _path.getFirstPool();
         // extract the token from encoded hop
-        (address _token0, address _token1, uint24 _fee) = hop.decodeFirstPool();
+        (address _token0, address _token1, uint24 _fee) = _hop.decodeFirstPool();
+
         // get pool
         address _pool = pancakeV3Factory.getPool(_token0, _token1, _fee);
 
-        // revrt if liquidity less than 0
+        // revert if there's no liquidity
         if (IPancakeV3Pool(_pool).liquidity() == 0) {
           revert PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity(_token0, _token1, _fee);
         }
@@ -132,6 +134,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
           (, address _destination, ) = _path.decodeFirstPool();
           // Assign to global paths
           paths[_source][_destination] = _paths[_i];
+          emit LogSetPath(_source, _destination, _paths[_i]);
           break;
         }
       }
@@ -149,9 +152,16 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     uint256 _length = _callers.length;
     for (uint256 _i; _i < _length; ) {
       callersOk[_callers[_i]] = _isOk;
+      emit LogSetCaller(_callers[_i], _isOk);
       unchecked {
         ++_i;
       }
     }
   }
+
+  function _getPool(
+    address tokenA,
+    address tokenB,
+    uint24 fee
+  ) internal view returns (address pool) {}
 }
