@@ -14,7 +14,6 @@ import { IBEP20 } from "solidity/contracts/money-market/interfaces/IBEP20.sol";
 // Mock
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
-import { MockMoneyMarketV3 } from "../../mocks/MockMoneyMarketV3.sol";
 
 // Library
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
@@ -46,7 +45,7 @@ contract BasePCSV3IbLiquidationForkTest is DSTest, StdUtils, StdAssertions, StdC
   IPancakeV3Factory internal PANCAKE_V3_FACTORY = IPancakeV3Factory(0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865);
   IV3SwapRouter internal router = IV3SwapRouter(0x13f4EA83D0bd40E75C8222255bc855a974568Dd4);
 
-  MockMoneyMarketV3 internal moneyMarket;
+  MockMoneyMarket internal moneyMarket;
   PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
 
   function setUp() public virtual {
@@ -61,7 +60,7 @@ contract BasePCSV3IbLiquidationForkTest is DSTest, StdUtils, StdAssertions, StdC
     usdtDecimal = usdt.decimals();
     ibETHDecimal = ibETH.decimals();
 
-    moneyMarket = new MockMoneyMarketV3();
+    moneyMarket = new MockMoneyMarket();
     liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(
       address(router),
       address(moneyMarket),

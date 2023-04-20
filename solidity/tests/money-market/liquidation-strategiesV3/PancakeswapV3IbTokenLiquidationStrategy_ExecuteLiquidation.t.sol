@@ -6,8 +6,6 @@ import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/mone
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
-import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
-import { MockMoneyMarketV3 } from "../../mocks/MockMoneyMarketV3.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3IbLiquidationForkTest {
   uint256 _aliceIbTokenBalance;
@@ -87,10 +85,6 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     vm.stopPrank();
 
     // nothing left in strat
-    // NOTE: ibETH was not burnt. Since the MockMoneyMarketV3 has no onWithdraw
-    // to check ibToken should not exists on liquidation strat
-    // assertEq(ibETH.balanceOf(address(liquidationStrat)), 0, "ibETH balance of liquidationStrat");
-
     // to check underlyingToken should swap all
     assertEq(ETH.balanceOf(address(liquidationStrat)), 0, "ETH balance of liquidationStrat");
 

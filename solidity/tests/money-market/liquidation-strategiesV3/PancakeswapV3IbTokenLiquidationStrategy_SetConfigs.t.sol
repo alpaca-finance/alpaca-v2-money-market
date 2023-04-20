@@ -6,8 +6,6 @@ import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/mone
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
-import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
-import { MockMoneyMarketV3 } from "../../mocks/MockMoneyMarketV3.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3IbLiquidationForkTest {
   function setUp() public override {
