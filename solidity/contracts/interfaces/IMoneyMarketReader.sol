@@ -129,13 +129,13 @@ interface IMoneyMarketReader {
 
   function getInterestRateModelConfig(address _underlyingToken) external view returns (TripleSlopeModelConfig memory);
 
-  struct AlpacaGuard {
+  struct AlpacaGuardStatus {
     address underlyingToken;
     bool isGuardActivated;
   }
 
-  function getAlpacaGuards(address[] calldata _underlyingTokens)
+  function getAlpacaGuardStatuses(address[] calldata _underlyingTokens)
     external
     view
-    returns (AlpacaGuard[] memory _alpacaGuards);
+    returns (AlpacaGuardStatus[] memory _alpacaGuardStatuses);
 }
