@@ -9,7 +9,7 @@ import { PancakeswapV3IbTokenLiquidationStrategy } from "solidity/contracts/mone
 // interfaces
 import { IPancakeV3Factory } from "solidity/contracts/money-market/interfaces/IPancakeV3Factory.sol";
 import { IV3SwapRouter } from "solidity/contracts/money-market/interfaces/IV3SwapRouter.sol";
-import { IBEP20 } from "solidity/contracts/money-market/interfaces/IBEP20.sol";
+import { IBEP20 } from "solidity/tests/interfaces/IBEP20.sol";
 
 // Mock
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
@@ -25,6 +25,7 @@ contract BasePCSV3IbLiquidationForkTest is DSTest, StdUtils, StdAssertions, StdC
   // Users
   address internal constant ALICE = address(0x88);
   address internal constant BOB = address(0x168);
+  address internal constant BSC_TOKEN_OWNER = address(0xF68a4b64162906efF0fF6aE34E2bB1Cd42FEf62d);
 
   IBEP20 constant ETH = IBEP20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
   IBEP20 constant btcb = IBEP20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
