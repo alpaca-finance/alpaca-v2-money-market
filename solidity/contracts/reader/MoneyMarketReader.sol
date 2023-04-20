@@ -383,23 +383,19 @@ contract MoneyMarketReader is IMoneyMarketReader {
     view
     returns (AlpacaGuardStatus[] memory _alpacaGuardStatuses)
   {
-    bool _isGuardActivated;
-    uint256 _len = _underlyingTokens.length;
     IAlpacaV2Oracle _alpacaV2Oracle = IAlpacaV2Oracle(_moneyMarket.getOracle());
 
+    uint256 _len = _underlyingTokens.length;
     _alpacaGuardStatuses = new AlpacaGuardStatus[](_len);
 
     for (uint256 _i; _i < _len; ) {
+      _alpacaGuardStatuses[_i].underlyingToken = _underlyingTokens[_i];
       try _alpacaV2Oracle.isStable(_underlyingTokens[_i]) {
         // if no error, alpaca guard is not activated
+        _alpacaGuardStatuses[_i].isGuardActivated = false;
       } catch {
-        _isGuardActivated = true;
+        _alpacaGuardStatuses[_i].isGuardActivated = true;
       }
-
-      _alpacaGuardStatuses[_i] = AlpacaGuardStatus({
-        underlyingToken: _underlyingTokens[_i],
-        isGuardActivated: _isGuardActivated
-      });
 
       unchecked {
         ++_i;
