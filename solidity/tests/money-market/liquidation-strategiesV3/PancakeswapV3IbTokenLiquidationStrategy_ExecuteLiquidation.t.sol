@@ -69,7 +69,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
   }
 
   // expect ibWeth => ETH => btcb
-  function testCorrectness_WhenExecuteIbTokenLiquiationStratV345_ShouldWork() external {
+  function testCorrectness_WhenExecuteIbTokenLiquiationStratV3_ShouldWork() external {
     // prepare criteria
     address _ibToken = address(ibETH);
     address _debtToken = address(btcb);
