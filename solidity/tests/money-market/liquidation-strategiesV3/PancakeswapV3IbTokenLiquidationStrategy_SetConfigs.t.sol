@@ -47,7 +47,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3IbLiquid
     assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
-  function testRevert_WhenOwnerSetRandomPath() external {
+  function testRevert_WhenOwnerSetNonExistingPath_ShouldRevert() external {
     // random token
     MockERC20 _randomToken0 = new MockERC20("Random0", "RD0", 18);
     MockERC20 _randomToken1 = new MockERC20("Random1", "RD1", 18);
@@ -60,7 +60,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3IbLiquid
     liquidationStrat.setPaths(_paths);
   }
 
-  function testRevert_WhenNonOwnerSetPaths() external {
+  function testRevert_WhenCallerIsNotOwner_ShouldRevert() external {
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(wbnb), poolFee, address(cake));
 

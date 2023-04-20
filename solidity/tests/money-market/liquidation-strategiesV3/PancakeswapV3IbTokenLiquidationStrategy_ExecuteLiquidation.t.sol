@@ -29,7 +29,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     _paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
     liquidationStrat.setPaths(_paths);
 
-    vm.startPrank(0xF68a4b64162906efF0fF6aE34E2bB1Cd42FEf62d);
+    vm.startPrank(BSC_TOKEN_OWNER);
     ETH.mint(normalizeEther(10 ether, ETHDecimal)); // mint to mm
     ETH.transfer(address(moneyMarket), normalizeEther(10 ether, ETHDecimal));
     btcb.mint(normalizeEther(10 ether, btcbDecimal)); // mint to mm
@@ -37,7 +37,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     vm.stopPrank();
   }
 
-  function testRevert_WhenExecuteLiquidationV3_PathConfigNotFound() external {
+  function testRevert_WhenThereIsNoConfiguredPath_ShouldRevert() external {
     vm.prank(address(ALICE));
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -52,6 +52,25 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
       normalizeEther(1 ether, usdtDecimal),
       0
     );
+  }
+
+  function testRevert_WhenNonOwnerExecuteLiquidationV3_ShouldRevert() external {
+    // prepare criteria
+    address _ibToken = address(ibETH);
+    address _debtToken = address(btcb);
+    uint256 _ibTokenIn = normalizeEther(1 ether, ibETHDecimal);
+    uint256 _minReceive = 0;
+
+    ibETH.mint(BOB, normalizeEther(1 ether, ibETHDecimal));
+    vm.startPrank(BOB);
+    ibETH.transfer(address(liquidationStrat), _ibTokenIn);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_Unauthorized.selector
+      )
+    );
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, 0, _minReceive);
+    vm.stopPrank();
   }
 
   // expect ibWeth => ETH => btcb
