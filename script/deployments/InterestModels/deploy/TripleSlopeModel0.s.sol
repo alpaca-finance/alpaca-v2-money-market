@@ -1,13 +1,15 @@
-// SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-contract SetFeesScript is BaseScript {
+import { TripleSlopeModel0 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel0.sol";
+
+contract DeployTripleSlopeModel0Script is BaseScript {
   using stdJson for string;
 
   function run() public {
     _loadAddresses();
+
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -18,15 +20,11 @@ contract SetFeesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint16 _newLendingFeeBps = 15;
-    uint16 _newRepurchaseFeeBps = 15;
-    uint16 _newLiquidationFeeBps = 15;
-
-    //---- execution ----//
     _startDeployerBroadcast();
-
-    moneyMarket.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
-
+    // deploy implementation
+    address interestModel = address(new TripleSlopeModel0());
     _stopBroadcast();
+
+    console.log("Interest Model", interestModel);
   }
 }

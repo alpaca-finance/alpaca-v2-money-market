@@ -17,6 +17,7 @@ interface IAdminFacet {
   error AdminFacet_InvalidDebtTokenImplementation();
   error AdminFacet_ExceedMaxRepurchaseReward();
   error AdminFacet_ExceedMaxNonCollatBorrowers();
+  error AdminFacet_Unauthorized();
 
   struct IbPair {
     address token;
@@ -62,6 +63,8 @@ interface IAdminFacet {
 
   function setLiquidatorsOk(address[] calldata list, bool _isOk) external;
 
+  function setRiskManagersOk(address[] calldata _riskManagers, bool _isOk) external;
+
   function setLiquidationTreasury(address newTreasury) external;
 
   function setNonCollatInterestModel(
@@ -73,8 +76,7 @@ interface IAdminFacet {
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseFeeBps,
-    uint16 _newLiquidationFeeBps,
-    uint16 _newLiquidationRewardBps
+    uint16 _newLiquidationFeeBps
   ) external;
 
   function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
@@ -104,4 +106,10 @@ interface IAdminFacet {
   function setMinDebtSize(uint256 _newValue) external;
 
   function setEmergencyPaused(bool _isPaused) external;
+
+  function setTokenMaximumCapacities(
+    address _token,
+    uint256 _newMaxCollateral,
+    uint256 _newMaxBorrow
+  ) external;
 }

@@ -8,6 +8,7 @@ interface ILiquidationFacet {
   error LiquidationFacet_InsufficientAmount();
   error LiquidationFacet_RepayAmountMismatch();
   error LiquidationFacet_CollateralNotExist();
+  error LiquidationFacet_TooMuchRepayToken();
 
   function repurchase(
     address _account,
@@ -23,7 +24,6 @@ interface ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
-    uint256 _repayAmount,
     uint256 _minReceive
   ) external;
 }

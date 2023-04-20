@@ -32,7 +32,7 @@ Collaterals are token that eligible to allow users to borrow other tokens given 
 
 ### Borrowing Power
 
-Under a subaccount, each collateral will have a collateral factor. For example, depositing 1 BTC@$60,000 with a collateral factor of 0.9 will yield 0.9 \* 60,000 = 54,000 Borrowing Power. This is used to calculate how much user can borrow agaist this collateral
+Under a subaccount, each collateral will have a collateral factor. For example, depositing 1 BTC@$60,000 with a collateral factor of 0.9 will yield 0.9 \* 60,000 = 54,000 Borrowing Power. This is used to calculate how much user can borrow against this collateral
 
 Each borrowing token will also have a borrowing factor. For example, borrowing 1000 USDC@$1 with a borrowing factor of 0.8 will use 1000 / 0.8 = 1,250 Borrowing Power.
 
@@ -46,12 +46,12 @@ Once the remaining borrowing power reach 0, the subaccount is available for repu
 
 If the used borrowing power / total borrowing power is greater than x%, the subaccount is available for liquidation. Liquidation process is done through market selling an collateral at a pre-configured DEX to repay the outstanding debt
 
+## Contracts Call
+
 ### Opening the market
 
 - To create a market for lending and borrowing
   `AdminFacet.openMarket()` This will deploy an interest bearing token, in short ibToken, that represent the share in the lending pool and debtToken that represent the share in over collateralized lending pool
-
-## Contracts Call
 
 ### Lending
 
