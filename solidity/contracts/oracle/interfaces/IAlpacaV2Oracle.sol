@@ -9,14 +9,11 @@ interface IAlpacaV2Oracle {
     bool isUsingV3Pool;
   }
 
-  struct PoolConfig {
-    address source;
-    address destination;
-    address poolAddress;
-  }
-
   /// @dev Set tokenConfig for getting dex price.
   function setTokenConfig(address[] calldata _tokens, Config[] calldata _configs) external;
+
+  /// @dev Set uniswap v3 pools
+  function setPools(address[] calldata _pools) external;
 
   /// @dev Return value in USD for the given lpAmount.
   function lpToDollar(uint256 _lpAmount, address _lpToken) external view returns (uint256, uint256);
@@ -33,12 +30,13 @@ interface IAlpacaV2Oracle {
   /// @dev Return true if token price is stable.
   function isStable(address _tokenAddress) external view;
 
+  function getPriceFromV3Pool(address _source, address _destination) external view returns (uint256 _price);
+
   function oracle() external view returns (address);
 
   function usd() external view returns (address);
 
   /// @dev Errors
-  error AlpacaV2Oracle_InvalidPool();
   error AlpacaV2Oracle_InvalidLPAddress();
   error AlpacaV2Oracle_InvalidOracleAddress();
   error AlpacaV2Oracle_InvalidConfigLength();

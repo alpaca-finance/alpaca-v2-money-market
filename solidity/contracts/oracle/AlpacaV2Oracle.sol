@@ -13,10 +13,12 @@ import { IAlpacaV2Oracle } from "./interfaces/IAlpacaV2Oracle.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IRouterLike } from "./interfaces/IRouterLike.sol";
-import { IUniswapV3Pool } from "./interfaces/IUniswapV3Pool.sol";
+import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
 
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
+
+  uint256 private constant TWO_X96 = 1 << 96;
 
   // Events
   event LogSetOracle(address indexed _caller, address _newOracle);
@@ -134,10 +136,10 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // - pool1 = BTC/ETH, price = 15
       // - pool2 = ETH/USDT, price = 1850
       // _dexPrice = 15 * 1850 = 27750
-      _dexPrice = 1;
+      _dexPrice = 1e18;
       uint256 _len = _tokenConfig.path.length - 1;
       for (uint256 _i = 0; _i < _len; ) {
-        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[_i], _tokenConfig.path[_i + 1]));
+        _dexPrice = (_dexPrice * _getPriceFromV3Pool(_tokenConfig.path[_i], _tokenConfig.path[_i + 1])) / 1e18;
         unchecked {
           ++_i;
         }
@@ -309,42 +311,27 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   }
 
   /// @notice Set pool addresses of uniswap v3
-  /// @param _poolConfigs List of poolConfig
-  function setPools(PoolConfig[] calldata _poolConfigs) external onlyOwner {
-    uint256 _len = _poolConfigs.length;
-
+  /// @param _pools List of uniswap v3 pools
+  function setPools(address[] calldata _pools) external onlyOwner {
+    uint256 _len = _pools.length;
+    address _token0;
+    address _token1;
+    address _poolAddress;
     for (uint256 _i; _i < _len; ) {
-      _setPool(_poolConfigs[_i].source, _poolConfigs[_i].destination, _poolConfigs[_i].poolAddress);
+      _poolAddress = _pools[_i];
+      _token0 = IPancakeV3Pool(_poolAddress).token0();
+      _token1 = IPancakeV3Pool(_poolAddress).token1();
+
+      v3PoolAddreses[_token0][_token1] = _poolAddress;
+      v3PoolAddreses[_token1][_token0] = _poolAddress;
+
+      emit LogSetPool(_token0, _token1, _poolAddress);
+      emit LogSetPool(_token1, _token0, _poolAddress);
 
       unchecked {
         ++_i;
       }
     }
-  }
-
-  /// @dev Set pool address of uniswap v3
-  /// @param _source source token address
-  /// @param _destination destination token address
-  /// @param _poolAddress pool address
-  function _setPool(
-    address _source,
-    address _destination,
-    address _poolAddress
-  ) internal {
-    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
-    // verify that pool contain both source and destination token
-    if (
-      !(_pool.token0() == _source && _pool.token1() == _destination) ||
-      !(_pool.token0() == _destination && _pool.token1() == _source)
-    ) {
-      revert AlpacaV2Oracle_InvalidPool();
-    }
-
-    v3PoolAddreses[_source][_destination] = _poolAddress;
-    v3PoolAddreses[_destination][_source] = _poolAddress;
-
-    emit LogSetPool(_source, _destination, _poolAddress);
-    emit LogSetPool(_destination, _source, _poolAddress);
   }
 
   /// @notice Get price from uniswap v3 pool
@@ -362,7 +349,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   function _getPriceFromV3Pool(address _source, address _destination) internal view returns (uint256 _price) {
     // assume that pool address is correct since it was verified when setPool
     address _poolAddress = v3PoolAddreses[_source][_destination];
-    IUniswapV3Pool _pool = IUniswapV3Pool(_poolAddress);
+    IPancakeV3Pool _pool = IPancakeV3Pool(_poolAddress);
 
     // get sqrtPriceX96 from uniswap v3 pool
     (uint160 _sqrtPriceX96, , , , , , ) = _pool.slot0();
@@ -382,7 +369,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // priceIn18QuoteByToken1 = 5.391525164143081e+26 * 10**6 / 10**18 = 539152516414308 (in 1e18 unit)
     //                        = 0.00054 ETH/USDC
 
-    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, 1 << 96);
+    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, TWO_X96);
     uint256 _non18Price = LibFullMath.mulDiv(_sqrtPriceIn1e18, _sqrtPriceIn1e18, 1e18);
     _price = (_non18Price * 10**(IERC20(_pool.token0()).decimals())) / 10**(IERC20(_pool.token1()).decimals());
 
