@@ -11,7 +11,7 @@ import { LibShareUtil } from "./libraries/LibShareUtil.sol";
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
 import { IInterestBearingToken } from "./interfaces/IInterestBearingToken.sol";
-import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
+import { IPancakeRouter02 } from "./interfaces/IPancakeRouter02.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 
