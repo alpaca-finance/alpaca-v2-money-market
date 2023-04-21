@@ -9,7 +9,7 @@ import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
-import { IPancakeRouter02 } from "../lyf/interfaces/IPancakeRouter02.sol";
+import { IPancakeRouter02 } from "./interfaces/IPancakeRouter02.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 
 contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
