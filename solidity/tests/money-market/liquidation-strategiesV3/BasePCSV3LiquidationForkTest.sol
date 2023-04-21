@@ -18,7 +18,7 @@ import { MockMoneyMarket } from "../../mocks/MockMoneyMarket.sol";
 // Library
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
-contract BasePCSV3IbLiquidationForkTest is DSTest, StdUtils, StdAssertions, StdCheats {
+contract BasePCSV3LiquidationForkTest is DSTest, StdUtils, StdAssertions, StdCheats {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
   string internal BSC_URL_RPC = "https://bsc-dataseed2.ninicoin.io";
 

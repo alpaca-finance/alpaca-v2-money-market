@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BasePCSV3IbLiquidationForkTest, console } from "./BasePCSV3IbLiquidationForkTest.sol";
+import { BasePCSV3LiquidationForkTest, console } from "./BasePCSV3LiquidationForkTest.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
-contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3IbLiquidationForkTest {
+contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3LiquidationForkTest {
   bytes[] internal paths = new bytes[](1);
 
   function setUp() public override {
