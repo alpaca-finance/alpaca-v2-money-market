@@ -80,8 +80,6 @@ interface IMoneyMarketReader {
     uint256 borrowingPendingReward;
   }
 
-  function getMarketSummary(address _underlyingToken) external view returns (MarketSummary memory);
-
   function getRewardSummary(address _underlyingToken, address _account) external view returns (RewardSummary memory);
 
   function getSubAccountSummary(address _account, uint256 _subAccountId)
