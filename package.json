@@ -28,6 +28,7 @@
     "exec:bsc_mainnet:money-market:config:set-liquidate-strat-ok": "forge script script/deployments/MoneyMarket/config/SetLiquidationStratsOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-liquidator-ok": "forge script script/deployments/MoneyMarket/config/SetLiquidatorsOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-account-manager-ok": "forge script script/deployments/MoneyMarket/config/SetAccountManagersOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:set-repurchase-reward-model": "forge script script/deployments/MoneyMarket/config/SetRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:mm-account-manager:deploy": "forge script script/deployments/MoneyMarketAccountManager/deploy/MoneyMarketAccountManager.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-strat:deploy": "forge script script/deployments/PancakeswapV2LiquidationStrategy/deploy/PancakeswapV2LiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-ib-strat:deploy": "forge script script/deployments/PancakeswapV2IbTokenLiquidationStrategy/deploy/PancakeswapV2IbTokenLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -42,8 +43,7 @@
     "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:chainlink-price-oracle2:deploy": "forge script script/deployments/ChainLinkOracle2/deploy/ChainlinkPriceOracle2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:chainlink-price-oracle2:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle2/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:repurchase-reward-model:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:repurchase-reward-model:set-repurchase-reward-model": "forge script script/deployments/MoneyMarket/config/SetRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:fix-repurchase-reward-model:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:triple-slope-model0:deploy": "forge script script/deployments/InterestModels/deploy/TripleSlopeModel0.s.sol --rpc-url bsc_mainnet --broadcast --slow"
   },
   "dependencies": {

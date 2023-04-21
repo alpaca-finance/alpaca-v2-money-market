@@ -62,6 +62,6 @@ contract DeployOracleScript is BaseScript {
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(address(alpacaV2Oracle)), ".alpacaV2Oracle");
+    _writeJson(vm.toString(address(alpacaV2Oracle)), ".oracle.alpacaV2Oracle");
   }
 }

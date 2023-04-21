@@ -1,11 +1,7 @@
 {
-  "proxyAdmin": "0x6AF55bB76C435F749C26E0D963cd0666A9BA4A31",
-  "wNativeToken": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  "proxyAdmin": "0x5379F32C8D5F663EACb61eeF63F722950294f452",
   "nativeRelayer": "0x8d3644898516274da3e855ac49289e96bb17201e",
-  "oracleMedianizer": "0x67e157c7aA71298f2cE1A3d004CF5944C06A2A40",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
-  "chainlinkPriceOracle": "0xEe13333120968d13811Eb2FF7f434ae138578B3e",
-  "alpacaV2Oracle": "0xa952932f1fF570CAa9c619068da4C32f8cF4755E",
   "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   "tokens": {
     "doge": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
@@ -17,8 +13,13 @@
     "usdt": "0x55d398326f99059fF775485246999027B3197955",
     "cake": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
   },
+  "oracle": {
+    "alpacaV2Oracle": "0xa952932f1fF570CAa9c619068da4C32f8cF4755E",
+    "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
+    "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
+  },
   "sharedConfig": {
-    "tripleSlope0": "0xd41ca0e6c44facbf30c97cd99aec2fa4fdce7a3c",
+    "tripleSlope0": "",
     "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44",
     "fixedRepurchaseRewardModel": ""
   },
@@ -29,134 +30,32 @@
     }
   },
   "moneyMarket": {
-    "moneyMarketDiamond": "0x0931262eF98BD2630A3D80BB47c03Ce8fbb05316",
+    "moneyMarketDiamond": "",
     "facets": {
-      "lendFacet": "0x147Ffc59f670ed03cb79c14fd3337cFf1314F541",
-      "diamondCutFacet": "0x2B00e9a17F56165b87118aD68d38fef18c312580",
-      "borrowFacet": "0xAE406B87ed135E16C79451bCEE3dc74e3b0D074D",
-      "viewFacet": "0xe2c439A1B59c7B36E9ff4d3120c7206df5c65131",
-      "diamondLoupeFacet": "0x34722Ec694655F71A8A3AD19dCf5Bf26463717Ea",
-      "adminFacet": "0x4eca67a3C5E8b8FE534Cacbc82Aad6A059FF0ebe",
-      "ownershipFacet": "0x3849708b770CF02c1075F340fbA632c1D1307049",
-      "liquidationFacet": "0x061fafc50Ebd21e867689076cF81B2CB8a4C083C",
-      "nonCollatBorrowFacet": "0x6D4dfb0a55e6b25ae4dF660B69bd500914afAA05",
-      "collateralFacet": "0xe35Cf6885286E7683B764e7948AA6289991Ec868"
+      "adminFacet": "",
+      "borrowFacet": "",
+      "collateralFacet": "",
+      "diamondCutFacet": "",
+      "diamondLoupeFacet": "",
+      "lendFacet": "",
+      "liquidationFacet": "",
+      "nonCollatBorrowFacet": "",
+      "ownershipFacet": "",
+      "viewFacet": ""
     },
-    "interestBearingTokenImplementation": "0xe5482d79d9ef72Aa586d896F7f079fC846aFF02b",
-    "debtTokenImplementation": "0xb21Ec6AE6e9f95CA8b8f8f839B9d348C3c65B572",
-    "markets": [
-      {
-        "name": "WBNB Market",
-        "tier": "COLLATERAL",
-        "token": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-        "ibToken": "0xebC06FeCaA89a37d917F58bBD3aBc070668cE65e",
-        "debtToken": "0xCF2488D80f266e5bADc3667c5C7d5D7F7e4ea23F",
-        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
-      },
-      {
-        "name": "BUSD Market",
-        "tier": "COLLATERAL",
-        "token": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-        "ibToken": "0xbE4Fe9C9394B6b1153f88B54c54c5053f6Ae15aC",
-        "debtToken": "0x6EFA254E2DEDFdB9e38EB11F3D8298da86FD45Da",
-        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
-      },
-      {
-        "name": "ALPACA Market",
-        "tier": "COLLATERAL",
-        "token": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
-        "ibToken": "0x7BdC4392D0c58a130212C6b9418E20e84B5AAF35",
-        "debtToken": "0x3b023deD14344dB62A43818024c3d37EBd622A00",
-        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
-      },
-      {
-        "name": "CAKE Market",
-        "tier": "CROSS",
-        "token": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
-        "ibToken": "0xB46430A0b3c2bd975ac6315108Ca99c2C96B1251",
-        "debtToken": "0xF96a88f4729618e229718716ec8b0C86AC55Db63",
-        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
-      },
-      {
-        "name": "DOT Market",
-        "tier": "ISOLATE",
-        "token": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
-        "ibToken": "0x548F5d6b08c135e694dFE4B6ed0034a7159e72A8",
-        "debtToken": "0x9c6F65FD0C39b67051F05B06De4552d1cb000544",
-        "interestModel": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44"
-      }
-    ],
+    "interestBearingTokenImplementation": "",
+    "debtTokenImplementation": "",
+    "markets": [],
     "accountManager": {
-      "implementation": "0x3a1126e65893e1Bd0e886774892cAc38b8595a0c",
-      "proxy": "0xe53F244bDC41342BAB81aE45C9E6a3a378DEF036"
+      "implementation": "",
+      "proxy": ""
     },
     "repurchaser": ""
   },
   "miniFL": {
-    "implementation": "0x8Fd47B6db27EBFDda5C8F56710dBbAFCeEE7464f",
-    "proxy": "0x0bdbe56EA26C2BB594A98452C162f215169237a6",
-    "pools": [
-      {
-        "id": 1,
-        "name": "ibWBNB",
-        "stakingToken": "0xebC06FeCaA89a37d917F58bBD3aBc070668cE65e",
-        "rewarders": []
-      },
-      {
-        "id": 2,
-        "name": "debtIbWBNB",
-        "stakingToken": "0xCF2488D80f266e5bADc3667c5C7d5D7F7e4ea23F",
-        "rewarders": []
-      },
-      {
-        "id": 3,
-        "name": "ibBUSD",
-        "stakingToken": "0xbE4Fe9C9394B6b1153f88B54c54c5053f6Ae15aC",
-        "rewarders": []
-      },
-      {
-        "id": 4,
-        "name": "debtIbBUSD",
-        "stakingToken": "0x6EFA254E2DEDFdB9e38EB11F3D8298da86FD45Da",
-        "rewarders": []
-      },
-      {
-        "id": 5,
-        "name": "ibALPACA",
-        "stakingToken": "0x7BdC4392D0c58a130212C6b9418E20e84B5AAF35",
-        "rewarders": []
-      },
-      {
-        "id": 6,
-        "name": "debtIbALPACA",
-        "stakingToken": "0x3b023deD14344dB62A43818024c3d37EBd622A00",
-        "rewarders": []
-      },
-      {
-        "id": 7,
-        "name": "ibCAKE",
-        "stakingToken": "0xB46430A0b3c2bd975ac6315108Ca99c2C96B1251",
-        "rewarders": []
-      },
-      {
-        "id": 8,
-        "name": "debtIbCAKE",
-        "stakingToken": "0xF96a88f4729618e229718716ec8b0C86AC55Db63",
-        "rewarders": []
-      },
-      {
-        "id": 9,
-        "name": "ibDOT",
-        "stakingToken": "0x548F5d6b08c135e694dFE4B6ed0034a7159e72A8",
-        "rewarders": []
-      },
-      {
-        "id": 10,
-        "name": "debtIbDOT",
-        "stakingToken": "0x9c6F65FD0C39b67051F05B06De4552d1cb000544",
-        "rewarders": []
-      }
-    ]
+    "implementation": "",
+    "proxy": "",
+    "pools": []
   },
-  "moneyMarketReader": "0x0a15B21eA5f19253Fce3AD0dE0F4cA7bcB1Aa6b0"
+  "moneyMarketReader": ""
 }

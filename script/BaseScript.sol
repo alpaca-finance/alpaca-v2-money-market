@@ -63,9 +63,8 @@ abstract contract BaseScript is Script {
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
-    oracleMedianizer = abi.decode(configJson.parseRaw(".oracleMedianizer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
-    alpacaV2Oracle = abi.decode(configJson.parseRaw(".alpacaV2Oracle"), (IAlpacaV2Oracle));
+
     pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
     repurchaseRewardModel = abi.decode(configJson.parseRaw(".sharedConfig.fixedRepurchaseRewardModel"), (IFeeModel));
 
@@ -82,6 +81,10 @@ abstract contract BaseScript is Script {
       configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIb"),
       (address)
     );
+    // oracles
+    oracleMedianizer = abi.decode(configJson.parseRaw(".oracle.oracleMedianizer"), (address));
+    alpacaV2Oracle = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle"), (IAlpacaV2Oracle));
+
     // tokens
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
