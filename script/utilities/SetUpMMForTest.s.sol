@@ -12,6 +12,10 @@ import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-mode
 contract SetUpMMForTestScript is BaseScript {
   using stdJson for string;
 
+  address ibBusd;
+  address ibDoge;
+  address ibDodo;
+
   function run() public {
     _startDeployerBroadcast();
 
