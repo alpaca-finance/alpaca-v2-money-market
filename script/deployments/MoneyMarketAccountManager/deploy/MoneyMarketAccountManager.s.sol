@@ -32,7 +32,7 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
     bytes memory data = abi.encodeWithSelector(
       bytes4(keccak256("initialize(address,address,address)")),
       address(moneyMarket),
-      wNativeToken,
+      wbnb,
       nativeRelayer
     );
     address accountManagerProxy = address(

@@ -26,7 +26,6 @@ abstract contract BaseScript is Script {
   using stdJson for string;
 
   uint256 internal deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-  uint256 internal userPrivateKey = vm.envUint("USER_PRIVATE_KEY");
   string internal configFilePath =
     string.concat(vm.projectRoot(), string.concat("/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
@@ -36,7 +35,6 @@ abstract contract BaseScript is Script {
   address internal deployerAddress;
   address internal userAddress;
   address internal proxyAdminAddress;
-  address internal wNativeToken;
   address internal nativeRelayer;
   address internal oracleMedianizer;
   address internal usdPlaceholder;
@@ -58,14 +56,12 @@ abstract contract BaseScript is Script {
 
   constructor() {
     deployerAddress = vm.addr(deployerPrivateKey);
-    userAddress = vm.addr(userPrivateKey);
 
     string memory configJson = vm.readFile(configFilePath);
     moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
-    wNativeToken = abi.decode(configJson.parseRaw(".wNativeToken"), (address));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracleMedianizer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));

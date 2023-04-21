@@ -31,7 +31,7 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
       maxBorrow: 0,
       maxCollateral: 1_000_000 ether
     });
-    address ibWNative = moneyMarket.openMarket(wNativeToken, tokenConfigInput, ibTokenConfigInput);
+    address ibWNative = moneyMarket.openMarket(wbnb, tokenConfigInput, ibTokenConfigInput);
     _writeJson(vm.toString(address(ibWNative)), ".ibTokens.ibBnb");
 
     // deploy implementation
@@ -41,7 +41,7 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
     bytes memory data = abi.encodeWithSelector(
       bytes4(keccak256("initialize(address,address,address)")),
       address(moneyMarket),
-      wNativeToken,
+      wbnb,
       nativeRelayer
     );
     address accountManagerProxy = address(
