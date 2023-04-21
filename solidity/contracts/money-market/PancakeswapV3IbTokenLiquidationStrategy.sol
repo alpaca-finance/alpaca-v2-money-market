@@ -7,7 +7,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 // ---- Libraries ---- //
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 import { LibPath } from "./libraries/LibPath.sol";
-import { LibPoolAddress } from "./libraries/LibPoolAddress.sol";
+import { LibPCSV3PoolAddress } from "./libraries/LibPCSV3PoolAddress.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
@@ -26,7 +26,6 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   error PancakeswapV3IbTokenLiquidationStrategy_Unauthorized();
   error PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
   error PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
-  error PancakeswapV3IbTokenLiquidationStrategy_PoolNotExist(address tokenA, address tokenB, uint24 fee);
   error PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity(address tokenA, address tokenB, uint24 fee);
 
   IV3PancakeSwapRouter internal immutable router;
@@ -110,9 +109,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
         (address _token0, address _token1, uint24 _fee) = _hop.decodeFirstPool();
 
         // compute pool address from token0, token1 and fee
-        address _pool = LibPoolAddress.computeAddress(
+        address _pool = LibPCSV3PoolAddress.computeAddress(
           PANCAKE_V3_POOL_DEPLOYER,
-          LibPoolAddress.PoolKey(_token0, _token1, _fee)
+          LibPCSV3PoolAddress.PoolKey(_token0, _token1, _fee)
         );
 
         // revert EVM error if pool is not existing (cannot call liquidity)
