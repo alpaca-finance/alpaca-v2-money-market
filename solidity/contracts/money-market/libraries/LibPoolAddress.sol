@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.19;
+pragma solidity >=0.5.0;
 
+/// this lib derives from PancakeSwap V3
 /// @title Provides functions for deriving a pool address from the factory, tokens, and the fee
 library LibPoolAddress {
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
 
   /// @notice The identifying key of the pool
   struct PoolKey {
@@ -27,10 +28,10 @@ library LibPoolAddress {
   }
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
-  /// @param factory The Uniswap V3 factory contract address
+  /// @param deployer The PancakeSwap V3 deployer contract address
   /// @param key The PoolKey
   /// @return pool The contract address of the V3 pool
-  function computeAddress(address factory, PoolKey memory key) internal pure returns (address pool) {
+  function computeAddress(address deployer, PoolKey memory key) internal pure returns (address pool) {
     require(key.token0 < key.token1);
     pool = address(
       uint160(
@@ -38,7 +39,7 @@ library LibPoolAddress {
           keccak256(
             abi.encodePacked(
               hex"ff",
-              factory,
+              deployer,
               keccak256(abi.encode(key.token0, key.token1, key.fee)),
               POOL_INIT_CODE_HASH
             )
