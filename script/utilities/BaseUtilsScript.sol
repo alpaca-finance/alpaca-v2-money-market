@@ -77,12 +77,6 @@ abstract contract BaseUtilsScript is Script {
     console.log("==== start broadcast as deployer ====");
   }
 
-  function _startUserBroadcast() internal {
-    vm.startBroadcast(userPrivateKey);
-    console.log("");
-    console.log("==== start broadcast as user ====");
-  }
-
   function _stopBroadcast() internal {
     vm.stopBroadcast();
     console.log("==== broadcast stopped ====\n");

@@ -101,10 +101,6 @@ abstract contract BaseScript is Script {
     _startBroadcast(deployerPrivateKey);
   }
 
-  function _startUserBroadcast() internal {
-    _startBroadcast(userPrivateKey);
-  }
-
   function _startBroadcast(uint256 pK) internal {
     console.log("");
 

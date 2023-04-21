@@ -84,7 +84,7 @@ contract SetUpMMForTestScript is BaseScript {
 
     //---- setup user positions ----//
 
-    _startUserBroadcast();
+    // _startUserBroadcast();
 
     IERC20(wbnb).approve(address(accountManager), type(uint256).max);
     IERC20(busd).approve(address(accountManager), type(uint256).max);
@@ -124,6 +124,6 @@ contract SetUpMMForTestScript is BaseScript {
 
     accountManager.borrow(2, doge, maxBorrowDoge);
 
-    _stopBroadcast();
+    // _stopBroadcast();
   }
 }
