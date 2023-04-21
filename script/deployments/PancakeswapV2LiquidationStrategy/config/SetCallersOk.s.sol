@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
@@ -21,9 +22,8 @@ contract SetLiquidatorsOkScript is BaseScript {
     address[] memory _callers = new address[](1);
     _callers[0] = address(moneyMarket);
 
-    address[] memory _strats = new address[](2);
-    _strats[0] = address(pancakeswapV2LiquidateStrat);
-    _strats[1] = address(pancakeswapV2IbLiquidateStrat);
+    address[] memory _strats = new address[](1);
+    _strats[0] = address(pancakeswapV2IbLiquidateStrat);
 
     _startDeployerBroadcast();
 
