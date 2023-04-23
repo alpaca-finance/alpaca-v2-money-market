@@ -11,14 +11,7 @@ contract SetTokenConfigScript is BaseScript {
   address[] tokens;
   IAlpacaV2Oracle.Config[] configs;
 
-  struct SetTokenConfigInput {
-    address[] path;
-    address router;
-    uint64 maxPriceDiffBps;
-    bool isUsingV3Pool;
-  }
-
-  address[] tokenPath;
+  address[] alpacaGuardPath;
 
   function run() public {
     /*
@@ -32,13 +25,29 @@ contract SetTokenConfigScript is BaseScript {
     */
 
     // set alpaca guard path
-    address[] memory _path;
 
-    _path = new address[](2);
-    _path[0] = cake;
-    _path[1] = busd;
+    // cake
+    alpacaGuardPath.push(cake);
+    alpacaGuardPath.push(busd);
     addSetTokenConfigList(
-      SetTokenConfigInput({ path: _path, router: pancakeswapV2Router, maxPriceDiffBps: 10500, isUsingV3Pool: false })
+      IAlpacaV2Oracle.Config({
+        path: alpacaGuardPath,
+        router: pancakeswapV2Router,
+        maxPriceDiffBps: 10500,
+        isUsingV3Pool: false
+      })
+    );
+
+    // alpaca
+    alpacaGuardPath.push(alpaca);
+    alpacaGuardPath.push(busd);
+    addSetTokenConfigList(
+      IAlpacaV2Oracle.Config({
+        path: alpacaGuardPath,
+        router: pancakeswapV2Router,
+        maxPriceDiffBps: 10500,
+        isUsingV3Pool: false
+      })
     );
 
     //---- execution ----//
@@ -47,15 +56,10 @@ contract SetTokenConfigScript is BaseScript {
     _stopBroadcast();
   }
 
-  function addSetTokenConfigList(SetTokenConfigInput memory _input) internal {
-    IAlpacaV2Oracle.Config memory config = IAlpacaV2Oracle.Config({
-      router: _input.router,
-      maxPriceDiffBps: _input.maxPriceDiffBps,
-      path: _input.path,
-      isUsingV3Pool: _input.isUsingV3Pool
-    });
+  function addSetTokenConfigList(IAlpacaV2Oracle.Config memory _config) internal {
+    tokens.push(_config.path[0]);
+    configs.push(_config);
 
-    tokens.push(_input.path[0]);
-    configs.push(config);
+    delete alpacaGuardPath;
   }
 }

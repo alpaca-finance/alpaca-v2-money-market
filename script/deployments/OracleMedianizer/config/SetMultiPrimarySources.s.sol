@@ -9,6 +9,26 @@ import { IPriceOracle } from "solidity/contracts/oracle/interfaces/IPriceOracle.
 contract SetMultiPrimarySourcesScript is BaseScript {
   using stdJson for string;
 
+  struct SetMultiPrimarySourcesInput {
+    address token0;
+    address token1;
+    uint256 maxPriceDeviation;
+    uint256 maxPriceStale;
+    IPriceOracle[] priceSources;
+  }
+
+  address[] token0s;
+  address[] token1s;
+  uint256[] maxPriceDeviationList;
+  uint256[] maxPriceStaleList;
+  IPriceOracle[][] allSources;
+
+  IPriceOracle[] chainlinkPriceSource;
+
+  constructor() {
+    chainlinkPriceSource.push(IPriceOracle(chainlinkPriceOracle));
+  }
+
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -19,38 +39,33 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-    uint8 pairLength = 2;
-    address[] memory token0s = new address[](pairLength);
-    address[] memory token1s = new address[](pairLength);
-    uint256[] memory maxPriceDeviationList = new uint256[](pairLength);
-    uint256[] memory maxPriceStaleList = new uint256[](pairLength);
-    IPriceOracle[][] memory allSources = new IPriceOracle[][](pairLength);
-    IPriceOracle[] memory souces;
 
     // CAKE
-    souces = new IPriceOracle[](1);
-    souces[0] = IPriceOracle(0xEe13333120968d13811Eb2FF7f434ae138578B3e);
-
-    token0s[0] = cake;
-    token1s[0] = usdPlaceholder;
-    maxPriceDeviationList[0] = 1000000000000000000;
-    maxPriceStaleList[0] = 86400;
-    allSources[0] = souces;
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: cake,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1000000000000000000,
+        maxPriceStale: 86400,
+        priceSources: chainlinkPriceSource
+      })
+    );
 
     // DOT
-    souces = new IPriceOracle[](1);
-    souces[0] = IPriceOracle(0xEe13333120968d13811Eb2FF7f434ae138578B3e);
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: dot,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1000000000000000000,
+        maxPriceStale: 86400,
+        priceSources: chainlinkPriceSource
+      })
+    );
 
-    token0s[1] = dot;
-    token1s[1] = usdPlaceholder;
-    maxPriceDeviationList[1] = 1000000000000000000;
-    maxPriceStaleList[1] = 86400;
-
-    allSources[1] = souces;
-
+    //---- execution ----//
     _startDeployerBroadcast();
 
-    OracleMedianizer(address(oracleMedianizer)).setMultiPrimarySources(
+    OracleMedianizer(oracleMedianizer).setMultiPrimarySources(
       token0s,
       token1s,
       maxPriceDeviationList,
@@ -59,5 +74,13 @@ contract SetMultiPrimarySourcesScript is BaseScript {
     );
 
     _stopBroadcast();
+  }
+
+  function addSetMultiPrimarySources(SetMultiPrimarySourcesInput memory _input) internal {
+    token0s.push(_input.token0);
+    token1s.push(_input.token1);
+    maxPriceDeviationList.push(_input.maxPriceDeviation);
+    maxPriceStaleList.push(_input.maxPriceStale);
+    allSources.push(_input.priceSources);
   }
 }
