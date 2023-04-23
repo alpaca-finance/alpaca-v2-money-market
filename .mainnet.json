@@ -4,23 +4,30 @@
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
   "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   "tokens": {
+    "ada": "0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47",
+    "alpaca": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
+    "btcb": "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
+    "busd": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+    "cake": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+    "dodo": "0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2",
     "doge": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
     "dot": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
-    "wbnb": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-    "busd": "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-    "dodo": "0x67ee3Cb086F8a16f34beE3ca72FAD36F7Db929e2",
-    "alpaca": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
+    "eth": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+    "matic": "0xCC42724C6683B7E57334c4E856f4c9965ED682bD",
+    "tusd": "0x14016E85a25aeb13065688cAFB43044C2ef86784",
     "usdt": "0x55d398326f99059fF775485246999027B3197955",
-    "cake": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
+    "usdc": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+    "wbnb": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "xrp": "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE"
   },
   "oracle": {
-    "alpacaV2Oracle": "0xa952932f1fF570CAa9c619068da4C32f8cF4755E",
-    "chainlinkPriceOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
+    "alpacaV2Oracle": "0x17eE39E65755C98Bba726CeF814785e7ffb45b5A",
+    "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
   },
   "sharedConfig": {
     "tripleSlope0": "",
-    "tripleSlope6": "0xc51d25a2C2d49eE2508B822829d43b9961deCB44",
+    "tripleSlope6": "",
     "fixedRepurchaseRewardModel": ""
   },
   "sharedStrategies": {
