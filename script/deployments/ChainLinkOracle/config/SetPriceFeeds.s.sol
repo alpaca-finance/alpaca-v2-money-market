@@ -1,33 +1,24 @@
-// SPDX-License-Identifier: BUSL
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { OracleMedianizer } from "solidity/contracts/oracle/OracleMedianizer.sol";
-import { IPriceOracle } from "solidity/contracts/oracle/interfaces/IPriceOracle.sol";
+import { IChainLinkPriceOracle } from "solidity/contracts/oracle/interfaces/IChainLinkPriceOracle.sol";
+import { IAggregatorV3 } from "solidity/contracts/oracle/interfaces/IAggregatorV3.sol";
 
-contract SetMultiPrimarySourcesScript is BaseScript {
+contract SetPriceFeedsScript is BaseScript {
   using stdJson for string;
 
-  struct SetMultiPrimarySourcesInput {
+  /// @dev normally there is only 1 aggregator
+  struct SetPriceFeedsInput {
     address token0;
     address token1;
-    uint256 maxPriceDeviation;
-    uint256 maxPriceStale;
-    IPriceOracle[] priceSources;
+    IAggregatorV3 source;
   }
 
   address[] token0s;
   address[] token1s;
-  uint256[] maxPriceDeviationList;
-  uint256[] maxPriceStaleList;
-  IPriceOracle[][] allSources;
-
-  IPriceOracle[] chainlinkPriceSource;
-
-  constructor() {
-    chainlinkPriceSource.push(IPriceOracle(chainlinkOracle));
-  }
+  IAggregatorV3[] allSources;
 
   function run() public {
     /*
@@ -41,46 +32,34 @@ contract SetMultiPrimarySourcesScript is BaseScript {
     */
 
     // CAKE
-    addSetMultiPrimarySources(
-      SetMultiPrimarySourcesInput({
+    addSetPriceFeeds(
+      SetPriceFeedsInput({
         token0: cake,
         token1: usdPlaceholder,
-        maxPriceDeviation: 1000000000000000000,
-        maxPriceStale: 86400,
-        priceSources: chainlinkPriceSource
+        source: IAggregatorV3(0xB6064eD41d4f67e353768aA239cA86f4F73665a1)
       })
     );
 
     // DOT
-    addSetMultiPrimarySources(
-      SetMultiPrimarySourcesInput({
+    addSetPriceFeeds(
+      SetPriceFeedsInput({
         token0: dot,
         token1: usdPlaceholder,
-        maxPriceDeviation: 1000000000000000000,
-        maxPriceStale: 86400,
-        priceSources: chainlinkPriceSource
+        source: IAggregatorV3(0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592)
       })
     );
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    OracleMedianizer(oracleMedianizer).setMultiPrimarySources(
-      token0s,
-      token1s,
-      maxPriceDeviationList,
-      maxPriceStaleList,
-      allSources
-    );
+    IChainLinkPriceOracle(chainlinkOracle).setPriceFeeds(token0s, token1s, allSources);
 
     _stopBroadcast();
   }
 
-  function addSetMultiPrimarySources(SetMultiPrimarySourcesInput memory _input) internal {
+  function addSetPriceFeeds(SetPriceFeedsInput memory _input) internal {
     token0s.push(_input.token0);
     token1s.push(_input.token1);
-    maxPriceDeviationList.push(_input.maxPriceDeviation);
-    maxPriceStaleList.push(_input.maxPriceStale);
-    allSources.push(_input.priceSources);
+    allSources.push(_input.source);
   }
 }

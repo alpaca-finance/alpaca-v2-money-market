@@ -36,7 +36,7 @@ abstract contract BaseScript is Script {
   address internal userAddress;
   address internal proxyAdminAddress;
   address internal nativeRelayer;
-  address internal chainlinkPriceOracle;
+  address internal chainlinkOracle;
   address internal oracleMedianizer;
   address internal usdPlaceholder;
   address internal ibTokenImplementation;
@@ -83,7 +83,7 @@ abstract contract BaseScript is Script {
       (address)
     );
     // oracles
-    chainlinkPriceOracle = abi.decode(configJson.parseRaw(".oracle.chainlinkPriceOracle"), (address));
+    chainlinkOracle = abi.decode(configJson.parseRaw(".oracle.chainlinkOracle"), (address));
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracle.oracleMedianizer"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle"), (IAlpacaV2Oracle));
 
