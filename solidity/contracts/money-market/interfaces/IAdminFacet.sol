@@ -43,6 +43,12 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
+  struct ProtocolReserve {
+    address token;
+    address to;
+    uint256 amount;
+  }
+
   function openMarket(
     address _token,
     TokenConfigInput calldata _tokenConfigInput,
@@ -86,6 +92,8 @@ interface IAdminFacet {
     address _to,
     uint256 _amount
   ) external;
+
+  function withdrawMultipleProtocolReserves(ProtocolReserve[] memory _data) external;
 
   function setIbTokenImplementation(address _newImplementation) external;
 
