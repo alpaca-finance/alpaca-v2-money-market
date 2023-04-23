@@ -56,7 +56,8 @@
     "ethers": "^5.6.1",
     "hardhat": "^2.9.1",
     "prettier": "^2.6.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.19"
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "commander": "^9.2.0"
   },
   "devDependencies": {
     "@typechain/hardhat": "^5.0.0",
