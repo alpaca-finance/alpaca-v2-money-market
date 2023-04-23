@@ -46,14 +46,22 @@ abstract contract BaseScript is Script {
   IAlpacaV2Oracle internal alpacaV2Oracle;
   address internal pancakeswapV2Router;
   IFeeModel internal repurchaseRewardModel;
-  address internal wbnb;
+
+  address internal ada;
+  address internal alpaca;
+  address internal btcb;
   address internal busd;
+  address internal cake;
   address internal dodo;
   address internal doge;
   address internal dot;
-  address internal alpaca;
+  address internal eth;
+  address internal matic;
+  address internal tusd;
   address internal usdt;
-  address internal cake;
+  address internal usdc;
+  address internal wbnb;
+  address internal xrp;
 
   constructor() {
     deployerAddress = vm.addr(deployerPrivateKey);
@@ -82,20 +90,28 @@ abstract contract BaseScript is Script {
       configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIb"),
       (address)
     );
+
     // oracles
     chainlinkOracle = abi.decode(configJson.parseRaw(".oracle.chainlinkOracle"), (address));
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracle.oracleMedianizer"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle"), (IAlpacaV2Oracle));
 
     // tokens
-    wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
+    ada = abi.decode(configJson.parseRaw(".tokens.ada"), (address));
+    alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
+    btcb = abi.decode(configJson.parseRaw(".tokens.btcb"), (address));
     busd = abi.decode(configJson.parseRaw(".tokens.busd"), (address));
+    cake = abi.decode(configJson.parseRaw(".tokens.cake"), (address));
     dodo = abi.decode(configJson.parseRaw(".tokens.dodo"), (address));
     doge = abi.decode(configJson.parseRaw(".tokens.doge"), (address));
     dot = abi.decode(configJson.parseRaw(".tokens.dot"), (address));
-    alpaca = abi.decode(configJson.parseRaw(".tokens.alpaca"), (address));
+    eth = abi.decode(configJson.parseRaw(".tokens.eth"), (address));
+    matic = abi.decode(configJson.parseRaw(".tokens.matic"), (address));
+    tusd = abi.decode(configJson.parseRaw(".tokens.tusd"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
-    cake = abi.decode(configJson.parseRaw(".tokens.cake"), (address));
+    usdc = abi.decode(configJson.parseRaw(".tokens.usdc"), (address));
+    wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
+    xrp = abi.decode(configJson.parseRaw(".tokens.xrp"), (address));
   }
 
   function _startDeployerBroadcast() internal {
