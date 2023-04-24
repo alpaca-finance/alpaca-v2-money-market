@@ -357,34 +357,6 @@ contract AdminFacet is IAdminFacet {
     emit LogSetLiquidationTreasury(_treasury);
   }
 
-  /// @notice Withdraw the protocol's reserve
-  /// @param _token The token to be withdrawn
-  /// @param _to The destination address
-  /// @param _amount The amount to withdraw
-  function withdrawProtocolReserve(
-    address _token,
-    address _to,
-    uint256 _amount
-  ) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // Revert if trying to withdraw more than protocolReserves
-    if (_amount > moneyMarketDs.protocolReserves[_token]) {
-      revert AdminFacet_ReserveTooLow();
-    }
-    // Revert if trying to withdraw more than actual token available even protocolReserves is enough
-    if (_amount > moneyMarketDs.reserves[_token]) {
-      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
-    }
-
-    // Reduce protocolReserves and reserves by amount withdrawn
-    moneyMarketDs.protocolReserves[_token] -= _amount;
-    moneyMarketDs.reserves[_token] -= _amount;
-
-    IERC20(_token).safeTransfer(_to, _amount);
-
-    emit LogWitdrawReserve(_token, _to, _amount);
-  }
-
   /// @notice Set protocol's fees
   /// @param _newLendingFeeBps The lending fee imposed on interest collected
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
@@ -555,5 +527,49 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.emergencyPaused = _isPaused;
 
     emit LogSetEmergencyPaused(msg.sender, _isPaused);
+  }
+
+  /// @notice Withdraw the protocol reserves
+  /// @param _withdrawProtocolReserveParam An array of protocol's reserve to withdraw
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam)
+    external
+    onlyOwner
+  {
+    uint256 _length = _withdrawProtocolReserveParam.length;
+    for (uint256 _i; _i < _length; ) {
+      _withdrawProtocolReserve(
+        _withdrawProtocolReserveParam[_i].token,
+        _withdrawProtocolReserveParam[_i].to,
+        _withdrawProtocolReserveParam[_i].amount
+      );
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  function _withdrawProtocolReserve(
+    address _token,
+    address _to,
+    uint256 _amount
+  ) internal {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // Revert if trying to withdraw more than protocolReserves
+    if (_amount > moneyMarketDs.protocolReserves[_token]) {
+      revert AdminFacet_ReserveTooLow();
+    }
+    // Revert if trying to withdraw more than actual token available even protocolReserves is enough
+    if (_amount > moneyMarketDs.reserves[_token]) {
+      revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
+
+    // Reduce protocolReserves and reserves by amount withdrawn
+    moneyMarketDs.protocolReserves[_token] -= _amount;
+    moneyMarketDs.reserves[_token] -= _amount;
+
+    IERC20(_token).safeTransfer(_to, _amount);
+
+    emit LogWitdrawReserve(_token, _to, _amount);
   }
 }
