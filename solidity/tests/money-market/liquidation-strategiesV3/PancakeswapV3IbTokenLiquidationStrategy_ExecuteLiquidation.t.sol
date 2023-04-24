@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BasePCSV3LiquidationForkTest, console } from "./BasePCSV3LiquidationForkTest.sol";
+import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // mocks
