@@ -197,6 +197,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     // btcb of alice (middle hop) must not left
     assertEq(_aliceBTCBBalanceAfter, _aliceBTCBBalanceBefore, "BTCB balance of ALICE");
 
+    // huge amount of collat token will cause the revert, since the tick would be changed
     // repay token (usdt) of alice must increase
     assertEq(_aliceUSDTBalanceAfter, _aliceUSDTBalanceBefore + _expectedUSDTOut, "USDT balance of ALICE");
   }
