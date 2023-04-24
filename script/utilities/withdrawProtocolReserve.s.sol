@@ -13,9 +13,11 @@ contract withdrawProtocolReserveScript is BaseUtilsScript {
     address tokenToWithdraw = mockTokenForLocalRun;
     address withdrawTo = deployerAddress;
     uint256 amountToWithdraw = 0;
+    IAdminFacet.WithdrawProtocolReserveParam[] memory _inputs = new IAdminFacet.WithdrawProtocolReserveParam[](1);
+    _inputs[0] = IAdminFacet.WithdrawProtocolReserveParam(tokenToWithdraw, withdrawTo, amountToWithdraw);
 
     //---- execution ----//
-    moneyMarket.withdrawProtocolReserve(tokenToWithdraw, withdrawTo, amountToWithdraw);
+    moneyMarket.withdrawProtocolReserves(_inputs);
 
     console.log("withdrawProtocolReserve");
     console.log("  tokenToWithdraw  :", tokenToWithdraw);

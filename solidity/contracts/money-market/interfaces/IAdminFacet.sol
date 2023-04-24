@@ -43,6 +43,12 @@ interface IAdminFacet {
     uint256 maxTokenBorrow;
   }
 
+  struct WithdrawProtocolReserveParam {
+    address token;
+    address to;
+    uint256 amount;
+  }
+
   function openMarket(
     address _token,
     TokenConfigInput calldata _tokenConfigInput,
@@ -81,12 +87,6 @@ interface IAdminFacet {
 
   function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
-  function withdrawProtocolReserve(
-    address _token,
-    address _to,
-    uint256 _amount
-  ) external;
-
   function setIbTokenImplementation(address _newImplementation) external;
 
   function setDebtTokenImplementation(address _newImplementation) external;
@@ -112,4 +112,6 @@ interface IAdminFacet {
     uint256 _newMaxCollateral,
     uint256 _newMaxBorrow
   ) external;
+
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external;
 }
