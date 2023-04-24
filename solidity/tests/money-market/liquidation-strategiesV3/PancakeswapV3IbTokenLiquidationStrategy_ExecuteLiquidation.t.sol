@@ -178,9 +178,8 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     (uint256 _expectedBTCBOut, , , ) = quoterV2.quoteExactInput(_ETHToBtcbPath, _ibTokenAmountIn);
 
     bytes memory _BtcbToUsdtPath = abi.encodePacked(address(btcb), uint24(500), address(usdt));
-    (uint256 _expectedUSDTOut, , , ) = quoterV2.quoteExactInput(_BtcbToUsdtPath, _ibTokenAmountIn);
+    (uint256 _expectedUSDTOut, , , ) = quoterV2.quoteExactInput(_BtcbToUsdtPath, _expectedBTCBOut);
 
-    console.log("before execution");
     liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenAmountIn, 0, _minReceive);
 
     uint256 _aliceETHBalanceAfter = ETH.balanceOf(ALICE);
@@ -188,13 +187,17 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     uint256 _aliceUSDTBalanceAfter = usdt.balanceOf(ALICE);
 
     // nothing left in strat
-    assertEq(ETH.balanceOf(address(liquidationStrat)), 0);
-    assertEq(btcb.balanceOf(address(liquidationStrat)), 0);
-    assertEq(usdt.balanceOf(address(liquidationStrat)), 0);
+    assertEq(ETH.balanceOf(address(liquidationStrat)), 0, "ETH balance of strat");
+    assertEq(btcb.balanceOf(address(liquidationStrat)), 0, "btcb balance of strat");
+    assertEq(usdt.balanceOf(address(liquidationStrat)), 0, "usdt balance of strat");
 
-    // ib of alice must correct
-    console.log(_aliceUSDTBalanceAfter);
     // eth of alice must not effect
-    assertEq(_aliceETHBalanceAfter, 0);
+    assertEq(_aliceETHBalanceAfter, _aliceETHBalanceBefore, "ETH balance of ALICE");
+
+    // btcb of alice (middle hop) must not left
+    assertEq(_aliceBTCBBalanceAfter, _aliceBTCBBalanceBefore, "BTCB balance of ALICE");
+
+    // repay token (usdt) of alice must increase
+    assertEq(_aliceUSDTBalanceAfter, _aliceUSDTBalanceBefore + _expectedUSDTOut, "USDT balance of ALICE");
   }
 }
