@@ -357,23 +357,6 @@ contract AdminFacet is IAdminFacet {
     emit LogSetLiquidationTreasury(_treasury);
   }
 
-  function withdrawProtocolReserve(
-    address _token,
-    address _to,
-    uint256 _amount
-  ) external onlyOwner {
-    _withdrawProtocolReserve(_token, _to, _amount);
-  }
-
-  /// @notice Withdraw multiple protocol reserves
-  /// @param _data The array of protocol reserve struct (including token, to, amount)
-  function withdrawMultipleProtocolReserves(ProtocolReserve[] memory _data) external onlyOwner {
-    uint256 _length = _data.length;
-    for (uint256 _i; _i < _length; ) {
-      _withdrawProtocolReserve(_data[_i].token, _data[_i].to, _data[_i].amount);
-    }
-  }
-
   /// @notice Set protocol's fees
   /// @param _newLendingFeeBps The lending fee imposed on interest collected
   /// @param _newRepurchaseFeeBps The repurchase fee collected by the protocol
@@ -546,10 +529,19 @@ contract AdminFacet is IAdminFacet {
     emit LogSetEmergencyPaused(msg.sender, _isPaused);
   }
 
-  /// @notice Withdraw the protocol's reserve
-  /// @param _token The token to be withdrawn
-  /// @param _to The destination address
-  /// @param _amount The amount to withdraw
+  /// @notice Withdraw multiple protocol reserves
+  /// @param _data The array of protocol reserve struct (including token, to, amount)
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _data) external onlyOwner {
+    uint256 _length = _data.length;
+    for (uint256 _i; _i < _length; ) {
+      _withdrawProtocolReserve(_data[_i].token, _data[_i].to, _data[_i].amount);
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   function _withdrawProtocolReserve(
     address _token,
     address _to,
