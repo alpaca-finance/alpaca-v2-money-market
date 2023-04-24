@@ -34,6 +34,7 @@
     "exec:bsc_mainnet:pancake-v2-liquidate-strat:deploy": "forge script script/deployments/PancakeswapV2LiquidationStrategy/deploy/PancakeswapV2LiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-ib-strat:deploy": "forge script script/deployments/PancakeswapV2IbTokenLiquidationStrategy/deploy/PancakeswapV2IbTokenLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v3-liquidate-ib-strat:deploy": "forge script script/deployments/PancakeswapV3IbTokenLiquidationStrategy/deploy/PancakeswapV3IbTokenLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:pancake-v3-liquidate-ib-strat:config:set-path": "forge script script/deployments/PancakeswapV3IbTokenLiquidationStrategy/config/SetPaths.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:liquidate-strat:config:set-caller-ok": "forge script script/deployments/PancakeswapV2LiquidationStrategy/config/SetCallersOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:liquidate-strat:config:set-path": "forge script script/deployments/PancakeswapV2LiquidationStrategy/config/SetPaths.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:deploy": "forge script script/deployments/AlpacaV2Oracle/deploy/AlpacaV2Oracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",

@@ -43,6 +43,7 @@ abstract contract BaseScript is Script {
   address internal debtTokenImplementation;
   address internal pancakeswapV2LiquidateStrat;
   address internal pancakeswapV2IbLiquidateStrat;
+  address internal pancakeswapV3IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
@@ -92,6 +93,10 @@ abstract contract BaseScript is Script {
     );
     pancakeswapV2IbLiquidateStrat = abi.decode(
       configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIb"),
+      (address)
+    );
+    pancakeswapV3IbLiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIbV3"),
       (address)
     );
 
