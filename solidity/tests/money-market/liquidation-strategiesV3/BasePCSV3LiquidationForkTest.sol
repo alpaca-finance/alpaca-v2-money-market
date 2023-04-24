@@ -7,7 +7,7 @@ import "../../utils/Components.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // interfaces
-import { IV3PancakeSwapRouter } from "solidity/contracts/money-market/interfaces/IV3PancakeSwapRouter.sol";
+import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 import { IQuoterV2 } from "solidity/tests/interfaces/IQuoterV2.sol";
 import { IBEP20 } from "solidity/tests/interfaces/IBEP20.sol";
 
@@ -44,7 +44,7 @@ contract BasePCSV3LiquidationForkTest is DSTest, StdUtils, StdAssertions, StdChe
 
   uint24 internal poolFee = 2500;
 
-  IV3PancakeSwapRouter internal router = IV3PancakeSwapRouter(0x13f4EA83D0bd40E75C8222255bc855a974568Dd4);
+  IPancakeSwapRouterV3 internal router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
   MockMoneyMarket internal moneyMarket;
   PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;

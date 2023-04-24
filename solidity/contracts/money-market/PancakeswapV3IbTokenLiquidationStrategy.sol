@@ -11,7 +11,7 @@ import { LibPCSV3PoolAddress } from "./libraries/LibPCSV3PoolAddress.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
-import { IV3PancakeSwapRouter } from "./interfaces/IV3PancakeSwapRouter.sol";
+import { IPancakeSwapRouterV3 } from "./interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
@@ -28,7 +28,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   error PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
   error PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity(address tokenA, address tokenB, uint24 fee);
 
-  IV3PancakeSwapRouter internal immutable router;
+  IPancakeSwapRouterV3 internal immutable router;
   IMoneyMarket internal immutable moneyMarket;
 
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
@@ -46,7 +46,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   }
 
   constructor(address _router, address _moneyMarket) {
-    router = IV3PancakeSwapRouter(_router);
+    router = IPancakeSwapRouterV3(_router);
     moneyMarket = IMoneyMarket(_moneyMarket);
   }
 
@@ -80,9 +80,10 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     uint256 _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _ibTokenAmountIn);
 
     // setup params from swap
-    IV3PancakeSwapRouter.ExactInputParams memory params = IV3PancakeSwapRouter.ExactInputParams({
+    IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
       path: _path,
       recipient: msg.sender,
+      deadline: block.timestamp,
       amountIn: _withdrawnUnderlyingAmount,
       amountOutMinimum: _minReceive
     });
