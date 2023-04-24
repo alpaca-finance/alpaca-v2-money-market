@@ -26,7 +26,7 @@ contract DeployOracleScript is BaseScript {
     path[0] = wbnb;
     path[1] = busd;
     configs[0] = IAlpacaV2Oracle.Config({
-      router: pancakeswapV2Router,
+      router: pancakeswapRouterV2,
       maxPriceDiffBps: 10500,
       path: path,
       isUsingV3Pool: false
@@ -38,7 +38,7 @@ contract DeployOracleScript is BaseScript {
     path[1] = wbnb;
     path[2] = busd;
     configs[1] = IAlpacaV2Oracle.Config({
-      router: pancakeswapV2Router,
+      router: pancakeswapRouterV2,
       maxPriceDiffBps: 10500,
       path: path,
       isUsingV3Pool: false
@@ -49,7 +49,7 @@ contract DeployOracleScript is BaseScript {
     path[0] = doge;
     path[1] = busd;
     configs[2] = IAlpacaV2Oracle.Config({
-      router: pancakeswapV2Router,
+      router: pancakeswapRouterV2,
       maxPriceDiffBps: 10500,
       path: path,
       isUsingV3Pool: false

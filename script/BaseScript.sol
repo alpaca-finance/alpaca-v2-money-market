@@ -45,7 +45,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV2IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   address internal pancakeswapFactoryV3;
-  address internal pancakeswapV2Router;
+  address internal pancakeswapRouterV2;
   IFeeModel internal repurchaseRewardModel;
 
   address internal ada;
@@ -76,7 +76,7 @@ abstract contract BaseScript is Script {
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
 
     pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
-    pancakeswapV2Router = abi.decode(configJson.parseRaw(".pancakeswapV2Router"), (address));
+    pancakeswapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV2"), (address));
     repurchaseRewardModel = abi.decode(configJson.parseRaw(".sharedConfig.fixedRepurchaseRewardModel"), (IFeeModel));
 
     ibTokenImplementation = abi.decode(

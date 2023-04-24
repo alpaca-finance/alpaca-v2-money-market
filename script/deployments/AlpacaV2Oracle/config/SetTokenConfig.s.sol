@@ -32,7 +32,7 @@ contract SetTokenConfigScript is BaseScript {
     addSetTokenConfigList(
       IAlpacaV2Oracle.Config({
         path: alpacaGuardPath,
-        router: pancakeswapV2Router,
+        router: pancakeswapRouterV2,
         maxPriceDiffBps: 10500,
         isUsingV3Pool: false
       })
@@ -44,7 +44,7 @@ contract SetTokenConfigScript is BaseScript {
     addSetTokenConfigList(
       IAlpacaV2Oracle.Config({
         path: alpacaGuardPath,
-        router: pancakeswapV2Router,
+        router: pancakeswapRouterV2,
         maxPriceDiffBps: 10500,
         isUsingV3Pool: false
       })
