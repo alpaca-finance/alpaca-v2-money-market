@@ -535,9 +535,13 @@ contract AdminFacet is IAdminFacet {
     external
     onlyOwner
   {
-    uint256 _length = _data.length;
+    uint256 _length = _withdrawProtocolReserveParam.length;
     for (uint256 _i; _i < _length; ) {
-      _withdrawProtocolReserve(_data[_i].token, _data[_i].to, _data[_i].amount);
+      _withdrawProtocolReserve(
+        _withdrawProtocolReserveParam[_i].token,
+        _withdrawProtocolReserveParam[_i].to,
+        _withdrawProtocolReserveParam[_i].amount
+      );
 
       unchecked {
         ++_i;
