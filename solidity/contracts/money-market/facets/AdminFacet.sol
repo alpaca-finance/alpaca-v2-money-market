@@ -529,9 +529,12 @@ contract AdminFacet is IAdminFacet {
     emit LogSetEmergencyPaused(msg.sender, _isPaused);
   }
 
-  /// @notice Withdraw multiple protocol reserves
-  /// @param _data The array of protocol reserve struct (including token, to, amount)
-  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _data) external onlyOwner {
+  /// @notice Withdraw the protocol reserves
+  /// @param _withdrawProtocolReserveParam An array of protocol's reserve to withdraw
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam)
+    external
+    onlyOwner
+  {
     uint256 _length = _data.length;
     for (uint256 _i; _i < _length; ) {
       _withdrawProtocolReserve(_data[_i].token, _data[_i].to, _data[_i].amount);

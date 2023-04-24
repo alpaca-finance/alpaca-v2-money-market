@@ -113,5 +113,5 @@ interface IAdminFacet {
     uint256 _newMaxBorrow
   ) external;
 
-  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _data) external;
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external;
 }
