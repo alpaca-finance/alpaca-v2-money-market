@@ -241,7 +241,7 @@ library LibMoneyMarketDeployment {
     _selectors[7] = IAdminFacet.setLiquidatorsOk.selector;
     _selectors[8] = IAdminFacet.setLiquidationTreasury.selector;
     _selectors[9] = IAdminFacet.setFees.selector;
-    _selectors[10] = IAdminFacet.withdrawProtocolReserve.selector;
+    _selectors[10] = IAdminFacet.withdrawProtocolReserves.selector;
     _selectors[11] = IAdminFacet.setProtocolConfigs.selector;
     _selectors[12] = IAdminFacet.setIbTokenImplementation.selector;
     _selectors[13] = IAdminFacet.setLiquidationParams.selector;
