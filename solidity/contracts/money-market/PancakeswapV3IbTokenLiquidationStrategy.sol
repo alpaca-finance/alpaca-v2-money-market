@@ -7,7 +7,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 // ---- Libraries ---- //
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 import { LibPath } from "./libraries/LibPath.sol";
-import { LibPCSV3PoolAddress } from "./libraries/LibPCSV3PoolAddress.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
@@ -32,6 +31,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   IMoneyMarket internal immutable moneyMarket;
 
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
 
   mapping(address => bool) public callersOk;
   // tokenIn => tokenOut => path
@@ -110,10 +110,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
         (address _token0, address _token1, uint24 _fee) = _hop.decodeFirstPool();
 
         // compute pool address from token0, token1 and fee
-        address _pool = LibPCSV3PoolAddress.computeAddress(
-          PANCAKE_V3_POOL_DEPLOYER,
-          LibPCSV3PoolAddress.PoolKey(_token0, _token1, _fee)
-        );
+        address _pool = _computeAddressV3(_token0, _token1, _fee);
 
         // revert EVM error if pool is not existing (cannot call liquidity)
         if (IPancakeV3Pool(_pool).liquidity() == 0) {
@@ -155,5 +152,27 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
         ++_i;
       }
     }
+  }
+
+  function _computeAddressV3(
+    address _tokenA,
+    address _tokenB,
+    uint24 _fee
+  ) internal pure returns (address pool) {
+    if (_tokenA > _tokenB) (_tokenA, _tokenB) = (_tokenB, _tokenA);
+    pool = address(
+      uint160(
+        uint256(
+          keccak256(
+            abi.encodePacked(
+              hex"ff",
+              PANCAKE_V3_POOL_DEPLOYER,
+              keccak256(abi.encode(_tokenA, _tokenB, _fee)),
+              POOL_INIT_CODE_HASH
+            )
+          )
+        )
+      )
+    );
   }
 }
