@@ -1,6 +1,6 @@
 {
   "proxyAdmin": "0x5379F32C8D5F663EACb61eeF63F722950294f452",
-  "nativeRelayer": "0x8d3644898516274da3e855ac49289e96bb17201e",
+  "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
   "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   "tokens": {
@@ -21,7 +21,7 @@
     "xrp": "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE"
   },
   "oracle": {
-    "alpacaV2Oracle": "0x17eE39E65755C98Bba726CeF814785e7ffb45b5A",
+    "alpacaV2Oracle": "",
     "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
   },
