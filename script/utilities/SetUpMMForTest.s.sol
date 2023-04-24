@@ -12,9 +12,11 @@ import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-mode
 contract SetUpMMForTestScript is BaseScript {
   using stdJson for string;
 
-  function run() public {
-    _loadAddresses();
+  address ibBusd;
+  address ibDoge;
+  address ibDodo;
 
+  function run() public {
     _startDeployerBroadcast();
 
     //---- setup mm configs ----//
@@ -82,7 +84,7 @@ contract SetUpMMForTestScript is BaseScript {
 
     //---- setup user positions ----//
 
-    _startUserBroadcast();
+    // _startUserBroadcast();
 
     IERC20(wbnb).approve(address(accountManager), type(uint256).max);
     IERC20(busd).approve(address(accountManager), type(uint256).max);
@@ -122,6 +124,6 @@ contract SetUpMMForTestScript is BaseScript {
 
     accountManager.borrow(2, doge, maxBorrowDoge);
 
-    _stopBroadcast();
+    // _stopBroadcast();
   }
 }

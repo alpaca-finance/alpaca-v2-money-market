@@ -9,10 +9,13 @@
     "build": "yarn run build:cjs",
     "exec:bsc_mainnet:proxy-admin:deploy": "forge script script/deployments/ProxyAdmin/deploy/ProxyAdmin.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:minifl:deploy": "forge script script/deployments/MiniFL/deploy/MiniFL.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:upgrade": "forge script script/deployments/MiniFL/upgrade/MiniFL.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:config:set-pool": "forge script script/deployments/MiniFL/config/SetPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:config:set-alpaca-per-sec": "forge script script/deployments/MiniFL/config/SetAlpacaPerSecond.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:ib-token:deploy": "forge script script/deployments/InterestBearingToken/deploy/InterestBearingTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:debt-token:deploy": "forge script script/deployments/DebtToken/deploy/DebtTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:money-market:config:open-market": "forge script script/deployments/MoneyMarket/config/OpeMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:open-market": "forge script script/deployments/MoneyMarket/config/OpenMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-interest-model": "forge script script/deployments/MoneyMarket/config/SetInterestModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-fees": "forge script script/deployments/MoneyMarket/config/SetFees.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-max-num-token": "forge script script/deployments/MoneyMarket/config/SetMaxNumOfToken.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -25,6 +28,8 @@
     "exec:bsc_mainnet:money-market:config:set-liquidate-strat-ok": "forge script script/deployments/MoneyMarket/config/SetLiquidationStratsOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-liquidator-ok": "forge script script/deployments/MoneyMarket/config/SetLiquidatorsOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-account-manager-ok": "forge script script/deployments/MoneyMarket/config/SetAccountManagersOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:set-repurchase-reward-model": "forge script script/deployments/MoneyMarket/config/SetRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:set-risk-manager-ok": "forge script script/deployments/MoneyMarket/config/SetRiskManagersOkScript.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:mm-account-manager:deploy": "forge script script/deployments/MoneyMarketAccountManager/deploy/MoneyMarketAccountManager.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-strat:deploy": "forge script script/deployments/PancakeswapV2LiquidationStrategy/deploy/PancakeswapV2LiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-ib-strat:deploy": "forge script script/deployments/PancakeswapV2IbTokenLiquidationStrategy/deploy/PancakeswapV2IbTokenLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -32,10 +37,16 @@
     "exec:bsc_mainnet:liquidate-strat:config:set-path": "forge script script/deployments/PancakeswapV2LiquidationStrategy/config/SetPaths.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:deploy": "forge script script/deployments/AlpacaV2Oracle/deploy/AlpacaV2Oracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-token-config": "forge script script/deployments/AlpacaV2Oracle/config/SetTokenConfig.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:alpaca-v2-oracle:config:set-oracle": "forge script script/deployments/AlpacaV2Oracle/config/SetOracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:oracle-medianizer:deploy": "forge script script/deployments/OracleMedianizer/deploy/OracleMedianizer.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:oracle-medianizer:config:set-multiple-primary-sources": "forge script script/deployments/OracleMedianizer/config/SetMultiPrimarySources.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:repurchase-reward-model:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:repurchase-reward-model:set-repurchase-reward-model": "forge script script/deployments/MoneyMarket/config/SetRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow"
+    "exec:bsc_mainnet:chainlink-price-oracle:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:chainlink-price-oracle2:deploy": "forge script script/deployments/ChainLinkOracle2/deploy/ChainlinkPriceOracle2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:chainlink-price-oracle2:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle2/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:fix-repurchase-reward-model:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:triple-slope-model0:deploy": "forge script script/deployments/InterestModels/deploy/TripleSlopeModel0.s.sol --rpc-url bsc_mainnet --broadcast --slow"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
@@ -46,7 +57,8 @@
     "ethers": "^5.6.1",
     "hardhat": "^2.9.1",
     "prettier": "^2.6.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.19"
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "commander": "^9.2.0"
   },
   "devDependencies": {
     "@typechain/hardhat": "^5.0.0",

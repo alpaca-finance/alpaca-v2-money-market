@@ -8,8 +8,6 @@ contract DeployDebtTokenImplementationScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -25,6 +23,6 @@ contract DeployDebtTokenImplementationScript is BaseScript {
     address debtTokenImplementation = address(new DebtToken());
     _stopBroadcast();
 
-    _writeJson(vm.toString(debtTokenImplementation), ".moneyMarket.debtToken");
+    _writeJson(vm.toString(debtTokenImplementation), ".moneyMarket.debtTokenImplementation");
   }
 }
