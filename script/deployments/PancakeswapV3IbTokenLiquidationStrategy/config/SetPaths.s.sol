@@ -23,9 +23,14 @@ contract SetPathsScript is BaseScript {
 
     address[] memory _strats = new address[](1);
     _strats[0] = address(pancakeswapV3IbLiquidateStrat);
+    bytes memory liquidationPath;
 
-    addPool(dot, 2500, wbnb);
-    addPool(wbnb, 500, busd);
+    liquidationPath = encodePool(wbnb, 500, busd);
+    setLiquidationPath(liquidationPath);
+
+    liquidationPath = encodePool(dot, 2500, wbnb);
+    addPath(liquidationPath, 500, busd);
+    setLiquidationPath(liquidationPath);
 
     //---- execution ----//
     _startDeployerBroadcast();
@@ -45,11 +50,17 @@ contract SetPathsScript is BaseScript {
     pool = abi.encodePacked(_tokenA, _fee, _tokenB);
   }
 
-  function addPool(
-    address _tokenA,
+  function addPath(
+    bytes memory liquidationPath,
     uint24 _fee,
     address _tokenB
   ) internal {
-    paths.push(encodePool(_tokenA, _fee, _tokenB));
+    liquidationPath = abi.encodePacked(liquidationPath, _fee, _tokenB);
+  }
+
+  function setLiquidationPath(bytes memory liquidationPath) internal {
+    paths.push(liquidationPath);
+
+    delete liquidationPath;
   }
 }
