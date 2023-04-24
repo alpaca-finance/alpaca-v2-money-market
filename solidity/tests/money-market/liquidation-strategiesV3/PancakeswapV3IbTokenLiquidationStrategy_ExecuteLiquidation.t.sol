@@ -149,4 +149,52 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, 0, _minReceive);
     vm.stopPrank();
   }
+
+  function testCorrectness_WhenLiduidateMultiHopIbToken_ShouldWork() external {
+    address _ibToken = address(ibETH);
+    address _debtToken = address(usdt);
+    uint256 _ibTokenAmountIn = normalizeEther(1 ether, ibETHDecimal);
+    uint256 _minReceive = 0;
+
+    // set withdrawal amount
+    uint256 _expectedWithdrawalAmount = normalizeEther(1 ether, ETHDecimal);
+    moneyMarket.setWithdrawalAmount(_expectedWithdrawalAmount);
+
+    // state before execution
+    uint256 _aliceETHBalanceBefore = ETH.balanceOf(ALICE);
+    uint256 _aliceBTCBBalanceBefore = btcb.balanceOf(ALICE);
+    uint256 _aliceUSDTBalanceBefore = usdt.balanceOf(ALICE);
+
+    // set multi-hop path ETH => btcb => usdt
+    bytes[] memory _paths = new bytes[](1);
+    _paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb), uint24(500), address(usdt));
+    liquidationStrat.setPaths(_paths);
+
+    // transfer ib to strat
+    vm.startPrank(ALICE);
+    ibETH.transfer(address(liquidationStrat), _ibTokenAmountIn);
+    // expect amount out 2 hop expect btcb, expect usdt
+    bytes memory _ETHToBtcbPath = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
+    (uint256 _expectedBTCBOut, , , ) = quoterV2.quoteExactInput(_ETHToBtcbPath, _ibTokenAmountIn);
+
+    bytes memory _BtcbToUsdtPath = abi.encodePacked(address(btcb), uint24(500), address(usdt));
+    (uint256 _expectedUSDTOut, , , ) = quoterV2.quoteExactInput(_BtcbToUsdtPath, _ibTokenAmountIn);
+
+    console.log("before execution");
+    liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenAmountIn, 0, _minReceive);
+
+    uint256 _aliceETHBalanceAfter = ETH.balanceOf(ALICE);
+    uint256 _aliceBTCBBalanceAfter = btcb.balanceOf(ALICE);
+    uint256 _aliceUSDTBalanceAfter = usdt.balanceOf(ALICE);
+
+    // nothing left in strat
+    assertEq(ETH.balanceOf(address(liquidationStrat)), 0);
+    assertEq(btcb.balanceOf(address(liquidationStrat)), 0);
+    assertEq(usdt.balanceOf(address(liquidationStrat)), 0);
+
+    // ib of alice must correct
+    console.log(_aliceUSDTBalanceAfter);
+    // eth of alice must not effect
+    assertEq(_aliceETHBalanceAfter, 0);
+  }
 }
