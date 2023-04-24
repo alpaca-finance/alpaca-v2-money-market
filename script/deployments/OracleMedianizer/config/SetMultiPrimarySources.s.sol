@@ -40,13 +40,81 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    // BTCB
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: btcb,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // ETH
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: eth,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // BUSD
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: busd,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // USDT => true
+
+    // ALPACA
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: alpaca,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
     // CAKE
     addSetMultiPrimarySources(
       SetMultiPrimarySourcesInput({
         token0: cake,
         token1: usdPlaceholder,
-        maxPriceDeviation: 1000000000000000000,
-        maxPriceStale: 86400,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // TUSD
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: tusd,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // XRP
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: xrp,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
         priceSources: chainlinkPriceSource
       })
     );
@@ -56,8 +124,19 @@ contract SetMultiPrimarySourcesScript is BaseScript {
       SetMultiPrimarySourcesInput({
         token0: dot,
         token1: usdPlaceholder,
-        maxPriceDeviation: 1000000000000000000,
-        maxPriceStale: 86400,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // MATIC
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: matic,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
         priceSources: chainlinkPriceSource
       })
     );
