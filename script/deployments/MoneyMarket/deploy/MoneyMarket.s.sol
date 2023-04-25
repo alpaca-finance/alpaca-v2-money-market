@@ -9,7 +9,7 @@ import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel7.sol";
 import { PancakeswapV2LiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2LiquidationStrategy.sol";
 import { PancakeswapV2IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";
-import { FixedFeeModel } from "solidity/contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel100Bps } from "solidity/contracts/money-market/fee-models/FixedFeeModel100Bps.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 import { LibMoneyMarketDeployment } from "script/deployments/libraries/LibMoneyMarketDeployment.sol";
 

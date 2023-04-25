@@ -5,7 +5,7 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTes
 
 // interfaces
 import { TripleSlopeModel6, IInterestRateModel } from "../../../contracts/money-market/interest-models/TripleSlopeModel6.sol";
-import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel100Bps, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel100Bps.sol";
 import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol";
 
 struct CacheState {
@@ -28,7 +28,7 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     adminFacet.setInterestModel(address(btc), address(tripleSlope6));
     adminFacet.setInterestModel(address(usdc), address(tripleSlope6));
 
-    FixedFeeModel fixedFeeModel = new FixedFeeModel();
+    FixedFeeModel100Bps fixedFeeModel = new FixedFeeModel100Bps();
     adminFacet.setRepurchaseRewardModel(fixedFeeModel);
 
     vm.startPrank(DEPLOYER);
