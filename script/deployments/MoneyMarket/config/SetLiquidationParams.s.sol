@@ -7,7 +7,6 @@ contract SetLiquidationParamsScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -18,8 +17,8 @@ contract SetLiquidationParamsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint16 _newMaxLiquidateBps = 100;
-    uint16 _newLiquidationThreshold = 10500;
+    uint16 _newMaxLiquidateBps = 5000;
+    uint16 _newLiquidationThreshold = 11000;
 
     //---- execution ----//
     _startDeployerBroadcast();

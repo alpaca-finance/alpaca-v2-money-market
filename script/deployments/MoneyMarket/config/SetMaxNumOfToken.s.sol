@@ -7,7 +7,6 @@ contract SetMaxNumOfTokenScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -18,9 +17,9 @@ contract SetMaxNumOfTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint8 _numOfCollat = 5;
-    uint8 _numOfDebt = 5;
-    uint8 _numOfNonCollatDebt = 5;
+    uint8 _numOfCollat = 10;
+    uint8 _numOfDebt = 10;
+    uint8 _numOfNonCollatDebt = 0;
 
     //---- execution ----//
     _startDeployerBroadcast();

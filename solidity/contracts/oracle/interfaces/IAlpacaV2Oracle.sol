@@ -24,6 +24,9 @@ interface IAlpacaV2Oracle {
   /// @dev Return value of given token in USD.
   function getTokenPrice(address _token) external view returns (uint256, uint256);
 
+  /// @dev Set new oracle.
+  function setOracle(address _oracle) external;
+
   /// @dev Return true if token price is stable.
   function isStable(address _tokenAddress) external view;
 
@@ -32,8 +35,6 @@ interface IAlpacaV2Oracle {
   function oracle() external view returns (address);
 
   function usd() external view returns (address);
-
-  function setOracle(address _oracle) external;
 
   /// @dev Errors
   error AlpacaV2Oracle_InvalidLPAddress();

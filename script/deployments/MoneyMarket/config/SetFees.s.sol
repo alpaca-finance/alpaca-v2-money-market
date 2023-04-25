@@ -7,7 +7,6 @@ contract SetFeesScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -18,9 +17,9 @@ contract SetFeesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint16 _newLendingFeeBps = 15;
-    uint16 _newRepurchaseFeeBps = 15;
-    uint16 _newLiquidationFeeBps = 15;
+    uint16 _newLendingFeeBps = 1900;
+    uint16 _newRepurchaseFeeBps = 40;
+    uint16 _newLiquidationFeeBps = 50;
 
     //---- execution ----//
     _startDeployerBroadcast();

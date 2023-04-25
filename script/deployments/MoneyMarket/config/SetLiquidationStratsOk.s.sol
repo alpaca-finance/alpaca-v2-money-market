@@ -7,8 +7,6 @@ contract SetLiquidationStratsOkScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -19,9 +17,8 @@ contract SetLiquidationStratsOkScript is BaseScript {
   Check all variables below before execute the deployment script
     */
     bool isOk = true;
-    address[] memory _strats = new address[](2);
-    _strats[0] = address(pancakeswapV2LiquidateStrat);
-    _strats[1] = address(pancakeswapV2IbLiquidateStrat);
+    address[] memory _strats = new address[](1);
+    _strats[0] = address(pancakeswapV2IbLiquidateStrat);
 
     _startDeployerBroadcast();
 

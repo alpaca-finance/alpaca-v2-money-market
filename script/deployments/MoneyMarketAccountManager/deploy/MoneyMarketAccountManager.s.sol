@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
@@ -14,8 +14,6 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
   ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
@@ -34,7 +32,7 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
     bytes memory data = abi.encodeWithSelector(
       bytes4(keccak256("initialize(address,address,address)")),
       address(moneyMarket),
-      wNativeToken,
+      wbnb,
       nativeRelayer
     );
     address accountManagerProxy = address(

@@ -24,7 +24,6 @@ abstract contract BaseUtilsScript is Script {
   using stdJson for string;
 
   uint256 internal deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-  uint256 internal userPrivateKey = vm.envUint("USER_PRIVATE_KEY");
   string internal configFilePath =
     string.concat(vm.projectRoot(), string.concat("/configs/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
@@ -50,7 +49,6 @@ abstract contract BaseUtilsScript is Script {
     MoneyMarketConfig memory mmConfig = _getConfig();
     moneyMarket = IMoneyMarket(mmConfig.MoneyMarketDiamond);
     deployerAddress = vm.addr(deployerPrivateKey);
-    userAddress = vm.addr(userPrivateKey);
     console.log("addresses");
     console.log("  deployer     :", deployerAddress);
     console.log("  user     :", userAddress);
@@ -75,12 +73,6 @@ abstract contract BaseUtilsScript is Script {
     vm.startBroadcast(deployerPrivateKey);
     console.log("");
     console.log("==== start broadcast as deployer ====");
-  }
-
-  function _startUserBroadcast() internal {
-    vm.startBroadcast(userPrivateKey);
-    console.log("");
-    console.log("==== start broadcast as user ====");
   }
 
   function _stopBroadcast() internal {

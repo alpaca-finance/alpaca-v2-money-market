@@ -17,8 +17,6 @@ contract DeployMoneyMarketScript is BaseScript {
   using stdJson for string;
 
   function run() public {
-    _loadAddresses();
-
     _startDeployerBroadcast();
 
     // deploy money market
@@ -30,10 +28,6 @@ contract DeployMoneyMarketScript is BaseScript {
     address[] memory _callers = new address[](1);
     _callers[0] = address(moneyMarket);
     miniFL.setWhitelistedCallers(_callers, true);
-
-    // set implementation to be able to open market
-    moneyMarket.setIbTokenImplementation(address(new InterestBearingToken()));
-    moneyMarket.setDebtTokenImplementation(address(new DebtToken()));
 
     _stopBroadcast();
 
