@@ -99,7 +99,7 @@ contract OpenMarketScript is BaseScript {
     // ETH
     executeOpenMarket(
       OpenMarketInput({
-        token: btcb,
+        token: eth,
         interestModel: doubleSlope2,
         tier: LibConstant.AssetTier.COLLATERAL,
         collateralFactor: 8800,

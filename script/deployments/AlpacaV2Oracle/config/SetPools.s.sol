@@ -30,22 +30,18 @@ contract SetPoolsScript is BaseScript {
     */
 
     // 2 hops
-    // DOT-WBNB fee 0.25
-    addPCSV3PoolAddress(dot, wbnb, 2500);
     // ETH-WBNB fee 0.25
     addPCSV3PoolAddress(eth, wbnb, 2500);
 
-    // 1 hops
-    // CAKE-BUSD fee 0.25
-    addPCSV3PoolAddress(cake, busd, 2500);
-    // BTCB-BUSD fee 0.05
-    addPCSV3PoolAddress(btcb, busd, 500);
+    // 1 hop
     // WBNB-BUSD fee 0.05
     addPCSV3PoolAddress(wbnb, busd, 500);
     // USDC-BUSD fee 0.01
     addPCSV3PoolAddress(usdc, busd, 100);
     // USDT-BUSD fee 0.01
     addPCSV3PoolAddress(usdt, busd, 100);
+    // BTCB-BUSD fee 0.05
+    addPCSV3PoolAddress(btcb, busd, 500);
 
     //---- execution ----//
     _startDeployerBroadcast();

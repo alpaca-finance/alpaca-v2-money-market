@@ -40,51 +40,6 @@ contract SetPriceFeedsScript is BaseScript {
       })
     );
 
-    // CAKE
-    addSetPriceFeeds(
-      SetPriceFeedsInput({
-        token0: cake,
-        token1: usdPlaceholder,
-        source: IAggregatorV3(0xB6064eD41d4f67e353768aA239cA86f4F73665a1)
-      })
-    );
-
-    // TUSD
-    addSetPriceFeeds(
-      SetPriceFeedsInput({
-        token0: tusd,
-        token1: usdPlaceholder,
-        source: IAggregatorV3(0xa3334A9762090E827413A7495AfeCE76F41dFc06)
-      })
-    );
-
-    // XRP
-    addSetPriceFeeds(
-      SetPriceFeedsInput({
-        token0: xrp,
-        token1: usdPlaceholder,
-        source: IAggregatorV3(0x93A67D414896A280bF8FFB3b389fE3686E014fda)
-      })
-    );
-
-    // MATIC
-    addSetPriceFeeds(
-      SetPriceFeedsInput({
-        token0: matic,
-        token1: usdPlaceholder,
-        source: IAggregatorV3(0x7CA57b0cA6367191c94C8914d7Df09A57655905f)
-      })
-    );
-
-    // DOT
-    addSetPriceFeeds(
-      SetPriceFeedsInput({
-        token0: dot,
-        token1: usdPlaceholder,
-        source: IAggregatorV3(0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592)
-      })
-    );
-
     //---- execution ----//
     _startDeployerBroadcast();
 
