@@ -48,8 +48,14 @@ abstract contract BaseScript is Script {
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
-  address internal fixFeeModel600Bps;
 
+  // shareConfig
+  address internal fixFeeModel600Bps;
+  address internal doubleSlope1;
+  address internal doubleSlope2;
+  address internal doubleSlope3;
+
+  // tokens
   address internal ada;
   address internal alpaca;
   address internal btcb;
@@ -77,11 +83,14 @@ abstract contract BaseScript is Script {
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
 
-    pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
     pancakeswapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV2"), (address));
+    pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
     pancakeswapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV3"), (address));
 
     fixFeeModel600Bps = abi.decode(configJson.parseRaw(".sharedConfig.fixFeeModel600Bps"), (address));
+    doubleSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope1"), (address));
+    doubleSlope2 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope2"), (address));
+    doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
 
     ibTokenImplementation = abi.decode(
       configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),
