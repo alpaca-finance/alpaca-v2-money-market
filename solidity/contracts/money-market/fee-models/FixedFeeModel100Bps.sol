@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 // interfaces
 import { IFeeModel } from "../interfaces/IFeeModel.sol";
 
-contract FixedFeeModel is IFeeModel {
+contract FixedFeeModel100Bps is IFeeModel {
   /// @notice Get a static fee
   function getFeeBps(
     uint256, /*_total*/

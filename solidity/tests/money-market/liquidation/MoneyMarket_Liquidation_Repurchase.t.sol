@@ -15,7 +15,7 @@ import { IMiniFL } from "../../../contracts/money-market/interfaces/IMiniFL.sol"
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 
 // contracts
-import { FixedFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel100Bps } from "../../../contracts/money-market/fee-models/FixedFeeModel100Bps.sol";
 
 // mocks
 import { MockInterestModel } from "solidity/tests/mocks/MockInterestModel.sol";
@@ -54,8 +54,8 @@ contract MoneyMarket_Liquidation_RepurchaseTest is MoneyMarket_BaseTest {
     adminFacet.setTokenConfigs(_tokens, _tokenConfigInputs);
     // 10% repurchase fee
     adminFacet.setFees(0, REPURCHASE_FEE, 0);
-    // 1% repurchase reward (hard-coded in FixedFeeModel)
-    FixedFeeModel fixedFeeModel = new FixedFeeModel();
+    // 1% repurchase reward (hard-coded in FixedFeeModel100Bps)
+    FixedFeeModel100Bps fixedFeeModel = new FixedFeeModel100Bps();
     adminFacet.setRepurchaseRewardModel(fixedFeeModel);
     // allow to repurchase up to 100% of position
     adminFacet.setLiquidationParams(10000, 10000);

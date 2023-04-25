@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 
-import { FixedFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel100Bps } from "../../../contracts/money-market/fee-models/FixedFeeModel100Bps.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -57,7 +57,7 @@ contract MoneyMarket_FeeOnTransferTokensTest is MoneyMarket_BaseTest {
     lateFotToken.setFee(100);
 
     // set repurchase fee model
-    FixedFeeModel fixedFeeModel = new FixedFeeModel();
+    FixedFeeModel100Bps fixedFeeModel = new FixedFeeModel100Bps();
     adminFacet.setRepurchaseRewardModel(fixedFeeModel);
   }
 

@@ -10,7 +10,7 @@ import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
 import { TripleSlopeModel7 } from "solidity/contracts/money-market/interest-models/TripleSlopeModel7.sol";
 import { PancakeswapV2LiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2LiquidationStrategy.sol";
 import { PancakeswapV2IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV2IbTokenLiquidationStrategy.sol";
-import { FixedFeeModel } from "solidity/contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel100Bps } from "solidity/contracts/money-market/fee-models/FixedFeeModel100Bps.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
 contract DeployMoneyMarketScript is BaseScript {
@@ -59,7 +59,7 @@ contract DeployMoneyMarketScript is BaseScript {
     // moneyMarket.setLiquidationStratsOk(liquidationStrats, true);
 
     // // setup fee models
-    // address feeModel1 = address(new FixedFeeModel());
+    // address feeModel1 = address(new FixedFeeModel100Bps());
     // moneyMarket.setRepurchaseRewardModel(IFeeModel(feeModel1));
 
     // set protocol params
