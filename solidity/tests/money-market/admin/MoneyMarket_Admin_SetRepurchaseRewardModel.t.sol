@@ -8,15 +8,15 @@ import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibM
 
 // interfaces
 import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
-import { FixedFeeModel, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel.sol";
+import { FixedFeeModel100Bps, IFeeModel } from "../../../contracts/money-market/fee-models/FixedFeeModel100Bps.sol";
 
 contract MoneyMarket_Admin_SetRepurchaseRewardModelTest is MoneyMarket_BaseTest {
-  FixedFeeModel fixedFeeModel;
+  FixedFeeModel100Bps fixedFeeModel;
 
   function setUp() public override {
     super.setUp();
 
-    fixedFeeModel = new FixedFeeModel();
+    fixedFeeModel = new FixedFeeModel100Bps();
   }
 
   function testCorrectness_WhenAdminSetRepurchaseRewardModel_ShouldWork() external {
@@ -34,7 +34,7 @@ contract MoneyMarket_Admin_SetRepurchaseRewardModelTest is MoneyMarket_BaseTest 
   function testRevert_WhenRepurchaseRewardModelReturnFeeMoreThanMaxRepurchaseFee_ShouldRevert() external {
     vm.mockCall(
       address(fixedFeeModel),
-      abi.encodeWithSelector(FixedFeeModel.getFeeBps.selector),
+      abi.encodeWithSelector(FixedFeeModel100Bps.getFeeBps.selector),
       abi.encode(LibMoneyMarket01.MAX_REPURCHASE_FEE_BPS + 1)
     );
 
