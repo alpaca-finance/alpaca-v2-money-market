@@ -28,7 +28,7 @@ contract TripleSlope0_Test is BaseTest {
     // when utilization is 80%, interest should be 10%
     assertCloseBps(_findInterestPerYear(_tripleSlopeModel0.getInterestRate(80, 20)), 0.1 ether, 1);
 
-    // when utilization is 95%, interest should be 25%
+    // when utilization is 90%, interest should be 25%
     assertCloseBps(_findInterestPerYear(_tripleSlopeModel0.getInterestRate(90, 10)), 0.25 ether, 1);
 
     // when utilization is 100%, interest should be 40%
