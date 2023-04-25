@@ -161,4 +161,12 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       }
     }
   }
+
+  function withdraw(
+    address _to,
+    address _token,
+    uint256 _amount
+  ) external onlyOwner {
+    IERC20(_token).safeTransfer(_to, _amount);
+  }
 }

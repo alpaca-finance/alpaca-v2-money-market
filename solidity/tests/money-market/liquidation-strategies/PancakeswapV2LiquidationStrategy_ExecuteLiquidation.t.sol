@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, console, MockERC20 } from "../MoneyMarket_BaseTest.t.sol";
 import { PancakeswapV2LiquidationStrategy } from "../../../contracts/money-market/PancakeswapV2LiquidationStrategy.sol";
 
 // mocks
@@ -130,4 +130,43 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
   }
 
   // TODO: multi-hop integration test with real router
+
+  function testCorrect_WhenCallerWithdraw_ShouldWork() external {
+    // mint erc20 to strat
+    MockERC20 _token = new MockERC20("token0", "TK0", 18);
+    uint256 _tokenDecimal = _token.decimals();
+
+    uint256 _withdrawAmount = normalizeEther(10, _tokenDecimal);
+    _token.mint(address(liquidationStrat), _withdrawAmount);
+
+    // balance before
+    uint256 _stratBalanceBefore = _token.balanceOf(address(liquidationStrat));
+    uint256 _aliceBalanceBefore = _token.balanceOf(address(ALICE));
+
+    // use caller (ALICE) to withdraw
+    liquidationStrat.withdraw(ALICE, address(_token), _withdrawAmount);
+
+    // balance after
+    uint256 _stratBalanceAfter = _token.balanceOf(address(liquidationStrat));
+    uint256 _aliceBalanceAfter = _token.balanceOf(address(ALICE));
+
+    // assert
+    // strat: after = before - withdraw
+    assertEq(_stratBalanceAfter, _stratBalanceBefore - _withdrawAmount);
+    // ALICE: after = before + withdraw
+    assertEq(_aliceBalanceAfter, _aliceBalanceBefore + _withdrawAmount);
+  }
+
+  function testRevert_WhenNonCallerWithdraw_ShouldRevert() external {
+    // mint erc20 to strat
+    MockERC20 _token = new MockERC20("token0", "TK0", 18);
+    uint256 _tokenDecimal = _token.decimals();
+
+    uint256 _withdrawAmount = normalizeEther(10, _tokenDecimal);
+    _token.mint(address(liquidationStrat), _withdrawAmount);
+
+    vm.startPrank(BOB);
+    vm.expectRevert("Ownable: caller is not the owner");
+    liquidationStrat.withdraw(BOB, address(_token), _withdrawAmount);
+  }
 }
