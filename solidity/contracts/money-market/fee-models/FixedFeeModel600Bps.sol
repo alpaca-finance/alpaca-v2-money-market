@@ -10,6 +10,6 @@ contract FixedFeeModel600Bps is IFeeModel {
     uint256, /*_total*/
     uint256 /*_used*/
   ) external pure returns (uint256 _interestRate) {
-    return 400;
+    return 600;
   }
 }
