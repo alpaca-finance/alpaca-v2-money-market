@@ -3,16 +3,7 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { MoneyMarketAccountManager } from "solidity/contracts/account-manager/MoneyMarketAccountManager.sol";
-import { MockWNativeRelayer } from "solidity/tests/mocks/MockWNativeRelayer.sol";
-import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
-import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-
-contract DeployMoneyMarketAccountManagerScript is BaseScript {
-  using stdJson for string;
-
+contract SetWhitelistedCallersScript is BaseScript {
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -24,24 +15,15 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    _startDeployerBroadcast();
-    // deploy implementation
-    address accountManagerImplementation = address(new MoneyMarketAccountManager());
+    address[] memory _callers = new address[](2);
+    _callers[0] = address(moneyMarket);
+    _callers[1] = address(accountManager);
 
-    // deploy proxy
-    bytes memory data = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address,address)")),
-      address(moneyMarket),
-      wbnb,
-      nativeRelayer
-    );
-    address accountManagerProxy = address(
-      new TransparentUpgradeableProxy(accountManagerImplementation, proxyAdminAddress, data)
-    );
+    //---- execution ----//
+    _startDeployerBroadcast();
+
+    miniFL.setWhitelistedCallers(_callers, true);
 
     _stopBroadcast();
-
-    _writeJson(vm.toString(accountManagerImplementation), ".moneyMarket.accountManager.implementation");
-    _writeJson(vm.toString(accountManagerProxy), ".moneyMarket.accountManager.proxy");
   }
 }

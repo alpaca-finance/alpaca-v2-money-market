@@ -18,8 +18,10 @@ contract SetAccountManagersOkScript is BaseScript {
     */
 
     bool isOk = true;
-    address[] memory _managers = new address[](1);
+    address[] memory _managers = new address[](3);
     _managers[0] = address(accountManager);
+    _managers[1] = address(pancakeswapV2IbLiquidateStrat);
+    _managers[2] = address(pancakeswapV3IbLiquidateStrat);
 
     //---- execution ----//
     _startDeployerBroadcast();

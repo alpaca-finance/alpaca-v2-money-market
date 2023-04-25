@@ -4,12 +4,12 @@ pragma solidity 0.8.19;
 import "../../../BaseScript.sol";
 
 contract SetPoolScript is BaseScript {
-  using stdJson for string;
-
   struct SetPoolInput {
     uint256 pid;
     uint256 allocPoint;
   }
+
+  SetPoolInput[] setPoolInputs;
 
   function run() public {
     /*
@@ -22,26 +22,48 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    SetPoolInput[] memory _setPoolInput = new SetPoolInput[](10);
-
-    _setPoolInput[0] = SetPoolInput({ pid: 1, allocPoint: 0 });
-    _setPoolInput[1] = SetPoolInput({ pid: 2, allocPoint: 100 });
-    _setPoolInput[2] = SetPoolInput({ pid: 3, allocPoint: 300 });
-    _setPoolInput[3] = SetPoolInput({ pid: 4, allocPoint: 200 });
-    _setPoolInput[4] = SetPoolInput({ pid: 5, allocPoint: 400 });
-    _setPoolInput[5] = SetPoolInput({ pid: 6, allocPoint: 0 });
-    _setPoolInput[6] = SetPoolInput({ pid: 7, allocPoint: 250 });
-    _setPoolInput[7] = SetPoolInput({ pid: 8, allocPoint: 350 });
-    _setPoolInput[8] = SetPoolInput({ pid: 9, allocPoint: 150 });
-    _setPoolInput[9] = SetPoolInput({ pid: 10, allocPoint: 50 });
+    // WBNB
+    setIbAllocPoint(wbnb, 125);
+    setDebtAllocPoint(wbnb, 50);
+    // BTCB
+    setIbAllocPoint(btcb, 225);
+    setDebtAllocPoint(btcb, 50);
+    // USDT
+    setIbAllocPoint(btcb, 175);
+    setDebtAllocPoint(btcb, 100);
+    // ETH
+    setIbAllocPoint(eth, 100);
+    setDebtAllocPoint(eth, 25);
+    // USDC
+    setIbAllocPoint(usdc, 75);
+    setDebtAllocPoint(usdc, 50);
+    // BUSD
+    setIbAllocPoint(busd, 50);
+    setDebtAllocPoint(busd, 50);
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    for (uint256 i; i < _setPoolInput.length; i++) {
-      miniFL.setPool(_setPoolInput[i].pid, _setPoolInput[i].allocPoint, false);
+    for (uint256 i; i < setPoolInputs.length; i++) {
+      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, false);
     }
 
     _stopBroadcast();
+  }
+
+  function setIbAllocPoint(address _token, uint256 _allocaPoint) internal {
+    address _ibToken = moneyMarket.getIbTokenFromToken(_token);
+    uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_ibToken);
+    setPoolAllocPoint(_pid, _allocaPoint);
+  }
+
+  function setDebtAllocPoint(address _token, uint256 _allocaPoint) internal {
+    address _debtToken = moneyMarket.getDebtTokenFromToken(_token);
+    uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_debtToken);
+    setPoolAllocPoint(_pid, _allocaPoint);
+  }
+
+  function setPoolAllocPoint(uint256 _pid, uint256 _allocPoint) internal {
+    setPoolInputs.push(SetPoolInput({ pid: _pid, allocPoint: _allocPoint }));
   }
 }
