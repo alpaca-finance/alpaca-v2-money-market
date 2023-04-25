@@ -48,7 +48,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
-  IFeeModel internal repurchaseRewardModel;
+  address internal fixFeeModel600Bps;
 
   address internal ada;
   address internal alpaca;
@@ -80,7 +80,8 @@ abstract contract BaseScript is Script {
     pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
     pancakeswapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV2"), (address));
     pancakeswapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV3"), (address));
-    repurchaseRewardModel = abi.decode(configJson.parseRaw(".sharedConfig.fixedRepurchaseRewardModel"), (IFeeModel));
+
+    fixFeeModel600Bps = abi.decode(configJson.parseRaw(".sharedConfig.fixFeeModel600Bps"), (address));
 
     ibTokenImplementation = abi.decode(
       configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),

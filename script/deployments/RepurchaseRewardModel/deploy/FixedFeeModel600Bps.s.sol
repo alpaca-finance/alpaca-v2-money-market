@@ -2,9 +2,10 @@
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
-import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
-contract SetRepurchaseRewardModelScript is BaseScript {
+import { FixedFeeModel600Bps } from "solidity/contracts/money-market/fee-models/FixedFeeModel600Bps.sol";
+
+contract DeployFixedFeeModel600BpsScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -18,13 +19,11 @@ contract SetRepurchaseRewardModelScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    IFeeModel _newModel = IFeeModel(fixFeeModel600Bps);
-
-    //---- execution ----//
     _startDeployerBroadcast();
-
-    moneyMarket.setRepurchaseRewardModel(_newModel);
-
+    // deploy implementation
+    address fixFeeModel600Bps = address(new FixedFeeModel600Bps());
     _stopBroadcast();
+
+    _writeJson(vm.toString(fixFeeModel600Bps), ".sharedConfig.fixFeeModel600Bps");
   }
 }

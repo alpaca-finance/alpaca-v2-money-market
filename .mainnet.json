@@ -25,9 +25,7 @@
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
   },
   "sharedConfig": {
-    "tripleSlope0": "",
-    "tripleSlope6": "",
-    "fixedRepurchaseRewardModel": ""
+    "fixFeeModel600Bps": ""
   },
   "sharedStrategies": {
     "pancakeswap": {

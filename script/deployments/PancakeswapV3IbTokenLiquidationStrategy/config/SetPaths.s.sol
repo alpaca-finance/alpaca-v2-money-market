@@ -54,7 +54,7 @@ contract SetPathsScript is BaseScript {
     bytes memory liquidationPath,
     uint24 _fee,
     address _tokenB
-  ) internal {
+  ) internal pure {
     liquidationPath = abi.encodePacked(liquidationPath, _fee, _tokenB);
   }
 
