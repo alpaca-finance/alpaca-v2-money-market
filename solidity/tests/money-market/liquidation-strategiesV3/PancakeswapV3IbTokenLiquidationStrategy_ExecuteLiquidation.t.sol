@@ -214,7 +214,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     uint256 _stratBalanceBefore = _token.balanceOf(address(liquidationStrat));
     uint256 _aliceBalanceBefore = _token.balanceOf(address(ALICE));
 
-    // use caller (ALICE) to withdraw
+    // use owner to withdraw
     liquidationStrat.withdraw(ALICE, address(_token), _withdrawAmount);
 
     // balance after
@@ -236,6 +236,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     uint256 _withdrawAmount = normalizeEther(10, _tokenDecimal);
     _token.mint(address(liquidationStrat), _withdrawAmount);
 
+    // prank to BOB and call withdraw
     vm.startPrank(BOB);
     vm.expectRevert("Ownable: caller is not the owner");
     liquidationStrat.withdraw(BOB, address(_token), _withdrawAmount);
