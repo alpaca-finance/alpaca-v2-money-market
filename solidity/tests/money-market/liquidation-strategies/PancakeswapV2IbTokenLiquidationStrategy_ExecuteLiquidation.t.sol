@@ -273,29 +273,52 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
   }
 
   function testCorrect_WhenCallerWithdraw_ShouldWork() external {
-    // mint erc20 to strat
-    MockERC20 _token = new MockERC20("token0", "TK0", 18);
-    uint256 _tokenDecimal = _token.decimals();
+    // mint erc20 to strat (token0, token1)
+    MockERC20 _token0 = new MockERC20("token0", "TK0", 18);
+    MockERC20 _token1 = new MockERC20("token1", "TK1", 18);
+    uint256 _token0Decimal = _token0.decimals();
+    uint256 _token1Decimal = _token1.decimals();
 
-    uint256 _withdrawAmount = normalizeEther(10, _tokenDecimal);
-    _token.mint(address(liquidationStrat), _withdrawAmount);
+    uint256 _withdrawToken0Amount = normalizeEther(10, _token0Decimal);
+    uint256 _withdrawToken1Amount = normalizeEther(10, _token1Decimal);
+    _token0.mint(address(liquidationStrat), _withdrawToken0Amount);
+    _token1.mint(address(liquidationStrat), _withdrawToken1Amount);
 
     // balance before
-    uint256 _stratBalanceBefore = _token.balanceOf(address(liquidationStrat));
-    uint256 _aliceBalanceBefore = _token.balanceOf(address(ALICE));
+    uint256 _stratToken0BalanceBefore = _token0.balanceOf(address(liquidationStrat));
+    uint256 _stratToken1BalanceBefore = _token1.balanceOf(address(liquidationStrat));
+    uint256 _aliceToken0BalanceBefore = _token0.balanceOf(address(ALICE));
+    uint256 _aliceToken1BalanceBefore = _token1.balanceOf(address(ALICE));
 
     // use owner to withdraw
-    liquidationStrat.withdraw(ALICE, address(_token), _withdrawAmount);
+    PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam[]
+      memory _withdrawParams = new PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam[](2);
+    _withdrawParams[0] = PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam(
+      ALICE,
+      address(_token0),
+      _withdrawToken0Amount
+    );
+    _withdrawParams[1] = PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam(
+      ALICE,
+      address(_token1),
+      _withdrawToken1Amount
+    );
+
+    liquidationStrat.withdraw(_withdrawParams);
 
     // balance after
-    uint256 _stratBalanceAfter = _token.balanceOf(address(liquidationStrat));
-    uint256 _aliceBalanceAfter = _token.balanceOf(address(ALICE));
+    uint256 _stratToken0BalanceAfter = _token0.balanceOf(address(liquidationStrat));
+    uint256 _stratToken1BalanceAfter = _token1.balanceOf(address(liquidationStrat));
+    uint256 _aliceToken0BalanceAfter = _token0.balanceOf(address(ALICE));
+    uint256 _aliceToken1BalanceAfter = _token1.balanceOf(address(ALICE));
 
     // assert
     // strat: after = before - withdraw
-    assertEq(_stratBalanceAfter, _stratBalanceBefore - _withdrawAmount);
+    assertEq(_stratToken0BalanceAfter, _stratToken0BalanceBefore - _withdrawToken0Amount);
+    assertEq(_stratToken1BalanceAfter, _stratToken1BalanceBefore - _withdrawToken1Amount);
     // ALICE: after = before + withdraw
-    assertEq(_aliceBalanceAfter, _aliceBalanceBefore + _withdrawAmount);
+    assertEq(_aliceToken0BalanceAfter, _aliceToken0BalanceBefore + _withdrawToken0Amount);
+    assertEq(_aliceToken1BalanceAfter, _aliceToken1BalanceBefore + _withdrawToken1Amount);
   }
 
   function testRevert_WhenNonCallerWithdraw_ShouldRevert() external {
@@ -306,9 +329,13 @@ contract PancakeswapV2IbTokenLiquidationStrategy_ExecuteLiquidationTest is Money
     uint256 _withdrawAmount = normalizeEther(10, _tokenDecimal);
     _token.mint(address(liquidationStrat), _withdrawAmount);
 
+    PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam[]
+      memory _withdrawParams = new PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam[](1);
+    _withdrawParams[0] = PancakeswapV2IbTokenLiquidationStrategy.WithdrawParam(ALICE, address(_token), _withdrawAmount);
+
     // prank to BOB and call withdraw
     vm.startPrank(BOB);
     vm.expectRevert("Ownable: caller is not the owner");
-    liquidationStrat.withdraw(BOB, address(_token), _withdrawAmount);
+    liquidationStrat.withdraw(_withdrawParams);
   }
 }

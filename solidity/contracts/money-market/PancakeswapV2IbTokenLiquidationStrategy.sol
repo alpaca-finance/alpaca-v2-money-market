@@ -26,6 +26,12 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     address[] path;
   }
 
+  struct WithdrawParam {
+    address to;
+    address token;
+    uint256 amount;
+  }
+
   IPancakeRouter02 internal immutable router;
   IMoneyMarket internal immutable moneyMarket;
 
@@ -162,11 +168,16 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     }
   }
 
-  function withdraw(
-    address _to,
-    address _token,
-    uint256 _amount
-  ) external onlyOwner {
-    IERC20(_token).safeTransfer(_to, _amount);
+  /// @notice Withdraw ERC20 from this contract
+  /// @param _withdrawParams an array of Withdrawal parameters (to, token, amount)
+  function withdraw(WithdrawParam[] calldata _withdrawParams) external onlyOwner {
+    uint256 _length = _withdrawParams.length;
+    for (uint256 _i; _i < _length; ) {
+      IERC20(_withdrawParams[_i].token).safeTransfer(_withdrawParams[_i].to, _withdrawParams[_i].amount);
+
+      unchecked {
+        ++_i;
+      }
+    }
   }
 }
