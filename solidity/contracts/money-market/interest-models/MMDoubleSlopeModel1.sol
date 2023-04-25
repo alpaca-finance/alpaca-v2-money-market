@@ -23,7 +23,7 @@ contract MMDoubleSlopeModel1 {
       // Less than 85% utilization - 0%-15% APY
       return (utilization * MAX_INTEREST_SLOPE_1) / (CEIL_SLOPE_1) / 365 days;
     } else if (utilization < CEIL_SLOPE_3) {
-      // Between 90% and 100% - 15-200% APY
+      // Between 85% and 100% - 15-200% APY
       return
         (MAX_INTEREST_SLOPE_2 +
           ((utilization - CEIL_SLOPE_2) * (MAX_INTEREST_SLOPE_3 - MAX_INTEREST_SLOPE_2)) /
