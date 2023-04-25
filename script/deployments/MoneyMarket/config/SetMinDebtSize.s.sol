@@ -17,7 +17,7 @@ contract SetMinDebtSizeScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint256 _minDebtSize = 200 ether;
+    uint256 _minDebtSize = 100 ether;
 
     //---- execution ----//
     _startDeployerBroadcast();

@@ -31,15 +31,81 @@ contract OpenMarketScript is BaseScript {
     */
     _startDeployerBroadcast();
 
+    // WBNB
     executeOpenMarket(
       OpenMarketInput({
-        token: alpaca,
-        interestModel: 0xc51d25a2C2d49eE2508B822829d43b9961deCB44,
+        token: wbnb,
+        interestModel: doubleSlope1,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 8000,
+        borrowingFactor: 8500,
+        maxCollateral: 250_000 ether,
+        maxBorrow: 200_000 ether
+      })
+    );
+
+    // USDC
+    executeOpenMarket(
+      OpenMarketInput({
+        token: usdc,
+        interestModel: doubleSlope3,
         tier: LibConstant.AssetTier.COLLATERAL,
         collateralFactor: 9000,
-        borrowingFactor: 9000,
-        maxCollateral: 0,
-        maxBorrow: 0
+        borrowingFactor: 9400,
+        maxCollateral: 75_000_000 ether,
+        maxBorrow: 50_000_000 ether
+      })
+    );
+
+    // USDT
+    executeOpenMarket(
+      OpenMarketInput({
+        token: usdt,
+        interestModel: doubleSlope3,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 9000,
+        borrowingFactor: 9400,
+        maxCollateral: 75_000_000 ether,
+        maxBorrow: 50_000_000 ether
+      })
+    );
+
+    // BUSD
+    executeOpenMarket(
+      OpenMarketInput({
+        token: busd,
+        interestModel: doubleSlope3,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 9000,
+        borrowingFactor: 9400,
+        maxCollateral: 75_000_000 ether,
+        maxBorrow: 50_000_000 ether
+      })
+    );
+
+    // BTCB
+    executeOpenMarket(
+      OpenMarketInput({
+        token: btcb,
+        interestModel: doubleSlope2,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 8800,
+        borrowingFactor: 9100,
+        maxCollateral: 5_000 ether,
+        maxBorrow: 4_500 ether
+      })
+    );
+
+    // ETH
+    executeOpenMarket(
+      OpenMarketInput({
+        token: btcb,
+        interestModel: doubleSlope2,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 8800,
+        borrowingFactor: 9100,
+        maxCollateral: 50_000 ether,
+        maxBorrow: 45_000 ether
       })
     );
 
