@@ -20,16 +20,16 @@ contract MMDoubleSlopeModel2 {
     uint256 total = debt + floating;
     uint256 utilization = (debt * 100e18) / total;
     if (utilization < CEIL_SLOPE_1) {
-      // Less than 85% utilization - 0%-15% APY
+      // Less than 85% utilization - 0%-10% APY
       return (utilization * MAX_INTEREST_SLOPE_1) / (CEIL_SLOPE_1) / 365 days;
     } else if (utilization < CEIL_SLOPE_3) {
-      // Between 90% and 100% - 10-40% APY
+      // Between 90% and 100% - 10-80% APY
       return
         (MAX_INTEREST_SLOPE_2 +
           ((utilization - CEIL_SLOPE_2) * (MAX_INTEREST_SLOPE_3 - MAX_INTEREST_SLOPE_2)) /
           (CEIL_SLOPE_3 - CEIL_SLOPE_2)) / 365 days;
     } else {
-      // Not possible, but just in case - 40% APY
+      // Not possible, but just in case - 80% APY
       return MAX_INTEREST_SLOPE_3 / 365 days;
     }
   }
