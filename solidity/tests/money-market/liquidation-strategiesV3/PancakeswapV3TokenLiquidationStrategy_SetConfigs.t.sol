@@ -2,23 +2,20 @@
 pragma solidity 0.8.19;
 
 import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol";
-import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
+import { PancakeswapV3TokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3TokenLiquidationStrategy.sol";
 
 // libs
 import { LibPCSV3PoolAddress } from "../../libs/LibPCSV3PoolAddress.sol";
 
-// interfaces
-import { IPancakeV3PoolState } from "../../../contracts/money-market/interfaces/IPancakeV3Pool.sol";
-
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
-contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3LiquidationForkTest {
-  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
+contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3LiquidationForkTest {
+  PancakeswapV3TokenLiquidationStrategy internal liquidationStrat;
 
   function setUp() public override {
     super.setUp();
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
+    liquidationStrat = new PancakeswapV3TokenLiquidationStrategy(address(router));
   }
 
   function testCorrectness_WhenOwnerSetCallersOk_ShouldWork() external {
@@ -64,24 +61,8 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(_randomToken0), poolFee, address(_randomToken1));
 
-    // Expect EVM Error. Since we call pool.liquidity() where pool is not existing
+    // TODO: Revert with?
     vm.expectRevert();
-    liquidationStrat.setPaths(_paths);
-
-    // expect pool address
-    address _poolAddress = LibPCSV3PoolAddress.computeAddress(
-      PANCAKE_V3_POOL_DEPLOYER,
-      LibPCSV3PoolAddress.PoolKey(address(_randomToken0), address(_randomToken1), poolFee)
-    );
-
-    // when mock liquidity => 0, should revert PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity correctly
-    vm.mockCall(address(_poolAddress), abi.encodeWithSelector(IPancakeV3PoolState.liquidity.selector), abi.encode(0));
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity.selector,
-        [address(_randomToken0), address(_randomToken1), address(uint160(poolFee))]
-      )
-    );
     liquidationStrat.setPaths(_paths);
   }
 
