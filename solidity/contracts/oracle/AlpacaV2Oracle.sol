@@ -18,7 +18,9 @@ import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
 contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   using LibFullMath for uint256;
 
+  uint256 private constant TWO_X56 = 1 << 56;
   uint256 private constant TWO_X96 = 1 << 96;
+  uint256 private constant TWO_X112 = 1 << 112;
 
   // Events
   event LogSetOracle(address indexed _caller, address _newOracle);
@@ -81,7 +83,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // get lp fair price and oldest _lastUpdate between token0 and token1
     (uint256 _lpPrice, uint256 _lastUpdate) = _getLPPrice(_lpToken);
 
-    return ((_lpAmount * _lpPrice) / (10**18), _lastUpdate);
+    return ((_lpAmount * _lpPrice) / (1e18), _lastUpdate);
   }
 
   /// @notice Perform the conversion from dollar to LP
@@ -96,7 +98,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // get lp fair price and oldest _lastUpdate between token0 and token1
     (uint256 _lpPrice, uint256 _lastUpdate) = _getLPPrice(_lpToken);
 
-    return (((_dollarAmount * (10**18)) / _lpPrice), _lastUpdate);
+    return (((_dollarAmount * (1e18)) / _lpPrice), _lastUpdate);
   }
 
   /// @notice Get token price in dollar
@@ -183,6 +185,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
 
   /// @dev get price of token in usd, will revert if price is not stable
   /// @param _tokenAddress address of token
+  /// @return _price token price in 1e18 format
+  /// @return _lastTimestamp the timestamp that price was fed
   function _getTokenPrice(address _tokenAddress) internal view returns (uint256 _price, uint256 _lastTimestamp) {
     (_price, _lastTimestamp) = IPriceOracle(oracle).getPrice(_tokenAddress, usd);
     _validateStability(_tokenAddress, _price);
@@ -193,6 +197,9 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
   /// @param _oracle oracle address
   function setOracle(address _oracle) external onlyOwner {
     if (_oracle == address(0)) revert AlpacaV2Oracle_InvalidOracleAddress();
+
+    // sanity call
+    IPriceOracle(_oracle).getPrice(baseStable, usd);
 
     oracle = _oracle;
 
@@ -228,8 +235,9 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     uint256 _totalValueIn18;
     {
       uint8 padDecimals = 36 - (_d0 + _d1);
-      uint256 _totalValue = (((_sqrtK * 2 * (LibFullMath.sqrt(_px0))) / (2**56)) * (LibFullMath.sqrt(_px1))) / (2**56);
-      _totalValueIn18 = (_totalValue / (2**112)) * 10**(padDecimals); // revert bumped up 2*112 from fdiv() and convert price to 1e18 unit
+      uint256 _totalValue = (((_sqrtK * 2 * (LibFullMath.sqrt(_px0))) / (TWO_X56)) * (LibFullMath.sqrt(_px1))) /
+        (TWO_X56);
+      _totalValueIn18 = (_totalValue / (TWO_X112)) * 10**(padDecimals); // revert bumped up 2*112 from fdiv() and convert price to 1e18 unit
     }
 
     return (_totalValueIn18, _olderLastUpdate);
@@ -259,8 +267,8 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     uint8 _d0 = IERC20(_token0Address).decimals();
     uint8 _d1 = IERC20(_token1Address).decimals();
 
-    uint256 _px0 = (_p0 * (2**112)) / 10**(18 - _d0); // in token decimals * 2**112
-    uint256 _px1 = (_p1 * (2**112)) / 10**(18 - _d1); // in token decimals * 2**112
+    uint256 _px0 = (_p0 * (TWO_X112)) / 10**(18 - _d0); // in token decimals * 2**112
+    uint256 _px1 = (_p1 * (TWO_X112)) / 10**(18 - _d1); // in token decimals * 2**112
 
     return (_px0, _px1, _d0, _d1, _olderLastUpdate);
   }
@@ -369,7 +377,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
     // priceIn18QuoteByToken1 = 5.391525164143081e+26 * 10**6 / 10**18 = 539152516414308 (in 1e18 unit)
     //                        = 0.00054 ETH/USDC
 
-    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 10**18, TWO_X96);
+    uint256 _sqrtPriceIn1e18 = LibFullMath.mulDiv(uint256(_sqrtPriceX96), 1e18, TWO_X96);
     uint256 _non18Price = LibFullMath.mulDiv(_sqrtPriceIn1e18, _sqrtPriceIn1e18, 1e18);
     _price = (_non18Price * 10**(IERC20(_pool.token0()).decimals())) / 10**(IERC20(_pool.token1()).decimals());
 
@@ -386,7 +394,7 @@ contract AlpacaV2Oracle is IAlpacaV2Oracle, Ownable {
       // - priceIn18QuoteByToken1 = 539152516414308
       // - priceIn18QuoteByToken0 = 1e36 / 539152516414308 = 1854762742554941500000 (in 1e18 unit)
       //                          = 1854.76274 USDC/ETH
-      _price = 10**36 / _price;
+      _price = 1e36 / _price;
     }
   }
 }
