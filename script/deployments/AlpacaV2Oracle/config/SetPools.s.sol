@@ -3,10 +3,20 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { ILiquidationStrategy } from "solidity/contracts/money-market/interfaces/ILiquidationStrategy.sol";
+import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 
-contract SetLiquidatorsOkScript is BaseScript {
+interface IPancakeSwapV3Factory {
+  function getPool(
+    address tokenA,
+    address tokenB,
+    uint24 fee
+  ) external view returns (address pool);
+}
+
+contract SetPoolsScript is BaseScript {
   using stdJson for string;
+
+  address[] v3Pools;
 
   function run() public {
     /*
@@ -18,20 +28,36 @@ contract SetLiquidatorsOkScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-    bool isOk = true;
-    address[] memory _callers = new address[](1);
-    _callers[0] = address(moneyMarket);
 
-    address[] memory _strats = new address[](2);
-    _strats[0] = address(pancakeswapV2IbLiquidateStrat);
-    _strats[1] = address(pancakeswapV3IbLiquidateStrat);
+    // 2 hops
+    // ETH-WBNB fee 0.25
+    addPCSV3PoolAddress(eth, wbnb, 2500);
 
+    // 1 hop
+    // WBNB-BUSD fee 0.05
+    addPCSV3PoolAddress(wbnb, busd, 500);
+    // USDC-BUSD fee 0.01
+    addPCSV3PoolAddress(usdc, busd, 100);
+    // USDT-BUSD fee 0.01
+    addPCSV3PoolAddress(usdt, busd, 100);
+    // BTCB-BUSD fee 0.05
+    addPCSV3PoolAddress(btcb, busd, 500);
+
+    //---- execution ----//
     _startDeployerBroadcast();
-
-    for (uint8 i; i < _strats.length; i++) {
-      ILiquidationStrategy(_strats[i]).setCallersOk(_callers, isOk);
-    }
-
+    alpacaV2Oracle.setPools(v3Pools);
     _stopBroadcast();
+  }
+
+  function addPCSV3PoolAddress(
+    address _tokenA,
+    address _tokenB,
+    uint24 _fee
+  ) internal {
+    address pool = IPancakeSwapV3Factory(pancakeswapFactoryV3).getPool(_tokenA, _tokenB, _fee);
+    if (pool == address(0)) {
+      revert("Pool not exist!");
+    }
+    v3Pools.push(pool);
   }
 }

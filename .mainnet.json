@@ -2,7 +2,6 @@
   "proxyAdmin": "0x5379F32C8D5F663EACb61eeF63F722950294f452",
   "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
-  "pancakeswapV2Router": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
   "tokens": {
     "ada": "0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47",
     "alpaca": "0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F",
@@ -26,14 +25,23 @@
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
   },
   "sharedConfig": {
-    "tripleSlope0": "",
-    "tripleSlope6": "",
-    "fixedRepurchaseRewardModel": ""
+    "fixFeeModel500Bps": "",
+    "doubleSlope1": "",
+    "doubleSlope2": "",
+    "doubleSlope3": ""
   },
   "sharedStrategies": {
     "pancakeswap": {
       "strategyLiquidate": "",
-      "strategyLiquidateIb": ""
+      "strategyLiquidateIb": "",
+      "strategyLiquidateIbV3": ""
+    }
+  },
+  "yieldSources": {
+    "pancakeSwap": {
+      "routerV2": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+      "routerV3": "0x1b81D678ffb9C0263b24A97847620C99d213eB14",
+      "factoryV3": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865"
     }
   },
   "moneyMarket": {

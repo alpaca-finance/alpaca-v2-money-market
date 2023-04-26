@@ -3,11 +3,7 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { ILiquidationStrategy } from "solidity/contracts/money-market/interfaces/ILiquidationStrategy.sol";
-
-contract SetLiquidatorsOkScript is BaseScript {
-  using stdJson for string;
-
+contract SetWhitelistedCallersScript is BaseScript {
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -18,19 +14,15 @@ contract SetLiquidatorsOkScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-    bool isOk = true;
-    address[] memory _callers = new address[](1);
+
+    address[] memory _callers = new address[](2);
     _callers[0] = address(moneyMarket);
+    _callers[1] = address(accountManager);
 
-    address[] memory _strats = new address[](2);
-    _strats[0] = address(pancakeswapV2IbLiquidateStrat);
-    _strats[1] = address(pancakeswapV3IbLiquidateStrat);
-
+    //---- execution ----//
     _startDeployerBroadcast();
 
-    for (uint8 i; i < _strats.length; i++) {
-      ILiquidationStrategy(_strats[i]).setCallersOk(_callers, isOk);
-    }
+    miniFL.setWhitelistedCallers(_callers, true);
 
     _stopBroadcast();
   }

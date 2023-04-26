@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
@@ -18,7 +19,7 @@ contract DeployPancakeswapV2IbTokenLiquidationStrategyScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _router = address(pancakeswapV2Router);
+    address _router = address(pancakeswapRouterV2);
     address _moneyMarket = address(moneyMarket);
 
     _startDeployerBroadcast();

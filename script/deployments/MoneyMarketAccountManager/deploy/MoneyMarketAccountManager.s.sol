@@ -39,14 +39,6 @@ contract DeployMoneyMarketAccountManagerScript is BaseScript {
       new TransparentUpgradeableProxy(accountManagerImplementation, proxyAdminAddress, data)
     );
 
-    // set account manager to allow interactions
-    address[] memory _accountManagers = new address[](1);
-    _accountManagers[0] = accountManagerProxy;
-    moneyMarket.setAccountManagersOk(_accountManagers, true);
-
-    // whitelist accountManager on miniFL
-    miniFL.setWhitelistedCallers(_accountManagers, true);
-
     _stopBroadcast();
 
     _writeJson(vm.toString(accountManagerImplementation), ".moneyMarket.accountManager.implementation");

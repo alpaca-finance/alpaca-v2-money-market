@@ -18,7 +18,7 @@ contract SetRepurchaseRewardModelScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    IFeeModel _newModel = IFeeModel(repurchaseRewardModel);
+    IFeeModel _newModel = IFeeModel(fixFeeModel500Bps);
 
     //---- execution ----//
     _startDeployerBroadcast();

@@ -19,7 +19,7 @@ contract DeployMiniFLScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address ALPACA = 0x8F0528cE5eF7B51152A59745bEfDD91D97091d2F;
+    address ALPACA = alpaca;
     uint256 maxAlpacaPerSecond = 1 ether;
 
     bytes memory data = abi.encodeWithSelector(

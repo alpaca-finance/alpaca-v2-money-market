@@ -4,8 +4,6 @@ pragma solidity 0.8.19;
 import "../../../BaseScript.sol";
 
 contract SetAlpacaPerSecondScript is BaseScript {
-  using stdJson for string;
-
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░

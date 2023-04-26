@@ -3,9 +3,9 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { ILiquidationStrategy } from "solidity/contracts/money-market/interfaces/ILiquidationStrategy.sol";
+import { FixedFeeModel500Bps } from "solidity/contracts/money-market/fee-models/FixedFeeModel500Bps.sol";
 
-contract SetLiquidatorsOkScript is BaseScript {
+contract DeployFixedFeeModel500BpsScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -18,20 +18,12 @@ contract SetLiquidatorsOkScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-    bool isOk = true;
-    address[] memory _callers = new address[](1);
-    _callers[0] = address(moneyMarket);
-
-    address[] memory _strats = new address[](2);
-    _strats[0] = address(pancakeswapV2IbLiquidateStrat);
-    _strats[1] = address(pancakeswapV3IbLiquidateStrat);
 
     _startDeployerBroadcast();
-
-    for (uint8 i; i < _strats.length; i++) {
-      ILiquidationStrategy(_strats[i]).setCallersOk(_callers, isOk);
-    }
-
+    // deploy implementation
+    address fixFeeModel500Bps = address(new FixedFeeModel500Bps());
     _stopBroadcast();
+
+    _writeJson(vm.toString(fixFeeModel500Bps), ".sharedConfig.fixFeeModel500Bps");
   }
 }
