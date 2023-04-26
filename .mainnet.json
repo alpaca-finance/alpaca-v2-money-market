@@ -1,5 +1,5 @@
 {
-  "proxyAdmin": "0x5379F32C8D5F663EACb61eeF63F722950294f452",
+  "proxyAdmin": "0xb04d73f8581C454D81973f50671736cF1BC25B28",
   "nativeRelayer": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
   "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
   "tokens": {
@@ -20,15 +20,14 @@
     "xrp": "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE"
   },
   "oracle": {
-    "alpacaV2Oracle": "",
+    "alpacaV2Oracle": "0xd30064ef5b4aF24b29B6d68eD5308d07af1AB4bd",
     "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
   },
   "sharedConfig": {
-    "fixFeeModel500Bps": "",
-    "doubleSlope1": "",
-    "doubleSlope2": "",
-    "doubleSlope3": ""
+    "tripleSlope0": "",
+    "tripleSlope6": "",
+    "fixedRepurchaseRewardModel": "0x8dC4509784af10019AF69E819Ab33cb48D3c079B"
   },
   "sharedStrategies": {
     "pancakeswap": {
@@ -45,31 +44,31 @@
     }
   },
   "moneyMarket": {
-    "moneyMarketDiamond": "",
+    "moneyMarketDiamond": "0xa3848276565C5e5aC5bf885221466F18E03E9b34",
     "facets": {
-      "adminFacet": "",
-      "borrowFacet": "",
-      "collateralFacet": "",
-      "diamondCutFacet": "",
-      "diamondLoupeFacet": "",
-      "lendFacet": "",
-      "liquidationFacet": "",
-      "nonCollatBorrowFacet": "",
-      "ownershipFacet": "",
-      "viewFacet": ""
+      "adminFacet": "0x24E2F0EBf9fe571B12eb1Cf531a86d72BB980b25",
+      "borrowFacet": "0x87825c1D5B46aE97D6A652241C38C5dEf2dC9678",
+      "collateralFacet": "0x794Ae688B513b7d2132c1393F930f6D8a9470aac",
+      "diamondCutFacet": "0x0E476356D9C0a0CcA4A3f01fA7a69669c533f56a",
+      "diamondLoupeFacet": "0x4f7B336df8A931136e966A700Ef3f7B93a93c0EE",
+      "lendFacet": "0xe80FEa8163Aea8c9f591d765f71731CB2014Edd5",
+      "liquidationFacet": "0xF91CBd4eA0Be0826eac0eDa0D4EB7302f1B31E3E",
+      "nonCollatBorrowFacet": "0x6e0A0580590A29E29b8917a168F13A5303d5b28c",
+      "ownershipFacet": "0xb98e3210362ea66E6E24E98B9C37E0f24Ef46FdE",
+      "viewFacet": "0x93fD58755680a1244Aec5A47F7a967A6919f1BE8"
     },
     "interestBearingTokenImplementation": "",
     "debtTokenImplementation": "",
     "markets": [],
     "accountManager": {
-      "implementation": "",
-      "proxy": ""
+      "implementation": "0xC5cFBD6be3D73EfCFcC66Ec1c29C8e9f8e0732A2",
+      "proxy": "0x9F495094Bc042C6528e445AE100476538cA6342E"
     },
     "repurchaser": ""
   },
   "miniFL": {
-    "implementation": "",
-    "proxy": "",
+    "implementation": "0x05AC39110422bf9B23BA675DdB86499A82CcA5EF",
+    "proxy": "0x714Caa88F3AcFD0a722177Ad5D30BFeFB9bdD145",
     "pools": []
   },
   "moneyMarketReader": ""

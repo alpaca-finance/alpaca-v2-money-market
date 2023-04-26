@@ -1,7 +1,7 @@
 read contract
 
 ```
-cast call $READER_ADDRESS "getSubAccountSummary(address,uint256)" 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b 0
+cast call $READER_ADDRESS "getSubAccountSummary(address,uint256)" 0xaddress 0
 ```
 
 write contract
