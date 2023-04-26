@@ -2,11 +2,11 @@
 pragma solidity 0.8.19;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { LibPath } from "./LibPath.sol";
+import { LibPath } from "./libraries/LibPath.sol";
 import { IPancakeV3Pool } from "../money-market/interfaces/IPancakeV3Pool.sol";
-import { IPancakeSwapPathV3Reader } from "./IPancakeSwapPathV3Reader.sol";
+import { IPathV3Reader } from "./interfaces/IPathV3Reader.sol";
 
-contract PancakeSwapPathV3Reader is IPancakeSwapPathV3Reader, Ownable {
+contract PancakeSwapPathV3Reader is IPathV3Reader, Ownable {
   using LibPath for bytes;
 
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;

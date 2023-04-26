@@ -32,7 +32,7 @@ library LibPCSV3PoolAddress {
   /// @param key The PoolKey
   /// @return pool The contract address of the V3 pool
   function computeAddress(address deployer, PoolKey memory key) internal pure returns (address pool) {
-    require(key.token0 < key.token1, "TEST");
+    require(key.token0 < key.token1);
     pool = address(
       uint160(
         uint256(
