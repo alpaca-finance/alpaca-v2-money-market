@@ -18,7 +18,7 @@ contract SetFeesScript is BaseScript {
     */
 
     uint16 _newLendingFeeBps = 1900;
-    uint16 _newRepurchaseFeeBps = 400;
+    uint16 _newRepurchaseFeeBps = 500;
     uint16 _newLiquidationFeeBps = 500;
 
     //---- execution ----//

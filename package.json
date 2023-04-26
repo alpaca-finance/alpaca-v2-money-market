@@ -49,7 +49,7 @@
     "exec:bsc_mainnet:chainlink-price-oracle:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:chainlink-price-oracle2:deploy": "forge script script/deployments/ChainLinkOracle2/deploy/ChainlinkPriceOracle2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:chainlink-price-oracle2:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle2/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:fix-fee-model-600-bps:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedFeeModel600Bps.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:fix-fee-model-500-bps:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedFeeModel500Bps.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:triple-slope-model0:deploy": "forge script script/deployments/InterestModels/deploy/TripleSlopeModel0.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:double-slope-model1:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel1.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:double-slope-model2:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel2.s.sol --rpc-url bsc_mainnet --broadcast --slow",

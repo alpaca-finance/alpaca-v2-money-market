@@ -3,9 +3,9 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { FixedFeeModel600Bps } from "solidity/contracts/money-market/fee-models/FixedFeeModel600Bps.sol";
+import { FixedFeeModel500Bps } from "solidity/contracts/money-market/fee-models/FixedFeeModel500Bps.sol";
 
-contract DeployFixedFeeModel600BpsScript is BaseScript {
+contract DeployFixedFeeModel500BpsScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -21,9 +21,9 @@ contract DeployFixedFeeModel600BpsScript is BaseScript {
 
     _startDeployerBroadcast();
     // deploy implementation
-    address fixFeeModel600Bps = address(new FixedFeeModel600Bps());
+    address fixFeeModel500Bps = address(new FixedFeeModel500Bps());
     _stopBroadcast();
 
-    _writeJson(vm.toString(fixFeeModel600Bps), ".sharedConfig.fixFeeModel600Bps");
+    _writeJson(vm.toString(fixFeeModel500Bps), ".sharedConfig.fixFeeModel500Bps");
   }
 }

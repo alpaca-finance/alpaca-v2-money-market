@@ -50,7 +50,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapRouterV3;
 
   // shareConfig
-  address internal fixFeeModel600Bps;
+  address internal fixFeeModel500Bps;
   address internal doubleSlope1;
   address internal doubleSlope2;
   address internal doubleSlope3;
@@ -87,7 +87,7 @@ abstract contract BaseScript is Script {
     pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
     pancakeswapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV3"), (address));
 
-    fixFeeModel600Bps = abi.decode(configJson.parseRaw(".sharedConfig.fixFeeModel600Bps"), (address));
+    fixFeeModel500Bps = abi.decode(configJson.parseRaw(".sharedConfig.fixFeeModel500Bps"), (address));
     doubleSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope1"), (address));
     doubleSlope2 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope2"), (address));
     doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
