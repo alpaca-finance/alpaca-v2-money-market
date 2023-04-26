@@ -24,13 +24,13 @@ contract DeployPancakeswapV3IbTokenLiquidationStrategyScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    address pancakeswapV2IbTokenLiquidationStrategy = address(
+    address pancakeswapV3IbTokenLiquidationStrategy = address(
       new PancakeswapV3IbTokenLiquidationStrategy(_routerV3, _moneyMarket)
     );
     _stopBroadcast();
 
     _writeJson(
-      vm.toString(pancakeswapV2IbTokenLiquidationStrategy),
+      vm.toString(pancakeswapV3IbTokenLiquidationStrategy),
       ".sharedStrategies.pancakeswap.strategyLiquidateIbV3"
     );
   }
