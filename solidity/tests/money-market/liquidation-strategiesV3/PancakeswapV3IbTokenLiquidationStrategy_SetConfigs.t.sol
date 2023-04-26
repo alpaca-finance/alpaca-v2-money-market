@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
+import { PancakeSwapPathV3Reader } from "../../../contracts/reader/PancakeSwapPathV3Reader.sol";
 
 // libs
 import { LibPCSV3PoolAddress } from "../../../contracts/money-market/libraries/LibPCSV3PoolAddress.sol";
@@ -41,16 +42,16 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), poolFee, address(wbnb));
 
-    liquidationStrat.setPaths(_paths);
-    assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
+    pathReader.setPaths(_paths);
+    assertEq(pathReader.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
   function testCorrectness_WhenOwnerSetPathMultiHop_ShouldWork() external {
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), poolFee, address(usdt), poolFee, address(wbnb));
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
-    assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
+    assertEq(pathReader.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
   function testRevert_WhenOwnerSetNonExistingPath_ShouldRevert() external {
@@ -63,23 +64,23 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
 
     // Expect EVM Error. Since we call pool.liquidity() where pool is not existing
     vm.expectRevert();
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
     // expect pool address
     address _poolAddress = LibPCSV3PoolAddress.computeAddress(
       PANCAKE_V3_POOL_DEPLOYER,
-      LibPCSV3PoolAddress.PoolKey(address(_randomToken0), address(_randomToken1), poolFee)
+      LibPCSV3PoolAddress.getPoolKey(address(_randomToken0), address(_randomToken1), poolFee)
     );
 
-    // when mock liquidity => 0, should revert PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity correctly
+    // // when mock liquidity => 0, should revert PancakeSwapPathV3Reader_NoLiquidity correctly
     vm.mockCall(address(_poolAddress), abi.encodeWithSelector(IPancakeV3PoolState.liquidity.selector), abi.encode(0));
     vm.expectRevert(
       abi.encodeWithSelector(
-        PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity.selector,
+        PancakeSwapPathV3Reader.PancakeSwapPathV3Reader_NoLiquidity.selector,
         [address(_randomToken0), address(_randomToken1), address(uint160(poolFee))]
       )
     );
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
   }
 
   function testRevert_WhenCallerIsNotOwner_ShouldRevert() external {
@@ -88,6 +89,6 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
 
     vm.prank(ALICE);
     vm.expectRevert("Ownable: caller is not the owner");
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
   }
 }

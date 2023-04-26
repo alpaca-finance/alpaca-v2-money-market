@@ -24,7 +24,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
 
     // Set path
     paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
-    liquidationStrat.setPaths(paths);
+    pathReader.setPaths(paths);
 
     vm.startPrank(BSC_TOKEN_OWNER);
     ETH.mint(normalizeEther(10 ether, ETHDecimal)); // mint to mm
@@ -168,7 +168,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     // set multi-hop path ETH => btcb => usdt
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb), uint24(500), address(usdt));
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
     // transfer ib to strat
     vm.startPrank(ALICE);

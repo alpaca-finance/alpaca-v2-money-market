@@ -5,6 +5,7 @@ import { DSTest } from "solidity/tests/base/DSTest.sol";
 import "../../utils/Components.sol";
 
 import { PancakeswapV3IbTokenLiquidationStrategy } from "solidity/contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
+import { PancakeSwapPathV3Reader } from "../../../contracts/reader/PancakeSwapPathV3Reader.sol";
 
 // interfaces
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
@@ -48,6 +49,7 @@ contract BasePCSV3LiquidationForkTest is DSTest, StdUtils, StdAssertions, StdChe
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
   MockMoneyMarket internal moneyMarket;
   PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
+  PancakeSwapPathV3Reader internal pathReader;
 
   function setUp() public virtual {
     vm.selectFork(vm.createFork(BSC_URL_RPC));
@@ -62,8 +64,13 @@ contract BasePCSV3LiquidationForkTest is DSTest, StdUtils, StdAssertions, StdChe
     ibETHDecimal = ibETH.decimals();
 
     moneyMarket = new MockMoneyMarket();
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
+    pathReader = new PancakeSwapPathV3Reader();
 
+    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(
+      address(router),
+      address(moneyMarket),
+      address(pathReader)
+    );
     vm.label(ALICE, "ALICE");
     vm.label(BOB, "BOB");
   }
