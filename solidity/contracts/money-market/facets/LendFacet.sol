@@ -152,7 +152,7 @@ contract LendFacet is ILendFacet {
     IERC20(_underlyingToken).safeTransfer(msg.sender, _withdrawAmount);
 
     // _for is purely used for event tracking purpose
-    // since this function will be called from only AccountManager
+    // since this function will be called from AccountManager, Liquidation Strat
     // we need a way to track the actual lender
     emit LogWithdraw(_for, _underlyingToken, msg.sender, _ibToken, _shareAmount, _withdrawAmount);
   }
