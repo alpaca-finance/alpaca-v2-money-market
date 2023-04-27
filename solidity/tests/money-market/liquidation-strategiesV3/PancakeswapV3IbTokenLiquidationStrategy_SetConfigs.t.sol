@@ -72,7 +72,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
       LibPCSV3PoolAddress.getPoolKey(address(_randomToken0), address(_randomToken1), poolFee)
     );
 
-    // // when mock liquidity => 0, should revert PancakeSwapPathV3Reader_NoLiquidity correctly
+    // when mock liquidity => 0, should revert PancakeSwapPathV3Reader_NoLiquidity correctly
     vm.mockCall(address(_poolAddress), abi.encodeWithSelector(IPancakeV3PoolState.liquidity.selector), abi.encode(0));
     vm.expectRevert(
       abi.encodeWithSelector(

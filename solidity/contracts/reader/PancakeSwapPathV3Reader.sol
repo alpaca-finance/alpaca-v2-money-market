@@ -12,6 +12,7 @@ contract PancakeSwapPathV3Reader is IPathV3Reader, Ownable {
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
   bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
 
+  // tokenIn => tokenOut => path
   mapping(address => mapping(address => bytes)) public override paths;
 
   error PancakeSwapPathV3Reader_NoLiquidity(address tokenA, address tokenB, uint24 fee);
@@ -26,10 +27,8 @@ contract PancakeSwapPathV3Reader is IPathV3Reader, Ownable {
       while (true) {
         bool hasMultiplePools = LibPath.hasMultiplePools(_path);
 
-        // get first hop (token0, fee, token1)
-        bytes memory _hop = _path.getFirstPool();
-        // extract the token from encoded hop
-        (address _token0, address _token1, uint24 _fee) = _hop.decodeFirstPool();
+        // extract the token from first encoded hop
+        (address _token0, address _token1, uint24 _fee) = _path.decodeFirstPool();
 
         // compute pool address from token0, token1 and fee
         address _pool = _computeAddressV3(_token0, _token1, _fee);
