@@ -24,11 +24,6 @@ contract DeployMoneyMarketScript is BaseScript {
       .deployMoneyMarketDiamond(address(miniFL));
     moneyMarket = IMoneyMarket(_moneyMarket);
 
-    // whitelist mm on miniFL to be able to openMarket
-    address[] memory _callers = new address[](1);
-    _callers[0] = address(moneyMarket);
-    miniFL.setWhitelistedCallers(_callers, true);
-
     _stopBroadcast();
 
     // money market

@@ -17,8 +17,9 @@ contract SetLiquidationStratsOkScript is BaseScript {
   Check all variables below before execute the deployment script
     */
     bool isOk = true;
-    address[] memory _strats = new address[](1);
+    address[] memory _strats = new address[](2);
     _strats[0] = address(pancakeswapV2IbLiquidateStrat);
+    _strats[1] = address(pancakeswapV3IbLiquidateStrat);
 
     _startDeployerBroadcast();
 

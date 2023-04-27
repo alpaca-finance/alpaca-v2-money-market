@@ -10,9 +10,22 @@ contract DeployAlpacaV2OracleScript is BaseScript {
   using stdJson for string;
 
   function run() public {
+    /*
+  ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
+  ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
+  ░╚██╗████╗██╔╝███████║██████╔╝██╔██╗██║██║██╔██╗██║██║░░██╗░
+  ░░████╔═████║░██╔══██║██╔══██╗██║╚████║██║██║╚████║██║░░╚██╗
+  ░░╚██╔╝░╚██╔╝░██║░░██║██║░░██║██║░╚███║██║██║░╚███║╚██████╔╝
+  ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
+  Check all variables below before execute the deployment script
+    */
+    address oracle = oracleMedianizer;
+    address baseStable = busd;
+    address usd = usdPlaceholder;
+
     _startDeployerBroadcast();
 
-    alpacaV2Oracle = new AlpacaV2Oracle(0x634902128543b25265da350e2d961C7ff540fC71, busd, usdPlaceholder);
+    alpacaV2Oracle = new AlpacaV2Oracle(oracle, baseStable, usd);
 
     _stopBroadcast();
 
