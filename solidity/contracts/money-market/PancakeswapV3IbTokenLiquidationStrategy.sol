@@ -110,10 +110,8 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
       while (true) {
         bool hasMultiplePools = LibPath.hasMultiplePools(_path);
 
-        // get first hop (token0, fee, token1)
-        bytes memory _hop = _path.getFirstPool();
         // extract the token from encoded hop
-        (address _token0, address _token1, uint24 _fee) = _hop.decodeFirstPool();
+        (address _token0, address _token1, uint24 _fee) = _path.decodeFirstPool();
 
         // compute pool address from token0, token1 and fee
         address _pool = _computeAddressV3(_token0, _token1, _fee);
