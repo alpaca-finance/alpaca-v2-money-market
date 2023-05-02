@@ -3,13 +3,8 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-contract SetPoolScript is BaseScript {
-  struct SetPoolInput {
-    uint256 pid;
-    uint256 allocPoint;
-  }
-
-  SetPoolInput[] setPoolInputs;
+contract WithdrawProtocolReservesScript is BaseScript {
+  IAdminFacet.WithdrawProtocolReserveParam[] withdrawProtocolReserveInputs;
 
   function run() public {
     /*
@@ -22,48 +17,41 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // WBNB
-    setIbAllocPoint(wbnb, 125);
-    setDebtAllocPoint(wbnb, 50);
-    // BTCB
-    setIbAllocPoint(btcb, 225);
-    setDebtAllocPoint(btcb, 50);
-    // USDT
-    setIbAllocPoint(btcb, 175);
-    setDebtAllocPoint(btcb, 100);
-    // ETH
-    setIbAllocPoint(eth, 100);
-    setDebtAllocPoint(eth, 25);
-    // USDC
-    setIbAllocPoint(usdc, 75);
-    setDebtAllocPoint(usdc, 50);
-    // BUSD
-    setIbAllocPoint(busd, 50);
-    setDebtAllocPoint(busd, 50);
+    address withdrawTo = 0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51;
+
+    _withdrawAllProtocolReserve(wbnb, withdrawTo);
+    _withdrawAllProtocolReserve(usdc, withdrawTo);
+    _withdrawAllProtocolReserve(usdt, withdrawTo);
+    _withdrawAllProtocolReserve(busd, withdrawTo);
+    _withdrawAllProtocolReserve(btcb, withdrawTo);
+    _withdrawAllProtocolReserve(eth, withdrawTo);
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    for (uint256 i; i < setPoolInputs.length; i++) {
-      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, true);
-    }
+    moneyMarket.withdrawProtocolReserves(withdrawProtocolReserveInputs);
 
     _stopBroadcast();
+
+    _logResult();
   }
 
-  function setIbAllocPoint(address _token, uint256 _allocaPoint) internal {
-    address _ibToken = moneyMarket.getIbTokenFromToken(_token);
-    uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_ibToken);
-    setPoolAllocPoint(_pid, _allocaPoint);
+  function _withdrawAllProtocolReserve(address _token, address _to) internal {
+    IAdminFacet.WithdrawProtocolReserveParam memory _input = IAdminFacet.WithdrawProtocolReserveParam({
+      token: _token,
+      amount: moneyMarket.getProtocolReserve(_token),
+      to: _to
+    });
+
+    withdrawProtocolReserveInputs.push(_input);
   }
 
-  function setDebtAllocPoint(address _token, uint256 _allocaPoint) internal {
-    address _debtToken = moneyMarket.getDebtTokenFromToken(_token);
-    uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_debtToken);
-    setPoolAllocPoint(_pid, _allocaPoint);
-  }
+  function _logResult() internal view {
+    for (uint256 i; i < withdrawProtocolReserveInputs.length; i++) {
+      address _token = withdrawProtocolReserveInputs[i].token;
+      uint256 _amount = withdrawProtocolReserveInputs[i].amount;
 
-  function setPoolAllocPoint(uint256 _pid, uint256 _allocPoint) internal {
-    setPoolInputs.push(SetPoolInput({ pid: _pid, allocPoint: _allocPoint }));
+      console.log("Withdraw token:", IERC20(_token).symbol(), "amount:", _amount);
+    }
   }
 }
