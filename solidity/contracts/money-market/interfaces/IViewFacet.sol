@@ -112,7 +112,8 @@ interface IViewFacet {
     returns (
       uint16 _lendingFeeBps,
       uint16 _repurchaseFeeBps,
-      uint16 _liquidationFeeBps
+      uint16 _liquidationFeeBps,
+      uint16 _flashLoanFeeBps
     );
 
   function getRepurchaseRewardModel() external view returns (address);

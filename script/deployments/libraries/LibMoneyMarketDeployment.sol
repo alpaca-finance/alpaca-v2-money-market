@@ -15,6 +15,7 @@ import { INonCollatBorrowFacet } from "solidity/contracts/money-market/interface
 import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILiquidationFacet } from "solidity/contracts/money-market/interfaces/ILiquidationFacet.sol";
 import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
+import { IFlashloanFacet } from "solidity/contracts/money-market/interfaces/IFlashloanFacet.sol";
 
 library LibMoneyMarketDeployment {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -29,6 +30,7 @@ library LibMoneyMarketDeployment {
     address adminFacet;
     address liquidationFacet;
     address ownershipFacet;
+    address flashloanFacet;
   }
 
   function deployMoneyMarketDiamond(address _miniFL)
@@ -70,6 +72,7 @@ library LibMoneyMarketDeployment {
     _facetAddresses.adminFacet = deployContract("./out/AdminFacet.sol/AdminFacet.json");
     _facetAddresses.liquidationFacet = deployContract("./out/LiquidationFacet.sol/LiquidationFacet.json");
     _facetAddresses.ownershipFacet = deployContract("./out/MMOwnershipFacet.sol/MMOwnershipFacet.json");
+    _facetAddresses.flashloanFacet = deployContract("./out/FlashloanFacet.sol/FlashloanFacet.json");
   }
 
   function deployContract(string memory _path) internal returns (address _deployedAddress) {
@@ -94,9 +97,10 @@ library LibMoneyMarketDeployment {
     bytes4[] memory _adminFacetSelectors = getAdminFacetSelectors();
     bytes4[] memory _liquidationFacetSelectors = getLiquidationFacetSelectors();
     bytes4[] memory _ownershipFacetSelectors = getOwnershipFacetSelectors();
+    bytes4[] memory _flashloanFacetSelectors = getFlashloanFacetSelectors();
 
     // prepare FacetCuts
-    IMMDiamondCut.FacetCut[] memory _facetCuts = new IMMDiamondCut.FacetCut[](9);
+    IMMDiamondCut.FacetCut[] memory _facetCuts = new IMMDiamondCut.FacetCut[](10);
     _facetCuts[0] = IMMDiamondCut.FacetCut({
       action: IMMDiamondCut.FacetCutAction.Add,
       facetAddress: _facetAddresses.diamondLoupeFacet,
@@ -141,6 +145,11 @@ library LibMoneyMarketDeployment {
       action: IMMDiamondCut.FacetCutAction.Add,
       facetAddress: _facetAddresses.ownershipFacet,
       functionSelectors: _ownershipFacetSelectors
+    });
+    _facetCuts[9] = IMMDiamondCut.FacetCut({
+      action: IMMDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.flashloanFacet,
+      functionSelectors: _flashloanFacetSelectors
     });
 
     // perform diamond cut on deployed MoneyMarketDiamond
@@ -268,5 +277,10 @@ library LibMoneyMarketDeployment {
     _selectors[1] = IMMOwnershipFacet.acceptOwnership.selector;
     _selectors[2] = IMMOwnershipFacet.owner.selector;
     _selectors[3] = IMMOwnershipFacet.pendingOwner.selector;
+  }
+
+  function getFlashloanFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
+    _selectors = new bytes4[](1);
+    _selectors[0] = IFlashloanFacet.flashloan.selector;
   }
 }

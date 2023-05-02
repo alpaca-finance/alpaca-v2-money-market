@@ -41,7 +41,12 @@ contract AdminFacet is IAdminFacet {
   event LogSetRiskManagerOk(address indexed _account, bool isOk);
   event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
-  event LogSetFees(uint256 _lendingFeeBps, uint256 _repurchaseFeeBps, uint256 _liquidationFeeBps);
+  event LogSetFees(
+    uint256 _lendingFeeBps,
+    uint256 _repurchaseFeeBps,
+    uint256 _liquidationFeeBps,
+    uint16 _flashLoanFeeBps
+  );
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetDebtTokenImplementation(address indexed _newImplementation);
@@ -364,13 +369,15 @@ contract AdminFacet is IAdminFacet {
   function setFees(
     uint16 _newLendingFeeBps,
     uint16 _newRepurchaseFeeBps,
-    uint16 _newLiquidationFeeBps
+    uint16 _newLiquidationFeeBps,
+    uint16 _newflashLoanFeeBps
   ) external onlyOwner {
     // Revert if fees exceed max bps
     if (
       _newLendingFeeBps > LibConstant.MAX_BPS ||
       _newRepurchaseFeeBps > LibConstant.MAX_BPS ||
-      _newLiquidationFeeBps > LibConstant.MAX_BPS
+      _newLiquidationFeeBps > LibConstant.MAX_BPS ||
+      _newflashLoanFeeBps > LibConstant.MAX_BPS
     ) {
       revert AdminFacet_InvalidArguments();
     }
@@ -381,8 +388,9 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.lendingFeeBps = _newLendingFeeBps;
     moneyMarketDs.repurchaseFeeBps = _newRepurchaseFeeBps;
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
+    moneyMarketDs.flashLoanFeeBps = _newflashLoanFeeBps;
 
-    emit LogSetFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
+    emit LogSetFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newflashLoanFeeBps);
   }
 
   /// @notice Set the repurchase reward model for a token specifically to over collateralized borrowing

@@ -371,7 +371,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
   function testCorrectness_WhenAccrueInterestAndThereIsLendingFee_ProtocolShouldGetRevenue() external {
     // set lending fee to 100 bps
-    adminFacet.setFees(100, 0, 0);
+    adminFacet.setFees(100, 0, 0, 0);
     uint256 _actualInterest = viewFacet.getGlobalPendingInterest(address(weth));
     assertEq(_actualInterest, 0);
 
