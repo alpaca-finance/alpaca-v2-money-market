@@ -5,6 +5,7 @@ import { MoneyMarket_BaseTest, console } from "../MoneyMarket_BaseTest.t.sol";
 
 // libs
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 
 // interfaces
 import { ILendFacet } from "../../../contracts/money-market/interfaces/ILendFacet.sol";
@@ -34,20 +35,33 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   //  - reserve increase correctly
   //  - protocol reserve increase correctly
   function testCorrectness_WhenUserCallFlashloan_ShouldWork() external {
-    uint256 _AliceBalanceBefore = usdc.balanceOf(ALICE);
+    // uint256 _AliceBalanceBefore = usdc.balanceOf(ALICE);
     uint256 _flashloanAmount = normalizeEther(1 ether, usdcDecimal);
+    (, , , uint16 _flashloanFee) = viewFacet.getFeeParams();
+
+    uint256 _expectedFee = (_flashloanAmount * _flashloanFee) / LibConstant.MAX_BPS;
+
+    uint256 _reserveBefore = viewFacet.getTotalToken(address(usdc));
 
     // deposit to
     vm.startPrank(ALICE);
     usdc.transfer(address(mockFlashloan), _flashloanAmount * 3);
     vm.stopPrank();
 
+    uint256 _mockFlashloanBalanceBefore = usdc.balanceOf(address(mockFlashloan));
+
     vm.startPrank(address(mockFlashloan));
     mockFlashloan.flash(moneyMarketDiamond, address(usdc), _flashloanAmount);
     vm.stopPrank();
-    uint256 _AliceBalanceAfter = usdc.balanceOf(ALICE);
+    // uint256 _AliceBalanceAfter = usdc.balanceOf(ALICE);
+    uint256 _mockFlashloanBalanceAfter = usdc.balanceOf(address(mockFlashloan));
 
-    assertLt(_AliceBalanceAfter, _AliceBalanceBefore, "ALICE USDC balance");
+    //  - user balance is deducted correctly
+    assertLt(_mockFlashloanBalanceAfter, _mockFlashloanBalanceBefore, "mockFlashloan USDC balance");
+
+    //  - reserve increase correctly
+    uint256 _reserveAfter = viewFacet.getTotalToken(address(usdc));
+    // assertEq(_reserveAfter, _reserveBefore + _expectedFee, "Reserve");
   }
 
   // test if repay excess the expected fee (should work)
