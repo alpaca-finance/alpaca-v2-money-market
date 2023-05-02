@@ -19,12 +19,12 @@ contract WithdrawProtocolReservesScript is BaseScript {
 
     address withdrawTo = 0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51;
 
-    withdrawAllProtocolReserve(wbnb, withdrawTo);
-    withdrawAllProtocolReserve(usdc, withdrawTo);
-    withdrawAllProtocolReserve(usdt, withdrawTo);
-    withdrawAllProtocolReserve(busd, withdrawTo);
-    withdrawAllProtocolReserve(btcb, withdrawTo);
-    withdrawAllProtocolReserve(eth, withdrawTo);
+    _withdrawAllProtocolReserve(wbnb, withdrawTo);
+    _withdrawAllProtocolReserve(usdc, withdrawTo);
+    _withdrawAllProtocolReserve(usdt, withdrawTo);
+    _withdrawAllProtocolReserve(busd, withdrawTo);
+    _withdrawAllProtocolReserve(btcb, withdrawTo);
+    _withdrawAllProtocolReserve(eth, withdrawTo);
 
     //---- execution ----//
     _startDeployerBroadcast();
@@ -33,10 +33,10 @@ contract WithdrawProtocolReservesScript is BaseScript {
 
     _stopBroadcast();
 
-    logResult();
+    _logResult();
   }
 
-  function withdrawAllProtocolReserve(address _token, address _to) internal {
+  function _withdrawAllProtocolReserve(address _token, address _to) internal {
     IAdminFacet.WithdrawProtocolReserveParam memory _input = IAdminFacet.WithdrawProtocolReserveParam({
       token: _token,
       amount: moneyMarket.getProtocolReserve(_token),
@@ -46,7 +46,7 @@ contract WithdrawProtocolReservesScript is BaseScript {
     withdrawProtocolReserveInputs.push(_input);
   }
 
-  function logResult() internal view {
+  function _logResult() internal view {
     for (uint256 i; i < withdrawProtocolReserveInputs.length; i++) {
       address _token = withdrawProtocolReserveInputs[i].token;
       uint256 _amount = withdrawProtocolReserveInputs[i].amount;
