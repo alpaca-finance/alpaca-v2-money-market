@@ -50,8 +50,8 @@ contract FlashloanFacet is IFlashloanFacet {
     // balance after
     uint256 _balanceAfter = IERC20(_token).balanceOf(address(this));
 
-    // 5. repay must be excess balance before + fee (revert if condition is not met)
-    if (_balanceAfter <= _balanceBefore + _expectedFee) {
+    // 5. revert if after - before < fee
+    if (_balanceAfter - _balanceBefore < _expectedFee) {
       revert FlashloanFacet_NotEnoughRepay();
     }
 
@@ -59,11 +59,11 @@ contract FlashloanFacet is IFlashloanFacet {
 
     // 6. 50% of fee add to reserve
     uint256 _lenderFee = (_expectedFee * 50) / 100;
-
-    // lender fee (add on reserve)
-    moneyMarketDs.reserves[_token] += _lenderFee;
-
-    // transfer the rest of fee to protocol reserve
-    moneyMarketDs.protocolReserves[_token] += (_actualTotalFee - _lenderFee);
+    unchecked {
+      // lender fee (add on reserve)
+      moneyMarketDs.reserves[_token] += _actualTotalFee;
+      // transfer the rest of fee to protocol reserve
+      moneyMarketDs.protocolReserves[_token] += _actualTotalFee - _lenderFee;
+    }
   }
 }
