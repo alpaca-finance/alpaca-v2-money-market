@@ -13,9 +13,9 @@ import { IFlashloanFacet } from "../../../contracts/money-market/interfaces/IFla
 import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
 
 // mock
-import { MockFlashloan } from "./MockFlashloan.sol";
-import { MockFlashloan_Redeposit } from "./MockFlashloan_Redeposit.sol";
-import { MockFlashloan_Repurchase } from "./MockFlashloan_Repurchase.sol";
+import { MockFlashloan } from "../../mocks/MockFlashloan.sol";
+import { MockFlashloan_Redeposit } from "../../mocks/MockFlashloan_Redeposit.sol";
+import { MockFlashloan_Repurchase } from "../../mocks/MockFlashloan_Repurchase.sol";
 
 contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   MockFlashloan internal mockFlashloan;
