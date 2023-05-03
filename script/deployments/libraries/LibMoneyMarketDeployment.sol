@@ -166,7 +166,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](42);
+    _selectors = new bytes4[](43);
     _selectors[0] = IViewFacet.getProtocolReserve.selector;
     _selectors[1] = IViewFacet.getTokenConfig.selector;
     _selectors[2] = IViewFacet.getOverCollatDebtSharesOf.selector;
@@ -209,6 +209,7 @@ library LibMoneyMarketDeployment {
     _selectors[39] = IViewFacet.getOverCollatPendingInterest.selector;
     _selectors[40] = IViewFacet.getOverCollatInterestModel.selector;
     _selectors[41] = IViewFacet.getOverCollatInterestRate.selector;
+    _selectors[42] = IViewFacet.getFlashloanFeeParams.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
@@ -239,7 +240,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](23);
+    _selectors = new bytes4[](24);
     _selectors[0] = IAdminFacet.openMarket.selector;
     _selectors[1] = IAdminFacet.setTokenConfigs.selector;
     _selectors[2] = IAdminFacet.setNonCollatBorrowerOk.selector;
@@ -263,6 +264,7 @@ library LibMoneyMarketDeployment {
     _selectors[20] = IAdminFacet.setAccountManagersOk.selector;
     _selectors[21] = IAdminFacet.setTokenMaximumCapacities.selector;
     _selectors[22] = IAdminFacet.setRiskManagersOk.selector;
+    _selectors[23] = IAdminFacet.setFlashloanFees.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

@@ -20,12 +20,11 @@ contract SetFeesScript is BaseScript {
     uint16 _newLendingFeeBps = 1900;
     uint16 _newRepurchaseFeeBps = 500;
     uint16 _newLiquidationFeeBps = 500;
-    uint16 _newFlashLoanFeeBps = 500;
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    moneyMarket.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newFlashLoanFeeBps);
+    moneyMarket.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
 
     _stopBroadcast();
   }

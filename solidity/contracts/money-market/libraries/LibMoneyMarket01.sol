@@ -150,7 +150,8 @@ library LibMoneyMarket01 {
     uint16 lendingFeeBps; // fee that is charged from lending interest by protocol, goes to protocolReserve
     uint16 repurchaseFeeBps; // fee that is charged during repurchase by protocol, goes to liquidationTreasury
     uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to liquidationTreasury
-    uint16 flashLoanFeeBps; // fee that is charged when providing the flashloan, 50% for protocolReserve, another 50% for reserve
+    uint16 flashloanFeeBps; // fee that is charged when providing the flashloan, 50% goes to reserve, the rest goes to protocol reserve
+    uint16 lenderFlashloanBps; // portion that lender will receive when providing the liquidity for flashloan
   }
 
   /// @dev Get money market storage
