@@ -28,17 +28,11 @@ contract MockFlashloan is IAlpacaFlashloanCallback {
     if (_data.length == 0) {
       IERC20(_token).transfer(msg.sender, _repay);
     } else {
-      (bool _sign, uint256 _fee) = abi.decode(_data, (bool, uint256));
+      int256 _fee = abi.decode(_data, (int256));
 
-      // if sign is true => excess case
-      if (_sign) {
-        IERC20(_token).transfer(msg.sender, _repay + _fee);
-      }
+      uint256 _actualRepay = uint256(int256(_repay) + _fee);
 
-      // if sign is false => lack case
-      if (!_sign) {
-        IERC20(_token).transfer(msg.sender, _repay - _fee);
-      }
+      IERC20(_token).transfer(msg.sender, _actualRepay);
     }
   }
 }

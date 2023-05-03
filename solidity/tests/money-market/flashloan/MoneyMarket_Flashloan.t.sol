@@ -91,7 +91,7 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
     uint256 _flashloanAmount = normalizeEther(1 ether, usdcDecimal);
 
     // define data for use as extra fee
-    bytes memory _data = abi.encode(true, normalizeEther(1 ether, usdcDecimal));
+    bytes memory _data = abi.encode(normalizeEther(1 ether, usdcDecimal));
 
     // call flashloan with 1 usdc with extra fee (1 usdc)
     mockFlashloan.flash(address(usdc), _flashloanAmount, _data);
@@ -119,7 +119,7 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   // test if repay less than the expected fee (should revert)
   function testRevert_WhenContractRepayLessThanExpectedFee_ShouldRevert() external {
     uint256 _flashloanAmount = normalizeEther(1 ether, usdcDecimal);
-    bytes memory _data = abi.encode(false, normalizeEther(0.01 ether, usdcDecimal));
+    bytes memory _data = abi.encode(-int256(normalizeEther(0.01 ether, usdcDecimal)));
 
     // call flashloan with 1 USDC with -0.01 USDC fee
     vm.expectRevert(abi.encodeWithSelector(IFlashloanFacet.FlashloanFacet_NotEnoughRepay.selector));
