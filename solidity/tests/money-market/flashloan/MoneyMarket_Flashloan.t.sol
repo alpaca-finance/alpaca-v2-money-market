@@ -15,6 +15,7 @@ import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
 // mock
 import { MockFlashloan } from "./MockFlashloan.sol";
 import { MockFlashloan_Redeposit } from "./MockFlashloan_Redeposit.sol";
+import { MockFlashloan_Repurchase } from "./MockFlashloan_Repurchase.sol";
 
 contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   MockFlashloan internal mockFlashloan;
@@ -157,8 +158,36 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
     }
   }
 
+  struct RepurchaseParam {
+    address _account;
+    uint256 _subAccountId;
+    address _repayToken;
+    address _collatToken;
+    uint256 _desiredRepayAmount;
+  }
+
   // Flash and repurchase, should revert with Reentrant error
-  function testRevert_WhenContractCallFlashloanAndRepurchase_ShouldRevert() external {}
+  function testRevert_WhenContractCallFlashloanAndRepurchase_ShouldRevert() external {
+    // mock flashloan have: 5 USDC
+    // reserve and balanceOf(mm): 10 USDC
+
+    // flashloan all balance
+    uint256 _flashloanAmount = usdc.balanceOf(moneyMarketDiamond);
+
+    // mock new flashloan that implements redeposit
+    MockFlashloan_Repurchase _mockRepurchaseFlashloan = new MockFlashloan_Repurchase(moneyMarketDiamond);
+    usdc.mint(address(_mockRepurchaseFlashloan), normalizeEther(5 ether, usdcDecimal));
+
+    // repurchase param (Don't need to consider the param, it should revert reentrancy first)
+    RepurchaseParam memory _param = RepurchaseParam(ALICE, 0, address(cake), address(usdc), 1 ether);
+
+    // repurchase
+    {
+      bytes memory _data = abi.encode(_param);
+      vm.expectRevert(LibReentrancyGuard.LibReentrancyGuard_ReentrantCall.selector);
+      _mockRepurchaseFlashloan.flash(address(usdc), _flashloanAmount, _data);
+    }
+  }
 
   // Flash and withdraw
 }
