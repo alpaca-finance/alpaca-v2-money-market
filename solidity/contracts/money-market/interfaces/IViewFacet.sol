@@ -115,6 +115,8 @@ interface IViewFacet {
       uint16 _liquidationFeeBps
     );
 
+  function getFlashloanFeeParams() external view returns (uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps);
+
   function getRepurchaseRewardModel() external view returns (address);
 
   function getIbTokenImplementation() external view returns (address);

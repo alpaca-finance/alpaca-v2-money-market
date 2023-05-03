@@ -85,6 +85,8 @@ interface IAdminFacet {
     uint16 _newLiquidationFeeBps
   ) external;
 
+  function setFlashloanFees(uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) external;
+
   function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
   function setIbTokenImplementation(address _newImplementation) external;
