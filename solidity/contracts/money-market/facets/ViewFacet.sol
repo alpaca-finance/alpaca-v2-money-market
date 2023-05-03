@@ -416,6 +416,15 @@ contract ViewFacet is IViewFacet {
     _liquidationFeeBps = moneyMarketDs.liquidationFeeBps;
   }
 
+  /// @notice Get flashloan fees
+  /// @return _flashloanFeeBps the flashloan fee collected by protocol
+  /// @return _lenderFlashloanBps the portion that lenders will receive from _flashloanFeeBps
+  function getFlashloanFeeParams() external view returns (uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    _flashloanFeeBps = moneyMarketDs.flashloanFeeBps;
+    _lenderFlashloanBps = moneyMarketDs.lenderFlashloanBps;
+  }
+
   /// @notice Get the address of repurchase reward model
   /// @return address of repurchase reward model contract
   function getRepurchaseRewardModel() external view returns (address) {
