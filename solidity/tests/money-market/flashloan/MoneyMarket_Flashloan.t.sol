@@ -20,11 +20,11 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   function setUp() public override {
     super.setUp();
 
-    // pool must have reserve
+    mockFlashloan = new MockFlashloan(moneyMarketDiamond);
+    // add 5 usdc to mock flashloan contract
+    usdc.mint(address(mockFlashloan), normalizeEther(5 ether, usdcDecimal));
 
-    mockFlashloan = new MockFlashloan();
-
-    // usdc.mint(moneyMarketDiamond, normalizeEther(1000 ether, usdcDecimal));
+    // add 10 USDC to moneymarket's reserve
     vm.prank(ALICE);
     uint256 _depositAmount = normalizeEther(10 ether, usdcDecimal);
     accountManager.deposit(address(usdc), _depositAmount);
@@ -35,41 +35,53 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   //  - reserve increase correctly
   //  - protocol reserve increase correctly
   function testCorrectness_WhenUserCallFlashloan_ShouldWork() external {
-    // uint256 _AliceBalanceBefore = usdc.balanceOf(ALICE);
+    // Fee calculation:
+    // =============================
+    // fee = 5% of amount
+    // flashloan amount: 1 USDC
+    // fee = 1 USDC * 5% = 0.05 USDC
+    // Contract: 5 USDC
+    // After call flashloan = balance - fee from flashloan
+    // = 5 - (1 * 5%) = 4.95 USDC
+
+    // Reserve calculation:
+    // =============================
+    // Market reserve: 10 USDC
+    // After call flashloan, reserve = current reserve + (50% of fee from flashloan's amount)
+    // reserve = 10 + (1 * 5%/2) = 10 + (0.05/2) = 10.025 USDC
+    // protocol reserve = 0.025 USDC
+
+    // flashloan 1 usdc
     uint256 _flashloanAmount = normalizeEther(1 ether, usdcDecimal);
-    (, , , uint16 _flashloanFee) = viewFacet.getFeeParams();
 
-    uint256 _expectedFee = (_flashloanAmount * _flashloanFee) / LibConstant.MAX_BPS;
-
-    uint256 _reserveBefore = viewFacet.getTotalToken(address(usdc));
-
-    // deposit to
-    vm.startPrank(ALICE);
-    usdc.transfer(address(mockFlashloan), _flashloanAmount * 3);
-    vm.stopPrank();
-
-    uint256 _mockFlashloanBalanceBefore = usdc.balanceOf(address(mockFlashloan));
-
+    // call flashloan with 1 usdc
     vm.startPrank(address(mockFlashloan));
-    mockFlashloan.flash(moneyMarketDiamond, address(usdc), _flashloanAmount);
+    mockFlashloan.flash(address(usdc), _flashloanAmount, "");
     vm.stopPrank();
-    // uint256 _AliceBalanceAfter = usdc.balanceOf(ALICE);
+
+    // mock flashloan contract should have 5 - (1 * fee) =  4.95 usdc
     uint256 _mockFlashloanBalanceAfter = usdc.balanceOf(address(mockFlashloan));
 
     //  - user balance is deducted correctly
-    assertLt(_mockFlashloanBalanceAfter, _mockFlashloanBalanceBefore, "mockFlashloan USDC balance");
+    assertEq(_mockFlashloanBalanceAfter, normalizeEther(4.95 ether, usdcDecimal), "mockFlashloan USDC balance");
 
     //  - reserve increase correctly
     uint256 _reserveAfter = viewFacet.getTotalToken(address(usdc));
-    // assertEq(_reserveAfter, _reserveBefore + _expectedFee, "Reserve");
+    assertEq(_reserveAfter, normalizeEther(10.025 ether, usdcDecimal), "Reserve");
   }
 
   // test if repay excess the expected fee (should work)
-  function testCorrectness_WhenUserRepayGreaterThanExpectedFee_ShouldWork() external {}
+  function testCorrectness_WhenContractRepayGreaterThanExpectedFee_ShouldWork() external {}
 
   // test if repay less than the expected fee (should revert)
-  function testRevert_WhenUserRepayLessThanExpectedFee_ShouldRevert() external {}
+  function testRevert_WhenContractRepayLessThanExpectedFee_ShouldRevert() external {}
 
   // test if token is not available for flashloan (should revert)
-  function testRevert_WhenUserFlashloanOnNonExistingToken_ShouldRevert() external {}
+  function testRevert_WhenContractCallFlashloanOnNonExistingToken_ShouldRevert() external {}
+
+  // Flash and deposit back to mm, should revert with Reentrant error
+  function testRevert_WhenContractCallFlashloanAndDepositBacktoMM_ShouldRevert() external {}
+
+  // Flash and repurchase, should revert with Reentrant error
+  function testRevert_WhenContractCallFlashloanAndRepurchase_ShouldRevert() external {}
 }

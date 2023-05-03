@@ -2,5 +2,11 @@
 pragma solidity 0.8.19;
 
 interface IFlashloanFacet {
-  function flashloan(address _token, uint256 _amount) external;
+  ///@dev  The caller of this method receives a callback in the form of IAlpacaFlashloanCallback#alpacaFlashloanCallback
+  //@param the confirm yet
+  function flashloan(
+    address _token,
+    uint256 _amount,
+    bytes calldata _data
+  ) external;
 }
