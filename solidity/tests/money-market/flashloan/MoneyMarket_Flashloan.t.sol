@@ -20,6 +20,14 @@ import { MockFlashloan_Repurchase } from "./MockFlashloan_Repurchase.sol";
 contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   MockFlashloan internal mockFlashloan;
 
+  struct RepurchaseParam {
+    address _account;
+    uint256 _subAccountId;
+    address _repayToken;
+    address _collatToken;
+    uint256 _desiredRepayAmount;
+  }
+
   function setUp() public override {
     super.setUp();
 
@@ -33,7 +41,7 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
     accountManager.deposit(address(usdc), _depositAmount);
   }
 
-  // NOTE: if token is not available in pool.
+  // NOTE: if token is not available/existing in pool.
   // It will revert same as "no liquidity" or "ERC20: transfer amount exceeds balance"
 
   function testCorrectness_WhenUserCallFlashloan_ShouldWork() external {
@@ -131,8 +139,6 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   }
 
   // Flash and deposit back to mm, should revert with Reentrant error
-  // deposit direct to mm
-  // deposit with account manager
   function testRevert_WhenContractCallFlashloanAndDepositBacktoMM_ShouldRevert() external {
     // mock flashloan have: 5 USDC
     // reserve and balanceOf(mm): 10 USDC
@@ -158,14 +164,6 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
     }
   }
 
-  struct RepurchaseParam {
-    address _account;
-    uint256 _subAccountId;
-    address _repayToken;
-    address _collatToken;
-    uint256 _desiredRepayAmount;
-  }
-
   // Flash and repurchase, should revert with Reentrant error
   function testRevert_WhenContractCallFlashloanAndRepurchase_ShouldRevert() external {
     // mock flashloan have: 5 USDC
@@ -188,6 +186,4 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
       _mockRepurchaseFlashloan.flash(address(usdc), _flashloanAmount, _data);
     }
   }
-
-  // Flash and withdraw
 }
