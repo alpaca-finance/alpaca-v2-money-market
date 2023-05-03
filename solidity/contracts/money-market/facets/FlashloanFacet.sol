@@ -15,11 +15,6 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 contract FlashloanFacet is IFlashloanFacet {
   using LibSafeToken for IERC20;
 
-  // error
-  error FlashloanFacet_InvalidToken(address _token);
-  error FlashloanFacet_NotEnoughToken(uint256 _amount);
-  error FlashloanFacet_NotEnoughRepay();
-
   modifier nonReentrant() {
     LibReentrancyGuard.lock();
     _;
