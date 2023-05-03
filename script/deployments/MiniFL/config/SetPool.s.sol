@@ -23,29 +23,29 @@ contract SetPoolScript is BaseScript {
     */
 
     // WBNB
-    setIbAllocPoint(wbnb, 125);
-    setDebtAllocPoint(wbnb, 50);
+    setIbAllocPoint(wbnb, 75);
+    setDebtAllocPoint(wbnb, 100);
     // BTCB
-    setIbAllocPoint(btcb, 225);
-    setDebtAllocPoint(btcb, 50);
+    setIbAllocPoint(btcb, 100);
+    setDebtAllocPoint(btcb, 125);
     // USDT
-    setIbAllocPoint(btcb, 175);
-    setDebtAllocPoint(btcb, 100);
+    setIbAllocPoint(usdt, 100);
+    setDebtAllocPoint(usdt, 175);
     // ETH
-    setIbAllocPoint(eth, 100);
-    setDebtAllocPoint(eth, 25);
+    setIbAllocPoint(eth, 75);
+    setDebtAllocPoint(eth, 100);
     // USDC
-    setIbAllocPoint(usdc, 75);
-    setDebtAllocPoint(usdc, 50);
+    setIbAllocPoint(usdc, 50);
+    setDebtAllocPoint(usdc, 75);
     // BUSD
     setIbAllocPoint(busd, 50);
-    setDebtAllocPoint(busd, 50);
+    setDebtAllocPoint(busd, 75);
 
     //---- execution ----//
     _startDeployerBroadcast();
 
     for (uint256 i; i < setPoolInputs.length; i++) {
-      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, false);
+      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, true);
     }
 
     _stopBroadcast();
