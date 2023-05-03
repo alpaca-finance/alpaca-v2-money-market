@@ -38,7 +38,7 @@ contract FlashloanFacet is IFlashloanFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // expected fee = (_amount * feeBps) / maxBps
+    // expected fee = (_amount * flashloan fee (bps)) / max bps
     uint256 _expectedFee = (_amount * moneyMarketDs.flashloanFeeBps) / LibConstant.MAX_BPS;
 
     // balance before
@@ -54,12 +54,12 @@ contract FlashloanFacet is IFlashloanFacet {
       revert FlashloanFacet_NotEnoughRepay();
     }
 
-    // 50% of fee add to reserve
+    // lender fee = x% of expected fee
     uint256 _lenderFee = (_expectedFee * moneyMarketDs.lenderFlashloanBps) / LibConstant.MAX_BPS;
 
-    // lender fee (add on reserve)
+    // actual fee will be added to reserve (including excess fee)
     moneyMarketDs.reserves[_token] += _actualTotalFee;
-    // transfer the rest of fee to protocol reserve
+    // procol fee = actual fee - lender fee (x% from expected fee)
     moneyMarketDs.protocolReserves[_token] += _actualTotalFee - _lenderFee;
   }
 }
