@@ -32,6 +32,7 @@
     "exec:bsc_mainnet:money-market:config:set-account-manager-ok": "forge script script/deployments/MoneyMarket/config/SetAccountManagersOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-repurchase-reward-model": "forge script script/deployments/MoneyMarket/config/SetRepurchaseRewardModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-risk-manager-ok": "forge script script/deployments/MoneyMarket/config/SetRiskManagersOkScript.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:withdraw-protocol-reserves": "forge script script/deployments/MoneyMarket/config/WithdrawProtocolReserves.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:mm-account-manager:deploy": "forge script script/deployments/MoneyMarketAccountManager/deploy/MoneyMarketAccountManager.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-strat:deploy": "forge script script/deployments/PancakeswapV2LiquidationStrategy/deploy/PancakeswapV2LiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-ib-strat:deploy": "forge script script/deployments/PancakeswapV2IbTokenLiquidationStrategy/deploy/PancakeswapV2IbTokenLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",

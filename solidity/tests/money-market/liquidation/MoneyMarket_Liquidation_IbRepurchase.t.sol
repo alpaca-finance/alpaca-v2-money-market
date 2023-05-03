@@ -154,7 +154,6 @@ contract MoneyMarket_Liquidation_IbRepurchaseTest is MoneyMarket_BaseTest {
     assertEq(_stateAfter.debtValue, normalizeEther(45.168821 ether, usdcDecimal));
     assertEq(_stateAfter.debtShare, normalizeEther(45.153540 ether, usdcDecimal));
     assertEq(_stateAfter.subAccountDebtShare, normalizeEther(45.153540 ether, usdcDecimal));
-    vm.stopPrank();
     assertEq(MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore, _expectedFeeToTreasury);
 
     // check staking ib token in MiniFL

@@ -11,3 +11,6 @@ ffi = true
 
 [rpc_endpoints]
 bsc_mainnet = "${BSC_RPC_URL}"
+
+[etherscan]
+bsc = { key = "${BSC_SCAN_API_KEY}", url = "https://api.bscscan.com/api" }

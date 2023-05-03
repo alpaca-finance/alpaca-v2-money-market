@@ -45,7 +45,7 @@ contract SetPoolScript is BaseScript {
     _startDeployerBroadcast();
 
     for (uint256 i; i < setPoolInputs.length; i++) {
-      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, false);
+      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, true);
     }
 
     _stopBroadcast();
