@@ -13,6 +13,7 @@
     "exec:bsc_mainnet:minifl:config:set-pool": "forge script script/deployments/MiniFL/config/SetPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:minifl:config:set-alpaca-per-sec": "forge script script/deployments/MiniFL/config/SetAlpacaPerSecond.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:minifl:config:set-whitelist-callers": "forge script script/deployments/MiniFL/config/SetWhitelistedCallers.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:script:mass-update-pools": "forge script script/deployments/MiniFL/script/MassUpdatePools.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:ib-token:deploy": "forge script script/deployments/InterestBearingToken/deploy/InterestBearingTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:debt-token:deploy": "forge script script/deployments/DebtToken/deploy/DebtTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
