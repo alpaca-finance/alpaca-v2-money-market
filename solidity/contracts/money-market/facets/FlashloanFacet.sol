@@ -5,10 +5,11 @@ pragma solidity 0.8.19;
 import { LibMoneyMarket01 } from "../libraries/LibMoneyMarket01.sol";
 import { LibSafeToken } from "../libraries/LibSafeToken.sol";
 import { LibConstant } from "../libraries/LibConstant.sol";
+import { LibReentrancyGuard } from "../libraries/LibReentrancyGuard.sol";
 
 // interfaces
 import { IFlashloanFacet } from "../interfaces/IFlashloanFacet.sol";
-import { IAlpacaFlashloan } from "../interfaces/IAlpacaFlashloan.sol";
+import { IAlpacaFlashloanCallback } from "../interfaces/IAlpacaFlashloanCallback.sol";
 import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract FlashloanFacet is IFlashloanFacet {
@@ -19,51 +20,46 @@ contract FlashloanFacet is IFlashloanFacet {
   error FlashloanFacet_NotEnoughToken(uint256 _amount);
   error FlashloanFacet_NotEnoughRepay();
 
-  // external call for using flashloan
-  function flashloan(address _token, uint256 _amount) external {
-    // prep
+  modifier nonReentrant() {
+    LibReentrancyGuard.lock();
+    _;
+    LibReentrancyGuard.unlock();
+  }
+
+  /// @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback
+  /// @dev The caller of this method receives a callback in the form of IAlpacaFlashloanCallback#alpacaFlashloanCallback
+  /// @param _token The address of loan token
+  /// @param _amount The amount of the loan token
+  /// @param _data Any data to be passed through to the callback
+  function flashloan(
+    address _token,
+    uint256 _amount,
+    bytes calldata _data
+  ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    // check if fee is set?
-
-    // 1. is market open for this token? (ib token from token)
-    // Revert if market doesn't exist for `_token`
-    if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) {
-      revert FlashloanFacet_InvalidToken(_token);
-    }
-
-    // 2. token reserve > borrow amount
-    if (moneyMarketDs.reserves[_token] < _amount) {
-      revert FlashloanFacet_NotEnoughToken(_amount);
-    }
-
-    // 3. expected fee = (_amount * feeBps) / maxBps
-    uint256 _expectedFee = (_amount * moneyMarketDs.flashLoanFeeBps) / LibConstant.MAX_BPS;
+    // expected fee = (_amount * feeBps) / maxBps
+    uint256 _expectedFee = (_amount * moneyMarketDs.flashloanFeeBps) / LibConstant.MAX_BPS;
 
     // balance before
     uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
     IERC20(_token).safeTransfer(msg.sender, _amount);
 
-    // 4. call AlpacaFlashloanCallback (AlpacaFlashloanCallback must return repay)
-    IAlpacaFlashloan(msg.sender).AlpacaFlashloanCallback(_token, _amount);
+    // call alpacaFlashloanCallback from msg.sender
+    IAlpacaFlashloanCallback(msg.sender).alpacaFlashloanCallback(_token, _amount + _expectedFee, _data);
 
-    // balance after
-    uint256 _balanceAfter = IERC20(_token).balanceOf(address(this));
-
-    // 5. revert if after - before < fee
-    if (_balanceAfter - _balanceBefore < _expectedFee) {
+    // revert if actual fee < fee
+    uint256 _actualTotalFee = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
+    if (_actualTotalFee < _expectedFee) {
       revert FlashloanFacet_NotEnoughRepay();
     }
 
-    uint256 _actualTotalFee = _balanceAfter - _balanceBefore;
+    // 50% of fee add to reserve
+    uint256 _lenderFee = (_expectedFee * moneyMarketDs.lenderFlashloanBps) / LibConstant.MAX_BPS;
 
-    // 6. 50% of fee add to reserve
-    uint256 _lenderFee = (_expectedFee * 50) / 100;
-    unchecked {
-      // lender fee (add on reserve)
-      moneyMarketDs.reserves[_token] += _actualTotalFee;
-      // transfer the rest of fee to protocol reserve
-      moneyMarketDs.protocolReserves[_token] += _actualTotalFee - _lenderFee;
-    }
+    // lender fee (add on reserve)
+    moneyMarketDs.reserves[_token] += _actualTotalFee;
+    // transfer the rest of fee to protocol reserve
+    moneyMarketDs.protocolReserves[_token] += _actualTotalFee - _lenderFee;
   }
 }
