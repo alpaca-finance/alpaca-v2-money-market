@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { IAlpacaFlashloanCallback } from "../../../contracts/money-market/interfaces/IAlpacaFlashloanCallback.sol";
-import { IFlashloanFacet } from "../../../contracts/money-market/interfaces/IFlashloanFacet.sol";
-import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
+import { IAlpacaFlashloanCallback } from "../../contracts/money-market/interfaces/IAlpacaFlashloanCallback.sol";
+import { IFlashloanFacet } from "../../contracts/money-market/interfaces/IFlashloanFacet.sol";
+import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
 // repurchase
-import { ILiquidationFacet } from "../../../contracts/money-market/interfaces/ILiquidationFacet.sol";
+import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 
 contract MockFlashloan_Repurchase is IAlpacaFlashloanCallback {
   IFlashloanFacet internal immutable flashloanRouter;
