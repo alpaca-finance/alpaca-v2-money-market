@@ -160,7 +160,6 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _bobBalanceAfter = weth.balanceOf(BOB);
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _wethBorrowAmount);
-    vm.stopPrank();
 
     // time past
     vm.warp(block.timestamp + 10);
@@ -261,7 +260,6 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     uint256 _bobBalanceAfter = usdc.balanceOf(BOB);
 
     assertEq(_bobBalanceAfter - _bobBalanceBefore, _usdcBorrowAmount);
-    vm.stopPrank();
 
     // time past
     uint256 _secondPassed = 1 days;
