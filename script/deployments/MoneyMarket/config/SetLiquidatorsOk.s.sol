@@ -18,6 +18,7 @@ contract SetLiquidatorsOkScript is BaseScript {
     */
     bool isOk = true;
     address[] memory _callers = new address[](1);
+    // ALPACA Liquidation Bot 1
     _callers[0] = 0xFef9d28767de30F4239B9b40Bc915919b0bcACe8;
 
     _startDeployerBroadcast();

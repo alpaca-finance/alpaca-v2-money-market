@@ -15,9 +15,8 @@ contract SetWhitelistedCallersScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address[] memory _callers = new address[](2);
-    _callers[0] = address(moneyMarket);
-    _callers[1] = address(accountManager);
+    address[] memory _callers = new address[](1);
+    _callers[0] = address(accountManager);
 
     //---- execution ----//
     _startDeployerBroadcast();
