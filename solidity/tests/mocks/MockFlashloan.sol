@@ -25,9 +25,11 @@ contract MockFlashloan is IAlpacaFlashloanCallback {
     uint256 _repay,
     bytes calldata _data
   ) external {
+    // if no data, just repay
     if (_data.length == 0) {
       IERC20(_token).transfer(msg.sender, _repay);
     } else {
+      // if data exist, repay +- (fee)
       int256 _fee = abi.decode(_data, (int256));
 
       uint256 _actualRepay = uint256(int256(_repay) + _fee);

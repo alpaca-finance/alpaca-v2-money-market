@@ -27,12 +27,17 @@ contract MockFlashloan_Redeposit is IAlpacaFlashloanCallback {
     uint256 _repay,
     bytes calldata _data
   ) external {
+    // data will be included:
+    ///@param _accountManager address of account manager
+    ///@param _amount: the borrow amount (not including fee yet)
+    // if data exists, call deposit via the account manager
     if (_data.length > 0) {
       (address _accountManager, uint256 _amount) = abi.decode(_data, (address, uint256));
       IERC20(_token).approve(_accountManager, type(uint256).max);
       IMoneyMarketAccountManager(_accountManager).deposit(_token, _amount);
       IERC20(_token).transfer(msg.sender, _repay);
     } else {
+      // if data not exists, call deposit directly to moneymarket diamond
       IERC20(_token).approve(msg.sender, type(uint256).max);
       ILendFacet(msg.sender).deposit(address(this), _token, _repay);
       IERC20(_token).transfer(msg.sender, _repay);
