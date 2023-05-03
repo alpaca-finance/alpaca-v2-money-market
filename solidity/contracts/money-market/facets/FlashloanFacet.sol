@@ -21,7 +21,7 @@ contract FlashloanFacet is IFlashloanFacet {
     LibReentrancyGuard.unlock();
   }
 
-  /// @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback
+  /// @notice Loan token and pay it back, plus fee, in the callback
   /// @dev The caller of this method receives a callback in the form of IAlpacaFlashloanCallback#alpacaFlashloanCallback
   /// @param _token The address of loan token
   /// @param _amount The amount of the loan token
@@ -49,12 +49,16 @@ contract FlashloanFacet is IFlashloanFacet {
       revert FlashloanFacet_NotEnoughRepay();
     }
 
-    // lender fee = x% of expected fee
+    // lender fee = x% of expected fee.
+    // in case flashloaner inject a lot of fee, the ib token price should not be inflated
+    // this is to prevent unforeseeable impact from inflating the ib token price
     uint256 _lenderFee = (_expectedFee * moneyMarketDs.lenderFlashloanBps) / LibConstant.MAX_BPS;
 
     // actual fee will be added to reserve (including excess fee)
     moneyMarketDs.reserves[_token] += _actualTotalFee;
-    // procol fee = actual fee - lender fee (x% from expected fee)
+    // protocol fee = actual fee - lender fee (x% from expected fee)
     moneyMarketDs.protocolReserves[_token] += _actualTotalFee - _lenderFee;
+
+    emit LogFlashloan(_token, _amount, _actualTotalFee, _lenderFee);
   }
 }

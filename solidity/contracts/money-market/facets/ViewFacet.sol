@@ -418,7 +418,7 @@ contract ViewFacet is IViewFacet {
 
   /// @notice Get flashloan fees
   /// @return _flashloanFeeBps the flashloan fee collected by protocol
-  /// @return _lenderFlashloanBps the portion that lender will receive when providing liquidity
+  /// @return _lenderFlashloanBps the portion that lenders will receive from _flashloanFeeBps
   function getFlashloanFeeParams() external view returns (uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     _flashloanFeeBps = moneyMarketDs.flashloanFeeBps;

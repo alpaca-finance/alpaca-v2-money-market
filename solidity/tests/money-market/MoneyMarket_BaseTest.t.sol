@@ -225,7 +225,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     adminFacet.setLiquidationTreasury(liquidationTreasury);
 
-    // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps, _newflashloanFeeBps);
+    // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
 
     adminFacet.setFees(0, 100, 100);
 

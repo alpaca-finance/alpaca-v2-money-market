@@ -2,6 +2,9 @@
 pragma solidity 0.8.19;
 
 interface IFlashloanFacet {
+  // Event
+  event LogFlashloan(address token, uint256 amount, uint256 totalFee, uint256 lenderFee);
+
   // Errors
   error FlashloanFacet_InvalidToken(address _token);
   error FlashloanFacet_NotEnoughToken(uint256 _amount);

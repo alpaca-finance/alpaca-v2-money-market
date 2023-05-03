@@ -388,7 +388,7 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Set lender portion and flashloan fee
   /// @param _flashloanFeeBps the flashloan fee collected by protocol
-  /// @param _lenderFlashloanBps the portion that lender will receive when providing liquidity
+  /// @param _lenderFlashloanBps the portion that lenders will receive from _flashloanFeeBps
   function setFlashloanFees(uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) external onlyOwner {
     if (_flashloanFeeBps > LibConstant.MAX_BPS || _lenderFlashloanBps > LibConstant.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
