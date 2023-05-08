@@ -353,12 +353,10 @@ contract AdminFacet is IAdminFacet {
   /// @param _isOk Whether to allow or disallow callers.
   function setOperatorsOk(address[] calldata _operators, bool _isOk) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
     uint256 _length = _operators.length;
     for (uint256 _i; _i < _length; ) {
       moneyMarketDs.operatorsOk[_operators[_i]] = _isOk;
       emit LogSetOperatorsOk(_operators[_i], _isOk);
-
       unchecked {
         ++_i;
       }
