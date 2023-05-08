@@ -3,13 +3,14 @@ pragma solidity 0.8.19;
 
 import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol";
 import { PancakeswapV3IbTokenLiquidationStrategy_WithPathReader } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.sol";
-import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
+import { PCSV3PathReader } from "solidity/contracts/reader/PCSV3PathReader.sol";
 
 // libs
 import { LibPCSV3PoolAddress } from "../../libs/LibPCSV3PoolAddress.sol";
 
 // interfaces
 import { IPancakeV3PoolState } from "../../../contracts/money-market/interfaces/IPancakeV3Pool.sol";
+import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
@@ -83,7 +84,7 @@ contract WithReader_PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePC
     vm.mockCall(address(_poolAddress), abi.encodeWithSelector(IPancakeV3PoolState.liquidity.selector), abi.encode(0));
     vm.expectRevert(
       abi.encodeWithSelector(
-        IUniSwapV3PathReader.PCSV3PathReader_NoLiquidity.selector,
+        PCSV3PathReader.PCSV3PathReader_NoLiquidity.selector,
         [address(_randomToken0), address(_randomToken1), address(uint160(poolFee))]
       )
     );

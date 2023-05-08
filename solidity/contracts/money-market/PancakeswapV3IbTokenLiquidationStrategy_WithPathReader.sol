@@ -25,7 +25,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
 
   IPancakeSwapRouterV3 internal immutable router;
   IMoneyMarket internal immutable moneyMarket;
-  IUniSwapV3PathReader public pathReader;
+  IUniSwapV3PathReader internal immutable pathReader;
 
   mapping(address => bool) public callersOk;
 
