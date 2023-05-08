@@ -47,7 +47,6 @@ contract BasePCSV3LiquidationForkTest is DSTest, StdUtils, StdAssertions, StdChe
   IPancakeSwapRouterV3 internal router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
   MockMoneyMarket internal moneyMarket;
-  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
 
   function setUp() public virtual {
     vm.selectFork(vm.createFork(BSC_URL_RPC));
@@ -62,7 +61,6 @@ contract BasePCSV3LiquidationForkTest is DSTest, StdUtils, StdAssertions, StdChe
     ibETHDecimal = ibETH.decimals();
 
     moneyMarket = new MockMoneyMarket();
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
 
     vm.label(ALICE, "ALICE");
     vm.label(BOB, "BOB");
