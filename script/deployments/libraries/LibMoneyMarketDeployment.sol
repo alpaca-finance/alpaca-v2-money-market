@@ -265,7 +265,7 @@ library LibMoneyMarketDeployment {
     _selectors[21] = IAdminFacet.setTokenMaximumCapacities.selector;
     _selectors[22] = IAdminFacet.setRiskManagersOk.selector;
     _selectors[23] = IAdminFacet.setFlashloanFees.selector;
-    _selectors[24] = IAdminFacet.setWhitelistedCallers.selector;
+    _selectors[24] = IAdminFacet.setOperatorsOk.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {

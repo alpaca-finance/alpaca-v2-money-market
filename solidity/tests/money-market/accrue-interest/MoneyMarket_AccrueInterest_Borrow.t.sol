@@ -20,7 +20,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     // set whitelist
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = ALICE;
-    adminFacet.setWhitelistedCallers(_whitelistedCallers, true);
+    adminFacet.setOperatorsOk(_whitelistedCallers, true);
 
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
