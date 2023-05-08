@@ -2,19 +2,23 @@
 pragma solidity 0.8.19;
 
 import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol";
-import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
+import { PancakeswapV3IbTokenLiquidationStrategy_WithPathReader } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.sol";
 
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
-contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3LiquidationForkTest {
+contract WithReader_PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3LiquidationForkTest {
   bytes[] internal paths = new bytes[](1);
-  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
+  PancakeswapV3IbTokenLiquidationStrategy_WithPathReader internal liquidationStrat;
 
   function setUp() public override {
     super.setUp();
 
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
+    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy_WithPathReader(
+      address(router),
+      address(moneyMarket),
+      address(pathReader)
+    );
 
     // mint ibETH to alice
     ibETH.mint(ALICE, normalizeEther(1 ether, ibETHDecimal));
@@ -27,7 +31,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
 
     // Set path
     paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
-    liquidationStrat.setPaths(paths);
+    pathReader.setPaths(paths);
 
     vm.startPrank(BSC_TOKEN_OWNER);
     ETH.mint(normalizeEther(10 ether, ETHDecimal)); // mint to mm
@@ -41,7 +45,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     vm.prank(address(ALICE));
     vm.expectRevert(
       abi.encodeWithSelector(
-        PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound.selector,
+        PancakeswapV3IbTokenLiquidationStrategy_WithPathReader
+          .PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound
+          .selector,
         [address(ETH), address(usdt)]
       )
     );
@@ -66,7 +72,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     ibETH.transfer(address(liquidationStrat), _ibTokenIn);
     vm.expectRevert(
       abi.encodeWithSelector(
-        PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_Unauthorized.selector
+        PancakeswapV3IbTokenLiquidationStrategy_WithPathReader
+          .PancakeswapV3IbTokenLiquidationStrategy_Unauthorized
+          .selector
       )
     );
     liquidationStrat.executeLiquidation(_ibToken, _debtToken, _ibTokenIn, 0, _minReceive);
@@ -143,7 +151,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     ibETH.transfer(address(liquidationStrat), _ibTokenIn);
     vm.expectRevert(
       abi.encodeWithSelector(
-        PancakeswapV3IbTokenLiquidationStrategy
+        PancakeswapV3IbTokenLiquidationStrategy_WithPathReader
           .PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken
           .selector
       )
@@ -170,7 +178,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     // set multi-hop path ETH => btcb => usdt
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb), uint24(500), address(usdt));
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
     // transfer ib to strat
     vm.startPrank(ALICE);
@@ -223,14 +231,14 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     uint256 _aliceToken1BalanceBefore = _token1.balanceOf(address(ALICE));
 
     // use owner to withdraw
-    PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam[]
-      memory _withdrawParams = new PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam[](2);
-    _withdrawParams[0] = PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam(
+    PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam[]
+      memory _withdrawParams = new PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam[](2);
+    _withdrawParams[0] = PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam(
       ALICE,
       address(_token0),
       _withdrawToken0Amount
     );
-    _withdrawParams[1] = PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam(
+    _withdrawParams[1] = PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam(
       ALICE,
       address(_token1),
       _withdrawToken1Amount
@@ -261,9 +269,13 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     uint256 _withdrawAmount = normalizeEther(10, _tokenDecimal);
     _token.mint(address(liquidationStrat), _withdrawAmount);
 
-    PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam[]
-      memory _withdrawParams = new PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam[](1);
-    _withdrawParams[0] = PancakeswapV3IbTokenLiquidationStrategy.WithdrawParam(ALICE, address(_token), _withdrawAmount);
+    PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam[]
+      memory _withdrawParams = new PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam[](1);
+    _withdrawParams[0] = PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.WithdrawParam(
+      ALICE,
+      address(_token),
+      _withdrawAmount
+    );
 
     // prank to BOB and call withdraw
     vm.startPrank(BOB);

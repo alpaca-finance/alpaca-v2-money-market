@@ -2,7 +2,8 @@
 pragma solidity 0.8.19;
 
 import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol";
-import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
+import { PancakeswapV3IbTokenLiquidationStrategy_WithPathReader } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy_WithPathReader.sol";
+import { PathPCSV3Reader } from "../../../contracts/reader/PathPCSV3Reader.sol";
 
 // libs
 import { LibPCSV3PoolAddress } from "../../libs/LibPCSV3PoolAddress.sol";
@@ -13,12 +14,16 @@ import { IPancakeV3PoolState } from "../../../contracts/money-market/interfaces/
 // mocks
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
-contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3LiquidationForkTest {
-  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
+contract WithReader_PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3LiquidationForkTest {
+  PancakeswapV3IbTokenLiquidationStrategy_WithPathReader internal liquidationStrat;
 
   function setUp() public override {
     super.setUp();
-    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
+    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy_WithPathReader(
+      address(router),
+      address(moneyMarket),
+      address(pathReader)
+    );
   }
 
   function testCorrectness_WhenOwnerSetCallersOk_ShouldWork() external {
@@ -44,16 +49,16 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), poolFee, address(wbnb));
 
-    liquidationStrat.setPaths(_paths);
-    assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
+    pathReader.setPaths(_paths);
+    assertEq(pathReader.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
   function testCorrectness_WhenOwnerSetPathMultiHop_ShouldWork() external {
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), poolFee, address(usdt), poolFee, address(wbnb));
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
-    assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
+    assertEq(pathReader.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
   function testRevert_WhenOwnerSetNonExistingPath_ShouldRevert() external {
@@ -66,7 +71,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
 
     // Expect EVM Error. Since we call pool.liquidity() where pool is not existing
     vm.expectRevert();
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
     // expect pool address
     address _poolAddress = LibPCSV3PoolAddress.computeAddress(
@@ -74,15 +79,15 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
       LibPCSV3PoolAddress.getPoolKey(address(_randomToken0), address(_randomToken1), poolFee)
     );
 
-    // when mock liquidity => 0, should revert PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity correctly
+    // when mock liquidity => 0, should revert PathPCSV3Reader_NoLiquidity correctly
     vm.mockCall(address(_poolAddress), abi.encodeWithSelector(IPancakeV3PoolState.liquidity.selector), abi.encode(0));
     vm.expectRevert(
       abi.encodeWithSelector(
-        PancakeswapV3IbTokenLiquidationStrategy.PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity.selector,
+        PathPCSV3Reader.PathPCSV3Reader_NoLiquidity.selector,
         [address(_randomToken0), address(_randomToken1), address(uint160(poolFee))]
       )
     );
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
   }
 
   function testRevert_WhenCallerIsNotOwner_ShouldRevert() external {
@@ -91,6 +96,6 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
 
     vm.prank(ALICE);
     vm.expectRevert("Ownable: caller is not the owner");
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
   }
 }
