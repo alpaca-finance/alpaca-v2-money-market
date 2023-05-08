@@ -132,7 +132,6 @@ library LibMoneyMarket01 {
     mapping(address => bool) liquidatorsOk; // allowed to initiate liquidation process
     mapping(address => bool) accountManagersOk; // allowed to manipulate account/subaccount on behalf of end users
     mapping(address => bool) riskManagersOk; // allowed to set risk control parameters
-    mapping(address => bool) operatorsOk; // allowed to withdraw the protocol reserve
     // ---- reserves ---- //
     mapping(address => uint256) protocolReserves; // token address => amount that is reserved for protocol
     mapping(address => uint256) reserves; // token address => amount that is available in protocol
@@ -153,6 +152,8 @@ library LibMoneyMarket01 {
     uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to liquidationTreasury
     uint16 flashloanFeeBps; // fee that is charged when providing the flashloan
     uint16 lenderFlashloanBps; // portion of flashloan fee that will go to lenders
+    // Additional state
+    mapping(address => bool) operatorsOk; // allowed to withdraw the protocol reserve
   }
 
   /// @dev Get money market storage
