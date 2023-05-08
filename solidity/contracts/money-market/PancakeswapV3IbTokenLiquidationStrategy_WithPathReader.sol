@@ -12,7 +12,7 @@ import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
 import { IPancakeSwapRouterV3 } from "./interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
-import { IPathPCSV3Reader } from "../reader/interfaces/IPathPCSV3Reader.sol";
+import { IUniSwapV3PathReader } from "../reader/interfaces/IUniSwapV3PathReader.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
@@ -25,7 +25,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
 
   IPancakeSwapRouterV3 internal immutable router;
   IMoneyMarket internal immutable moneyMarket;
-  IPathPCSV3Reader public pathReader;
+  IUniSwapV3PathReader public pathReader;
 
   mapping(address => bool) public callersOk;
 
@@ -50,7 +50,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
   ) {
     router = IPancakeSwapRouterV3(_router);
     moneyMarket = IMoneyMarket(_moneyMarket);
-    pathReader = IPathPCSV3Reader(_pathReader);
+    pathReader = IUniSwapV3PathReader(_pathReader);
   }
 
   /// @notice Execute liquidate from collatToken to repayToken

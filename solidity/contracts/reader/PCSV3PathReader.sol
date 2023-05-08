@@ -4,9 +4,9 @@ pragma solidity 0.8.19;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { LibPath } from "./libraries/LibPath.sol";
 import { IPancakeV3Pool } from "../money-market/interfaces/IPancakeV3Pool.sol";
-import { IPathPCSV3Reader } from "./interfaces/IPathPCSV3Reader.sol";
+import { IUniSwapV3PathReader } from "./interfaces/IUniSwapV3PathReader.sol";
 
-contract PathPCSV3Reader is IPathPCSV3Reader, Ownable {
+contract PCSV3PathReader is IUniSwapV3PathReader, Ownable {
   using LibPath for bytes;
 
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
@@ -15,8 +15,7 @@ contract PathPCSV3Reader is IPathPCSV3Reader, Ownable {
   // tokenIn => tokenOut => path
   mapping(address => mapping(address => bytes)) public override paths;
 
-  error PathPCSV3Reader_NoLiquidity(address tokenA, address tokenB, uint24 fee);
-
+  // Events
   event LogSetPath(address _token0, address _token1, bytes _path);
 
   function setPaths(bytes[] calldata _paths) external onlyOwner {
@@ -36,7 +35,7 @@ contract PathPCSV3Reader is IPathPCSV3Reader, Ownable {
         // revert EVM error if pool is not existing (cannot call liquidity)
         if (IPancakeV3Pool(_pool).liquidity() == 0) {
           // revert no liquidity if there's no liquidity
-          revert PathPCSV3Reader_NoLiquidity(_token0, _token1, _fee);
+          revert PCSV3PathReader_NoLiquidity(_token0, _token1, _fee);
         }
 
         // if true, go to the next hop

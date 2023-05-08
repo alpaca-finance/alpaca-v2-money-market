@@ -13,7 +13,7 @@ import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
 import { IPancakeSwapRouterV3 } from "./interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
-import { IPathPCSV3Reader } from "../reader/interfaces/IPathPCSV3Reader.sol";
+import { IUniSwapV3PathReader } from "../reader/interfaces/IUniSwapV3PathReader.sol";
 
 contract PancakeswapV3TokenLiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
@@ -28,7 +28,7 @@ contract PancakeswapV3TokenLiquidationStrategy is ILiquidationStrategy, Ownable 
   error PancakeswapV3TokenLiquidationStrategy_NoLiquidity(address tokenA, address tokenB, uint24 fee);
 
   IPancakeSwapRouterV3 internal immutable router;
-  IPathPCSV3Reader public pathReader;
+  IUniSwapV3PathReader public pathReader;
 
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
   bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
@@ -53,7 +53,7 @@ contract PancakeswapV3TokenLiquidationStrategy is ILiquidationStrategy, Ownable 
 
   constructor(address _router, address _pathReader) {
     router = IPancakeSwapRouterV3(_router);
-    pathReader = IPathPCSV3Reader(_pathReader);
+    pathReader = IUniSwapV3PathReader(_pathReader);
   }
 
   /// @notice Execute liquidate from collatToken to repayToken
