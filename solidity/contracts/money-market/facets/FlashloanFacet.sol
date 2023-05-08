@@ -36,27 +36,27 @@ contract FlashloanFacet is IFlashloanFacet {
     // expected fee = (_amount * flashloan fee (bps)) / max bps
     uint256 _expectedFee = (_amount * moneyMarketDs.flashloanFeeBps) / LibConstant.MAX_BPS;
 
-    // balance before
+    // cache balance before sending token to flashloaner
     uint256 _balanceBefore = IERC20(_token).balanceOf(address(this));
     IERC20(_token).safeTransfer(msg.sender, _amount);
 
-    // call alpacaFlashloanCallback from msg.sender
+    // initiate callback at sender's contract
     IAlpacaFlashloanCallback(msg.sender).alpacaFlashloanCallback(_token, _amount + _expectedFee, _data);
 
-    // revert if actual fee < fee
+    // revert if the returned amount did not cover fee
     uint256 _actualTotalFee = IERC20(_token).balanceOf(address(this)) - _balanceBefore;
     if (_actualTotalFee < _expectedFee) {
       revert FlashloanFacet_NotEnoughRepay();
     }
 
-    // lender fee = x% of expected fee.
+    // calculate the actual lender fee by taking x% of expected fee
     // in case flashloaner inject a lot of fee, the ib token price should not be inflated
     // this is to prevent unforeseeable impact from inflating the ib token price
     uint256 _lenderFee = (_expectedFee * moneyMarketDs.lenderFlashloanBps) / LibConstant.MAX_BPS;
 
-    // actual fee will be added to reserve (including excess fee)
+    // total actual fee will be added to reserve (including excess fee)
     moneyMarketDs.reserves[_token] += _actualTotalFee;
-    // protocol fee = actual fee - lender fee (x% from expected fee)
+    // the rest of the fee will go to protocol
     moneyMarketDs.protocolReserves[_token] += _actualTotalFee - _lenderFee;
 
     emit LogFlashloan(_token, _amount, _actualTotalFee, _lenderFee);
