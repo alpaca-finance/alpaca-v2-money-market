@@ -19,6 +19,7 @@ import { MockFlashloan_Repurchase } from "../../mocks/MockFlashloan_Repurchase.s
 
 contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   MockFlashloan internal mockFlashloan;
+  address internal flashloanTreasury;
 
   struct RepurchaseParam {
     address _account;
@@ -30,6 +31,8 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
 
   function setUp() public override {
     super.setUp();
+    flashloanTreasury = address(111);
+    adminFacet.setFlashloanParams(500, 5000, flashloanTreasury);
 
     mockFlashloan = new MockFlashloan(moneyMarketDiamond);
     // add 5 usdc to mock flashloan contract
@@ -107,13 +110,15 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
     // fee = 0.05 USDC
     // After flash, reserve = current + fee + extra
     // 10 + 0.05 + 1 = 11.05 USDC #
-    // Extra 1 USDC should go to protocol reserve
-    // protocol reserve = current + fee + extra = 0 + 0.025 + 1 = 1.025 USDC #
+    // Extra 1 USDC should go to flashloan treasury
+    // protocol reserve = current + fee = 0 + 0.025  = 0.025 USDC #
     uint256 _reserve = viewFacet.getFloatingBalance(address(usdc));
-    assertEq(_reserve, normalizeEther(11.05 ether, usdcDecimal), "Reserve");
+    assertEq(_reserve, normalizeEther(10.05 ether, usdcDecimal), "Reserve");
 
     uint256 _protocolReserve = viewFacet.getProtocolReserve(address(usdc));
-    assertEq(_protocolReserve, normalizeEther(1.025 ether, usdcDecimal), "Protocol reserve");
+    assertEq(_protocolReserve, normalizeEther(0.025 ether, usdcDecimal), "Protocol reserve");
+
+    assertEq(usdc.balanceOf(flashloanTreasury), normalizeEther(1 ether, usdcDecimal), "Flashloan Treasury");
   }
 
   // test if repay less than the expected fee (should revert)
@@ -185,5 +190,16 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
       vm.expectRevert(LibReentrancyGuard.LibReentrancyGuard_ReentrantCall.selector);
       _mockRepurchaseFlashloan.flash(address(usdc), _flashloanAmount, _data);
     }
+  }
+
+  function testRevert_IfExpectedFeeIsZero_ShouldRevert() external {
+    // this should cause precision loss on expected fee
+    vm.expectRevert(IFlashloanFacet.FlashloanFacet_NoFee.selector);
+    mockFlashloan.flash(address(usdc), 10, "");
+  }
+
+  function testRevert_WhenTryToFlashloanNonExistingMarket_ShouldRevert() external {
+    vm.expectRevert(IFlashloanFacet.FlashloanFacet_InvalidToken.selector);
+    mockFlashloan.flash(address(888), 10, "");
   }
 }
