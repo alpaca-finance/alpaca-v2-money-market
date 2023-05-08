@@ -65,7 +65,7 @@ contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidatio
     liquidationStrat.setPaths(_paths);
   }
 
-  function testRevert_WhenCallerIsNotOwner_ShouldRevert() external {
+  function testRevert_WhenNotOwnerSetPaths_ShouldRevert() external {
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(wbnb), poolFee, address(cake));
 
