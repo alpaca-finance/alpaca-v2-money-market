@@ -30,8 +30,6 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
-  mapping(address => bool) public whitelistedCallers;
-
   event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken, address _debtToken);
   event LogSetTokenConfig(address indexed _token, LibConstant.TokenConfig _config);
   event LogsetNonCollatBorrowerOk(address indexed _account, bool isOk);
@@ -60,14 +58,6 @@ contract AdminFacet is IAdminFacet {
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
-    _;
-  }
-
-  /// @dev allow only whitelised callers
-  modifier onlyWhitelisted() {
-    if (!whitelistedCallers[msg.sender]) {
-      revert AdminFacet_Unauthorized();
-    }
     _;
   }
 
@@ -560,9 +550,11 @@ contract AdminFacet is IAdminFacet {
   /// @param _callers The addresses of the callers that are going to be whitelisted.
   /// @param _allow Whether to allow or disallow callers.
   function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
     uint256 _length = _callers.length;
     for (uint256 _i; _i < _length; ) {
-      whitelistedCallers[_callers[_i]] = _allow;
+      moneyMarketDs.reserveWithdrawerOk[_callers[_i]] = _allow;
       emit LogSetWhitelistedCaller(_callers[_i], _allow);
 
       unchecked {
@@ -573,10 +565,11 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Withdraw the protocol reserves
   /// @param _withdrawProtocolReserveParam An array of protocol's reserve to withdraw
-  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam)
-    external
-    onlyWhitelisted
-  {
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (!moneyMarketDs.reserveWithdrawerOk[msg.sender]) revert AdminFacet_Unauthorized();
+
     uint256 _length = _withdrawProtocolReserveParam.length;
     for (uint256 _i; _i < _length; ) {
       _withdrawProtocolReserve(
