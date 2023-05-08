@@ -546,16 +546,16 @@ contract AdminFacet is IAdminFacet {
     emit LogSetEmergencyPaused(msg.sender, _isPaused);
   }
 
-  /// @notice Set whitelisted callers
-  /// @param _callers The addresses of the callers that are going to be whitelisted.
+  /// @notice Set operators
+  /// @param _operators The addresses of the operator that are going to be whitelisted.
   /// @param _allow Whether to allow or disallow callers.
-  function setOperatorsOk(address[] calldata _callers, bool _allow) external onlyOwner {
+  function setOperatorsOk(address[] calldata _operators, bool _allow) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    uint256 _length = _callers.length;
+    uint256 _length = _operators.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.operatorsOk[_callers[_i]] = _allow;
-      emit LogSetOperatorsOk(_callers[_i], _allow);
+      moneyMarketDs.operatorsOk[_operators[_i]] = _allow;
+      emit LogSetOperatorsOk(_operators[_i], _allow);
 
       unchecked {
         ++_i;

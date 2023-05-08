@@ -115,7 +115,7 @@ interface IAdminFacet {
     uint256 _newMaxBorrow
   ) external;
 
-  function setOperatorsOk(address[] calldata _callers, bool _allow) external;
+  function setOperatorsOk(address[] calldata _operators, bool _allow) external;
 
   function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external;
 }
