@@ -264,7 +264,7 @@ library LibMoneyMarketDeployment {
     _selectors[20] = IAdminFacet.setAccountManagersOk.selector;
     _selectors[21] = IAdminFacet.setTokenMaximumCapacities.selector;
     _selectors[22] = IAdminFacet.setRiskManagersOk.selector;
-    _selectors[23] = IAdminFacet.setFlashloanFees.selector;
+    _selectors[23] = IAdminFacet.setFlashloanParams.selector;
     _selectors[24] = IAdminFacet.setOperatorsOk.selector;
   }
 
