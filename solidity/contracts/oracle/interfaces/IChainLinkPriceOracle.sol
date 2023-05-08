@@ -10,5 +10,5 @@ interface IChainLinkPriceOracle {
     IAggregatorV3[] calldata allSources
   ) external;
 
-  function getPrice(address token0, address token1) external returns (uint256, uint256);
+  function getPrice(address token0, address token1) external view returns (uint256, uint256);
 }

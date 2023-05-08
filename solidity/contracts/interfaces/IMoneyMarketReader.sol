@@ -44,13 +44,14 @@ interface IMoneyMarketReader {
   }
 
   struct RewardSummary {
-    uint256 ibPoolId;
-    uint256 debtPoolId;
-    uint256 lendingPendingReward;
-    uint256 borrowingPendingReward;
+    address rewardToken;
+    uint256 pId;
+    uint256 pendingReward;
   }
 
-  function getRewardSummary(address _underlyingToken, address _account) external view returns (RewardSummary memory);
+  // function getRewardSummary(address _underlyingToken, address _account) external view returns (RewardSummary memory);
+
+  function getRewardSummary(uint256 _pId, address _account) external view returns (RewardSummary[] memory);
 
   function getSubAccountSummary(address _account, uint256 _subAccountId)
     external
@@ -91,7 +92,7 @@ interface IMoneyMarketReader {
     uint256 globalDebtValue;
     uint256 reserve;
     uint256 totalToken;
-    uint256 pendingIntetest;
+    uint256 pendingInterest;
     uint256 interestRate;
     uint256 lastAccruedAt;
     uint256 blockTimestamp;
@@ -102,10 +103,20 @@ interface IMoneyMarketReader {
   struct MarketRewardInfo {
     uint256 debtTokenAllocPoint;
     uint256 ibTokenAllocPoint;
-    uint256 totalAllocPoint;
     uint256 rewardPerSec;
+    uint256 totalAllocPoint;
     uint256 totalDebtTokenInPool;
     uint256 totalUnderlyingTokenInPool;
+    RewarderInfo[] ibRewarderInfos;
+    RewarderInfo[] debtRewarderInfos;
+  }
+
+  struct RewarderInfo {
+    address rewardToken;
+    uint256 pId;
+    uint256 rewardPerSec;
+    uint256 totalAllocPoint;
+    uint256 allocPoint;
   }
 
   function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory);

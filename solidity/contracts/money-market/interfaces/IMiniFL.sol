@@ -43,4 +43,8 @@ interface IMiniFL {
   function harvest(uint256 _pid) external;
 
   function harvestMany(uint256[] calldata _pids) external;
+
+  function rewarders(uint256 _pid) external view returns (address[] memory _rewarders);
+
+  function ALPACA() external view returns (address);
 }

@@ -251,7 +251,9 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
       unchecked {
         _timePast = block.timestamp - _poolInfo.lastRewardTime;
       }
-      uint256 _rewards = (_timePast * rewardPerSecond * _poolInfo.allocPoint) / totalAllocPoint;
+      uint256 _rewards = totalAllocPoint != 0
+        ? (_timePast * rewardPerSecond * _poolInfo.allocPoint) / totalAllocPoint
+        : 0;
       _accRewardPerShare = _accRewardPerShare + ((_rewards * ACC_REWARD_PRECISION) / _stakedBalance);
     }
     return
@@ -351,5 +353,11 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   /// @return Last reward time
   function lastRewardTime(uint256 _pid) external view returns (uint256) {
     return poolInfo[_pid].lastRewardTime;
+  }
+
+  /// @notice Returns the allocation point of a pool.
+  /// @param _pid The index of the pool. See `poolInfo`.
+  function getPoolAllocPoint(uint256 _pid) external view returns (uint256 _allocPoint) {
+    _allocPoint = poolInfo[_pid].allocPoint;
   }
 }
