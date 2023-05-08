@@ -15,6 +15,9 @@ contract PCSV3PathReader is IUniSwapV3PathReader, Ownable {
   // tokenIn => tokenOut => path
   mapping(address => mapping(address => bytes)) public override paths;
 
+  // Errors
+  error PCSV3PathReader_NoLiquidity(address tokenA, address tokenB, uint24 fee);
+
   // Events
   event LogSetPath(address _token0, address _token1, bytes _path);
 
