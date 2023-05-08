@@ -199,7 +199,6 @@ contract MoneyMarket_Flashloan is MoneyMarket_BaseTest {
   }
 
   function testRevert_WhenTryToFlashloanNonExistingMarket_ShouldRevert() external {
-    // this should cause precision loss on expected fee
     vm.expectRevert(IFlashloanFacet.FlashloanFacet_InvalidToken.selector);
     mockFlashloan.flash(address(888), 10, "");
   }
