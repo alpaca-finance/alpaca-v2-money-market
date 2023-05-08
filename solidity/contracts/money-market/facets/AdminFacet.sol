@@ -30,6 +30,8 @@ contract AdminFacet is IAdminFacet {
   using SafeCast for uint256;
   using LibDoublyLinkedList for LibDoublyLinkedList.List;
 
+  mapping(address => bool) public whitelistedCallers;
+
   event LogOpenMarket(address indexed _user, address indexed _token, address _ibToken, address _debtToken);
   event LogSetTokenConfig(address indexed _token, LibConstant.TokenConfig _config);
   event LogsetNonCollatBorrowerOk(address indexed _account, bool isOk);
@@ -54,9 +56,18 @@ contract AdminFacet is IAdminFacet {
   event LogTopUpTokenReserve(address indexed _token, uint256 _amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed _caller, bool _isPasued);
+  event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
+    _;
+  }
+
+  /// @dev allow only whitelised callers
+  modifier onlyWhitelisted() {
+    if (!whitelistedCallers[msg.sender]) {
+      revert AdminFacet_Unauthorized();
+    }
     _;
   }
 
@@ -545,11 +556,26 @@ contract AdminFacet is IAdminFacet {
     emit LogSetEmergencyPaused(msg.sender, _isPaused);
   }
 
+  /// @notice Set whitelisted callers
+  /// @param _callers The addresses of the callers that are going to be whitelisted.
+  /// @param _allow Whether to allow or disallow callers.
+  function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
+    uint256 _length = _callers.length;
+    for (uint256 _i; _i < _length; ) {
+      whitelistedCallers[_callers[_i]] = _allow;
+      emit LogSetWhitelistedCaller(_callers[_i], _allow);
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   /// @notice Withdraw the protocol reserves
   /// @param _withdrawProtocolReserveParam An array of protocol's reserve to withdraw
   function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam)
     external
-    onlyOwner
+    onlyWhitelisted
   {
     uint256 _length = _withdrawProtocolReserveParam.length;
     for (uint256 _i; _i < _length; ) {
