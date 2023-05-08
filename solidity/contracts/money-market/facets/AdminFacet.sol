@@ -348,6 +348,23 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  /// @notice Set operators
+  /// @param _operators The addresses of the operator that are going to be whitelisted.
+  /// @param _isOk Whether to allow or disallow callers.
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    uint256 _length = _operators.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.operatorsOk[_operators[_i]] = _isOk;
+      emit LogSetOperatorsOk(_operators[_i], _isOk);
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
   function setLiquidationTreasury(address _treasury) external onlyOwner {
@@ -544,23 +561,6 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.emergencyPaused = _isPaused;
 
     emit LogSetEmergencyPaused(msg.sender, _isPaused);
-  }
-
-  /// @notice Set operators
-  /// @param _operators The addresses of the operator that are going to be whitelisted.
-  /// @param _allow Whether to allow or disallow callers.
-  function setOperatorsOk(address[] calldata _operators, bool _allow) external onlyOwner {
-    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-
-    uint256 _length = _operators.length;
-    for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.operatorsOk[_operators[_i]] = _allow;
-      emit LogSetOperatorsOk(_operators[_i], _allow);
-
-      unchecked {
-        ++_i;
-      }
-    }
   }
 
   /// @notice Withdraw the protocol reserves
