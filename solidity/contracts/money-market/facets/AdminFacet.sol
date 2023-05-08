@@ -42,6 +42,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(uint256 _lendingFeeBps, uint256 _repurchaseFeeBps, uint256 _liquidationFeeBps);
+  event LogSetFlashloanFees(uint256 _flashloanFeeBps, uint256 _lenderFlashloanBps);
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetDebtTokenImplementation(address indexed _newImplementation);
@@ -383,6 +384,21 @@ contract AdminFacet is IAdminFacet {
     moneyMarketDs.liquidationFeeBps = _newLiquidationFeeBps;
 
     emit LogSetFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
+  }
+
+  /// @notice Set lender portion and flashloan fee
+  /// @param _flashloanFeeBps the flashloan fee collected by protocol
+  /// @param _lenderFlashloanBps the portion that lenders will receive from _flashloanFeeBps
+  function setFlashloanFees(uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) external onlyOwner {
+    if (_flashloanFeeBps > LibConstant.MAX_BPS || _lenderFlashloanBps > LibConstant.MAX_BPS) {
+      revert AdminFacet_InvalidArguments();
+    }
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    // Replace existing fees
+    moneyMarketDs.flashloanFeeBps = _flashloanFeeBps;
+    moneyMarketDs.lenderFlashloanBps = _lenderFlashloanBps;
+
+    emit LogSetFlashloanFees(_flashloanFeeBps, _lenderFlashloanBps);
   }
 
   /// @notice Set the repurchase reward model for a token specifically to over collateralized borrowing

@@ -17,6 +17,7 @@ import { INonCollatBorrowFacet } from "../../contracts/money-market/interfaces/I
 import { ILiquidationFacet } from "../../contracts/money-market/interfaces/ILiquidationFacet.sol";
 import { IMMOwnershipFacet } from "../../contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMoneyMarketAccountManager } from "../../contracts/interfaces/IMoneyMarketAccountManager.sol";
+import { IFlashloanFacet } from "../../contracts/money-market/interfaces/IFlashloanFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
 
 // mocks
@@ -44,6 +45,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   INonCollatBorrowFacet internal nonCollatBorrowFacet;
   ILiquidationFacet internal liquidationFacet;
   IMMOwnershipFacet internal MMOwnershipFacet;
+  IFlashloanFacet internal flashloanFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -60,6 +62,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     nonCollatBorrowFacet = INonCollatBorrowFacet(moneyMarketDiamond);
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
     MMOwnershipFacet = IMMOwnershipFacet(moneyMarketDiamond);
+    flashloanFacet = IFlashloanFacet(moneyMarketDiamond);
 
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = moneyMarketDiamond;
@@ -225,6 +228,9 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
 
     adminFacet.setFees(0, 100, 100);
+
+    // adminFacet.setFlashloanFees(_flashloanFeeBps, _lenderFlashloanBps);
+    adminFacet.setFlashloanFees(500, 5000);
 
     // set liquidation params: maxLiquidate 50%, liquidationThreshold 111.11%
     adminFacet.setLiquidationParams(5000, 11111);

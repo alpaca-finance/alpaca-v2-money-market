@@ -9,9 +9,12 @@ import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3LiquidationForkTest {
   bytes[] internal paths = new bytes[](1);
+  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
 
   function setUp() public override {
     super.setUp();
+
+    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
 
     // mint ibETH to alice
     ibETH.mint(ALICE, normalizeEther(1 ether, ibETHDecimal));
@@ -70,7 +73,6 @@ contract PancakeswapV3IbTokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3
     vm.stopPrank();
   }
 
-  // expect ibWeth => ETH => btcb
   function testCorrectness_WhenExecuteIbTokenLiquiationStratV3_ShouldWork() external {
     // prepare criteria
     address _ibToken = address(ibETH);
