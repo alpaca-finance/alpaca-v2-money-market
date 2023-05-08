@@ -33,6 +33,11 @@ contract FlashloanFacet is IFlashloanFacet {
   ) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
+    // only allow flashloan on opened market
+    if (moneyMarketDs.tokenToIbTokens[_token] == address(0)) {
+      revert FlashloanFacet_InvalidToken(_token);
+    }
+
     // expected fee = (_amount * flashloan fee (bps)) / max bps
     uint256 _expectedFee = (_amount * moneyMarketDs.flashloanFeeBps) / LibConstant.MAX_BPS;
 
