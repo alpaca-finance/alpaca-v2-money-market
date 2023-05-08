@@ -54,7 +54,7 @@ contract AdminFacet is IAdminFacet {
   event LogTopUpTokenReserve(address indexed _token, uint256 _amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed _caller, bool _isPasued);
-  event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
+  event LogSetOperatorsOk(address indexed _caller, bool _allow);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -549,13 +549,13 @@ contract AdminFacet is IAdminFacet {
   /// @notice Set whitelisted callers
   /// @param _callers The addresses of the callers that are going to be whitelisted.
   /// @param _allow Whether to allow or disallow callers.
-  function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
+  function setOperatorsOk(address[] calldata _callers, bool _allow) external onlyOwner {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     uint256 _length = _callers.length;
     for (uint256 _i; _i < _length; ) {
       moneyMarketDs.operatorsOk[_callers[_i]] = _allow;
-      emit LogSetWhitelistedCaller(_callers[_i], _allow);
+      emit LogSetOperatorsOk(_callers[_i], _allow);
 
       unchecked {
         ++_i;
