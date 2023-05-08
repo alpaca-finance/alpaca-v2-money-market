@@ -84,7 +84,7 @@ contract FlashloanFacet is IFlashloanFacet {
 
     // expected fee will be added to reserve
     moneyMarketDs.reserves[_token] += _expectedFee;
-    // the rest of the fee will go to protocol
+    // protocol portion will be booked to protocol reserve
     uint256 _feeToProtocol;
     unchecked {
       _feeToProtocol = _expectedFee - _feeToLenders;
