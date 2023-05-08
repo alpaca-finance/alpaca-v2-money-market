@@ -554,7 +554,7 @@ contract AdminFacet is IAdminFacet {
 
     uint256 _length = _callers.length;
     for (uint256 _i; _i < _length; ) {
-      moneyMarketDs.reserveWithdrawerOk[_callers[_i]] = _allow;
+      moneyMarketDs.operatorsOk[_callers[_i]] = _allow;
       emit LogSetWhitelistedCaller(_callers[_i], _allow);
 
       unchecked {
@@ -568,7 +568,7 @@ contract AdminFacet is IAdminFacet {
   function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
-    if (!moneyMarketDs.reserveWithdrawerOk[msg.sender]) revert AdminFacet_Unauthorized();
+    if (!moneyMarketDs.operatorsOk[msg.sender]) revert AdminFacet_Unauthorized();
 
     uint256 _length = _withdrawProtocolReserveParam.length;
     for (uint256 _i; _i < _length; ) {
