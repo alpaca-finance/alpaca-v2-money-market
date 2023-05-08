@@ -61,7 +61,6 @@ contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidatio
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(_randomToken0), poolFee, address(_randomToken1));
 
-    // TODO: Revert with?
     vm.expectRevert();
     liquidationStrat.setPaths(_paths);
   }

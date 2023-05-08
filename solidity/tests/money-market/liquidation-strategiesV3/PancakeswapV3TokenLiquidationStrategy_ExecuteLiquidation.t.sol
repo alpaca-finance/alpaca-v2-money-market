@@ -122,7 +122,6 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
     );
   }
 
-  // TODO: check multi hop
   function testCorrectness_WhenLiquidationOnMultiHop_ShouldWork() external {
     address _collatToken = address(ETH);
     address _debtToken = address(usdt);
