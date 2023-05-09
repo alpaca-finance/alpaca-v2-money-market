@@ -226,11 +226,7 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     adminFacet.setLiquidationTreasury(liquidationTreasury);
 
     // adminFacet.setFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
-
     adminFacet.setFees(0, 100, 100);
-
-    // adminFacet.setFlashloanFees(_flashloanFeeBps, _lenderFlashloanBps);
-    adminFacet.setFlashloanFees(500, 5000);
 
     // set liquidation params: maxLiquidate 50%, liquidationThreshold 111.11%
     adminFacet.setLiquidationParams(5000, 11111);

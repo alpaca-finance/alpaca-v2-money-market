@@ -6,36 +6,28 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ---- Libraries ---- //
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
-import { LibPath } from "../reader/libraries/LibPath.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
 import { IPancakeSwapRouterV3 } from "./interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
-import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
+import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
 import { IUniSwapV3PathReader } from "../reader/interfaces/IUniSwapV3PathReader.sol";
 
-contract PancakeswapV3TokenLiquidationStrategy is ILiquidationStrategy, Ownable {
+contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
-  using LibPath for bytes;
 
   event LogSetCaller(address _caller, bool _isOk);
-  event LogSetPath(address _token0, address _token1, bytes _path);
 
-  error PancakeswapV3TokenLiquidationStrategy_Unauthorized();
-  error PancakeswapV3TokenLiquidationStrategy_RepayTokenIsSameWithCollatToken();
-  error PancakeswapV3TokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
-  error PancakeswapV3TokenLiquidationStrategy_NoLiquidity(address tokenA, address tokenB, uint24 fee);
+  error PancakeswapV3IbTokenLiquidationStrategy_Unauthorized();
+  error PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
+  error PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
 
   IPancakeSwapRouterV3 internal immutable router;
+  IMoneyMarket internal immutable moneyMarket;
   IUniSwapV3PathReader internal immutable pathReader;
 
-  address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
-
   mapping(address => bool) public callersOk;
-  // tokenIn => tokenOut => path
-  mapping(address => mapping(address => bytes)) public paths;
 
   struct WithdrawParam {
     address to;
@@ -46,51 +38,62 @@ contract PancakeswapV3TokenLiquidationStrategy is ILiquidationStrategy, Ownable 
   /// @notice allow only whitelisted callers
   modifier onlyWhitelistedCallers() {
     if (!callersOk[msg.sender]) {
-      revert PancakeswapV3TokenLiquidationStrategy_Unauthorized();
+      revert PancakeswapV3IbTokenLiquidationStrategy_Unauthorized();
     }
     _;
   }
 
-  constructor(address _router, address _pathReader) {
+  constructor(
+    address _router,
+    address _moneyMarket,
+    address _pathReader
+  ) {
     router = IPancakeSwapRouterV3(_router);
+    moneyMarket = IMoneyMarket(_moneyMarket);
     pathReader = IUniSwapV3PathReader(_pathReader);
   }
 
   /// @notice Execute liquidate from collatToken to repayToken
-  /// @param _collatToken The source token
+  /// @param _ibToken The source token
   /// @param _repayToken The destination token
-  /// @param _collatAmountIn Available amount of source token to trade
+  /// @param _ibTokenAmountIn Available amount of source token to trade
   /// @param _minReceive Min token receive after swap
   function executeLiquidation(
-    address _collatToken,
+    address _ibToken,
     address _repayToken,
-    uint256 _collatAmountIn,
-    uint256, /* _repayAmount */
+    uint256 _ibTokenAmountIn,
+    uint256, /*_repayAmount*/
     uint256 _minReceive
   ) external onlyWhitelistedCallers {
+    // get underlying tokenAddress from MoneyMarket
+    address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
+
     // Revert if _underlyingToken and _repayToken are the same address
-    if (_collatToken == _repayToken) {
-      revert PancakeswapV3TokenLiquidationStrategy_RepayTokenIsSameWithCollatToken();
+    if (_underlyingToken == _repayToken) {
+      revert PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
-    bytes memory _path = pathReader.paths(_collatToken, _repayToken);
-    // Revert if no swapPath config for _collatToken and _repayToken pair
+    bytes memory _path = pathReader.paths(_underlyingToken, _repayToken);
+    // Revert if no swapPath config for _underlyingToken and _repayToken pair
     if (_path.length == 0) {
-      revert PancakeswapV3TokenLiquidationStrategy_PathConfigNotFound(_collatToken, _repayToken);
+      revert PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
     }
+
+    // withdraw ibToken from Moneymarket for underlyingToken
+    uint256 _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _ibTokenAmountIn);
 
     // setup params from swap
     IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
       path: _path,
       recipient: msg.sender,
       deadline: block.timestamp,
-      amountIn: _collatAmountIn,
+      amountIn: _withdrawnUnderlyingAmount,
       amountOutMinimum: _minReceive
     });
 
     // approve router for swapping
-    IERC20(_collatToken).safeApprove(address(router), _collatAmountIn);
-    // swap all collatToken to repayToken
+    IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
+    // swap all ib's underlyingToken to repayToken
     router.exactInput(params);
   }
 

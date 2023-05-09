@@ -152,6 +152,7 @@ library LibMoneyMarket01 {
     uint16 liquidationFeeBps; // fee that is charged during liquidation by protocol, goes to liquidationTreasury
     uint16 flashloanFeeBps; // fee that is charged when providing the flashloan
     uint16 lenderFlashloanBps; // portion of flashloan fee that will go to lenders
+    address flashloanTreasury; // a treasury to hold excess flashloan fee
   }
 
   /// @dev Get money market storage
