@@ -10,50 +10,33 @@ import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 // ---- Interfaces ---- //
-// path reader
+import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
 import { IPancakeSwapRouterV3 } from "../money-market/interfaces/IPancakeSwapRouterV3.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
+import { IERC20 } from "../money-market/interfaces/IERC20.sol";
+import { ISmartTreasury } from "./ISmartTreasury.sol";
 
-interface ISmartTreasury {
-  error SmartTreasury_AmountTooLow();
-  error SmartTreasury_NoBalance();
-  error SmartTreasury_PathConfigNotFound();
-  error SmartTreasury_Unauthorized();
-
-  // call to auto split target token to each destination
-  function distribute(address calldata _tokens) external;
-
-  function setAllocs(
-    uint256 _revenueAlloc,
-    uint256 _devAlloc,
-    uint256 _burnAlloc
-  ) external;
-
-  function setWhitelistedCallers(address[] calldata _callers, bool _allow) external;
-}
-
-// whitelist (can be both Eoa and contract)
-// this contract hold treasury
 contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   using LibSafeToken for IERC20;
 
   address public revenueTreasury;
   address public devTreasury;
   address public burnTreasury;
+  address public revenueToken;
 
   mapping(address => bool) public whitelistedCallers;
 
-  uint16 public revenueAlloc;
-  uint16 public devAlloc;
-  uint16 public burnAlloc;
+  uint256 public revenueAlloc;
+  uint256 public devAlloc;
+  uint256 public burnAlloc;
+  uint256 public totalAlloc;
 
-  address internal constant BUSD = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
-  IPancakeSwapRouterV3 internal constant PCS_V3_ROUTER = IPancakeSwapRouterV3(address(1));
-  // IUniSwapV3PathReader internal immutable pathReader;
+  IPancakeSwapRouterV3 public PCS_V3_ROUTER;
+  IUniSwapV3PathReader public pathReader;
 
   event LogDistribute(address _token, uint256 _amount);
-  event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
   event LogSetAllocs(uint256 _revenueAlloc, uint256 _devAlloc, uint256 _burnAlloc, uint256 totalAlloc);
+  event LogSetRevenueToken(address _revenueToken);
+  event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
 
   modifier onlyWhitelisted() {
     if (!whitelistedCallers[msg.sender]) {
@@ -62,18 +45,19 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     _;
   }
 
-  // target 1 address First portion is to swapped token to “BUSD” and send to RevenueTreasury from AF1.0
-  // target 2 address Second portion is to transfer token to dev treasury address (0x08B5A95cb94f926a8B620E87eE92e675b35afc7E)
-  // target 3 address Third portion is to transfer token to "buy back" and burn treasury address (address ?)
-
   constructor() {
     _disableInitializers();
   }
 
-  function initialize() external initializer {
+  function initialize(address _router, address _pathReader) external initializer {
     OwnableUpgradeable.__Ownable_init();
+    PCS_V3_ROUTER = IPancakeSwapRouterV3(_router);
+    pathReader = IUniSwapV3PathReader(_pathReader);
   }
 
+  /// @notice Distribute the balance in this contract to each treasury
+  /// @dev This function will be called by external.
+  /// @param _tokens An array of tokens that want to distribute.
   function distribute(address[] calldata _tokens) external onlyWhitelisted {
     uint256 _length = _tokens.length;
     for (uint256 _i; _i < _length; ) {
@@ -85,11 +69,51 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     }
   }
 
+  /// @notice Set allocation points
+  /// @param _revenueAlloc An allocation point for revenue treasury.
+  /// @param _devAlloc An allocation point for dev treasury.
+  /// @param _burnAlloc An allocation point for burn treasury.
+  function setAllocs(
+    uint256 _revenueAlloc,
+    uint256 _devAlloc,
+    uint256 _burnAlloc
+  ) external onlyWhitelisted {
+    totalAlloc = _revenueAlloc + _devAlloc + _burnAlloc;
+    revenueAlloc = _revenueAlloc;
+    devAlloc = _devAlloc;
+    burnAlloc = _burnAlloc;
+
+    emit LogSetAllocs(_revenueAlloc, _devAlloc, _burnAlloc, totalAlloc);
+  }
+
+  /// @notice Set revenue token
+  /// @dev Revenue token used for swapping before transfer to revenue treasury.
+  /// @param _revenueToken An address of destination token.
+  function setRevenueToken(address _revenueToken) external onlyWhitelisted {
+    revenueToken = _revenueToken;
+    emit LogSetRevenueToken(_revenueToken);
+  }
+
+  /// @notice Set whitelisted callers
+  /// @param _callers The addresses of the callers that are going to be whitelisted.
+  /// @param _allow Whether to allow or disallow callers.
+  function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
+    uint256 _length = _callers.length;
+    for (uint256 _i; _i < _length; ) {
+      whitelistedCallers[_callers[_i]] = _allow;
+      emit LogSetWhitelistedCaller(_callers[_i], _allow);
+
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   function _distribute(address _token) internal {
     uint256 _amount = IERC20(_token).balanceOf(address(this));
     (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _splitPayment(_amount);
 
-    bytes memory _path = pathReader.paths(_token, BUSD);
+    bytes memory _path = pathReader.paths(_token, revenueToken);
     if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
 
     IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
@@ -112,48 +136,18 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
 
   function _splitPayment(uint256 _amount)
     internal
+    view
     returns (
       uint256 _revenueAmount,
       uint256 _devAmount,
       uint256 _burnAmount
     )
   {
-    if (_amount <= LibConstant.MAX_BPS) revert SmartTreasury_AmountTooLow();
-    _devAmount = (_amount * devAlloc) / LibConstant.MAX_BPS;
-    _burnAmount = (_amount * burnAlloc) / LibConstant.MAX_BPS;
+    _devAmount = (_amount * devAlloc) / totalAlloc;
+    _burnAmount = (_amount * burnAlloc) / totalAlloc;
     unchecked {
       _revenueAmount = _amount - _devAmount - _burnAmount;
     }
-  }
-
-  uint256 public totalAlloc;
-
-  function setAllocs(
-    uint256 _revenueAlloc,
-    uint256 _devAlloc,
-    uint256 _burnAlloc
-  ) external onlyWhitelisted {
-    totalAlloc = _revenueAlloc + _devAlloc + _burnAlloc;
-
-    revenueAlloc = _revenueAlloc;
-    devAlloc = _devAlloc;
-    burnAlloc = _burnAlloc;
-
-    emit LogSetAllocs(_revenueAlloc, _devAlloc, _burnAlloc, totalAlloc);
-  }
-
-  /// @notice Set whitelisted callers
-  /// @param _callers The addresses of the callers that are going to be whitelisted.
-  /// @param _allow Whether to allow or disallow callers.
-  function setWhitelistedCallers(address[] calldata _callers, bool _allow) external onlyOwner {
-    uint256 _length = _callers.length;
-    for (uint256 _i; _i < _length; ) {
-      whitelistedCallers[_callers[_i]] = _allow;
-      emit LogSetWhitelistedCaller(_callers[_i], _allow);
-
-      unchecked {
-        ++_i;
-      }
-    }
+    if (_devAmount == 0 || _burnAmount == 0 || _revenueAmount == 0) revert SmartTreasury_AmountTooLow();
   }
 }
