@@ -6,7 +6,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ---- Libraries ---- //
 import { LibSafeToken } from "./libraries/LibSafeToken.sol";
-import { LibPath } from "./libraries/LibPath.sol";
+import { LibPath } from "../reader/libraries/LibPath.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
