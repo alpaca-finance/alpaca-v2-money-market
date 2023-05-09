@@ -15,7 +15,7 @@ contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidatio
 
   function setUp() public override {
     super.setUp();
-    liquidationStrat = new PancakeswapV3TokenLiquidationStrategy(address(router));
+    liquidationStrat = new PancakeswapV3TokenLiquidationStrategy(address(router), address(pathReader));
   }
 
   function testCorrectness_WhenOwnerSetCallersOk_ShouldWork() external {
@@ -41,16 +41,16 @@ contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidatio
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), poolFee, address(wbnb));
 
-    liquidationStrat.setPaths(_paths);
-    assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
+    pathReader.setPaths(_paths);
+    assertEq(pathReader.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
   function testCorrectness_WhenOwnerSetPathMultiHop_ShouldWork() external {
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), poolFee, address(usdt), poolFee, address(wbnb));
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
-    assertEq(liquidationStrat.paths(address(cake), address(wbnb)), _paths[0]);
+    assertEq(pathReader.paths(address(cake), address(wbnb)), _paths[0]);
   }
 
   function testRevert_WhenOwnerSetNonExistingPath_ShouldRevert() external {
@@ -62,7 +62,7 @@ contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidatio
     _paths[0] = abi.encodePacked(address(_randomToken0), poolFee, address(_randomToken1));
 
     vm.expectRevert();
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
   }
 
   function testRevert_WhenNotOwnerSetPaths_ShouldRevert() external {
@@ -71,6 +71,6 @@ contract PancakeswapV3TokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidatio
 
     vm.prank(ALICE);
     vm.expectRevert("Ownable: caller is not the owner");
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
   }
 }
