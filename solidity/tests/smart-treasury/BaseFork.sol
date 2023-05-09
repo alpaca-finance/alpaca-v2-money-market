@@ -7,11 +7,12 @@ import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
 
 // implementation
 import { PCSV3PathReader } from "solidity/contracts/reader/PCSV3PathReader.sol";
+import { SmartTreasury } from "solidity/contracts/smart-treasury/SmartTreasury.sol";
 
 // interfaces
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
-import { ISmartTreasury } from "solidity/contracts/smart-treasury/ISmartTreasury.sol";
+import { IQuoterV2 } from "solidity/tests/interfaces/IQuoterV2.sol";
 
 contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   using stdStorage for StdStorage;
@@ -39,14 +40,21 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
 
   IPancakeSwapRouterV3 internal router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
   PCSV3PathReader internal pathReader;
-  ISmartTreasury internal smartTreasury;
+  SmartTreasury internal smartTreasury;
+  IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
 
   function setUp() public virtual {
     vm.createSelectFork("bsc_mainnet", 27_515_914);
 
     pathReader = new PCSV3PathReader();
+    // set path for
+    bytes[] memory _paths = new bytes[](1);
+    _paths[0] = abi.encodePacked(address(wbnb), uint24(500), address(usdt));
+
+    pathReader.setPaths(_paths);
+
     vm.startPrank(DEPLOYER);
-    _setupProxyAdmin();
+    proxyAdmin = _setupProxyAdmin();
     smartTreasury = deploySmartTreasury(address(router), address(pathReader));
     vm.stopPrank();
 
@@ -67,31 +75,38 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
     vm.label(address(smartTreasury), "SmartTreasury");
   }
 
-  function deployUpgradeable(string memory contractName, bytes memory initializer) internal returns (address) {
-    // Deploy implementation contract
-    bytes memory logicBytecode = abi.encodePacked(
-      vm.getCode(string(abi.encodePacked("./out/", contractName, ".sol/", contractName, ".json")))
+  function deploySmartTreasury(address _router, address _pathReader) internal returns (SmartTreasury) {
+    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/SmartTreasury.sol/SmartTreasury.json"));
+    bytes memory _initializer = abi.encodeWithSelector(
+      bytes4(keccak256("initialize(address,address)")),
+      _router,
+      _pathReader
     );
-    address logic;
-    assembly {
-      logic := create(0, add(logicBytecode, 0x20), mload(logicBytecode))
-    }
+    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
+    return SmartTreasury(_proxy);
+  }
 
-    // Deploy proxy
-    bytes memory proxyBytecode = abi.encodePacked(
+  function _setupUpgradeable(bytes memory _logicBytecode, bytes memory _initializer) internal returns (address) {
+    bytes memory _proxyBytecode = abi.encodePacked(
       vm.getCode("./out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json")
     );
-    proxyBytecode = abi.encodePacked(proxyBytecode, abi.encode(logic, address(proxyAdmin), initializer));
 
-    address proxy;
+    address _logic;
     assembly {
-      proxy := create(0, add(proxyBytecode, 0x20), mload(proxyBytecode))
-      if iszero(extcodesize(proxy)) {
+      _logic := create(0, add(_logicBytecode, 0x20), mload(_logicBytecode))
+    }
+
+    _proxyBytecode = abi.encodePacked(_proxyBytecode, abi.encode(_logic, address(proxyAdmin), _initializer));
+
+    address _proxy;
+    assembly {
+      _proxy := create(0, add(_proxyBytecode, 0x20), mload(_proxyBytecode))
+      if iszero(extcodesize(_proxy)) {
         revert(0, 0)
       }
     }
 
-    return proxy;
+    return _proxy;
   }
 
   function _setupProxyAdmin() internal returns (ProxyAdminLike) {
@@ -101,16 +116,6 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
       _address := create(0, add(_bytecode, 0x20), mload(_bytecode))
     }
     return ProxyAdminLike(address(_address));
-  }
-
-  function deploySmartTreasury(address _router, address _pathReader) internal returns (ISmartTreasury) {
-    return
-      ISmartTreasury(
-        deployUpgradeable(
-          "SmartTreasury",
-          abi.encodeWithSelector(bytes4(keccak256("initialize(address,address)")), _router, _pathReader)
-        )
-      );
   }
 
   function normalizeEther(uint256 _ether, uint256 _decimal) internal pure returns (uint256 _normalizedEther) {

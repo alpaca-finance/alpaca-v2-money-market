@@ -94,6 +94,21 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     emit LogSetRevenueToken(_revenueToken);
   }
 
+  /// @notice Set treasury addresses
+  /// @dev The destination addresses for distribution
+  /// @param _revenueTreasury An address of revenue treasury
+  /// @param _devTreasury An address of dev treasury
+  /// @param _burnTreasury An address of burn treasury
+  function setTreasuryAddresses(
+    address _revenueTreasury,
+    address _devTreasury,
+    address _burnTreasury
+  ) external onlyWhitelisted {
+    revenueTreasury = _revenueTreasury;
+    devTreasury = _devTreasury;
+    burnTreasury = _burnTreasury;
+  }
+
   /// @notice Set whitelisted callers
   /// @param _callers The addresses of the callers that are going to be whitelisted.
   /// @param _allow Whether to allow or disallow callers.
@@ -110,26 +125,35 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   }
 
   function _distribute(address _token) internal {
-    uint256 _amount = IERC20(_token).balanceOf(address(this));
-    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _splitPayment(_amount);
-
     bytes memory _path = pathReader.paths(_token, revenueToken);
     if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
 
-    IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
-      path: _path,
-      recipient: revenueTreasury,
-      deadline: block.timestamp,
-      amountIn: _revenueAmount,
-      amountOutMinimum: 0
-    });
+    uint256 _amount = IERC20(_token).balanceOf(address(this));
+    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _splitPayment(_amount);
 
-    // Direct send to revenue treasury
-    IERC20(_token).safeApprove(address(PCS_V3_ROUTER), _revenueAmount);
-    PCS_V3_ROUTER.exactInput(params);
+    if (_revenueAmount != 0) {
+      IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
+        path: _path,
+        recipient: revenueTreasury,
+        deadline: block.timestamp,
+        amountIn: _revenueAmount,
+        amountOutMinimum: 0
+      });
 
-    IERC20(_token).safeTransfer(devTreasury, _devAmount);
-    IERC20(_token).safeTransfer(burnTreasury, _burnAmount);
+      // Direct send to revenue treasury
+      IERC20(_token).safeApprove(address(PCS_V3_ROUTER), _revenueAmount);
+      try PCS_V3_ROUTER.exactInput(params) {} catch {
+        return;
+      }
+    }
+
+    if (_devAmount != 0) {
+      IERC20(_token).safeTransfer(devTreasury, _devAmount);
+    }
+
+    if (_burnAmount != 0) {
+      IERC20(_token).safeTransfer(burnTreasury, _burnAmount);
+    }
 
     emit LogDistribute(_token, _amount);
   }
@@ -143,11 +167,12 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       uint256 _burnAmount
     )
   {
-    _devAmount = (_amount * devAlloc) / totalAlloc;
-    _burnAmount = (_amount * burnAlloc) / totalAlloc;
-    unchecked {
-      _revenueAmount = _amount - _devAmount - _burnAmount;
+    if (_amount != 0) {
+      _devAmount = (_amount * devAlloc) / totalAlloc;
+      _burnAmount = (_amount * burnAlloc) / totalAlloc;
+      unchecked {
+        _revenueAmount = _amount - _devAmount - _burnAmount;
+      }
     }
-    if (_devAmount == 0 || _burnAmount == 0 || _revenueAmount == 0) revert SmartTreasury_AmountTooLow();
   }
 }

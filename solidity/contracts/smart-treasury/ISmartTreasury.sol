@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 interface ISmartTreasury {
-  error SmartTreasury_AmountTooLow();
   error SmartTreasury_PathConfigNotFound();
   error SmartTreasury_Unauthorized();
 
@@ -18,6 +17,4 @@ interface ISmartTreasury {
   function setRevenueToken(address _revenueToken) external;
 
   function setWhitelistedCallers(address[] calldata _callers, bool _allow) external;
-
-  function whitelistedCallers(address _caller) external view returns (bool _allow);
 }
