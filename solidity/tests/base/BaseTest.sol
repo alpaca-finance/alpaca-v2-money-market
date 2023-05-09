@@ -20,7 +20,6 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
-import { ChainLinkPriceOracle2 } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 import { AlpacaV2Oracle, IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 
