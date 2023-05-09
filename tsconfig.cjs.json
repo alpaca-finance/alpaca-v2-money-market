@@ -10,14 +10,28 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "lib": ["es6", "es2017", "dom"],
-    "types": ["@types/node"],
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "lib": [
+      "es6",
+      "es2017",
+      "dom"
+    ],
+    "types": [
+      "@types/node"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ],
     "outDir": "typechain",
     "declaration": true
   },
   "include": [
     "./typechain/**/*.ts"
   ],
-  "exclude": ["node_modules", "build", "cache", "artifacts"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "cache",
+    "artifacts"
+  ]
 }

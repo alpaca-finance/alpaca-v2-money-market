@@ -9,7 +9,7 @@ cache/
 node_modules/
 typechain/
 
-yarn-error.log/
+yarn-error.log
 
 broadcast/
 
