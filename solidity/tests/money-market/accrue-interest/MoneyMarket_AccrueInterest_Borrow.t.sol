@@ -441,11 +441,11 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
     _withdrawInput[0] = IAdminFacet.WithdrawProtocolReserveParam(address(weth), address(this), 4e16);
 
-    // call withdraw by deployer
+    // call withdraw by deployer, should revert unauthorized
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_Unauthorized.selector));
     adminFacet.withdrawProtocolReserves(_withdrawInput);
 
-    // call withdraw by unauthorized person
+    // call withdraw by unauthorized person, should revert unauthorized
     vm.prank(BOB);
     vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_Unauthorized.selector));
     adminFacet.withdrawProtocolReserves(_withdrawInput);
