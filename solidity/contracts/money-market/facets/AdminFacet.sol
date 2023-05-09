@@ -54,6 +54,7 @@ contract AdminFacet is IAdminFacet {
   event LogTopUpTokenReserve(address indexed _token, uint256 _amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed _caller, bool _isPasued);
+  event LogSetOperatorsOk(address indexed _caller, bool _allow);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -347,6 +348,21 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  /// @notice Set operators
+  /// @param _operators The addresses of the operator that are going to be whitelisted.
+  /// @param _isOk Whether to allow or disallow callers.
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _operators.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.operatorsOk[_operators[_i]] = _isOk;
+      emit LogSetOperatorsOk(_operators[_i], _isOk);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
   function setLiquidationTreasury(address _treasury) external onlyOwner {
@@ -553,10 +569,11 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Withdraw the protocol reserves
   /// @param _withdrawProtocolReserveParam An array of protocol's reserve to withdraw
-  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam)
-    external
-    onlyOwner
-  {
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (!moneyMarketDs.operatorsOk[msg.sender]) revert AdminFacet_Unauthorized();
+
     uint256 _length = _withdrawProtocolReserveParam.length;
     for (uint256 _i; _i < _length; ) {
       _withdrawProtocolReserve(
