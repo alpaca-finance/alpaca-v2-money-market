@@ -3,11 +3,9 @@ pragma solidity 0.8.19;
 
 // ---- External Libraries ---- //
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // ---- Libraries ---- //
 import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 // ---- Interfaces ---- //
 import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
@@ -25,16 +23,27 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
 
   mapping(address => bool) public whitelistedCallers;
 
-  uint256 public revenueAlloc;
-  uint256 public devAlloc;
-  uint256 public burnAlloc;
-  uint256 public totalAlloc;
+  uint256 public revenueAllocPoint;
+  uint256 public devAllocPoint;
+  uint256 public burnAllocPoint;
+  uint256 public totalAllocPoint;
 
-  IPancakeSwapRouterV3 public PCS_V3_ROUTER;
+  IPancakeSwapRouterV3 public router;
   IUniSwapV3PathReader public pathReader;
 
-  event LogDistribute(address _token, uint256 _amount);
-  event LogSetAllocs(uint256 _revenueAlloc, uint256 _devAlloc, uint256 _burnAlloc, uint256 totalAlloc);
+  event LogDistribute(
+    address _token,
+    uint256 _revenueAmount,
+    uint256 _devAmount,
+    uint256 _burnAmount,
+    uint256 _totalAmount
+  );
+  event LogSetAllocs(
+    uint256 _revenueAllocPoint,
+    uint256 _devAllocPoint,
+    uint256 _burnAllocPoint,
+    uint256 totalAllocPoint
+  );
   event LogSetRevenueToken(address _revenueToken);
   event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
 
@@ -51,7 +60,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
 
   function initialize(address _router, address _pathReader) external initializer {
     OwnableUpgradeable.__Ownable_init();
-    PCS_V3_ROUTER = IPancakeSwapRouterV3(_router);
+    router = IPancakeSwapRouterV3(_router);
     pathReader = IUniSwapV3PathReader(_pathReader);
   }
 
@@ -61,7 +70,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   function distribute(address[] calldata _tokens) external onlyWhitelisted {
     uint256 _length = _tokens.length;
     for (uint256 _i; _i < _length; ) {
-      // should try catch?
       _distribute(_tokens[_i]);
       unchecked {
         ++_i;
@@ -70,20 +78,20 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   }
 
   /// @notice Set allocation points
-  /// @param _revenueAlloc An allocation point for revenue treasury.
-  /// @param _devAlloc An allocation point for dev treasury.
-  /// @param _burnAlloc An allocation point for burn treasury.
-  function setAllocs(
-    uint256 _revenueAlloc,
-    uint256 _devAlloc,
-    uint256 _burnAlloc
+  /// @param _revenueAllocPoint An allocation point for revenue treasury.
+  /// @param _devAllocPoint An allocation point for dev treasury.
+  /// @param _burnAllocPoint An allocation point for burn treasury.
+  function setAllocPoints(
+    uint256 _revenueAllocPoint,
+    uint256 _devAllocPoint,
+    uint256 _burnAllocPoint
   ) external onlyWhitelisted {
-    totalAlloc = _revenueAlloc + _devAlloc + _burnAlloc;
-    revenueAlloc = _revenueAlloc;
-    devAlloc = _devAlloc;
-    burnAlloc = _burnAlloc;
+    totalAllocPoint = _revenueAllocPoint + _devAllocPoint + _burnAllocPoint;
+    revenueAllocPoint = _revenueAllocPoint;
+    devAllocPoint = _devAllocPoint;
+    burnAllocPoint = _burnAllocPoint;
 
-    emit LogSetAllocs(_revenueAlloc, _devAlloc, _burnAlloc, totalAlloc);
+    emit LogSetAllocs(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint, totalAllocPoint);
   }
 
   /// @notice Set revenue token
@@ -141,8 +149,8 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       });
 
       // Direct send to revenue treasury
-      IERC20(_token).safeApprove(address(PCS_V3_ROUTER), _revenueAmount);
-      try PCS_V3_ROUTER.exactInput(params) {} catch {
+      IERC20(_token).safeApprove(address(router), _revenueAmount);
+      try router.exactInput(params) {} catch {
         return;
       }
     }
@@ -155,7 +163,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       IERC20(_token).safeTransfer(burnTreasury, _burnAmount);
     }
 
-    emit LogDistribute(_token, _amount);
+    emit LogDistribute(_token, _revenueAmount, _devAmount, _burnAmount, _amount);
   }
 
   function _splitPayment(uint256 _amount)
@@ -168,8 +176,8 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     )
   {
     if (_amount != 0) {
-      _devAmount = (_amount * devAlloc) / totalAlloc;
-      _burnAmount = (_amount * burnAlloc) / totalAlloc;
+      _devAmount = (_amount * devAllocPoint) / totalAllocPoint;
+      _burnAmount = (_amount * burnAllocPoint) / totalAllocPoint;
       unchecked {
         _revenueAmount = _amount - _devAmount - _burnAmount;
       }

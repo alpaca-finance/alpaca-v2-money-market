@@ -66,10 +66,10 @@ contract SmartTreasury_SetConfigs is BaseFork {
     smartTreasury.setWhitelistedCallers(_callers, true);
 
     vm.prank(ALICE);
-    smartTreasury.setAllocs(100, 100, 100);
-    assertEq(smartTreasury.revenueAlloc(), 100, "Set Revenue Allocation");
-    assertEq(smartTreasury.devAlloc(), 100, "Set Dev Allocation");
-    assertEq(smartTreasury.burnAlloc(), 100, "Set Burn Allocation");
+    smartTreasury.setAllocPoints(100, 100, 100);
+    assertEq(smartTreasury.revenueAllocPoint(), 100, "Set Revenue Allocation");
+    assertEq(smartTreasury.devAllocPoint(), 100, "Set Dev Allocation");
+    assertEq(smartTreasury.burnAllocPoint(), 100, "Set Burn Allocation");
   }
 
   function testRevert_UnauthorizedCallerSetAlloc_ShouldRevert() external {
@@ -80,7 +80,7 @@ contract SmartTreasury_SetConfigs is BaseFork {
 
     vm.prank(BOB);
     vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
-    smartTreasury.setAllocs(100, 100, 100);
+    smartTreasury.setAllocPoints(100, 100, 100);
   }
 
   // test correctness treasury address

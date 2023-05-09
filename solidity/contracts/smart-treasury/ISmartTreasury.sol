@@ -8,10 +8,10 @@ interface ISmartTreasury {
   // call to auto split target token to each destination
   function distribute(address[] calldata _tokens) external;
 
-  function setAllocs(
-    uint256 _revenueAlloc,
-    uint256 _devAlloc,
-    uint256 _burnAlloc
+  function setAllocPoints(
+    uint256 _revenueAllocPoint,
+    uint256 _devAllocPoint,
+    uint256 _burnAllocPoint
   ) external;
 
   function setRevenueToken(address _revenueToken) external;
