@@ -209,7 +209,7 @@ library LibMoneyMarketDeployment {
     _selectors[39] = IViewFacet.getOverCollatPendingInterest.selector;
     _selectors[40] = IViewFacet.getOverCollatInterestModel.selector;
     _selectors[41] = IViewFacet.getOverCollatInterestRate.selector;
-    _selectors[42] = IViewFacet.getFlashloanFeeParams.selector;
+    _selectors[42] = IViewFacet.getFlashloanParams.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
