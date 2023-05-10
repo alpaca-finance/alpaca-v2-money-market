@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { ConfigFileHelper } from "../file-helper.ts/config-file.helper";
-import { AssetTier, Market, reverseAssetTier } from "../interfaces";
+import { ConfigFileHelper } from "../../deploy/file-helper.ts/config-file.helper";
+import { AssetTier, Market, reverseAssetTier } from "../../deploy/interfaces";
 
 async function main(
   name: string,

@@ -32,6 +32,6 @@
     "artifacts"
   ],
   "files": [
-    "typechain/index.d.ts"
+    "typechain/index.ts"
   ]
 }
