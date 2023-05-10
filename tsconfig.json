@@ -8,16 +8,30 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "module": "commonjs",
-    "lib": ["es6", "es2017", "dom"],
+    "lib": [
+      "es6",
+      "es2017",
+      "dom"
+    ],
     "target": "es5",
-    "types": ["@types/node"],
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "types": [
+      "@types/node"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ],
   },
   "include": [
     "**/*.ts"
   ],
-  "exclude": ["node_modules", "build", "cache", "artifacts"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "cache",
+    "artifacts"
+  ],
   "files": [
-    "typechain/index.d.ts"
+    "typechain/index.ts"
   ]
 }

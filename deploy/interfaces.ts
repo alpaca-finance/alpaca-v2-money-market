@@ -4,6 +4,20 @@ export interface Config {
 }
 
 export interface MoneyMarket {
+  moneyMarketDiamond: string;
+  facets: {
+    adminFacet: string;
+    borrowFacet: string;
+    collateralFacet: string;
+    diamondCutFacet: string;
+    diamondLoupeFacet: string;
+    flashloanFacet: string;
+    lendFacet: string;
+    liquidationFacet: string;
+    nonCollatBorrowFacet: string;
+    ownershipFacet: string;
+    viewFacet: string;
+  };
   markets: Market[];
 }
 

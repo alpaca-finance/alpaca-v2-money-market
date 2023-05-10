@@ -1,40 +1,42 @@
 import { config as dotEnvConfig } from "dotenv";
+import { HardhatUserConfig } from "hardhat/config";
 dotEnvConfig();
 
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-ethers";
 import "@typechain/hardhat";
+import "hardhat-deploy";
 
-module.exports = {
+const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
-    // rinkeby: {
-    //   url: process.env.RINKEBY_RPC,
-    //   accounts:
-    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    // },
+    bsc_mainnet: {
+      chainId: 56,
+      url: process.env.BSC_RPC_URL,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+    },
   },
   solidity: {
-    version: "0.8.13",
+    version: "0.8.19",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1,
       },
-      evmVersion: "istanbul",
     },
   },
   paths: {
-    sources: "./contracts",
-    tests: "./test",
+    sources: "./solidity/contracts",
     cache: "./cache",
     artifacts: "./artifacts",
   },
   typechain: {
     outDir: "./typechain",
-    target: process.env.TYPECHAIN_TARGET || "ethers-v5",
+    target: "ethers-v5",
   },
   mocha: {
     timeout: 100000,
   },
 };
+
+export default config;
