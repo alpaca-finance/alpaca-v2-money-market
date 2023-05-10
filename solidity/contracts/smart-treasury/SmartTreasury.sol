@@ -38,11 +38,11 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     uint256 _burnAmount,
     uint256 _totalAmount
   );
-  event LogSetAllocs(
+  event LogSetAllocPoints(
     uint256 _revenueAllocPoint,
     uint256 _devAllocPoint,
     uint256 _burnAllocPoint,
-    uint256 totalAllocPoint
+    uint256 _totalAllocPoint
   );
   event LogSetRevenueToken(address _revenueToken);
   event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
@@ -91,7 +91,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     devAllocPoint = _devAllocPoint;
     burnAllocPoint = _burnAllocPoint;
 
-    emit LogSetAllocs(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint, totalAllocPoint);
+    emit LogSetAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint, totalAllocPoint);
   }
 
   /// @notice Set revenue token
@@ -137,7 +137,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
 
     uint256 _amount = IERC20(_token).balanceOf(address(this));
-    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _splitPayment(_amount);
+    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(_amount);
 
     if (_revenueAmount != 0) {
       IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
@@ -166,7 +166,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     emit LogDistribute(_token, _revenueAmount, _devAmount, _burnAmount, _amount);
   }
 
-  function _splitPayment(uint256 _amount)
+  function _allocate(uint256 _amount)
     internal
     view
     returns (
