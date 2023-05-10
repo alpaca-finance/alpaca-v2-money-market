@@ -51,6 +51,10 @@ interface IMoneyMarketAccountManager {
 
   function depositAndStake(address _token, uint256 _amount) external;
 
+  function depositETHAndStake() external payable;
+
+  function unstakeAndWithdrawETH(uint256 _amount) external;
+
   function unstakeAndWithdraw(address _ibToken, uint256 _amount) external;
 
   function borrow(
