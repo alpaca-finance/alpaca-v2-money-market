@@ -23,7 +23,7 @@ contract SetAllocPointScript is BaseScript {
     _startDeployerBroadcast();
 
     // TODO: how much for each?
-    smartTreasury.setAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
+    // smartTreasury.setAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
 
     _stopBroadcast();
   }

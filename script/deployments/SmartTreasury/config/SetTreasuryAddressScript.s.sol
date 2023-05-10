@@ -24,7 +24,7 @@ contract SetTreasuryAddressScript is BaseScript {
 
     // TODO: pending revenueTreasury, devTreasury, burnTreasury
 
-    smartTreasury.setTreasuryAddresses(_revenueTreasury, _devTreasury, _burnTreasury);
+    // smartTreasury.setTreasuryAddresses(_revenueTreasury, _devTreasury, _burnTreasury);
 
     _stopBroadcast();
   }

@@ -23,7 +23,7 @@ contract SetRevenueTokenScript is BaseScript {
     _startDeployerBroadcast();
 
     // TODO: what's token?
-    smartTreasury.setRevenueToken(_revenueToken);
+    // smartTreasury.setRevenueToken(_revenueToken);
 
     _stopBroadcast();
   }

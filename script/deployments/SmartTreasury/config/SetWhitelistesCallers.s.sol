@@ -22,12 +22,11 @@ contract SetWhitelistesCallers is BaseScript {
 
     _startDeployerBroadcast();
 
-    address[] memory _callers = new address()[1];
-
     // TODO: who is operator (keeper)
-    // _callers[0] = address();
 
-    smartTreasury.setWhitelistedCallers(_callers, true);
+    // address[] memory _callers = new address()[1];
+    // _callers[0] = address();
+    // smartTreasury.setWhitelistedCallers(_callers, true);
 
     _stopBroadcast();
   }
