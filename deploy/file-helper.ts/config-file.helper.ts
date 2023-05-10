@@ -20,6 +20,10 @@ export class ConfigFileHelper {
     this._writeConfigFile(this.config);
   }
 
+  public getConfig() {
+    return this.config;
+  }
+
   private _writeConfigFile(config: Config) {
     console.log(`>> Writing ${this.filePath}`);
     fs.writeFileSync(this.filePath, JSON.stringify(config, null, 2));
