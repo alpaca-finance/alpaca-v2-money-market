@@ -6,14 +6,15 @@ interface ISmartTreasury {
   error SmartTreasury_PathConfigNotFound();
   error SmartTreasury_Unauthorized();
 
-  // call to auto split target token to each destination
+  struct AllocPoints {
+    uint16 revenueAllocPoint;
+    uint16 devAllocPoint;
+    uint16 burnAllocPoint;
+  }
+
   function distribute(address[] calldata _tokens) external;
 
-  function setAllocPoints(
-    uint256 _revenueAllocPoint,
-    uint256 _devAllocPoint,
-    uint256 _burnAllocPoint
-  ) external;
+  function setAllocPoints(AllocPoints calldata _allocPoints) external;
 
   function setRevenueToken(address _revenueToken) external;
 

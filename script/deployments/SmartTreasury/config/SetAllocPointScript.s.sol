@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import "../../../BaseScript.sol";
 
 import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
+import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract SetAllocPointScript is BaseScript {
@@ -23,6 +24,8 @@ contract SetAllocPointScript is BaseScript {
     _startDeployerBroadcast();
 
     // TODO: how much for each?
+
+    // ISmartTreasury.AllocPoints memory _allocPoints = ISmartTreasury.AllocPoints(x,x,x);
     // smartTreasury.setAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
 
     _stopBroadcast();

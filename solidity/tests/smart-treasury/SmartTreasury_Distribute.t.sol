@@ -19,7 +19,8 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.startPrank(ALICE);
     // setup revenue token, alloc points and treasury address
     smartTreasury.setRevenueToken(address(usdt));
-    smartTreasury.setAllocPoints(100, 100, 100);
+    ISmartTreasury.AllocPoints memory _allocPoints = ISmartTreasury.AllocPoints(100, 100, 100);
+    smartTreasury.setAllocPoints(_allocPoints);
     smartTreasury.setTreasuryAddresses(REVENUE_TREASURY, DEV_TREASURY, BURN_TREASURY);
     vm.stopPrank();
   }
@@ -75,7 +76,7 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
     smartTreasury.distribute(_tokens);
 
-    // Smart treasury must have nothing left
+    // Smart treasury after must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
     assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
   }

@@ -16,33 +16,20 @@ import { ISmartTreasury } from "../interfaces/ISmartTreasury.sol";
 contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   using LibSafeToken for IERC20;
 
-  event LogDistribute(
-    address _token,
-    uint256 _revenueAmount,
-    uint256 _devAmount,
-    uint256 _burnAmount,
-    uint256 _totalAmount
-  );
-  event LogSetAllocPoints(
-    uint256 _revenueAllocPoint,
-    uint256 _devAllocPoint,
-    uint256 _burnAllocPoint,
-    uint256 _totalAllocPoint
-  );
+  event LogDistribute(address _token, uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount);
+  event LogSetAllocPoints(uint256 _revenueAllocPoint, uint256 _devAllocPoint, uint256 _burnAllocPoint);
   event LogSetRevenueToken(address _revenueToken);
   event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
   event LogFailedDistribution(address _token);
   event LogSetTreasuryAddresses(address _revenueTreasury, address _devTreasury, address _burnTreasury);
+  event LogWithdraw(address _token, address _to);
+
+  AllocPoints public allocPoints;
 
   address public revenueTreasury;
   address public devTreasury;
   address public burnTreasury;
   address public revenueToken;
-
-  uint256 public revenueAllocPoint;
-  uint256 public devAllocPoint;
-  uint256 public burnAllocPoint;
-  uint256 public totalAllocPoint;
 
   mapping(address => bool) public whitelistedCallers;
 
@@ -80,20 +67,13 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   }
 
   /// @notice Set allocation points
-  /// @param _revenueAllocPoint An allocation point for revenue treasury.
-  /// @param _devAllocPoint An allocation point for dev treasury.
-  /// @param _burnAllocPoint An allocation point for burn treasury.
-  function setAllocPoints(
-    uint256 _revenueAllocPoint,
-    uint256 _devAllocPoint,
-    uint256 _burnAllocPoint
-  ) external onlyWhitelisted {
-    totalAllocPoint = _revenueAllocPoint + _devAllocPoint + _burnAllocPoint;
-    revenueAllocPoint = _revenueAllocPoint;
-    devAllocPoint = _devAllocPoint;
-    burnAllocPoint = _burnAllocPoint;
+  /// @param _allocPoints A struct of treasury addresses
+  function setAllocPoints(AllocPoints calldata _allocPoints) external onlyWhitelisted {
+    allocPoints.revenueAllocPoint = _allocPoints.revenueAllocPoint;
+    allocPoints.devAllocPoint = _allocPoints.devAllocPoint;
+    allocPoints.burnAllocPoint = _allocPoints.burnAllocPoint;
 
-    emit LogSetAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint, totalAllocPoint);
+    emit LogSetAllocPoints(_allocPoints.revenueAllocPoint, _allocPoints.devAllocPoint, _allocPoints.burnAllocPoint);
   }
 
   /// @notice Set revenue token
@@ -141,13 +121,13 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   }
 
   function _distribute(address _token) internal {
-    bytes memory _path = pathReader.paths(_token, revenueToken);
-    if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
-
     uint256 _amount = IERC20(_token).balanceOf(address(this));
     (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(_amount);
 
     if (_revenueAmount != 0) {
+      bytes memory _path = pathReader.paths(_token, revenueToken);
+      if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
+
       IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
         path: _path,
         recipient: revenueTreasury,
@@ -172,7 +152,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       IERC20(_token).safeTransfer(burnTreasury, _burnAmount);
     }
 
-    emit LogDistribute(_token, _revenueAmount, _devAmount, _burnAmount, _amount);
+    emit LogDistribute(_token, _revenueAmount, _devAmount, _burnAmount);
   }
 
   function _allocate(uint256 _amount)
@@ -185,11 +165,31 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     )
   {
     if (_amount != 0) {
-      _devAmount = (_amount * devAllocPoint) / totalAllocPoint;
-      _burnAmount = (_amount * burnAllocPoint) / totalAllocPoint;
+      AllocPoints memory _allocPoints = allocPoints;
+      uint64 _totalAllocPoint = _allocPoints.revenueAllocPoint +
+        _allocPoints.devAllocPoint +
+        _allocPoints.burnAllocPoint;
+      _devAmount = (_amount * _allocPoints.devAllocPoint) / _totalAllocPoint;
+      _burnAmount = (_amount * _allocPoints.burnAllocPoint) / _totalAllocPoint;
       unchecked {
         _revenueAmount = _amount - _devAmount - _burnAmount;
       }
     }
+  }
+
+  function withdraw(address[] calldata _tokens, address _to) external onlyOwner {
+    uint256 _length = _tokens.length;
+    for (uint256 _i; _i < _length; ) {
+      _withdraw(_tokens[_i], _to);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  function _withdraw(address _token, address _to) internal {
+    uint256 _amount = IERC20(_token).balanceOf(address(this));
+    IERC20(_token).transfer(_to, _amount);
+    emit LogWithdraw(_token, _to);
   }
 }
