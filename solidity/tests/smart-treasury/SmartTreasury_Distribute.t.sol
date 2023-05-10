@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import { BaseFork } from "./BaseFork.sol";
-import { ISmartTreasury } from "solidity/contracts/smart-treasury/ISmartTreasury.sol";
+import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 

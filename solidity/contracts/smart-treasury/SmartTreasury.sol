@@ -11,25 +11,10 @@ import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
 import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
 import { IPancakeSwapRouterV3 } from "../money-market/interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "../money-market/interfaces/IERC20.sol";
-import { ISmartTreasury } from "./ISmartTreasury.sol";
+import { ISmartTreasury } from "../interfaces/ISmartTreasury.sol";
 
 contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   using LibSafeToken for IERC20;
-
-  address public revenueTreasury;
-  address public devTreasury;
-  address public burnTreasury;
-  address public revenueToken;
-
-  mapping(address => bool) public whitelistedCallers;
-
-  uint256 public revenueAllocPoint;
-  uint256 public devAllocPoint;
-  uint256 public burnAllocPoint;
-  uint256 public totalAllocPoint;
-
-  IPancakeSwapRouterV3 public router;
-  IUniSwapV3PathReader public pathReader;
 
   event LogDistribute(
     address _token,
@@ -46,6 +31,23 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   );
   event LogSetRevenueToken(address _revenueToken);
   event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
+  event LogFailedDistribution(address _token);
+  event LogSetTreasuryAddresses(address _revenueTreasury, address _devTreasury, address _burnTreasury);
+
+  address public revenueTreasury;
+  address public devTreasury;
+  address public burnTreasury;
+  address public revenueToken;
+
+  uint256 public revenueAllocPoint;
+  uint256 public devAllocPoint;
+  uint256 public burnAllocPoint;
+  uint256 public totalAllocPoint;
+
+  mapping(address => bool) public whitelistedCallers;
+
+  IPancakeSwapRouterV3 public router;
+  IUniSwapV3PathReader public pathReader;
 
   modifier onlyWhitelisted() {
     if (!whitelistedCallers[msg.sender]) {
@@ -112,9 +114,15 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     address _devTreasury,
     address _burnTreasury
   ) external onlyWhitelisted {
+    if (_revenueTreasury == address(0) || _devTreasury == address(0) || _burnTreasury == address(0)) {
+      revert SmartTreasury_InvalidAddress();
+    }
+
     revenueTreasury = _revenueTreasury;
     devTreasury = _devTreasury;
     burnTreasury = _burnTreasury;
+
+    emit LogSetTreasuryAddresses(_revenueTreasury, _devTreasury, _burnTreasury);
   }
 
   /// @notice Set whitelisted callers
@@ -151,6 +159,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       // Direct send to revenue treasury
       IERC20(_token).safeApprove(address(router), _revenueAmount);
       try router.exactInput(params) {} catch {
+        emit LogFailedDistribution(_token);
         return;
       }
     }

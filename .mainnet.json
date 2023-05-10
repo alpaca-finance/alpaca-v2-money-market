@@ -194,5 +194,12 @@
       }
     ]
   },
-  "moneyMarketReader": "0x1d3cb2f91207afDA9E9baB89caDE1a4c3222cf6a"
+  "moneyMarketReader": "0x1d3cb2f91207afDA9E9baB89caDE1a4c3222cf6a",
+  "smartTreasury": {
+    "implementation": "",
+    "proxy": ""
+  },
+  "pathReader": {
+    "v3": ""
+  }
 }

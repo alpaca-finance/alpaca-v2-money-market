@@ -15,6 +15,7 @@ import { IBorrowFacet } from "solidity/contracts/money-market/interfaces/IBorrow
 import { ILendFacet } from "solidity/contracts/money-market/interfaces/ILendFacet.sol";
 import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
 import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
+import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
@@ -48,12 +49,16 @@ abstract contract BaseScript is Script {
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
+  ISmartTreasury internal smartTreasury;
 
   // shareConfig
   address internal fixFeeModel500Bps;
   address internal doubleSlope1;
   address internal doubleSlope2;
   address internal doubleSlope3;
+
+  // path reader
+  address internal pathReaderV3;
 
   // tokens
   address internal ada;
@@ -79,6 +84,7 @@ abstract contract BaseScript is Script {
     moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
+    smartTreasury = abi.decode(configJson.parseRaw(".smartTreasury.proxy"), (ISmartTreasury));
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
@@ -91,6 +97,9 @@ abstract contract BaseScript is Script {
     doubleSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope1"), (address));
     doubleSlope2 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope2"), (address));
     doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
+
+    // path reader
+    pathReaderV3 = abi.decode(configJson.parseRaw(".pathReader.v3"), (address));
 
     ibTokenImplementation = abi.decode(
       configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),
