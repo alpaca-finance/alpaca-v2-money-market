@@ -419,10 +419,20 @@ contract ViewFacet is IViewFacet {
   /// @notice Get flashloan fees
   /// @return _flashloanFeeBps the flashloan fee collected by protocol
   /// @return _lenderFlashloanBps the portion that lenders will receive from _flashloanFeeBps
-  function getFlashloanFeeParams() external view returns (uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) {
+  /// @return _flashloanTreasury Flashloan treasury address
+  function getFlashloanParams()
+    external
+    view
+    returns (
+      uint16 _flashloanFeeBps,
+      uint16 _lenderFlashloanBps,
+      address _flashloanTreasury
+    )
+  {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     _flashloanFeeBps = moneyMarketDs.flashloanFeeBps;
     _lenderFlashloanBps = moneyMarketDs.lenderFlashloanBps;
+    _flashloanTreasury = moneyMarketDs.flashloanTreasury;
   }
 
   /// @notice Get the address of repurchase reward model
@@ -464,5 +474,45 @@ contract ViewFacet is IViewFacet {
   /// @return miniFL address
   function getMiniFL() external view returns (address) {
     return address(LibMoneyMarket01.moneyMarketDiamondStorage().miniFL);
+  }
+
+  /// @notice Check given address is in liquidationStrat whitelist
+  /// @param _strat Strat address
+  /// @return Bool True if address is in liquidationStrat whitelist
+  function isLiquidationStratOk(address _strat) external view returns (bool) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.liquidationStratOk[_strat];
+  }
+
+  /// @notice Check given address is in liquidator whitelist
+  /// @param _liquidator Liquidator address
+  /// @return Bool True if address is in liquidator whitelist
+  function isLiquidatorOk(address _liquidator) external view returns (bool) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.liquidatorsOk[_liquidator];
+  }
+
+  /// @notice Check given address is in account manager whitelist
+  /// @param _accountManger account manager address
+  /// @return Bool True if address is in account manager whitelist
+  function isAccountManagersOk(address _accountManger) external view returns (bool) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.accountManagersOk[_accountManger];
+  }
+
+  /// @notice Check given address is in risk manager whitelist
+  /// @param _riskManager risk manager address
+  /// @return Bool True if address is in risk manager whitelist
+  function isRiskManagersOk(address _riskManager) external view returns (bool) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.riskManagersOk[_riskManager];
+  }
+
+  /// @notice Check given address is in operator whitelist
+  /// @param _operator operator address
+  /// @return Bool True if address is in operator whitelist
+  function isOperatorsOk(address _operator) external view returns (bool) {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    return moneyMarketDs.operatorsOk[_operator];
   }
 }

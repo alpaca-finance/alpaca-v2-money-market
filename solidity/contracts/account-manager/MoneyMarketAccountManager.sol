@@ -287,6 +287,45 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     miniFL.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
   }
 
+  /// @notice Deposit native token to Money Market and stake the ibToken to miniFL
+  function depositETHAndStake() external payable {
+    // revert if trying to deposit 0
+    if (msg.value == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
+    // Wrap the native token as MoneyMarket only accepts ERC20
+    IWNative(wNativeToken).deposit{ value: msg.value }();
+
+    // deposit wrapped native token to MoneyMarket
+    (address _ibToken, uint256 _amountReceived) = _deposit(wNativeToken, msg.value);
+
+    // Use the received ibToken and stake it at miniFL on bahalf of the caller
+    IERC20(_ibToken).safeApprove(address(miniFL), _amountReceived);
+
+    miniFL.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
+  }
+
+  /// @notice Unstake ibToken from miniFL and withdraw as native token from MoneyMarket
+  /// @param _ibTokenAmount The amount to withdraw
+  function unstakeAndWithdrawETH(uint256 _ibTokenAmount) external {
+    // revert if trying to remove 0
+
+    if (_ibTokenAmount == 0) {
+      revert MoneyMarketAccountManager_InvalidAmount();
+    }
+    // unstake from miniFL with given amount
+    // If the transaction went through, the amount received will always equals to the _amount
+    miniFL.withdraw(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(ibWNativeToken), _ibTokenAmount);
+
+    //  withdraw all of the ibToken received from unstaking from miniFL
+    (, uint256 _underlyingAmountReceived) = _withdraw(ibWNativeToken, _ibTokenAmount);
+
+    // The _underlyingAmountReceived is expected to be greater than 0
+    // making the ERC20.transfer impossible to revert on transfer 0 amount
+    // unwrap the wNativeToken and send back to the msg.sender
+    _safeUnwrap(msg.sender, _underlyingAmountReceived);
+  }
+
   /// @notice Unstake ibToken from miniFL and withdraw from MoneyMarket
   /// @param _ibToken The ibToken token to withdraw
   /// @param _ibTokenAmount The amount to withdraw
