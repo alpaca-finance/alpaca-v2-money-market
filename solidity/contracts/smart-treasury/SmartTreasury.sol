@@ -6,12 +6,14 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 
 // ---- Libraries ---- //
 import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 // ---- Interfaces ---- //
 import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
 import { IPancakeSwapRouterV3 } from "../money-market/interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "../money-market/interfaces/IERC20.sol";
 import { ISmartTreasury } from "../interfaces/ISmartTreasury.sol";
+import { IOracleMedianizer } from "solidity/contracts/oracle/interfaces/IOracleMedianizer.sol";
 
 contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   using LibSafeToken for IERC20;
@@ -20,7 +22,8 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   event LogSetAllocPoints(uint256 _revenueAllocPoint, uint256 _devAllocPoint, uint256 _burnAllocPoint);
   event LogSetRevenueToken(address _revenueToken);
   event LogSetWhitelistedCaller(address indexed _caller, bool _allow);
-  event LogFailedDistribution(address _token);
+  event LogFailedDistribution(address _token, bytes _reason);
+  event LogSetSlippageToleranceBps(uint256 _slippageToleranceBps);
   event LogSetTreasuryAddresses(address _revenueTreasury, address _devTreasury, address _burnTreasury);
   event LogWithdraw(address _token, address _to);
 
@@ -30,11 +33,15 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   address public devTreasury;
   address public burnTreasury;
   address public revenueToken;
+  uint256 public slippageToleranceBps;
+
+  address public constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
   mapping(address => bool) public whitelistedCallers;
 
   IPancakeSwapRouterV3 public router;
   IUniSwapV3PathReader public pathReader;
+  IOracleMedianizer public oracleMedianizer;
 
   modifier onlyWhitelisted() {
     if (!whitelistedCallers[msg.sender]) {
@@ -47,10 +54,15 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     _disableInitializers();
   }
 
-  function initialize(address _router, address _pathReader) external initializer {
+  function initialize(
+    address _router,
+    address _pathReader,
+    address _oracleMedianizer
+  ) external initializer {
     OwnableUpgradeable.__Ownable_init();
     router = IPancakeSwapRouterV3(_router);
     pathReader = IUniSwapV3PathReader(_pathReader);
+    oracleMedianizer = IOracleMedianizer(_oracleMedianizer);
   }
 
   /// @notice Distribute the balance in this contract to each treasury
@@ -120,27 +132,52 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     }
   }
 
+  function setSlippageToleranceBps(uint256 _slippageToleranceBps) external onlyWhitelisted {
+    slippageToleranceBps = _slippageToleranceBps;
+    emit LogSetSlippageToleranceBps(_slippageToleranceBps);
+  }
+
+  function _getMinAmountOut(
+    address _tokenIn,
+    address _tokenOut,
+    uint256 _amountIn
+  ) internal view returns (uint256 _minAmountOut) {
+    (uint256 _tokenInPrice, ) = oracleMedianizer.getPrice(_tokenIn, USD);
+
+    uint256 _minAmountOutUSD = (_amountIn * _tokenInPrice * (LibConstant.MAX_BPS - slippageToleranceBps)) /
+      (IERC20(_tokenIn).decimals() * LibConstant.MAX_BPS);
+
+    (uint256 _tokenOutPrice, ) = oracleMedianizer.getPrice(_tokenOut, USD);
+    _minAmountOut = ((_minAmountOutUSD * IERC20(_tokenOut).decimals()) / _tokenOutPrice);
+  }
+
   function _distribute(address _token) internal {
     uint256 _amount = IERC20(_token).balanceOf(address(this));
     (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(_amount);
 
     if (_revenueAmount != 0) {
-      bytes memory _path = pathReader.paths(_token, revenueToken);
-      if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
+      if (_token == revenueToken) {
+        IERC20(_token).safeTransfer(revenueTreasury, _revenueAmount);
+      } else {
+        bytes memory _path = pathReader.paths(_token, revenueToken);
+        if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
 
-      IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
-        path: _path,
-        recipient: revenueTreasury,
-        deadline: block.timestamp,
-        amountIn: _revenueAmount,
-        amountOutMinimum: 0
-      });
+        uint256 _minAmountOut = _getMinAmountOut(_token, revenueToken, _revenueAmount);
 
-      // Direct send to revenue treasury
-      IERC20(_token).safeApprove(address(router), _revenueAmount);
-      try router.exactInput(params) {} catch {
-        emit LogFailedDistribution(_token);
-        return;
+        IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
+          path: _path,
+          recipient: revenueTreasury,
+          deadline: block.timestamp,
+          amountIn: _revenueAmount,
+          amountOutMinimum: _minAmountOut
+        });
+
+        // Direct send to revenue treasury
+        IERC20(_token).safeApprove(address(router), _revenueAmount);
+        try router.exactInput(params) {} catch (bytes memory _reason) {
+          emit LogFailedDistribution(_token, _reason);
+          return;
+        }
       }
     }
 

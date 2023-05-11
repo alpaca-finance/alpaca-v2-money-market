@@ -13,6 +13,7 @@ import { SmartTreasury } from "solidity/contracts/smart-treasury/SmartTreasury.s
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 import { IQuoterV2 } from "solidity/tests/interfaces/IQuoterV2.sol";
+import { IOracleMedianizer } from "solidity/contracts/oracle/interfaces/IOracleMedianizer.sol";
 
 contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   using stdStorage for StdStorage;
@@ -28,6 +29,8 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   address CHARLIE = makeAddr("CHARLIE");
   address EVE = makeAddr("EVE");
 
+  address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
+
   // Treasury
   address REVENUE_TREASURY = makeAddr("REVENUE_TREASURY");
   address DEV_TREASURY = makeAddr("DEV_TREASURY");
@@ -37,11 +40,15 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   IERC20 public constant wbnb = IERC20(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
   IERC20 public constant usdt = IERC20(0x55d398326f99059fF775485246999027B3197955);
   IERC20 public constant cake = IERC20(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
+  IERC20 public constant doge = IERC20(0xbA2aE424d960c26247Dd6c32edC70B295c744C43);
+
+  address internal usd = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
   IPancakeSwapRouterV3 internal router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
   PCSV3PathReader internal pathReader;
   SmartTreasury internal smartTreasury;
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
+  IOracleMedianizer internal oracleMedianizer = IOracleMedianizer(0x553b8adc2Ac16491Ec57239BeA7191719a2B880c);
 
   function setUp() public virtual {
     vm.createSelectFork("bsc_mainnet", 27_515_914);
@@ -55,12 +62,13 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
 
     vm.startPrank(DEPLOYER);
     proxyAdmin = _setupProxyAdmin();
-    smartTreasury = deploySmartTreasury(address(router), address(pathReader));
+    smartTreasury = deploySmartTreasury(address(router), address(pathReader), address(oracleMedianizer));
     vm.stopPrank();
 
     vm.label(address(wbnb), "WBNB");
     vm.label(address(usdt), "USDT");
     vm.label(address(cake), "CAKE");
+    vm.label(address(doge), "DOGE");
 
     vm.label(ALICE, "ALICE");
     vm.label(BOB, "BOB");
@@ -73,14 +81,20 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
 
     vm.label(address(router), "PancakeSwapRouterV3");
     vm.label(address(smartTreasury), "SmartTreasury");
+    vm.label(address(oracleMedianizer), "OracleMedianizer");
   }
 
-  function deploySmartTreasury(address _router, address _pathReader) internal returns (SmartTreasury) {
+  function deploySmartTreasury(
+    address _router,
+    address _pathReader,
+    address _oracle
+  ) internal returns (SmartTreasury) {
     bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/SmartTreasury.sol/SmartTreasury.json"));
     bytes memory _initializer = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address)")),
+      bytes4(keccak256("initialize(address,address,address)")),
       _router,
-      _pathReader
+      _pathReader,
+      _oracle
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return SmartTreasury(_proxy);
