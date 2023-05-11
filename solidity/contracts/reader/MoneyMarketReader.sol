@@ -29,7 +29,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
   }
 
   /// @dev Get the reward summary
-  /// @param _pId Pool if of miniFL
+  /// @param _pId Pool id of miniFL
   /// @param _account The account address
   /// @param _rewarders List of rewarder addresses associate with miniFL pId
   function getRewardSummary(
