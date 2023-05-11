@@ -37,6 +37,9 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   address BURN_TREASURY = makeAddr("BURN_TREASURY");
 
   // Token
+
+  IERC20 public constant btcb = IERC20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
+  IERC20 public constant eth = IERC20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
   IERC20 public constant wbnb = IERC20(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
   IERC20 public constant usdt = IERC20(0x55d398326f99059fF775485246999027B3197955);
   IERC20 public constant cake = IERC20(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
@@ -65,6 +68,7 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
     smartTreasury = deploySmartTreasury(address(router), address(pathReader), address(oracleMedianizer));
     vm.stopPrank();
 
+    vm.label(address(eth), "ETH");
     vm.label(address(wbnb), "WBNB");
     vm.label(address(usdt), "USDT");
     vm.label(address(cake), "CAKE");

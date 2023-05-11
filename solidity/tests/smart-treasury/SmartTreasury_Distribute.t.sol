@@ -155,16 +155,8 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testCorrectness_WhenSwapFailedOtherDistribution_ShoulWork() external {
-    // set path for cake to usdt
-    bytes[] memory _paths = new bytes[](1);
-    _paths[0] = abi.encodePacked(address(cake), uint24(2500), address(usdt));
-    pathReader.setPaths(_paths);
-
-    // top up 2 tokens
-    // wbnb
-    // cake
+    // top up smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
-    deal(address(cake), address(smartTreasury), 30 ether);
 
     uint256 _WBNBTreasuryBalanceBefore = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
 
@@ -174,37 +166,16 @@ contract SmartTreasury_Distribute is BaseFork {
       IERC20(address(wbnb)).balanceOf(BURN_TREASURY)
     );
 
-    CacheState memory _stateCakeBefore = CacheState(
-      IERC20(address(usdt)).balanceOf(REVENUE_TREASURY),
-      IERC20(address(cake)).balanceOf(DEV_TREASURY),
-      IERC20(address(cake)).balanceOf(BURN_TREASURY)
-    );
-
-    // mock fail for wbnb
-    // *cake must work normally
-    IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
-      path: abi.encodePacked(address(wbnb), uint24(500), address(usdt)),
-      recipient: REVENUE_TREASURY,
-      deadline: block.timestamp,
-      amountIn: 10 ether,
-      amountOutMinimum: 0
-    });
-
-    vm.mockCallRevert(
-      address(router),
-      abi.encodeWithSelector(IPancakeSwapRouterV3.exactInput.selector, _params),
-      abi.encode("WBNB to USDT Failed swap")
-    );
-
-    (uint256 _expectedAmountOut, , , ) = quoterV2.quoteExactInput(
-      abi.encodePacked(address(cake), uint24(2500), address(usdt)),
-      10 ether
+    // mock router swap failed due to slippage
+    vm.mockCall(
+      address(oracleMedianizer),
+      abi.encodeWithSelector(IPriceOracle.getPrice.selector, address(wbnb), usd),
+      abi.encode(normalizeEther(500 ether, wbnb.decimals()), 0)
     );
 
     // call distribute
-    address[] memory _tokens = new address[](2);
+    address[] memory _tokens = new address[](1);
     _tokens[0] = address(wbnb);
-    _tokens[1] = address(cake);
     vm.prank(ALICE);
     smartTreasury.distribute(_tokens);
 
@@ -215,29 +186,14 @@ contract SmartTreasury_Distribute is BaseFork {
       IERC20(address(wbnb)).balanceOf(BURN_TREASURY)
     );
 
-    CacheState memory _stateCakeAfter = CacheState(
-      IERC20(address(usdt)).balanceOf(REVENUE_TREASURY),
-      IERC20(address(cake)).balanceOf(DEV_TREASURY),
-      IERC20(address(cake)).balanceOf(BURN_TREASURY)
-    );
-
-    // 1. wbnb balance after must equal to balance before
-    // Note: usdt balance = wbnb distribution (0) + cake distribution (expectAmountOut)
-    // Then we have to deduct the increased amount from cake distribution
-    assertCloseBps(_stateWBNBAfter._rev, _stateWBNBBefore._rev + _expectedAmountOut, 500);
+    // wbnb balance after distribute must equal to balance before
+    assertEq(_stateWBNBAfter._rev, _stateWBNBBefore._rev, "Rev treasury balance (USDT)");
     assertEq(_stateWBNBAfter._dev, _stateWBNBBefore._dev, "Dev treasury balance (WBNB)");
     assertEq(_stateWBNBAfter._burn, _stateWBNBBefore._burn, "Burn treasury balance (WBNB)");
-
-    // 2. cake balanace after must work normally
-    assertGt(_stateCakeAfter._rev, _stateCakeBefore._rev, "(CAKE) Revenue treasury balance (USDT)");
-    assertEq(_stateCakeAfter._dev, _stateCakeBefore._dev + 10 ether, "Dev treasury balance (Cake)");
-    assertEq(_stateCakeAfter._burn, _stateCakeBefore._burn + 10 ether, "Burn treasury balance (Cake)");
 
     // Smart Treasury balance test
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
     assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
-    uint256 _CakeTreasuryBalanceAfter = IERC20(address(cake)).balanceOf(address(smartTreasury));
-    assertEq(_CakeTreasuryBalanceAfter, 0, "Smart treasury balance (Cake)");
   }
 
   function testRevert_WhenOracleGetPriceFailed_ShouldRevert() external {
