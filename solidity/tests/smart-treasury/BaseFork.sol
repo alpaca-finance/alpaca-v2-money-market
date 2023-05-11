@@ -42,6 +42,7 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   IERC20 public constant eth = IERC20(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
   IERC20 public constant wbnb = IERC20(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
   IERC20 public constant usdt = IERC20(0x55d398326f99059fF775485246999027B3197955);
+  IERC20 public constant usdc = IERC20(0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d);
   IERC20 public constant cake = IERC20(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
   IERC20 public constant doge = IERC20(0xbA2aE424d960c26247Dd6c32edC70B295c744C43);
 
@@ -54,12 +55,13 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   IOracleMedianizer internal oracleMedianizer = IOracleMedianizer(0x553b8adc2Ac16491Ec57239BeA7191719a2B880c);
 
   function setUp() public virtual {
-    vm.createSelectFork("bsc_mainnet", 27_515_914);
+    vm.createSelectFork("bsc_mainnet", 28_113_725);
 
     pathReader = new PCSV3PathReader();
     // set path for
-    bytes[] memory _paths = new bytes[](1);
+    bytes[] memory _paths = new bytes[](2);
     _paths[0] = abi.encodePacked(address(wbnb), uint24(500), address(usdt));
+    _paths[1] = abi.encodePacked(address(eth), uint24(500), address(usdc), uint24(100), address(usdt));
 
     pathReader.setPaths(_paths);
 
@@ -71,6 +73,7 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
     vm.label(address(eth), "ETH");
     vm.label(address(wbnb), "WBNB");
     vm.label(address(usdt), "USDT");
+    vm.label(address(usdc), "USDC");
     vm.label(address(cake), "CAKE");
     vm.label(address(doge), "DOGE");
 

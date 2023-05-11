@@ -46,13 +46,12 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testCorrectness_CallDistribute_ShouldWork() external {
-    // state before distribute
-    uint256 _revenueBalanceBefore = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
-    uint256 _devBalanceBefore = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
-    uint256 _burnBalanceBefore = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
+    // state before distribution
+    uint256 _USDTrevenueBalanceBefore = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
+    uint256 _WBNBdevBalanceBefore = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
+    uint256 _WBNBburnBalanceBefore = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
 
-    // top up balance smart treasury
-    // top up wbnb
+    // top up wbnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
 
     address[] memory _tokens = new address[](1);
@@ -60,32 +59,31 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.prank(ALICE);
     smartTreasury.distribute(_tokens);
 
-    // expect amount
+    // expect amount in usdt
     (uint256 _expectedAmountOut, , , ) = quoterV2.quoteExactInput(
       abi.encodePacked(address(wbnb), uint24(500), address(usdt)),
       10 ether
     );
 
     // state after distribute
-    uint256 _revenueBalanceAfter = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
-    uint256 _devBalanceAfter = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
-    uint256 _burnBalanceAfter = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
+    uint256 _USDTrevenueBalanceAfter = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
+    uint256 _WBNBdevBalanceAfter = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
+    uint256 _WBNBburnBalanceAfter = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
 
-    // rev treasury (get usdt)
-    // tolerance ~5%
-    assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectedAmountOut, 500);
-    // dev treasury (get wbnb)
-    assertEq(_devBalanceAfter, _devBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
+    // rev treasury (USDT)
+    assertCloseBps(_USDTrevenueBalanceAfter, _USDTrevenueBalanceBefore + _expectedAmountOut, 100);
+    // dev treasury (WBNB)
+    assertEq(_WBNBdevBalanceAfter, _WBNBdevBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
+    // burn treasury (WBNB)
+    assertEq(_WBNBburnBalanceAfter, _WBNBburnBalanceBefore + 10 ether, "Burn Treasury Balance (WBNB)");
 
-    // burn treasury (get wbnb)
-    assertEq(_burnBalanceAfter, _burnBalanceBefore + 10 ether, "Burn Treasury Balance (WBNB)");
-
-    // Smart treasury after must equal to before
-    uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
-    assertEq(_WBNBTreasuryBalanceAfter, 0, "Smart treasury balance (WBNB)");
+    // Smart treasury must have nothing
+    uint256 _WBNBSmartTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
+    assertEq(_WBNBSmartTreasuryBalanceAfter, 0, "Smart treasury balance (WBNB)");
   }
 
   function testRevert_UnauthorizedCallDistribute_ShouldRevert() external {
+    // top up wbnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
     uint256 _WBNBTreasuryBalanceBefore = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
 
@@ -96,7 +94,7 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
     smartTreasury.distribute(_tokens);
 
-    // Smart treasury after must equal to before
+    // Smart treasury after distributed must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
     assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
   }
@@ -112,22 +110,22 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.expectRevert(ISmartTreasury.SmartTreasury_PathConfigNotFound.selector);
     smartTreasury.distribute(_tokens);
 
-    // Smart treasury after must equal to before
+    // Smart treasury after distributed must equal to before
     uint256 _cakeTreasuryBalanceAfter = IERC20(address(cake)).balanceOf(address(smartTreasury));
     assertEq(_cakeTreasuryBalanceAfter, _cakeTreasuryBalanceBefore, "Smart treasury balance (Cake)");
   }
 
   function testCorrectness_DistributeFailedFromSwap_ShouldNotDistribute() external {
-    // top up balance smart treasury
-    // top up wbnb
+    // top up wbnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
     uint256 _WBNBTreasuryBalanceBefore = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
 
     // state before distribute
-    uint256 _revenueBalanceBefore = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
-    uint256 _devBalanceBefore = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
-    uint256 _burnBalanceBefore = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
+    uint256 _USDTrevenueBalanceBefore = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
+    uint256 _WBNBdevBalanceBefore = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
+    uint256 _WBNBburnBalanceBefore = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
 
+    // mock swap failed
     vm.mockCallRevert(
       address(router),
       abi.encodeWithSelector(IPancakeSwapRouterV3.exactInput.selector),
@@ -145,9 +143,9 @@ contract SmartTreasury_Distribute is BaseFork {
     uint256 _burnBalanceAfter = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
 
     // after should be equal to before
-    assertEq(_revenueBalanceAfter, _revenueBalanceBefore, "Revenue Treasury Balance (USDT)");
-    assertEq(_devBalanceAfter, _devBalanceBefore, "Dev Treasury Balance (WBNB)");
-    assertEq(_burnBalanceAfter, _burnBalanceBefore, "Burn Treasury Balance (WBNB)");
+    assertEq(_revenueBalanceAfter, _USDTrevenueBalanceBefore, "Revenue Treasury Balance (USDT)");
+    assertEq(_devBalanceAfter, _WBNBdevBalanceBefore, "Dev Treasury Balance (WBNB)");
+    assertEq(_burnBalanceAfter, _WBNBburnBalanceBefore, "Burn Treasury Balance (WBNB)");
 
     // Smart treasury after must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
@@ -155,45 +153,34 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testCorrectness_WhenSwapFailedOtherDistribution_ShoulWork() external {
-    // top up smart treasury
-    deal(address(wbnb), address(smartTreasury), 30 ether);
+    // top up 2 tokens ot treasury
+    // wbnb (failed)
+    // eth (passed)
+    deal(address(wbnb), address(smartTreasury), normalizeEther(3 ether, wbnb.decimals()));
+    deal(address(eth), address(smartTreasury), normalizeEther(3 ether, eth.decimals()));
 
-    uint256 _WBNBTreasuryBalanceBefore = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
+    uint256 _wbnbTreasuryBefore = IERC20(wbnb).balanceOf(address(smartTreasury));
 
-    CacheState memory _stateWBNBBefore = CacheState(
-      IERC20(address(usdt)).balanceOf(REVENUE_TREASURY),
-      IERC20(address(wbnb)).balanceOf(DEV_TREASURY),
-      IERC20(address(wbnb)).balanceOf(BURN_TREASURY)
-    );
-
-    // mock router swap failed due to slippage
+    // mock fail for wbnb by slippage
     vm.mockCall(
       address(oracleMedianizer),
       abi.encodeWithSelector(IPriceOracle.getPrice.selector, address(wbnb), usd),
       abi.encode(normalizeEther(500 ether, wbnb.decimals()), 0)
     );
 
-    // call distribute
-    address[] memory _tokens = new address[](1);
+    address[] memory _tokens = new address[](2);
     _tokens[0] = address(wbnb);
+    _tokens[1] = address(eth);
     vm.prank(ALICE);
     smartTreasury.distribute(_tokens);
 
-    // state after distribution
-    CacheState memory _stateWBNBAfter = CacheState(
-      IERC20(address(usdt)).balanceOf(REVENUE_TREASURY),
-      IERC20(address(wbnb)).balanceOf(DEV_TREASURY),
-      IERC20(address(wbnb)).balanceOf(BURN_TREASURY)
-    );
+    uint256 _wbnbTreasuryAfter = IERC20(wbnb).balanceOf(address(smartTreasury));
+    uint256 _ethTreasuryAfter = IERC20(eth).balanceOf(address(smartTreasury));
 
-    // wbnb balance after distribute must equal to balance before
-    assertEq(_stateWBNBAfter._rev, _stateWBNBBefore._rev, "Rev treasury balance (USDT)");
-    assertEq(_stateWBNBAfter._dev, _stateWBNBBefore._dev, "Dev treasury balance (WBNB)");
-    assertEq(_stateWBNBAfter._burn, _stateWBNBBefore._burn, "Burn treasury balance (WBNB)");
-
-    // Smart Treasury balance test
-    uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
-    assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
+    // smart treasury (wbnb) before must equal to after
+    assertEq(_wbnbTreasuryAfter, _wbnbTreasuryBefore, "WBNB smart treasury");
+    // smart treasury (eth) must have nothing
+    assertEq(_ethTreasuryAfter, 0, "ETH smart treasury");
   }
 
   function testRevert_WhenOracleGetPriceFailed_ShouldRevert() external {
@@ -213,18 +200,20 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testCorrectness_DecimalDiff_ShouldWork() external {
+    // tokenIn: doge (8 decimals)
+    // tokenOut (revenue token): wbnb (18 decimals)
+
+    // set revenue token
     vm.prank(ALICE);
     smartTreasury.setRevenueToken(address(wbnb));
 
-    // doge 8 decimals
     uint256 _distributeAmount = normalizeEther(3 ether, doge.decimals());
 
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(doge), uint24(2500), address(wbnb));
     pathReader.setPaths(_paths);
 
-    // case 2: in 6 out 18
-    // mock oracle (doge to wbnb)
+    // mock price doge on oracle
     vm.mockCall(
       address(oracleMedianizer),
       abi.encodeWithSelector(IPriceOracle.getPrice.selector, address(doge), usd),
@@ -237,8 +226,7 @@ contract SmartTreasury_Distribute is BaseFork {
       normalizeEther(1 ether, doge.decimals())
     );
 
-    // top up balance smart treasury
-    // top up wbnb
+    // top up doge to smart treasury
     deal(address(doge), address(smartTreasury), _distributeAmount);
 
     address[] memory _tokens = new address[](1);
@@ -246,12 +234,14 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.prank(ALICE);
     smartTreasury.distribute(_tokens);
 
-    uint256 _revenueTreasury = IERC20(address(wbnb)).balanceOf(REVENUE_TREASURY);
-    assertCloseBps(_revenueTreasury, _expectedAmountOut, 100);
+    uint256 _WBNBrevenueTreasury = IERC20(address(wbnb)).balanceOf(REVENUE_TREASURY);
+    assertCloseBps(_WBNBrevenueTreasury, _expectedAmountOut, 100);
 
-    uint256 _devDogeTreasury = IERC20(address(doge)).balanceOf(DEV_TREASURY);
-    assertEq(_devDogeTreasury, normalizeEther(1 ether, doge.decimals()), "DOGE Dev treasury");
+    // expect distributed amount = 1 doge on dev treasury
+    uint256 _DogeDevTreasuryBalance = IERC20(address(doge)).balanceOf(DEV_TREASURY);
+    assertEq(_DogeDevTreasuryBalance, normalizeEther(1 ether, doge.decimals()), "DOGE Dev treasury");
 
+    // expect distributed amount = 1 doge on burn treasury
     uint256 _burnDogeTreasury = IERC20(address(doge)).balanceOf(BURN_TREASURY);
     assertEq(_burnDogeTreasury, normalizeEther(1 ether, doge.decimals()), "DOGE Burn treasury");
   }
@@ -262,8 +252,7 @@ contract SmartTreasury_Distribute is BaseFork {
     uint256 _devBalanceBefore = IERC20(address(usdt)).balanceOf(DEV_TREASURY);
     uint256 _burnBalanceBefore = IERC20(address(usdt)).balanceOf(BURN_TREASURY);
 
-    // top up balance smart treasury
-    // top up usdt
+    // top up usdt to balance smart treasury
     deal(address(usdt), address(smartTreasury), normalizeEther(30 ether, usdt.decimals()));
 
     address[] memory _tokens = new address[](1);
@@ -296,8 +285,7 @@ contract SmartTreasury_Distribute is BaseFork {
     uint256 _devBalanceBefore = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
     uint256 _burnBalanceBefore = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
 
-    // top up balance smart treasury
-    // top up wbnb
+    // top up bnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
 
     // mock oracle under rate
@@ -324,8 +312,7 @@ contract SmartTreasury_Distribute is BaseFork {
     uint256 _burnBalanceAfter = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
 
     // rev treasury (get usdt)
-    // tolerance ~5%
-    assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectedAmountOut, 500);
+    assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectedAmountOut, 100);
     // dev treasury (get wbnb)
     assertEq(_devBalanceAfter, _devBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
 
@@ -338,14 +325,9 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testCorrectness_TooMuchSlippage_ShouldSkip() external {
-    // state before distribute
-    uint256 _revenueBalanceBefore = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
-    uint256 _devBalanceBefore = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
-    uint256 _burnBalanceBefore = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
-
-    // top up balance smart treasury
-    // top up wbnb
+    // top up bnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
+    uint256 _WBNBTreasuryBalanceBefore = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
 
     // mock oracle under rate
     vm.mockCall(
@@ -359,21 +341,8 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.prank(ALICE);
     smartTreasury.distribute(_tokens);
 
-    // state after distribute
-    uint256 _revenueBalanceAfter = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
-    uint256 _devBalanceAfter = IERC20(address(wbnb)).balanceOf(DEV_TREASURY);
-    uint256 _burnBalanceAfter = IERC20(address(wbnb)).balanceOf(BURN_TREASURY);
-
-    // rev treasury (get usdt)
-    assertEq(_revenueBalanceAfter, _revenueBalanceBefore, "Rev Treasury Balance (USDT)");
-    // dev treasury (get wbnb)
-    assertEq(_devBalanceAfter, _devBalanceBefore, "Dev Treasury Balance (WBNB)");
-
-    // burn treasury (get wbnb)
-    assertEq(_burnBalanceAfter, _burnBalanceBefore, "Burn Treasury Balance (WBNB)");
-
     // Smart treasury after must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
-    assertEq(_WBNBTreasuryBalanceAfter, normalizeEther(30 ether, wbnb.decimals()), "Smart treasury balance (WBNB)");
+    assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
   }
 }
