@@ -29,11 +29,19 @@ interface IRewarder {
 
   function lastRewardTime(uint256 _pid) external view returns (uint256);
 
+  function addPool(
+    uint256 _pid,
+    uint256 _allocPoint,
+    bool _withUpdate
+  ) external;
+
   function setPool(
     uint256 _pid,
     uint256 _newAllocPoint,
     bool _withUpdate
   ) external;
+
+  function setRewardPerSecond(uint256 _newRewardPerSecond, bool _withUpdate) external;
 
   function rewardToken() external view returns (address);
 

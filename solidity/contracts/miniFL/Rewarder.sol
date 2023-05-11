@@ -197,12 +197,12 @@ contract Rewarder is IRewarder, OwnableUpgradeable, ReentrancyGuardUpgradeable {
   }
 
   /// @notice Add a new pool. Can only be called by the owner.
-  /// @param _allocPoint The new allocation point
   /// @param _pid The Pool ID on MiniFL
+  /// @param _allocPoint The new allocation point
   /// @param _withUpdate If true, do mass update pools
   function addPool(
-    uint256 _allocPoint,
     uint256 _pid,
+    uint256 _allocPoint,
     bool _withUpdate
   ) external onlyOwner {
     if (poolInfo[_pid].lastRewardTime != 0) revert Rewarder1_PoolExisted();

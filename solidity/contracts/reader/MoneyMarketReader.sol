@@ -28,48 +28,32 @@ contract MoneyMarketReader is IMoneyMarketReader {
     _moneyMarketAccountManager = moneyMarketAccountManager_;
   }
 
-  // /// @dev Get the reward summary
-  // /// @param _underlyingToken The underlying token address
-  // /// @param _account The account address
-  // function getRewardSummary(address _underlyingToken, address _account) external view returns (RewardSummary memory) {
-  //   address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
-  //   address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
-
-  //   uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
-  //   uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
-
-  //   return
-  //     RewardSummary({
-  //       ibPoolId: _ibPoolId,
-  //       debtPoolId: _debtPoolId,
-  //       lendingPendingReward: _miniFL.pendingAlpaca(_ibPoolId, _account),
-  //       borrowingPendingReward: _miniFL.pendingAlpaca(_debtPoolId, _account)
-  //     });
-  // }
-
-  function getRewardSummary(uint256 _pId, address account)
-    external
-    view
-    returns (RewardSummary[] memory _rewardSummary)
-  {
-    address[] memory _rewarders = _miniFL.rewarders(_pId);
+  /// @dev Get the reward summary
+  /// @param _pId Pool if of miniFL
+  /// @param _account The account address
+  /// @param _rewarders List of rewarder addresses associate with miniFL pId
+  function getRewardSummary(
+    uint256 _pId,
+    address _account,
+    address[] calldata _rewarders
+  ) external view returns (RewardSummary[] memory _rewardSummary) {
     // include miniFL reward
-    uint256 _rewarderLength = _rewarders.length + 1;
-    _rewardSummary = new RewardSummary[](_rewarderLength);
+    uint256 _rewardLength = _rewarders.length + 1;
+    _rewardSummary = new RewardSummary[](_rewardLength);
 
     _rewardSummary[0] = RewardSummary({
       rewardToken: _miniFL.ALPACA(),
       pId: _pId,
-      pendingReward: _miniFL.pendingAlpaca(_pId, account)
+      pendingReward: _miniFL.pendingAlpaca(_pId, _account)
     });
 
-    for (uint256 i = 1; i < _rewarderLength; ) {
+    for (uint256 i; i < _rewarders.length; ) {
       IRewarder _rewarder = IRewarder(_rewarders[i]);
 
-      _rewardSummary[i] = RewardSummary({
+      _rewardSummary[i + 1] = RewardSummary({
         rewardToken: _rewarder.rewardToken(),
         pId: _pId,
-        pendingReward: _rewarder.pendingToken(_pId, account)
+        pendingReward: _rewarder.pendingToken(_pId, _account)
       });
       unchecked {
         ++i;
@@ -356,7 +340,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
     return marketStats;
   }
 
-  function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory) {
+  function getMarketRewardInfo(address _underlyingToken, address[] calldata _rewarders)
+    external
+    view
+    returns (MarketRewardInfo memory)
+  {
     address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
     address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
 
@@ -371,25 +359,33 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
     return
       MarketRewardInfo({
-        debtTokenAllocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
-        ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
-        totalAllocPoint: _miniFL.totalAllocPoint(),
-        rewardPerSec: _miniFL.alpacaPerSecond(),
         totalUnderlyingTokenInPool: IInterestBearingToken(_ibAddress).convertToAssets(_ibReserveAmount),
         totalDebtTokenInPool: _totalDebtToken,
-        ibRewarderInfos: _getRewardersInfo(_ibPoolId),
-        debtRewarderInfos: _getRewardersInfo(_debtPoolId)
+        ibRewarderInfos: _getRewardersInfo(_ibPoolId, _rewarders),
+        debtRewarderInfos: _getRewardersInfo(_debtPoolId, _rewarders)
       });
   }
 
-  function _getRewardersInfo(uint256 _pId) internal view returns (RewarderInfo[] memory _rewarderInfos) {
-    address[] memory _rewarders = _miniFL.rewarders(_pId);
-    uint256 rewarderLength = _rewarders.length;
+  function _getRewardersInfo(uint256 _pId, address[] calldata _rewarders)
+    internal
+    view
+    returns (RewarderInfo[] memory _rewarderInfos)
+  {
+    uint256 rewarderLength = _rewarders.length + 1;
     _rewarderInfos = new RewarderInfo[](rewarderLength);
-    for (uint256 i; i < rewarderLength; ) {
+
+    _rewarderInfos[0] = RewarderInfo({
+      rewardToken: _miniFL.ALPACA(),
+      pId: _pId,
+      rewardPerSec: _miniFL.alpacaPerSecond(),
+      allocPoint: _miniFL.getPoolAllocPoint(_pId),
+      totalAllocPoint: _miniFL.totalAllocPoint()
+    });
+
+    for (uint256 i; i < _rewarders.length; ) {
       IRewarder _rewarder = IRewarder(_rewarders[i]);
 
-      _rewarderInfos[i] = RewarderInfo({
+      _rewarderInfos[i + 1] = RewarderInfo({
         rewardToken: _rewarder.rewardToken(),
         pId: _pId,
         rewardPerSec: _rewarder.rewardPerSecond(),

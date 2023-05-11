@@ -43,4 +43,6 @@ interface IMiniFL {
   function harvestMany(uint256[] calldata _pids) external;
 
   function massUpdatePools() external;
+
+  function setPoolRewarders(uint256 _pid, address[] calldata _newRewarders) external;
 }
