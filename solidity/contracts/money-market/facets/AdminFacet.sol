@@ -42,7 +42,7 @@ contract AdminFacet is IAdminFacet {
   event LogSetAccountManagerOk(address indexed _manager, bool isOk);
   event LogSetLiquidationTreasury(address indexed _treasury);
   event LogSetFees(uint256 _lendingFeeBps, uint256 _repurchaseFeeBps, uint256 _liquidationFeeBps);
-  event LogSetFlashloanFees(uint256 _flashloanFeeBps, uint256 _lenderFlashloanBps);
+  event LogSetFlashloanParams(uint256 _flashloanFeeBps, uint256 _lenderFlashloanBps, address _flashloanTreasury);
   event LogSetRepurchaseRewardModel(IFeeModel indexed _repurchaseRewardModel);
   event LogSetIbTokenImplementation(address indexed _newImplementation);
   event LogSetDebtTokenImplementation(address indexed _newImplementation);
@@ -54,6 +54,7 @@ contract AdminFacet is IAdminFacet {
   event LogTopUpTokenReserve(address indexed _token, uint256 _amount);
   event LogSetMinDebtSize(uint256 _newValue);
   event LogSetEmergencyPaused(address indexed _caller, bool _isPasued);
+  event LogSetOperatorsOk(address indexed _caller, bool _allow);
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
@@ -347,6 +348,21 @@ contract AdminFacet is IAdminFacet {
     }
   }
 
+  /// @notice Set operators
+  /// @param _operators The addresses of the operator that are going to be whitelisted.
+  /// @param _isOk Whether to allow or disallow callers.
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external onlyOwner {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+    uint256 _length = _operators.length;
+    for (uint256 _i; _i < _length; ) {
+      moneyMarketDs.operatorsOk[_operators[_i]] = _isOk;
+      emit LogSetOperatorsOk(_operators[_i], _isOk);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
   /// @notice Set the treasury address
   /// @param _treasury The new treasury address
   function setLiquidationTreasury(address _treasury) external onlyOwner {
@@ -386,19 +402,25 @@ contract AdminFacet is IAdminFacet {
     emit LogSetFees(_newLendingFeeBps, _newRepurchaseFeeBps, _newLiquidationFeeBps);
   }
 
-  /// @notice Set lender portion and flashloan fee
+  /// @notice Set parameters for flashloan
   /// @param _flashloanFeeBps the flashloan fee collected by protocol
   /// @param _lenderFlashloanBps the portion that lenders will receive from _flashloanFeeBps
-  function setFlashloanFees(uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) external onlyOwner {
+  /// @param _flashloanTreasury the address that hold excess flashloan fee
+  function setFlashloanParams(
+    uint16 _flashloanFeeBps,
+    uint16 _lenderFlashloanBps,
+    address _flashloanTreasury
+  ) external onlyOwner {
     if (_flashloanFeeBps > LibConstant.MAX_BPS || _lenderFlashloanBps > LibConstant.MAX_BPS) {
       revert AdminFacet_InvalidArguments();
     }
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
-    // Replace existing fees
+    // Replace existing params
     moneyMarketDs.flashloanFeeBps = _flashloanFeeBps;
     moneyMarketDs.lenderFlashloanBps = _lenderFlashloanBps;
+    moneyMarketDs.flashloanTreasury = _flashloanTreasury;
 
-    emit LogSetFlashloanFees(_flashloanFeeBps, _lenderFlashloanBps);
+    emit LogSetFlashloanParams(_flashloanFeeBps, _lenderFlashloanBps, _flashloanTreasury);
   }
 
   /// @notice Set the repurchase reward model for a token specifically to over collateralized borrowing
@@ -547,10 +569,11 @@ contract AdminFacet is IAdminFacet {
 
   /// @notice Withdraw the protocol reserves
   /// @param _withdrawProtocolReserveParam An array of protocol's reserve to withdraw
-  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam)
-    external
-    onlyOwner
-  {
+  function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external {
+    LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
+
+    if (!moneyMarketDs.operatorsOk[msg.sender]) revert AdminFacet_Unauthorized();
+
     uint256 _length = _withdrawProtocolReserveParam.length;
     for (uint256 _i; _i < _length; ) {
       _withdrawProtocolReserve(

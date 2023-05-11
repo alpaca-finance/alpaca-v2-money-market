@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { ConfigFileHelper } from "../file-helper.ts/config-file.helper";
-import { MiniFLPool } from "../interfaces";
+import { ConfigFileHelper } from "../../deploy/file-helper.ts/config-file.helper";
+import { MiniFLPool } from "../../deploy/interfaces";
 
 async function main(id: string, name: string, stakingToken: string) {
   const configFileHelper = new ConfigFileHelper();

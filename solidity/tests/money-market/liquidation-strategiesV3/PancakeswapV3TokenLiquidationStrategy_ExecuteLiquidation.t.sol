@@ -13,7 +13,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
 
   function setUp() public override {
     super.setUp();
-    liquidationStrat = new PancakeswapV3TokenLiquidationStrategy(address(router));
+    liquidationStrat = new PancakeswapV3TokenLiquidationStrategy(address(router), address(pathReader));
 
     address[] memory _callers = new address[](1);
     _callers[0] = ALICE;
@@ -21,7 +21,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
 
     // Set path
     paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb));
-    liquidationStrat.setPaths(paths);
+    pathReader.setPaths(paths);
 
     // mint ETH to ALICE
     vm.startPrank(BSC_TOKEN_OWNER);
@@ -106,13 +106,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
     address _debtToken = address(cake);
 
     vm.prank(ALICE);
-    vm.expectRevert(
-      abi.encodeWithSelector(
-        PancakeswapV3TokenLiquidationStrategy.PancakeswapV3TokenLiquidationStrategy_PathConfigNotFound.selector,
-        _collatToken,
-        _debtToken
-      )
-    );
+    vm.expectRevert();
     liquidationStrat.executeLiquidation(
       _collatToken,
       _debtToken,
@@ -140,7 +134,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
     // set multi-hop path ETH => btcb => usdt
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(ETH), uint24(2500), address(btcb), uint24(500), address(usdt));
-    liquidationStrat.setPaths(_paths);
+    pathReader.setPaths(_paths);
 
     // transfer collat to to strat
     vm.startPrank(ALICE);

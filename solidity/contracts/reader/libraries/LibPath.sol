@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.6.0;
 
-import "./BytesLib.sol";
+import "./LibBytes.sol";
 
 /// original is Path.sol from https://github.com/Uniswap/v3-periphery/blob/main/contracts/libraries/Path.sol
 /// @title Functions for manipulating path data for multihop swaps
 library LibPath {
-  using BytesLib for bytes;
+  using LibBytes for bytes;
 
   /// @dev The length of the bytes encoded address
   uint256 private constant ADDR_SIZE = 20;

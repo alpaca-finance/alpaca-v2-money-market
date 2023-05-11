@@ -52,6 +52,7 @@
       "collateralFacet": "0x8cE125c65605f937AE16645a3642d3A335852936",
       "diamondCutFacet": "0x2E28CbF8995969d4ea1F03FfB6f25dab8afEE45C",
       "diamondLoupeFacet": "0xaDB5Be7b114Ca6721e00778F97e615B85D095952",
+      "flashloanFacet": "",
       "lendFacet": "0x0d8AE68ee3eE728Ed7AE9E99Edc10f2cfc3959b1",
       "liquidationFacet": "0xaB530549D03AE12A96292d749c75f7f719EA2f9D",
       "nonCollatBorrowFacet": "0xF22133299081534780777D1504A6B38955195b03",

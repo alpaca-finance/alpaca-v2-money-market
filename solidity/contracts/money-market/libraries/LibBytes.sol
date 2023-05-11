@@ -8,7 +8,7 @@
  */
 pragma solidity 0.8.19;
 
-library BytesLib {
+library LibBytes {
   function slice(
     bytes memory _bytes,
     uint256 _start,

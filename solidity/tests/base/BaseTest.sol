@@ -20,7 +20,6 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
-import { ChainLinkPriceOracle2 } from "../../contracts/oracle/ChainLinkPriceOracle2.sol";
 import { AlpacaV2Oracle, IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 
@@ -138,7 +137,7 @@ contract BaseTest is DSTest, StdUtils, StdAssertions, StdCheats {
 
     // miniFL
 
-    _setupProxyAdmin();
+    proxyAdmin = _setupProxyAdmin();
 
     vm.label(DEPLOYER, "DEPLOYER");
     vm.label(ALICE, "ALICE");
@@ -241,7 +240,7 @@ contract BaseTest is DSTest, StdUtils, StdAssertions, StdCheats {
 
   function _setupUpgradeable(bytes memory _logicBytecode, bytes memory _initializer) internal returns (address) {
     bytes memory _proxyBytecode = abi.encodePacked(
-      vm.getCode("./out/AdminUpgradeabilityProxy.sol/AdminUpgradeabilityProxy.json")
+      vm.getCode("./out/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json")
     );
 
     address _logic;

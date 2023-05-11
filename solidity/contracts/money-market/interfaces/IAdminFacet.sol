@@ -85,7 +85,11 @@ interface IAdminFacet {
     uint16 _newLiquidationFeeBps
   ) external;
 
-  function setFlashloanFees(uint16 _flashloanFeeBps, uint16 _lenderFlashloanBps) external;
+  function setFlashloanParams(
+    uint16 _flashloanFeeBps,
+    uint16 _lenderFlashloanBps,
+    address _flashloanTreasury
+  ) external;
 
   function setRepurchaseRewardModel(IFeeModel _newRepurchaseRewardModel) external;
 
@@ -114,6 +118,8 @@ interface IAdminFacet {
     uint256 _newMaxCollateral,
     uint256 _newMaxBorrow
   ) external;
+
+  function setOperatorsOk(address[] calldata _operators, bool _isOk) external;
 
   function withdrawProtocolReserves(WithdrawProtocolReserveParam[] calldata _withdrawProtocolReserveParam) external;
 }
