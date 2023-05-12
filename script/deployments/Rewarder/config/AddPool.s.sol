@@ -55,16 +55,16 @@ contract SetPoolScript is BaseScript {
     _stopBroadcast();
   }
 
-  function addIbPool(address _token, uint256 _allocaPoint) internal {
+  function addIbPool(address _token, uint256 _allocPoint) internal {
     address _ibToken = moneyMarket.getIbTokenFromToken(_token);
     uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_ibToken);
-    addRewarderPool(_pid, _allocaPoint);
+    addRewarderPool(_pid, _allocPoint);
   }
 
-  function addDebtPool(address _token, uint256 _allocaPoint) internal {
+  function addDebtPool(address _token, uint256 _allocPoint) internal {
     address _debtToken = moneyMarket.getDebtTokenFromToken(_token);
     uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_debtToken);
-    addRewarderPool(_pid, _allocaPoint);
+    addRewarderPool(_pid, _allocPoint);
   }
 
   function addRewarderPool(uint256 _pid, uint256 _allocPoint) internal {
