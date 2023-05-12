@@ -38,8 +38,7 @@ contract SmartTreasury_Distribute is BaseFork {
     vm.startPrank(ALICE);
     // setup revenue token, alloc points and treasury address
     smartTreasury.setRevenueToken(address(usdt));
-    ISmartTreasury.AllocPoints memory _allocPoints = ISmartTreasury.AllocPoints(100, 100, 100);
-    smartTreasury.setAllocPoints(_allocPoints);
+    smartTreasury.setAllocPoints(100, 100, 100);
     smartTreasury.setTreasuryAddresses(REVENUE_TREASURY, DEV_TREASURY, BURN_TREASURY);
     smartTreasury.setSlippageToleranceBps(100);
     vm.stopPrank();
@@ -199,6 +198,7 @@ contract SmartTreasury_Distribute is BaseFork {
     smartTreasury.distribute(_tokens);
   }
 
+  // TODO: incorrect logic, should not work
   function testCorrectness_DecimalDiff_ShouldWork() external {
     // tokenIn: doge (8 decimals)
     // tokenOut (revenue token): wbnb (18 decimals)
@@ -213,11 +213,11 @@ contract SmartTreasury_Distribute is BaseFork {
     _paths[0] = abi.encodePacked(address(doge), uint24(2500), address(wbnb));
     pathReader.setPaths(_paths);
 
-    // mock price doge on oracle
+    // mock price doge on oracle doge = 0.0715291 * 1e18
     vm.mockCall(
       address(oracleMedianizer),
       abi.encodeWithSelector(IPriceOracle.getPrice.selector, address(doge), usd),
-      abi.encode(normalizeEther(0.0715291 ether, 18), 0)
+      abi.encode(0.0715291 ether, 0)
     );
 
     // expect amount out

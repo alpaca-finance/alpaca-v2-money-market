@@ -25,23 +25,29 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   event LogFailedDistribution(address _token, bytes _reason);
   event LogSetSlippageToleranceBps(uint256 _slippageToleranceBps);
   event LogSetTreasuryAddresses(address _revenueTreasury, address _devTreasury, address _burnTreasury);
-  event LogWithdraw(address _token, address _to);
-
-  AllocPoints public allocPoints;
-
-  address public revenueTreasury;
-  address public devTreasury;
-  address public burnTreasury;
-  address public revenueToken;
-  uint256 public slippageToleranceBps;
+  event LogWithdraw(address _to, address _token, uint256 _amount);
 
   address public constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
-  mapping(address => bool) public whitelistedCallers;
+  // TODO: revise to address, allo
+
+  address public revenueTreasury;
+  uint16 public revenueAllocPoint;
+
+  address public devTreasury;
+  uint16 public devAllocPoint;
+
+  address public burnTreasury;
+  uint16 public burnAllocPoint;
+
+  address public revenueToken;
 
   IPancakeSwapRouterV3 public router;
   IUniSwapV3PathReader public pathReader;
   IOracleMedianizer public oracleMedianizer;
+
+  mapping(address => bool) public whitelistedCallers;
+  uint16 public slippageToleranceBps;
 
   modifier onlyWhitelisted() {
     if (!whitelistedCallers[msg.sender]) {
@@ -79,21 +85,47 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   }
 
   /// @notice Set allocation points
-  /// @param _allocPoints A struct of treasury addresses
-  function setAllocPoints(AllocPoints calldata _allocPoints) external onlyWhitelisted {
-    allocPoints.revenueAllocPoint = _allocPoints.revenueAllocPoint;
-    allocPoints.devAllocPoint = _allocPoints.devAllocPoint;
-    allocPoints.burnAllocPoint = _allocPoints.burnAllocPoint;
+  /// @param _revenueAllocPoint revenue treasury allocation point
+  /// @param _devAllocPoint dev treasury allocation point
+  /// @param _burnAllocPoint burn treasury allocation point
+  function setAllocPoints(
+    uint16 _revenueAllocPoint,
+    uint16 _devAllocPoint,
+    uint16 _burnAllocPoint
+  ) external onlyWhitelisted {
+    if (
+      _revenueAllocPoint > LibConstant.MAX_BPS ||
+      _devAllocPoint > LibConstant.MAX_BPS ||
+      _burnAllocPoint > LibConstant.MAX_BPS
+    ) {
+      revert SmartTreasury_InvalidAllocPoint();
+    }
 
-    emit LogSetAllocPoints(_allocPoints.revenueAllocPoint, _allocPoints.devAllocPoint, _allocPoints.burnAllocPoint);
+    revenueAllocPoint = _revenueAllocPoint;
+    devAllocPoint = _devAllocPoint;
+    burnAllocPoint = _burnAllocPoint;
+
+    emit LogSetAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
   }
 
   /// @notice Set revenue token
   /// @dev Revenue token used for swapping before transfer to revenue treasury.
   /// @param _revenueToken An address of destination token.
   function setRevenueToken(address _revenueToken) external onlyWhitelisted {
+    IERC20(_revenueToken).decimals();
+
     revenueToken = _revenueToken;
     emit LogSetRevenueToken(_revenueToken);
+  }
+
+  /// @notice Set Slippage tolerance (bps)
+  /// @param _slippageToleranceBps Amount of Slippage Tolerance (bps)
+  function setSlippageToleranceBps(uint16 _slippageToleranceBps) external onlyWhitelisted {
+    if (_slippageToleranceBps > LibConstant.MAX_BPS) {
+      revert SmartTreasury_SlippageTolerance();
+    }
+    slippageToleranceBps = _slippageToleranceBps;
+    emit LogSetSlippageToleranceBps(_slippageToleranceBps);
   }
 
   /// @notice Set treasury addresses
@@ -132,11 +164,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     }
   }
 
-  function setSlippageToleranceBps(uint256 _slippageToleranceBps) external onlyWhitelisted {
-    slippageToleranceBps = _slippageToleranceBps;
-    emit LogSetSlippageToleranceBps(_slippageToleranceBps);
-  }
-
   function _getMinAmountOut(
     address _tokenIn,
     address _tokenOut,
@@ -145,10 +172,10 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     (uint256 _tokenInPrice, ) = oracleMedianizer.getPrice(_tokenIn, USD);
 
     uint256 _minAmountOutUSD = (_amountIn * _tokenInPrice * (LibConstant.MAX_BPS - slippageToleranceBps)) /
-      (IERC20(_tokenIn).decimals() * LibConstant.MAX_BPS);
+      (10**IERC20(_tokenIn).decimals() * LibConstant.MAX_BPS);
 
     (uint256 _tokenOutPrice, ) = oracleMedianizer.getPrice(_tokenOut, USD);
-    _minAmountOut = ((_minAmountOutUSD * IERC20(_tokenOut).decimals()) / _tokenOutPrice);
+    _minAmountOut = ((_minAmountOutUSD * (10**IERC20(_tokenOut).decimals())) / _tokenOutPrice);
   }
 
   function _distribute(address _token) internal {
@@ -160,19 +187,19 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
         IERC20(_token).safeTransfer(revenueTreasury, _revenueAmount);
       } else {
         bytes memory _path = pathReader.paths(_token, revenueToken);
-        if (_path.length == 0) revert SmartTreasury_PathConfigNotFound();
-
-        uint256 _minAmountOut = _getMinAmountOut(_token, revenueToken, _revenueAmount);
+        if (_path.length == 0) {
+          revert SmartTreasury_PathConfigNotFound();
+        }
 
         IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
           path: _path,
           recipient: revenueTreasury,
           deadline: block.timestamp,
           amountIn: _revenueAmount,
-          amountOutMinimum: _minAmountOut
+          amountOutMinimum: _getMinAmountOut(_token, revenueToken, _revenueAmount)
         });
 
-        // Direct send to revenue treasury
+        // Swap and send to revenue treasury
         IERC20(_token).safeApprove(address(router), _revenueAmount);
         try router.exactInput(params) {} catch (bytes memory _reason) {
           emit LogFailedDistribution(_token, _reason);
@@ -202,12 +229,9 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     )
   {
     if (_amount != 0) {
-      AllocPoints memory _allocPoints = allocPoints;
-      uint64 _totalAllocPoint = _allocPoints.revenueAllocPoint +
-        _allocPoints.devAllocPoint +
-        _allocPoints.burnAllocPoint;
-      _devAmount = (_amount * _allocPoints.devAllocPoint) / _totalAllocPoint;
-      _burnAmount = (_amount * _allocPoints.burnAllocPoint) / _totalAllocPoint;
+      uint256 _totalAllocPoint = revenueAllocPoint + devAllocPoint + burnAllocPoint;
+      _devAmount = (_amount * devAllocPoint) / _totalAllocPoint;
+      _burnAmount = (_amount * burnAllocPoint) / _totalAllocPoint;
       unchecked {
         _revenueAmount = _amount - _devAmount - _burnAmount;
       }
@@ -227,6 +251,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   function _withdraw(address _token, address _to) internal {
     uint256 _amount = IERC20(_token).balanceOf(address(this));
     IERC20(_token).transfer(_to, _amount);
-    emit LogWithdraw(_token, _to);
+    emit LogWithdraw(_to, _token, _amount);
   }
 }
