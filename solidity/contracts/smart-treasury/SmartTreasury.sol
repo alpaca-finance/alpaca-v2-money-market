@@ -29,8 +29,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
 
   address public constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
-  // TODO: revise to address, allo
-
   address public revenueTreasury;
   uint16 public revenueAllocPoint;
 
@@ -112,6 +110,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   /// @dev Revenue token used for swapping before transfer to revenue treasury.
   /// @param _revenueToken An address of destination token.
   function setRevenueToken(address _revenueToken) external onlyWhitelisted {
+    // Sanity check
     IERC20(_revenueToken).decimals();
 
     revenueToken = _revenueToken;
