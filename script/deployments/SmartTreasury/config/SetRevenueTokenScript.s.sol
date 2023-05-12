@@ -20,10 +20,11 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    address _revenueToken = address(0);
+
     _startDeployerBroadcast();
 
-    // TODO: what's token?
-    // smartTreasury.setRevenueToken(_revenueToken);
+    smartTreasury.setRevenueToken(_revenueToken);
 
     _stopBroadcast();
   }

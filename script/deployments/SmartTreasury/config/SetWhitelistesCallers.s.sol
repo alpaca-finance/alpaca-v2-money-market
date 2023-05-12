@@ -20,13 +20,12 @@ contract SetWhitelistesCallers is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    address[] memory _callers = new address[](1);
+    _callers[0] = deployerAddress;
+
     _startDeployerBroadcast();
 
-    // TODO: who is operator (keeper)
-
-    // address[] memory _callers = new address()[1];
-    // _callers[0] = address();
-    // smartTreasury.setWhitelistedCallers(_callers, true);
+    smartTreasury.setWhitelistedCallers(_callers, true);
 
     _stopBroadcast();
   }

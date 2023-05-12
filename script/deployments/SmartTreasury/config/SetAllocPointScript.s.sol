@@ -21,12 +21,13 @@ contract SetAllocPointScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    uint16 _revenueAllocPoint = 0;
+    uint16 _devAllocPoint = 0;
+    uint16 _burnAllocPoint = 0;
+
     _startDeployerBroadcast();
 
-    // TODO: how much for each?
-
-    // ISmartTreasury.AllocPoints memory _allocPoints = ISmartTreasury.AllocPoints(x,x,x);
-    // smartTreasury.setAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
+    smartTreasury.setAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
 
     _stopBroadcast();
   }

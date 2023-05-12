@@ -20,11 +20,13 @@ contract SetTreasuryAddressScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    address _revenueTreasury = address(0);
+    address _devTreasury = address(0);
+    address _burnTreasury = address(0);
+
     _startDeployerBroadcast();
 
-    // TODO: pending revenueTreasury, devTreasury, burnTreasury
-
-    // smartTreasury.setTreasuryAddresses(_revenueTreasury, _devTreasury, _burnTreasury);
+    smartTreasury.setTreasuryAddresses(_revenueTreasury, _devTreasury, _burnTreasury);
 
     _stopBroadcast();
   }
