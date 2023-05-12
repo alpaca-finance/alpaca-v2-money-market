@@ -37,7 +37,7 @@ contract DeploySmartTreasuryScript is BaseScript {
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(smartTreasuryImplementation), ".moneyMarket.smartTreasury.implementation");
-    _writeJson(vm.toString(smartTreasuryProxy), ".moneyMarket.smartTreasury.proxy");
+    _writeJson(vm.toString(smartTreasuryImplementation), ".smartTreasury.implementation");
+    _writeJson(vm.toString(smartTreasuryProxy), ".smartTreasury.proxy");
   }
 }
