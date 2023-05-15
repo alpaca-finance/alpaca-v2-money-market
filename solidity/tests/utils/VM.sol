@@ -434,6 +434,20 @@ interface VM is VmSafe {
     bytes calldata
   ) external;
 
+  function mockCallRevert(
+    address callee,
+    bytes calldata data,
+    bytes calldata revertData
+  ) external;
+
+  // Reverts a call to an address with a specific msg.value, with specified revert data.
+  function mockCallRevert(
+    address callee,
+    uint256 msgValue,
+    bytes calldata data,
+    bytes calldata revertData
+  ) external;
+
   // Clears all mocked calls
   function clearMockedCalls() external;
 
