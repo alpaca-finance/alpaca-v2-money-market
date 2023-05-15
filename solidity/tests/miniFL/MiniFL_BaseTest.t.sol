@@ -73,10 +73,10 @@ contract MiniFL_BaseTest is BaseTest {
   // | Pool   | AllocPoint |
   // | DToken |        100 |
   function setupRewarder() internal {
-    rewarder1.addPool(90, wethPoolID, false);
-    rewarder1.addPool(10, dtokenPoolID, false);
+    rewarder1.addPool(wethPoolID, 90, false);
+    rewarder1.addPool(dtokenPoolID, 10, false);
 
-    rewarder2.addPool(100, wethPoolID, false);
+    rewarder2.addPool(wethPoolID, 100, false);
 
     address[] memory _poolWethRewarders = new address[](2);
     _poolWethRewarders[0] = address(rewarder1);

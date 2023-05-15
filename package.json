@@ -17,6 +17,7 @@
     "exec:bsc_mainnet:minifl:config:set-alpaca-per-sec": "forge script script/deployments/MiniFL/config/SetAlpacaPerSecond.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:minifl:config:set-whitelist-callers": "forge script script/deployments/MiniFL/config/SetWhitelistedCallers.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:minifl:script:mass-update-pools": "forge script script/deployments/MiniFL/script/MassUpdatePools.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:minifl:config:set-pool-rewarders": "forge script script/deployments/MiniFL/config/SetPoolRewarders.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:ib-token:deploy": "forge script script/deployments/InterestBearingToken/deploy/InterestBearingTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:debt-token:deploy": "forge script script/deployments/DebtToken/deploy/DebtTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -63,6 +64,10 @@
     "exec:bsc_mainnet:double-slope-model1:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel1.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:double-slope-model2:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:double-slope-model3:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel3.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:rewarder:deploy": "forge script script/deployments/Rewarder/deploy/Rewarder.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:rewarder:config:add-pool": "forge script script/deployments/Rewarder/config/AddPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:rewarder:config:set-pool": "forge script script/deployments/Rewarder/config/SetPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:rewarder:config:set-reward-per-second": "forge script script/deployments/Rewarder/config/SetRewardPerSecond.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "----------Deploy Hardhat -------------": "----------Deploy Hardhat -------------",
     "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut"
   },

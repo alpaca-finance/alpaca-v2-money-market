@@ -14,6 +14,7 @@ import { IOracleMedianizer } from "../oracle/interfaces/IOracleMedianizer.sol";
 import { IAlpacaV2Oracle } from "../oracle/interfaces/IAlpacaV2Oracle.sol";
 import { IMiniFL } from "../money-market/interfaces/IMiniFL.sol";
 import { IInterestRateModel } from "../money-market/interfaces/IInterestRateModel.sol";
+import { IRewarder } from "../miniFL/interfaces/IRewarder.sol";
 
 contract MoneyMarketReader is IMoneyMarketReader {
   IMoneyMarket private immutable _moneyMarket;
@@ -28,22 +29,36 @@ contract MoneyMarketReader is IMoneyMarketReader {
   }
 
   /// @dev Get the reward summary
-  /// @param _underlyingToken The underlying token address
+  /// @param _pId Pool id of miniFL
   /// @param _account The account address
-  function getRewardSummary(address _underlyingToken, address _account) external view returns (RewardSummary memory) {
-    address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
-    address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
+  /// @param _rewarders List of rewarder addresses associate with miniFL pId
+  function getRewardSummary(
+    uint256 _pId,
+    address _account,
+    address[] calldata _rewarders
+  ) external view returns (RewardSummary[] memory _rewardSummary) {
+    // include miniFL reward
+    uint256 _rewardLength = _rewarders.length + 1;
+    _rewardSummary = new RewardSummary[](_rewardLength);
 
-    uint256 _ibPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_ibAddress);
-    uint256 _debtPoolId = _moneyMarket.getMiniFLPoolIdOfToken(_debtAddress);
+    _rewardSummary[0] = RewardSummary({
+      rewardToken: _miniFL.ALPACA(),
+      pId: _pId,
+      pendingReward: _miniFL.pendingAlpaca(_pId, _account)
+    });
 
-    return
-      RewardSummary({
-        ibPoolId: _ibPoolId,
-        debtPoolId: _debtPoolId,
-        lendingPendingReward: _miniFL.pendingAlpaca(_ibPoolId, _account),
-        borrowingPendingReward: _miniFL.pendingAlpaca(_debtPoolId, _account)
+    for (uint256 i; i < _rewarders.length; ) {
+      IRewarder _rewarder = IRewarder(_rewarders[i]);
+
+      _rewardSummary[i + 1] = RewardSummary({
+        rewardToken: _rewarder.rewardToken(),
+        pId: _pId,
+        pendingReward: _rewarder.pendingToken(_pId, _account)
       });
+      unchecked {
+        ++i;
+      }
+    }
   }
 
   /// @dev Get subaccount summary of collaterals and debts
@@ -317,7 +332,7 @@ contract MoneyMarketReader is IMoneyMarketReader {
     marketStats.globalDebtValue = _moneyMarket.getGlobalDebtValue(_underlyingToken);
     marketStats.reserve = _moneyMarket.getFloatingBalance(_underlyingToken);
     marketStats.totalToken = _moneyMarket.getTotalToken(_underlyingToken);
-    marketStats.pendingIntetest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
+    marketStats.pendingInterest = _moneyMarket.getGlobalPendingInterest(_underlyingToken);
     marketStats.interestRate = _moneyMarket.getOverCollatInterestRate(_underlyingToken);
     marketStats.lastAccruedAt = _moneyMarket.getDebtLastAccruedAt(_underlyingToken);
     marketStats.blockTimestamp = block.timestamp;
@@ -325,7 +340,11 @@ contract MoneyMarketReader is IMoneyMarketReader {
     return marketStats;
   }
 
-  function getMarketRewardInfo(address _underlyingToken) external view returns (MarketRewardInfo memory) {
+  function getMarketRewardInfo(address _underlyingToken, address[] calldata _rewarders)
+    external
+    view
+    returns (MarketRewardInfo memory)
+  {
     address _ibAddress = _moneyMarket.getIbTokenFromToken(_underlyingToken);
     address _debtAddress = _moneyMarket.getDebtTokenFromToken(_underlyingToken);
 
@@ -340,13 +359,44 @@ contract MoneyMarketReader is IMoneyMarketReader {
 
     return
       MarketRewardInfo({
-        debtTokenAllocPoint: _miniFL.getPoolAllocPoint(_debtPoolId),
-        ibTokenAllocPoint: _miniFL.getPoolAllocPoint(_ibPoolId),
-        totalAllocPoint: _miniFL.totalAllocPoint(),
-        rewardPerSec: _miniFL.alpacaPerSecond(),
         totalUnderlyingTokenInPool: IInterestBearingToken(_ibAddress).convertToAssets(_ibReserveAmount),
-        totalDebtTokenInPool: _totalDebtToken
+        totalDebtTokenInPool: _totalDebtToken,
+        ibRewarderInfos: _getRewardersInfo(_ibPoolId, _rewarders),
+        debtRewarderInfos: _getRewardersInfo(_debtPoolId, _rewarders)
       });
+  }
+
+  function _getRewardersInfo(uint256 _pId, address[] calldata _rewarders)
+    internal
+    view
+    returns (RewarderInfo[] memory _rewarderInfos)
+  {
+    uint256 rewarderLength = _rewarders.length + 1;
+    _rewarderInfos = new RewarderInfo[](rewarderLength);
+
+    _rewarderInfos[0] = RewarderInfo({
+      rewardToken: _miniFL.ALPACA(),
+      pId: _pId,
+      rewardPerSec: _miniFL.alpacaPerSecond(),
+      allocPoint: _miniFL.getPoolAllocPoint(_pId),
+      totalAllocPoint: _miniFL.totalAllocPoint()
+    });
+
+    for (uint256 i; i < _rewarders.length; ) {
+      IRewarder _rewarder = IRewarder(_rewarders[i]);
+
+      _rewarderInfos[i + 1] = RewarderInfo({
+        rewardToken: _rewarder.rewardToken(),
+        pId: _pId,
+        rewardPerSec: _rewarder.rewardPerSecond(),
+        allocPoint: _rewarder.getPoolAllocPoint(_pId),
+        totalAllocPoint: _rewarder.totalAllocPoint()
+      });
+
+      unchecked {
+        ++i;
+      }
+    }
   }
 
   function getMarketPriceInfo(address _underlyingToken) external view returns (MarketPriceInfo memory) {

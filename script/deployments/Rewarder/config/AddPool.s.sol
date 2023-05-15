@@ -3,13 +3,15 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
+import { IRewarder } from "solidity/contracts/miniFL/interfaces/IRewarder.sol";
+
 contract SetPoolScript is BaseScript {
-  struct SetPoolInput {
+  struct AddPoolInput {
     uint256 pid;
     uint256 allocPoint;
   }
 
-  SetPoolInput[] setPoolInputs;
+  AddPoolInput[] addPoolInputs;
 
   function run() public {
     /*
@@ -22,48 +24,50 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    IRewarder rewarder = IRewarder(0x0886B13E413bc0fBAeDB76b0855CA5F2dae82E99);
+
     // WBNB
-    setIbAllocPoint(wbnb, 75);
-    setDebtAllocPoint(wbnb, 100);
+    addIbPool(wbnb, 75);
+    addDebtPool(wbnb, 100);
     // BTCB
-    setIbAllocPoint(btcb, 100);
-    setDebtAllocPoint(btcb, 125);
+    addIbPool(btcb, 100);
+    addDebtPool(btcb, 125);
     // USDT
-    setIbAllocPoint(usdt, 100);
-    setDebtAllocPoint(usdt, 175);
+    addIbPool(usdt, 100);
+    addDebtPool(usdt, 175);
     // ETH
-    setIbAllocPoint(eth, 75);
-    setDebtAllocPoint(eth, 100);
+    addIbPool(eth, 75);
+    addDebtPool(eth, 100);
     // USDC
-    setIbAllocPoint(usdc, 50);
-    setDebtAllocPoint(usdc, 75);
+    addIbPool(usdc, 50);
+    addDebtPool(usdc, 75);
     // BUSD
-    setIbAllocPoint(busd, 50);
-    setDebtAllocPoint(busd, 75);
+    addIbPool(busd, 50);
+    addDebtPool(busd, 75);
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    for (uint256 i; i < setPoolInputs.length; i++) {
-      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, true);
+    for (uint256 i; i < addPoolInputs.length; i++) {
+      rewarder.addPool(addPoolInputs[i].pid, addPoolInputs[i].allocPoint, true);
     }
 
     _stopBroadcast();
   }
 
-  function setIbAllocPoint(address _token, uint256 _allocPoint) internal {
+  function addIbPool(address _token, uint256 _allocPoint) internal {
     address _ibToken = moneyMarket.getIbTokenFromToken(_token);
     uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_ibToken);
-    setPoolAllocPoint(_pid, _allocPoint);
+    addRewarderPool(_pid, _allocPoint);
   }
 
-  function setDebtAllocPoint(address _token, uint256 _allocPoint) internal {
+  function addDebtPool(address _token, uint256 _allocPoint) internal {
     address _debtToken = moneyMarket.getDebtTokenFromToken(_token);
     uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_debtToken);
-    setPoolAllocPoint(_pid, _allocPoint);
+    addRewarderPool(_pid, _allocPoint);
   }
 
-  function setPoolAllocPoint(uint256 _pid, uint256 _allocPoint) internal {
-    setPoolInputs.push(SetPoolInput({ pid: _pid, allocPoint: _allocPoint }));
+  function addRewarderPool(uint256 _pid, uint256 _allocPoint) internal {
+    addPoolInputs.push(AddPoolInput({ pid: _pid, allocPoint: _allocPoint }));
   }
 }
