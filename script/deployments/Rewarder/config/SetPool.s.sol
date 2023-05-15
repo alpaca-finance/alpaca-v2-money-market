@@ -54,16 +54,16 @@ contract SetPoolScript is BaseScript {
     _stopBroadcast();
   }
 
-  function setIbAllocPoint(address _token, uint256 _allocaPoint) internal {
+  function setIbAllocPoint(address _token, uint256 _allocPoint) internal {
     address _ibToken = moneyMarket.getIbTokenFromToken(_token);
     uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_ibToken);
-    setPoolAllocPoint(_pid, _allocaPoint);
+    setPoolAllocPoint(_pid, _allocPoint);
   }
 
-  function setDebtAllocPoint(address _token, uint256 _allocaPoint) internal {
+  function setDebtAllocPoint(address _token, uint256 _allocPoint) internal {
     address _debtToken = moneyMarket.getDebtTokenFromToken(_token);
     uint256 _pid = moneyMarket.getMiniFLPoolIdOfToken(_debtToken);
-    setPoolAllocPoint(_pid, _allocaPoint);
+    setPoolAllocPoint(_pid, _allocPoint);
   }
 
   function setPoolAllocPoint(uint256 _pid, uint256 _allocPoint) internal {
