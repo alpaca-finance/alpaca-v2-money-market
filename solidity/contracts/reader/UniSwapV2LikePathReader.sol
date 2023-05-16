@@ -5,7 +5,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IUniSwapV2PathReader } from "./interfaces/IUniSwapV2PathReader.sol";
 import { IPancakeRouter02 } from "../money-market/interfaces/IPancakeRouter02.sol";
 
-// return router, return path
+/// @title UniSwapV2LikePathReader - Return router and part to swap on UniSwapV2-fork DEX
 contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
   event LogSetPath(address _source, address _destination, address[] _path);
 

@@ -1,14 +1,14 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { SmartTreasury } from "solidity/contracts/smart-treasury/SmartTreasury.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { IUniSwapV2PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV2PathReader.sol";
 
-contract DeploySmartTreasuryScript is BaseScript {
+contract SetV2PathsScript is BaseScript {
   using stdJson for string;
+
+  IUniSwapV2PathReader.PathParams[] paths;
 
   function run() public {
     /*
@@ -21,25 +21,37 @@ contract DeploySmartTreasuryScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    _startDeployerBroadcast();
-    // deploy implementation
-    address smartTreasuryImplementation = address(new SmartTreasury());
+    /* Template:
+    {
+      address _router = pancakeswapRouterV2;
+      address[] memory _path = new address[](2);
+      _path[0] = wbnb;
+      _path[1] = busd;
 
-    // deploy proxy
-    bytes memory data = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address,address,address)")),
-      address(uniswapV2LikePathReader),
-      address(pancakeswapRouterV3),
-      address(pcsV3PathReader),
-      oracleMedianizer
-    );
-    address smartTreasuryProxy = address(
-      new TransparentUpgradeableProxy(smartTreasuryImplementation, proxyAdminAddress, data)
-    );
+      _setPath(_path);
+    }
+     */
+
+    {
+      address _router = pancakeswapRouterV2;
+      address[] memory _path = new address[](2);
+      _path[0] = wbnb;
+      _path[1] = busd;
+
+      _setPath(_router, _path);
+    }
+
+    _startDeployerBroadcast();
+
+    IUniSwapV2PathReader(uniswapV2LikePathReader).setPaths(paths);
 
     _stopBroadcast();
+  }
 
-    _writeJson(vm.toString(smartTreasuryImplementation), ".smartTreasury.implementation");
-    _writeJson(vm.toString(smartTreasuryProxy), ".smartTreasury.proxy");
+  function _setPath(address _router, address[] memory _path) internal {
+    IUniSwapV2PathReader.PathParams memory _pathParam = IUniSwapV2PathReader.PathParams(_router, _path);
+    paths.push(_pathParam);
+
+    delete _pathParam;
   }
 }

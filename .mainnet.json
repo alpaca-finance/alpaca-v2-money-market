@@ -201,6 +201,7 @@
     "proxy": ""
   },
   "pathReader": {
-    "v3": ""
+    "pcsV3PathReader": "",
+    "uniswapV2LikePathReader": ""
   }
 }
