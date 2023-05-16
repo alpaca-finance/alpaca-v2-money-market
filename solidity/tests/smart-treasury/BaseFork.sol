@@ -7,11 +7,13 @@ import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
 
 // implementation
 import { PCSV3PathReader } from "solidity/contracts/reader/PCSV3PathReader.sol";
+import { PCSV2PathReader } from "solidity/contracts/reader/PCSV2PathReader.sol";
 import { SmartTreasury } from "solidity/contracts/smart-treasury/SmartTreasury.sol";
 
 // interfaces
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
+import { IPancakeRouter02 } from "solidity/contracts/money-market/interfaces/IPancakeRouter02.sol";
 import { IQuoterV2 } from "solidity/tests/interfaces/IQuoterV2.sol";
 import { IOracleMedianizer } from "solidity/contracts/oracle/interfaces/IOracleMedianizer.sol";
 
@@ -48,8 +50,10 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
 
   address internal usd = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
-  IPancakeSwapRouterV3 internal router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
-  PCSV3PathReader internal pathReader;
+  IPancakeRouter02 internal routerV2 = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
+  IPancakeSwapRouterV3 internal routerV3 = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
+  PCSV2PathReader internal pathReaderV2;
+  PCSV3PathReader internal pathReaderV3;
   SmartTreasury internal smartTreasury;
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
   IOracleMedianizer internal oracleMedianizer = IOracleMedianizer(0x553b8adc2Ac16491Ec57239BeA7191719a2B880c);
@@ -57,17 +61,24 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   function setUp() public virtual {
     vm.createSelectFork("bsc_mainnet", 28_113_725);
 
-    pathReader = new PCSV3PathReader();
-    // set path for
+    pathReaderV2 = new PCSV2PathReader();
+    pathReaderV3 = new PCSV3PathReader();
+
+    // set path v3
     bytes[] memory _paths = new bytes[](2);
     _paths[0] = abi.encodePacked(address(wbnb), uint24(500), address(usdt));
     _paths[1] = abi.encodePacked(address(eth), uint24(500), address(usdc), uint24(100), address(usdt));
 
-    pathReader.setPaths(_paths);
+    pathReaderV3.setPaths(_paths);
 
     vm.startPrank(DEPLOYER);
     proxyAdmin = _setupProxyAdmin();
-    smartTreasury = deploySmartTreasury(address(router), address(pathReader), address(oracleMedianizer));
+    smartTreasury = deploySmartTreasury(
+      address(pathReaderV2),
+      address(routerV3),
+      address(pathReaderV3),
+      address(oracleMedianizer)
+    );
     vm.stopPrank();
 
     vm.label(address(eth), "ETH");
@@ -86,21 +97,24 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
     vm.label(DEV_TREASURY, "DEV_TREASURY");
     vm.label(BURN_TREASURY, "BURN_TREASURY");
 
-    vm.label(address(router), "PancakeSwapRouterV3");
+    vm.label(address(routerV3), "PancakeSwapRouterV3");
+    vm.label(address(routerV2), "PancakeSwapRouterV2");
     vm.label(address(smartTreasury), "SmartTreasury");
     vm.label(address(oracleMedianizer), "OracleMedianizer");
   }
 
   function deploySmartTreasury(
-    address _router,
-    address _pathReader,
+    address _pathReaderV2,
+    address _routerV3,
+    address _pathReaderV3,
     address _oracle
   ) internal returns (SmartTreasury) {
     bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/SmartTreasury.sol/SmartTreasury.json"));
     bytes memory _initializer = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address,address)")),
-      _router,
-      _pathReader,
+      bytes4(keccak256("initialize(address,address,address,address)")),
+      _pathReaderV2,
+      _routerV3,
+      _pathReaderV3,
       _oracle
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
