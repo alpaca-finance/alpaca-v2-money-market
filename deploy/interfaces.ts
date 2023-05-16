@@ -1,6 +1,14 @@
+interface UpgradableContract {
+  implementation: string;
+  proxy: string;
+}
+
 export interface Config {
   moneyMarket: MoneyMarket;
   miniFL: MiniFL;
+  proxyAdmin: string;
+  timelock: string;
+  opMultiSig: string;
 }
 
 export interface MoneyMarket {
@@ -19,6 +27,7 @@ export interface MoneyMarket {
     viewFacet: string;
   };
   markets: Market[];
+  accountManager: UpgradableContract;
 }
 
 export interface MiniFL {
@@ -49,3 +58,17 @@ export const reverseAssetTier: Record<AssetTier, AssetTierString> = {
   2: "CROSS",
   3: "COLLATERAL",
 };
+
+export interface TimelockTransaction {
+  info: string;
+  chainId: number;
+  queuedAt: string;
+  executedAt: string;
+  executionTransaction: string;
+  target: string;
+  value: string;
+  signature: string;
+  paramTypes: Array<string>;
+  params: Array<any>;
+  eta: string;
+}

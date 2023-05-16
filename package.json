@@ -69,32 +69,37 @@
     "exec:bsc_mainnet:rewarder:config:set-pool": "forge script script/deployments/Rewarder/config/SetPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:rewarder:config:set-reward-per-second": "forge script script/deployments/Rewarder/config/SetRewardPerSecond.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "----------Deploy Hardhat -------------": "----------Deploy Hardhat -------------",
-    "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut"
+    "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut",
+    "exec:bsc_mainnet:money-market:upgrade:account-manager": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags UpgradeMoneyMarketAccountManager"
   },
   "devDependencies": {
+    "@safe-global/safe-core-sdk": "^3.3.3",
+    "@safe-global/safe-core-sdk-types": "^1.9.1",
+    "@safe-global/safe-ethers-lib": "^1.9.3",
+    "@safe-global/safe-service-client": "^2.0.1",
     "@typechain/ethers-v5": "^10.0.0",
     "@typechain/hardhat": "^5.0.0",
-    "@types/mocha": "^9.1.0",
     "@types/lodash": "^4.14.191",
+    "@types/mocha": "^9.1.0",
     "@types/readline-sync": "^1.4.4",
-    "ts-node": "^10.7.0",
-    "typescript": "^4.6.2",
-    "typechain": "^8.0.0",
     "lodash": "^4.17.21",
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "ts-node": "^10.7.0",
+    "typechain": "^8.0.0",
+    "typescript": "^4.6.2"
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
-    "@openzeppelin/hardhat-upgrades": "^1.16.1",
     "@openzeppelin/contracts": "^4.7.1",
     "@openzeppelin/contracts-upgradeable": "^4.7.3",
+    "@openzeppelin/hardhat-upgrades": "^1.16.1",
+    "commander": "^9.2.0",
     "dotenv": "^16.0.0",
-    "ethers": "^5.6.1",
+    "ethers": "^5.7.0",
     "hardhat": "^2.9.1",
     "hardhat-deploy": "^0.11.10",
     "prettier": "^2.6.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.19",
-    "commander": "^9.2.0"
+    "prettier-plugin-solidity": "^1.0.0-beta.19"
   },
   "engines": {
     "node": ">=14.15.4"
