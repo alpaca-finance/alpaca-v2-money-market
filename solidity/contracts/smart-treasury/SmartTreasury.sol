@@ -277,7 +277,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       _success = true;
     } catch (bytes memory _reason) {
       emit LogFailedDistribution(_tokenIn, _reason);
-      return;
       _success = false;
     }
   }
