@@ -195,7 +195,7 @@
       }
     ]
   },
-  "moneyMarketReader": "0x1d3cb2f91207afDA9E9baB89caDE1a4c3222cf6a",
+  "moneyMarketReader": "0x4913DEC75cC0e061Ba78ebbDb2584905760be4C6",
   "smartTreasury": {
     "implementation": "",
     "proxy": ""
