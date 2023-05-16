@@ -46,7 +46,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   IPancakeRouter02 public routerV2;
   IUniSwapV3PathReader public pathReaderV3;
   IPancakeSwapRouterV3 public routerV3;
-
   IOracleMedianizer public oracleMedianizer;
 
   mapping(address => bool) public whitelistedCallers;
@@ -295,6 +294,10 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     _minAmountOut = ((_minAmountOutUSD * (10**IERC20(_tokenOut).decimals())) / _tokenOutPrice);
   }
 
+  /// @notice Withdraw the tokens from contracts
+  /// @dev Emergency function, will use when token is stuck in this contract
+  /// @param _tokens An array of address withdraw tokens
+  /// @param _to Destination address
   function withdraw(address[] calldata _tokens, address _to) external onlyOwner {
     uint256 _length = _tokens.length;
     for (uint256 _i; _i < _length; ) {

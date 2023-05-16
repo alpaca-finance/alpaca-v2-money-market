@@ -7,7 +7,7 @@ import { ProxyAdminLike } from "../interfaces/ProxyAdminLike.sol";
 
 // implementation
 import { PCSV3PathReader } from "solidity/contracts/reader/PCSV3PathReader.sol";
-import { PCSV2PathReader } from "solidity/contracts/reader/PCSV2PathReader.sol";
+import { UniSwapV2LikePathReader } from "solidity/contracts/reader/UniSwapV2LikePathReader.sol";
 import { SmartTreasury } from "solidity/contracts/smart-treasury/SmartTreasury.sol";
 
 // interfaces
@@ -52,7 +52,7 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
 
   IPancakeRouter02 internal routerV2 = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
   IPancakeSwapRouterV3 internal routerV3 = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
-  PCSV2PathReader internal pathReaderV2;
+  UniSwapV2LikePathReader internal pathReaderV2;
   PCSV3PathReader internal pathReaderV3;
   SmartTreasury internal smartTreasury;
   IQuoterV2 internal quoterV2 = IQuoterV2(0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997);
@@ -61,7 +61,7 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
   function setUp() public virtual {
     vm.createSelectFork("bsc_mainnet", 28_113_725);
 
-    pathReaderV2 = new PCSV2PathReader();
+    pathReaderV2 = new UniSwapV2LikePathReader();
     pathReaderV3 = new PCSV3PathReader();
 
     // set path v3

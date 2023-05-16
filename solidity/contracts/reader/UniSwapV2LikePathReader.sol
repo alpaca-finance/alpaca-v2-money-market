@@ -6,16 +6,23 @@ import { IUniSwapV2PathReader } from "./interfaces/IUniSwapV2PathReader.sol";
 import { IPancakeRouter02 } from "../money-market/interfaces/IPancakeRouter02.sol";
 
 // return router, return path
-contract PCSV2PathReader is IUniSwapV2PathReader, Ownable {
+contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
   event LogSetPath(address _source, address _destination, address[] _path);
 
   // sourceToken => destinationToken => pathParams
   mapping(address => mapping(address => PathParams)) internal paths;
 
+  /// @notice Get a path from given source and destination tokens
+  /// @dev Function will return router and path
+  /// @param _source The source token address
+  /// @param _destination The destination token address
+  /// @return PathParams The path parameters (containing router and path)
   function getPath(address _source, address _destination) external view returns (PathParams memory) {
     return paths[_source][_destination];
   }
 
+  /// @notice Sets path configurations v2
+  /// @param _inputs An array of PathParams (each PathParams must contain router and path)
   function setPaths(PathParams[] calldata _inputs) external {
     uint256 _len = _inputs.length;
     PathParams memory _params;

@@ -21,6 +21,8 @@ contract PCSV3PathReader is IUniSwapV3PathReader, Ownable {
   // tokenIn => tokenOut => path
   mapping(address => mapping(address => bytes)) public override paths;
 
+  /// @notice Sets path configurations v2
+  /// @param _paths An array of path
   function setPaths(bytes[] calldata _paths) external onlyOwner {
     uint256 _len = _paths.length;
     for (uint256 _i; _i < _len; ) {
