@@ -6,7 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 
 // ---- Libraries ---- //
 import { LibSafeToken } from "../money-market/libraries/LibSafeToken.sol";
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
+import { LibConstant } from "../money-market/libraries/LibConstant.sol";
 
 // ---- Interfaces ---- //
 import { IPancakeRouter02 } from "../money-market/interfaces/IPancakeRouter02.sol";
