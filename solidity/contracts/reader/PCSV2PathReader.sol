@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IUniSwapV2PathReader } from "./interfaces/IUniSwapV2PathReader.sol";
 import { IPancakeRouter02 } from "../money-market/interfaces/IPancakeRouter02.sol";
 
 // return router, return path
-contract PCSV2PathReader is IUniSwapV2PathReader {
+contract PCSV2PathReader is IUniSwapV2PathReader, Ownable {
   event LogSetPath(address _source, address _destination, address[] _path);
 
+  // sourceToken => destinationToken => pathParams
   mapping(address => mapping(address => PathParams)) internal paths;
-
-  constructor() {}
 
   function getPath(address _source, address _destination) external view returns (PathParams memory) {
     return paths[_source][_destination];

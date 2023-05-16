@@ -196,25 +196,26 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(_amount);
 
     if (_revenueAmount != 0) {
-      if (_token == revenueToken) {
+      if (_token == _revenueToken) {
         IERC20(_token).safeTransfer(revenueTreasury, _revenueAmount);
       } else {
         // Check path on pool v3 first
-        if ((pathReaderV3.paths(_token, revenueToken)).length != 0) {
-          bytes memory _path = pathReaderV3.paths(_token, revenueToken);
-          bool _success = _swapTokenV3(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _path);
-          if (!_success) {
-            return;
-          }
-        } else if (pathReaderV2.getPath(_token, _revenueToken).path.length != 0) {
-          // if there is no path on v3. Then check path on v2
-          IUniSwapV2PathReader.PathParams memory _pathParam = pathReaderV2.getPath(_token, _revenueToken);
-          bool _success = _swapTokenV2(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _pathParam);
+        bytes memory _v3Path = (pathReaderV3.paths(_token, _revenueToken));
+        if (_v3Path.length != 0) {
+          bool _success = _swapTokenV3(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _v3Path);
           if (!_success) {
             return;
           }
         } else {
-          revert SmartTreasury_PathConfigNotFound();
+          IUniSwapV2PathReader.PathParams memory _pathParam = pathReaderV2.getPath(_token, _revenueToken);
+          if (_pathParam.path.length != 0) {
+            bool _success = _swapTokenV2(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _pathParam);
+            if (!_success) {
+              return;
+            }
+          } else {
+            revert SmartTreasury_PathConfigNotFound();
+          }
         }
       }
     }
@@ -276,6 +277,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
       _success = true;
     } catch (bytes memory _reason) {
       emit LogFailedDistribution(_tokenIn, _reason);
+      return;
       _success = false;
     }
   }
