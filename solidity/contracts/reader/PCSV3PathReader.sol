@@ -9,17 +9,17 @@ import { IUniSwapV3PathReader } from "./interfaces/IUniSwapV3PathReader.sol";
 contract PCSV3PathReader is IUniSwapV3PathReader, Ownable {
   using LibPath for bytes;
 
-  address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
-
-  // tokenIn => tokenOut => path
-  mapping(address => mapping(address => bytes)) public override paths;
-
   // Errors
   error PCSV3PathReader_NoLiquidity(address tokenA, address tokenB, uint24 fee);
 
   // Events
   event LogSetPath(address _token0, address _token1, bytes _path);
+
+  address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ce8eb472fa82df5469c6ab6d485f17c3ad13c8cd7af59b3d4a8026c5ce0f7e2;
+
+  // tokenIn => tokenOut => path
+  mapping(address => mapping(address => bytes)) public override paths;
 
   function setPaths(bytes[] calldata _paths) external onlyOwner {
     uint256 _len = _paths.length;
