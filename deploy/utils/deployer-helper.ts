@@ -8,8 +8,7 @@ export async function getDeployer(): Promise<SignerWithAddress> {
 
   if (isFork()) {
     const provider = ethers.getDefaultProvider((network.config as HttpNetworkUserConfig).url) as JsonRpcProvider;
-    // const signer = provider.getSigner("0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51");
-    const signer = provider.getSigner("0x18f59e8dddef9e000863082a37fc56a2a5475d01");
+    const signer = provider.getSigner("0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51");
     const mainnetForkDeployer = await SignerWithAddress.create(signer);
 
     return mainnetForkDeployer;

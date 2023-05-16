@@ -7,7 +7,6 @@ import { getDeployer } from "../../utils/deployer-helper";
 import { getProxyAdminFactory } from "@openzeppelin/hardhat-upgrades/dist/utils";
 import { TimelockService, fileService } from "../../services";
 import { compare } from "../../utils/address";
-import { makeForceImport } from "@openzeppelin/hardhat-upgrades/dist/force-import";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
@@ -19,6 +18,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
   */
+
+  /*
+   * Since Money Market contract is not deployed via hardhat-deploy, we need to `forceImport` Openzeppelin's unknowJson
+   * ref: https://docs.openzeppelin.com/upgrades-plugins/1.x/api-hardhat-upgrades#force-import
+   */
 
   const TITLE = "upgrade_money_market_account_manager";
   const MONEY_MARKET_ACCOUNT_MANAGER = "MoneyMarketAccountManager";
@@ -41,7 +45,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`> Upgrading ${MONEY_MARKET_ACCOUNT_MANAGER} through Timelock + ProxyAdmin`);
     console.log("> Prepare upgrade & deploy if needed a new IMPL automatically.");
     const newAccountManager = await ethers.getContractFactory(MONEY_MARKET_ACCOUNT_MANAGER);
-    const preparedAccountManager = await upgrades.prepareUpgrade(accountManager.proxy, newAccountManager);
+    const preparedAccountManager = await upgrades.prepareUpgrade(accountManager.proxy, newAccountManager, {
+      unsafeAllow: ["constructor", "delegatecall"],
+    });
     console.log(`> Implementation address: ${preparedAccountManager}`);
     console.log("✅ Done");
 
@@ -55,7 +61,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         ["address", "address"],
         [accountManager.proxy, preparedAccountManager],
         EXACT_ETA,
-        { nonce: nonce++, gasLimit: 500000000 }
+        { nonce: nonce++ }
       )
     );
   } else {
@@ -63,7 +69,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`> Upgrading ${MONEY_MARKET_ACCOUNT_MANAGER} through ProxyAdmin`);
     console.log("> Upgrade & deploy if needed a new IMPL automatically.");
     const newAccountManager = await ethers.getContractFactory(MONEY_MARKET_ACCOUNT_MANAGER);
-    const preparedAccountManager = await upgrades.prepareUpgrade(accountManager.proxy, newAccountManager);
+    const preparedAccountManager = await upgrades.prepareUpgrade(accountManager.proxy, newAccountManager, {
+      unsafeAllow: ["constructor", "delegatecall"],
+    });
     console.log(`> Implementation address: ${preparedAccountManager}`);
 
     // Perform actual upgrade
