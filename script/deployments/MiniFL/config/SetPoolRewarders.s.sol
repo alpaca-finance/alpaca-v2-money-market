@@ -65,7 +65,7 @@ contract SetPoolRewardersScript is BaseScript {
     cmds[5] = "--rewarderAddress";
 
     for (uint256 i; i < rewardersLength; i++) {
-      cmds[6 + i] = vm.toString(_rewarder);
+      cmds[6 + i] = vm.toString(_rewarders[i]);
     }
 
     vm.ffi(cmds);
