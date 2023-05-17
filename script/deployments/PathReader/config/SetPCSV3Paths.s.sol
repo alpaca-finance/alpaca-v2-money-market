@@ -26,104 +26,104 @@ contract SetPCSV3PathsScript is BaseScript {
     // ********* WBNB ********* //
     // WBNB -> USDC:
     path = _encodePath(wbnb, 500, usdt, 100, usdc);
-    _setPath(path);
+    _addPath(path);
     // WBNB -> USDT:
     path = _encodePath(wbnb, 500, usdt);
-    _setPath(path);
+    _addPath(path);
     // WBNB -> BUSD:
     path = _encodePath(wbnb, 500, busd);
-    _setPath(path);
+    _addPath(path);
     // WBNB -> BTCB:
     path = _encodePath(wbnb, 2500, btcb);
-    _setPath(path);
+    _addPath(path);
     // WBNB -> ETH:
     path = _encodePath(wbnb, 2500, eth);
-    _setPath(path);
+    _addPath(path);
 
     // ********* USDC ********* //
     // USDC -> BTCB:
     path = _encodePath(usdc, 100, busd, 500, btcb);
-    _setPath(path);
+    _addPath(path);
     // USDC -> ETH:
     path = _encodePath(usdc, 500, eth);
-    _setPath(path);
+    _addPath(path);
     // USDC -> WBNB:
     path = _encodePath(usdc, 100, usdt, 500, wbnb);
-    _setPath(path);
+    _addPath(path);
     // USDC -> BUSD:
     path = _encodePath(usdc, 100, busd);
-    _setPath(path);
+    _addPath(path);
     // USDC -> USDT:
     path = _encodePath(usdc, 100, usdt);
-    _setPath(path);
+    _addPath(path);
 
     // ********* USDT ********* //
     // USDT -> BTCB:
     path = _encodePath(usdt, 500, btcb);
-    _setPath(path);
+    _addPath(path);
     // USDT -> ETH:
     path = _encodePath(usdt, 500, wbnb, 2500, eth);
-    _setPath(path);
+    _addPath(path);
     // USDT -> WBNB:
     path = _encodePath(usdt, 500, wbnb);
-    _setPath(path);
+    _addPath(path);
     // USDT -> BUSD:
     path = _encodePath(usdt, 100, busd);
-    _setPath(path);
+    _addPath(path);
     // USDT -> USDC:
     path = _encodePath(usdt, 100, usdc);
-    _setPath(path);
+    _addPath(path);
 
     // ********* BUSD ********* //
     // BUSD -> BTCB:
     path = _encodePath(busd, 500, btcb);
-    _setPath(path);
+    _addPath(path);
     // BUSD -> ETH:
     path = _encodePath(busd, 500, wbnb, 2500, eth);
-    _setPath(path);
+    _addPath(path);
     // BUSD -> WBNB:
     path = _encodePath(busd, 500, wbnb);
-    _setPath(path);
+    _addPath(path);
     // BUSD -> USDT:
     path = _encodePath(busd, 100, usdt);
-    _setPath(path);
+    _addPath(path);
     // BUSD -> USDC:
     path = _encodePath(busd, 100, usdc);
-    _setPath(path);
+    _addPath(path);
 
     // ********* BTCB ********* //
     // BTCB -> ETH
     path = _encodePath(btcb, 2500, eth);
-    _setPath(path);
+    _addPath(path);
     // BTCB -> WBNB
     path = _encodePath(btcb, 2500, wbnb);
-    _setPath(path);
+    _addPath(path);
     // BTCB -> BUSD
     path = _encodePath(btcb, 500, busd);
-    _setPath(path);
+    _addPath(path);
     // BTCB -> USDT
     path = _encodePath(btcb, 500, usdt);
-    _setPath(path);
+    _addPath(path);
     // BTCB -> USDC
     path = _encodePath(btcb, 500, busd, 100, usdc);
-    _setPath(path);
+    _addPath(path);
 
     // ********* ETH ********* //
     // ETH -> BTCB
     path = _encodePath(eth, 2500, btcb);
-    _setPath(path);
+    _addPath(path);
     // ETH -> WBNB
     path = _encodePath(eth, 2500, wbnb);
-    _setPath(path);
+    _addPath(path);
     // ETH -> BUSD
     path = _encodePath(eth, 2500, wbnb, 500, busd);
-    _setPath(path);
+    _addPath(path);
     // ETH -> USDT
     path = _encodePath(eth, 2500, wbnb, 500, usdt);
-    _setPath(path);
+    _addPath(path);
     // ETH -> USDC
     path = _encodePath(eth, 500, usdc);
-    _setPath(path);
+    _addPath(path);
 
     //---- execution ----//
     _startDeployerBroadcast();
@@ -151,7 +151,7 @@ contract SetPCSV3PathsScript is BaseScript {
     pool = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC);
   }
 
-  function _setPath(bytes memory path) internal {
+  function _addPath(bytes memory path) internal {
     paths.push(path);
 
     delete path;
