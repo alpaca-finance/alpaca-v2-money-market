@@ -18,7 +18,7 @@ contract SetRewardPerSecondScript is BaseScript {
     */
 
     IRewarder rewarder = IRewarder(address(0));
-    uint256 _newRewardPerSecond = 7676681783824641;
+    uint256 _newRewardPerSecond = 6717096560846561;
     bool _withUpdate = true;
 
     //---- execution ----//

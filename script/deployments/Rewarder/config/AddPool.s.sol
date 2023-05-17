@@ -27,8 +27,8 @@ contract SetPoolScript is BaseScript {
     IRewarder rewarder = IRewarder(address(0));
 
     // HIGH
-    addIbPool(high, 50);
-    addDebtPool(high, 75);
+    addIbPool(high, 40);
+    addDebtPool(high, 60);
 
     //---- execution ----//
     _startDeployerBroadcast();
