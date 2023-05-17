@@ -58,8 +58,6 @@ contract HAYWombatWrapper_GetAmountInTest is DSTest, StdUtils, StdAssertions, St
 
     (uint256 _amountOut, ) = wombatRouter.getAmountOut(_tokenPaths, _poolPaths, int256(AMOUNTIN));
 
-    console.log(_amountOut);
-
     uint256[] memory _amountsFromWrapper = wrapper.getAmountsOut(AMOUNTIN, _tokenPaths);
 
     assertEq(_amountsFromWrapper[_amountsFromWrapper.length - 1], _amountOut);
