@@ -196,6 +196,7 @@
       }
     ]
   },
+  "rewarders": [],
   "moneyMarketReader": "0x4913DEC75cC0e061Ba78ebbDb2584905760be4C6",
   "smartTreasury": {
     "implementation": "",
