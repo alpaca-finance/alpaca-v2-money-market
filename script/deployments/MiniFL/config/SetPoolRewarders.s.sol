@@ -23,7 +23,7 @@ contract SetPoolRewardersScript is BaseScript {
     */
 
     address[] memory rewarders = new address[](1);
-    rewarders[0] = address(0);
+    rewarders[0] = 0x7180f062aa725057EB110224a262f64978e89b24;
 
     setIbPoolRewarders(high, rewarders);
     setDebtPoolRewarders(high, rewarders);
@@ -33,6 +33,8 @@ contract SetPoolRewardersScript is BaseScript {
 
     for (uint256 i; i < setPoolRewarderInputs.length; i++) {
       miniFL.setPoolRewarders(setPoolRewarderInputs[i].pId, setPoolRewarderInputs[i].rewarders);
+
+      writeRewarderToMiniFLPool(setPoolRewarderInputs[i].pId, setPoolRewarderInputs[i].rewarders);
     }
 
     _stopBroadcast();
