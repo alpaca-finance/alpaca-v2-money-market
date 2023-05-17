@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import { IWombatRouter } from "./interfaces/IWombatRouter.sol";
 
 contract HAYWombatRouterWrapper {
-  address public constant HAY_SMART_POOL = 0xa61dccC6c6E34C8Fbf14527386cA35589e9b8C27;
   address public constant HAY_POOL = 0x0520451B19AD0bb00eD35ef391086A692CFC74B2;
   address public constant MAIN_POOL = 0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0;
 
