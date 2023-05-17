@@ -40,43 +40,10 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // USDC
+    // HIGH
     addSetMultiPrimarySources(
       SetMultiPrimarySourcesInput({
-        token0: usdc,
-        token1: usdPlaceholder,
-        maxPriceDeviation: 1e18,
-        maxPriceStale: 1 days,
-        priceSources: chainlinkPriceSource
-      })
-    );
-
-    // BTCB
-    addSetMultiPrimarySources(
-      SetMultiPrimarySourcesInput({
-        token0: btcb,
-        token1: usdPlaceholder,
-        maxPriceDeviation: 1e18,
-        maxPriceStale: 1 days,
-        priceSources: chainlinkPriceSource
-      })
-    );
-
-    // ETH
-    addSetMultiPrimarySources(
-      SetMultiPrimarySourcesInput({
-        token0: eth,
-        token1: usdPlaceholder,
-        maxPriceDeviation: 1e18,
-        maxPriceStale: 1 days,
-        priceSources: chainlinkPriceSource
-      })
-    );
-
-    // BUSD
-    addSetMultiPrimarySources(
-      SetMultiPrimarySourcesInput({
-        token0: busd,
+        token0: high,
         token1: usdPlaceholder,
         maxPriceDeviation: 1e18,
         maxPriceStale: 1 days,

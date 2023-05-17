@@ -17,8 +17,8 @@ contract SetRewardPerSecondScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    IRewarder rewarder = IRewarder(0x429CEb4aD26712Ead1b534f6c3662Cd129e465a9);
-    uint256 _newRewardPerSecond = 33068783068783070;
+    IRewarder rewarder = IRewarder(address(0));
+    uint256 _newRewardPerSecond = 6717096560846561;
     bool _withUpdate = true;
 
     //---- execution ----//

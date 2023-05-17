@@ -31,12 +31,12 @@ contract SetPriceFeedsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // USDC
+    // HIGH
     addSetPriceFeeds(
       SetPriceFeedsInput({
-        token0: usdc,
+        token0: high,
         token1: usdPlaceholder,
-        source: IAggregatorV3(0x51597f405303C4377E36123cBc172b13269EA163)
+        source: IAggregatorV3(0xdF4Dd957a84F798acFADd448badd2D8b9bC99047)
       })
     );
 
