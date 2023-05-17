@@ -20,9 +20,9 @@ contract DeployRewarderScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    string memory name = "HIGH Street";
+    string memory name = "high";
     address miniFL = address(miniFL);
-    address rewardToken = 0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63;
+    address rewardToken = high;
     uint256 maxRewardPerSecond = 1 ether;
 
     bytes memory data = abi.encodeWithSelector(
@@ -39,7 +39,23 @@ contract DeployRewarderScript is BaseScript {
     // deploy proxy
     address proxy = address(new TransparentUpgradeableProxy(rewarderImplementation, proxyAdminAddress, data));
 
-    console.log("rewarder", proxy);
+    writeRewarderToJson(proxy);
+
     _stopBroadcast();
+  }
+
+  function writeRewarderToJson(address _rewarder) internal {
+    string[] memory cmds = new string[](9);
+    cmds[0] = "npx";
+    cmds[1] = "ts-node";
+    cmds[2] = "./type-script/scripts/write-rewarder.ts";
+    cmds[3] = "--name";
+    cmds[4] = Rewarder(_rewarder).name();
+    cmds[5] = "--address";
+    cmds[6] = vm.toString(_rewarder);
+    cmds[7] = "--rewardToken";
+    cmds[8] = vm.toString(Rewarder(_rewarder).rewardToken());
+
+    vm.ffi(cmds);
   }
 }
