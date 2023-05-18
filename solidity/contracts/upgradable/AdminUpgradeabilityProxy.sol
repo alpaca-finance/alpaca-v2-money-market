@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // File: MasterChef/contracts-proxy/Proxy.sol
 
-pragma solidity ^0.6.0;
+pragma solidity 0.8.19;
 
 /**
  * @title Proxy
@@ -81,8 +81,6 @@ abstract contract Proxy {
 }
 
 // File: @openzeppelin/contracts/utils/Address.sol
-
-pragma solidity >=0.6.2 <0.8.0;
 
 /**
  * @dev Collection of functions related to the address type
@@ -269,10 +267,6 @@ library Address {
   }
 }
 
-// File: MasterChef/contracts-proxy/UpgradeabilityProxy.sol
-
-pragma solidity ^0.6.0;
-
 /**
  * @title UpgradeabilityProxy
  * @dev This contract implements a proxy that allows to change the
@@ -344,10 +338,6 @@ contract UpgradeabilityProxy is Proxy {
     }
   }
 }
-
-// File: MasterChef/contracts-proxy/AdminUpgradeabilityProxy.sol
-
-pragma solidity ^0.6.0;
 
 /**
  * @title AdminUpgradeabilityProxy

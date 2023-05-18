@@ -15,17 +15,17 @@ module.exports = {
     // },
   },
   solidity: {
-    version: "0.8.13",
+    version: "0.8.19",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 1,
       },
       evmVersion: "istanbul",
     },
   },
   paths: {
-    sources: "./contracts",
+    sources: "./solidity/contracts",
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts",

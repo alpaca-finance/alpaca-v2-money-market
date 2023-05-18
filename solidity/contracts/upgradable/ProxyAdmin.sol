@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // File: @openzeppelin/contracts/GSN/Context.sol
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity 0.8.19;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -15,7 +15,7 @@ pragma solidity >=0.6.0 <0.8.0;
  */
 abstract contract Context {
   function _msgSender() internal view virtual returns (address payable) {
-    return msg.sender;
+    return payable(msg.sender);
   }
 
   function _msgData() internal view virtual returns (bytes memory) {
@@ -25,8 +25,6 @@ abstract contract Context {
 }
 
 // File: @openzeppelin/contracts/access/Ownable.sol
-
-pragma solidity >=0.6.0 <0.8.0;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -91,10 +89,6 @@ abstract contract Ownable is Context {
     _owner = newOwner;
   }
 }
-
-// File: MasterChef/contracts-proxy/Proxy.sol
-
-pragma solidity ^0.6.0;
 
 /**
  * @title Proxy
@@ -172,10 +166,6 @@ abstract contract Proxy {
     _delegate(_implementation());
   }
 }
-
-// File: @openzeppelin/contracts/utils/Address.sol
-
-pragma solidity >=0.6.2 <0.8.0;
 
 /**
  * @dev Collection of functions related to the address type
@@ -362,10 +352,6 @@ library Address {
   }
 }
 
-// File: MasterChef/contracts-proxy/UpgradeabilityProxy.sol
-
-pragma solidity ^0.6.0;
-
 /**
  * @title UpgradeabilityProxy
  * @dev This contract implements a proxy that allows to change the
@@ -437,10 +423,6 @@ contract UpgradeabilityProxy is Proxy {
     }
   }
 }
-
-// File: MasterChef/contracts-proxy/AdminUpgradeabilityProxy.sol
-
-pragma solidity ^0.6.0;
 
 /**
  * @title AdminUpgradeabilityProxy
@@ -576,10 +558,6 @@ contract AdminUpgradeabilityProxy is UpgradeabilityProxy {
     super._willFallback();
   }
 }
-
-// File: MasterChef/contracts-proxy/ProxyAdmin.sol
-
-pragma solidity ^0.6.0;
 
 /**
  * @title ProxyAdmin
