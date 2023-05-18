@@ -3,6 +3,7 @@ optimizer = true
 optimizer-runs = 1
 src = 'solidity/contracts'
 out = 'out'
+cache_path = './forge_cache'
 libs = ['node_modules']
 test = 'solidity/tests'
 fs_permissions = [{ access = "read-write", path = "./" }]

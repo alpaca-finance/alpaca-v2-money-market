@@ -26,40 +26,17 @@ contract SetTokenConfigScript is BaseScript {
 
     // set alpaca guard path
 
-    // WBNB
-    alpacaGuardPath.push(wbnb);
-    alpacaGuardPath.push(usdt);
-    addSetTokenConfigList(
-      IAlpacaV2Oracle.Config({ path: alpacaGuardPath, router: address(0), maxPriceDiffBps: 10500, isUsingV3Pool: true })
-    );
-
-    // USDC
-    alpacaGuardPath.push(usdc);
-    alpacaGuardPath.push(usdt);
-    addSetTokenConfigList(
-      IAlpacaV2Oracle.Config({ path: alpacaGuardPath, router: address(0), maxPriceDiffBps: 10500, isUsingV3Pool: true })
-    );
-
-    // BUSD
+    // HIGH
+    alpacaGuardPath.push(high);
     alpacaGuardPath.push(busd);
     alpacaGuardPath.push(usdt);
     addSetTokenConfigList(
-      IAlpacaV2Oracle.Config({ path: alpacaGuardPath, router: address(0), maxPriceDiffBps: 10500, isUsingV3Pool: true })
-    );
-
-    // BTCB
-    alpacaGuardPath.push(btcb);
-    alpacaGuardPath.push(usdt);
-    addSetTokenConfigList(
-      IAlpacaV2Oracle.Config({ path: alpacaGuardPath, router: address(0), maxPriceDiffBps: 10500, isUsingV3Pool: true })
-    );
-
-    // ETH
-    alpacaGuardPath.push(eth);
-    alpacaGuardPath.push(wbnb);
-    alpacaGuardPath.push(usdt);
-    addSetTokenConfigList(
-      IAlpacaV2Oracle.Config({ path: alpacaGuardPath, router: address(0), maxPriceDiffBps: 10500, isUsingV3Pool: true })
+      IAlpacaV2Oracle.Config({
+        path: alpacaGuardPath,
+        router: pancakeswapRouterV2,
+        maxPriceDiffBps: 10500,
+        isUsingV3Pool: false
+      })
     );
 
     //---- execution ----//

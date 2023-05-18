@@ -1,9 +1,24 @@
 export interface Config {
   moneyMarket: MoneyMarket;
   miniFL: MiniFL;
+  rewarders: Rewarder[];
 }
 
 export interface MoneyMarket {
+  moneyMarketDiamond: string;
+  facets: {
+    adminFacet: string;
+    borrowFacet: string;
+    collateralFacet: string;
+    diamondCutFacet: string;
+    diamondLoupeFacet: string;
+    flashloanFacet: string;
+    lendFacet: string;
+    liquidationFacet: string;
+    nonCollatBorrowFacet: string;
+    ownershipFacet: string;
+    viewFacet: string;
+  };
   markets: Market[];
 }
 
@@ -24,7 +39,13 @@ export interface MiniFLPool {
   id: number;
   name: string;
   stakingToken: string;
-  rewarders: string[];
+  rewarders: Rewarder[];
+}
+
+export interface Rewarder {
+  name: string;
+  address: string;
+  rewardToken: string;
 }
 
 export type AssetTier = 0 | 1 | 2 | 3;

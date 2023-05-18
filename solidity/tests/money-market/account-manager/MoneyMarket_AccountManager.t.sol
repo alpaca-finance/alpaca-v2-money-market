@@ -51,4 +51,14 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
 
     assertEq(weth.balanceOf(ALICE), _wethBalanceBefore);
   }
+
+  function testCorrectness_UnstakeAndWithdrawETH_ShouldWork() external {
+    uint256 _nativeTokenBalance = ALICE.balance;
+    vm.startPrank(ALICE);
+    accountManager.depositETHAndStake{ value: 10 ether }();
+    accountManager.unstakeAndWithdrawETH(10 ether);
+    vm.stopPrank();
+
+    assertEq(weth.balanceOf(ALICE), _nativeTokenBalance);
+  }
 }

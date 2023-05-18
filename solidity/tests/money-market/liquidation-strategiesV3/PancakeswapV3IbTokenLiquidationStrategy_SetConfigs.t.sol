@@ -5,7 +5,7 @@ import { BasePCSV3LiquidationForkTest } from "./BasePCSV3LiquidationForkTest.sol
 import { PancakeswapV3IbTokenLiquidationStrategy } from "../../../contracts/money-market/PancakeswapV3IbTokenLiquidationStrategy.sol";
 
 // libs
-import { LibPCSV3PoolAddress } from "../../../contracts/money-market/libraries/LibPCSV3PoolAddress.sol";
+import { LibPCSV3PoolAddress } from "../../libs/LibPCSV3PoolAddress.sol";
 
 // interfaces
 import { IPancakeV3PoolState } from "../../../contracts/money-market/interfaces/IPancakeV3Pool.sol";
@@ -14,8 +14,11 @@ import { IPancakeV3PoolState } from "../../../contracts/money-market/interfaces/
 import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 
 contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3LiquidationForkTest {
+  PancakeswapV3IbTokenLiquidationStrategy internal liquidationStrat;
+
   function setUp() public override {
     super.setUp();
+    liquidationStrat = new PancakeswapV3IbTokenLiquidationStrategy(address(router), address(moneyMarket));
   }
 
   function testCorrectness_WhenOwnerSetCallersOk_ShouldWork() external {
@@ -68,7 +71,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_SetConfigs is BasePCSV3Liquidat
     // expect pool address
     address _poolAddress = LibPCSV3PoolAddress.computeAddress(
       PANCAKE_V3_POOL_DEPLOYER,
-      LibPCSV3PoolAddress.PoolKey(address(_randomToken0), address(_randomToken1), poolFee)
+      LibPCSV3PoolAddress.getPoolKey(address(_randomToken0), address(_randomToken1), poolFee)
     );
 
     // when mock liquidity => 0, should revert PancakeswapV3IbTokenLiquidationStrategy_NoLiquidity correctly

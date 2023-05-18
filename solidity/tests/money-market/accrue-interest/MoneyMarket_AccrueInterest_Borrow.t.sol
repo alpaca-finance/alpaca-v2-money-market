@@ -17,6 +17,10 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
 
   function setUp() public override {
     super.setUp();
+    // set whitelist
+    address[] memory _operators = new address[](1);
+    _operators[0] = ALICE;
+    adminFacet.setOperatorsOk(_operators, true);
 
     mockToken = deployMockErc20("Mock token", "MOCK", 18);
     mockToken.mint(ALICE, 1000 ether);
@@ -430,18 +434,27 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     _withdrawInput[0] = IAdminFacet.WithdrawProtocolReserveParam(address(weth), address(this), 5e16);
 
     // test withdrawing reserve
+    vm.startPrank(ALICE);
     vm.expectRevert(IAdminFacet.AdminFacet_ReserveTooLow.selector);
     adminFacet.withdrawProtocolReserves(_withdrawInput);
+    vm.stopPrank();
 
     _withdrawInput[0] = IAdminFacet.WithdrawProtocolReserveParam(address(weth), address(this), 4e16);
 
-    vm.prank(ALICE);
-    vm.expectRevert("LibDiamond: Must be contract owner");
+    // call withdraw by deployer, should revert unauthorized
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_Unauthorized.selector));
     adminFacet.withdrawProtocolReserves(_withdrawInput);
 
+    // call withdraw by unauthorized person, should revert unauthorized
+    vm.prank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(IAdminFacet.AdminFacet_Unauthorized.selector));
+    adminFacet.withdrawProtocolReserves(_withdrawInput);
+
+    vm.startPrank(ALICE);
     adminFacet.withdrawProtocolReserves(_withdrawInput);
     assertEq(viewFacet.getProtocolReserve(address(weth)), 0);
     assertEq(viewFacet.getTotalToken(address(weth)), 5396e16);
+    vm.stopPrank();
   }
 
   function testCorrectness_WhenUsersBorrowSameTokenButDifferentInterestModel_ShouldaccrueInterestCorrectly() external {

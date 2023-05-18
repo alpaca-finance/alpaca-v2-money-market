@@ -15,6 +15,7 @@ import { INonCollatBorrowFacet } from "solidity/contracts/money-market/interface
 import { IAdminFacet } from "solidity/contracts/money-market/interfaces/IAdminFacet.sol";
 import { ILiquidationFacet } from "solidity/contracts/money-market/interfaces/ILiquidationFacet.sol";
 import { IMMOwnershipFacet } from "solidity/contracts/money-market/interfaces/IMMOwnershipFacet.sol";
+import { IFlashloanFacet } from "solidity/contracts/money-market/interfaces/IFlashloanFacet.sol";
 
 library LibMoneyMarketDeployment {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -29,6 +30,7 @@ library LibMoneyMarketDeployment {
     address adminFacet;
     address liquidationFacet;
     address ownershipFacet;
+    address flashloanFacet;
   }
 
   function deployMoneyMarketDiamond(address _miniFL)
@@ -70,6 +72,7 @@ library LibMoneyMarketDeployment {
     _facetAddresses.adminFacet = deployContract("./out/AdminFacet.sol/AdminFacet.json");
     _facetAddresses.liquidationFacet = deployContract("./out/LiquidationFacet.sol/LiquidationFacet.json");
     _facetAddresses.ownershipFacet = deployContract("./out/MMOwnershipFacet.sol/MMOwnershipFacet.json");
+    _facetAddresses.flashloanFacet = deployContract("./out/FlashloanFacet.sol/FlashloanFacet.json");
   }
 
   function deployContract(string memory _path) internal returns (address _deployedAddress) {
@@ -94,9 +97,10 @@ library LibMoneyMarketDeployment {
     bytes4[] memory _adminFacetSelectors = getAdminFacetSelectors();
     bytes4[] memory _liquidationFacetSelectors = getLiquidationFacetSelectors();
     bytes4[] memory _ownershipFacetSelectors = getOwnershipFacetSelectors();
+    bytes4[] memory _flashloanFacetSelectors = getFlashloanFacetSelectors();
 
     // prepare FacetCuts
-    IMMDiamondCut.FacetCut[] memory _facetCuts = new IMMDiamondCut.FacetCut[](9);
+    IMMDiamondCut.FacetCut[] memory _facetCuts = new IMMDiamondCut.FacetCut[](10);
     _facetCuts[0] = IMMDiamondCut.FacetCut({
       action: IMMDiamondCut.FacetCutAction.Add,
       facetAddress: _facetAddresses.diamondLoupeFacet,
@@ -142,6 +146,11 @@ library LibMoneyMarketDeployment {
       facetAddress: _facetAddresses.ownershipFacet,
       functionSelectors: _ownershipFacetSelectors
     });
+    _facetCuts[9] = IMMDiamondCut.FacetCut({
+      action: IMMDiamondCut.FacetCutAction.Add,
+      facetAddress: _facetAddresses.flashloanFacet,
+      functionSelectors: _flashloanFacetSelectors
+    });
 
     // perform diamond cut on deployed MoneyMarketDiamond
     // address(0) and empty string means no initialization / cleanup after diamond cut
@@ -157,7 +166,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getViewFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](42);
+    _selectors = new bytes4[](48);
     _selectors[0] = IViewFacet.getProtocolReserve.selector;
     _selectors[1] = IViewFacet.getTokenConfig.selector;
     _selectors[2] = IViewFacet.getOverCollatDebtSharesOf.selector;
@@ -200,6 +209,12 @@ library LibMoneyMarketDeployment {
     _selectors[39] = IViewFacet.getOverCollatPendingInterest.selector;
     _selectors[40] = IViewFacet.getOverCollatInterestModel.selector;
     _selectors[41] = IViewFacet.getOverCollatInterestRate.selector;
+    _selectors[42] = IViewFacet.getFlashloanParams.selector;
+    _selectors[43] = IViewFacet.isLiquidationStratOk.selector;
+    _selectors[44] = IViewFacet.isLiquidatorOk.selector;
+    _selectors[45] = IViewFacet.isAccountManagersOk.selector;
+    _selectors[46] = IViewFacet.isRiskManagersOk.selector;
+    _selectors[47] = IViewFacet.isOperatorsOk.selector;
   }
 
   function getLendFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
@@ -230,7 +245,7 @@ library LibMoneyMarketDeployment {
   }
 
   function getAdminFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
-    _selectors = new bytes4[](23);
+    _selectors = new bytes4[](25);
     _selectors[0] = IAdminFacet.openMarket.selector;
     _selectors[1] = IAdminFacet.setTokenConfigs.selector;
     _selectors[2] = IAdminFacet.setNonCollatBorrowerOk.selector;
@@ -254,6 +269,8 @@ library LibMoneyMarketDeployment {
     _selectors[20] = IAdminFacet.setAccountManagersOk.selector;
     _selectors[21] = IAdminFacet.setTokenMaximumCapacities.selector;
     _selectors[22] = IAdminFacet.setRiskManagersOk.selector;
+    _selectors[23] = IAdminFacet.setFlashloanParams.selector;
+    _selectors[24] = IAdminFacet.setOperatorsOk.selector;
   }
 
   function getLiquidationFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
@@ -268,5 +285,10 @@ library LibMoneyMarketDeployment {
     _selectors[1] = IMMOwnershipFacet.acceptOwnership.selector;
     _selectors[2] = IMMOwnershipFacet.owner.selector;
     _selectors[3] = IMMOwnershipFacet.pendingOwner.selector;
+  }
+
+  function getFlashloanFacetSelectors() internal pure returns (bytes4[] memory _selectors) {
+    _selectors = new bytes4[](1);
+    _selectors[0] = IFlashloanFacet.flashloan.selector;
   }
 }

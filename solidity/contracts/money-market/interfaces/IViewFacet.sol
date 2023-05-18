@@ -115,6 +115,15 @@ interface IViewFacet {
       uint16 _liquidationFeeBps
     );
 
+  function getFlashloanParams()
+    external
+    view
+    returns (
+      uint16 _flashloanFeeBps,
+      uint16 _lenderFlashloanBps,
+      address _flashloanTreasury
+    );
+
   function getRepurchaseRewardModel() external view returns (address);
 
   function getIbTokenImplementation() external view returns (address);
@@ -128,4 +137,14 @@ interface IViewFacet {
   function getOracle() external view returns (address);
 
   function getMiniFL() external view returns (address);
+
+  function isLiquidationStratOk(address _strat) external view returns (bool);
+
+  function isLiquidatorOk(address _liquidator) external view returns (bool);
+
+  function isAccountManagersOk(address _accountManger) external view returns (bool);
+
+  function isRiskManagersOk(address _riskManager) external view returns (bool);
+
+  function isOperatorsOk(address _operator) external view returns (bool);
 }

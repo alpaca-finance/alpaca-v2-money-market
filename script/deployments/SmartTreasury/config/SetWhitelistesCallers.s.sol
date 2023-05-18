@@ -3,9 +3,10 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployChainlinkPriceOracle2Script is BaseScript {
+contract SetWhitelistesCallers is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -19,30 +20,13 @@ contract DeployChainlinkPriceOracle2Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    bytes memory _logicBytecode = abi.encodePacked(
-      vm.getCode("./script/deployments/ChainLinkOracle2/deploy/ChainlinkPriceOracle2.json")
-    );
+    address[] memory _callers = new address[](1);
+    _callers[0] = deployerAddress;
 
-    bytes memory data = abi.encodeWithSelector(bytes4(keccak256("initialize()")));
-
-    address _chainLinkPriceOracle2Implementation;
     _startDeployerBroadcast();
 
-    // deploy implementation
-    assembly {
-      _chainLinkPriceOracle2Implementation := create(0, add(_logicBytecode, 0x20), mload(_logicBytecode))
-      if iszero(extcodesize(_chainLinkPriceOracle2Implementation)) {
-        revert(0, 0)
-      }
-    }
+    smartTreasury.setWhitelistedCallers(_callers, true);
 
-    // deploy proxy
-    address proxy = address(
-      new TransparentUpgradeableProxy(_chainLinkPriceOracle2Implementation, proxyAdminAddress, data)
-    );
     _stopBroadcast();
-
-    console.log("_chainLinkPriceOracle2Implementation", _chainLinkPriceOracle2Implementation);
-    console.log("_chainLinkPriceOracle2Proxy", proxy);
   }
 }
