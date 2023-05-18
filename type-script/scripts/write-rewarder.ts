@@ -1,31 +1,30 @@
 import { Command } from "commander";
-import { ConfigFileHelper } from "../file-helper.ts/config-file.helper";
-import { MiniFLPool } from "../interfaces";
+import { ConfigFileHelper } from "../../deploy/file-helper.ts/config-file.helper";
+import { Rewarder } from "../../deploy/interfaces";
 
-async function main(id: string, name: string, stakingToken: string) {
+async function main(name: string, address: string, rewardToken: string) {
   const configFileHelper = new ConfigFileHelper();
 
-  const newMiniFLPool: MiniFLPool = {
-    id: Number(id),
+  const rewarder: Rewarder = {
     name,
-    stakingToken,
-    rewarders: [],
+    address,
+    rewardToken,
   };
 
-  configFileHelper.addMiniFLPool(newMiniFLPool);
+  configFileHelper.addRewarder(rewarder);
   console.log("✅ Done");
 }
 
 const program = new Command();
-program.requiredOption("-i, --id <id>");
 program.requiredOption("-n, --name <name>");
-program.requiredOption("-token, --stakingToken <stakingToken>");
+program.requiredOption("-a, --address <address>");
+program.requiredOption("-r, --rewardToken <rewardToken>");
 
 program.parse(process.argv);
 
 const options = program.opts();
 
-main(options.id, options.name, options.stakingToken)
+main(options.name, options.address, options.rewardToken)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
