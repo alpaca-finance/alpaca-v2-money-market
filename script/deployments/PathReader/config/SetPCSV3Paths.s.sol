@@ -151,9 +151,9 @@ contract SetPCSV3PathsScript is BaseScript {
     pool = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC);
   }
 
-  function _addPath(bytes memory path) internal {
-    paths.push(path);
+  function _addPath(bytes memory _path) internal {
+    paths.push(_path);
 
-    delete path;
+    delete _path;
   }
 }
