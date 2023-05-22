@@ -23,7 +23,7 @@ contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
 
   /// @notice Sets path configurations v2
   /// @param _inputs An array of PathParams (each PathParams must contain router and path)
-  function setPaths(PathParams[] calldata _inputs) external {
+  function setPaths(PathParams[] calldata _inputs) external onlyOwner {
     uint256 _len = _inputs.length;
     PathParams memory _params;
     for (uint256 _i; _i < _len; ) {
