@@ -24,7 +24,7 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    IRewarder rewarder = IRewarder(address(0));
+    IRewarder rewarder = IRewarder(0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB);
 
     // HIGH
     addIbPool(high, 40);
