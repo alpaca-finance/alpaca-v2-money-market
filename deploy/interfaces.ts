@@ -6,6 +6,7 @@ interface UpgradableContract {
 export interface Config {
   moneyMarket: MoneyMarket;
   miniFL: MiniFL;
+  rewarders: Rewarder[];
   proxyAdmin: string;
   timelock: string;
   opMultiSig: string;
@@ -47,7 +48,13 @@ export interface MiniFLPool {
   id: number;
   name: string;
   stakingToken: string;
-  rewarders: string[];
+  rewarders: Rewarder[];
+}
+
+export interface Rewarder {
+  name: string;
+  address: string;
+  rewardToken: string;
 }
 
 export type AssetTier = 0 | 1 | 2 | 3;

@@ -14,6 +14,7 @@
     "doge": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
     "dot": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
     "eth": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+    "high": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63",
     "matic": "0xCC42724C6683B7E57334c4E856f4c9965ED682bD",
     "tusd": "0x14016E85a25aeb13065688cAFB43044C2ef86784",
     "usdt": "0x55d398326f99059fF775485246999027B3197955",
@@ -197,6 +198,7 @@
       }
     ]
   },
+  "rewarders": [],
   "moneyMarketReader": "0x4913DEC75cC0e061Ba78ebbDb2584905760be4C6",
   "smartTreasury": {
     "implementation": "",

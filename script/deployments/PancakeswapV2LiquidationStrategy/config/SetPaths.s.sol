@@ -8,6 +8,8 @@ import { PancakeswapV2LiquidationStrategy } from "solidity/contracts/money-marke
 contract SetPathsScript is BaseScript {
   using stdJson for string;
 
+  PancakeswapV2LiquidationStrategy.SetPathParams[] liquidationPaths;
+
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -19,25 +21,82 @@ contract SetPathsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address[] memory _strats = new address[](2);
-    _strats[0] = address(pancakeswapV2LiquidateStrat);
-    _strats[1] = address(pancakeswapV2IbLiquidateStrat);
+    address[] memory _strats = new address[](1);
+    _strats[0] = address(pancakeswapV2IbLiquidateStrat);
 
-    address[] memory _wbnbLiquidationPath = new address[](2);
-    _wbnbLiquidationPath[0] = wbnb;
-    _wbnbLiquidationPath[1] = busd;
+    // ********* WBNB ********* //
+    // WBNB -> HIGH:
+    setLiquidationPath(wbnb, busd, high);
 
-    PancakeswapV2LiquidationStrategy.SetPathParams[]
-      memory _inputs = new PancakeswapV2LiquidationStrategy.SetPathParams[](1);
+    // ********* USDC ********* //
+    // USDC -> HIGH:
+    setLiquidationPath(usdc, busd, high);
 
-    _inputs[0].path = _wbnbLiquidationPath;
+    // ********* USDT ********* //
+    // USDT -> HIGH:
+    setLiquidationPath(usdt, busd, high);
+
+    // ********* BUSD ********* //
+    // BUSD -> HIGH:
+    setLiquidationPath(busd, high);
+
+    // ********* BTCB ********* //
+    // BTCB -> HIGH:
+    setLiquidationPath(btcb, busd, high);
+
+    // ********* ETH ********* //
+    // ETH -> HIGH:
+    setLiquidationPath(eth, busd, high);
+
+    // ********* HIGH ********* //
+    // HIGH -> WBNB:
+    setLiquidationPath(high, busd, wbnb);
+    // HIGH -> USDC:
+    setLiquidationPath(high, busd, usdc);
+    // HIGH -> USDT:
+    setLiquidationPath(high, busd, usdt);
+    // HIGH -> BUSD:
+    setLiquidationPath(high, busd);
+    // HIGH -> BTCB:
+    setLiquidationPath(high, busd, btcb);
+    // HIGH -> ETH:
+    setLiquidationPath(high, busd, eth);
 
     _startDeployerBroadcast();
 
     for (uint8 i; i < _strats.length; i++) {
-      PancakeswapV2LiquidationStrategy(_strats[i]).setPaths(_inputs);
+      PancakeswapV2LiquidationStrategy(_strats[i]).setPaths(liquidationPaths);
     }
 
     _stopBroadcast();
+  }
+
+  function setLiquidationPath(address _token1, address _token2) internal {
+    address[] memory path = new address[](2);
+    path[0] = _token1;
+    path[1] = _token2;
+
+    PancakeswapV2LiquidationStrategy.SetPathParams memory _input = PancakeswapV2LiquidationStrategy.SetPathParams({
+      path: path
+    });
+
+    liquidationPaths.push(_input);
+  }
+
+  function setLiquidationPath(
+    address _token1,
+    address _token2,
+    address _token3
+  ) internal {
+    address[] memory path = new address[](3);
+    path[0] = _token1;
+    path[1] = _token2;
+    path[2] = _token3;
+
+    PancakeswapV2LiquidationStrategy.SetPathParams memory _input = PancakeswapV2LiquidationStrategy.SetPathParams({
+      path: path
+    });
+
+    liquidationPaths.push(_input);
   }
 }
