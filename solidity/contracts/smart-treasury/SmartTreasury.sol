@@ -201,15 +201,13 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
         // Check path on pool v3 first
         bytes memory _v3Path = (pathReaderV3.paths(_token, _revenueToken));
         if (_v3Path.length != 0) {
-          bool _success = _swapTokenV3(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _v3Path);
-          if (!_success) {
+          if (!_swapTokenV3(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _v3Path)) {
             return;
           }
         } else {
           IUniSwapV2PathReader.PathParams memory _pathParam = pathReaderV2.getPath(_token, _revenueToken);
           if (_pathParam.path.length != 0) {
-            bool _success = _swapTokenV2(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _pathParam);
-            if (!_success) {
+            if (!_swapTokenV2(_token, _revenueToken, _revenueAmount, _revenueTreasuryAddress, _pathParam)) {
               return;
             }
           } else {
