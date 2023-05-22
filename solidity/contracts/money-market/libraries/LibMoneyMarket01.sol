@@ -80,10 +80,11 @@ library LibMoneyMarket01 {
   );
 
   event LogWriteOffSubAccountDebt(
-    address indexed subAccount,
-    address indexed token,
-    uint256 debtShareWrittenOff,
-    uint256 debtValueWrittenOff
+    address indexed _account,
+    address indexed _subAccount,
+    address indexed _token,
+    uint256 _debtShareWrittenOff,
+    uint256 _debtValueWrittenOff
   );
 
   struct ProtocolConfig {
@@ -1187,7 +1188,7 @@ library LibMoneyMarket01 {
       // Reset debts of the token under subAccount
       removeOverCollatDebtFromSubAccount(_account, _subAccount, _token, _shareToRemove, _amountToRemove, moneyMarketDs);
 
-      emit LogWriteOffSubAccountDebt(_subAccount, _token, _shareToRemove, _amountToRemove);
+      emit LogWriteOffSubAccountDebt(_account, _subAccount, _token, _shareToRemove, _amountToRemove);
 
       unchecked {
         ++_i;

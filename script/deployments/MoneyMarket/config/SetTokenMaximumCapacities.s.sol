@@ -3,7 +3,9 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-contract SetAlpacaPerSecondScript is BaseScript {
+contract SetTokenMaximumCapacitiesScript is BaseScript {
+  using stdJson for string;
+
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -15,13 +17,14 @@ contract SetAlpacaPerSecondScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint256 _newAlpacaPerSecond = 0.1421957671957672 ether;
-    bool _withUpdate = true;
+    address token = high;
+    uint256 newMaxCollateral = 0;
+    uint256 newMaxBorrow = 1_000_000 ether;
 
     //---- execution ----//
     _startDeployerBroadcast();
 
-    miniFL.setAlpacaPerSecond(_newAlpacaPerSecond, _withUpdate);
+    moneyMarket.setTokenMaximumCapacities(token, newMaxCollateral, newMaxBorrow);
 
     _stopBroadcast();
   }

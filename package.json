@@ -1,13 +1,13 @@
 {
   "name": "@alpaca-finance/alpaca-money-market",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "compile": "hardhat typechain --config hardhat.config.ts",
-    "hardhat": "hardhat",
-    "build": "yarn run build:cjs",
+    "prepublishOnly": "yarn compile",
+    "compile": "hardhat compile && yarn build",
     "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "yarn run build:cjs",
     "bsc_mainnet": "hardhat console --no-compile --network bsc_mainnet",
     "----------Deploy Foundry Script-------------": "----------Deploy Foundry Script-------------",
     "exec:bsc_mainnet:proxy-admin:deploy": "forge script script/deployments/ProxyAdmin/deploy/ProxyAdmin.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -40,9 +40,11 @@
     "exec:bsc_mainnet:money-market:config:set-operator-ok": "forge script script/deployments/MoneyMarket/config/SetOperatorsOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:withdraw-protocol-reserves": "forge script script/deployments/MoneyMarket/config/WithdrawProtocolReserves.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-flash-loan-params": "forge script script/deployments/MoneyMarket/config/SetFlashloanParams.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:config:set-token-max-capacity": "forge script script/deployments/MoneyMarket/config/SetTokenMaximumCapacities.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:admin-facet:deploy": "forge script script/deployments/MoneyMarket/deploy/AdminFacet.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:flash-loan-facet:deploy": "forge script script/deployments/MoneyMarket/deploy/FlashloanFacet.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:view-facet:deploy": "forge script script/deployments/MoneyMarket/deploy/ViewFacet.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:money-market:liquidation-facet:deploy": "forge script script/deployments/MoneyMarket/deploy/LiquidationFacet.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:mm-account-manager:deploy": "forge script script/deployments/MoneyMarketAccountManager/deploy/MoneyMarketAccountManager.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-strat:deploy": "forge script script/deployments/PancakeswapV2LiquidationStrategy/deploy/PancakeswapV2LiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:pancake-v2-liquidate-ib-strat:deploy": "forge script script/deployments/PancakeswapV2IbTokenLiquidationStrategy/deploy/PancakeswapV2IbTokenLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -85,17 +87,22 @@
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
-    "@openzeppelin/hardhat-upgrades": "^1.16.1",
     "@openzeppelin/contracts": "^4.7.1",
     "@openzeppelin/contracts-upgradeable": "^4.7.3",
+    "@openzeppelin/hardhat-upgrades": "^1.16.1",
+    "@typechain/ethers-v5": "^10.2.0",
+    "commander": "^9.2.0",
     "dotenv": "^16.0.0",
     "ethers": "^5.6.1",
     "hardhat": "^2.9.1",
     "hardhat-deploy": "^0.11.10",
     "prettier": "^2.6.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.19",
-    "commander": "^9.2.0"
+    "prettier-plugin-solidity": "^1.0.0-beta.19"
   },
+  "files": [
+    "typechain",
+    "artifacts"
+  ],
   "engines": {
     "node": ">=14.15.4"
   }

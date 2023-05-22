@@ -3,7 +3,11 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-contract SetAlpacaPerSecondScript is BaseScript {
+import { LiquidationFacet } from "solidity/contracts/money-market/facets/LiquidationFacet.sol";
+
+contract DeployLiquidationFacetScript is BaseScript {
+  using stdJson for string;
+
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -15,14 +19,12 @@ contract SetAlpacaPerSecondScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint256 _newAlpacaPerSecond = 0.1421957671957672 ether;
-    bool _withUpdate = true;
-
-    //---- execution ----//
     _startDeployerBroadcast();
 
-    miniFL.setAlpacaPerSecond(_newAlpacaPerSecond, _withUpdate);
+    address liquidationFacet = address(new LiquidationFacet());
 
     _stopBroadcast();
+
+    _writeJson(vm.toString(liquidationFacet), ".moneyMarket.facets.liquidationFacet");
   }
 }
