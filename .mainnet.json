@@ -110,6 +110,14 @@
         "ibToken": "0x0A4FE32De91bE99a3EFAC80F6576976293B95369",
         "debtToken": "0x57496afdB38A0da228046c93695778c757075dEa",
         "interestModel": "0x89c53B34b5E6A1D0b2922941749e9Ee05ce58b42"
+      },
+      {
+        "name": "HIGH",
+        "tier": "CROSS",
+        "token": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63",
+        "ibToken": "0x0c9E2653B17b60E9aD9465D1cF478bD6d76a03F0",
+        "debtToken": "0xeB27c21EBA6765608681ec96B0d9F697726884DA",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
       }
     ],
     "accountManager": {
@@ -193,10 +201,40 @@
         "name": "debtETH",
         "stakingToken": "0x57496afdB38A0da228046c93695778c757075dEa",
         "rewarders": []
+      },
+      {
+        "id": 13,
+        "name": "ibHIGH",
+        "stakingToken": "0x0c9E2653B17b60E9aD9465D1cF478bD6d76a03F0",
+        "rewarders": [
+          {
+            "name": "high",
+            "address": "0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB",
+            "rewardToken": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "name": "debtHIGH",
+        "stakingToken": "0xeB27c21EBA6765608681ec96B0d9F697726884DA",
+        "rewarders": [
+          {
+            "name": "high",
+            "address": "0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB",
+            "rewardToken": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63"
+          }
+        ]
       }
     ]
   },
-  "rewarders": [],
+  "rewarders": [
+    {
+      "name": "high",
+      "address": "0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB",
+      "rewardToken": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63"
+    }
+  ],
   "moneyMarketReader": "0x4913DEC75cC0e061Ba78ebbDb2584905760be4C6",
   "smartTreasury": {
     "implementation": "",
