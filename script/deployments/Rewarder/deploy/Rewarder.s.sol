@@ -21,14 +21,14 @@ contract DeployRewarderScript is BaseScript {
     */
 
     string memory name = "high";
-    address miniFL = address(miniFL);
+    address _miniFL = address(miniFL);
     address rewardToken = high;
     uint256 maxRewardPerSecond = 1 ether;
 
     bytes memory data = abi.encodeWithSelector(
       bytes4(keccak256("initialize(string,address,address,uint256)")),
       name,
-      miniFL,
+      _miniFL,
       rewardToken,
       maxRewardPerSecond
     );
