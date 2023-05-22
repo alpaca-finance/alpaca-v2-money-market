@@ -3,6 +3,8 @@ interface UpgradableContract {
   proxy: string;
 }
 
+interface AccountManager extends UpgradableContract {}
+
 export interface Config {
   moneyMarket: MoneyMarket;
   miniFL: MiniFL;
@@ -28,7 +30,7 @@ export interface MoneyMarket {
     viewFacet: string;
   };
   markets: Market[];
-  accountManager: UpgradableContract;
+  accountManager: AccountManager;
 }
 
 export interface MiniFL {
