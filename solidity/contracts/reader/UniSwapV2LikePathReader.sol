@@ -36,10 +36,10 @@ contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
 
       paths[_path[0]][_path[_path.length - 1]] = _params;
 
+      emit LogSetPath(_path[0], _path[_path.length - 1], _path);
       unchecked {
         ++_i;
       }
-      emit LogSetPath(_path[0], _path[_path.length - 1], _path);
     }
   }
 }
