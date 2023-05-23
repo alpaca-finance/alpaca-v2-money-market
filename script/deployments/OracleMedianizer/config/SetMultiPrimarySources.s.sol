@@ -40,10 +40,21 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // HIGH
+    // CAKE
     addSetMultiPrimarySources(
       SetMultiPrimarySourcesInput({
-        token0: high,
+        token0: cake,
+        token1: usdPlaceholder,
+        maxPriceDeviation: 1e18,
+        maxPriceStale: 1 days,
+        priceSources: chainlinkPriceSource
+      })
+    );
+
+    // XRP
+    addSetMultiPrimarySources(
+      SetMultiPrimarySourcesInput({
+        token0: xrp,
         token1: usdPlaceholder,
         maxPriceDeviation: 1e18,
         maxPriceStale: 1 days,

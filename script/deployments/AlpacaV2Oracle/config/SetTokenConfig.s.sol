@@ -26,16 +26,29 @@ contract SetTokenConfigScript is BaseScript {
 
     // set alpaca guard path
 
-    // HIGH
-    alpacaGuardPath.push(high);
-    alpacaGuardPath.push(busd);
+    // CAKE
+    alpacaGuardPath.push(cake);
+    alpacaGuardPath.push(wbnb);
     alpacaGuardPath.push(usdt);
     addSetTokenConfigList(
       IAlpacaV2Oracle.Config({
         path: alpacaGuardPath,
-        router: pancakeswapRouterV2,
-        maxPriceDiffBps: 10500,
-        isUsingV3Pool: false
+        router: pancakeswapRouterV3,
+        maxPriceDiffBps: 10_500,
+        isUsingV3Pool: true
+      })
+    );
+
+    // XRP
+    alpacaGuardPath.push(xrp);
+    alpacaGuardPath.push(wbnb);
+    alpacaGuardPath.push(usdt);
+    addSetTokenConfigList(
+      IAlpacaV2Oracle.Config({
+        path: alpacaGuardPath,
+        router: pancakeswapRouterV3,
+        maxPriceDiffBps: 10_500,
+        isUsingV3Pool: true
       })
     );
 

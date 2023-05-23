@@ -120,6 +120,22 @@
         "ibToken": "0x0c9E2653B17b60E9aD9465D1cF478bD6d76a03F0",
         "debtToken": "0xeB27c21EBA6765608681ec96B0d9F697726884DA",
         "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "Cake",
+        "tier": "COLLATERAL",
+        "token": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+        "ibToken": "0x848204278E491f5f15B3F2dce593e6af9552b372",
+        "debtToken": "0xE0ECA72bEe09695C82d9DD5422267270495eA0c2",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "XRP",
+        "tier": "COLLATERAL",
+        "token": "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE",
+        "ibToken": "0xACb41b8bddF67727F07bf375b01edC40Ed51c4ff",
+        "debtToken": "0x9c04F5D68fc754D79fBCAc8fC56469C0264F85DC",
+        "interestModel": "0x89c53B34b5E6A1D0b2922941749e9Ee05ce58b42"
       }
     ],
     "accountManager": {
@@ -227,6 +243,30 @@
             "rewardToken": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63"
           }
         ]
+      },
+      {
+        "id": 15,
+        "name": "ibCake",
+        "stakingToken": "0x848204278E491f5f15B3F2dce593e6af9552b372",
+        "rewarders": []
+      },
+      {
+        "id": 16,
+        "name": "debtCake",
+        "stakingToken": "0xE0ECA72bEe09695C82d9DD5422267270495eA0c2",
+        "rewarders": []
+      },
+      {
+        "id": 17,
+        "name": "ibXRP",
+        "stakingToken": "0xACb41b8bddF67727F07bf375b01edC40Ed51c4ff",
+        "rewarders": []
+      },
+      {
+        "id": 18,
+        "name": "debtXRP",
+        "stakingToken": "0x9c04F5D68fc754D79fBCAc8fC56469C0264F85DC",
+        "rewarders": []
       }
     ]
   },

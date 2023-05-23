@@ -31,16 +31,29 @@ contract OpenMarketScript is BaseScript {
     */
     _startDeployerBroadcast();
 
-    // HIGH
+    // CAKE
     executeOpenMarket(
       OpenMarketInput({
-        token: high,
+        token: cake,
         interestModel: doubleSlope1,
-        tier: LibConstant.AssetTier.CROSS,
-        collateralFactor: 0,
-        borrowingFactor: 5000,
-        maxCollateral: 0 ether,
-        maxBorrow: 500_000 ether
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 5000,
+        borrowingFactor: 7500,
+        maxCollateral: 1_000_000 ether,
+        maxBorrow: 750_000 ether
+      })
+    );
+
+    // XRP
+    executeOpenMarket(
+      OpenMarketInput({
+        token: xrp,
+        interestModel: doubleSlope2,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 5000,
+        borrowingFactor: 7500,
+        maxCollateral: 2_500_000 ether,
+        maxBorrow: 2_000_000 ether
       })
     );
 

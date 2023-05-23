@@ -26,105 +26,91 @@ contract SetPathsScript is BaseScript {
     bytes memory liquidationPath;
 
     // ********* WBNB ********* //
-    // WBNB -> USDC:
-    liquidationPath = encodePath(wbnb, 500, usdt, 100, usdc);
+    // WBNB -> CAKE:
+    liquidationPath = encodePath(wbnb, 2500, cake);
     setLiquidationPath(liquidationPath);
-    // WBNB -> USDT:
-    liquidationPath = encodePath(wbnb, 500, usdt);
-    setLiquidationPath(liquidationPath);
-    // WBNB -> BUSD:
-    liquidationPath = encodePath(wbnb, 500, busd);
-    setLiquidationPath(liquidationPath);
-    // WBNB -> BTCB:
-    liquidationPath = encodePath(wbnb, 2500, btcb);
-    setLiquidationPath(liquidationPath);
-    // WBNB -> ETH:
-    liquidationPath = encodePath(wbnb, 2500, eth);
+    // WBNB -> XRP:
+    liquidationPath = encodePath(wbnb, 2500, xrp);
     setLiquidationPath(liquidationPath);
 
     // ********* USDC ********* //
-    // USDC -> BTCB:
-    liquidationPath = encodePath(usdc, 100, busd, 500, btcb);
+    // USDC -> CAKE:
+    liquidationPath = encodePath(usdc, 100, usdt, 2500, cake);
     setLiquidationPath(liquidationPath);
-    // USDC -> ETH:
-    liquidationPath = encodePath(usdc, 500, eth);
-    setLiquidationPath(liquidationPath);
-    // USDC -> WBNB:
-    liquidationPath = encodePath(usdc, 100, usdt, 500, wbnb);
-    setLiquidationPath(liquidationPath);
-    // USDC -> BUSD:
-    liquidationPath = encodePath(usdc, 100, busd);
-    setLiquidationPath(liquidationPath);
-    // USDC -> USDT:
-    liquidationPath = encodePath(usdc, 100, usdt);
+    // USDC -> XRP:
+    liquidationPath = encodePath(usdc, 100, usdt, 500, wbnb, 2500, xrp);
     setLiquidationPath(liquidationPath);
 
     // ********* USDT ********* //
-    // USDT -> BTCB:
-    liquidationPath = encodePath(usdt, 500, btcb);
+    // USDT -> CAKE:
+    liquidationPath = encodePath(usdt, 100, wbnb, 2500, cake);
     setLiquidationPath(liquidationPath);
-    // USDT -> ETH:
-    liquidationPath = encodePath(usdt, 500, wbnb, 2500, eth);
-    setLiquidationPath(liquidationPath);
-    // USDT -> WBNB:
-    liquidationPath = encodePath(usdt, 500, wbnb);
-    setLiquidationPath(liquidationPath);
-    // USDT -> BUSD:
-    liquidationPath = encodePath(usdt, 100, busd);
-    setLiquidationPath(liquidationPath);
-    // USDT -> USDC:
-    liquidationPath = encodePath(usdt, 100, usdc);
+    // USDT -> XRP:
+    liquidationPath = encodePath(usdt, 100, wbnb, 2500, xrp);
     setLiquidationPath(liquidationPath);
 
     // ********* BUSD ********* //
-    // BUSD -> BTCB:
-    liquidationPath = encodePath(busd, 500, btcb);
+    // BUSD -> CAKE:
+    liquidationPath = encodePath(busd, 500, wbnb, 2500, cake);
     setLiquidationPath(liquidationPath);
-    // BUSD -> ETH:
-    liquidationPath = encodePath(busd, 500, wbnb, 2500, eth);
-    setLiquidationPath(liquidationPath);
-    // BUSD -> WBNB:
-    liquidationPath = encodePath(busd, 500, wbnb);
-    setLiquidationPath(liquidationPath);
-    // BUSD -> USDT:
-    liquidationPath = encodePath(busd, 100, usdt);
-    setLiquidationPath(liquidationPath);
-    // BUSD -> USDC:
-    liquidationPath = encodePath(busd, 100, usdc);
+    // BUSD -> XRP:
+    liquidationPath = encodePath(busd, 500, wbnb, 2500, xrp);
     setLiquidationPath(liquidationPath);
 
     // ********* BTCB ********* //
-    // BTCB -> ETH
-    liquidationPath = encodePath(btcb, 2500, eth);
+    // BTCB -> CAKE
+    liquidationPath = encodePath(btcb, 2500, wbnb, 2500, cake);
     setLiquidationPath(liquidationPath);
-    // BTCB -> WBNB
-    liquidationPath = encodePath(btcb, 2500, wbnb);
-    setLiquidationPath(liquidationPath);
-    // BTCB -> BUSD
-    liquidationPath = encodePath(btcb, 500, busd);
-    setLiquidationPath(liquidationPath);
-    // BTCB -> USDT
-    liquidationPath = encodePath(btcb, 500, usdt);
-    setLiquidationPath(liquidationPath);
-    // BTCB -> USDC
-    liquidationPath = encodePath(btcb, 500, busd, 100, usdc);
+    // BTCB -> XRP
+    liquidationPath = encodePath(btcb, 2500, wbnb, 2500, xrp);
     setLiquidationPath(liquidationPath);
 
     // ********* ETH ********* //
-    // ETH -> BTCB
-    liquidationPath = encodePath(eth, 2500, btcb);
+    // ETH -> CAKE
+    liquidationPath = encodePath(eth, 2500, wbnb, 2500, cake);
     setLiquidationPath(liquidationPath);
-    // ETH -> WBNB
-    liquidationPath = encodePath(eth, 2500, wbnb);
+    // ETH -> XRP
+    liquidationPath = encodePath(eth, 2500, wbnb, 2500, xrp);
     setLiquidationPath(liquidationPath);
-    // ETH -> BUSD
-    liquidationPath = encodePath(eth, 2500, wbnb, 500, busd);
+
+    // ********* CAKE ********* //
+    // CAKE -> BTCB
+    liquidationPath = encodePath(cake, 2500, usdt, 500, btcb);
     setLiquidationPath(liquidationPath);
-    // ETH -> USDT
-    liquidationPath = encodePath(eth, 2500, wbnb, 500, usdt);
+    // CAKE -> WBNB
+    liquidationPath = encodePath(cake, 2500, wbnb);
     setLiquidationPath(liquidationPath);
-    // ETH -> USDC
-    liquidationPath = encodePath(eth, 500, usdc);
+    // CAKE -> BUSD
+    liquidationPath = encodePath(cake, 2500, usdt, 100, busd);
+    setLiquidationPath(liquidationPath);
+    // CAKE -> USDT
+    liquidationPath = encodePath(cake, 2500, usdt);
+    setLiquidationPath(liquidationPath);
+    // CAKE -> USDC
+    liquidationPath = encodePath(cake, 2500, usdt, 100, usdc);
+    setLiquidationPath(liquidationPath);
+    // CAKE -> XRP
+    liquidationPath = encodePath(cake, 2500, wbnb, 2500, xrp);
+    setLiquidationPath(liquidationPath);
+
+    // ********* XRP ********* //
+    // XRP -> BTCB
+    liquidationPath = encodePath(xrp, 2500, wbnb, 2500, btcb);
+    setLiquidationPath(liquidationPath);
+    // XRP -> WBNB
+    liquidationPath = encodePath(xrp, 2500, wbnb);
+    setLiquidationPath(liquidationPath);
+    // XRP -> BUSD
+    liquidationPath = encodePath(xrp, 2500, wbnb, 500, busd);
+    setLiquidationPath(liquidationPath);
+    // XRP -> USDT
+    liquidationPath = encodePath(xrp, 2500, wbnb, 100, usdt);
+    setLiquidationPath(liquidationPath);
+    // XRP -> USDC
+    liquidationPath = encodePath(xrp, 2500, wbnb, 500, usdt, 100, usdc);
+    setLiquidationPath(liquidationPath);
+    // XRP -> CAKE
+    liquidationPath = encodePath(xrp, 2500, wbnb, 2500, cake);
     setLiquidationPath(liquidationPath);
 
     //---- execution ----//
