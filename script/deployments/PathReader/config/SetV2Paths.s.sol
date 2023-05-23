@@ -49,19 +49,17 @@ contract SetV2PathsScript is BaseScript {
     // ETH -> HIGH:
     _addLiquidationPath(eth, busd, high);
 
+    // ********* CAKE ********* //
+    // CAKE -> HIGH:
+    _addLiquidationPath(cake, busd, high);
+
+    // ********* XRP ********* //
+    // XRP -> HIGH:
+    _addLiquidationPath(xrp, busd, high);
+
     // ********* HIGH ********* //
-    // HIGH -> WBNB:
-    _addLiquidationPath(high, busd, wbnb);
-    // HIGH -> USDC:
-    _addLiquidationPath(high, busd, usdc);
-    // HIGH -> USDT:
-    _addLiquidationPath(high, busd, usdt);
     // HIGH -> BUSD:
     _addLiquidationPath(high, busd);
-    // HIGH -> BTCB:
-    _addLiquidationPath(high, busd, btcb);
-    // HIGH -> ETH:
-    _addLiquidationPath(high, busd, eth);
 
     _startDeployerBroadcast();
 
