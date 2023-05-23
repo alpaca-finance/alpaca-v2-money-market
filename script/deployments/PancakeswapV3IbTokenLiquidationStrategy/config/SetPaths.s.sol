@@ -155,6 +155,18 @@ contract SetPathsScript is BaseScript {
     pool = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC);
   }
 
+  function encodePath(
+    address _tokenA,
+    uint24 _fee0,
+    address _tokenB,
+    uint24 _fee1,
+    address _tokenC,
+    uint24 _fee2,
+    address _tokenD
+  ) internal pure returns (bytes memory pool) {
+    pool = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC, _fee2, _tokenD);
+  }
+
   function setLiquidationPath(bytes memory liquidationPath) internal {
     paths.push(liquidationPath);
 
