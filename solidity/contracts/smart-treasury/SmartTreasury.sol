@@ -191,8 +191,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   function _distribute(address _token) internal {
     address _revenueToken = revenueToken;
     address _revenueTreasuryAddress = revenueTreasury;
-    uint256 _amount = IERC20(_token).balanceOf(address(this));
-    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(_amount);
+    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(IERC20(_token).balanceOf(address(this)));
 
     if (_revenueAmount != 0) {
       if (_token == _revenueToken) {
