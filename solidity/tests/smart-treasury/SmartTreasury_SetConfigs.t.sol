@@ -19,12 +19,7 @@ contract SmartTreasury_SetConfigs is BaseFork {
   }
 
   function testCorrectness_SetRevenueToken_ShouldWork() external {
-    address[] memory _callers = new address[](1);
-    _callers[0] = ALICE;
-    vm.prank(DEPLOYER);
-    smartTreasury.setWhitelistedCallers(_callers, true);
-
-    vm.startPrank(ALICE);
+    vm.startPrank(DEPLOYER);
     smartTreasury.setRevenueToken(address(wbnb));
     assertEq(smartTreasury.revenueToken(), address(wbnb), "Set Revenue Token");
 
@@ -36,12 +31,7 @@ contract SmartTreasury_SetConfigs is BaseFork {
   }
 
   function testCorrectness_SetAlloc_ShouldWork() external {
-    address[] memory _callers = new address[](1);
-    _callers[0] = ALICE;
-    vm.prank(DEPLOYER);
-    smartTreasury.setWhitelistedCallers(_callers, true);
-
-    vm.startPrank(ALICE);
+    vm.startPrank(DEPLOYER);
     smartTreasury.setAllocPoints(100, 100, 100);
     assertEq(smartTreasury.revenueAllocPoint(), 100, "Set Revenue Allocation");
     assertEq(smartTreasury.devAllocPoint(), 100, "Set Dev Allocation");
@@ -58,12 +48,7 @@ contract SmartTreasury_SetConfigs is BaseFork {
   }
 
   function testCorrectness_SetTreasuryAddresses_ShouldWork() external {
-    address[] memory _callers = new address[](1);
-    _callers[0] = ALICE;
-    vm.prank(DEPLOYER);
-    smartTreasury.setWhitelistedCallers(_callers, true);
-
-    vm.startPrank(ALICE);
+    vm.startPrank(DEPLOYER);
     smartTreasury.setTreasuryAddresses(REVENUE_TREASURY, DEV_TREASURY, BURN_TREASURY);
     assertEq(smartTreasury.revenueTreasury(), REVENUE_TREASURY, "Set Revenue treasury address");
     assertEq(smartTreasury.devTreasury(), DEV_TREASURY, "Set Dev treasury address");
@@ -82,12 +67,7 @@ contract SmartTreasury_SetConfigs is BaseFork {
   }
 
   function testCorrectness_SetSlippageTolerances_ShouldWork() external {
-    address[] memory _callers = new address[](1);
-    _callers[0] = ALICE;
-    vm.prank(DEPLOYER);
-    smartTreasury.setWhitelistedCallers(_callers, true);
-
-    vm.startPrank(ALICE);
+    vm.startPrank(DEPLOYER);
     smartTreasury.setSlippageToleranceBps(100);
     assertEq(smartTreasury.slippageToleranceBps(), 100, "Slippage tolerance");
 
@@ -104,16 +84,16 @@ contract SmartTreasury_SetConfigs is BaseFork {
     smartTreasury.setWhitelistedCallers(_callers, true);
 
     vm.startPrank(BOB);
-    vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
+    vm.expectRevert("Ownable: caller is not the owner");
     smartTreasury.setRevenueToken(address(wbnb));
 
-    vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
+    vm.expectRevert("Ownable: caller is not the owner");
     smartTreasury.setAllocPoints(100, 100, 100);
 
-    vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
+    vm.expectRevert("Ownable: caller is not the owner");
     smartTreasury.setTreasuryAddresses(REVENUE_TREASURY, DEV_TREASURY, BURN_TREASURY);
 
-    vm.expectRevert(ISmartTreasury.SmartTreasury_Unauthorized.selector);
+    vm.expectRevert("Ownable: caller is not the owner");
     smartTreasury.setSlippageToleranceBps(100);
 
     vm.stopPrank();

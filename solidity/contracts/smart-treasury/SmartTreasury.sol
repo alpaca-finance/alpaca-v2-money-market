@@ -96,7 +96,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     uint16 _revenueAllocPoint,
     uint16 _devAllocPoint,
     uint16 _burnAllocPoint
-  ) external onlyWhitelisted {
+  ) external onlyOwner {
     if (
       _revenueAllocPoint > LibConstant.MAX_BPS ||
       _devAllocPoint > LibConstant.MAX_BPS ||
@@ -115,7 +115,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   /// @notice Set revenue token
   /// @dev Revenue token used for swapping before transfer to revenue treasury.
   /// @param _revenueToken An address of destination token.
-  function setRevenueToken(address _revenueToken) external onlyWhitelisted {
+  function setRevenueToken(address _revenueToken) external onlyOwner {
     // Sanity check
     IERC20(_revenueToken).decimals();
 
@@ -125,7 +125,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
 
   /// @notice Set Slippage tolerance (bps)
   /// @param _slippageToleranceBps Amount of Slippage Tolerance (bps)
-  function setSlippageToleranceBps(uint16 _slippageToleranceBps) external onlyWhitelisted {
+  function setSlippageToleranceBps(uint16 _slippageToleranceBps) external onlyOwner {
     if (_slippageToleranceBps > LibConstant.MAX_BPS) {
       revert SmartTreasury_SlippageTolerance();
     }
@@ -142,7 +142,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     address _revenueTreasury,
     address _devTreasury,
     address _burnTreasury
-  ) external onlyWhitelisted {
+  ) external onlyOwner {
     if (_revenueTreasury == address(0) || _devTreasury == address(0) || _burnTreasury == address(0)) {
       revert SmartTreasury_InvalidAddress();
     }
@@ -191,7 +191,9 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   function _distribute(address _token) internal {
     address _revenueToken = revenueToken;
     address _revenueTreasuryAddress = revenueTreasury;
-    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(IERC20(_token).balanceOf(address(this)));
+    (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(
+      IERC20(_token).balanceOf(address(this))
+    );
 
     if (_revenueAmount != 0) {
       if (_token == _revenueToken) {

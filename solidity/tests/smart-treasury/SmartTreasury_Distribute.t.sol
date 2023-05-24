@@ -27,10 +27,8 @@ contract SmartTreasury_Distribute is BaseFork {
     // setup whitelisted caller
     address[] memory _callers = new address[](1);
     _callers[0] = ALICE;
-    vm.prank(DEPLOYER);
+    vm.startPrank(DEPLOYER);
     smartTreasury.setWhitelistedCallers(_callers, true);
-
-    vm.startPrank(ALICE);
     // setup revenue token, alloc points and treasury address
     smartTreasury.setRevenueToken(address(usdt));
     smartTreasury.setAllocPoints(100, 100, 100);
@@ -198,7 +196,7 @@ contract SmartTreasury_Distribute is BaseFork {
     // tokenOut (revenue token): wbnb (18 decimals)
 
     // set revenue token
-    vm.prank(ALICE);
+    vm.prank(DEPLOYER);
     smartTreasury.setRevenueToken(address(wbnb));
 
     uint256 _distributeAmount = normalizeEther(3 ether, doge.decimals());
