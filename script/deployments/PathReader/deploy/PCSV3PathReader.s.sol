@@ -1,13 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { SmartTreasury } from "solidity/contracts/smart-treasury/SmartTreasury.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { PCSV3PathReader } from "solidity/contracts/reader/PCSV3PathReader.sol";
 
-contract DeploySmartTreasuryScript is BaseScript {
+contract DeployPCSV3PathReaderScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -22,24 +20,11 @@ contract DeploySmartTreasuryScript is BaseScript {
     */
 
     _startDeployerBroadcast();
-    // deploy implementation
-    address smartTreasuryImplementation = address(new SmartTreasury());
 
-    // deploy proxy
-    bytes memory data = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address,address,address)")),
-      address(uniswapV2LikePathReader),
-      address(pancakeswapRouterV3),
-      address(pcsV3PathReader),
-      oracleMedianizer
-    );
-    address smartTreasuryProxy = address(
-      new TransparentUpgradeableProxy(smartTreasuryImplementation, proxyAdminAddress, data)
-    );
+    address pcsV3PathReader = address(new PCSV3PathReader());
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(smartTreasuryImplementation), ".smartTreasury.implementation");
-    _writeJson(vm.toString(smartTreasuryProxy), ".smartTreasury.proxy");
+    _writeJson(vm.toString(pcsV3PathReader), ".pathReader.pcsV3PathReader");
   }
 }

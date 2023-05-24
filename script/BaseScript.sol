@@ -58,7 +58,8 @@ abstract contract BaseScript is Script {
   address internal doubleSlope3;
 
   // path reader
-  address internal pathReaderV3;
+  address internal uniswapV2LikePathReader;
+  address internal pcsV3PathReader;
 
   // tokens
   address internal ada;
@@ -100,7 +101,8 @@ abstract contract BaseScript is Script {
     doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
 
     // path reader
-    pathReaderV3 = abi.decode(configJson.parseRaw(".pathReader.v3"), (address));
+    uniswapV2LikePathReader = abi.decode(configJson.parseRaw(".pathReader.uniswapV2LikePathReader"), (address));
+    pcsV3PathReader = abi.decode(configJson.parseRaw(".pathReader.pcsV3PathReader"), (address));
 
     ibTokenImplementation = abi.decode(
       configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),
