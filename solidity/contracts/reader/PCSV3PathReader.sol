@@ -17,7 +17,7 @@ contract PCSV3PathReader is IUniSwapV3PathReader, Ownable {
   event LogSetPath(address _token0, address _token1, bytes _path);
 
   // MAX LENGTH FOR 5 HOP PATH
-  // [address's size * (hop+1) + fee size * (hop)]  =  135
+  // [address's size * (hop+1) + fee size * (hop)]  =  135 Bytes
   uint8 internal constant MAX_HOP = 5;
   uint8 internal constant MAX_PATH_LENGTH = (20 * (MAX_HOP - 1)) + (3 * MAX_HOP);
   address internal constant PANCAKE_V3_POOL_DEPLOYER = 0x41ff9AA7e16B8B1a8a8dc4f0eFacd93D02d071c9;
