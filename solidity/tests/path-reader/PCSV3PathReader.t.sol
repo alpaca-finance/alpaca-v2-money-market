@@ -107,7 +107,6 @@ contract PCSV3PathReaderTest is DSTest, StdUtils, StdAssertions, StdCheats {
     );
 
     vm.prank(DEPLOYER);
-    // evm revert if pool address is not existing
     vm.expectRevert(abi.encodeWithSignature("PCSV3PathReader_MaxPathLengthExceed()"));
     pcsPathReaderV3.setPaths(_paths);
   }
