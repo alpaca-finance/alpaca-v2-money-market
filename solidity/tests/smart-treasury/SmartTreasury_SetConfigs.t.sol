@@ -32,17 +32,15 @@ contract SmartTreasury_SetConfigs is BaseFork {
 
   function testCorrectness_SetAlloc_ShouldWork() external {
     vm.startPrank(DEPLOYER);
-    smartTreasury.setAllocPoints(100, 100, 100);
-    assertEq(smartTreasury.revenueAllocPoint(), 100, "Set Revenue Allocation");
-    assertEq(smartTreasury.devAllocPoint(), 100, "Set Dev Allocation");
-    assertEq(smartTreasury.burnAllocPoint(), 100, "Set Burn Allocation");
+    smartTreasury.setAllocPoints(1000, 2000, 7000);
+    assertEq(smartTreasury.revenueAllocPoint(), 1000, "Set Revenue Allocation");
+    assertEq(smartTreasury.devAllocPoint(), 2000, "Set Dev Allocation");
+    assertEq(smartTreasury.burnAllocPoint(), 7000, "Set Burn Allocation");
 
     vm.expectRevert(ISmartTreasury.SmartTreasury_InvalidAllocPoint.selector);
-    smartTreasury.setAllocPoints(10001, 100, 100);
+    smartTreasury.setAllocPoints(1001, 2000, 7000);
     vm.expectRevert(ISmartTreasury.SmartTreasury_InvalidAllocPoint.selector);
-    smartTreasury.setAllocPoints(100, 10001, 100);
-    vm.expectRevert(ISmartTreasury.SmartTreasury_InvalidAllocPoint.selector);
-    smartTreasury.setAllocPoints(100, 100, 10001);
+    smartTreasury.setAllocPoints(999, 2000, 7000);
 
     vm.stopPrank();
   }

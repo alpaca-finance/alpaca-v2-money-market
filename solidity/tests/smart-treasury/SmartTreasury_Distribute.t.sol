@@ -31,7 +31,7 @@ contract SmartTreasury_Distribute is BaseFork {
     smartTreasury.setWhitelistedCallers(_callers, true);
     // setup revenue token, alloc points and treasury address
     smartTreasury.setRevenueToken(address(usdt));
-    smartTreasury.setAllocPoints(100, 100, 100);
+    smartTreasury.setAllocPoints(3333, 3333, 3334);
     smartTreasury.setTreasuryAddresses(REVENUE_TREASURY, DEV_TREASURY, BURN_TREASURY);
     smartTreasury.setSlippageToleranceBps(100);
     vm.stopPrank();
@@ -65,9 +65,9 @@ contract SmartTreasury_Distribute is BaseFork {
     // rev treasury (USDT)
     assertCloseBps(_USDTrevenueBalanceAfter, _USDTrevenueBalanceBefore + _expectedAmountOut, 100);
     // dev treasury (WBNB)
-    assertEq(_WBNBdevBalanceAfter, _WBNBdevBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
+    assertCloseBps(_WBNBdevBalanceAfter, _WBNBdevBalanceBefore + 10 ether, 100);
     // burn treasury (WBNB)
-    assertEq(_WBNBburnBalanceAfter, _WBNBburnBalanceBefore + 10 ether, "Burn Treasury Balance (WBNB)");
+    assertCloseBps(_WBNBburnBalanceAfter, _WBNBburnBalanceBefore + 10 ether, 100);
 
     // Smart treasury must have nothing
     uint256 _WBNBSmartTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
@@ -231,11 +231,11 @@ contract SmartTreasury_Distribute is BaseFork {
 
     // expect distributed amount = 1 doge on dev treasury
     uint256 _DogeDevTreasuryBalance = IERC20(address(doge)).balanceOf(DEV_TREASURY);
-    assertEq(_DogeDevTreasuryBalance, normalizeEther(1 ether, doge.decimals()), "DOGE Dev treasury");
+    assertCloseBps(_DogeDevTreasuryBalance, normalizeEther(1 ether, doge.decimals()), 100);
 
     // expect distributed amount = 1 doge on burn treasury
     uint256 _burnDogeTreasury = IERC20(address(doge)).balanceOf(BURN_TREASURY);
-    assertEq(_burnDogeTreasury, normalizeEther(1 ether, doge.decimals()), "DOGE Burn treasury");
+    assertCloseBps(_burnDogeTreasury, normalizeEther(1 ether, doge.decimals()), 100);
   }
 
   function testCorrectness_DistributeTokenIsRevenueToken_ShouldWork() external {
@@ -260,11 +260,11 @@ contract SmartTreasury_Distribute is BaseFork {
     uint256 _expectAmount = normalizeEther(10 ether, usdt.decimals());
 
     // rev treasury (get usdt)
-    assertEq(_revenueBalanceAfter, _revenueBalanceBefore + _expectAmount, "Revenue Treasury Balance (USDT)");
+    assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectAmount, 100);
     // dev treasury (get usdt)
-    assertEq(_devBalanceAfter, _devBalanceBefore + _expectAmount, "Dev Treasury Balance (USDT)");
+    assertCloseBps(_devBalanceAfter, _devBalanceBefore + _expectAmount, 100);
     // burn treasury (get usdt)
-    assertEq(_burnBalanceAfter, _burnBalanceBefore + _expectAmount, "Burn Treasury Balance (USDT)");
+    assertCloseBps(_burnBalanceAfter, _burnBalanceBefore + _expectAmount, 100);
 
     // Smart treasury after distribute must have nothing
     uint256 _USDTTreasuryBalanceAfter = IERC20(address(usdt)).balanceOf(address(smartTreasury));
@@ -306,10 +306,10 @@ contract SmartTreasury_Distribute is BaseFork {
     // rev treasury (get usdt)
     assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectedAmountOut, 100);
     // dev treasury (get wbnb)
-    assertEq(_devBalanceAfter, _devBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
+    assertCloseBps(_devBalanceAfter, _devBalanceBefore + 10 ether, 100);
 
     // burn treasury (get wbnb)
-    assertEq(_burnBalanceAfter, _burnBalanceBefore + 10 ether, "Burn Treasury Balance (WBNB)");
+    assertCloseBps(_burnBalanceAfter, _burnBalanceBefore + 10 ether, 100);
 
     // Smart treasury after must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
@@ -371,8 +371,8 @@ contract SmartTreasury_Distribute is BaseFork {
     smartTreasury.distribute(_tokens);
 
     assertEq(wbnb.balanceOf(address(smartTreasury)), 0, "WBNB Smart Treasury");
-    assertEq(usdt.balanceOf(REVENUE_TREASURY), _expectedAmount[1], "USDT Revenue Treasury");
-    assertEq(wbnb.balanceOf(DEV_TREASURY), 10 ether, "WBNB Dev Treasury");
-    assertEq(wbnb.balanceOf(BURN_TREASURY), 10 ether, "WBNB Burn Treasury");
+    assertCloseBps(usdt.balanceOf(REVENUE_TREASURY), _expectedAmount[1], 100);
+    assertCloseBps(wbnb.balanceOf(DEV_TREASURY), 10 ether, 100);
+    assertCloseBps(wbnb.balanceOf(BURN_TREASURY), 10 ether, 100);
   }
 }
