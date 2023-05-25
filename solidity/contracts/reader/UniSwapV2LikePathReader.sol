@@ -11,7 +11,7 @@ contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
 
   event LogSetPath(address _source, address _destination, address[] _path);
 
-  uint8 public constant MAX_PATH_LENGTH = 5;
+  uint8 internal constant MAX_PATH_LENGTH = 5;
   // sourceToken => destinationToken => pathParams
   mapping(address => mapping(address => PathParams)) internal paths;
 
