@@ -85,6 +85,32 @@ contract PCSV3PathReaderTest is DSTest, StdUtils, StdAssertions, StdCheats {
     pcsPathReaderV3.setPaths(_paths);
   }
 
+  function testRevert_SetPathExceedMaxLength_ShouldRevert() external {
+    address _token0 = address(usdt);
+    uint24 _poolFee = 5000;
+    bytes[] memory _paths = new bytes[](1);
+    // 6 hop
+    _paths[0] = abi.encodePacked(
+      _token0,
+      _poolFee,
+      _token0,
+      _poolFee,
+      _token0,
+      _poolFee,
+      _token0,
+      _poolFee,
+      _token0,
+      _poolFee,
+      _token0,
+      _poolFee,
+      _token0
+    );
+
+    vm.prank(DEPLOYER);
+    vm.expectRevert(abi.encodeWithSignature("PCSV3PathReader_MaxPathLengthExceed()"));
+    pcsPathReaderV3.setPaths(_paths);
+  }
+
   function _computeAddressV3(
     address _tokenA,
     address _tokenB,

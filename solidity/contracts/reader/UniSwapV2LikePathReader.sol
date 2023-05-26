@@ -7,8 +7,11 @@ import { IPancakeRouter02 } from "../money-market/interfaces/IPancakeRouter02.so
 
 /// @title UniSwapV2LikePathReader - Return router and part to swap on UniSwapV2-fork DEX
 contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
+  error UniSwapV2LikePathReader_MaxPathLengthExceed();
+
   event LogSetPath(address _source, address _destination, address[] _path);
 
+  uint8 internal constant MAX_PATH_LENGTH = 5;
   // sourceToken => destinationToken => pathParams
   mapping(address => mapping(address => PathParams)) internal paths;
 
@@ -25,6 +28,11 @@ contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
   /// @param _inputs An array of PathParams (each PathParams must contain router and path)
   function setPaths(PathParams[] calldata _inputs) external onlyOwner {
     uint256 _len = _inputs.length;
+
+    if (_len > MAX_PATH_LENGTH) {
+      revert UniSwapV2LikePathReader_MaxPathLengthExceed();
+    }
+
     PathParams memory _params;
     for (uint256 _i; _i < _len; ) {
       _params = _inputs[_i];

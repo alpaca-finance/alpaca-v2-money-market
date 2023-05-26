@@ -97,11 +97,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     uint16 _devAllocPoint,
     uint16 _burnAllocPoint
   ) external onlyOwner {
-    if (
-      _revenueAllocPoint > LibConstant.MAX_BPS ||
-      _devAllocPoint > LibConstant.MAX_BPS ||
-      _burnAllocPoint > LibConstant.MAX_BPS
-    ) {
+    if (_revenueAllocPoint + _devAllocPoint + _burnAllocPoint != LibConstant.MAX_BPS) {
       revert SmartTreasury_InvalidAllocPoint();
     }
 
@@ -179,9 +175,8 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     )
   {
     if (_amount != 0) {
-      uint256 _totalAllocPoint = revenueAllocPoint + devAllocPoint + burnAllocPoint;
-      _devAmount = (_amount * devAllocPoint) / _totalAllocPoint;
-      _burnAmount = (_amount * burnAllocPoint) / _totalAllocPoint;
+      _devAmount = (_amount * devAllocPoint) / LibConstant.MAX_BPS;
+      _burnAmount = (_amount * burnAllocPoint) / LibConstant.MAX_BPS;
       unchecked {
         _revenueAmount = _amount - _devAmount - _burnAmount;
       }
@@ -309,7 +304,7 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
 
   function _withdraw(address _token, address _to) internal {
     uint256 _amount = IERC20(_token).balanceOf(address(this));
-    IERC20(_token).transfer(_to, _amount);
+    IERC20(_token).safeTransfer(_to, _amount);
     emit LogWithdraw(_to, _token, _amount);
   }
 }

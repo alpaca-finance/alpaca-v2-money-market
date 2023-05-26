@@ -87,4 +87,14 @@ contract UniSwapV2LikePathReaderTest is DSTest, StdUtils, StdAssertions, StdChea
     vm.expectRevert();
     pathReaderV2.setPaths(_params);
   }
+
+  function testRevert_SetLongTokenPath_ShouldRevert() external {
+    address[] memory _path = new address[](6);
+    IUniSwapV2PathReader.PathParams[] memory _params = new IUniSwapV2PathReader.PathParams[](1);
+    _params[0] = IUniSwapV2PathReader.PathParams({ router: pcsRouterV2, path: _path });
+
+    vm.prank(DEPLOYER);
+    vm.expectRevert();
+    pathReaderV2.setPaths(_params);
+  }
 }
