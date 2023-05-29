@@ -7,7 +7,6 @@ import { OracleMedianizer } from "../../../contracts/oracle/OracleMedianizer.sol
 
 // ---- Interfaces ---- //
 import { AlpacaV2Oracle02, IAlpacaV2Oracle02 } from "../../../contracts/oracle/AlpacaV2Oracle02.sol";
-import { IRouterLike } from "../../../contracts/oracle/interfaces/IRouterLike.sol";
 
 contract AlpacaV2Oracle02_WithPCSv3 is BaseTest {
   address constant mockRouter = address(6666);

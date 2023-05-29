@@ -5,7 +5,7 @@ import "../../../BaseScript.sol";
 
 import { AlpacaV2Oracle02, IAlpacaV2Oracle02 } from "solidity/contracts/oracle/AlpacaV2Oracle02.sol";
 
-contract DeployAlpacaV2OracleScript is BaseScript {
+contract DeployAlpacaV2Oracle02Script is BaseScript {
   using stdJson for string;
 
   function run() public {

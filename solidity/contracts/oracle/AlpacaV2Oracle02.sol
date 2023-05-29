@@ -12,7 +12,6 @@ import { ILiquidityPair } from "./interfaces/ILiquidityPair.sol";
 import { IAlpacaV2Oracle02 } from "./interfaces/IAlpacaV2Oracle02.sol";
 import { IPriceOracle } from "./interfaces/IPriceOracle.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
-import { IRouterLike } from "./interfaces/IRouterLike.sol";
 import { IPancakeV3Pool } from "./interfaces/IPancakeV3Pool.sol";
 
 contract AlpacaV2Oracle02 is IAlpacaV2Oracle02, Ownable {

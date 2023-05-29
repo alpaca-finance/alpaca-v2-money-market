@@ -5,11 +5,7 @@ interface IAlpacaV2Oracle02 {
   /// @dev Errors
   error AlpacaV2Oracle02_InvalidLPAddress();
   error AlpacaV2Oracle02_InvalidOracleAddress();
-  error AlpacaV2Oracle02_InvalidConfigLength();
-  error AlpacaV2Oracle02_InvalidConfigPath();
   error AlpacaV2Oracle02_InvalidBaseStableTokenDecimal();
-  error AlpacaV2Oracle02_InvalidPriceDiffConfig();
-  error AlpacaV2Oracle02_PriceTooDeviate(uint256 _dexPrice, uint256 _oraclePrice);
 
   /// @dev Set uniswap v3 pools
   function setPools(address[] calldata _pools) external;
