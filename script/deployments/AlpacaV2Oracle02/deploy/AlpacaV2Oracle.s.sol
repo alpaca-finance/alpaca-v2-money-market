@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: BUSL
+pragma solidity 0.8.19;
+
+import "../../../BaseScript.sol";
+
+import { AlpacaV2Oracle02, IAlpacaV2Oracle02 } from "solidity/contracts/oracle/AlpacaV2Oracle02.sol";
+
+contract DeployAlpacaV2OracleScript is BaseScript {
+  using stdJson for string;
+
+  function run() public {
+    /*
+  ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
+  ░██║░░██╗░░██║██╔══██╗██╔══██╗████╗░██║██║████╗░██║██╔════╝░
+  ░╚██╗████╗██╔╝███████║██████╔╝██╔██╗██║██║██╔██╗██║██║░░██╗░
+  ░░████╔═████║░██╔══██║██╔══██╗██║╚████║██║██║╚████║██║░░╚██╗
+  ░░╚██╔╝░╚██╔╝░██║░░██║██║░░██║██║░╚███║██║██║░╚███║╚██████╔╝
+  ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
+  Check all variables below before execute the deployment script
+    */
+    address oracle = oracleMedianizer;
+    address baseStable = usdt;
+    address usd = usdPlaceholder;
+
+    _startDeployerBroadcast();
+
+    alpacaV2Oracle02 = new AlpacaV2Oracle02(oracle, baseStable, usd);
+
+    _stopBroadcast();
+
+    _writeJson(vm.toString(address(alpacaV2Oracle02)), ".oracle.alpacaV2Oracle02");
+  }
+}

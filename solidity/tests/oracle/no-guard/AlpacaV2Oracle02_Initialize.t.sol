@@ -6,8 +6,7 @@ import { BaseTest, console, MockERC20 } from "../../base/BaseTest.sol";
 import { OracleMedianizer } from "../../../contracts/oracle/OracleMedianizer.sol";
 
 // ---- Interfaces ---- //
-import { IAlpacaV2Oracle02 } from "../../../contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
-import { AlpacaV2Oracle02 } from "../../../contracts/oracle/AlpacaV2Oracle02.sol";
+import { AlpacaV2Oracle02, IAlpacaV2Oracle02 } from "../../../contracts/oracle/AlpacaV2Oracle02.sol";
 import { IRouterLike } from "../../../contracts/oracle/interfaces/IRouterLike.sol";
 
 contract AlpacaV2Oracle02_InitializeTest is BaseTest {
