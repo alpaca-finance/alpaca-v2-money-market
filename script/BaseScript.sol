@@ -31,6 +31,9 @@ abstract contract BaseScript is Script {
     string.concat(vm.projectRoot(), string.concat("/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
   IMoneyMarket internal moneyMarket;
+  // facets
+  address internal flashloanFacet;
+
   IMiniFL internal miniFL;
   IMoneyMarketAccountManager internal accountManager;
   address internal deployerAddress;
@@ -84,6 +87,7 @@ abstract contract BaseScript is Script {
 
     string memory configJson = vm.readFile(configFilePath);
     moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
+    flashloanFacet = abi.decode(configJson.parseRaw(".moneyMarket.facets.flashloanFacet"), (address));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
     smartTreasury = abi.decode(configJson.parseRaw(".smartTreasury.proxy"), (ISmartTreasury));

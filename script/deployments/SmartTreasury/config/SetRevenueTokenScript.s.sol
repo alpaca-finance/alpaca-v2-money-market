@@ -20,7 +20,7 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _revenueToken = address(0);
+    address _revenueToken = busd;
 
     _startDeployerBroadcast();
 

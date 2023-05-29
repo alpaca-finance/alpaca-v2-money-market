@@ -21,7 +21,7 @@ contract SetWhitelistesCallers is BaseScript {
     */
 
     address[] memory _callers = new address[](1);
-    _callers[0] = deployerAddress;
+    _callers[0] = address(0);
 
     _startDeployerBroadcast();
 
