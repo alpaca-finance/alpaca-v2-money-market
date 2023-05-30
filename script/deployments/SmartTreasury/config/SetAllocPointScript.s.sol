@@ -21,9 +21,9 @@ contract SetAllocPointScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint16 _revenueAllocPoint = 0;
-    uint16 _devAllocPoint = 0;
-    uint16 _burnAllocPoint = 0;
+    uint16 _revenueAllocPoint = 600;
+    uint16 _devAllocPoint = 900;
+    uint16 _burnAllocPoint = 400;
 
     _startDeployerBroadcast();
 
