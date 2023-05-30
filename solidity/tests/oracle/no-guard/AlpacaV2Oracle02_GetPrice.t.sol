@@ -18,7 +18,6 @@ contract AlpacaV2Oracle02_GetPrice is BaseTest {
   OracleMedianizer oracleMedianizer2;
 
   function setUp() public virtual {
-    vm.createSelectFork("https://bsc-dataseed3.defibit.io", 27_280_390);
     oracleMedianizer = deployOracleMedianizer();
     oracleMedianizer2 = deployOracleMedianizer();
     alpacaV2Oracle02 = new AlpacaV2Oracle02(address(oracleMedianizer), usd);

@@ -19,10 +19,10 @@ contract AlpacaV2Oracle02 is IAlpacaV2Oracle02, Ownable {
   event LogSetDefaultOracle(address indexed _caller, address _newOracle);
   event LogSetSpecificOracle(address _token, address _oracle);
 
-  address public constant WBNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+  address internal constant WBNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
 
   // An address of chainlink usd token
-  address public immutable usd;
+  address internal immutable usd;
 
   // a OracleMedianizer interface to perform get price
   address public oracle;
@@ -41,9 +41,9 @@ contract AlpacaV2Oracle02 is IAlpacaV2Oracle02, Ownable {
   /// @return _price token price in 1e18 format
   /// @return _lastTimestamp the timestamp that price was fed
   function getTokenPrice(address _tokenAddress) external view returns (uint256 _price, uint256 _lastTimestamp) {
-    address _oracle = oracle;
-    if (specificOracles[_tokenAddress] != address(0)) {
-      _oracle = specificOracles[_tokenAddress];
+    address _oracle = specificOracles[_tokenAddress];
+    if (_oracle == address(0)) {
+      _oracle = oracle;
     }
     (_price, _lastTimestamp) = IPriceOracle(_oracle).getPrice(_tokenAddress, usd);
   }

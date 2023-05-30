@@ -16,7 +16,6 @@ contract AlpacaV2Oracle02_Configs is BaseTest {
   address constant BTC = 0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c;
 
   function setUp() public virtual {
-    vm.createSelectFork("https://bsc-dataseed3.defibit.io", 27_280_390);
     oracleMedianizer = deployOracleMedianizer();
     alpacaV2Oracle02 = new AlpacaV2Oracle02(address(oracleMedianizer), usd);
   }
@@ -53,7 +52,7 @@ contract AlpacaV2Oracle02_Configs is BaseTest {
   }
 
   // unauthorzied set
-  function testRevert_Unauthorized() external {
+  function testRevert_SetOracle_NonOwnerIsCaller() external {
     address _oracle = makeAddr("oracle");
     IAlpacaV2Oracle02.SpecificOracle[] memory _inputs = new IAlpacaV2Oracle02.SpecificOracle[](1);
     _inputs[0] = IAlpacaV2Oracle02.SpecificOracle({ token: address(USDT), oracle: _oracle });

@@ -14,8 +14,6 @@ interface IAlpacaV2Oracle02 {
 
   function specificOracles(address _token) external view returns (address);
 
-  function usd() external view returns (address);
-
   function setDefaultOracle(address _oracle) external;
 
   function setSpecificOracle(SpecificOracle[] memory _input) external;
