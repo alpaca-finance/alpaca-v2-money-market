@@ -21,7 +21,7 @@ contract SetOracleScript is BaseScript {
 
     //---- execution ----//
     _startDeployerBroadcast();
-    alpacaV2Oracle02.setOracle(_newOracle);
+    alpacaV2Oracle02.setDefaultOracle(_newOracle);
     _stopBroadcast();
   }
 }

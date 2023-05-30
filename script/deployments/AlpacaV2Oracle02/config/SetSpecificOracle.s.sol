@@ -2,19 +2,12 @@
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
+import { IAlpacaV2Oracle02 } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
 
-interface IPancakeSwapV3Factory {
-  function getPool(
-    address tokenA,
-    address tokenB,
-    uint24 fee
-  ) external view returns (address pool);
-}
-
-contract SetPoolsScript is BaseScript {
+contract SetOracleScript is BaseScript {
   using stdJson for string;
 
-  address[] v3Pools;
+  IAlpacaV2Oracle02.SpecificOracle[] _inputs;
 
   function run() public {
     /*
@@ -27,35 +20,21 @@ contract SetPoolsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // 2 hops
-    // ETH-WBNB fee 0.25
-    addPCSV3PoolAddress(eth, wbnb, 2500);
-
-    // 1 hop
-    // WBNB-USDT fee 0.05
-    addPCSV3PoolAddress(wbnb, usdt, 500);
-    // USDC-USDT fee 0.01
-    addPCSV3PoolAddress(usdc, usdt, 100);
-    // BUSD-USDT fee 0.01
-    addPCSV3PoolAddress(busd, usdt, 100);
-    // BTCB-USDT fee 0.05
-    addPCSV3PoolAddress(btcb, usdt, 500);
+    address _oracle = alpacaV2Oracle02;
+    addTokenAndOracle(address(usdt), _oracle);
 
     //---- execution ----//
     _startDeployerBroadcast();
-    alpacaV2Oracle02.setPools(v3Pools);
+    alpacaV2Oracle02.setSpecificOracle(_inputs);
     _stopBroadcast();
   }
 
-  function addPCSV3PoolAddress(
-    address _tokenA,
-    address _tokenB,
-    uint24 _fee
-  ) internal {
-    address pool = IPancakeSwapV3Factory(pancakeswapFactoryV3).getPool(_tokenA, _tokenB, _fee);
-    if (pool == address(0)) {
-      revert("Pool not exist!");
-    }
-    v3Pools.push(pool);
+  function addTokenAndOracle(address _token, address _oracle) internal {
+    IAlpacaV2Oracle02.SpecificOracle memory _input = IAlpacaV2Oracle02.SpecificOracle({
+      token: _token,
+      oracle: _oracle
+    });
+
+    _inputs.push(_input);
   }
 }
