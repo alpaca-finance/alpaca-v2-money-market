@@ -79,6 +79,7 @@
     "exec:bsc_mainnet:smart-treasury:config:set-revenue-token": "forge script script/deployments/SmartTreasury/config/SetRevenueTokenScript.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:smart-treasury:config:set-treasury-address": "forge script script/deployments/SmartTreasury/config/SetTreasuryAddressScript.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:smart-treasury:config:set-whitelist-callers": "forge script script/deployments/SmartTreasury/config/SetWhitelistesCallers.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:smart-treasury:config:set-slippage-tolerance": "forge script script/deployments/SmartTreasury/config/SetSlippageToleranceBps.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "----------Deploy Hardhat -------------": "----------Deploy Hardhat -------------",
     "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut",
     "exec:bsc_mainnet:money-market:upgrade:account-manager": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags UpgradeMoneyMarketAccountManager"
