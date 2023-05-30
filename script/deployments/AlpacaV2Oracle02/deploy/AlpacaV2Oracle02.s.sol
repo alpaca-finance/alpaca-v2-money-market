@@ -19,12 +19,11 @@ contract DeployAlpacaV2Oracle02Script is BaseScript {
   Check all variables below before execute the deployment script
     */
     address oracle = oracleMedianizer;
-    address baseStable = usdt;
     address usd = usdPlaceholder;
 
     _startDeployerBroadcast();
 
-    alpacaV2Oracle02 = new AlpacaV2Oracle02(oracle, baseStable, usd);
+    alpacaV2Oracle02 = new AlpacaV2Oracle02(oracle, usd);
 
     _stopBroadcast();
 

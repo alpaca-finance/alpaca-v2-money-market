@@ -20,7 +20,7 @@ contract SetOracleScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _oracle = alpacaV2Oracle02;
+    address _oracle = address(alpacaV2Oracle02);
     addTokenAndOracle(address(usdt), _oracle);
 
     //---- execution ----//
