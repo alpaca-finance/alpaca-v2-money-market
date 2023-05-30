@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BaseTest, console, MockERC20 } from "../../base/BaseTest.sol";
+import { BaseTest, console, MockERC20 } from "../base/BaseTest.sol";
 
-import { SimplePriceOracle, IPriceOracle } from "../../../contracts/oracle/SimplePriceOracle.sol";
-import { IAggregatorV3 } from "../../../contracts/oracle/interfaces/IAggregatorV3.sol";
-import { MockChainLinkAggregator } from "../../mocks/MockChainLinkAggregator.sol";
+import { SimplePriceOracle, IPriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
+import { IAggregatorV3 } from "../../contracts/oracle/interfaces/IAggregatorV3.sol";
+import { MockChainLinkAggregator } from "../mocks/MockChainLinkAggregator.sol";
 
 contract Oracle_SimpleOracleTest is BaseTest {
   address feeder;
