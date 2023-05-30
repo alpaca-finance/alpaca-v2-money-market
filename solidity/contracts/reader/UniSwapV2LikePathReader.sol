@@ -29,14 +29,15 @@ contract UniSwapV2LikePathReader is IUniSwapV2PathReader, Ownable {
   function setPaths(PathParams[] calldata _inputs) external onlyOwner {
     uint256 _len = _inputs.length;
 
-    if (_len > MAX_PATH_LENGTH) {
-      revert UniSwapV2LikePathReader_MaxPathLengthExceed();
-    }
-
     PathParams memory _params;
     for (uint256 _i; _i < _len; ) {
       _params = _inputs[_i];
       address[] memory _path = _params.path;
+
+      if (_path.length > MAX_PATH_LENGTH) {
+        revert UniSwapV2LikePathReader_MaxPathLengthExceed();
+      }
+
       address _router = _params.router;
 
       // sanity check. router will revert if pair doesn't exist
