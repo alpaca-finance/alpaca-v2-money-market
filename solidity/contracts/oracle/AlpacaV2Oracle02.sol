@@ -41,6 +41,16 @@ contract AlpacaV2Oracle02 is IAlpacaV2Oracle02, Ownable {
   /// @return _price token price in 1e18 format
   /// @return _lastTimestamp the timestamp that price was fed
   function getTokenPrice(address _tokenAddress) external view returns (uint256 _price, uint256 _lastTimestamp) {
+    (_price, _lastTimestamp) = _getTokenPrice(_tokenAddress);
+  }
+
+  /// @notice Check token price from dex and oracle is in the acceptable range
+  /// @param _tokenAddress tokenAddress
+  function isStable(address _tokenAddress) external view {
+    _getTokenPrice(_tokenAddress);
+  }
+
+  function _getTokenPrice(address _tokenAddress) internal view returns (uint256 _price, uint256 _lastTimestamp) {
     address _oracle = specificOracles[_tokenAddress];
     if (_oracle == address(0)) {
       _oracle = oracle;

@@ -17,4 +17,6 @@ interface IAlpacaV2Oracle02 {
   function setDefaultOracle(address _oracle) external;
 
   function setSpecificOracle(SpecificOracle[] memory _input) external;
+
+  function isStable(address _tokenAddress) external view;
 }
