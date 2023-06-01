@@ -18,8 +18,9 @@ contract SetOperatorsOkScript is BaseScript {
     */
 
     bool isOk = true;
-    address[] memory operators = new address[](1);
+    address[] memory operators = new address[](2);
     operators[0] = 0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51;
+    operators[1] = address(0);
 
     //---- execution ----//
     _startDeployerBroadcast();
