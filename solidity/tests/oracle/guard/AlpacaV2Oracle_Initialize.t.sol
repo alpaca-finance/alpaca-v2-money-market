@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BaseTest, console, MockERC20 } from "../base/BaseTest.sol";
+import { BaseTest, console, MockERC20 } from "../../base/BaseTest.sol";
 
-import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
+import { OracleMedianizer } from "../../../contracts/oracle/OracleMedianizer.sol";
 
 // ---- Interfaces ---- //
-import { IAlpacaV2Oracle } from "../../contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
-import { AlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
-import { IRouterLike } from "../../contracts/oracle/interfaces/IRouterLike.sol";
+import { IAlpacaV2Oracle } from "../../../contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
+import { AlpacaV2Oracle } from "../../../contracts/oracle/AlpacaV2Oracle.sol";
+import { IRouterLike } from "../../../contracts/oracle/interfaces/IRouterLike.sol";
 
 contract AlpacaV2Oracle_InitializeTest is BaseTest {
   function setUp() public virtual {}
