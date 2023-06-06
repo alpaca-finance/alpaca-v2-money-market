@@ -24,43 +24,13 @@ contract SetPathsScript is BaseScript {
     address[] memory _strats = new address[](1);
     _strats[0] = address(pancakeswapV2IbLiquidateStrat);
 
-    // ********* WBNB ********* //
-    // WBNB -> HIGH:
-    setLiquidationPath(wbnb, busd, high);
+    // ********* CAKE ********* //
+    // CAKE -> HIGH:
+    setLiquidationPath(cake, busd, high);
 
-    // ********* USDC ********* //
-    // USDC -> HIGH:
-    setLiquidationPath(usdc, busd, high);
-
-    // ********* USDT ********* //
-    // USDT -> HIGH:
-    setLiquidationPath(usdt, busd, high);
-
-    // ********* BUSD ********* //
-    // BUSD -> HIGH:
-    setLiquidationPath(busd, high);
-
-    // ********* BTCB ********* //
-    // BTCB -> HIGH:
-    setLiquidationPath(btcb, busd, high);
-
-    // ********* ETH ********* //
-    // ETH -> HIGH:
-    setLiquidationPath(eth, busd, high);
-
-    // ********* HIGH ********* //
-    // HIGH -> WBNB:
-    setLiquidationPath(high, busd, wbnb);
-    // HIGH -> USDC:
-    setLiquidationPath(high, busd, usdc);
-    // HIGH -> USDT:
-    setLiquidationPath(high, busd, usdt);
-    // HIGH -> BUSD:
-    setLiquidationPath(high, busd);
-    // HIGH -> BTCB:
-    setLiquidationPath(high, busd, btcb);
-    // HIGH -> ETH:
-    setLiquidationPath(high, busd, eth);
+    // ********* XRP ********* //
+    // XRP -> HIGH:
+    setLiquidationPath(xrp, busd, high);
 
     _startDeployerBroadcast();
 
