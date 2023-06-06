@@ -31,7 +31,7 @@ contract OpenMarketScript is BaseScript {
     */
     _startDeployerBroadcast();
 
-    // doge
+    // DOGE
     executeOpenMarket(
       OpenMarketInput({
         token: doge,
@@ -40,7 +40,7 @@ contract OpenMarketScript is BaseScript {
         collateralFactor: 3000,
         borrowingFactor: 5000,
         maxCollateral: formatAmount(doge, 15_000_000),
-        maxBorrow: formatAmount(doege, 10_000_000)
+        maxBorrow: formatAmount(doge, 10_000_000)
       })
     );
 

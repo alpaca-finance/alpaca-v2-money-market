@@ -29,19 +29,8 @@ contract SetPoolsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // 2 hops
-    // ETH-WBNB fee 0.25
-    addPCSV3PoolAddress(eth, wbnb, 2500);
-
-    // 1 hop
-    // WBNB-USDT fee 0.05
-    addPCSV3PoolAddress(wbnb, usdt, 500);
-    // USDC-USDT fee 0.01
-    addPCSV3PoolAddress(usdc, usdt, 100);
-    // BUSD-USDT fee 0.01
-    addPCSV3PoolAddress(busd, usdt, 100);
-    // BTCB-USDT fee 0.05
-    addPCSV3PoolAddress(btcb, usdt, 500);
+    // DOGE-WBNB fee 0.25
+    addPCSV3PoolAddress(doge, wbnb, 2500);
 
     //---- execution ----//
     _startDeployerBroadcast();
