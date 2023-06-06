@@ -22,24 +22,12 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // WBNB
-    setIbAllocPoint(wbnb, 75);
-    setDebtAllocPoint(wbnb, 100);
-    // BTCB
-    setIbAllocPoint(btcb, 100);
-    setDebtAllocPoint(btcb, 125);
-    // USDT
-    setIbAllocPoint(usdt, 100);
-    setDebtAllocPoint(usdt, 175);
-    // ETH
-    setIbAllocPoint(eth, 75);
-    setDebtAllocPoint(eth, 100);
-    // USDC
-    setIbAllocPoint(usdc, 50);
-    setDebtAllocPoint(usdc, 75);
-    // BUSD
-    setIbAllocPoint(busd, 50);
-    setDebtAllocPoint(busd, 75);
+    // cake
+    // setIbAllocPoint(cake, 20);
+    setDebtAllocPoint(cake, 25);
+    // xrp
+    // setIbAllocPoint(xrp, 10);
+    // setDebtAllocPoint(xrp, 15);
 
     //---- execution ----//
     _startDeployerBroadcast();
