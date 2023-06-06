@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { BaseFork, console } from "./BaseFork.sol";
+import { BaseFork } from "./BaseFork.sol";
 
 // implementation
-import { MockERC20 } from "solidity/tests/mocks/MockERC20.sol";
 import { OracleMedianizer } from "solidity/contracts/oracle/OracleMedianizer.sol";
-
-// libraries
-import { LibPCSV3PoolAddress } from "../libs/LibPCSV3PoolAddress.sol";
 
 // interfaces
 import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
-import { IOracleMedianizer } from "solidity/contracts/oracle/interfaces/IOracleMedianizer.sol";
 import { IPriceOracle } from "solidity/contracts/oracle/interfaces/IPriceOracle.sol";
-import { IUniswapV3Pool } from "solidity/contracts/oracle/interfaces/IUniswapV3Pool.sol";
-import { IPancakeV3PoolState } from "../../contracts/money-market/interfaces/IPancakeV3Pool.sol";
+import { IUniSwapV2PathReader } from "../../contracts/reader/interfaces/IUniSwapV2PathReader.sol";
+import { IUniSwapV3PathReader } from "solidity/contracts/reader/interfaces/IUniSwapV3PathReader.sol";
 
 contract SmartTreasury_Distribute is BaseFork {
   struct CacheState {
@@ -32,13 +27,11 @@ contract SmartTreasury_Distribute is BaseFork {
     // setup whitelisted caller
     address[] memory _callers = new address[](1);
     _callers[0] = ALICE;
-    vm.prank(DEPLOYER);
+    vm.startPrank(DEPLOYER);
     smartTreasury.setWhitelistedCallers(_callers, true);
-
-    vm.startPrank(ALICE);
     // setup revenue token, alloc points and treasury address
     smartTreasury.setRevenueToken(address(usdt));
-    smartTreasury.setAllocPoints(100, 100, 100);
+    smartTreasury.setAllocPoints(3333, 3333, 3334);
     smartTreasury.setTreasuryAddresses(REVENUE_TREASURY, DEV_TREASURY, BURN_TREASURY);
     smartTreasury.setSlippageToleranceBps(100);
     vm.stopPrank();
@@ -72,9 +65,9 @@ contract SmartTreasury_Distribute is BaseFork {
     // rev treasury (USDT)
     assertCloseBps(_USDTrevenueBalanceAfter, _USDTrevenueBalanceBefore + _expectedAmountOut, 100);
     // dev treasury (WBNB)
-    assertEq(_WBNBdevBalanceAfter, _WBNBdevBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
+    assertCloseBps(_WBNBdevBalanceAfter, _WBNBdevBalanceBefore + 10 ether, 100);
     // burn treasury (WBNB)
-    assertEq(_WBNBburnBalanceAfter, _WBNBburnBalanceBefore + 10 ether, "Burn Treasury Balance (WBNB)");
+    assertCloseBps(_WBNBburnBalanceAfter, _WBNBburnBalanceBefore + 10 ether, 100);
 
     // Smart treasury must have nothing
     uint256 _WBNBSmartTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
@@ -126,7 +119,7 @@ contract SmartTreasury_Distribute is BaseFork {
 
     // mock swap failed
     vm.mockCallRevert(
-      address(router),
+      address(routerV3),
       abi.encodeWithSelector(IPancakeSwapRouterV3.exactInput.selector),
       abi.encode("Failed swap")
     );
@@ -186,7 +179,7 @@ contract SmartTreasury_Distribute is BaseFork {
     // set path for cake to usdt
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(cake), uint24(2500), address(usdt));
-    pathReader.setPaths(_paths);
+    pathReaderV3.setPaths(_paths);
 
     deal(address(cake), address(smartTreasury), 30 ether);
 
@@ -198,20 +191,19 @@ contract SmartTreasury_Distribute is BaseFork {
     smartTreasury.distribute(_tokens);
   }
 
-  // TODO: incorrect logic, should not work
   function testCorrectness_DecimalDiff_ShouldWork() external {
     // tokenIn: doge (8 decimals)
     // tokenOut (revenue token): wbnb (18 decimals)
 
     // set revenue token
-    vm.prank(ALICE);
+    vm.prank(DEPLOYER);
     smartTreasury.setRevenueToken(address(wbnb));
 
     uint256 _distributeAmount = normalizeEther(3 ether, doge.decimals());
 
     bytes[] memory _paths = new bytes[](1);
     _paths[0] = abi.encodePacked(address(doge), uint24(2500), address(wbnb));
-    pathReader.setPaths(_paths);
+    pathReaderV3.setPaths(_paths);
 
     // mock price doge on oracle doge = 0.0715291 * 1e18
     vm.mockCall(
@@ -239,11 +231,11 @@ contract SmartTreasury_Distribute is BaseFork {
 
     // expect distributed amount = 1 doge on dev treasury
     uint256 _DogeDevTreasuryBalance = IERC20(address(doge)).balanceOf(DEV_TREASURY);
-    assertEq(_DogeDevTreasuryBalance, normalizeEther(1 ether, doge.decimals()), "DOGE Dev treasury");
+    assertCloseBps(_DogeDevTreasuryBalance, normalizeEther(1 ether, doge.decimals()), 100);
 
     // expect distributed amount = 1 doge on burn treasury
     uint256 _burnDogeTreasury = IERC20(address(doge)).balanceOf(BURN_TREASURY);
-    assertEq(_burnDogeTreasury, normalizeEther(1 ether, doge.decimals()), "DOGE Burn treasury");
+    assertCloseBps(_burnDogeTreasury, normalizeEther(1 ether, doge.decimals()), 100);
   }
 
   function testCorrectness_DistributeTokenIsRevenueToken_ShouldWork() external {
@@ -268,11 +260,11 @@ contract SmartTreasury_Distribute is BaseFork {
     uint256 _expectAmount = normalizeEther(10 ether, usdt.decimals());
 
     // rev treasury (get usdt)
-    assertEq(_revenueBalanceAfter, _revenueBalanceBefore + _expectAmount, "Revenue Treasury Balance (USDT)");
+    assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectAmount, 100);
     // dev treasury (get usdt)
-    assertEq(_devBalanceAfter, _devBalanceBefore + _expectAmount, "Dev Treasury Balance (USDT)");
+    assertCloseBps(_devBalanceAfter, _devBalanceBefore + _expectAmount, 100);
     // burn treasury (get usdt)
-    assertEq(_burnBalanceAfter, _burnBalanceBefore + _expectAmount, "Burn Treasury Balance (USDT)");
+    assertCloseBps(_burnBalanceAfter, _burnBalanceBefore + _expectAmount, 100);
 
     // Smart treasury after distribute must have nothing
     uint256 _USDTTreasuryBalanceAfter = IERC20(address(usdt)).balanceOf(address(smartTreasury));
@@ -314,10 +306,10 @@ contract SmartTreasury_Distribute is BaseFork {
     // rev treasury (get usdt)
     assertCloseBps(_revenueBalanceAfter, _revenueBalanceBefore + _expectedAmountOut, 100);
     // dev treasury (get wbnb)
-    assertEq(_devBalanceAfter, _devBalanceBefore + 10 ether, "Dev Treasury Balance (WBNB)");
+    assertCloseBps(_devBalanceAfter, _devBalanceBefore + 10 ether, 100);
 
     // burn treasury (get wbnb)
-    assertEq(_burnBalanceAfter, _burnBalanceBefore + 10 ether, "Burn Treasury Balance (WBNB)");
+    assertCloseBps(_burnBalanceAfter, _burnBalanceBefore + 10 ether, 100);
 
     // Smart treasury after must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
@@ -344,5 +336,43 @@ contract SmartTreasury_Distribute is BaseFork {
     // Smart treasury after must equal to before
     uint256 _WBNBTreasuryBalanceAfter = IERC20(address(wbnb)).balanceOf(address(smartTreasury));
     assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
+  }
+
+  function testCorrectness_WhenV3NoLiquidity_V2Liquidity_ShouldSupport() external {
+    // set path v2
+    address[] memory _pathV2 = new address[](2);
+    _pathV2[0] = address(wbnb);
+    _pathV2[1] = address(usdt);
+    IUniSwapV2PathReader.PathParams[] memory _pathV2Param = new IUniSwapV2PathReader.PathParams[](1);
+    _pathV2Param[0] = IUniSwapV2PathReader.PathParams(address(routerV2), _pathV2);
+    pathReaderV2.setPaths(_pathV2Param);
+
+    // top up wbnb to smart treasury
+    deal(address(wbnb), address(smartTreasury), 30 ether);
+
+    // mock call that v3 path not exists
+    vm.mockCall(
+      address(pathReaderV3),
+      abi.encodeWithSelector(IUniSwapV3PathReader.paths.selector, address(wbnb), address(usdt)),
+      abi.encode(0)
+    );
+
+    // expect amount out
+    uint256[] memory _expectedAmount = routerV2.getAmountsOut(
+      10 ether,
+      pathReaderV2.getPath(address(wbnb), address(usdt)).path
+    );
+
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(wbnb);
+
+    // distribute
+    vm.prank(ALICE);
+    smartTreasury.distribute(_tokens);
+
+    assertEq(wbnb.balanceOf(address(smartTreasury)), 0, "WBNB Smart Treasury");
+    assertCloseBps(usdt.balanceOf(REVENUE_TREASURY), _expectedAmount[1], 100);
+    assertCloseBps(wbnb.balanceOf(DEV_TREASURY), 10 ether, 100);
+    assertCloseBps(wbnb.balanceOf(BURN_TREASURY), 10 ether, 100);
   }
 }

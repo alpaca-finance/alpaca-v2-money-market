@@ -1,12 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { AlpacaV2Oracle02, IAlpacaV2Oracle02 } from "solidity/contracts/oracle/AlpacaV2Oracle02.sol";
 
-contract SetRevenueTokenScript is BaseScript {
+contract DeployAlpacaV2Oracle02Script is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -19,13 +18,15 @@ contract SetRevenueTokenScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-
-    address _revenueToken = busd;
+    address oracle = oracleMedianizer;
+    address usd = usdPlaceholder;
 
     _startDeployerBroadcast();
 
-    smartTreasury.setRevenueToken(_revenueToken);
+    alpacaV2Oracle02 = new AlpacaV2Oracle02(oracle, usd);
 
     _stopBroadcast();
+
+    _writeJson(vm.toString(address(alpacaV2Oracle02)), ".oracle.alpacaV2Oracle02");
   }
 }

@@ -26,8 +26,8 @@ contract SetTokenConfigScript is BaseScript {
 
     // set alpaca guard path
 
-    // CAKE
-    alpacaGuardPath.push(cake);
+    // Doge
+    alpacaGuardPath.push(doge);
     alpacaGuardPath.push(wbnb);
     alpacaGuardPath.push(usdt);
     addSetTokenConfigList(
@@ -39,8 +39,8 @@ contract SetTokenConfigScript is BaseScript {
       })
     );
 
-    // XRP
-    alpacaGuardPath.push(xrp);
+    // LTC
+    alpacaGuardPath.push(ltc);
     alpacaGuardPath.push(wbnb);
     alpacaGuardPath.push(usdt);
     addSetTokenConfigList(

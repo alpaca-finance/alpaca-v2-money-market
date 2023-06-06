@@ -2,12 +2,12 @@
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
+import { IAlpacaV2Oracle02 } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-
-contract SetRevenueTokenScript is BaseScript {
+contract SetOracleScript is BaseScript {
   using stdJson for string;
+
+  IAlpacaV2Oracle02.SpecificOracle[] _inputs;
 
   function run() public {
     /*
@@ -20,12 +20,21 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _revenueToken = busd;
+    address _oracle = address(alpacaV2Oracle02);
+    addTokenAndOracle(address(usdt), _oracle);
 
+    //---- execution ----//
     _startDeployerBroadcast();
-
-    smartTreasury.setRevenueToken(_revenueToken);
-
+    alpacaV2Oracle02.setSpecificOracle(_inputs);
     _stopBroadcast();
+  }
+
+  function addTokenAndOracle(address _token, address _oracle) internal {
+    IAlpacaV2Oracle02.SpecificOracle memory _input = IAlpacaV2Oracle02.SpecificOracle({
+      token: _token,
+      oracle: _oracle
+    });
+
+    _inputs.push(_input);
   }
 }

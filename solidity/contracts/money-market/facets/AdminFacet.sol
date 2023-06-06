@@ -282,7 +282,7 @@ contract AdminFacet is IAdminFacet {
   /// @param _oracle The address of oracle
   function setOracle(address _oracle) external onlyOwner {
     // Sanity check
-    IAlpacaV2Oracle(_oracle).dollarToLp(0, address(0));
+    IAlpacaV2Oracle(_oracle).oracle();
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
     moneyMarketDs.oracle = IAlpacaV2Oracle(_oracle);
     emit LogSetOracle(_oracle);

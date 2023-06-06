@@ -31,21 +31,21 @@ contract SetPriceFeedsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // CAKE
+    // DOGE
     addSetPriceFeeds(
       SetPriceFeedsInput({
-        token0: cake,
+        token0: doge,
         token1: usdPlaceholder,
-        source: IAggregatorV3(0xB6064eD41d4f67e353768aA239cA86f4F73665a1)
+        source: IAggregatorV3(0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8)
       })
     );
 
-    // XRP
+    // LTC
     addSetPriceFeeds(
       SetPriceFeedsInput({
-        token0: xrp,
+        token0: ltc,
         token1: usdPlaceholder,
-        source: IAggregatorV3(0x93A67D414896A280bF8FFB3b389fE3686E014fda)
+        source: IAggregatorV3(0x74E72F37A8c415c8f1a98Ed42E78Ff997435791D)
       })
     );
 

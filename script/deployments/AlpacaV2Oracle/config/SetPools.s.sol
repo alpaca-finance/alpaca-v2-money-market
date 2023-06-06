@@ -29,10 +29,8 @@ contract SetPoolsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // CAKE-WBNB fee 0.25
-    addPCSV3PoolAddress(cake, wbnb, 2500);
-    // XRP-WBNB fee 0.25
-    addPCSV3PoolAddress(xrp, wbnb, 2500);
+    // DOGE-WBNB fee 0.25
+    addPCSV3PoolAddress(doge, wbnb, 2500);
 
     //---- execution ----//
     _startDeployerBroadcast();

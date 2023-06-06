@@ -3,10 +3,7 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-
-contract SetRevenueTokenScript is BaseScript {
+contract SetSlippageToleranceBpsScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -20,11 +17,11 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _revenueToken = busd;
+    uint16 _slippageToleranceBps = 100;
 
     _startDeployerBroadcast();
 
-    smartTreasury.setRevenueToken(_revenueToken);
+    smartTreasury.setSlippageToleranceBps(_slippageToleranceBps);
 
     _stopBroadcast();
   }

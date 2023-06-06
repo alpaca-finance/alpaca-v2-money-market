@@ -15,6 +15,7 @@
     "dot": "0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402",
     "eth": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
     "high": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63",
+    "ltc": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
     "matic": "0xCC42724C6683B7E57334c4E856f4c9965ED682bD",
     "tusd": "0x14016E85a25aeb13065688cAFB43044C2ef86784",
     "usdt": "0x55d398326f99059fF775485246999027B3197955",
@@ -24,6 +25,7 @@
   },
   "oracle": {
     "alpacaV2Oracle": "0x0Ece0910fCB2838Fbfd6bC01da17F1E96ae1D812",
+    "alpacaV2Oracle02": "",
     "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
   },
@@ -283,6 +285,7 @@
     "proxy": ""
   },
   "pathReader": {
-    "v3": ""
+    "pcsV3PathReader": "",
+    "uniswapV2LikePathReader": ""
   }
 }

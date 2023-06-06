@@ -18,6 +18,7 @@ import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
+import { IAlpacaV2Oracle02 } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
@@ -31,6 +32,9 @@ abstract contract BaseScript is Script {
     string.concat(vm.projectRoot(), string.concat("/", vm.envString("DEPLOYMENT_CONFIG_FILENAME")));
 
   IMoneyMarket internal moneyMarket;
+  // facets
+  address internal flashloanFacet;
+
   IMiniFL internal miniFL;
   IMoneyMarketAccountManager internal accountManager;
   address internal deployerAddress;
@@ -46,6 +50,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV2IbLiquidateStrat;
   address internal pancakeswapV3IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
+  IAlpacaV2Oracle02 internal alpacaV2Oracle02;
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
@@ -58,7 +63,8 @@ abstract contract BaseScript is Script {
   address internal doubleSlope3;
 
   // path reader
-  address internal pathReaderV3;
+  address internal uniswapV2LikePathReader;
+  address internal pcsV3PathReader;
 
   // tokens
   address internal ada;
@@ -71,6 +77,7 @@ abstract contract BaseScript is Script {
   address internal dot;
   address internal eth;
   address internal high;
+  address internal ltc;
   address internal matic;
   address internal tusd;
   address internal usdt;
@@ -83,6 +90,7 @@ abstract contract BaseScript is Script {
 
     string memory configJson = vm.readFile(configFilePath);
     moneyMarket = abi.decode(configJson.parseRaw(".moneyMarket.moneyMarketDiamond"), (IMoneyMarket));
+    flashloanFacet = abi.decode(configJson.parseRaw(".moneyMarket.facets.flashloanFacet"), (address));
     proxyAdminAddress = abi.decode(configJson.parseRaw(".proxyAdmin"), (address));
     miniFL = abi.decode(configJson.parseRaw(".miniFL.proxy"), (IMiniFL));
     smartTreasury = abi.decode(configJson.parseRaw(".smartTreasury.proxy"), (ISmartTreasury));
@@ -100,7 +108,8 @@ abstract contract BaseScript is Script {
     doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
 
     // path reader
-    pathReaderV3 = abi.decode(configJson.parseRaw(".pathReader.v3"), (address));
+    uniswapV2LikePathReader = abi.decode(configJson.parseRaw(".pathReader.uniswapV2LikePathReader"), (address));
+    pcsV3PathReader = abi.decode(configJson.parseRaw(".pathReader.pcsV3PathReader"), (address));
 
     ibTokenImplementation = abi.decode(
       configJson.parseRaw(".moneyMarket.interestBearingTokenImplementation"),
@@ -124,6 +133,7 @@ abstract contract BaseScript is Script {
     chainlinkOracle = abi.decode(configJson.parseRaw(".oracle.chainlinkOracle"), (address));
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracle.oracleMedianizer"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle"), (IAlpacaV2Oracle));
+    alpacaV2Oracle02 = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle02"), (IAlpacaV2Oracle02));
 
     // tokens
     ada = abi.decode(configJson.parseRaw(".tokens.ada"), (address));
@@ -136,6 +146,7 @@ abstract contract BaseScript is Script {
     dot = abi.decode(configJson.parseRaw(".tokens.dot"), (address));
     eth = abi.decode(configJson.parseRaw(".tokens.eth"), (address));
     high = abi.decode(configJson.parseRaw(".tokens.high"), (address));
+    ltc = abi.decode(configJson.parseRaw(".tokens.ltc"), (address));
     matic = abi.decode(configJson.parseRaw(".tokens.matic"), (address));
     tusd = abi.decode(configJson.parseRaw(".tokens.tusd"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));

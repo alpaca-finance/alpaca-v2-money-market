@@ -22,12 +22,12 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // cake
-    // setIbAllocPoint(cake, 20);
-    setDebtAllocPoint(cake, 25);
-    // xrp
-    // setIbAllocPoint(xrp, 10);
-    // setDebtAllocPoint(xrp, 15);
+    // doge
+    setIbAllocPoint(doge, 10);
+    setDebtAllocPoint(doge, 15);
+    // ltc
+    setIbAllocPoint(ltc, 10);
+    setDebtAllocPoint(ltc, 15);
 
     //---- execution ----//
     _startDeployerBroadcast();

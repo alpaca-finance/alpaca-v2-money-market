@@ -1,14 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { UniSwapV2LikePathReader } from "solidity/contracts/reader/UniSwapV2LikePathReader.sol";
 
-contract SetRevenueTokenScript is BaseScript {
-  using stdJson for string;
-
+contract DeployUniSwapV2LikePathReaderScritp is BaseScript {
   function run() public {
     /*
   ░██╗░░░░░░░██╗░█████╗░██████╗░███╗░░██╗██╗███╗░░██╗░██████╗░
@@ -20,12 +17,12 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _revenueToken = busd;
-
     _startDeployerBroadcast();
 
-    smartTreasury.setRevenueToken(_revenueToken);
+    address uniswapV2LikePathReader = address(new UniSwapV2LikePathReader());
 
     _stopBroadcast();
+
+    _writeJson(vm.toString(uniswapV2LikePathReader), ".pathReader.uniswapV2LikePathReader");
   }
 }

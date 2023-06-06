@@ -1,12 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { PCSV3PathReader } from "solidity/contracts/reader/PCSV3PathReader.sol";
 
-contract SetRevenueTokenScript is BaseScript {
+contract DeployPCSV3PathReaderScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -20,12 +19,12 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _revenueToken = busd;
-
     _startDeployerBroadcast();
 
-    smartTreasury.setRevenueToken(_revenueToken);
+    address pcsV3PathReader = address(new PCSV3PathReader());
 
     _stopBroadcast();
+
+    _writeJson(vm.toString(pcsV3PathReader), ".pathReader.pcsV3PathReader");
   }
 }

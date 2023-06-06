@@ -20,13 +20,13 @@ contract DiamondCutFlashloanFacetScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address flashloanFacet = 0x767adcb3650BAB4FEA44469fCe3FA66D767Bc22c;
+    address _flashloanFacet = flashloanFacet;
 
     IMMDiamondCut.FacetCut[] memory facetCuts = new IMMDiamondCut.FacetCut[](1);
 
     facetCuts[0] = IMMDiamondCut.FacetCut({
       action: IMMDiamondCut.FacetCutAction.Add,
-      facetAddress: flashloanFacet,
+      facetAddress: _flashloanFacet,
       functionSelectors: getFlashloanFacetSelectors()
     });
 

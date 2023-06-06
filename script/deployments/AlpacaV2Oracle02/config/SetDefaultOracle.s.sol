@@ -3,10 +3,7 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-
-contract SetRevenueTokenScript is BaseScript {
+contract SetOracleScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -20,12 +17,11 @@ contract SetRevenueTokenScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _revenueToken = busd;
+    address _newOracle = 0x67e157c7aA71298f2cE1A3d004CF5944C06A2A40;
 
+    //---- execution ----//
     _startDeployerBroadcast();
-
-    smartTreasury.setRevenueToken(_revenueToken);
-
+    alpacaV2Oracle02.setDefaultOracle(_newOracle);
     _stopBroadcast();
   }
 }
