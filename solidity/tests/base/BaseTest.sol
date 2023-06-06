@@ -21,6 +21,7 @@ import { InterestBearingToken } from "../../contracts/money-market/InterestBeari
 // oracle
 import { SimplePriceOracle } from "../../contracts/oracle/SimplePriceOracle.sol";
 import { AlpacaV2Oracle, IAlpacaV2Oracle } from "../../contracts/oracle/AlpacaV2Oracle.sol";
+import { AlpacaV2Oracle02, IAlpacaV2Oracle02 } from "../../contracts/oracle/AlpacaV2Oracle02.sol";
 import { OracleMedianizer } from "../../contracts/oracle/OracleMedianizer.sol";
 
 // Mocks
@@ -79,6 +80,8 @@ contract BaseTest is DSTest, StdUtils, StdAssertions, StdCheats {
 
   IPriceOracle internal oracle;
   IAlpacaV2Oracle internal alpacaV2Oracle;
+  IAlpacaV2Oracle02 internal alpacaV2Oracle02;
+
   OracleMedianizer internal oracleMedianizer;
 
   MockWNativeRelayer wNativeRelayer;
@@ -214,17 +217,6 @@ contract BaseTest is DSTest, StdUtils, StdAssertions, StdCheats {
     );
     address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
     return Rewarder(_proxy);
-  }
-
-  function deployAlpacaV2Oracle(address _oracleMedianizer) internal returns (AlpacaV2Oracle) {
-    bytes memory _logicBytecode = abi.encodePacked(vm.getCode("./out/AlpacaV2Oracle.sol/AlpacaV2Oracle.json"));
-    bytes memory _initializer = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address)")),
-      _oracleMedianizer,
-      usd
-    );
-    address _proxy = _setupUpgradeable(_logicBytecode, _initializer);
-    return AlpacaV2Oracle(_proxy);
   }
 
   function deployAlpacaV2Oracle(address _oracleMedianizer, address _baseStable) internal returns (AlpacaV2Oracle) {

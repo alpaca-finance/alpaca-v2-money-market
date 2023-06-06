@@ -18,6 +18,7 @@ import { IMiniFL } from "solidity/contracts/miniFL/interfaces/IMiniFL.sol";
 import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
 import { IMoneyMarketAccountManager } from "solidity/contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle.sol";
+import { IAlpacaV2Oracle02 } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
 
@@ -49,6 +50,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV2IbLiquidateStrat;
   address internal pancakeswapV3IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
+  IAlpacaV2Oracle02 internal alpacaV2Oracle02;
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
@@ -131,6 +133,7 @@ abstract contract BaseScript is Script {
     chainlinkOracle = abi.decode(configJson.parseRaw(".oracle.chainlinkOracle"), (address));
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracle.oracleMedianizer"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle"), (IAlpacaV2Oracle));
+    alpacaV2Oracle02 = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle02"), (IAlpacaV2Oracle02));
 
     // tokens
     ada = abi.decode(configJson.parseRaw(".tokens.ada"), (address));
