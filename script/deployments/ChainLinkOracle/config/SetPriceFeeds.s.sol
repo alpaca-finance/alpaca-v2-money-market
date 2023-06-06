@@ -31,12 +31,21 @@ contract SetPriceFeedsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // HIGH
+    // DOGE
     addSetPriceFeeds(
       SetPriceFeedsInput({
-        token0: high,
+        token0: doge,
         token1: usdPlaceholder,
-        source: IAggregatorV3(0xdF4Dd957a84F798acFADd448badd2D8b9bC99047)
+        source: IAggregatorV3(0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8)
+      })
+    );
+
+    // LTC
+    addSetPriceFeeds(
+      SetPriceFeedsInput({
+        token0: ltc,
+        token1: usdPlaceholder,
+        source: IAggregatorV3(0x74E72F37A8c415c8f1a98Ed42E78Ff997435791D)
       })
     );
 

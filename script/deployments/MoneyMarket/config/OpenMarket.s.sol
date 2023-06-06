@@ -31,16 +31,29 @@ contract OpenMarketScript is BaseScript {
     */
     _startDeployerBroadcast();
 
-    // HIGH
+    // DOGE
     executeOpenMarket(
       OpenMarketInput({
-        token: high,
+        token: doge,
         interestModel: doubleSlope1,
-        tier: LibConstant.AssetTier.CROSS,
-        collateralFactor: 0,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 3000,
         borrowingFactor: 5000,
-        maxCollateral: 0 ether,
-        maxBorrow: 500_000 ether
+        maxCollateral: formatAmount(doge, 15_000_000),
+        maxBorrow: formatAmount(doge, 10_000_000)
+      })
+    );
+
+    // LTC
+    executeOpenMarket(
+      OpenMarketInput({
+        token: ltc,
+        interestModel: doubleSlope1,
+        tier: LibConstant.AssetTier.COLLATERAL,
+        collateralFactor: 5000,
+        borrowingFactor: 7500,
+        maxCollateral: formatAmount(ltc, 120_000),
+        maxBorrow: formatAmount(ltc, 100_000)
       })
     );
 
@@ -74,6 +87,10 @@ contract OpenMarketScript is BaseScript {
     writeNewMarketToJson(_input.token);
     writeNewMiniFLPoolToJson(moneyMarket.getIbTokenFromToken(_input.token));
     writeNewMiniFLPoolToJson(moneyMarket.getDebtTokenFromToken(_input.token));
+  }
+
+  function formatAmount(address _token, uint256 _amount) internal returns (uint256 _formatAmount) {
+    _formatAmount = _amount * 10**(IERC20(_token).decimals());
   }
 
   function writeNewMarketToJson(address _underlyingToken) internal {
