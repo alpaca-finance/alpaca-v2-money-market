@@ -51,6 +51,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV3IbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   IAlpacaV2Oracle02 internal alpacaV2Oracle02;
+  address internal simpleOracle;
   address internal pancakeswapFactoryV3;
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
@@ -135,6 +136,7 @@ abstract contract BaseScript is Script {
     oracleMedianizer = abi.decode(configJson.parseRaw(".oracle.oracleMedianizer"), (address));
     alpacaV2Oracle = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle"), (IAlpacaV2Oracle));
     alpacaV2Oracle02 = abi.decode(configJson.parseRaw(".oracle.alpacaV2Oracle02"), (IAlpacaV2Oracle02));
+    simpleOracle = abi.decode(configJson.parseRaw(".oracle.simpleOracle"), (address));
 
     // tokens
     ada = abi.decode(configJson.parseRaw(".tokens.ada"), (address));

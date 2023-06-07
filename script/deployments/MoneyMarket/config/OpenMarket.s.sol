@@ -31,29 +31,16 @@ contract OpenMarketScript is BaseScript {
     */
     _startDeployerBroadcast();
 
-    // DOGE
+    // THE
     executeOpenMarket(
       OpenMarketInput({
-        token: doge,
+        token: the,
         interestModel: doubleSlope1,
-        tier: LibConstant.AssetTier.COLLATERAL,
-        collateralFactor: 3000,
-        borrowingFactor: 5000,
-        maxCollateral: formatAmount(doge, 15_000_000),
-        maxBorrow: formatAmount(doge, 10_000_000)
-      })
-    );
-
-    // LTC
-    executeOpenMarket(
-      OpenMarketInput({
-        token: ltc,
-        interestModel: doubleSlope1,
-        tier: LibConstant.AssetTier.COLLATERAL,
-        collateralFactor: 5000,
-        borrowingFactor: 7500,
-        maxCollateral: formatAmount(ltc, 120_000),
-        maxBorrow: formatAmount(ltc, 100_000)
+        tier: LibConstant.AssetTier.ISOLATE,
+        collateralFactor: 0,
+        borrowingFactor: 6000,
+        maxCollateral: formatAmount(the, 0),
+        maxBorrow: formatAmount(the, 1_000_000)
       })
     );
 

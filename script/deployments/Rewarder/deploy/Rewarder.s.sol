@@ -20,9 +20,9 @@ contract DeployRewarderScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    string memory name = "high";
+    string memory name = "the";
     address _miniFL = address(miniFL);
-    address rewardToken = high;
+    address rewardToken = the;
     uint256 maxRewardPerSecond = 1 ether;
 
     bytes memory data = abi.encodeWithSelector(

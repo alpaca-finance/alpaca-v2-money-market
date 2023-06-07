@@ -27,6 +27,6 @@ contract DeployAlpacaV2Oracle02Script is BaseScript {
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(address(alpacaV2Oracle02)), ".oracle.alpacaV2Oracle");
+    _writeJson(vm.toString(address(alpacaV2Oracle02)), ".oracle.alpacaV2Oracle02");
   }
 }

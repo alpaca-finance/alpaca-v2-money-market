@@ -24,9 +24,11 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   IPriceOracle[][] allSources;
 
   IPriceOracle[] chainlinkPriceSource;
+  IPriceOracle[] simpleOraclePriceSource;
 
   constructor() {
     chainlinkPriceSource.push(IPriceOracle(chainlinkOracle));
+    simpleOraclePriceSource.push(IPriceOracle(simpleOracle));
   }
 
   function run() public {
@@ -40,25 +42,14 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // DOGE
+    // THE
     addSetMultiPrimarySources(
       SetMultiPrimarySourcesInput({
-        token0: doge,
+        token0: the,
         token1: usdPlaceholder,
         maxPriceDeviation: 1e18,
         maxPriceStale: 1 days,
-        priceSources: chainlinkPriceSource
-      })
-    );
-
-    // LTC
-    addSetMultiPrimarySources(
-      SetMultiPrimarySourcesInput({
-        token0: ltc,
-        token1: usdPlaceholder,
-        maxPriceDeviation: 1e18,
-        maxPriceStale: 1 days,
-        priceSources: chainlinkPriceSource
+        priceSources: simpleOraclePriceSource
       })
     );
 

@@ -17,7 +17,7 @@ contract SetOracleScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _newOracle = address(alpacaV2Oracle);
+    address _newOracle = address(alpacaV2Oracle02);
 
     //---- execution ----//
     _startDeployerBroadcast();

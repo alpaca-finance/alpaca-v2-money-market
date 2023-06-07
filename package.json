@@ -56,7 +56,7 @@
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-token-config": "forge script script/deployments/AlpacaV2Oracle/config/SetTokenConfig.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-pools": "forge script script/deployments/AlpacaV2Oracle/config/SetPools.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-oracle": "forge script script/deployments/AlpacaV2Oracle/config/SetOracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:alpaca-v2-oracle02:deploy": "forge script/deployments/AlpacaV2Oracle02/deploy/AlpacaV2Oracle02.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:alpaca-v2-oracle02:deploy": "forge script script/deployments/AlpacaV2Oracle02/deploy/AlpacaV2Oracle02.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:oracle-medianizer:deploy": "forge script script/deployments/OracleMedianizer/deploy/OracleMedianizer.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:oracle-medianizer:config:set-multiple-primary-sources": "forge script script/deployments/OracleMedianizer/config/SetMultiPrimarySources.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",

@@ -23,10 +23,10 @@ contract SetPoolRewardersScript is BaseScript {
     */
 
     address[] memory rewarders = new address[](1);
-    rewarders[0] = 0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB;
+    rewarders[0] = 0xEc2d6B93bbBD559F88e77B8DdD2C914aC72df271;
 
-    setIbPoolRewarders(high, rewarders);
-    setDebtPoolRewarders(high, rewarders);
+    setIbPoolRewarders(the, rewarders);
+    setDebtPoolRewarders(the, rewarders);
 
     //---- execution ----//
     _startDeployerBroadcast();
