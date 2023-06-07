@@ -79,6 +79,7 @@ abstract contract BaseScript is Script {
   address internal high;
   address internal ltc;
   address internal matic;
+  address internal the;
   address internal tusd;
   address internal usdt;
   address internal usdc;
@@ -148,6 +149,7 @@ abstract contract BaseScript is Script {
     high = abi.decode(configJson.parseRaw(".tokens.high"), (address));
     ltc = abi.decode(configJson.parseRaw(".tokens.ltc"), (address));
     matic = abi.decode(configJson.parseRaw(".tokens.matic"), (address));
+    the = abi.decode(configJson.parseRaw(".tokens.the"), (address));
     tusd = abi.decode(configJson.parseRaw(".tokens.tusd"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
     usdc = abi.decode(configJson.parseRaw(".tokens.usdc"), (address));

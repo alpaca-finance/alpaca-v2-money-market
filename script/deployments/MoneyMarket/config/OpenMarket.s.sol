@@ -89,7 +89,7 @@ contract OpenMarketScript is BaseScript {
     writeNewMiniFLPoolToJson(moneyMarket.getDebtTokenFromToken(_input.token));
   }
 
-  function formatAmount(address _token, uint256 _amount) internal returns (uint256 _formatAmount) {
+  function formatAmount(address _token, uint256 _amount) internal view returns (uint256 _formatAmount) {
     _formatAmount = _amount * 10**(IERC20(_token).decimals());
   }
 
