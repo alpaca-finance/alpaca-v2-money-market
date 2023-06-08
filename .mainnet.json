@@ -17,6 +17,7 @@
     "high": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63",
     "ltc": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
     "matic": "0xCC42724C6683B7E57334c4E856f4c9965ED682bD",
+    "the": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11",
     "tusd": "0x14016E85a25aeb13065688cAFB43044C2ef86784",
     "usdt": "0x55d398326f99059fF775485246999027B3197955",
     "usdc": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
@@ -27,7 +28,8 @@
     "alpacaV2Oracle": "0x0Ece0910fCB2838Fbfd6bC01da17F1E96ae1D812",
     "alpacaV2Oracle02": "",
     "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
-    "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
+    "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
+    "simpleOracle": "0x166f56F2EDa9817cAB77118AE4FCAA0002A17eC7"
   },
   "sharedConfig": {
     "fixFeeModel500Bps": "0x5c40022195b143c63E8E49d0a1f26C164799fBB6",
@@ -154,29 +156,13 @@
         "ibToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
         "debtToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
         "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
-      },
-      {
-        "name": "DOGE",
-        "tier": "COLLATERAL",
-        "token": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
-        "ibToken": "0x72Ad41ecf9C6C1171F19FaCCBA2b347D64AFe57f",
-        "debtToken": "0xBda539AFD66fEE61499B22769E4e413dc158f271",
-        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
-      },
-      {
-        "name": "LTC",
-        "tier": "COLLATERAL",
-        "token": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
-        "ibToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
-        "debtToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
-        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
       }
     ],
     "accountManager": {
       "implementation": "0xD870c0D7de9302D829FB7b7ba126C9E1E1220fb5",
       "proxy": "0xD20B887654dB8dC476007bdca83d22Fa51e93407"
     },
-    "repurchaser": ""
+    "repurchaser": "0x40d48e2fe8a9f65b114fd85489fda955dfe86c35"
   },
   "miniFL": {
     "implementation": "0x15474B03710187eB9de4401d99E75680eD240b27",
@@ -300,30 +286,6 @@
         "id": 18,
         "name": "debtXRP",
         "stakingToken": "0x9c04F5D68fc754D79fBCAc8fC56469C0264F85DC",
-        "rewarders": []
-      },
-      {
-        "id": 19,
-        "name": "ibDOGE",
-        "stakingToken": "0x72Ad41ecf9C6C1171F19FaCCBA2b347D64AFe57f",
-        "rewarders": []
-      },
-      {
-        "id": 20,
-        "name": "debtDOGE",
-        "stakingToken": "0xBda539AFD66fEE61499B22769E4e413dc158f271",
-        "rewarders": []
-      },
-      {
-        "id": 21,
-        "name": "ibLTC",
-        "stakingToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
-        "rewarders": []
-      },
-      {
-        "id": 22,
-        "name": "debtLTC",
-        "stakingToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
         "rewarders": []
       },
       {
