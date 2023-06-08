@@ -26,8 +26,10 @@
   },
   "oracle": {
     "alpacaV2Oracle": "0x0Ece0910fCB2838Fbfd6bC01da17F1E96ae1D812",
+    "alpacaV2Oracle02": "",
     "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
-    "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c"
+    "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
+    "simpleOracle": "0x166f56F2EDa9817cAB77118AE4FCAA0002A17eC7"
   },
   "sharedConfig": {
     "fixFeeModel500Bps": "0x5c40022195b143c63E8E49d0a1f26C164799fBB6",
