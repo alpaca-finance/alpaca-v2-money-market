@@ -26,7 +26,7 @@
   },
   "oracle": {
     "alpacaV2Oracle": "0x0Ece0910fCB2838Fbfd6bC01da17F1E96ae1D812",
-    "alpacaV2Oracle02": "",
+    "alpacaV2Oracle02": "0xB265D1b4eb6Fc969B7C23eBa3A2d661C4c09E143",
     "chainlinkOracle": "0x634902128543b25265da350e2d961C7ff540fC71",
     "oracleMedianizer": "0x553b8adc2Ac16491Ec57239BeA7191719a2B880c",
     "simpleOracle": "0x166f56F2EDa9817cAB77118AE4FCAA0002A17eC7"
@@ -54,17 +54,17 @@
   "moneyMarket": {
     "moneyMarketDiamond": "0x7389aaf2e32872cABD766D0CEB384220e8F2A590",
     "facets": {
-      "adminFacet": "0xe6f38b2B81A3401f8c28286d5bd5345502E33917",
+      "adminFacet": "0x7232A9E4C156d5828B5660353fBe5e6bE7F9d674",
       "borrowFacet": "0xdE6F41147Ab3749d1f8E82d267A1FfD8e7599A5D",
       "collateralFacet": "0x8cE125c65605f937AE16645a3642d3A335852936",
       "diamondCutFacet": "0x2E28CbF8995969d4ea1F03FfB6f25dab8afEE45C",
       "diamondLoupeFacet": "0xaDB5Be7b114Ca6721e00778F97e615B85D095952",
-      "flashloanFacet": "",
+      "flashloanFacet": "0xC934E6332f3af8B27da447eDa0273bd3867efAF2",
       "lendFacet": "0x0d8AE68ee3eE728Ed7AE9E99Edc10f2cfc3959b1",
-      "liquidationFacet": "0xaB530549D03AE12A96292d749c75f7f719EA2f9D",
+      "liquidationFacet": "0x891D268a3Adc285BAa1A8d8704167A865e76446f",
       "nonCollatBorrowFacet": "0xF22133299081534780777D1504A6B38955195b03",
       "ownershipFacet": "0x09E6Fb57dfB952D44D915a335c29A7F485Df4CDE",
-      "viewFacet": "0xA7D618BF3880f146Bbc0F0d18eB6f13F59d3D339"
+      "viewFacet": "0xD53DEeFe0d1F5f0e2476044bdDfC399e50032345"
     },
     "interestBearingTokenImplementation": "0x7f5EfBA7Fc83B69445Bbc704A2C5a03c66550425",
     "debtTokenImplementation": "0xbAdedB738a08fe68b7a1c0038F64D62656D0d5D7",
@@ -155,6 +155,14 @@
         "token": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
         "ibToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
         "debtToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "THE",
+        "tier": "ISOLATE",
+        "token": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11",
+        "ibToken": "0x91E3A9B3f5a2c02Dd5cd40733fe4d52a87A213d9",
+        "debtToken": "0x2C8A7592828007eF33D87B49732F174D9A0b6759",
         "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
       }
     ],
@@ -311,6 +319,30 @@
         "name": "debtLTC",
         "stakingToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
         "rewarders": []
+      },
+      {
+        "id": 23,
+        "name": "ibTHE",
+        "stakingToken": "0x91E3A9B3f5a2c02Dd5cd40733fe4d52a87A213d9",
+        "rewarders": [
+          {
+            "name": "the",
+            "address": "0x5706ef757a635A986032cfe14e7B12EBA9f118Fd",
+            "rewardToken": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11"
+          }
+        ]
+      },
+      {
+        "id": 24,
+        "name": "debtTHE",
+        "stakingToken": "0x2C8A7592828007eF33D87B49732F174D9A0b6759",
+        "rewarders": [
+          {
+            "name": "the",
+            "address": "0x5706ef757a635A986032cfe14e7B12EBA9f118Fd",
+            "rewardToken": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11"
+          }
+        ]
       }
     ]
   },
@@ -319,6 +351,11 @@
       "name": "high",
       "address": "0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB",
       "rewardToken": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63"
+    },
+    {
+      "name": "the",
+      "address": "0x5706ef757a635A986032cfe14e7B12EBA9f118Fd",
+      "rewardToken": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11"
     }
   ],
   "moneyMarketReader": "0x4913DEC75cC0e061Ba78ebbDb2584905760be4C6",
