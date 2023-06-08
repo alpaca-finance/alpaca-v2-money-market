@@ -33,7 +33,7 @@ contract SetPoolScript is BaseScript {
     _startDeployerBroadcast();
 
     for (uint256 i; i < setPoolInputs.length; i++) {
-      miniFL.setPool(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, true);
+      miniFL.setPool{ gas: 4_000_000 }(setPoolInputs[i].pid, setPoolInputs[i].allocPoint, true);
     }
 
     _stopBroadcast();

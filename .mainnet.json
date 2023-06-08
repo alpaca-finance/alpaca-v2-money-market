@@ -138,6 +138,38 @@
         "ibToken": "0xACb41b8bddF67727F07bf375b01edC40Ed51c4ff",
         "debtToken": "0x9c04F5D68fc754D79fBCAc8fC56469C0264F85DC",
         "interestModel": "0x89c53B34b5E6A1D0b2922941749e9Ee05ce58b42"
+      },
+      {
+        "name": "DOGE",
+        "tier": "COLLATERAL",
+        "token": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+        "ibToken": "0x72Ad41ecf9C6C1171F19FaCCBA2b347D64AFe57f",
+        "debtToken": "0xBda539AFD66fEE61499B22769E4e413dc158f271",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "LTC",
+        "tier": "COLLATERAL",
+        "token": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
+        "ibToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
+        "debtToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "DOGE",
+        "tier": "COLLATERAL",
+        "token": "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+        "ibToken": "0x72Ad41ecf9C6C1171F19FaCCBA2b347D64AFe57f",
+        "debtToken": "0xBda539AFD66fEE61499B22769E4e413dc158f271",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "LTC",
+        "tier": "COLLATERAL",
+        "token": "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
+        "ibToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
+        "debtToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
       }
     ],
     "accountManager": {
@@ -268,6 +300,54 @@
         "id": 18,
         "name": "debtXRP",
         "stakingToken": "0x9c04F5D68fc754D79fBCAc8fC56469C0264F85DC",
+        "rewarders": []
+      },
+      {
+        "id": 19,
+        "name": "ibDOGE",
+        "stakingToken": "0x72Ad41ecf9C6C1171F19FaCCBA2b347D64AFe57f",
+        "rewarders": []
+      },
+      {
+        "id": 20,
+        "name": "debtDOGE",
+        "stakingToken": "0xBda539AFD66fEE61499B22769E4e413dc158f271",
+        "rewarders": []
+      },
+      {
+        "id": 21,
+        "name": "ibLTC",
+        "stakingToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
+        "rewarders": []
+      },
+      {
+        "id": 22,
+        "name": "debtLTC",
+        "stakingToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
+        "rewarders": []
+      },
+      {
+        "id": 19,
+        "name": "ibDOGE",
+        "stakingToken": "0x72Ad41ecf9C6C1171F19FaCCBA2b347D64AFe57f",
+        "rewarders": []
+      },
+      {
+        "id": 20,
+        "name": "debtDOGE",
+        "stakingToken": "0xBda539AFD66fEE61499B22769E4e413dc158f271",
+        "rewarders": []
+      },
+      {
+        "id": 21,
+        "name": "ibLTC",
+        "stakingToken": "0x42b2D846785636CfB393b5EC48C6581f47c37EC3",
+        "rewarders": []
+      },
+      {
+        "id": 22,
+        "name": "debtLTC",
+        "stakingToken": "0x22c583069619eA08F260758E34Bc525B5833d11b",
         "rewarders": []
       }
     ]
