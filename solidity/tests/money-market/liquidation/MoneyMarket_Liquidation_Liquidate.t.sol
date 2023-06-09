@@ -110,6 +110,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
 
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
+
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -117,6 +119,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
 
@@ -187,6 +190,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 1 ether);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -194,6 +198,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
 
@@ -243,6 +248,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // return 50% of debt plus liquidation fee
 
     mockBadLiquidationStrategy.setReturnRepayAmount((_maxReturnWithFee) / 2);
+
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(mockBadLiquidationStrategy), // this strategy always return repayToken as set prior
@@ -250,6 +257,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
 
@@ -303,6 +311,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(weth),
+      0,
       0
     );
 
@@ -325,6 +334,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // add a little bit so it can't be liquidate
     mockOracle.setTokenPrice(address(weth), 0.9000091 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, address(weth));
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
@@ -333,6 +343,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(weth),
+      _collateralAmount,
       0
     );
   }
@@ -340,19 +351,21 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
   function testRevert_WhenLiquidationStrategyIsNotOk() external {
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
-    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0);
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0, 0);
   }
 
   function testRevert_WhenLiquidationCallerIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     vm.prank(EVE);
-    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0);
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0, 0);
   }
 
   function testRevert_WhenTryToLiquidateNonExistedCollateral_ShouldRevert() external {
     // criteria
     address _collatToken = address(ibUsdc);
     address _debtToken = address(usdc);
+
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
 
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_CollateralNotExist.selector));
@@ -362,6 +375,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
   }
@@ -374,6 +388,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
+
     // alice has 40 weth collat, 30 usdc debt
     // liquidate 30 usdc debt should fail because liquidatedBorrowingPower > maxLiquidateBps * totalUsedBorrowingPower
     vm.prank(liquidator);
@@ -384,6 +400,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
   }

@@ -303,8 +303,8 @@ contract LiquidationFacet is ILiquidationFacet {
   /// @notice Liquidate the collateral token in exchange of the debt token
   ///
   ///         liquidation process
-  ///           1) withdraw all specified collateral of subAccount and withdraw from MiniFL staking if applicable
-  ///           2) send all collateral to strategy to prepare for liquidation
+  ///           1) withdraw specified collateral of subAccount and withdraw from MiniFL staking if applicable
+  ///           2) send the collateral to strategy to prepare for liquidation
   ///           3) call `executeLiquidation` on strategy
   ///               - strategy convert collateral to repay token
   ///               - strategy transfer converted repay token and leftover collateral (if any) back to diamond
@@ -322,6 +322,7 @@ contract LiquidationFacet is ILiquidationFacet {
   /// @param _subAccountId The index to derive the subaccount
   /// @param _repayToken The token that will be repurchase and repay the debt
   /// @param _collatToken The collateral token that will be used for exchange
+  /// @param _collatAmount The amount of collateral to liquidate
   /// @param _minReceive Minimum amount expected from liquidation in repayToken
   function liquidationCall(
     address _liquidationStrat,
@@ -329,6 +330,7 @@ contract LiquidationFacet is ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
+    uint256 _collatAmount,
     uint256 _minReceive
   ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
@@ -369,7 +371,7 @@ contract LiquidationFacet is ILiquidationFacet {
       _account,
       _vars.subAccount,
       _collatToken,
-      _vars.subAccountCollatAmount,
+      _collatAmount,
       false,
       moneyMarketDs
     );
@@ -380,7 +382,7 @@ contract LiquidationFacet is ILiquidationFacet {
     _vars.repayTokenBalaceBefore = IERC20(_repayToken).balanceOf(address(this));
 
     // Send all collats under subaccount to strategy
-    IERC20(_collatToken).safeTransfer(_liquidationStrat, _vars.subAccountCollatAmount);
+    IERC20(_collatToken).safeTransfer(_liquidationStrat, _collatAmount);
 
     // Calculated repayToken amount expected from liquidation
     // Cap repay amount to current debt if input exceeds it

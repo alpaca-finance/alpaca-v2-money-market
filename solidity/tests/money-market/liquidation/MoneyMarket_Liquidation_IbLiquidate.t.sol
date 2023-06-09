@@ -191,6 +191,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -198,6 +199,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       _debtToken,
       _ibCollatToken,
+      _collateralAmount,
       0
     );
 
@@ -328,6 +330,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | WETH      | 0.8          |
     // | USDC      | 1            |
     // | ------------------------ |
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -336,6 +339,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       _debtToken,
       _ibCollatToken,
+      _collateralAmount,
       0
     );
 
@@ -414,6 +418,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(_debtToken, 1 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
+
     vm.prank(liquidator);
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -428,6 +434,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       _debtToken,
       _ibCollatToken,
+      _collateralAmount,
       0
     );
   }
@@ -448,6 +455,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     mockOracle.setTokenPrice(address(btc), 10 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, address(ibWeth));
+
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
@@ -456,6 +465,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       address(usdc),
       address(ibWeth),
+      _collateralAmount,
       0
     );
   }
@@ -467,6 +477,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, address(ibWeth));
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     liquidationFacet.liquidationCall(
@@ -475,6 +486,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       address(usdc),
       address(ibWeth),
+      _collateralAmount,
       0
     );
   }
