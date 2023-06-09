@@ -162,7 +162,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      *    - usdc debt has increased to 30.005076 usdc
      *    - ALICE borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd
      *
-     * 3. try to liquidate half of weth collaterl = 20 weth
+     * 3. try to liquidate half of weth collateral = 20 weth
      *
      * 4. The final result should be
      *    - remaining collat should be 40-20 = 20 weth
