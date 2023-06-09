@@ -456,8 +456,8 @@ contract LiquidationFacet is ILiquidationFacet {
     // Calculate the actual collateral used in liquidation strategy by comparing balance before and after
     _vars.collatSold = _vars.collatTokenBalanceBefore - IERC20(_collatToken).balanceOf(address(this));
 
-    // Add remaining collateral back to the subaccount since we have removed all collateral earlier
-    // This should deposit collateral back to miniFL if applicable
+    // Add remaining collateral back to the subaccount since we have removed specified amount of
+    // collateral earlier. This should deposit collateral back to miniFL if applicable
     if (_collatAmount > _vars.collatSold) {
       unchecked {
         LibMoneyMarket01.addCollatToSubAccount(
