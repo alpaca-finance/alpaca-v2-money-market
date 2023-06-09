@@ -405,7 +405,7 @@ contract LiquidationFacet is ILiquidationFacet {
     ILiquidationStrategy(_liquidationStrat).executeLiquidation(
       _collatToken,
       _repayToken,
-      _vars.subAccountCollatAmount,
+      _collatAmount,
       _vars.expectedMaxRepayAmount,
       _minReceive
     );
@@ -458,13 +458,13 @@ contract LiquidationFacet is ILiquidationFacet {
 
     // Add remaining collateral back to the subaccount since we have removed all collateral earlier
     // This should deposit collateral back to miniFL if applicable
-    if (_vars.subAccountCollatAmount > _vars.collatSold) {
+    if (_collatAmount > _vars.collatSold) {
       unchecked {
         LibMoneyMarket01.addCollatToSubAccount(
           _account,
           _vars.subAccount,
           _collatToken,
-          _vars.subAccountCollatAmount - _vars.collatSold,
+          _collatAmount - _vars.collatSold,
           false,
           moneyMarketDs
         );
