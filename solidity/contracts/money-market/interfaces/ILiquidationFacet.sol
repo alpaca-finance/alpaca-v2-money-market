@@ -9,6 +9,7 @@ interface ILiquidationFacet {
   error LiquidationFacet_RepayAmountMismatch();
   error LiquidationFacet_CollateralNotExist();
   error LiquidationFacet_TooMuchRepayToken();
+  error LiquidationFacet_InvalidParams();
 
   function repurchase(
     address _account,

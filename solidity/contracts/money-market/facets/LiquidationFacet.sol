@@ -58,7 +58,6 @@ contract LiquidationFacet is ILiquidationFacet {
 
   struct LiquidationLocalVars {
     address subAccount;
-    uint256 subAccountCollatAmount;
     uint256 maxPossibleRepayAmount;
     uint256 maxPossibleFee;
     uint256 expectedMaxRepayAmount;
@@ -340,12 +339,15 @@ contract LiquidationFacet is ILiquidationFacet {
       revert LiquidationFacet_Unauthorized();
     }
 
+    if (_collatAmount == 0) {
+      revert LiquidationFacet_InvalidParams();
+    }
+
     LiquidationLocalVars memory _vars;
 
     _vars.subAccount = LibMoneyMarket01.getSubAccount(_account, _subAccountId);
-    _vars.subAccountCollatAmount = moneyMarketDs.subAccountCollats[_vars.subAccount].getAmount(_collatToken);
     // Revert if subAccount doesn't have collateral to be liquidated
-    if (_vars.subAccountCollatAmount == 0) {
+    if (moneyMarketDs.subAccountCollats[_vars.subAccount].getAmount(_collatToken) == 0) {
       revert LiquidationFacet_CollateralNotExist();
     }
 

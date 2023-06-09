@@ -311,7 +311,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(weth),
-      0,
+      1,
       0
     );
 
@@ -365,8 +365,6 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     address _collatToken = address(ibUsdc);
     address _debtToken = address(usdc);
 
-    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
-
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_CollateralNotExist.selector));
     liquidationFacet.liquidationCall(
@@ -375,7 +373,25 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
-      _collateralAmount,
+      1,
+      0
+    );
+  }
+
+  function testRevert_WhenInputZeroAmountOfCollat_ShouldRevert() external {
+    // criteria
+    address _collatToken = address(ibUsdc);
+    address _debtToken = address(usdc);
+
+    vm.prank(liquidator);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_InvalidParams.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      0,
       0
     );
   }
