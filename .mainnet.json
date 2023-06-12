@@ -167,7 +167,7 @@
       }
     ],
     "accountManager": {
-      "implementation": "0xD870c0D7de9302D829FB7b7ba126C9E1E1220fb5",
+      "implementation": "0x456b43F8D71cA6666ca5eC848254D6E0A076Bc4e",
       "proxy": "0xD20B887654dB8dC476007bdca83d22Fa51e93407"
     },
     "repurchaser": "0x40d48e2fe8a9f65b114fd85489fda955dfe86c35"
