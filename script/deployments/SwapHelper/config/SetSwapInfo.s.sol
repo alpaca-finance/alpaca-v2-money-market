@@ -27,7 +27,7 @@ contract SetSwapInfoScript is BaseScript {
     address _destination = address(0x0);
     address _router = address(0x0);
 
-    ISwapHelper.SwapInfo memory _swapInfo = SwapHelper.SwapInfo({
+    ISwapHelper.SwapInfo memory _swapInfo = ISwapHelper.SwapInfo({
       swapCalldata: "",
       router: _router,
       amountInOffset: 0,

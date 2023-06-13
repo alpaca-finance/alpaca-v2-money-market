@@ -60,8 +60,8 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     ISwapHelper.SwapInfo memory _swapInfo = ISwapHelper.SwapInfo({
       swapCalldata: _calldata,
       router: address(pancakeV3Router),
-      amountInOffset: 128,
-      toOffset: 64
+      amountInOffset: 128 + 4,
+      toOffset: 64 + 4
     });
 
     swapHelper.setSwapInfo(_token0, _token1, _swapInfo);
@@ -133,8 +133,8 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
       ISwapHelper.SwapInfo({
         swapCalldata: _calldata,
         router: address(pancakeV3Router),
-        amountInOffset: 128,
-        toOffset: 64
+        amountInOffset: 128 + 4,
+        toOffset: 64 + 4
       })
     );
 
@@ -143,8 +143,34 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
     assertEq(keccak256(_retrievedCalldata), keccak256(_calldata));
   }
 
+  function testRevert_SetSwapInfo_InvalidOffset() public {
+    // test revert when offset is less than function signature length
+    vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
+    swapHelper.setSwapInfo(
+      address(usdc),
+      address(cake),
+      ISwapHelper.SwapInfo({ swapCalldata: "", router: address(pancakeV3Router), amountInOffset: 0, toOffset: 0 })
+    );
+
+    // test revert when offset is more than swap calldata length
+    bytes memory _swapCalldata = abi.encode("0x12345678");
+    uint256 _swapCalldataLength = _swapCalldata.length;
+
+    vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
+    swapHelper.setSwapInfo(
+      address(usdc),
+      address(cake),
+      ISwapHelper.SwapInfo({
+        swapCalldata: _swapCalldata,
+        router: address(pancakeV3Router),
+        amountInOffset: _swapCalldataLength + 1,
+        toOffset: _swapCalldataLength + 1
+      })
+    );
+  }
+
   function testRevert_SetSwapInfo_WhenCallerIsNotOwner() public {
-    vm.expectRevert();
+    vm.expectRevert("Ownable: caller is not the owner");
     vm.prank(RECIPIENT);
     swapHelper.setSwapInfo(
       address(usdc),

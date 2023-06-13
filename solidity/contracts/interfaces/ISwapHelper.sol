@@ -2,6 +2,8 @@
 pragma solidity 0.8.19;
 
 interface ISwapHelper {
+  error SwapHelper_InvalidAgrument();
+
   struct SwapInfo {
     bytes swapCalldata;
     address router;

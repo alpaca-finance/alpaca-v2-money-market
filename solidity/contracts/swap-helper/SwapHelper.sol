@@ -9,8 +9,6 @@ contract SwapHelper is ISwapHelper, Ownable {
   // source => desination => SwapInfo
   mapping(address => mapping(address => SwapInfo)) public swapInfos;
 
-  constructor() {}
-
   /// @notice Get swap calldata
   /// @param _source The source token
   /// @param _destination The destination token
@@ -39,6 +37,20 @@ contract SwapHelper is ISwapHelper, Ownable {
     address _destination,
     SwapInfo calldata _swapInfo
   ) external onlyOwner {
+    uint256 _swapCalldataLength = _swapInfo.swapCalldata.length;
+    uint256 _amountInOffset = _swapInfo.amountInOffset;
+    uint256 _toOffset = _swapInfo.toOffset;
+
+    // validate the offsets
+    if (
+      // check if the offset is more than function signature length
+      (_amountInOffset < 4 || _toOffset < 4) ||
+      // check if the offset is more than swap calldata length
+      (_amountInOffset > _swapCalldataLength || _toOffset > _swapCalldataLength)
+    ) {
+      revert SwapHelper_InvalidAgrument();
+    }
+
     swapInfos[_source][_destination] = _swapInfo;
   }
 
@@ -48,9 +60,11 @@ contract SwapHelper is ISwapHelper, Ownable {
     uint256 _offset
   ) internal pure {
     assembly {
+      // skip length to the data
       let dataPointer := add(_data, 32)
-      let skipFuncSig := add(4, dataPointer)
-      mstore(add(_offset, skipFuncSig), _addr)
+      // replace the data at the offset
+      //  offset = length after the first data bytes + size of address
+      mstore(add(_offset, dataPointer), _addr)
     }
   }
 
@@ -60,9 +74,11 @@ contract SwapHelper is ISwapHelper, Ownable {
     uint256 _offset
   ) internal pure {
     assembly {
+      // skip length to the data
       let dataPointer := add(_data, 32)
-      let skipFuncSig := add(4, dataPointer)
-      mstore(add(_offset, skipFuncSig), _amount)
+      // replace the data at the offset
+      //  offset = length after the first data bytes + size of uint256)
+      mstore(add(_offset, dataPointer), _amount)
     }
   }
 }

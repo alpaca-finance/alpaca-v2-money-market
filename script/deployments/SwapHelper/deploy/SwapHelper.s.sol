@@ -21,10 +21,10 @@ contract DeploySwapHelperScript is BaseScript {
 
     _startDeployerBroadcast();
 
-    address swapHelper = address(new SwapHelper());
+    address _swapHelper = address(new SwapHelper());
 
     _stopBroadcast();
 
-    _writeJson(vm.toString(swapHelper), ".swapHelper");
+    _writeJson(vm.toString(_swapHelper), ".swapHelper");
   }
 }
