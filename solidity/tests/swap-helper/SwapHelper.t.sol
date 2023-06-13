@@ -70,7 +70,12 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     uint256 _newAmountIn = 200e18;
     address _newTo = RECIPIENT_2;
-    (, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(_token0, _token1, _newAmountIn, _newTo);
+    (address _router, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(
+      _token0,
+      _token1,
+      _newAmountIn,
+      _newTo
+    );
 
     // ====== do swap with pancake swap ======
 
@@ -95,8 +100,8 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     vm.startPrank(BINANCE_HOT_WALLET);
 
-    usdt.approve(address(pancakeV3Router), _newAmountIn);
-    (, _returnData) = address(pancakeV3Router).call(_replacedCalldata);
+    usdt.approve(_router, _newAmountIn);
+    (, _returnData) = _router.call(_replacedCalldata);
     uint256 _newAmountOut = abi.decode(_returnData, (uint256));
 
     vm.stopPrank();
