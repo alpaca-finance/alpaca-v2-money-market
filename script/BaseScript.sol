@@ -21,6 +21,7 @@ import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2O
 import { IAlpacaV2Oracle02 } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
+import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
 
 interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IMMOwnershipFacet {}
 
@@ -56,6 +57,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
   ISmartTreasury internal smartTreasury;
+  ISwapHelper internal swapHelper;
 
   // shareConfig
   address internal fixFeeModel500Bps;
@@ -99,6 +101,7 @@ abstract contract BaseScript is Script {
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
+    swapHelper = abi.decode(configJson.parseRaw(".swapHelper"), (ISwapHelper));
 
     pancakeswapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV2"), (address));
     pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
