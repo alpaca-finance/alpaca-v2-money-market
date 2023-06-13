@@ -24,7 +24,7 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    IRewarder rewarder = IRewarder(0xEc2d6B93bbBD559F88e77B8DdD2C914aC72df271);
+    IRewarder rewarder = IRewarder(0x5706ef757a635A986032cfe14e7B12EBA9f118Fd);
 
     // THE
     addIbPool(the, 40);
@@ -34,7 +34,7 @@ contract SetPoolScript is BaseScript {
     _startDeployerBroadcast();
 
     for (uint256 i; i < addPoolInputs.length; i++) {
-      rewarder.addPool(addPoolInputs[i].pid, addPoolInputs[i].allocPoint, true);
+      rewarder.addPool{ gas: 4_000_000 }(addPoolInputs[i].pid, addPoolInputs[i].allocPoint, true);
     }
 
     _stopBroadcast();
