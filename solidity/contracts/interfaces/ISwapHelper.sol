@@ -16,7 +16,7 @@ interface ISwapHelper {
     address _destination,
     uint256 _amountIn,
     address _to
-  ) external view returns (bytes memory);
+  ) external view returns (address, bytes memory);
 
   function setSwapInfo(
     address _source,

@@ -70,7 +70,7 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     uint256 _newAmountIn = 200e18;
     address _newTo = RECIPIENT_2;
-    bytes memory _replacedCalldata = swapHelper.getSwapCalldata(_token0, _token1, _newAmountIn, _newTo);
+    (, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(_token0, _token1, _newAmountIn, _newTo);
 
     // ====== do swap with pancake swap ======
 
@@ -139,7 +139,8 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
     );
 
     // get swap calldata with same amountIn and to should be the same
-    bytes memory _retrievedCalldata = swapHelper.getSwapCalldata(_token0, _token1, _amountIn, _to);
+    (address _router, bytes memory _retrievedCalldata) = swapHelper.getSwapCalldata(_token0, _token1, _amountIn, _to);
+    assertEq(_router, address(pancakeV3Router));
     assertEq(keccak256(_retrievedCalldata), keccak256(_calldata));
   }
 
@@ -153,18 +154,18 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
     );
 
     // test revert when offset is more than swap calldata length
-    bytes memory _swapCalldata = abi.encode("0x12345678");
-    uint256 _swapCalldataLength = _swapCalldata.length;
+    bytes memory _mockCalldata = abi.encode(address(usdc), address(cake), address(pancakeV3Router));
+    uint256 _mockCalldataLength = _mockCalldata.length;
 
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
     swapHelper.setSwapInfo(
       address(usdc),
       address(cake),
       ISwapHelper.SwapInfo({
-        swapCalldata: _swapCalldata,
+        swapCalldata: _mockCalldata,
         router: address(pancakeV3Router),
-        amountInOffset: _swapCalldataLength + 1,
-        toOffset: _swapCalldataLength + 1
+        amountInOffset: _mockCalldataLength + 1,
+        toOffset: _mockCalldataLength + 1
       })
     );
   }

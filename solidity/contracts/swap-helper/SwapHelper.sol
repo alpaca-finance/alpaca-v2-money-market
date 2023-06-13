@@ -14,18 +14,19 @@ contract SwapHelper is ISwapHelper, Ownable {
   /// @param _destination The destination token
   /// @param _amountIn The amount in
   /// @param _to The destination address
-  /// @return _swapCalldata The modified swap calldata according to the input
+  /// @return the router address
+  /// @return the modified swap calldata according to the input
   function getSwapCalldata(
     address _source,
     address _destination,
     uint256 _amountIn,
     address _to
-  ) external view returns (bytes memory) {
+  ) external view returns (address, bytes memory) {
     SwapInfo memory _swapInfo = swapInfos[_source][_destination];
     bytes memory _swapCalldata = _swapInfo.swapCalldata;
     _replace(_swapCalldata, _amountIn, _swapInfo.amountInOffset);
     _replace(_swapCalldata, _to, _swapInfo.toOffset);
-    return _swapCalldata;
+    return (_swapInfo.router, _swapCalldata);
   }
 
   /// @notice Set swap info
@@ -45,8 +46,8 @@ contract SwapHelper is ISwapHelper, Ownable {
     if (
       // check if the offset is more than function signature length
       (_amountInOffset < 4 || _toOffset < 4) ||
-      // check if the offset is more than swap calldata length
-      (_amountInOffset > _swapCalldataLength || _toOffset > _swapCalldataLength)
+      // check if the offset with data size is more than swap calldata length
+      (_amountInOffset + 32 > _swapCalldataLength || _toOffset + 20 > _swapCalldataLength)
     ) {
       revert SwapHelper_InvalidAgrument();
     }
