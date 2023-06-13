@@ -89,7 +89,7 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     (, _returnData) = address(pancakeV3Router).call(_calldata);
     uint256 _amountOut = abi.decode(_returnData, (uint256));
 
-    assertEq(wbnb.balanceOf(RECIPIENT), _wbnbBalanceBefore + _amountOut);
+    assertEq(wbnb.balanceOf(_to), _wbnbBalanceBefore + _amountOut);
 
     // swap to new recipient with new amountIn
 
@@ -273,7 +273,7 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
     (, _returnData) = address(pancakeV3Router).call(_calldata);
     uint256 _amountOut = abi.decode(_returnData, (uint256));
 
-    assertEq(wbnb.balanceOf(RECIPIENT), _wbnbBalanceBefore + _amountOut);
+    assertEq(wbnb.balanceOf(_to), _wbnbBalanceBefore + _amountOut);
 
     // swap to new recipient with new amountIn
 
