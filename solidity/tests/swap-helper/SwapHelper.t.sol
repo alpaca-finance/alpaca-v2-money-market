@@ -5,10 +5,12 @@ import "../utils/Components.sol";
 
 import { DSTest } from "solidity/tests/base/DSTest.sol";
 import { SwapHelper } from "solidity/contracts/swap-helper/SwapHelper.sol";
+import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
 
 // interfaces
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
+import { IOracleMedianizer } from "solidity/contracts/oracle/interfaces/IOracleMedianizer.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 
 contract SwapHelper_BaseFork is DSTest, StdCheats {
@@ -22,9 +24,12 @@ contract SwapHelper_BaseFork is DSTest, StdCheats {
   IERC20 public constant cake = IERC20(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
   IERC20 public constant doge = IERC20(0xbA2aE424d960c26247Dd6c32edC70B295c744C43);
 
+  address internal constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
+
   address internal constant RECIPIENT = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
   address internal constant RECIPIENT_2 = 0x09FC1B9B288647FF0b5b4668C74e51F8bEA50C67;
 
+  IOracleMedianizer public oracleMedianizer = IOracleMedianizer(0x553b8adc2Ac16491Ec57239BeA7191719a2B880c);
   IPancakeSwapRouterV3 public pancakeV3Router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
 
   ISwapHelper public swapHelper;
@@ -34,6 +39,21 @@ contract SwapHelper_BaseFork is DSTest, StdCheats {
     swapHelper = new SwapHelper();
 
     deal(address(usdt), address(this), 300e18);
+  }
+
+  function _getMinAmountOut(
+    address _token0,
+    address _token1,
+    uint256 _amountIn,
+    uint256 slippageToleranceBps
+  ) internal view returns (uint256 _minAmountOut) {
+    (uint256 _token0Price, ) = oracleMedianizer.getPrice(_token0, USD);
+
+    uint256 _minAmountOutUSD = (_amountIn * _token0Price * (LibConstant.MAX_BPS - slippageToleranceBps)) /
+      (10**IERC20(_token0).decimals() * LibConstant.MAX_BPS);
+
+    (uint256 _token1Price, ) = oracleMedianizer.getPrice(_token1, USD);
+    _minAmountOut = ((_minAmountOutUSD * (10**IERC20(_token1).decimals())) / _token1Price);
   }
 }
 
@@ -45,6 +65,7 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     uint256 _amountIn = 100e18;
     address _to = RECIPIENT;
+    uint256 _minAmountOut = _getMinAmountOut(_token0, _token1, _amountIn, 500);
 
     // prepare origin swap calldata
     IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
@@ -52,7 +73,7 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
       recipient: _to,
       deadline: type(uint256).max,
       amountIn: _amountIn,
-      amountOutMinimum: 0
+      amountOutMinimum: _minAmountOut
     });
 
     bytes memory _calldata = abi.encodeCall(IPancakeSwapRouterV3.exactInput, _params);
@@ -62,7 +83,8 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
       swapCalldata: _calldata,
       router: address(pancakeV3Router),
       amountInOffset: 128 + 4,
-      toOffset: 64 + 4
+      toOffset: 64 + 4,
+      minAmountOutOffset: 160 + 4
     });
 
     swapHelper.setSwapInfo(_token0, _token1, _swapInfo);
@@ -71,11 +93,13 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     uint256 _newAmountIn = 200e18;
     address _newTo = RECIPIENT_2;
+    uint256 _newMinAmountOut = _getMinAmountOut(_token0, _token1, _newAmountIn, 500);
     (address _router, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(
       _token0,
       _token1,
       _newAmountIn,
-      _newTo
+      _newTo,
+      _newMinAmountOut
     );
 
     // ====== do swap with pancake swap ======
@@ -103,6 +127,11 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     // since newAmountIn is greater than original amountIn
     assertGt(_newAmountOut, _amountOut);
+    assertGt(_newMinAmountOut, _minAmountOut);
+  }
+
+  function testCorrectness_GetSwapCalldata_IgnoreMinAmountOut() public {
+    // TODO: test set minAmountOut = 0
   }
 }
 
@@ -114,13 +143,14 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
 
     uint256 _amountIn = 10e18;
     address _to = RECIPIENT;
+    uint256 _minAmountOut = 0;
 
     IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
       path: abi.encodePacked(_token0, _poolFee, _token1),
       recipient: _to,
       deadline: type(uint256).max,
       amountIn: _amountIn,
-      amountOutMinimum: 0
+      amountOutMinimum: _minAmountOut
     });
 
     bytes memory _calldata = abi.encodeCall(IPancakeSwapRouterV3.exactInput, _params);
@@ -132,20 +162,27 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
         swapCalldata: _calldata,
         router: address(pancakeV3Router),
         amountInOffset: 128 + 4,
-        toOffset: 64 + 4
+        toOffset: 64 + 4,
+        minAmountOutOffset: 160 + 4
       })
     );
 
     // get swap calldata with same amountIn and to should be the same
-    (address _router, bytes memory _retrievedCalldata) = swapHelper.getSwapCalldata(_token0, _token1, _amountIn, _to);
+    (address _router, bytes memory _retrievedCalldata) = swapHelper.getSwapCalldata(
+      _token0,
+      _token1,
+      _amountIn,
+      _to,
+      _minAmountOut
+    );
     assertEq(_router, address(pancakeV3Router));
     assertEq(keccak256(_retrievedCalldata), keccak256(_calldata));
   }
 
   function testRevert_SetSwapInfo_InvalidOffset() public {
     // test revert when offset is more than swap calldata length
-    bytes memory _mockCalldata = abi.encodeWithSignature("mockCall(address)", address(usdc));
-    // _mockCalldata length = 4 + 32 = 36 Bytes
+    bytes memory _mockCalldata = abi.encodeWithSignature("mockCall(address,address)", address(usdc), address(cake));
+    // _mockCalldata length = 4 + 32 + 32 = 68 Bytes
 
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
     // offset is included function signature length
@@ -156,8 +193,9 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
       ISwapHelper.SwapInfo({
         swapCalldata: _mockCalldata,
         router: address(pancakeV3Router),
-        amountInOffset: 5, // should revert with this offset
-        toOffset: 4
+        amountInOffset: 5 + 32, // should revert with this offset
+        toOffset: 4,
+        minAmountOutOffset: 5
       })
     );
 
@@ -170,7 +208,8 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
         swapCalldata: _mockCalldata,
         router: address(pancakeV3Router),
         amountInOffset: 4,
-        toOffset: 4
+        toOffset: 4,
+        minAmountOutOffset: 4
       })
     );
 
@@ -183,7 +222,8 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
         swapCalldata: _mockCalldata,
         router: address(pancakeV3Router),
         amountInOffset: 0,
-        toOffset: 1
+        toOffset: 1,
+        minAmountOutOffset: 2
       })
     );
   }
@@ -194,7 +234,13 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
     swapHelper.setSwapInfo(
       address(usdc),
       address(cake),
-      ISwapHelper.SwapInfo({ swapCalldata: "", router: address(pancakeV3Router), amountInOffset: 0, toOffset: 0 })
+      ISwapHelper.SwapInfo({
+        swapCalldata: "",
+        router: address(pancakeV3Router),
+        amountInOffset: 0,
+        toOffset: 0,
+        minAmountOutOffset: 0
+      })
     );
   }
 }
@@ -229,6 +275,7 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
 
     uint256 _amountIn = 100e18;
     address _to = RECIPIENT;
+    uint256 _minAmountOut = _getMinAmountOut(_token0, _token1, _amountIn, 500);
 
     // prepare origin swap calldata
     IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
@@ -236,7 +283,7 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
       recipient: _to,
       deadline: type(uint256).max,
       amountIn: _amountIn,
-      amountOutMinimum: 0
+      amountOutMinimum: _minAmountOut
     });
 
     bytes memory _calldata = abi.encodeCall(IPancakeSwapRouterV3.exactInput, _params);
@@ -246,7 +293,8 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
       swapCalldata: _calldata,
       router: address(pancakeV3Router),
       amountInOffset: swapHelper.search(_calldata, _amountIn),
-      toOffset: swapHelper.search(_calldata, _to)
+      toOffset: swapHelper.search(_calldata, _to),
+      minAmountOutOffset: swapHelper.search(_calldata, _minAmountOut)
     });
 
     swapHelper.setSwapInfo(_token0, _token1, _swapInfo);
@@ -255,11 +303,13 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
 
     uint256 _newAmountIn = 200e18;
     address _newTo = RECIPIENT_2;
+    uint256 _newMinAmountOut = _getMinAmountOut(_token0, _token1, _newAmountIn, 500);
     (address _router, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(
       _token0,
       _token1,
       _newAmountIn,
-      _newTo
+      _newTo,
+      _newMinAmountOut
     );
 
     // ====== do swap with pancake swap ======
@@ -287,5 +337,6 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
 
     // since newAmountIn is greater than original amountIn
     assertGt(_newAmountOut, _amountOut);
+    assertGt(_newMinAmountOut, _minAmountOut);
   }
 }

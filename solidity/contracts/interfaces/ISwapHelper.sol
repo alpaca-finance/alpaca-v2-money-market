@@ -9,13 +9,15 @@ interface ISwapHelper {
     address router;
     uint256 amountInOffset;
     uint256 toOffset;
+    uint256 minAmountOutOffset;
   }
 
   function getSwapCalldata(
     address _source,
     address _destination,
     uint256 _amountIn,
-    address _to
+    address _to,
+    uint256 _minAmountOut
   ) external view returns (address, bytes memory);
 
   function setSwapInfo(
