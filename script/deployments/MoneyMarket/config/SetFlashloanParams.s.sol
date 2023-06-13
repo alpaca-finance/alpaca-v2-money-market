@@ -19,7 +19,7 @@ contract SetFlashloanParamsScript is BaseScript {
 
     uint16 flashloanFeeBps = 19;
     uint16 lenderFlashloanBps = 7000;
-    address flashloanTreasury = 0xFeCfcd99B496e044166086dd2F29E2FC2bb6Dd64;
+    address flashloanTreasury = 0x0d5CD78A4268CB579bA7253a3279060F46541001;
 
     //---- execution ----//
     _startDeployerBroadcast();
