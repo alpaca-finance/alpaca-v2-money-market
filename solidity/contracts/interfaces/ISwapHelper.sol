@@ -23,4 +23,8 @@ interface ISwapHelper {
     address _destination,
     SwapInfo calldata _swapInfo
   ) external;
+
+  function search(bytes memory _calldata, address _query) external pure returns (uint256 _offset);
+
+  function search(bytes memory _calldata, uint256 _query) external pure returns (uint256 _offset);
 }

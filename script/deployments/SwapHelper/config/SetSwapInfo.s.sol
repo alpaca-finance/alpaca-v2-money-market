@@ -21,17 +21,20 @@ contract SetSwapInfoScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // TODO: calculate offset for amountIn and to before setSwapInfo
+    uint256 _amountIn = 0;
+    address _to = address(0x0);
 
     address _source = address(0x0);
     address _destination = address(0x0);
     address _router = address(0x0);
 
+    bytes memory _calldata = abi.encodeWithSignature("mockCall(address)", address(0x0));
+
     ISwapHelper.SwapInfo memory _swapInfo = ISwapHelper.SwapInfo({
-      swapCalldata: "",
+      swapCalldata: _calldata,
       router: _router,
-      amountInOffset: 0,
-      toOffset: 0
+      amountInOffset: swapHelper.search(_calldata, _amountIn),
+      toOffset: swapHelper.search(_calldata, _to)
     });
 
     _startDeployerBroadcast();
