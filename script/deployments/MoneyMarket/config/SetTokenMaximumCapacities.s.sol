@@ -17,9 +17,9 @@ contract SetTokenMaximumCapacitiesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address token = high;
+    address token = the;
     uint256 newMaxCollateral = 0;
-    uint256 newMaxBorrow = 1_000_000 ether;
+    uint256 newMaxBorrow = 2_000_000 ether;
 
     //---- execution ----//
     _startDeployerBroadcast();

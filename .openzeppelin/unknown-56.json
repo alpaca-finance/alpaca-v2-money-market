@@ -59,7 +59,7 @@
             "label": "moneyMarket",
             "offset": 0,
             "slot": "101",
-            "type": "t_contract(IMoneyMarket)22040",
+            "type": "t_contract(IMoneyMarket)20730",
             "contract": "MoneyMarketAccountManager",
             "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:22"
           },
@@ -67,7 +67,7 @@
             "label": "nativeRelayer",
             "offset": 0,
             "slot": "102",
-            "type": "t_contract(IWNativeRelayer)7950",
+            "type": "t_contract(IWNativeRelayer)7871",
             "contract": "MoneyMarketAccountManager",
             "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:23"
           },
@@ -75,7 +75,7 @@
             "label": "miniFL",
             "offset": 0,
             "slot": "103",
-            "type": "t_contract(IMiniFL)10520",
+            "type": "t_contract(IMiniFL)10412",
             "contract": "MoneyMarketAccountManager",
             "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:24"
           },
@@ -113,15 +113,142 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(IMiniFL)10520": {
+          "t_contract(IMiniFL)10412": {
             "label": "contract IMiniFL",
             "numberOfBytes": "20"
           },
-          "t_contract(IMoneyMarket)22040": {
+          "t_contract(IMoneyMarket)20730": {
             "label": "contract IMoneyMarket",
             "numberOfBytes": "20"
           },
-          "t_contract(IWNativeRelayer)7950": {
+          "t_contract(IWNativeRelayer)7871": {
+            "label": "contract IWNativeRelayer",
+            "numberOfBytes": "20"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "09ceed4cc0a64e53df518626a403e13a657aa7048754fd9964bf593008e6348e": {
+      "address": "0x456b43F8D71cA6666ca5eC848254D6E0A076Bc4e",
+      "txHash": "0xd2f9e13bc050ea2e1edcdabbca56a5dcbd77ac7644adbbf80d5b24869ba645c0",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "moneyMarket",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_contract(IMoneyMarket)22145",
+            "contract": "MoneyMarketAccountManager",
+            "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:22"
+          },
+          {
+            "label": "nativeRelayer",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(IWNativeRelayer)8054",
+            "contract": "MoneyMarketAccountManager",
+            "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:23"
+          },
+          {
+            "label": "miniFL",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_contract(IMiniFL)10624",
+            "contract": "MoneyMarketAccountManager",
+            "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:24"
+          },
+          {
+            "label": "wNativeToken",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_address",
+            "contract": "MoneyMarketAccountManager",
+            "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:25"
+          },
+          {
+            "label": "ibWNativeToken",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_address",
+            "contract": "MoneyMarketAccountManager",
+            "src": "solidity/contracts/account-manager/MoneyMarketAccountManager.sol:26"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IMiniFL)10624": {
+            "label": "contract IMiniFL",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IMoneyMarket)22145": {
+            "label": "contract IMoneyMarket",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IWNativeRelayer)8054": {
             "label": "contract IWNativeRelayer",
             "numberOfBytes": "20"
           },
