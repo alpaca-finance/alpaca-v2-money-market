@@ -145,18 +145,25 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
   }
 
   function testRevert_SetSwapInfo_InvalidOffset() public {
-    // test revert when offset is less than function signature length
+    // test revert when offset is more than swap calldata length
+    bytes memory _mockCalldata = abi.encodeWithSignature("mockCall(address)", address(usdc));
+    // _mockCalldata length = 4 + 32 = 36 Bytes
+
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
+    // offset is included function signature length
+    //  and there is only one data to be replaced, so offset should not be more than 4 bytes
     swapHelper.setSwapInfo(
       address(usdc),
       address(cake),
-      ISwapHelper.SwapInfo({ swapCalldata: "", router: address(pancakeV3Router), amountInOffset: 0, toOffset: 0 })
+      ISwapHelper.SwapInfo({
+        swapCalldata: _mockCalldata,
+        router: address(pancakeV3Router),
+        amountInOffset: 5, // should revert with this offset
+        toOffset: 4
+      })
     );
 
-    // test revert when offset is more than swap calldata length
-    bytes memory _mockCalldata = abi.encode(address(usdc), address(cake), address(pancakeV3Router));
-    uint256 _mockCalldataLength = _mockCalldata.length;
-
+    // test revert when offsets are the same
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
     swapHelper.setSwapInfo(
       address(usdc),
@@ -164,8 +171,21 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
       ISwapHelper.SwapInfo({
         swapCalldata: _mockCalldata,
         router: address(pancakeV3Router),
-        amountInOffset: _mockCalldataLength + 1,
-        toOffset: _mockCalldataLength + 1
+        amountInOffset: 4,
+        toOffset: 4
+      })
+    );
+
+    // test revert when offset is less than function signature length
+    vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
+    swapHelper.setSwapInfo(
+      address(usdc),
+      address(cake),
+      ISwapHelper.SwapInfo({
+        swapCalldata: _mockCalldata,
+        router: address(pancakeV3Router),
+        amountInOffset: 0,
+        toOffset: 1
       })
     );
   }

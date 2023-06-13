@@ -44,10 +44,13 @@ contract SwapHelper is ISwapHelper, Ownable {
 
     // validate the offsets
     if (
+      // check if the offsets are the same
+      (_amountInOffset == _toOffset) ||
       // check if the offset is more than function signature length
       (_amountInOffset < 4 || _toOffset < 4) ||
       // check if the offset with data size is more than swap calldata length
-      (_amountInOffset + 32 > _swapCalldataLength || _toOffset + 20 > _swapCalldataLength)
+      //  reserve 32 bytes for replaced data size
+      (_amountInOffset > _swapCalldataLength - 32 || _toOffset > _swapCalldataLength - 32)
     ) {
       revert SwapHelper_InvalidAgrument();
     }
@@ -64,7 +67,7 @@ contract SwapHelper is ISwapHelper, Ownable {
       // skip length to the data
       let dataPointer := add(_data, 32)
       // replace the data at the offset
-      //  offset = length after the first data byte + size of address
+      //  offset = length after the first data byte + 32 (padding 0 + address size)
       mstore(add(_offset, dataPointer), _addr)
     }
   }
@@ -78,7 +81,7 @@ contract SwapHelper is ISwapHelper, Ownable {
       // skip length to the data
       let dataPointer := add(_data, 32)
       // replace the data at the offset
-      //  offset = length after the first data byte + size of uint256)
+      //  offset = length after the first data byte + 32
       mstore(add(_offset, dataPointer), _amount)
     }
   }
