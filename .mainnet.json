@@ -167,7 +167,7 @@
       }
     ],
     "accountManager": {
-      "implementation": "0xD870c0D7de9302D829FB7b7ba126C9E1E1220fb5",
+      "implementation": "0x456b43F8D71cA6666ca5eC848254D6E0A076Bc4e",
       "proxy": "0xD20B887654dB8dC476007bdca83d22Fa51e93407"
     },
     "repurchaser": "0x40d48e2fe8a9f65b114fd85489fda955dfe86c35"
@@ -351,11 +351,6 @@
       "name": "high",
       "address": "0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB",
       "rewardToken": "0x5f4Bde007Dc06b867f86EBFE4802e34A1fFEEd63"
-    },
-    {
-      "name": "the",
-      "address": "0xc699f3451B4ddf8c1B99Ad80E46e227fe8D2030E",
-      "rewardToken": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11"
     },
     {
       "name": "the",
