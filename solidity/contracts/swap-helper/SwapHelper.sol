@@ -85,4 +85,58 @@ contract SwapHelper is ISwapHelper, Ownable {
       mstore(add(_offset, dataPointer), _amount)
     }
   }
+
+  /// @dev helper function for `setSwapInfo`
+  /// @param _calldata The calldata
+  /// @param _query The query
+  /// @return _offset the offset of the query
+  function search(bytes memory _calldata, address _query) external pure returns (uint256 _offset) {
+    assembly {
+      // skip length to the data
+      let dataPointer := add(_calldata, 32)
+      // get the length of the calldata
+      let dataLength := mload(_calldata)
+      // loop through the calldata
+      for {
+        let i := 0
+      } lt(i, dataLength) {
+        i := add(i, 1)
+      } {
+        // get the current data pointer
+        let currentPointer := add(dataPointer, i)
+        // check if the current data is the query
+        if eq(mload(currentPointer), _query) {
+          // return the offset
+          _offset := i
+          // break the loop
+          i := dataLength
+        }
+      }
+    }
+  }
+
+  function search(bytes memory _calldata, uint256 _query) external pure returns (uint256 _offset) {
+    assembly {
+      // skip length to the data
+      let dataPointer := add(_calldata, 32)
+      // get the length of the calldata
+      let dataLength := mload(_calldata)
+      // loop through the calldata
+      for {
+        let i := 0
+      } lt(i, dataLength) {
+        i := add(i, 1)
+      } {
+        // get the current data pointer
+        let currentPointer := add(dataPointer, i)
+        // check if the current data is the query
+        if eq(mload(currentPointer), _query) {
+          // return the offset
+          _offset := i
+          // break the loop
+          i := dataLength
+        }
+      }
+    }
+  }
 }

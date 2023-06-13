@@ -11,7 +11,7 @@ import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 
-contract SwapHelper_BaseFork is DSTest {
+contract SwapHelper_BaseFork is DSTest, StdCheats {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
   IERC20 public constant btcb = IERC20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
@@ -24,7 +24,6 @@ contract SwapHelper_BaseFork is DSTest {
 
   address internal constant RECIPIENT = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
   address internal constant RECIPIENT_2 = 0x09FC1B9B288647FF0b5b4668C74e51F8bEA50C67;
-  address internal constant BINANCE_HOT_WALLET = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
 
   IPancakeSwapRouterV3 public pancakeV3Router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
 
@@ -33,6 +32,8 @@ contract SwapHelper_BaseFork is DSTest {
   function setUp() public {
     vm.createSelectFork("bsc_mainnet", 29_033_259);
     swapHelper = new SwapHelper();
+
+    deal(address(usdt), address(this), 300e18);
   }
 }
 
@@ -84,27 +85,19 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     bytes memory _returnData;
     uint256 _wbnbBalanceBefore = wbnb.balanceOf(_to);
 
-    vm.startPrank(BINANCE_HOT_WALLET);
-
     usdt.approve(address(pancakeV3Router), _amountIn);
     (, _returnData) = address(pancakeV3Router).call(_calldata);
     uint256 _amountOut = abi.decode(_returnData, (uint256));
 
-    vm.stopPrank();
-
-    assertEq(wbnb.balanceOf(RECIPIENT), _wbnbBalanceBefore + _amountOut);
+    assertEq(wbnb.balanceOf(_to), _wbnbBalanceBefore + _amountOut);
 
     // swap to new recipient with new amountIn
 
     _wbnbBalanceBefore = wbnb.balanceOf(_newTo);
 
-    vm.startPrank(BINANCE_HOT_WALLET);
-
     usdt.approve(_router, _newAmountIn);
     (, _returnData) = _router.call(_replacedCalldata);
     uint256 _newAmountOut = abi.decode(_returnData, (uint256));
-
-    vm.stopPrank();
 
     assertEq(wbnb.balanceOf(_newTo), _wbnbBalanceBefore + _newAmountOut);
 
@@ -203,5 +196,96 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
       address(cake),
       ISwapHelper.SwapInfo({ swapCalldata: "", router: address(pancakeV3Router), amountInOffset: 0, toOffset: 0 })
     );
+  }
+}
+
+contract SwapHelper_Search is SwapHelper_BaseFork {
+  function testCorrectness_Search_ShouldReturnCorrectOffset() public {
+    bytes memory _mockCalldata = abi.encodeWithSignature(
+      "mockCall(address, address, uint256)",
+      address(usdc),
+      address(cake),
+      100e18
+    );
+    // _mockCalldata length = 4 + 32 + 32 + 32 = 100 Bytes
+    //
+    //  structure: function signature + 3 * 32 bytes data
+    //    offset of usdc = 4 bytes
+    //    offset of cake = 4 + 32 = 36 bytes
+    //    offset of 100e18 = 4 + 32 + 32 = 68 bytes
+
+    assertEq(swapHelper.search(_mockCalldata, address(usdc)), 4);
+    assertEq(swapHelper.search(_mockCalldata, address(cake)), 36);
+    assertEq(swapHelper.search(_mockCalldata, 100e18), 68);
+  }
+
+  function testCorrectness_Search_ShouldWorkOnRealData() public {
+    // test with pancake swap calldata
+    //  same as `testCorrectness_GetSwapCalldata_SwapOnPancakeShouldWork()`
+    //  but using search function to get offset
+    address _token0 = address(usdt);
+    address _token1 = address(wbnb);
+    uint24 _poolFee = 2500;
+
+    uint256 _amountIn = 100e18;
+    address _to = RECIPIENT;
+
+    // prepare origin swap calldata
+    IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
+      path: abi.encodePacked(_token0, _poolFee, _token1),
+      recipient: _to,
+      deadline: type(uint256).max,
+      amountIn: _amountIn,
+      amountOutMinimum: 0
+    });
+
+    bytes memory _calldata = abi.encodeCall(IPancakeSwapRouterV3.exactInput, _params);
+
+    // set swap info
+    ISwapHelper.SwapInfo memory _swapInfo = ISwapHelper.SwapInfo({
+      swapCalldata: _calldata,
+      router: address(pancakeV3Router),
+      amountInOffset: swapHelper.search(_calldata, _amountIn),
+      toOffset: swapHelper.search(_calldata, _to)
+    });
+
+    swapHelper.setSwapInfo(_token0, _token1, _swapInfo);
+
+    // get swap calldata with modified amountIn and to
+
+    uint256 _newAmountIn = 200e18;
+    address _newTo = RECIPIENT_2;
+    (address _router, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(
+      _token0,
+      _token1,
+      _newAmountIn,
+      _newTo
+    );
+
+    // ====== do swap with pancake swap ======
+
+    // swap to original recipient with original amountIn
+
+    bytes memory _returnData;
+    uint256 _wbnbBalanceBefore = wbnb.balanceOf(_to);
+
+    usdt.approve(address(pancakeV3Router), _amountIn);
+    (, _returnData) = address(pancakeV3Router).call(_calldata);
+    uint256 _amountOut = abi.decode(_returnData, (uint256));
+
+    assertEq(wbnb.balanceOf(_to), _wbnbBalanceBefore + _amountOut);
+
+    // swap to new recipient with new amountIn
+
+    _wbnbBalanceBefore = wbnb.balanceOf(_newTo);
+
+    usdt.approve(_router, _newAmountIn);
+    (, _returnData) = _router.call(_replacedCalldata);
+    uint256 _newAmountOut = abi.decode(_returnData, (uint256));
+
+    assertEq(wbnb.balanceOf(_newTo), _wbnbBalanceBefore + _newAmountOut);
+
+    // since newAmountIn is greater than original amountIn
+    assertGt(_newAmountOut, _amountOut);
   }
 }
