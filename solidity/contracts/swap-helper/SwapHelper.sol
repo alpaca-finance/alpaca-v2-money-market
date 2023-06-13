@@ -63,7 +63,7 @@ contract SwapHelper is ISwapHelper, Ownable {
       // skip length to the data
       let dataPointer := add(_data, 32)
       // replace the data at the offset
-      //  offset = length after the first data bytes + size of address
+      //  offset = length after the first data byte + size of address
       mstore(add(_offset, dataPointer), _addr)
     }
   }
@@ -77,7 +77,7 @@ contract SwapHelper is ISwapHelper, Ownable {
       // skip length to the data
       let dataPointer := add(_data, 32)
       // replace the data at the offset
-      //  offset = length after the first data bytes + size of uint256)
+      //  offset = length after the first data byte + size of uint256)
       mstore(add(_offset, dataPointer), _amount)
     }
   }
