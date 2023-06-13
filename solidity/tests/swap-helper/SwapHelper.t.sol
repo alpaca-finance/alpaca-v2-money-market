@@ -11,7 +11,7 @@ import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 
-contract SwapHelper_BaseFork is DSTest {
+contract SwapHelper_BaseFork is DSTest, StdCheats {
   VM internal constant vm = VM(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
   IERC20 public constant btcb = IERC20(0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c);
@@ -24,7 +24,6 @@ contract SwapHelper_BaseFork is DSTest {
 
   address internal constant RECIPIENT = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
   address internal constant RECIPIENT_2 = 0x09FC1B9B288647FF0b5b4668C74e51F8bEA50C67;
-  address internal constant BINANCE_HOT_WALLET = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
 
   IPancakeSwapRouterV3 public pancakeV3Router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
 
@@ -33,6 +32,8 @@ contract SwapHelper_BaseFork is DSTest {
   function setUp() public {
     vm.createSelectFork("bsc_mainnet", 29_033_259);
     swapHelper = new SwapHelper();
+
+    deal(address(usdt), address(this), 300e18);
   }
 }
 
@@ -84,13 +85,9 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     bytes memory _returnData;
     uint256 _wbnbBalanceBefore = wbnb.balanceOf(_to);
 
-    vm.startPrank(BINANCE_HOT_WALLET);
-
     usdt.approve(address(pancakeV3Router), _amountIn);
     (, _returnData) = address(pancakeV3Router).call(_calldata);
     uint256 _amountOut = abi.decode(_returnData, (uint256));
-
-    vm.stopPrank();
 
     assertEq(wbnb.balanceOf(RECIPIENT), _wbnbBalanceBefore + _amountOut);
 
@@ -98,13 +95,9 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
 
     _wbnbBalanceBefore = wbnb.balanceOf(_newTo);
 
-    vm.startPrank(BINANCE_HOT_WALLET);
-
     usdt.approve(_router, _newAmountIn);
     (, _returnData) = _router.call(_replacedCalldata);
     uint256 _newAmountOut = abi.decode(_returnData, (uint256));
-
-    vm.stopPrank();
 
     assertEq(wbnb.balanceOf(_newTo), _wbnbBalanceBefore + _newAmountOut);
 
@@ -276,13 +269,9 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
     bytes memory _returnData;
     uint256 _wbnbBalanceBefore = wbnb.balanceOf(_to);
 
-    vm.startPrank(BINANCE_HOT_WALLET);
-
     usdt.approve(address(pancakeV3Router), _amountIn);
     (, _returnData) = address(pancakeV3Router).call(_calldata);
     uint256 _amountOut = abi.decode(_returnData, (uint256));
-
-    vm.stopPrank();
 
     assertEq(wbnb.balanceOf(RECIPIENT), _wbnbBalanceBefore + _amountOut);
 
@@ -290,13 +279,9 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
 
     _wbnbBalanceBefore = wbnb.balanceOf(_newTo);
 
-    vm.startPrank(BINANCE_HOT_WALLET);
-
     usdt.approve(_router, _newAmountIn);
     (, _returnData) = _router.call(_replacedCalldata);
     uint256 _newAmountOut = abi.decode(_returnData, (uint256));
-
-    vm.stopPrank();
 
     assertEq(wbnb.balanceOf(_newTo), _wbnbBalanceBefore + _newAmountOut);
 
