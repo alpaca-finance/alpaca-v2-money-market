@@ -20,12 +20,14 @@ contract SwapHelper is ISwapHelper, Ownable {
     address _source,
     address _destination,
     uint256 _amountIn,
-    address _to
+    address _to,
+    uint256 _minAmountOut
   ) external view returns (address, bytes memory) {
     SwapInfo memory _swapInfo = swapInfos[_source][_destination];
     bytes memory _swapCalldata = _swapInfo.swapCalldata;
     _replace(_swapCalldata, _amountIn, _swapInfo.amountInOffset);
     _replace(_swapCalldata, _to, _swapInfo.toOffset);
+    _replace(_swapCalldata, _minAmountOut, _swapInfo.minAmountOutOffset);
     return (_swapInfo.router, _swapCalldata);
   }
 
@@ -41,16 +43,21 @@ contract SwapHelper is ISwapHelper, Ownable {
     uint256 _swapCalldataLength = _swapInfo.swapCalldata.length;
     uint256 _amountInOffset = _swapInfo.amountInOffset;
     uint256 _toOffset = _swapInfo.toOffset;
+    uint256 _minAmountOutOffset = _swapInfo.minAmountOutOffset;
 
     // validate the offsets
     if (
       // check if the offsets are the same
       (_amountInOffset == _toOffset) ||
+      (_toOffset == _minAmountOutOffset) ||
+      (_amountInOffset == _minAmountOutOffset) ||
       // check if the offset is more than function signature length
-      (_amountInOffset < 4 || _toOffset < 4) ||
+      (_amountInOffset < 4 || _toOffset < 4 || _minAmountOutOffset < 4) ||
       // check if the offset with data size is more than swap calldata length
       //  reserve 32 bytes for replaced data size
-      (_amountInOffset > _swapCalldataLength - 32 || _toOffset > _swapCalldataLength - 32)
+      (_toOffset > _swapCalldataLength - 32 ||
+        _amountInOffset > _swapCalldataLength - 32 ||
+        _minAmountOutOffset > _swapCalldataLength - 32)
     ) {
       revert SwapHelper_InvalidAgrument();
     }
@@ -86,11 +93,16 @@ contract SwapHelper is ISwapHelper, Ownable {
     }
   }
 
-  /// @dev helper function for `setSwapInfo`
+  /// @notice helper function for `setSwapInfo`
+  /// @dev beware of using this function, it's not ensured that the offset is correct in all cases
   /// @param _calldata The calldata
   /// @param _query The query
   /// @return _offset the offset of the query
   function search(bytes memory _calldata, address _query) external pure returns (uint256 _offset) {
+    // search for address(0x0) might result in invalid offset
+    if (_query == address(0x0)) {
+      revert SwapHelper_InvalidAgrument();
+    }
     assembly {
       // skip length to the data
       let dataPointer := add(_calldata, 32)
@@ -116,6 +128,10 @@ contract SwapHelper is ISwapHelper, Ownable {
   }
 
   function search(bytes memory _calldata, uint256 _query) external pure returns (uint256 _offset) {
+    // search for 0 might result in invalid offset
+    if (_query == 0) {
+      revert SwapHelper_InvalidAgrument();
+    }
     assembly {
       // skip length to the data
       let dataPointer := add(_calldata, 32)
