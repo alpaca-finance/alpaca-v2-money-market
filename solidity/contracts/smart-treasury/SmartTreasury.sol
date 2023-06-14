@@ -180,12 +180,12 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
         IERC20(_token).safeTransfer(revenueTreasury, _revenueAmount);
       } else {
         address _revenueTreasury = revenueTreasury;
-        uint256 _revenueTokenBefore = IERC20(_revenueToken).balanceOf(_revenueTreasury);
         (address _router, bytes memory _swapCalldata) = swapHelper.getSwapCalldata(
           _token,
           _revenueToken,
           _revenueAmount,
-          _revenueTreasury
+          _revenueTreasury,
+          _getMinAmountOut(_token, _revenueToken, _revenueAmount)
         );
         if (_router == address(0)) {
           revert SmartTreasury_PathConfigNotFound();
@@ -198,15 +198,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
         // Skip dev and burn distribution if swap failed or failed slippage check
         if (!_success) {
           emit LogFailedDistribution(_token, _result);
-          return;
-        }
-        console.log("minAmount", _getMinAmountOut(_token, _revenueToken, _revenueAmount));
-        console.log("received", IERC20(_revenueToken).balanceOf(_revenueTreasury) - _revenueTokenBefore);
-        if (
-          _getMinAmountOut(_token, _revenueToken, _revenueAmount) >
-          IERC20(_revenueToken).balanceOf(_revenueTreasury) - _revenueTokenBefore
-        ) {
-          emit LogFailedDistribution(_token, "slippage");
           return;
         }
       }

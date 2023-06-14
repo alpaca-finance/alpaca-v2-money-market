@@ -114,7 +114,8 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
       swapCalldata: _calldata,
       router: address(routerV3),
       amountInOffset: 128 + 4,
-      toOffset: 64 + 4
+      toOffset: 64 + 4,
+      minAmountOutOffset: 160 + 4
     });
     swapHelper.setSwapInfo(_tokenIn, _tokenOut, _swapInfo);
   }
@@ -130,7 +131,8 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
       swapCalldata: _calldata,
       router: address(routerV2),
       amountInOffset: swapHelper.search(_calldata, 1),
-      toOffset: swapHelper.search(_calldata, address(3))
+      toOffset: swapHelper.search(_calldata, address(3)),
+      minAmountOutOffset: swapHelper.search(_calldata, 2)
     });
     swapHelper.setSwapInfo(_tokenIn, _tokenOut, _swapInfo);
   }
