@@ -93,7 +93,8 @@ contract SwapHelper is ISwapHelper, Ownable {
     }
   }
 
-  /// @dev helper function for `setSwapInfo`
+  /// @notice helper function for `setSwapInfo`
+  /// @dev beware of using this function, it's not ensured that the offset is correct in all cases
   /// @param _calldata The calldata
   /// @param _query The query
   /// @return _offset the offset of the query

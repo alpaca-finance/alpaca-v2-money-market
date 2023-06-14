@@ -20,8 +20,8 @@ contract SetSwapInfoScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-
-    uint256 _amountIn = 0;
+    // TODO: create `SetSwapInfo` script for specific DEX (e.g. SetSwapInfoPancakeSwapV3)
+    uint256 _amountIn = 1;
     uint256 _minAmountOut = 1; // _minAmountOut should be greater than 0 when setSwapInfo
     address _to = address(0x0);
 
