@@ -130,8 +130,58 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     assertGt(_newMinAmountOut, _minAmountOut);
   }
 
-  function testCorrectness_GetSwapCalldata_IgnoreMinAmountOut() public {
+  function testCorrectness_GetSwapCalldata_WithZeroMinAmountOut() public {
     // TODO: test set minAmountOut = 0
+    address _token0 = address(eth);
+    address _token1 = address(usdc);
+    uint24 _poolFee = 3000;
+
+    uint256 _amountIn = 1e18;
+    address _to = RECIPIENT;
+    uint256 _minAmountOut = _getMinAmountOut(_token0, _token1, _amountIn, 500);
+
+    // prepare origin swap calldata
+    bytes memory _calldata = abi.encodeCall(
+      IPancakeSwapRouterV3.exactInput,
+      IPancakeSwapRouterV3.ExactInputParams({
+        path: abi.encodePacked(_token0, _poolFee, _token1),
+        recipient: _to,
+        deadline: type(uint256).max,
+        amountIn: _amountIn,
+        amountOutMinimum: _minAmountOut
+      })
+    );
+
+    // build same calldata with minAmountOut = 0
+    bytes memory _zeroMinAmountOutcalldata = abi.encodeCall(
+      IPancakeSwapRouterV3.exactInput,
+      IPancakeSwapRouterV3.ExactInputParams({
+        path: abi.encodePacked(_token0, _poolFee, _token1),
+        recipient: _to,
+        deadline: type(uint256).max,
+        amountIn: _amountIn,
+        amountOutMinimum: 0
+      })
+    );
+
+    // set swap info
+    swapHelper.setSwapInfo(
+      _token0,
+      _token1,
+      ISwapHelper.SwapInfo({
+        swapCalldata: _calldata,
+        router: address(pancakeV3Router),
+        amountInOffset: 128 + 4,
+        toOffset: 64 + 4,
+        minAmountOutOffset: 160 + 4
+      })
+    );
+
+    // get swap calldata with minAmountOut = 0 from SwapHelper
+    (, bytes memory _replacedCalldata) = swapHelper.getSwapCalldata(_token0, _token1, _amountIn, _to, 0);
+
+    // modified calldata from SwapHelper should be the same as the one with minAmountOut = 0
+    assertEq(keccak256(_replacedCalldata), keccak256(_zeroMinAmountOutcalldata));
   }
 }
 
@@ -246,6 +296,16 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
 }
 
 contract SwapHelper_Search is SwapHelper_BaseFork {
+  function testRevert_Search_ByZeroAddress() public {
+    vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
+    swapHelper.search("", address(0x0));
+  }
+
+  function testRevert_Search_ByZeroAmount() public {
+    vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
+    swapHelper.search("", 0);
+  }
+
   function testCorrectness_Search_ShouldReturnCorrectOffset() public {
     bytes memory _mockCalldata = abi.encodeWithSignature(
       "mockCall(address, address, uint256)",
