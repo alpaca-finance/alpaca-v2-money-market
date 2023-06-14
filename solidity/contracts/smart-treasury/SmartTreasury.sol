@@ -18,8 +18,6 @@ import { ISmartTreasury } from "../interfaces/ISmartTreasury.sol";
 import { IOracleMedianizer } from "../oracle/interfaces/IOracleMedianizer.sol";
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
 
-import "solidity/tests/utils/console.sol";
-
 contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
   using LibSafeToken for IERC20;
 
@@ -171,9 +169,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
     (uint256 _revenueAmount, uint256 _devAmount, uint256 _burnAmount) = _allocate(
       IERC20(_token).balanceOf(address(this))
     );
-    console.log("_revenueAmount", _revenueAmount);
-    console.log("_devAmount", _devAmount);
-    console.log("_burnAmount", _burnAmount);
 
     if (_revenueAmount != 0) {
       if (_token == _revenueToken) {
@@ -190,11 +185,8 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
         if (_router == address(0)) {
           revert SmartTreasury_PathConfigNotFound();
         }
-        console.log(_router);
-        console.logBytes(_swapCalldata);
         IERC20(_token).safeApprove(_router, _revenueAmount);
         (bool _success, bytes memory _result) = _router.call(_swapCalldata);
-        console.log(_success);
         // Skip dev and burn distribution if swap failed or failed slippage check
         if (!_success) {
           emit LogFailedDistribution(_token, _result);
