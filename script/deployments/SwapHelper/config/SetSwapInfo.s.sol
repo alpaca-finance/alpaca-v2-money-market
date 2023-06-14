@@ -20,8 +20,9 @@ contract SetSwapInfoScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-
-    uint256 _amountIn = 0;
+    // TODO: create `SetSwapInfo` script for specific DEX (e.g. SetSwapInfoPancakeSwapV3)
+    uint256 _amountIn = 1;
+    uint256 _minAmountOut = 1; // _minAmountOut should be greater than 0 when setSwapInfo
     address _to = address(0x0);
 
     address _source = address(0x0);
@@ -34,7 +35,8 @@ contract SetSwapInfoScript is BaseScript {
       swapCalldata: _calldata,
       router: _router,
       amountInOffset: swapHelper.search(_calldata, _amountIn),
-      toOffset: swapHelper.search(_calldata, _to)
+      toOffset: swapHelper.search(_calldata, _to),
+      minAmountOutOffset: swapHelper.search(_calldata, _minAmountOut)
     });
 
     _startDeployerBroadcast();
