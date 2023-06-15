@@ -41,6 +41,18 @@ contract SwapHelper_BaseFork is DSTest, StdCheats {
     deal(address(usdt), address(this), 300e18);
   }
 
+  // try to solve stack too deep error
+  function _setSingleSwapInfo(
+    address _token0,
+    address _token1,
+    ISwapHelper.SwapInfo memory _swapInfo
+  ) internal {
+    ISwapHelper.PathInput[] memory _pathInputs = new ISwapHelper.PathInput[](1);
+    _pathInputs[0] = ISwapHelper.PathInput({ source: _token0, destination: _token1, info: _swapInfo });
+
+    swapHelper.setSwapInfos(_pathInputs);
+  }
+
   function _getMinAmountOut(
     address _token0,
     address _token1,

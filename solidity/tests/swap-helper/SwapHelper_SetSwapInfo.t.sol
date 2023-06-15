@@ -3,8 +3,8 @@ pragma solidity 0.8.19;
 
 import "./SwapHelper_BaseFork.t.sol";
 
-contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
-  function testCorrectness_SetSwapInfo_ShouldWork() public {
+contract SwapHelper_SetSwapInfos is SwapHelper_BaseFork {
+  function testCorrectness_SetSwapInfos_ShouldWork() public {
     address _token0 = address(usdc);
     address _token1 = address(cake);
     uint24 _poolFee = 3000;
@@ -23,7 +23,7 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
 
     bytes memory _calldata = abi.encodeCall(IPancakeSwapRouterV3.exactInput, _params);
 
-    swapHelper.setSwapInfo(
+    _setSingleSwapInfo(
       _token0,
       _token1,
       ISwapHelper.SwapInfo({
@@ -47,15 +47,16 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
     assertEq(keccak256(_retrievedCalldata), keccak256(_calldata));
   }
 
-  function testRevert_SetSwapInfo_InvalidOffset() public {
+  function testRevert_SetSwapInfos_InvalidOffset() public {
     // test revert when offset is more than swap calldata length
     bytes memory _mockCalldata = abi.encodeWithSignature("mockCall(address,address)", address(usdc), address(cake));
     // _mockCalldata length = 4 + 32 + 32 = 68 Bytes
 
+    // test revert when offset is greater than calldata length
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
     // offset is included function signature length
-    //  and there is only one data to be replaced, so offset should not be more than 4 bytes
-    swapHelper.setSwapInfo(
+    //  and there is two data to be replaced, so offset should not be more than 4 + 32 bytes
+    _setSingleSwapInfo(
       address(usdc),
       address(cake),
       ISwapHelper.SwapInfo({
@@ -69,7 +70,7 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
 
     // test revert when offsets are the same
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
-    swapHelper.setSwapInfo(
+    _setSingleSwapInfo(
       address(usdc),
       address(cake),
       ISwapHelper.SwapInfo({
@@ -83,7 +84,7 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
 
     // test revert when offset is less than function signature length
     vm.expectRevert(ISwapHelper.SwapHelper_InvalidAgrument.selector);
-    swapHelper.setSwapInfo(
+    _setSingleSwapInfo(
       address(usdc),
       address(cake),
       ISwapHelper.SwapInfo({
@@ -96,19 +97,9 @@ contract SwapHelper_SetSwapInfo is SwapHelper_BaseFork {
     );
   }
 
-  function testRevert_SetSwapInfo_WhenCallerIsNotOwner() public {
+  function testRevert_SetSwapInfos_WhenCallerIsNotOwner() public {
     vm.expectRevert("Ownable: caller is not the owner");
     vm.prank(RECIPIENT);
-    swapHelper.setSwapInfo(
-      address(usdc),
-      address(cake),
-      ISwapHelper.SwapInfo({
-        swapCalldata: "",
-        router: address(pancakeV3Router),
-        amountInOffset: 0,
-        toOffset: 0,
-        minAmountOutOffset: 0
-      })
-    );
+    swapHelper.setSwapInfos(new ISwapHelper.PathInput[](1));
   }
 }

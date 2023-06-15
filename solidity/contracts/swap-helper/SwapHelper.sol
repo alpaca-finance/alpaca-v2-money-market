@@ -22,7 +22,7 @@ contract SwapHelper is ISwapHelper, Ownable {
     uint256 _amountIn,
     address _to,
     uint256 _minAmountOut
-  ) external view returns (address, bytes memory) {
+  ) external view override returns (address, bytes memory) {
     SwapInfo memory _swapInfo = swapInfos[_source][_destination];
     bytes memory _swapCalldata = _swapInfo.swapCalldata;
     _replace(_swapCalldata, _amountIn, _swapInfo.amountInOffset);
@@ -31,15 +31,27 @@ contract SwapHelper is ISwapHelper, Ownable {
     return (_swapInfo.router, _swapCalldata);
   }
 
-  /// @notice Set swap info
+  /// @notice Set multiple swap infos
+  /// @param _pathInputs The path inputs that contains source, destination, and swap info
+  function setSwapInfos(PathInput[] calldata _pathInputs) external override onlyOwner {
+    uint256 _pathInputsLength = _pathInputs.length;
+    for (uint256 _i; _i < _pathInputsLength; ) {
+      _setSwapInfo(_pathInputs[_i].source, _pathInputs[_i].destination, _pathInputs[_i].info);
+      unchecked {
+        ++_i;
+      }
+    }
+  }
+
+  /// @dev Set swap info with validated offset
   /// @param _source The source token
   /// @param _destination The destination token
   /// @param _swapInfo The swap info struct
-  function setSwapInfo(
+  function _setSwapInfo(
     address _source,
     address _destination,
     SwapInfo calldata _swapInfo
-  ) external onlyOwner {
+  ) internal {
     uint256 _swapCalldataLength = _swapInfo.swapCalldata.length;
     uint256 _amountInOffset = _swapInfo.amountInOffset;
     uint256 _toOffset = _swapInfo.toOffset;
