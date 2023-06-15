@@ -6,6 +6,8 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ISwapHelper } from "../interfaces/ISwapHelper.sol";
 
 contract SwapHelper is ISwapHelper, Ownable {
+  error SwapHelper_SwapInfoNotFound(address _source, address _destination);
+
   // source => desination => SwapInfo
   mapping(address => mapping(address => SwapInfo)) public swapInfos;
 
@@ -24,6 +26,9 @@ contract SwapHelper is ISwapHelper, Ownable {
     uint256 _minAmountOut
   ) external view returns (address, bytes memory) {
     SwapInfo memory _swapInfo = swapInfos[_source][_destination];
+    if (_swapInfo.router == address(0)) {
+      revert SwapHelper_SwapInfoNotFound(_source, _destination);
+    }
     bytes memory _swapCalldata = _swapInfo.swapCalldata;
     _replace(_swapCalldata, _amountIn, _swapInfo.amountInOffset);
     _replace(_swapCalldata, _to, _swapInfo.toOffset);
@@ -35,11 +40,7 @@ contract SwapHelper is ISwapHelper, Ownable {
   /// @param _source The source token
   /// @param _destination The destination token
   /// @param _swapInfo The swap info struct
-  function setSwapInfo(
-    address _source,
-    address _destination,
-    SwapInfo calldata _swapInfo
-  ) external onlyOwner {
+  function setSwapInfo(address _source, address _destination, SwapInfo calldata _swapInfo) external onlyOwner {
     uint256 _swapCalldataLength = _swapInfo.swapCalldata.length;
     uint256 _amountInOffset = _swapInfo.amountInOffset;
     uint256 _toOffset = _swapInfo.toOffset;
@@ -65,11 +66,7 @@ contract SwapHelper is ISwapHelper, Ownable {
     swapInfos[_source][_destination] = _swapInfo;
   }
 
-  function _replace(
-    bytes memory _data,
-    address _addr,
-    uint256 _offset
-  ) internal pure {
+  function _replace(bytes memory _data, address _addr, uint256 _offset) internal pure {
     assembly {
       // skip length to the data
       let dataPointer := add(_data, 32)
@@ -79,11 +76,7 @@ contract SwapHelper is ISwapHelper, Ownable {
     }
   }
 
-  function _replace(
-    bytes memory _data,
-    uint256 _amount,
-    uint256 _offset
-  ) internal pure {
+  function _replace(bytes memory _data, uint256 _amount, uint256 _offset) internal pure {
     assembly {
       // skip length to the data
       let dataPointer := add(_data, 32)

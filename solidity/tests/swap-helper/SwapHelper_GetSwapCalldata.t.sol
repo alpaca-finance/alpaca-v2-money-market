@@ -129,4 +129,9 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     // modified calldata from SwapHelper should be the same as the one with minAmountOut = 0
     assertEq(keccak256(_replacedCalldata), keccak256(_zeroMinAmountOutcalldata));
   }
+
+  function testRevert_GetSwapCalldata_SwapInfoNotFound() public {
+    vm.expectRevert(abi.encodeWithSelector(SwapHelper.SwapHelper_SwapInfoNotFound.selector, address(1), address(2)));
+    swapHelper.getSwapCalldata(address(1), address(2), 0, address(this), 0);
+  }
 }
