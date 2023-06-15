@@ -6,8 +6,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ISwapHelper } from "../interfaces/ISwapHelper.sol";
 
 contract SwapHelper is ISwapHelper, Ownable {
-  error SwapHelper_SwapInfoNotFound(address _source, address _destination);
-
   // source => desination => SwapInfo
   mapping(address => mapping(address => SwapInfo)) public swapInfos;
 

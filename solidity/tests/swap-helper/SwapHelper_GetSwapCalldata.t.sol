@@ -131,7 +131,7 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
   }
 
   function testRevert_GetSwapCalldata_SwapInfoNotFound() public {
-    vm.expectRevert(abi.encodeWithSelector(SwapHelper.SwapHelper_SwapInfoNotFound.selector, address(1), address(2)));
+    vm.expectRevert(abi.encodeWithSelector(ISwapHelper.SwapHelper_SwapInfoNotFound.selector, address(1), address(2)));
     swapHelper.getSwapCalldata(address(1), address(2), 0, address(this), 0);
   }
 }
