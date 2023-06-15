@@ -84,7 +84,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
      *    - usdc debt has increased to 30.005076 usdc
      *    - ALICE borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd
      *
-     * 3. try to liquidate 40 usdc with weth collateral
+     * 3. try to liquidate 30.005076 usdc with weth collateral
      *
      * 4. should be able to liquidate with 30.005076 usdc repaid, 37.806395 weth reduced from collateral and 0.300050 usdc to treasury
      *    - remaining collateral = 40 - 37.8814075 = 2.193605 weth
@@ -106,9 +106,10 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
     // MockLiquidationStrategy need these to function
-    mockOracle.setTokenPrice(address(weth), 8e17);
 
     uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
+
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -117,6 +118,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
 
@@ -139,6 +141,83 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
       normalizeEther(0.30005 ether, usdcDecimal)
+    );
+
+    // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
+    // since debt token is minted only one time, so the totalSupply should be equal to _stateAfter.debtShare after burned
+    address _miniFLDebtToken = viewFacet.getDebtTokenFromToken(_debtToken);
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_miniFLDebtToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), _stateAfter.debtShare);
+    assertEq(DebtToken(_miniFLDebtToken).totalSupply(), _stateAfter.debtShare);
+  }
+
+  function testCorrectness_WhenPartialLiquidate_ShouldLiquidatePartialDebtOnThatToken() external {
+    /**
+     * scenario:
+     *
+     * 1. 1 usdc/weth, ALICE post 40 weth as collateral, borrow 30 usdc
+     *    - ALICE borrowing power = 40 * 1 * 9000 / 10000 = 36 usd
+     *
+     * 2. 1 day passesd, debt accrued, weth price drops to 0.8 usdc/weth, position become liquidatable
+     *    - usdc debt has increased to 30.005076 usdc
+     *    - ALICE borrowing power = 40 * 0.8 * 9000 / 10000 = 28.8 usd
+     *
+     * 3. try to liquidate half of weth collateral = 20 weth
+     *
+     * 4. The final result should be
+     *    - remaining collat should be 40-20 = 20 weth
+     *    - repaying 20 * 0.8 = 16 usdc
+     *    - max liquidation fee = 16 * 100 / 101 = 0.15841585
+     *    - remaining debt  30.005076 - (16 - 0.15841585)  = 14.16349185 usdc
+     */
+
+    adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
+
+    address _debtToken = address(usdc);
+    address _collatToken = address(weth);
+
+    vm.warp(block.timestamp + 1 days);
+
+    // LiquidationFacet need these to function
+    mockOracle.setTokenPrice(address(weth), 8e17);
+    mockOracle.setTokenPrice(address(usdc), 1 ether);
+    // MockLiquidationStrategy need these to function
+    mockOracle.setTokenPrice(address(weth), 8e17);
+
+    uint256 _treasuryBalanceBefore = MockERC20(_debtToken).balanceOf(liquidationTreasury);
+
+    uint256 _collateralAmount = (viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken) / 2);
+
+    vm.prank(liquidator);
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      _collateralAmount,
+      0
+    );
+
+    CacheState memory _stateAfter = CacheState({
+      collat: viewFacet.getTotalCollat(_collatToken),
+      subAccountCollat: viewFacet.getCollatAmountOf(ALICE, subAccount0, _collatToken),
+      debtShare: viewFacet.getOverCollatTokenDebtShares(_debtToken),
+      debtValue: viewFacet.getOverCollatTokenDebtValue(_debtToken),
+      subAccountDebtShare: 0
+    });
+    (_stateAfter.subAccountDebtShare, ) = viewFacet.getOverCollatDebtShareAndAmountOf(ALICE, 0, _debtToken);
+
+    assertEq(_stateAfter.collat, normalizeEther(20 ether, wethDecimal));
+    assertEq(_stateAfter.subAccountCollat, normalizeEther(20 ether, wethDecimal)); // same as collat
+    // entire positon got liquidated, everything = 0
+    assertEq(_stateAfter.debtValue, normalizeEther(14.163491 ether, usdcDecimal));
+    assertEq(_stateAfter.debtShare, normalizeEther(14.161095 ether, usdcDecimal));
+    assertEq(_stateAfter.subAccountDebtShare, normalizeEther(14.161095 ether, usdcDecimal));
+
+    assertEq(
+      MockERC20(_debtToken).balanceOf(liquidationTreasury) - _treasuryBalanceBefore,
+      normalizeEther(0.158415 ether, usdcDecimal)
     );
 
     // debt token in MiniFL should be equal to debtShare after liquidated (withdrawn & burned)
@@ -187,6 +266,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 1 ether);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(mockLiquidationStrategy),
@@ -194,6 +274,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
 
@@ -243,6 +324,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // return 50% of debt plus liquidation fee
 
     mockBadLiquidationStrategy.setReturnRepayAmount((_maxReturnWithFee) / 2);
+
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(mockBadLiquidationStrategy), // this strategy always return repayToken as set prior
@@ -250,6 +333,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
 
@@ -303,6 +387,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(weth),
+      1,
       0
     );
 
@@ -325,6 +410,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     // add a little bit so it can't be liquidate
     mockOracle.setTokenPrice(address(weth), 0.9000091 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, address(weth));
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
@@ -333,6 +419,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       address(usdc),
       address(weth),
+      _collateralAmount,
       0
     );
   }
@@ -340,13 +427,13 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
   function testRevert_WhenLiquidationStrategyIsNotOk() external {
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
-    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0);
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0, 0);
   }
 
   function testRevert_WhenLiquidationCallerIsNotOk() external {
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Unauthorized.selector));
     vm.prank(EVE);
-    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0);
+    liquidationFacet.liquidationCall(address(0), ALICE, _subAccountId, address(usdc), address(weth), 0, 0);
   }
 
   function testRevert_WhenTryToLiquidateNonExistedCollateral_ShouldRevert() external {
@@ -362,6 +449,25 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      1,
+      0
+    );
+  }
+
+  function testRevert_WhenInputZeroAmountOfCollat_ShouldRevert() external {
+    // criteria
+    address _collatToken = address(ibUsdc);
+    address _debtToken = address(usdc);
+
+    vm.prank(liquidator);
+    vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_InvalidParams.selector));
+    liquidationFacet.liquidationCall(
+      address(mockLiquidationStrategy),
+      ALICE,
+      _subAccountId,
+      _debtToken,
+      _collatToken,
+      0,
       0
     );
   }
@@ -374,6 +480,8 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _subAccountId, _collatToken);
+
     // alice has 40 weth collat, 30 usdc debt
     // liquidate 30 usdc debt should fail because liquidatedBorrowingPower > maxLiquidateBps * totalUsedBorrowingPower
     vm.prank(liquidator);
@@ -384,6 +492,7 @@ contract MoneyMarket_Liquidation_LiquidateTest is MoneyMarket_BaseTest {
       _subAccountId,
       _debtToken,
       _collatToken,
+      _collateralAmount,
       0
     );
   }
