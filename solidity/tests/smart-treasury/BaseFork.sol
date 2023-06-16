@@ -117,7 +117,9 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
       toOffset: 64 + 4,
       minAmountOutOffset: 160 + 4
     });
-    swapHelper.setSwapInfo(_tokenIn, _tokenOut, _swapInfo);
+    ISwapHelper.PathInput[] memory _inputs = new ISwapHelper.PathInput[](1);
+    _inputs[0] = ISwapHelper.PathInput({ source: _tokenIn, destination: _tokenOut, info: _swapInfo });
+    swapHelper.setSwapInfos(_inputs);
   }
 
   function _setSwapHelperSwapInfoPCSV2(address _tokenIn, address _tokenOut, address[] memory _path) internal {
@@ -134,7 +136,9 @@ contract BaseFork is DSTest, StdUtils, StdAssertions, StdCheats {
       toOffset: swapHelper.search(_calldata, address(3)),
       minAmountOutOffset: swapHelper.search(_calldata, 2)
     });
-    swapHelper.setSwapInfo(_tokenIn, _tokenOut, _swapInfo);
+    ISwapHelper.PathInput[] memory _inputs = new ISwapHelper.PathInput[](1);
+    _inputs[0] = ISwapHelper.PathInput({ source: _tokenIn, destination: _tokenOut, info: _swapInfo });
+    swapHelper.setSwapInfos(_inputs);
   }
 
   function deploySmartTreasury(address _swapHelper, address _oracle) internal returns (SmartTreasury) {

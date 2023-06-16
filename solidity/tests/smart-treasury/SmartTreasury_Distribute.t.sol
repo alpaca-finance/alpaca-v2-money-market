@@ -94,18 +94,20 @@ contract SmartTreasury_Distribute is BaseFork {
 
   function testRevert_DistributeWhenPathNotSet_ShouldRevert() external {
     deal(address(btcb), address(smartTreasury), 30 ether);
-    uint256 _cakeTreasuryBalanceBefore = IERC20(address(btcb)).balanceOf(address(smartTreasury));
+    uint256 _btcbTreasuryBalanceBefore = IERC20(address(btcb)).balanceOf(address(smartTreasury));
 
     address[] memory _tokens = new address[](1);
     _tokens[0] = address(btcb);
 
     vm.prank(ALICE);
-    vm.expectRevert(ISmartTreasury.SmartTreasury_PathConfigNotFound.selector);
+    vm.expectRevert(
+      abi.encodeWithSignature("SwapHelper_SwapInfoNotFound(address,address)", address(btcb), address(usdt))
+    );
     smartTreasury.distribute(_tokens);
 
     // Smart treasury after distributed must equal to before
     uint256 _cakeTreasuryBalanceAfter = IERC20(address(btcb)).balanceOf(address(smartTreasury));
-    assertEq(_cakeTreasuryBalanceAfter, _cakeTreasuryBalanceBefore, "Smart treasury balance (Cake)");
+    assertEq(_cakeTreasuryBalanceAfter, _btcbTreasuryBalanceBefore, "Smart treasury balance (Cake)");
   }
 
   function testCorrectness_DistributeFailedFromSwap_ShouldNotDistribute() external {

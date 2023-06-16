@@ -5,9 +5,7 @@ interface ISmartTreasury {
   error SmartTreasury_InvalidAddress();
   error SmartTreasury_InvalidAllocPoint();
   error SmartTreasury_SlippageTolerance();
-  error SmartTreasury_PathConfigNotFound();
   error SmartTreasury_Unauthorized();
-  error SmartTreasury_SwapFailed();
 
   function distribute(address[] calldata _tokens) external;
 

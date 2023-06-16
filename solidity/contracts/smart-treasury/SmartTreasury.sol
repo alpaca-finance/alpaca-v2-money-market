@@ -182,9 +182,6 @@ contract SmartTreasury is OwnableUpgradeable, ISmartTreasury {
           _revenueTreasury,
           _getMinAmountOut(_token, _revenueToken, _revenueAmount)
         );
-        if (_router == address(0)) {
-          revert SmartTreasury_PathConfigNotFound();
-        }
         IERC20(_token).safeApprove(_router, _revenueAmount);
         (bool _success, bytes memory _result) = _router.call(_swapCalldata);
         // Skip dev and burn distribution if swap failed or failed slippage check
