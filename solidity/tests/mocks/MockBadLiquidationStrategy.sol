@@ -13,11 +13,12 @@ contract MockBadLiquidationStrategy is ILiquidationStrategy {
 
   /// @dev swap collat for exact repay amount and send remaining collat to caller
   function executeLiquidation(
-    address, /* _collatToken */
+    address /* _collatToken */,
     address _repayToken,
-    uint256, /*_collatAmount*/
-    uint256, /*_repayAmount*/
-    uint256 /*_minReceive*/
+    uint256 /*_collatAmount*/,
+    uint256 /*_repayAmount*/,
+    uint256 /*_minReceive*/,
+    bytes memory /* _data */
   ) external {
     ERC20(_repayToken).safeTransfer(msg.sender, amountToReturn);
   }

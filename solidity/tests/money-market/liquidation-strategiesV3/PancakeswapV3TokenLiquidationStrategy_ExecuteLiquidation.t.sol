@@ -43,7 +43,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
 
     vm.startPrank(ALICE);
     MockERC20(_collatToken).transfer(address(liquidationStrat), _collatAmountIn);
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmountIn, 0, 0);
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmountIn, 0, 0, "");
     vm.stopPrank();
 
     uint256 _aliceBTCBBalanceAfter = btcb.balanceOf(ALICE);
@@ -73,7 +73,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
     vm.stopPrank();
 
     vm.prank(ALICE);
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, 0, 0);
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, 0, 0, "");
 
     // injected collat left in strat
     assertEq(ETH.balanceOf(address(liquidationStrat)), _injectAmount, "ETH balance of strat");
@@ -97,7 +97,8 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
       _debtToken,
       normalizeEther(1 ether, ETHDecimal),
       normalizeEther(1 ether, btcbDecimal),
-      0
+      0,
+      ""
     );
   }
 
@@ -112,7 +113,8 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
       _debtToken,
       normalizeEther(1 ether, btcbDecimal),
       normalizeEther(1 ether, cakeDecimal),
-      0
+      0,
+      ""
     );
   }
 
@@ -146,7 +148,7 @@ contract PancakeswapV3TokenLiquidationStrategy_ExecuteLiquidation is BasePCSV3Li
     bytes memory _BtcbToUsdtPath = abi.encodePacked(address(btcb), uint24(500), address(usdt));
     (uint256 _expectedUSDTOut, , , ) = quoterV2.quoteExactInput(_BtcbToUsdtPath, _expectedBTCBOut);
 
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatTokenAmountIn, 0, _minReceive);
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatTokenAmountIn, 0, _minReceive, "");
 
     uint256 _aliceETHBalanceAfter = ETH.balanceOf(ALICE);
     uint256 _aliceBTCBBalanceAfter = btcb.balanceOf(ALICE);

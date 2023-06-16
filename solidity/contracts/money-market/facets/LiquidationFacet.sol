@@ -330,7 +330,8 @@ contract LiquidationFacet is ILiquidationFacet {
     address _repayToken,
     address _collatToken,
     uint256 _collatAmount,
-    uint256 _minReceive
+    uint256 _minReceive,
+    bytes memory _data
   ) external nonReentrant liquidateExec {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
@@ -409,7 +410,8 @@ contract LiquidationFacet is ILiquidationFacet {
       _repayToken,
       _collatAmount,
       _vars.expectedMaxRepayAmount,
-      _minReceive
+      _minReceive,
+      _data
     );
 
     // Calculate actual repayment by comparing balance of repayToken before and after liquidation
@@ -440,20 +442,22 @@ contract LiquidationFacet is ILiquidationFacet {
     unchecked {
       moneyMarketDs.reserves[_repayToken] += _vars.repaidAmount;
     }
-
-    // Remove repaid debt from subAccount
-    LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
-      _account,
-      _vars.subAccount,
-      _repayToken,
-      LibShareUtil.valueToShare(
+    {
+      uint256 _sharesToRemove = LibShareUtil.valueToShare(
         _vars.repaidAmount,
         moneyMarketDs.overCollatDebtShares[_repayToken],
         moneyMarketDs.overCollatDebtValues[_repayToken]
-      ),
-      _vars.repaidAmount,
-      moneyMarketDs
-    );
+      );
+      // Remove repaid debt from subAccount
+      LibMoneyMarket01.removeOverCollatDebtFromSubAccount(
+        _account,
+        _vars.subAccount,
+        _repayToken,
+        _sharesToRemove,
+        _vars.repaidAmount,
+        moneyMarketDs
+      );
+    }
 
     // Calculate the actual collateral used in liquidation strategy by comparing balance before and after
     _vars.collatSold = _vars.collatTokenBalanceBefore - IERC20(_collatToken).balanceOf(address(this));

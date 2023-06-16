@@ -65,8 +65,9 @@ contract PancakeswapV3TokenLiquidationStrategy is ILiquidationStrategy, Ownable 
     address _collatToken,
     address _repayToken,
     uint256 _collatAmountIn,
-    uint256, /* _repayAmount */
-    uint256 _minReceive
+    uint256 /* _repayAmount */,
+    uint256 _minReceive,
+    bytes memory /* _data */
   ) external onlyWhitelistedCallers {
     // Revert if _underlyingToken and _repayToken are the same address
     if (_collatToken == _repayToken) {

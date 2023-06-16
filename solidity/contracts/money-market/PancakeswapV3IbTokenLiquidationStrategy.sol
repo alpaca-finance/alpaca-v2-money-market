@@ -65,8 +65,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     address _ibToken,
     address _repayToken,
     uint256 _ibTokenAmountIn,
-    uint256, /*_repayAmount*/
-    uint256 _minReceive
+    uint256 /*_repayAmount*/,
+    uint256 _minReceive,
+    bytes memory /* _data */
   ) external onlyWhitelistedCallers {
     // get underlying tokenAddress from MoneyMarket
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
@@ -171,11 +172,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     }
   }
 
-  function _computeAddressV3(
-    address _tokenA,
-    address _tokenB,
-    uint24 _fee
-  ) internal pure returns (address pool) {
+  function _computeAddressV3(address _tokenA, address _tokenB, uint24 _fee) internal pure returns (address pool) {
     if (_tokenA > _tokenB) (_tokenA, _tokenB) = (_tokenB, _tokenA);
     pool = address(
       uint160(
