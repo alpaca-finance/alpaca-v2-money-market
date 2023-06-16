@@ -51,7 +51,8 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _repayToken The destination token
   /// @param _ibTokenAmountIn Available amount of source token to trade
   /// @param _minReceive Min token receive after swap
-  /// @param _data Bridge token address. Direct swap if address(0)
+  /// @param _data Bridge token address. Direct swap if address(0).
+  /// If bridge token == underlying or repay token it will revert because path to same token is not set.
   function executeLiquidation(
     address _ibToken,
     address _repayToken,
