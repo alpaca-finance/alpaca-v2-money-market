@@ -9,23 +9,21 @@ import { LibSafeToken } from "./libraries/LibSafeToken.sol";
 
 // ---- Interfaces ---- //
 import { ILiquidationStrategy } from "./interfaces/ILiquidationStrategy.sol";
-import { IPancakeSwapRouterV3 } from "./interfaces/IPancakeSwapRouterV3.sol";
 import { IERC20 } from "./interfaces/IERC20.sol";
 import { IMoneyMarket } from "./interfaces/IMoneyMarket.sol";
-import { IUniSwapV3PathReader } from "../reader/interfaces/IUniSwapV3PathReader.sol";
+import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
 
-contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationStrategy, Ownable {
+contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
   event LogSetCaller(address _caller, bool _isOk);
 
-  error PancakeswapV3IbTokenLiquidationStrategy_Unauthorized();
-  error PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
-  error PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(address tokenIn, address tokenOut);
+  error SwapHelperIbTokenLiquidationStrategy_Unauthorized();
+  error SwapHelperIbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
+  error SwapHelperIbTokenLiquidationStrategy_SwapFailed();
 
-  IPancakeSwapRouterV3 internal immutable router;
+  ISwapHelper internal immutable swapHelper;
   IMoneyMarket internal immutable moneyMarket;
-  IUniSwapV3PathReader internal immutable pathReader;
 
   mapping(address => bool) public callersOk;
 
@@ -38,15 +36,14 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
   /// @notice allow only whitelisted callers
   modifier onlyWhitelistedCallers() {
     if (!callersOk[msg.sender]) {
-      revert PancakeswapV3IbTokenLiquidationStrategy_Unauthorized();
+      revert SwapHelperIbTokenLiquidationStrategy_Unauthorized();
     }
     _;
   }
 
-  constructor(address _router, address _moneyMarket, address _pathReader) {
-    router = IPancakeSwapRouterV3(_router);
+  constructor(address _swapHelper, address _moneyMarket) {
+    swapHelper = ISwapHelper(_swapHelper);
     moneyMarket = IMoneyMarket(_moneyMarket);
-    pathReader = IUniSwapV3PathReader(_pathReader);
   }
 
   /// @notice Execute liquidate from collatToken to repayToken
@@ -54,44 +51,66 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
   /// @param _repayToken The destination token
   /// @param _ibTokenAmountIn Available amount of source token to trade
   /// @param _minReceive Min token receive after swap
+  /// @param _data Bridge token address. Direct swap if address(0).
+  /// If bridge token == underlying or repay token it will revert because path to same token is not set.
   function executeLiquidation(
     address _ibToken,
     address _repayToken,
     uint256 _ibTokenAmountIn,
     uint256 /*_repayAmount*/,
     uint256 _minReceive,
-    bytes memory /* _data */
+    bytes memory _data
   ) external onlyWhitelistedCallers {
-    // get underlying tokenAddress from MoneyMarket
+    // Get underlying tokenAddress from MoneyMarket
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
 
     // Revert if _underlyingToken and _repayToken are the same address
     if (_underlyingToken == _repayToken) {
-      revert PancakeswapV3IbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
+      revert SwapHelperIbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
-    bytes memory _path = pathReader.paths(_underlyingToken, _repayToken);
-    // Revert if no swapPath config for _underlyingToken and _repayToken pair
-    if (_path.length == 0) {
-      revert PancakeswapV3IbTokenLiquidationStrategy_PathConfigNotFound(_underlyingToken, _repayToken);
-    }
-
-    // withdraw ibToken from Moneymarket for underlyingToken
+    // Withdraw ibToken from Moneymarket for underlyingToken
     uint256 _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _ibTokenAmountIn);
 
-    // setup params from swap
-    IPancakeSwapRouterV3.ExactInputParams memory params = IPancakeSwapRouterV3.ExactInputParams({
-      path: _path,
-      recipient: msg.sender,
-      deadline: block.timestamp,
-      amountIn: _withdrawnUnderlyingAmount,
-      amountOutMinimum: _minReceive
-    });
+    // Swap underlyingToken to repayToken
+    address _bridgeToken = abi.decode(_data, (address));
+    if (_bridgeToken != address(0)) {
+      // Use bridge token
+      _swapExactIn(_underlyingToken, _bridgeToken, _withdrawnUnderlyingAmount, 0, address(this));
+      _swapExactIn(_bridgeToken, _repayToken, IERC20(_bridgeToken).balanceOf(address(this)), _minReceive, msg.sender);
+    } else {
+      // Direct swap
+      _swapExactIn(_underlyingToken, _repayToken, _withdrawnUnderlyingAmount, _minReceive, msg.sender);
+    }
+  }
 
-    // approve router for swapping
-    IERC20(_underlyingToken).safeApprove(address(router), _withdrawnUnderlyingAmount);
-    // swap all ib's underlyingToken to repayToken
-    router.exactInput(params);
+  function _swapExactIn(
+    address _tokenIn,
+    address _tokenOut,
+    uint256 _amountIn,
+    uint256 _minReceive,
+    address _receiver
+  ) internal {
+    // Get swap data from swapHelper
+    // swap all ib's underlyingToken to repayToken and send to msg.sender
+    // NOTE: this only works with swap exact input
+    // if swap exact output is used, `underlyingToken` might be stuck here
+    (address _router, bytes memory _swapCalldata) = swapHelper.getSwapCalldata(
+      _tokenIn,
+      _tokenOut,
+      _amountIn,
+      _receiver,
+      _minReceive
+    );
+
+    // Approve router for swapping
+    IERC20(_tokenIn).safeApprove(_router, _amountIn);
+    // Do swap
+    (bool _success, ) = _router.call(_swapCalldata);
+    // Revert if swap failed
+    if (!_success) {
+      revert SwapHelperIbTokenLiquidationStrategy_SwapFailed();
+    }
   }
 
   /// @notice Set callers ok

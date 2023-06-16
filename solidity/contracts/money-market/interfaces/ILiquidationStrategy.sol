@@ -7,7 +7,8 @@ interface ILiquidationStrategy {
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    uint256 _minReceive
+    uint256 _minReceive,
+    bytes memory _data
   ) external;
 
   function setCallersOk(address[] calldata _callers, bool _isOk) external;

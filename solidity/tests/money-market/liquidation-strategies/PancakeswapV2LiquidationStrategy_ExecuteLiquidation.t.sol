@@ -49,7 +49,8 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
       _debtToken,
       normalizeEther(1 ether, wethDecimal),
       normalizeEther(1 ether, usdcDecimal),
-      0
+      0,
+      ""
     );
 
     // nothing left in strat
@@ -78,7 +79,7 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
     usdc.mint(address(router), normalizeEther(1 ether, usdcDecimal));
 
     vm.prank(address(moneyMarketDiamond));
-    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, _repayAmount, 0);
+    liquidationStrat.executeLiquidation(_collatToken, _debtToken, _collatAmount, _repayAmount, 0, "");
 
     // injected collat left in strat
     assertEq(weth.balanceOf(address(liquidationStrat)), _injectAmount, "weth balance of strat");
@@ -104,7 +105,8 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
       _debtToken,
       normalizeEther(1 ether, wethDecimal),
       normalizeEther(1 ether, usdcDecimal),
-      0
+      0,
+      ""
     );
   }
 
@@ -125,7 +127,8 @@ contract PancakeswapV2LiquidationStrategy_ExecuteLiquidationTest is MoneyMarket_
       _debtToken,
       normalizeEther(1 ether, usdcDecimal),
       normalizeEther(1 ether, wethDecimal),
-      0
+      0,
+      ""
     );
   }
 
