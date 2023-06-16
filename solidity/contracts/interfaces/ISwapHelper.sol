@@ -14,6 +14,12 @@ interface ISwapHelper {
     uint256 minAmountOutOffset;
   }
 
+  struct PathInput {
+    address source;
+    address destination;
+    SwapInfo info;
+  }
+
   function getSwapCalldata(
     address _source,
     address _destination,
@@ -22,11 +28,7 @@ interface ISwapHelper {
     uint256 _minAmountOut
   ) external view returns (address, bytes memory);
 
-  function setSwapInfo(
-    address _source,
-    address _destination,
-    SwapInfo calldata _swapInfo
-  ) external;
+  function setSwapInfos(PathInput[] calldata _pathInputs) external;
 
   function search(bytes memory _calldata, address _query) external pure returns (uint256 _offset);
 
