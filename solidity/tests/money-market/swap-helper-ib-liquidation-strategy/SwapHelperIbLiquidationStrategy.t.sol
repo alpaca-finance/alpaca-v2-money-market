@@ -24,6 +24,7 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
   IERC20 constant wbnb = IERC20(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
   address constant mockIbWBNB = address(1234);
   IERC20 constant usdt = IERC20(0x55d398326f99059fF775485246999027B3197955);
+  IERC20 constant busd = IERC20(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
   address constant routerV2 = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
   address constant routerV3 = 0x1b81D678ffb9C0263b24A97847620C99d213eB14;
 
@@ -39,7 +40,11 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
     swapHelper = new SwapHelper();
 
     // Prepare liquidation strategy
-    liquidationStrategy = new SwapHelperIbLiquidationStrategy(address(swapHelper), address(mockMoneyMarket));
+    liquidationStrategy = new SwapHelperIbLiquidationStrategy(
+      address(swapHelper),
+      address(mockMoneyMarket),
+      address(busd)
+    );
     address[] memory _callers = new address[](1);
     _callers[0] = address(this);
     liquidationStrategy.setCallersOk(_callers, true);
@@ -97,13 +102,18 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
   }
 
   function testCorrectness_ExecuteLiquidation_SwapV3() public {
-    // Scenario: Liquidate 1 ibwbnb (1 ibwbnb = 1 wbnb) for usdt via pcs v3
+    // Scenario: Liquidate 1 ibwbnb (1 ibwbnb = 1 wbnb) for usdt via pcs v3 through busd as bridge token
 
     // Setup
     _setSwapHelperSwapInfoPCSV3(
       address(wbnb),
+      address(busd),
+      abi.encodePacked(address(wbnb), uint24(500), address(busd))
+    );
+    _setSwapHelperSwapInfoPCSV3(
+      address(busd),
       address(usdt),
-      abi.encodePacked(address(wbnb), uint24(500), address(usdt))
+      abi.encodePacked(address(busd), uint24(100), address(usdt))
     );
     mockMoneyMarket.setWithdrawalAmount(1 ether);
 
@@ -113,16 +123,26 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
     // Assertions
     // - sender usdt increase (wbnb is swapped for usdt)
     assertGt(usdt.balanceOf(address(this)), usdtBefore);
+    // Invariants
+    // - no token left in strategy
+    assertEq(wbnb.balanceOf(address(liquidationStrategy)), 0);
+    assertEq(busd.balanceOf(address(liquidationStrategy)), 0);
+    assertEq(usdt.balanceOf(address(liquidationStrategy)), 0);
   }
 
   function testCorrectness_ExecuteLiquidation_SwapV2() public {
-    // Scenario: Liquidate 1 ibwbnb (1 ibwbnb = 1 wbnb) for usdt via pcs v2
+    // Scenario: Liquidate 1 ibwbnb (1 ibwbnb = 1 wbnb) for usdt via pcs v2 through busd as bridge token
 
     // Setup
     address[] memory _pathV2 = new address[](2);
     _pathV2[0] = address(wbnb);
+    _pathV2[1] = address(busd);
+    _setSwapHelperSwapInfoPCSV2(address(wbnb), address(busd), _pathV2);
+    mockMoneyMarket.setWithdrawalAmount(1 ether);
+    _pathV2 = new address[](2);
+    _pathV2[0] = address(busd);
     _pathV2[1] = address(usdt);
-    _setSwapHelperSwapInfoPCSV2(address(wbnb), address(usdt), _pathV2);
+    _setSwapHelperSwapInfoPCSV2(address(busd), address(usdt), _pathV2);
     mockMoneyMarket.setWithdrawalAmount(1 ether);
 
     uint256 usdtBefore = usdt.balanceOf(address(this));
@@ -131,18 +151,34 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
     // Assertions
     // - sender usdt increase (wbnb is swapped for usdt)
     assertGt(usdt.balanceOf(address(this)), usdtBefore);
+    // Invariants
+    // - no token left in strategy
+    assertEq(wbnb.balanceOf(address(liquidationStrategy)), 0);
+    assertEq(busd.balanceOf(address(liquidationStrategy)), 0);
+    assertEq(usdt.balanceOf(address(liquidationStrategy)), 0);
   }
 
   function testRevert_ExecuteLiquidation_SwapFailed() public {
     // Set bad swap info so swap should failed
     _setSwapHelperSwapInfoPCSV3(
       address(wbnb),
-      address(usdt),
-      abi.encodePacked(address(wbnb), uint24(99999), address(usdt))
+      address(busd),
+      abi.encodePacked(address(wbnb), uint24(99999), address(busd))
     );
 
     vm.expectRevert(abi.encodeWithSignature("SwapHelperIbTokenLiquidationStrategy_SwapFailed()"));
     liquidationStrategy.executeLiquidation(mockIbWBNB, address(usdt), 1 ether, 0, 0);
+  }
+
+  function testRevert_SetBridgeToken_CallerIsNotOwner() public {
+    vm.prank(address(1234));
+    vm.expectRevert("Ownable: caller is not the owner");
+    liquidationStrategy.setBridgeToken(address(1234));
+  }
+
+  function testCorrectness_SetBridgeToken() public {
+    liquidationStrategy.setBridgeToken(address(1234));
+    assertEq(liquidationStrategy.bridgeToken(), address(1234));
   }
 
   function testRevert_SetCallersOk_CallerIsNotOwner() public {

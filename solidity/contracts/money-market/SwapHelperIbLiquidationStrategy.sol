@@ -17,6 +17,7 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
   event LogSetCaller(address _caller, bool _isOk);
+  event LogSetBridgeToken(address _bridgeToken);
 
   error SwapHelperIbTokenLiquidationStrategy_Unauthorized();
   error SwapHelperIbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
@@ -25,6 +26,7 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   ISwapHelper internal immutable swapHelper;
   IMoneyMarket internal immutable moneyMarket;
 
+  address public bridgeToken;
   mapping(address => bool) public callersOk;
 
   struct WithdrawParam {
@@ -41,9 +43,10 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
     _;
   }
 
-  constructor(address _swapHelper, address _moneyMarket) {
+  constructor(address _swapHelper, address _moneyMarket, address _bridgeToken) {
     swapHelper = ISwapHelper(_swapHelper);
     moneyMarket = IMoneyMarket(_moneyMarket);
+    bridgeToken = _bridgeToken;
   }
 
   /// @notice Execute liquidate from collatToken to repayToken
@@ -66,29 +69,47 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
       revert SwapHelperIbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
+    address _bridgeToken = bridgeToken;
+
     // withdraw ibToken from Moneymarket for underlyingToken
     uint256 _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _ibTokenAmountIn);
+    _swapExactIn(_underlyingToken, _bridgeToken, _withdrawnUnderlyingAmount, 0, address(this));
+    _swapExactIn(_bridgeToken, _repayToken, IERC20(_bridgeToken).balanceOf(address(this)), _minReceive, msg.sender);
+  }
 
+  function _swapExactIn(
+    address _tokenIn,
+    address _tokenOut,
+    uint256 _amountIn,
+    uint256 _minReceive,
+    address _receiver
+  ) internal {
     // Get swap data from swapHelper
     // swap all ib's underlyingToken to repayToken and send to msg.sender
     // NOTE: this only works with swap exact input
     // if swap exact output is used, `underlyingToken` might be stuck here
     (address _router, bytes memory _swapCalldata) = swapHelper.getSwapCalldata(
-      _underlyingToken,
-      _repayToken,
-      _withdrawnUnderlyingAmount,
-      msg.sender,
+      _tokenIn,
+      _tokenOut,
+      _amountIn,
+      _receiver,
       _minReceive
     );
 
     // Approve router for swapping
-    IERC20(_underlyingToken).safeApprove(_router, _withdrawnUnderlyingAmount);
+    IERC20(_tokenIn).safeApprove(_router, _amountIn);
     // Do swap
     (bool _success, ) = _router.call(_swapCalldata);
     // Revert if swap failed
     if (!_success) {
       revert SwapHelperIbTokenLiquidationStrategy_SwapFailed();
     }
+  }
+
+  /// @notice Set bridge token for swap
+  function setBridgeToken(address _bridgeToken) external onlyOwner {
+    bridgeToken = _bridgeToken;
+    emit LogSetBridgeToken(_bridgeToken);
   }
 
   /// @notice Set callers ok
