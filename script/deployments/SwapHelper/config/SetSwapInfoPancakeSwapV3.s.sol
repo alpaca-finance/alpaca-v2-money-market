@@ -29,7 +29,9 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // ********* Token0 <-> Token1 ********* //
+    // All pair will be added both forward and reverse path
+
+    // ********* 1 Hops *********
 
     /// BUSD
 
