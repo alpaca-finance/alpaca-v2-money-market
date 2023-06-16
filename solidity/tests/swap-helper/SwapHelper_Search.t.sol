@@ -39,7 +39,6 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
     //  but using search function to get offset
     address _token0 = address(usdt);
     address _token1 = address(wbnb);
-    uint24 _poolFee = 2500;
 
     uint256 _amountIn = 100e18;
     address _to = RECIPIENT;
@@ -47,7 +46,7 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
 
     // prepare origin swap calldata
     IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
-      path: abi.encodePacked(_token0, _poolFee, _token1),
+      path: abi.encodePacked(_token0, uint24(2500), _token1),
       recipient: _to,
       deadline: type(uint256).max,
       amountIn: _amountIn,
@@ -65,7 +64,7 @@ contract SwapHelper_Search is SwapHelper_BaseFork {
       minAmountOutOffset: swapHelper.search(_calldata, _minAmountOut)
     });
 
-    swapHelper.setSwapInfo(_token0, _token1, _swapInfo);
+    _setSingleSwapInfo(_token0, _token1, _swapInfo);
 
     // get swap calldata with modified amountIn and to
 
