@@ -68,7 +68,9 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
       toOffset: 64 + 4,
       minAmountOutOffset: 160 + 4
     });
-    swapHelper.setSwapInfo(_tokenIn, _tokenOut, _swapInfo);
+    ISwapHelper.PathInput[] memory _inputs = new ISwapHelper.PathInput[](1);
+    _inputs[0] = ISwapHelper.PathInput({ source: _tokenIn, destination: _tokenOut, info: _swapInfo });
+    swapHelper.setSwapInfos(_inputs);
   }
 
   function _setSwapHelperSwapInfoPCSV2(address _tokenIn, address _tokenOut, address[] memory _path) internal {
@@ -85,7 +87,9 @@ contract SwapHelperIbLiquidationStrategyTest is DSTest, StdUtils, StdAssertions,
       toOffset: swapHelper.search(_calldata, address(3)),
       minAmountOutOffset: swapHelper.search(_calldata, 2)
     });
-    swapHelper.setSwapInfo(_tokenIn, _tokenOut, _swapInfo);
+    ISwapHelper.PathInput[] memory _inputs = new ISwapHelper.PathInput[](1);
+    _inputs[0] = ISwapHelper.PathInput({ source: _tokenIn, destination: _tokenOut, info: _swapInfo });
+    swapHelper.setSwapInfos(_inputs);
   }
 
   function testRevert_ExecuteLiquidation_CallerIsNotWhitelisted() public {
