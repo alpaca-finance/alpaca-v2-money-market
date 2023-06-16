@@ -26,6 +26,7 @@ interface ILiquidationFacet {
     address _repayToken,
     address _collatToken,
     uint256 _collatAmount,
-    uint256 _minReceive
+    uint256 _minReceive,
+    bytes calldata _data
   ) external;
 }

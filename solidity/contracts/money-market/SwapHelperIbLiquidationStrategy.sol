@@ -17,7 +17,6 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   using LibSafeToken for IERC20;
 
   event LogSetCaller(address _caller, bool _isOk);
-  event LogSetBridgeToken(address _bridgeToken);
 
   error SwapHelperIbTokenLiquidationStrategy_Unauthorized();
   error SwapHelperIbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
@@ -26,7 +25,6 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   ISwapHelper internal immutable swapHelper;
   IMoneyMarket internal immutable moneyMarket;
 
-  address public bridgeToken;
   mapping(address => bool) public callersOk;
 
   struct WithdrawParam {
@@ -43,10 +41,9 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
     _;
   }
 
-  constructor(address _swapHelper, address _moneyMarket, address _bridgeToken) {
+  constructor(address _swapHelper, address _moneyMarket) {
     swapHelper = ISwapHelper(_swapHelper);
     moneyMarket = IMoneyMarket(_moneyMarket);
-    bridgeToken = _bridgeToken;
   }
 
   /// @notice Execute liquidate from collatToken to repayToken
@@ -54,12 +51,14 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
   /// @param _repayToken The destination token
   /// @param _ibTokenAmountIn Available amount of source token to trade
   /// @param _minReceive Min token receive after swap
+  /// @param _data Bridge token address. Direct swap if address(0)
   function executeLiquidation(
     address _ibToken,
     address _repayToken,
     uint256 _ibTokenAmountIn,
     uint256 /*_repayAmount*/,
-    uint256 _minReceive
+    uint256 _minReceive,
+    bytes memory _data
   ) external onlyWhitelistedCallers {
     // Get underlying tokenAddress from MoneyMarket
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
@@ -69,12 +68,19 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
       revert SwapHelperIbTokenLiquidationStrategy_RepayTokenIsSameWithUnderlyingToken();
     }
 
-    address _bridgeToken = bridgeToken;
-
-    // withdraw ibToken from Moneymarket for underlyingToken
+    // Withdraw ibToken from Moneymarket for underlyingToken
     uint256 _withdrawnUnderlyingAmount = moneyMarket.withdraw(msg.sender, _ibToken, _ibTokenAmountIn);
-    _swapExactIn(_underlyingToken, _bridgeToken, _withdrawnUnderlyingAmount, 0, address(this));
-    _swapExactIn(_bridgeToken, _repayToken, IERC20(_bridgeToken).balanceOf(address(this)), _minReceive, msg.sender);
+
+    // Swap underlyingToken to repayToken
+    address _bridgeToken = abi.decode(_data, (address));
+    if (_bridgeToken != address(0)) {
+      // Use bridge token
+      _swapExactIn(_underlyingToken, _bridgeToken, _withdrawnUnderlyingAmount, 0, address(this));
+      _swapExactIn(_bridgeToken, _repayToken, IERC20(_bridgeToken).balanceOf(address(this)), _minReceive, msg.sender);
+    } else {
+      // Direct swap
+      _swapExactIn(_underlyingToken, _repayToken, _withdrawnUnderlyingAmount, _minReceive, msg.sender);
+    }
   }
 
   function _swapExactIn(
@@ -104,12 +110,6 @@ contract SwapHelperIbLiquidationStrategy is ILiquidationStrategy, Ownable {
     if (!_success) {
       revert SwapHelperIbTokenLiquidationStrategy_SwapFailed();
     }
-  }
-
-  /// @notice Set bridge token for swap
-  function setBridgeToken(address _bridgeToken) external onlyOwner {
-    bridgeToken = _bridgeToken;
-    emit LogSetBridgeToken(_bridgeToken);
   }
 
   /// @notice Set callers ok
