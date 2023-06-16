@@ -29,41 +29,8 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // ********* WBNB ********* //
-    // WBNB -> HIGH:
-    _encodeAndPushPath(wbnb, busd, high);
-
-    // ********* USDC ********* //
-    // USDC -> HIGH:
-    _encodeAndPushPath(usdc, busd, high);
-
-    // ********* USDT ********* //
-    // USDT -> HIGH:
-    _encodeAndPushPath(usdt, busd, high);
-
-    // ********* BUSD ********* //
-    // BUSD -> HIGH:
+    // BUSD -> HIGH
     _encodeAndPushPath(busd, high);
-
-    // ********* BTCB ********* //
-    // BTCB -> HIGH:
-    _encodeAndPushPath(btcb, busd, high);
-
-    // ********* ETH ********* //
-    // ETH -> HIGH:
-    _encodeAndPushPath(eth, busd, high);
-
-    // ********* CAKE ********* //
-    // CAKE -> HIGH:
-    _encodeAndPushPath(cake, busd, high);
-
-    // ********* XRP ********* //
-    // XRP -> HIGH:
-    _encodeAndPushPath(xrp, busd, high);
-
-    // ********* HIGH ********* //
-    // HIGH -> BUSD:
-    _encodeAndPushPath(high, busd);
 
     _startDeployerBroadcast();
 

@@ -6,15 +6,15 @@ import "../../../BaseScript.sol";
 import { SwapHelper } from "solidity/contracts/swap-helper/SwapHelper.sol";
 
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
-import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
+import { IThenaRouterV2 } from "solidity/contracts/interfaces/IThenaRouterV2.sol";
 
-contract SetSwapInfoPancakeSwapV3Script is BaseScript {
+contract SetSwapInfoThenaV1 is BaseScript {
   using stdJson for string;
 
-  // pancake swap v3 offset configs (included 4 bytes of funcSig.)
-  uint256 internal constant AMOUNT_IN_OFFSET = 132;
-  uint256 internal constant TO_OFFSET = 68;
-  uint256 internal constant MIN_AMOUNT_OUT_OFFSET = 164;
+  // thena dex v1 offset configs (included 4 bytes of funcSig.)
+  uint256 internal constant AMOUNT_IN_OFFSET = 4;
+  uint256 internal constant TO_OFFSET = 100;
+  uint256 internal constant MIN_AMOUNT_OUT_OFFSET = 36;
 
   ISwapHelper.PathInput[] internal pathInputs;
 
@@ -29,47 +29,10 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // ********* Token0 <-> Token1 ********* //
+    // Thena V1 use RouterV2
 
-    /// BUSD
-
-    _encodeAndPushPath(wbnb, 500, busd);
-
-    _encodeAndPushPath(usdc, 100, busd);
-
-    _encodeAndPushPath(usdt, 100, busd);
-
-    _encodeAndPushPath(btcb, 500, busd);
-
-    /// USDC
-
-    _encodeAndPushPath(eth, 500, usdc);
-
-    /// WBNB
-
-    _encodeAndPushPath(cake, 500, wbnb);
-
-    _encodeAndPushPath(xrp, 2500, wbnb);
-
-    _encodeAndPushPath(doge, 2500, wbnb);
-
-    _encodeAndPushPath(ltc, 2500, wbnb);
-
-    _encodeAndPushPath(ada, 2500, wbnb);
-
-    // ********* 2 Hops *********
-
-    _encodeAndPushPath(eth, 500, usdc, 100, busd);
-
-    _encodeAndPushPath(cake, 500, wbnb, 500, busd);
-
-    _encodeAndPushPath(xrp, 2500, wbnb, 500, busd);
-
-    _encodeAndPushPath(doge, 2500, wbnb, 500, busd);
-
-    _encodeAndPushPath(ltc, 2500, wbnb, 500, busd);
-
-    _encodeAndPushPath(ada, 2500, wbnb, 500, busd);
+    // THE -> BUSD (Treasury)
+    _encodeAndPushPath(the, busd, false);
 
     _startDeployerBroadcast();
 
@@ -78,21 +41,20 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
     _stopBroadcast();
   }
 
-  function _preparePCSV3SwapInfo(bytes memory _path) internal view returns (ISwapHelper.SwapInfo memory) {
+  function _prepareThenaV1SwapInfo(IThenaRouterV2.route[] memory _routes)
+    internal
+    view
+    returns (ISwapHelper.SwapInfo memory)
+  {
     // recipient, amountIn and amountOutMinimum will be replaced when calling `getSwapCalldata`
     address _to = address(moneyMarket);
     uint256 _amountIn = type(uint256).max / 5; // 0x333...
     uint256 _minAmountOut = type(uint256).max / 3; // 0x555...
 
-    IPancakeSwapRouterV3.ExactInputParams memory _params = IPancakeSwapRouterV3.ExactInputParams({
-      path: _path,
-      recipient: _to,
-      deadline: type(uint256).max, // 0xfff...
-      amountIn: _amountIn,
-      amountOutMinimum: _minAmountOut
-    });
-
-    bytes memory _calldata = abi.encodeCall(IPancakeSwapRouterV3.exactInput, _params);
+    bytes memory _calldata = abi.encodeCall(
+      IThenaRouterV2.swapExactTokensForTokens,
+      (_amountIn, _minAmountOut, _routes, _to, type(uint256).max)
+    );
 
     // cross check offset
     uint256 _amountInOffset = swapHelper.search(_calldata, _amountIn);
@@ -106,7 +68,7 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
     return
       ISwapHelper.SwapInfo({
         swapCalldata: _calldata,
-        router: pancakeswapRouterV3,
+        router: thenaSwapRouterV2,
         amountInOffset: _amountInOffset,
         toOffset: _toOffset,
         minAmountOutOffset: _minAmountOutOffset
@@ -116,9 +78,9 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
   function _addPathInput(
     address _source,
     address _destination,
-    bytes memory _path
+    IThenaRouterV2.route[] memory _routes
   ) internal {
-    ISwapHelper.SwapInfo memory _info = _preparePCSV3SwapInfo(_path);
+    ISwapHelper.SwapInfo memory _info = _prepareThenaV1SwapInfo(_routes);
 
     ISwapHelper.PathInput memory _newPathInput = ISwapHelper.PathInput({
       source: _source,
@@ -131,28 +93,12 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
   // encode path and push to array
 
   function _encodeAndPushPath(
-    address _tokenA,
-    uint24 _fee,
-    address _tokenB
+    address _token0,
+    address _token1,
+    bool _stable
   ) internal {
-    bytes memory _path = abi.encodePacked(_tokenA, _fee, _tokenB);
-    bytes memory _reversePath = abi.encodePacked(_tokenB, _fee, _tokenA);
-
-    _addPathInput(_tokenA, _tokenB, _path);
-    _addPathInput(_tokenB, _tokenA, _reversePath);
-  }
-
-  function _encodeAndPushPath(
-    address _tokenA,
-    uint24 _fee0,
-    address _tokenB,
-    uint24 _fee1,
-    address _tokenC
-  ) internal {
-    bytes memory _path = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC);
-    bytes memory _reversePath = abi.encodePacked(_tokenC, _fee1, _tokenB, _fee0, _tokenA);
-
-    _addPathInput(_tokenA, _tokenC, _path);
-    _addPathInput(_tokenC, _tokenA, _reversePath);
+    IThenaRouterV2.route[] memory _routes = new IThenaRouterV2.route[](1);
+    _routes[0] = IThenaRouterV2.route({ from: _token0, to: _token1, stable: _stable });
+    _addPathInput(_token0, _token1, _routes);
   }
 }

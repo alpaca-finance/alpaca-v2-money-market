@@ -129,6 +129,70 @@ contract SwapHelper_GetSwapCalldata is SwapHelper_BaseFork {
     assertEq(keccak256(_replacedCalldata), keccak256(_zeroMinAmountOutcalldata));
   }
 
+  function testCorrectness_GetSwapCalldata_ThenaFusionSwap() public {
+    // test thena fusion swap in script format
+    //  to verify the correctness of config script and thena's swap router
+    address _token0 = address(wbnb);
+    address _token1 = address(the);
+
+    address _to = address(RECIPIENT);
+    uint256 _amountIn = type(uint256).max / 5; // 0x333...
+    uint256 _minAmountOut = type(uint256).max / 3; // 0x555...
+
+    IThenaRouterV3.ExactInputSingleParams memory _params = IThenaRouterV3.ExactInputSingleParams({
+      tokenIn: _token0,
+      tokenOut: _token1,
+      recipient: _to,
+      deadline: type(uint256).max,
+      amountIn: _amountIn,
+      amountOutMinimum: _minAmountOut,
+      limitSqrtPrice: 0
+    });
+
+    bytes memory _calldata = abi.encodeCall(IThenaRouterV3.exactInputSingle, (_params));
+
+    uint256 _amountInOffset = swapHelper.search(_calldata, _amountIn);
+    uint256 _toOffset = swapHelper.search(_calldata, _to);
+    uint256 _minAmountOutOffset = swapHelper.search(_calldata, _minAmountOut);
+
+    // cross check
+    assertEq(_amountInOffset, 132);
+    assertEq(_toOffset, 68);
+    assertEq(_minAmountOutOffset, 164);
+
+    _setSingleSwapInfo(
+      _token0,
+      _token1,
+      ISwapHelper.SwapInfo({
+        swapCalldata: _calldata,
+        router: address(thenaRouterV3),
+        amountInOffset: _amountInOffset,
+        toOffset: _toOffset,
+        minAmountOutOffset: _minAmountOutOffset
+      })
+    );
+
+    uint256 _newMinAmountOut = _getMinAmountOut(address(wbnb), address(the), 10e18, 500);
+
+    (address _router, bytes memory _retrievedCalldata) = swapHelper.getSwapCalldata(
+      _token0,
+      _token1,
+      10e18,
+      _to,
+      _newMinAmountOut
+    );
+
+    uint256 _balanceBefore = the.balanceOf(RECIPIENT);
+
+    deal(address(wbnb), address(this), 10e18);
+    wbnb.approve(_router, 10e18);
+    (, bytes memory _returnData) = _router.call(_retrievedCalldata);
+
+    uint256 _amountOut = abi.decode(_returnData, (uint256));
+
+    assertEq(the.balanceOf(RECIPIENT), _balanceBefore + _amountOut);
+  }
+
   function testRevert_GetSwapCalldata_SwapInfoNotFound() public {
     vm.expectRevert(abi.encodeWithSelector(ISwapHelper.SwapHelper_SwapInfoNotFound.selector, address(1), address(2)));
     swapHelper.getSwapCalldata(address(1), address(2), 0, address(this), 0);
