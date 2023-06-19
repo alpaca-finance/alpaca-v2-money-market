@@ -33,6 +33,8 @@ contract SetSwapInfoThenaV1 is BaseScript {
 
     // THE -> BUSD (Treasury)
     _encodeAndPushPath(the, busd, false);
+    // BUSD -> THE (Repurchase)
+    _encodeAndPushPath(busd, the, false);
 
     _startDeployerBroadcast();
 
