@@ -6,12 +6,12 @@ import "../../../BaseScript.sol";
 import { SwapHelper } from "solidity/contracts/swap-helper/SwapHelper.sol";
 
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
-import { IPancakeRouter02 } from "solidity/contracts/money-market/interfaces/IPancakeRouter02.sol";
+import { IThenaRouterV2 } from "solidity/contracts/interfaces/IThenaRouterV2.sol";
 
-contract SetSwapInfoPancakeSwapV2Script is BaseScript {
+contract SetSwapInfoThenaV1 is BaseScript {
   using stdJson for string;
 
-  // pancake swap v2 offset configs (included 4 bytes of funcSig.)
+  // thena dex v1 offset configs (included 4 bytes of funcSig.)
   uint256 internal constant AMOUNT_IN_OFFSET = 4;
   uint256 internal constant TO_OFFSET = 100;
   uint256 internal constant MIN_AMOUNT_OUT_OFFSET = 36;
@@ -29,8 +29,10 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // BUSD -> HIGH
-    _encodeAndPushPath(busd, high);
+    // Thena V1 use RouterV2
+
+    // THE -> BUSD (Treasury)
+    _encodeAndPushPath(the, busd, false);
 
     _startDeployerBroadcast();
 
@@ -39,15 +41,19 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
     _stopBroadcast();
   }
 
-  function _preparePCSV2SwapInfo(address[] memory _path) internal view returns (ISwapHelper.SwapInfo memory) {
+  function _prepareThenaV1SwapInfo(IThenaRouterV2.route[] memory _routes)
+    internal
+    view
+    returns (ISwapHelper.SwapInfo memory)
+  {
     // recipient, amountIn and amountOutMinimum will be replaced when calling `getSwapCalldata`
     address _to = address(moneyMarket);
     uint256 _amountIn = type(uint256).max / 5; // 0x333...
     uint256 _minAmountOut = type(uint256).max / 3; // 0x555...
 
     bytes memory _calldata = abi.encodeCall(
-      IPancakeRouter02.swapExactTokensForTokens,
-      (_amountIn, _minAmountOut, _path, _to, type(uint256).max)
+      IThenaRouterV2.swapExactTokensForTokens,
+      (_amountIn, _minAmountOut, _routes, _to, type(uint256).max)
     );
 
     // cross check offset
@@ -62,7 +68,7 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
     return
       ISwapHelper.SwapInfo({
         swapCalldata: _calldata,
-        router: pancakeswapRouterV2,
+        router: thenaSwapRouterV2,
         amountInOffset: _amountInOffset,
         toOffset: _toOffset,
         minAmountOutOffset: _minAmountOutOffset
@@ -72,9 +78,9 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
   function _addPathInput(
     address _source,
     address _destination,
-    address[] memory _path
+    IThenaRouterV2.route[] memory _routes
   ) internal {
-    ISwapHelper.SwapInfo memory _info = _preparePCSV2SwapInfo(_path);
+    ISwapHelper.SwapInfo memory _info = _prepareThenaV1SwapInfo(_routes);
 
     ISwapHelper.PathInput memory _newPathInput = ISwapHelper.PathInput({
       source: _source,
@@ -86,22 +92,13 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
 
   // encode path and push to array
 
-  function _encodeAndPushPath(address _token0, address _token1) internal {
-    address[] memory _path = new address[](2);
-    _path[0] = _token0;
-    _path[1] = _token1;
-    _addPathInput(_token0, _token1, _path);
-  }
-
   function _encodeAndPushPath(
     address _token0,
     address _token1,
-    address _token2
+    bool _stable
   ) internal {
-    address[] memory _path = new address[](3);
-    _path[0] = _token0;
-    _path[1] = _token1;
-    _path[2] = _token2;
-    _addPathInput(_token0, _token2, _path);
+    IThenaRouterV2.route[] memory _routes = new IThenaRouterV2.route[](1);
+    _routes[0] = IThenaRouterV2.route({ from: _token0, to: _token1, stable: _stable });
+    _addPathInput(_token0, _token1, _routes);
   }
 }

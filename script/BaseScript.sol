@@ -58,6 +58,8 @@ abstract contract BaseScript is Script {
   address internal pancakeswapRouterV3;
   ISmartTreasury internal smartTreasury;
   ISwapHelper internal swapHelper;
+  address internal thenaSwapRouterV2;
+  address internal thenaSwapRouterV3;
 
   // shareConfig
   address internal fixFeeModel500Bps;
@@ -106,6 +108,9 @@ abstract contract BaseScript is Script {
     pancakeswapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV2"), (address));
     pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
     pancakeswapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV3"), (address));
+
+    thenaSwapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.thenaDex.routerV2"), (address));
+    thenaSwapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.thenaDex.routerV3"), (address));
 
     fixFeeModel500Bps = abi.decode(configJson.parseRaw(".sharedConfig.fixFeeModel500Bps"), (address));
     doubleSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope1"), (address));

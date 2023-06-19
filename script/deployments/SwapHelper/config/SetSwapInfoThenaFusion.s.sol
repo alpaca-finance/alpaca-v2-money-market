@@ -6,15 +6,15 @@ import "../../../BaseScript.sol";
 import { SwapHelper } from "solidity/contracts/swap-helper/SwapHelper.sol";
 
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
-import { IPancakeRouter02 } from "solidity/contracts/money-market/interfaces/IPancakeRouter02.sol";
+import { IThenaRouterV3 } from "solidity/contracts/interfaces/IThenaRouterV3.sol";
 
-contract SetSwapInfoPancakeSwapV2Script is BaseScript {
+contract SetSwapInfoThenaFusion is BaseScript {
   using stdJson for string;
 
-  // pancake swap v2 offset configs (included 4 bytes of funcSig.)
-  uint256 internal constant AMOUNT_IN_OFFSET = 4;
-  uint256 internal constant TO_OFFSET = 100;
-  uint256 internal constant MIN_AMOUNT_OUT_OFFSET = 36;
+  // thena dex fusion offset configs (included 4 bytes of funcSig.)
+  uint256 internal constant AMOUNT_IN_OFFSET = 132;
+  uint256 internal constant TO_OFFSET = 68;
+  uint256 internal constant MIN_AMOUNT_OUT_OFFSET = 164;
 
   ISwapHelper.PathInput[] internal pathInputs;
 
@@ -29,8 +29,10 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // BUSD -> HIGH
-    _encodeAndPushPath(busd, high);
+    // Thena Fusion use SwapRouter (RouterV3)
+
+    // WBNB -> THE (Liquidation)
+    _addPathInput(wbnb, the);
 
     _startDeployerBroadcast();
 
@@ -39,16 +41,27 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
     _stopBroadcast();
   }
 
-  function _preparePCSV2SwapInfo(address[] memory _path) internal view returns (ISwapHelper.SwapInfo memory) {
+  function _prepareThenaFusionSwapInfo(address _source, address _destination)
+    internal
+    view
+    returns (ISwapHelper.SwapInfo memory)
+  {
     // recipient, amountIn and amountOutMinimum will be replaced when calling `getSwapCalldata`
     address _to = address(moneyMarket);
     uint256 _amountIn = type(uint256).max / 5; // 0x333...
     uint256 _minAmountOut = type(uint256).max / 3; // 0x555...
 
-    bytes memory _calldata = abi.encodeCall(
-      IPancakeRouter02.swapExactTokensForTokens,
-      (_amountIn, _minAmountOut, _path, _to, type(uint256).max)
-    );
+    IThenaRouterV3.ExactInputSingleParams memory _params = IThenaRouterV3.ExactInputSingleParams({
+      tokenIn: _source,
+      tokenOut: _destination,
+      recipient: _to,
+      deadline: type(uint256).max,
+      amountIn: _amountIn,
+      amountOutMinimum: _minAmountOut,
+      limitSqrtPrice: 0
+    });
+
+    bytes memory _calldata = abi.encodeCall(IThenaRouterV3.exactInputSingle, (_params));
 
     // cross check offset
     uint256 _amountInOffset = swapHelper.search(_calldata, _amountIn);
@@ -62,19 +75,15 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
     return
       ISwapHelper.SwapInfo({
         swapCalldata: _calldata,
-        router: pancakeswapRouterV2,
+        router: thenaSwapRouterV3,
         amountInOffset: _amountInOffset,
         toOffset: _toOffset,
         minAmountOutOffset: _minAmountOutOffset
       });
   }
 
-  function _addPathInput(
-    address _source,
-    address _destination,
-    address[] memory _path
-  ) internal {
-    ISwapHelper.SwapInfo memory _info = _preparePCSV2SwapInfo(_path);
+  function _addPathInput(address _source, address _destination) internal {
+    ISwapHelper.SwapInfo memory _info = _prepareThenaFusionSwapInfo(_source, _destination);
 
     ISwapHelper.PathInput memory _newPathInput = ISwapHelper.PathInput({
       source: _source,
@@ -82,26 +91,5 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
       info: _info
     });
     pathInputs.push(_newPathInput);
-  }
-
-  // encode path and push to array
-
-  function _encodeAndPushPath(address _token0, address _token1) internal {
-    address[] memory _path = new address[](2);
-    _path[0] = _token0;
-    _path[1] = _token1;
-    _addPathInput(_token0, _token1, _path);
-  }
-
-  function _encodeAndPushPath(
-    address _token0,
-    address _token1,
-    address _token2
-  ) internal {
-    address[] memory _path = new address[](3);
-    _path[0] = _token0;
-    _path[1] = _token1;
-    _path[2] = _token2;
-    _addPathInput(_token0, _token2, _path);
   }
 }

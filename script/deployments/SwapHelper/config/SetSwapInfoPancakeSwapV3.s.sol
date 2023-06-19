@@ -29,181 +29,49 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // ********* WBNB ********* //
-    // WBNB -> USDC:
-    _encodeAndPushPath(wbnb, 500, usdt, 100, usdc);
+    // All pair will be added both forward and reverse path
 
-    // WBNB -> USDT:
-    _encodeAndPushPath(wbnb, 500, usdt);
+    // ********* 1 Hops *********
 
-    // WBNB -> BUSD:
+    /// BUSD
+
     _encodeAndPushPath(wbnb, 500, busd);
 
-    // WBNB -> BTCB:
-    _encodeAndPushPath(wbnb, 100, usdt, 500, btcb);
-
-    // WBNB -> ETH:
-    _encodeAndPushPath(wbnb, 2500, eth);
-
-    // WBNB -> CAKE:
-    _encodeAndPushPath(wbnb, 2500, cake);
-
-    // WBNB -> XRP:
-    _encodeAndPushPath(wbnb, 2500, xrp);
-
-    // ********* USDC ********* //
-    // USDC -> BTCB:
-    _encodeAndPushPath(usdc, 100, usdt, 500, btcb);
-
-    // USDC -> ETH:
-    _encodeAndPushPath(usdc, 500, eth);
-
-    // USDC -> WBNB:
-    _encodeAndPushPath(usdc, 100, usdt, 500, wbnb);
-
-    // USDC -> BUSD:
     _encodeAndPushPath(usdc, 100, busd);
 
-    // USDC -> USDT:
-    _encodeAndPushPath(usdc, 100, usdt);
-
-    // USDC -> CAKE:
-    _encodeAndPushPath(usdc, 100, usdt, 2500, cake);
-
-    // USDC -> XRP:
-    _encodeAndPushPath(usdc, 100, usdt, 500, wbnb, 2500, xrp);
-
-    // ********* USDT ********* //
-    // USDT -> BTCB:
-    _encodeAndPushPath(usdt, 500, btcb);
-
-    // USDT -> ETH:
-    _encodeAndPushPath(usdt, 100, usdc, 500, eth);
-
-    // USDT -> WBNB:
-    _encodeAndPushPath(usdt, 100, wbnb);
-
-    // USDT -> BUSD:
     _encodeAndPushPath(usdt, 100, busd);
 
-    // USDT -> USDC:
-    _encodeAndPushPath(usdt, 100, usdc);
-
-    // USDT -> CAKE:
-    _encodeAndPushPath(usdt, 2500, cake);
-
-    // USDT -> XRP:
-    _encodeAndPushPath(usdt, 100, wbnb, 2500, xrp);
-
-    // ********* BUSD ********* //
-    // BUSD -> BTCB:
-    _encodeAndPushPath(busd, 500, btcb);
-
-    // BUSD -> ETH:
-    _encodeAndPushPath(busd, 100, usdc, 500, eth);
-
-    // BUSD -> WBNB:
-    _encodeAndPushPath(busd, 100, usdt, 100, wbnb);
-
-    // BUSD -> USDT:
-    _encodeAndPushPath(busd, 100, usdt);
-
-    // BUSD -> USDC:
-    _encodeAndPushPath(busd, 100, usdc);
-
-    // BUSD -> CAKE:
-    _encodeAndPushPath(busd, 2500, cake);
-
-    // BUSD -> XRP:
-    _encodeAndPushPath(busd, 500, wbnb, 2500, xrp);
-
-    // ********* BTCB ********* //
-    // BTCB -> ETH
-    _encodeAndPushPath(btcb, 2500, eth);
-
-    // BTCB -> WBNB
-    _encodeAndPushPath(btcb, 500, usdt, 100, wbnb);
-
-    // BTCB -> BUSD
     _encodeAndPushPath(btcb, 500, busd);
 
-    // BTCB -> USDT
-    _encodeAndPushPath(btcb, 500, usdt);
+    /// USDC
 
-    // BTCB -> USDC
-    _encodeAndPushPath(btcb, 500, busd, 100, usdc);
-
-    // BTCB -> CAKE
-    _encodeAndPushPath(btcb, 500, usdt, 2500, cake);
-
-    // BTCB -> XRP
-    _encodeAndPushPath(btcb, 500, usdt, 500, wbnb, 2500, xrp);
-
-    // ********* ETH ********* //
-    // ETH -> BTCB
-    _encodeAndPushPath(eth, 2500, btcb);
-
-    // ETH -> WBNB
-    _encodeAndPushPath(eth, 2500, wbnb);
-
-    // ETH -> BUSD
-    _encodeAndPushPath(eth, 500, usdc, 100, busd);
-
-    // ETH -> USDT
-    _encodeAndPushPath(eth, 500, usdc, 100, usdt);
-
-    // ETH -> USDC
     _encodeAndPushPath(eth, 500, usdc);
 
-    // ETH -> CAKE
-    _encodeAndPushPath(eth, 500, usdc, 100, usdt, 2500, cake);
+    /// WBNB
 
-    // ETH -> XRP
-    _encodeAndPushPath(eth, 2500, wbnb, 2500, xrp);
+    _encodeAndPushPath(cake, 500, wbnb);
 
-    // ********* CAKE ********* //
-    // CAKE -> BTCB
-    _encodeAndPushPath(cake, 2500, usdt, 500, btcb);
-
-    // CAKE -> WBNB
-    _encodeAndPushPath(cake, 2500, wbnb);
-
-    // CAKE -> BUSD
-    _encodeAndPushPath(cake, 2500, busd);
-
-    // CAKE -> USDT
-    _encodeAndPushPath(cake, 2500, usdt);
-
-    // CAKE -> USDC
-    _encodeAndPushPath(cake, 2500, usdt, 100, usdc);
-
-    // CAKE -> ETH
-    _encodeAndPushPath(cake, 2500, usdt, 100, usdc, 500, eth);
-
-    // CAKE -> XRP
-    _encodeAndPushPath(cake, 2500, wbnb, 2500, xrp);
-
-    // ********* XRP ********* //
-    // XRP -> BTCB
-    _encodeAndPushPath(xrp, 2500, wbnb, 500, usdt, 500, btcb);
-
-    // XRP -> WBNB
     _encodeAndPushPath(xrp, 2500, wbnb);
 
-    // XRP -> BUSD
+    _encodeAndPushPath(doge, 2500, wbnb);
+
+    _encodeAndPushPath(ltc, 2500, wbnb);
+
+    _encodeAndPushPath(ada, 2500, wbnb);
+
+    // ********* 2 Hops *********
+
+    _encodeAndPushPath(eth, 500, usdc, 100, busd);
+
+    _encodeAndPushPath(cake, 500, wbnb, 500, busd);
+
     _encodeAndPushPath(xrp, 2500, wbnb, 500, busd);
 
-    // XRP -> USDT
-    _encodeAndPushPath(xrp, 2500, wbnb, 100, usdt);
+    _encodeAndPushPath(doge, 2500, wbnb, 500, busd);
 
-    // XRP -> USDC
-    _encodeAndPushPath(xrp, 2500, wbnb, 500, usdt, 100, usdc);
+    _encodeAndPushPath(ltc, 2500, wbnb, 500, busd);
 
-    // XRP -> ETH
-    _encodeAndPushPath(xrp, 2500, wbnb, 2500, eth);
-
-    // XRP -> CAKE
-    _encodeAndPushPath(xrp, 2500, wbnb, 2500, cake);
+    _encodeAndPushPath(ada, 2500, wbnb, 500, busd);
 
     _startDeployerBroadcast();
 
@@ -270,7 +138,10 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
     address _tokenB
   ) internal {
     bytes memory _path = abi.encodePacked(_tokenA, _fee, _tokenB);
+    bytes memory _reversePath = abi.encodePacked(_tokenB, _fee, _tokenA);
+
     _addPathInput(_tokenA, _tokenB, _path);
+    _addPathInput(_tokenB, _tokenA, _reversePath);
   }
 
   function _encodeAndPushPath(
@@ -281,19 +152,9 @@ contract SetSwapInfoPancakeSwapV3Script is BaseScript {
     address _tokenC
   ) internal {
     bytes memory _path = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC);
-    _addPathInput(_tokenA, _tokenC, _path);
-  }
+    bytes memory _reversePath = abi.encodePacked(_tokenC, _fee1, _tokenB, _fee0, _tokenA);
 
-  function _encodeAndPushPath(
-    address _tokenA,
-    uint24 _fee0,
-    address _tokenB,
-    uint24 _fee1,
-    address _tokenC,
-    uint24 _fee2,
-    address _tokenD
-  ) internal {
-    bytes memory _path = abi.encodePacked(_tokenA, _fee0, _tokenB, _fee1, _tokenC, _fee2, _tokenD);
-    _addPathInput(_tokenA, _tokenD, _path);
+    _addPathInput(_tokenA, _tokenC, _path);
+    _addPathInput(_tokenC, _tokenA, _reversePath);
   }
 }

@@ -10,6 +10,8 @@ import { LibConstant } from "solidity/contracts/money-market/libraries/LibConsta
 // interfaces
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
+import { IThenaRouterV2 } from "solidity/contracts/interfaces/IThenaRouterV2.sol";
+import { IThenaRouterV3 } from "solidity/contracts/interfaces/IThenaRouterV3.sol";
 import { IOracleMedianizer } from "solidity/contracts/oracle/interfaces/IOracleMedianizer.sol";
 import { IPancakeSwapRouterV3 } from "solidity/contracts/money-market/interfaces/IPancakeSwapRouterV3.sol";
 
@@ -23,12 +25,16 @@ contract SwapHelper_BaseFork is DSTest, StdCheats {
   IERC20 public constant usdc = IERC20(0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d);
   IERC20 public constant cake = IERC20(0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82);
   IERC20 public constant doge = IERC20(0xbA2aE424d960c26247Dd6c32edC70B295c744C43);
+  IERC20 public constant the = IERC20(0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11);
+  IERC20 public constant busd = IERC20(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56);
 
   address internal constant USD = 0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff;
 
   address internal constant RECIPIENT = 0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b;
   address internal constant RECIPIENT_2 = 0x09FC1B9B288647FF0b5b4668C74e51F8bEA50C67;
 
+  IThenaRouterV2 public thenaRouterV2 = IThenaRouterV2(0xd4ae6eCA985340Dd434D38F470aCCce4DC78D109);
+  IThenaRouterV3 public thenaRouterV3 = IThenaRouterV3(0x327Dd3208f0bCF590A66110aCB6e5e6941A4EfA0);
   IOracleMedianizer public oracleMedianizer = IOracleMedianizer(0x553b8adc2Ac16491Ec57239BeA7191719a2B880c);
   IPancakeSwapRouterV3 public pancakeV3Router = IPancakeSwapRouterV3(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
 

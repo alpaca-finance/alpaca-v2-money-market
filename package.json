@@ -84,6 +84,8 @@
     "exec:bsc_mainnet:swap-helper:deploy": "forge script script/deployments/SwapHelper/deploy/SwapHelper.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:swap-helper:config:set-swap-info-pancake-swap-v2": "forge script script/deployments/SwapHelper/config/SetSwapInfoPancakeSwapV2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:swap-helper:config:set-swap-info-pancake-swap-v3": "forge script script/deployments/SwapHelper/config/SetSwapInfoPancakeSwapV3.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:swap-helper:config:set-swap-info-thena-v1": "forge script script/deployments/SwapHelper/config/SetSwapInfoThenaV1.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:swap-helper:config:set-swap-info-thena-fusion": "forge script script/deployments/SwapHelper/config/SetSwapInfoThenaFusion.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "----------Deploy Hardhat -------------": "----------Deploy Hardhat -------------",
     "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut",
     "exec:bsc_mainnet:money-market:upgrade:account-manager": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags UpgradeMoneyMarketAccountManager"
