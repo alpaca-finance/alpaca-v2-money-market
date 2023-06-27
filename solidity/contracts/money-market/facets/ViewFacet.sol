@@ -151,7 +151,7 @@ contract ViewFacet is IViewFacet {
 
   /// @notice Get pending interest of non collateralized borrowed token
   /// @param _account The non collat borrower address
-  /// @param _token The token that has collected the interest
+  /// @param _token The token that has been borrowed
   /// @return _pendingInterest The total amount of non collateralized pending interest
   function getNonCollatPendingInterest(address _account, address _token)
     external

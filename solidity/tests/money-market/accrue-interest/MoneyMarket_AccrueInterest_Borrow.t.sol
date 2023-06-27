@@ -586,13 +586,13 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_borrowedUSDValue, 29 ether);
   }
 
-  function testCorrectness_WhenUserBorrowNonCollat_ShouldWork() external {
+  function testCorrectness_WhenUserBorrowNonCollat_NonCollatPendingInterest_ShouldWork() external {
     // 1. borrow non-collat
     vm.prank(ALICE);
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), 9 ether);
 
     // 2. cache "debt before accrue"
-    uint256 _globalDebtBefore = viewFacet.getGlobalDebtValue(address(weth));
+    uint256 _nonCollatDebtBefore = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     // skip
     skip(100);
@@ -604,9 +604,9 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     borrowFacet.accrueInterest(address(weth));
 
     // 5. cache "debt after accrue"
-    uint256 _globalDebtAfter = viewFacet.getGlobalDebtValue(address(weth));
+    uint256 _nonCollatDebtAfter = viewFacet.getNonCollatAccountDebt(ALICE, address(weth));
 
     // assert increasing debt (after - before) == _pendingInterest
-    assertEq(_globalDebtAfter - _globalDebtBefore, _pendingInterest);
+    assertEq(_nonCollatDebtAfter - _nonCollatDebtBefore, _pendingInterest);
   }
 }
