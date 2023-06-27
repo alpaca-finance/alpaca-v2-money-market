@@ -586,7 +586,7 @@ contract MoneyMarket_AccrueInterest_Borrow is MoneyMarket_BaseTest {
     assertEq(_borrowedUSDValue, 29 ether);
   }
 
-  function testCorrectness_WhenUserBorrowNonCollat_NonCollatPendingInterest_ShouldWork() external {
+  function testCorrectness_WhenUserBorrowNonCollat_ShouldAccrueInterestCorrectly() external {
     // 1. borrow non-collat
     vm.prank(ALICE);
     nonCollatBorrowFacet.nonCollatBorrow(address(weth), 9 ether);
