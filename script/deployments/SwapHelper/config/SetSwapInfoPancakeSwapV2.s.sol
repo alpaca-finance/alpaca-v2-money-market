@@ -29,6 +29,7 @@ contract SetSwapInfoPancakeSwapV2Script is BaseScript {
   Check all variables below before execute the deployment script
     */
 
+    _encodeAndPushPath(high, busd);
     // BUSD -> HIGH
     _encodeAndPushPath(busd, high);
 
