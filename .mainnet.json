@@ -42,7 +42,8 @@
       "strategyLiquidate": "",
       "strategyLiquidateIb": "0xa70bc3Ef35382f1222A75fBA9BDD413a9F21Ab7b",
       "strategyLiquidateIbV3": "0x980d31235aFfAad592f59b21B0c49B932E7a68A0"
-    }
+    },
+    "strategySwapHelperLiquidateIb": ""
   },
   "yieldSources": {
     "pancakeSwap": {
@@ -390,5 +391,6 @@
   "pathReader": {
     "pcsV3PathReader": "",
     "uniswapV2LikePathReader": ""
-  }
+  },
+  "swapHelper": ""
 }

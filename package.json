@@ -52,6 +52,7 @@
     "exec:bsc_mainnet:pancake-v3-liquidate-ib-strat:config:set-path": "forge script script/deployments/PancakeswapV3IbTokenLiquidationStrategy/config/SetPaths.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:liquidate-strat:config:set-caller-ok": "forge script script/deployments/PancakeswapV2LiquidationStrategy/config/SetCallersOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:liquidate-strat:config:set-path": "forge script script/deployments/PancakeswapV2LiquidationStrategy/config/SetPaths.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:swap-helper-liquidation-strat:deploy": "forge script script/deployments/SwapHelperIbLiquidationStrategy/deploy/SwapHelperIbLiquidationStrategy.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:deploy": "forge script script/deployments/AlpacaV2Oracle/deploy/AlpacaV2Oracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-token-config": "forge script script/deployments/AlpacaV2Oracle/config/SetTokenConfig.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-pools": "forge script script/deployments/AlpacaV2Oracle/config/SetPools.s.sol --rpc-url bsc_mainnet --broadcast --slow",

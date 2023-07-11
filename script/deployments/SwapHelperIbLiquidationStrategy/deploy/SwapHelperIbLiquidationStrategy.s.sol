@@ -3,11 +3,9 @@ pragma solidity 0.8.19;
 
 import "../../../BaseScript.sol";
 
-import { LibConstant } from "solidity/contracts/money-market/libraries/LibConstant.sol";
-import { ISmartTreasury } from "solidity/contracts/interfaces/ISmartTreasury.sol";
-import { TransparentUpgradeableProxy } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import { SwapHelperIbLiquidationStrategy } from "solidity/contracts/money-market/SwapHelperIbLiquidationStrategy.sol";
 
-contract SetAllocPointScript is BaseScript {
+contract DeploySwapHelperIbLiquidationStrategyScript is BaseScript {
   using stdJson for string;
 
   function run() public {
@@ -21,14 +19,15 @@ contract SetAllocPointScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint16 _revenueAllocPoint = 3158;
-    uint16 _devAllocPoint = 4737;
-    uint16 _burnAllocPoint = 2105;
+    address _swapHelper = address(swapHelper);
+    address _moneyMarket = address(moneyMarket);
 
     _startDeployerBroadcast();
 
-    smartTreasury.setAllocPoints(_revenueAllocPoint, _devAllocPoint, _burnAllocPoint);
+    address swapHelperIbLiquidationStrategy = address(new SwapHelperIbLiquidationStrategy(_swapHelper, _moneyMarket));
 
     _stopBroadcast();
+
+    _writeJson(vm.toString(swapHelperIbLiquidationStrategy), ".sharedStrategies.strategySwapHelperLiquidateIb");
   }
 }

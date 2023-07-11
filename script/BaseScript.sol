@@ -50,6 +50,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV2LiquidateStrat;
   address internal pancakeswapV2IbLiquidateStrat;
   address internal pancakeswapV3IbLiquidateStrat;
+  address internal swapHelperIbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   IAlpacaV2Oracle02 internal alpacaV2Oracle02;
   address internal simpleOracle;
@@ -136,6 +137,10 @@ abstract contract BaseScript is Script {
     );
     pancakeswapV3IbLiquidateStrat = abi.decode(
       configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIbV3"),
+      (address)
+    );
+    swapHelperIbLiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.strategySwapHelperLiquidateIb"),
       (address)
     );
 
