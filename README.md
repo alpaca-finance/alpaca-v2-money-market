@@ -74,6 +74,14 @@ If the used borrowing power / total borrowing power is greater than x%, the suba
 - To liquidate
   `LiquidationFacet.liquidationCall()` - Liquidate an underwater subaccount
 
+### Flashloan
+
+- To initiate flashloan
+  `FlashloanFacet.flashloan()` - Initiate a flashloan which will send the token to msg.sender
+
+- Implementing a callback to repay the flashloan
+  The contract that initiated a flashloan need to implement IAlpacaFlashloanCallback interface
+
 # Setting up the project
 
 - Install dependencies
