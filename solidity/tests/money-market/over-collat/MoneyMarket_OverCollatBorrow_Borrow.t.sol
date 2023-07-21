@@ -6,6 +6,7 @@ import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTes
 // libraries
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
 import { LibDoublyLinkedList } from "../../../contracts/money-market/libraries/LibDoublyLinkedList.sol";
+import { LibConstant } from "../../../contracts/money-market/libraries/LibConstant.sol";
 // interfaces
 import { IBorrowFacet } from "../../../contracts/money-market/interfaces/IBorrowFacet.sol";
 import { IAdminFacet } from "../../../contracts/money-market/interfaces/IAdminFacet.sol";
@@ -413,5 +414,62 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     _debtToken = viewFacet.getDebtTokenFromToken(_borrowToken);
     _poolId = viewFacet.getMiniFLPoolIdOfToken(_debtToken);
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, BOB), _borrowAmount);
+  }
+
+  function testRevert_WhenDemoteMarket_UserHasMoreThanOneIsolate_ShouldNotBeAbleToBorrow() public {
+    // prepare
+    usdc.mint(ALICE, 1e10);
+    vm.prank(ALICE);
+    accountManager.deposit(address(usdc), 1e10);
+
+    btc.mint(BOB, 1 ether);
+    mockOracle.setTokenPrice(address(btc), 30000 ether);
+
+    // BOB borrow weth and usdc
+    vm.startPrank(BOB);
+    btc.approve(address(accountManager), type(uint256).max);
+    accountManager.addCollateralFor(BOB, subAccount0, address(btc), 1 ether);
+    accountManager.borrow(subAccount0, address(weth), 1 ether);
+    accountManager.borrow(subAccount0, address(usdc), 1e8);
+    vm.stopPrank();
+
+    // Demote both token to ISOLATE tier
+    IAdminFacet.TokenConfigInput[] memory tokenConfigs = new IAdminFacet.TokenConfigInput[](2);
+    tokenConfigs[0] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.ISOLATE,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: 30 ether,
+      maxCollateral: 100 ether
+    });
+    tokenConfigs[1] = IAdminFacet.TokenConfigInput({
+      tier: LibConstant.AssetTier.ISOLATE,
+      collateralFactor: 9000,
+      borrowingFactor: 9000,
+      maxBorrow: normalizeEther(100 ether, 6),
+      maxCollateral: normalizeEther(100 ether, 6)
+    });
+    address[] memory tokens = new address[](2);
+    tokens[0] = address(weth);
+    tokens[1] = address(usdc);
+    adminFacet.setTokenConfigs(tokens, tokenConfigs);
+
+    // Should not be able to borrow anything after both got demoted
+    vm.startPrank(BOB);
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
+    accountManager.borrow(subAccount0, address(usdc), 1e8);
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
+    accountManager.borrow(subAccount0, address(btc), 0.01 ether);
+    // Should be able to repay
+    accountManager.repayFor(BOB, subAccount0, address(usdc), 1e8, 1e8);
+
+    // After repay one ISOLATE debt
+    // should be able to borrow more of the remaining token
+    accountManager.borrow(subAccount0, address(weth), 0.01 ether);
+    // should not be able to borrow any other token
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
+    accountManager.borrow(subAccount0, address(usdc), 1e8);
+    vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
+    accountManager.borrow(subAccount0, address(btc), 0.01 ether);
   }
 }
