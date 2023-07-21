@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Forge tests
         env:
-          BSC_RPC_URL: https://bsc-dataseed.binance.org/
+          BSC_RPC_URL: https://bsc-dataseed1.defibit.io
         run: |
           forge test -vvv
         id: test
