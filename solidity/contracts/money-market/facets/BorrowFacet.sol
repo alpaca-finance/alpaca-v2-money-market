@@ -48,12 +48,7 @@ contract BorrowFacet is IBorrowFacet {
   /// @param _subAccountId An index to derive the subaccount
   /// @param _token The token to borrow
   /// @param _amount The amount to borrow
-  function borrow(
-    address _account,
-    uint256 _subAccountId,
-    address _token,
-    uint256 _amount
-  ) external nonReentrant {
+  function borrow(address _account, uint256 _subAccountId, address _token, uint256 _amount) external nonReentrant {
     LibMoneyMarket01.MoneyMarketDiamondStorage storage moneyMarketDs = LibMoneyMarket01.moneyMarketDiamondStorage();
 
     LibMoneyMarket01.onlyLive(moneyMarketDs);
@@ -332,6 +327,14 @@ contract BorrowFacet is IBorrowFacet {
       if (
         !moneyMarketDs.subAccountDebtShares[_subAccount].has(_token) &&
         moneyMarketDs.subAccountDebtShares[_subAccount].size > 0
+      ) {
+        revert BorrowFacet_InvalidAssetTier();
+      }
+      // Edge case: when demote multiple market to ISOLATE at once
+      // there could be ISOLATE token along with something else in subaccount, forbid user from borrowing anything
+      if (
+        moneyMarketDs.subAccountDebtShares[_subAccount].has(_token) &&
+        moneyMarketDs.subAccountDebtShares[_subAccount].size > 1
       ) {
         revert BorrowFacet_InvalidAssetTier();
       }
