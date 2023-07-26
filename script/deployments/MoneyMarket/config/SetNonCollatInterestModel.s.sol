@@ -22,7 +22,6 @@ contract SetNonCollatInterestModelScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    bool isOk = true;
     address borrower = address(0);
     SetInterestModelInput[2] memory _input = [
       SetInterestModelInput({ token: usdt, interestModel: flatSlope1 }),
