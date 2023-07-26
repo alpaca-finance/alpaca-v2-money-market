@@ -23,7 +23,7 @@ contract SetNonCollatBorrowerOkScript is BaseScript {
     //---- execution ----//
     _startDeployerBroadcast();
 
-    moneyMarket.setNonCollatBorrowerOk(borrower, _isOk);
+    moneyMarket.setNonCollatBorrowerOk(borrower, isOk);
 
     _stopBroadcast();
   }
