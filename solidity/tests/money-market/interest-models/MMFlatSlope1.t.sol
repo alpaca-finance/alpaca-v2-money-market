@@ -14,18 +14,8 @@ contract MMFlatSlopeModel1_Test is BaseTest {
     _flatSlopeModel1 = new MMFlatSlopeModel1();
   }
 
-  function testCorrectness_getInterestRate() external {
-    // when utilization is 0%, interest should be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(0, 0), 0.06 ether);
-    // when utilization is 30%, interest should be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(30, 70), 0.06 ether);
-    // when utilization is 60%, interest shuold be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(60, 40), 0.06 ether);
-    // when utilization is 85%, interest should be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(85, 15), 0.06 ether);
-    // when utilization is 90%, interest should be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(90, 10), 0.06 ether);
-    // when utilization is 100%, interest should be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(100, 0), 0.06 ether);
+  function testFuzz_getInterestRate(uint256 debt, uint256 floating) external {
+    // when utilization is whatever, interest will always be 6.00%
+    assertEq(_flatSlopeModel1.getInterestRate(debt, floating), 0.06 ether);
   }
 }
