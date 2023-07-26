@@ -14,8 +14,12 @@ contract MMFlatSlopeModel1_Test is BaseTest {
     _flatSlopeModel1 = new MMFlatSlopeModel1();
   }
 
+  function _findInterestPerYear(uint256 _interestPerSec) internal pure returns (uint256) {
+    return _interestPerSec * 365 days;
+  }
+
   function testFuzz_getInterestRate(uint256 debt, uint256 floating) external {
-    // when utilization is whatever, interest will always be 6.00%
-    assertEq(_flatSlopeModel1.getInterestRate(debt, floating), 0.06 ether);
+    // when utilization is whatever, interest will always be 5.99% ~ 6.00%
+    assertEq(_findInterestPerYear(_flatSlopeModel1.getInterestRate(debt, floating)), 0.059999999999184000 ether);
   }
 }
