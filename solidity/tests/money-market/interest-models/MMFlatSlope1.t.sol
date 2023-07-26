@@ -3,15 +3,15 @@ pragma solidity 0.8.19;
 
 import { BaseTest, console } from "../../base/BaseTest.sol";
 
-import { MMFlatSlopeModel1, IInterestRateModel } from "../../../contracts/money-market/interest-models/MMFlatSlopeModel1.sol";
+import { MMFlatSlopeModel1 } from "../../../contracts/money-market/interest-models/MMFlatSlopeModel1.sol";
 
 // solhint-disable func-name-mixedcase
 // solhint-disable contract-name-camelcase
 contract MMFlatSlopeModel1_Test is BaseTest {
-  IInterestRateModel private _flatSlopeModel1;
+  MMFlatSlopeModel1 private _flatSlopeModel1;
 
   function setUp() external {
-    _flatSlopeModel1 = IInterestRateModel(address(new MMFlatSlopeModel1()));
+    _flatSlopeModel1 = new MMFlatSlopeModel1();
   }
 
   function _findInterestPerYear(uint256 _interestPerSec) internal pure returns (uint256) {
