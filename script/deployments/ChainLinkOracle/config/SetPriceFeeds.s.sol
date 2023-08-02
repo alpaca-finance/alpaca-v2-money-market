@@ -31,21 +31,12 @@ contract SetPriceFeedsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // DOGE
+    // ADA
     addSetPriceFeeds(
       SetPriceFeedsInput({
-        token0: doge,
+        token0: ada,
         token1: usdPlaceholder,
-        source: IAggregatorV3(0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8)
-      })
-    );
-
-    // LTC
-    addSetPriceFeeds(
-      SetPriceFeedsInput({
-        token0: ltc,
-        token1: usdPlaceholder,
-        source: IAggregatorV3(0x74E72F37A8c415c8f1a98Ed42E78Ff997435791D)
+        source: IAggregatorV3(0xa767f745331D267c7751297D982b050c93985627)
       })
     );
 

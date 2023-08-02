@@ -19,7 +19,7 @@ contract SetTokenMaximumCapacitiesScript is BaseScript {
 
     address token = the;
     uint256 newMaxCollateral = 0;
-    uint256 newMaxBorrow = 2_000_000 ether;
+    uint256 newMaxBorrow = 2_500_000 ether;
 
     //---- execution ----//
     _startDeployerBroadcast();

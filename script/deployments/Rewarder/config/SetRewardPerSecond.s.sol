@@ -17,9 +17,9 @@ contract SetRewardPerSecondScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // 152,500 over 8 weeks Thena over 8 weeks = 0.031518683862433862 the Per Second
-    IRewarder rewarder = IRewarder(0x5706ef757a635A986032cfe14e7B12EBA9f118Fd);
-    uint256 _newRewardPerSecond = 31518683862433862;
+    // 32,500 High over 8 weeks = 0.006717096560846561 High Per Second
+    IRewarder rewarder = IRewarder(0x527c87bDBEB012f9f27A75dC3D5CC3F0Dd51B3bB);
+    uint256 _newRewardPerSecond = 0;
     bool _withUpdate = true;
 
     //---- execution ----//

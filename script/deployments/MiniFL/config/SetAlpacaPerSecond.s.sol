@@ -15,7 +15,7 @@ contract SetAlpacaPerSecondScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint256 _newAlpacaPerSecond = 0.1421957671957672 ether;
+    uint256 _newAlpacaPerSecond = 0;
     bool _withUpdate = true;
 
     //---- execution ----//

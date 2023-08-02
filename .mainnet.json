@@ -392,6 +392,6 @@
   "pathReader": {
     "pcsV3PathReader": "",
     "uniswapV2LikePathReader": ""
-  },
+  }
   "swapHelper": ""
 }

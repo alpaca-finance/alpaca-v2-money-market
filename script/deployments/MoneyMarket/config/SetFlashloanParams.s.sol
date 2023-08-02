@@ -17,7 +17,7 @@ contract SetFlashloanParamsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    uint16 flashloanFeeBps = 19;
+    uint16 flashloanFeeBps = 9;
     uint16 lenderFlashloanBps = 7000;
     address flashloanTreasury = 0x0d5CD78A4268CB579bA7253a3279060F46541001;
 
