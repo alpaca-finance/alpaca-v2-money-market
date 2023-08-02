@@ -164,6 +164,14 @@
         "ibToken": "0x91E3A9B3f5a2c02Dd5cd40733fe4d52a87A213d9",
         "debtToken": "0x2C8A7592828007eF33D87B49732F174D9A0b6759",
         "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "ADA",
+        "tier": "COLLATERAL",
+        "token": "0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47",
+        "ibToken": "0x674d38092D177A9b074e5CAA5D45315eaAcEc790",
+        "debtToken": "0xA57Ce447a14Ec8822105bF2c8f8456fcC0ba4dF4",
+        "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
       }
     ],
     "accountManager": {
@@ -343,6 +351,18 @@
             "rewardToken": "0xF4C8E32EaDEC4BFe97E0F595AdD0f4450a863a11"
           }
         ]
+      },
+      {
+        "id": 25,
+        "name": "ibADA",
+        "stakingToken": "0x674d38092D177A9b074e5CAA5D45315eaAcEc790",
+        "rewarders": []
+      },
+      {
+        "id": 26,
+        "name": "debtADA",
+        "stakingToken": "0xA57Ce447a14Ec8822105bF2c8f8456fcC0ba4dF4",
+        "rewarders": []
       }
     ]
   },

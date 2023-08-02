@@ -22,12 +22,9 @@ contract SetPoolScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // doge
-    setIbAllocPoint(doge, 10);
-    setDebtAllocPoint(doge, 15);
-    // ltc
-    setIbAllocPoint(ltc, 10);
-    setDebtAllocPoint(ltc, 15);
+    // ada
+    setIbAllocPoint(ada, 10);
+    setDebtAllocPoint(ada, 15);
 
     //---- execution ----//
     _startDeployerBroadcast();

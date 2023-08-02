@@ -42,14 +42,14 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // THE
+    // ADA
     addSetMultiPrimarySources(
       SetMultiPrimarySourcesInput({
-        token0: the,
+        token0: ada,
         token1: usdPlaceholder,
         maxPriceDeviation: 1e18,
         maxPriceStale: 1 days,
-        priceSources: simpleOraclePriceSource
+        priceSources: chainlinkPriceSource
       })
     );
 
