@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.19;
+pragma solidity >=0.8.19;
 
 interface ILiquidationFacet {
   error LiquidationFacet_Unauthorized();

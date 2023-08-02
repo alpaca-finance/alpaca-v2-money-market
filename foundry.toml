@@ -8,6 +8,7 @@ libs = ['node_modules']
 test = 'solidity/tests'
 fs_permissions = [{ access = "read-write", path = "./" }]
 ffi = true
+solc = "0.8.19"
 
 
 [rpc_endpoints]
