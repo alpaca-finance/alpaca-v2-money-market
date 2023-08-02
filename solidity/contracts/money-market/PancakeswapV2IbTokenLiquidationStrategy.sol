@@ -63,7 +63,8 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
     address _repayToken,
     uint256 _ibTokenAmountIn,
     uint256 _repayAmount,
-    uint256 _minReceive
+    uint256 _minReceive,
+    bytes memory /* _data */
   ) external onlyWhitelistedCallers {
     // get underlying tokenAddress from MoneyMarket
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);
@@ -126,11 +127,10 @@ contract PancakeswapV2IbTokenLiquidationStrategy is ILiquidationStrategy, Ownabl
   /// @dev get required amount of token for swapping
   /// @param _repayAmount The amount needed to repay
   /// @param _path The path for collateralToken to repayToken
-  function _getRequiredUnderlyingAmount(uint256 _repayAmount, address[] memory _path)
-    internal
-    view
-    returns (uint256 _requiredUnderlyingAmount)
-  {
+  function _getRequiredUnderlyingAmount(
+    uint256 _repayAmount,
+    address[] memory _path
+  ) internal view returns (uint256 _requiredUnderlyingAmount) {
     uint256[] memory amountsIn = router.getAmountsIn(_repayAmount, _path);
     // underlying token amount to swap
     _requiredUnderlyingAmount = amountsIn[0];

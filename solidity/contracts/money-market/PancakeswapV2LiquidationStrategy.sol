@@ -57,7 +57,8 @@ contract PancakeswapV2LiquidationStrategy is ILiquidationStrategy, Ownable {
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    uint256 _minReceive
+    uint256 _minReceive,
+    bytes memory /* _data */
   ) external onlyWhitelistedCallers {
     address[] memory _path = paths[_collatToken][_repayToken];
 

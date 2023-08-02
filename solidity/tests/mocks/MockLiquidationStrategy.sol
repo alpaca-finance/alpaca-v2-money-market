@@ -32,14 +32,18 @@ contract MockLiquidationStrategy is ILiquidationStrategy, Ownable {
     address _repayToken,
     uint256 _collatAmountIn,
     uint256 _repayAmount,
-    uint256 /* _minReceive */
+    uint256 /* _minReceive */,
+    bytes memory /* _data */
   ) external {
-    (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
-    (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
-    uint256 _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
+    uint256 _priceCollatPerRepayToken;
+    {
+      (uint256 _collatPrice, ) = _mockOracle.getTokenPrice(_collatToken);
+      (uint256 _repayTokenPrice, ) = _mockOracle.getTokenPrice(_repayToken);
+      _priceCollatPerRepayToken = (_collatPrice * 1e18) / _repayTokenPrice;
+    }
 
-    uint256 _repayTo18ConvertFactor = 10**(18 - ERC20(_repayToken).decimals());
-    uint256 _collatTo18ConvertFactor = 10**(18 - ERC20(_collatToken).decimals());
+    uint256 _repayTo18ConvertFactor = 10 ** (18 - ERC20(_repayToken).decimals());
+    uint256 _collatTo18ConvertFactor = 10 ** (18 - ERC20(_collatToken).decimals());
 
     uint256 _collatSold = (_repayAmount * _repayTo18ConvertFactor * 1e18) / _priceCollatPerRepayToken;
     uint256 _actualCollatSold = _collatSold > _collatAmountIn ? _collatAmountIn : _collatSold;

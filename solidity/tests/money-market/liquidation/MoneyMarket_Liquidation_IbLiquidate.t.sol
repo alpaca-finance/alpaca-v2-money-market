@@ -191,6 +191,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | USDC      | 1            |
     // | ------------------------ |
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
       address(_ibTokenLiquidationStrat),
@@ -198,7 +199,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       _debtToken,
       _ibCollatToken,
-      0
+      _collateralAmount,
+      0,
+      ""
     );
 
     // | Calculation When Liquidate ALICE Position
@@ -245,6 +248,99 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     uint256 _expectedIbTokenToWithdraw = 37.879484528586034722 ether;
     uint256 _expectedUnderlyingWitdrawnAmount = 37.881407499999999999 ether;
     uint256 _expectedLiquidationFeeToTrasury = normalizeEther(0.300049 ether, usdcDecimal);
+
+    _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
+    _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
+    _assertWithdrawnUnderlying(_underlyingToken, _expectedUnderlyingWitdrawnAmount, _stateBefore);
+    _assertTreasuryFee(_debtToken, _expectedLiquidationFeeToTrasury, _stateBefore);
+
+    // check staking ib token in MiniFL
+    uint256 _poolId = viewFacet.getMiniFLPoolIdOfToken(_ibCollatToken);
+    assertEq(_miniFL.getUserTotalAmountOf(_poolId, ALICE), 40 ether - _expectedIbTokenToWithdraw);
+  }
+
+  function testCorrectness_WhenPartialLiquidateIbt_ShouldPartialLiquidateDebtOnThatToken() external {
+    adminFacet.setLiquidationParams(10000, 11111); // allow liquidation of entire subAccount
+
+    // criteria
+    address _ibCollatToken = address(ibWeth);
+    address _underlyingToken = address(weth);
+    address _debtToken = address(usdc);
+
+    vm.prank(ALICE);
+    accountManager.borrow(0, _debtToken, normalizeEther(30 ether, usdcDecimal));
+    // | After Alice borrow 30 USDC
+    // | ---------------------------------------------- |
+    // | State                        | AMOUNT (ether)  |
+    // | ---------------------------- | --------------- |
+    // | ALICE USDC Debt Share        | 30              |
+    // | Global USDC Debt Share       | 30              |
+    // | Global USDC Debt Value       | 30              |
+    // | ---------------------------------------------- |
+
+    vm.prank(BOB);
+    accountManager.borrow(0, _underlyingToken, 24 ether);
+    // | After BOB borrow 24 WETH
+    // | ---------------------------------------------- |
+    // | State                        | AMOUNT (ether)  |
+    // | ---------------------------- | --------------- |
+    // | BOB WETH Debt Share          | 24              |
+    // | Global WETH Debt Share       | 24              |
+    // | Global WETH Debt Value       | 24              |
+    // | ---------------------------------------------- |
+
+    // Time past for 1 day
+    vm.warp(block.timestamp + 1 days);
+    // | After Time past for 1 Day
+    // | -------------------------------------------------------------------- |
+    // | State                        | Interest Rate : Day | Utilization (%) |
+    // | ---------------------------- | ------------------- | --------------- |
+    // | USDC Debt Interate rate      | 0.00016921837224    | 30% (30 : 100)  |
+    // | WETH Debt Interate rate      | 0.00016921837224    | 30% (30 : 100)  |
+    // | -------------------------------------------------------------------- |
+
+    // Pending interest formula = Borrowed Amount * Interest Rate
+    // USDC Debt Pending Interest = 30 * 0.00016921837224 = 0.005076
+    // WETH Debt Pending Interest = 24 * 0.00016921837224 = 0.00406124093376
+    uint256 _pendingInterest = viewFacet.getGlobalPendingInterest(_debtToken);
+    assertEq(_pendingInterest, normalizeEther(0.005076 ether, usdcDecimal), "pending interest for _debtToken");
+    uint256 _underlyingInterest = viewFacet.getGlobalPendingInterest(_underlyingToken);
+    assertEq(_underlyingInterest, 0.00406124093376 ether, "pending interest for _underlyingToken");
+
+    CacheState memory _stateBefore = _cacheState(ALICE, subAccount0, _ibCollatToken, _underlyingToken, _debtToken);
+
+    // Prepare before liquidation
+    // Dump WETH price from 1 USD to 0.8 USD, make position unhealthy
+    mockOracle.setTokenPrice(_underlyingToken, 8e17);
+    mockOracle.setTokenPrice(_debtToken, 1 ether);
+    // | ------------------------ |
+    // | TOKEN     | Price (USD)  |
+    // | ------------------------ |
+    // | WETH      | 0.8          |
+    // | USDC      | 1            |
+    // | ------------------------ |
+
+    // trying to liquidate half of collateral
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
+    vm.prank(liquidator);
+    liquidationFacet.liquidationCall(
+      address(_ibTokenLiquidationStrat),
+      ALICE,
+      _aliceSubAccountId,
+      _debtToken,
+      _ibCollatToken,
+      _collateralAmount / 2,
+      0,
+      ""
+    );
+
+    // Expectation
+    uint256 _expectedIbTokenToWithdraw = 20 ether;
+    uint256 _expectedUnderlyingWitdrawnAmount = 20.001015310233440000 ether;
+    // repaying 16.0008122481868
+    // actual repaid  = 16.0008122481868 * 100 / 101 = 15.8423883645
+    uint256 _expectedRepaidAmount = normalizeEther(15.842389 ether, usdcDecimal);
+    uint256 _expectedLiquidationFeeToTrasury = normalizeEther(0.15842389 ether, usdcDecimal);
 
     _assertDebt(ALICE, _aliceSubAccountId, _debtToken, _expectedRepaidAmount, _pendingInterest, _stateBefore);
     _assertIbTokenCollatAndTotalSupply(ALICE, subAccount0, _ibCollatToken, _expectedIbTokenToWithdraw, _stateBefore);
@@ -328,6 +424,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     // | WETH      | 0.8          |
     // | USDC      | 1            |
     // | ------------------------ |
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
 
     vm.prank(liquidator);
     liquidationFacet.liquidationCall(
@@ -336,7 +433,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       _debtToken,
       _ibCollatToken,
-      0
+      _collateralAmount,
+      0,
+      ""
     );
 
     // | Calculation When Liquidate ALICE Position
@@ -414,6 +513,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(_debtToken, 1 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, _ibCollatToken);
+
     vm.prank(liquidator);
     vm.expectRevert(
       abi.encodeWithSelector(
@@ -428,7 +529,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       _debtToken,
       _ibCollatToken,
-      0
+      _collateralAmount,
+      0,
+      ""
     );
   }
 
@@ -448,6 +551,8 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(usdc), 1e18);
     mockOracle.setTokenPrice(address(btc), 10 ether);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, address(ibWeth));
+
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_Healthy.selector));
     liquidationFacet.liquidationCall(
@@ -456,7 +561,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       address(usdc),
       address(ibWeth),
-      0
+      _collateralAmount,
+      0,
+      ""
     );
   }
 
@@ -467,6 +574,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     mockOracle.setTokenPrice(address(weth), 8e17);
     mockOracle.setTokenPrice(address(usdc), 1e18);
 
+    uint256 _collateralAmount = viewFacet.getCollatAmountOf(ALICE, _aliceSubAccountId, address(ibWeth));
     vm.prank(liquidator);
     vm.expectRevert(abi.encodeWithSelector(ILiquidationFacet.LiquidationFacet_RepayAmountExceedThreshold.selector));
     liquidationFacet.liquidationCall(
@@ -475,7 +583,9 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
       _aliceSubAccountId,
       address(usdc),
       address(ibWeth),
-      0
+      _collateralAmount,
+      0,
+      ""
     );
   }
 
@@ -559,11 +669,7 @@ contract MoneyMarket_Liquidation_IbLiquidateTest is MoneyMarket_BaseTest {
     );
   }
 
-  function _assertTreasuryFee(
-    address _debtToken,
-    uint256 _feeToTreasury,
-    CacheState memory _cache
-  ) internal {
+  function _assertTreasuryFee(address _debtToken, uint256 _feeToTreasury, CacheState memory _cache) internal {
     assertEq(
       MockERC20(_debtToken).balanceOf(liquidationTreasury),
       _cache.treasuryDebtTokenBalance + _feeToTreasury,

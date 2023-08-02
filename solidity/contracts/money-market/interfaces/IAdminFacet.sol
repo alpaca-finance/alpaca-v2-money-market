@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.19;
+pragma solidity >=0.8.19;
 
 import { LibConstant } from "../libraries/LibConstant.sol";
 

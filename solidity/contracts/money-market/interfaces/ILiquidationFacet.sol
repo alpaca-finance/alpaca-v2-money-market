@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.19;
+pragma solidity >=0.8.19;
 
 interface ILiquidationFacet {
   error LiquidationFacet_Unauthorized();
@@ -9,6 +9,7 @@ interface ILiquidationFacet {
   error LiquidationFacet_RepayAmountMismatch();
   error LiquidationFacet_CollateralNotExist();
   error LiquidationFacet_TooMuchRepayToken();
+  error LiquidationFacet_InvalidParams();
 
   function repurchase(
     address _account,
@@ -24,6 +25,8 @@ interface ILiquidationFacet {
     uint256 _subAccountId,
     address _repayToken,
     address _collatToken,
-    uint256 _minReceive
+    uint256 _collatAmount,
+    uint256 _minReceive,
+    bytes calldata _data
   ) external;
 }

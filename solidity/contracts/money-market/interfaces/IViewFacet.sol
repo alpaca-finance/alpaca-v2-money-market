@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL
-pragma solidity 0.8.19;
+pragma solidity >=0.8.19;
 
 // libs
 import { LibConstant } from "../libraries/LibConstant.sol";
@@ -45,6 +45,11 @@ interface IViewFacet {
   function getOverCollatInterestModel(address _token) external view returns (address);
 
   function getOverCollatPendingInterest(address _token) external view returns (uint256 _pendingInterest);
+
+  function getNonCollatPendingInterest(address _account, address _token)
+    external
+    view
+    returns (uint256 _pendingInterest);
 
   function getGlobalPendingInterest(address _token) external view returns (uint256);
 

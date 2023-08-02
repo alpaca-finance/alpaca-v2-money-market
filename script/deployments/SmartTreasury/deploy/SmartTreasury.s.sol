@@ -27,10 +27,8 @@ contract DeploySmartTreasuryScript is BaseScript {
 
     // deploy proxy
     bytes memory data = abi.encodeWithSelector(
-      bytes4(keccak256("initialize(address,address,address,address)")),
-      address(uniswapV2LikePathReader),
-      address(pancakeswapRouterV3),
-      address(pcsV3PathReader),
+      bytes4(keccak256("initialize(address,address)")),
+      address(swapHelper),
       oracleMedianizer
     );
     address smartTreasuryProxy = address(

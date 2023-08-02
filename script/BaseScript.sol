@@ -21,6 +21,7 @@ import { IAlpacaV2Oracle } from "solidity/contracts/oracle/interfaces/IAlpacaV2O
 import { IAlpacaV2Oracle02 } from "solidity/contracts/oracle/interfaces/IAlpacaV2Oracle02.sol";
 import { IERC20 } from "solidity/contracts/money-market/interfaces/IERC20.sol";
 import { IFeeModel } from "solidity/contracts/money-market/interfaces/IFeeModel.sol";
+import { ISwapHelper } from "solidity/contracts/interfaces/ISwapHelper.sol";
 
 interface IMoneyMarket is IAdminFacet, IViewFacet, ICollateralFacet, IBorrowFacet, ILendFacet, IMMOwnershipFacet {}
 
@@ -49,6 +50,7 @@ abstract contract BaseScript is Script {
   address internal pancakeswapV2LiquidateStrat;
   address internal pancakeswapV2IbLiquidateStrat;
   address internal pancakeswapV3IbLiquidateStrat;
+  address internal swapHelperIbLiquidateStrat;
   IAlpacaV2Oracle internal alpacaV2Oracle;
   IAlpacaV2Oracle02 internal alpacaV2Oracle02;
   address internal simpleOracle;
@@ -56,12 +58,16 @@ abstract contract BaseScript is Script {
   address internal pancakeswapRouterV2;
   address internal pancakeswapRouterV3;
   ISmartTreasury internal smartTreasury;
+  ISwapHelper internal swapHelper;
+  address internal thenaSwapRouterV2;
+  address internal thenaSwapRouterV3;
 
   // shareConfig
   address internal fixFeeModel500Bps;
   address internal doubleSlope1;
   address internal doubleSlope2;
   address internal doubleSlope3;
+  address internal flatSlope1;
 
   // path reader
   address internal uniswapV2LikePathReader;
@@ -99,15 +105,20 @@ abstract contract BaseScript is Script {
     accountManager = abi.decode(configJson.parseRaw(".moneyMarket.accountManager.proxy"), (IMoneyMarketAccountManager));
     nativeRelayer = abi.decode(configJson.parseRaw(".nativeRelayer"), (address));
     usdPlaceholder = abi.decode(configJson.parseRaw(".usdPlaceholder"), (address));
+    swapHelper = abi.decode(configJson.parseRaw(".swapHelper"), (ISwapHelper));
 
     pancakeswapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV2"), (address));
     pancakeswapFactoryV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.factoryV3"), (address));
     pancakeswapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.pancakeSwap.routerV3"), (address));
 
+    thenaSwapRouterV2 = abi.decode(configJson.parseRaw(".yieldSources.thenaDex.routerV2"), (address));
+    thenaSwapRouterV3 = abi.decode(configJson.parseRaw(".yieldSources.thenaDex.routerV3"), (address));
+
     fixFeeModel500Bps = abi.decode(configJson.parseRaw(".sharedConfig.fixFeeModel500Bps"), (address));
     doubleSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope1"), (address));
     doubleSlope2 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope2"), (address));
     doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
+    flatSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.flatSlope1"), (address));
 
     // path reader
     uniswapV2LikePathReader = abi.decode(configJson.parseRaw(".pathReader.uniswapV2LikePathReader"), (address));
@@ -128,6 +139,10 @@ abstract contract BaseScript is Script {
     );
     pancakeswapV3IbLiquidateStrat = abi.decode(
       configJson.parseRaw(".sharedStrategies.pancakeswap.strategyLiquidateIbV3"),
+      (address)
+    );
+    swapHelperIbLiquidateStrat = abi.decode(
+      configJson.parseRaw(".sharedStrategies.strategySwapHelperLiquidateIb"),
       (address)
     );
 

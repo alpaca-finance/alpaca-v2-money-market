@@ -43,11 +43,7 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
     _;
   }
 
-  constructor(
-    address _router,
-    address _moneyMarket,
-    address _pathReader
-  ) {
+  constructor(address _router, address _moneyMarket, address _pathReader) {
     router = IPancakeSwapRouterV3(_router);
     moneyMarket = IMoneyMarket(_moneyMarket);
     pathReader = IUniSwapV3PathReader(_pathReader);
@@ -62,8 +58,9 @@ contract PancakeswapV3IbTokenLiquidationStrategy_WithPathReader is ILiquidationS
     address _ibToken,
     address _repayToken,
     uint256 _ibTokenAmountIn,
-    uint256, /*_repayAmount*/
-    uint256 _minReceive
+    uint256 /*_repayAmount*/,
+    uint256 _minReceive,
+    bytes memory /* _data */
   ) external onlyWhitelistedCallers {
     // get underlying tokenAddress from MoneyMarket
     address _underlyingToken = moneyMarket.getTokenFromIbToken(_ibToken);

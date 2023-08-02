@@ -46,16 +46,17 @@ contract SmartTreasury_Distribute is BaseFork {
     // top up wbnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
 
-    address[] memory _tokens = new address[](1);
-    _tokens[0] = address(wbnb);
-    vm.prank(ALICE);
-    smartTreasury.distribute(_tokens);
-
     // expect amount in usdt
     (uint256 _expectedAmountOut, , , ) = quoterV2.quoteExactInput(
       abi.encodePacked(address(wbnb), uint24(500), address(usdt)),
       10 ether
     );
+
+    // distribute
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = address(wbnb);
+    vm.prank(ALICE);
+    smartTreasury.distribute(_tokens);
 
     // state after distribute
     uint256 _USDTrevenueBalanceAfter = IERC20(address(usdt)).balanceOf(REVENUE_TREASURY);
@@ -91,20 +92,22 @@ contract SmartTreasury_Distribute is BaseFork {
     assertEq(_WBNBTreasuryBalanceAfter, _WBNBTreasuryBalanceBefore, "Smart treasury balance (WBNB)");
   }
 
-  function testRevert_DistributeWithNonExistingRevenueToken_ShouldRevert() external {
-    deal(address(cake), address(smartTreasury), 30 ether);
-    uint256 _cakeTreasuryBalanceBefore = IERC20(address(cake)).balanceOf(address(smartTreasury));
+  function testRevert_DistributeWhenPathNotSet_ShouldRevert() external {
+    deal(address(btcb), address(smartTreasury), 30 ether);
+    uint256 _btcbTreasuryBalanceBefore = IERC20(address(btcb)).balanceOf(address(smartTreasury));
 
     address[] memory _tokens = new address[](1);
-    _tokens[0] = address(cake);
+    _tokens[0] = address(btcb);
 
     vm.prank(ALICE);
-    vm.expectRevert(ISmartTreasury.SmartTreasury_PathConfigNotFound.selector);
+    vm.expectRevert(
+      abi.encodeWithSignature("SwapHelper_SwapInfoNotFound(address,address)", address(btcb), address(usdt))
+    );
     smartTreasury.distribute(_tokens);
 
     // Smart treasury after distributed must equal to before
-    uint256 _cakeTreasuryBalanceAfter = IERC20(address(cake)).balanceOf(address(smartTreasury));
-    assertEq(_cakeTreasuryBalanceAfter, _cakeTreasuryBalanceBefore, "Smart treasury balance (Cake)");
+    uint256 _cakeTreasuryBalanceAfter = IERC20(address(btcb)).balanceOf(address(smartTreasury));
+    assertEq(_cakeTreasuryBalanceAfter, _btcbTreasuryBalanceBefore, "Smart treasury balance (Cake)");
   }
 
   function testCorrectness_DistributeFailedFromSwap_ShouldNotDistribute() external {
@@ -176,11 +179,11 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testRevert_WhenOracleGetPriceFailed_ShouldRevert() external {
-    // set path for cake to usdt
-    bytes[] memory _paths = new bytes[](1);
-    _paths[0] = abi.encodePacked(address(cake), uint24(2500), address(usdt));
-    pathReaderV3.setPaths(_paths);
-
+    _setSwapHelperSwapInfoPCSV3(
+      address(cake),
+      address(usdt),
+      abi.encodePacked(address(cake), uint24(2500), address(usdt))
+    );
     deal(address(cake), address(smartTreasury), 30 ether);
 
     // call distribute
@@ -201,9 +204,11 @@ contract SmartTreasury_Distribute is BaseFork {
 
     uint256 _distributeAmount = normalizeEther(3 ether, doge.decimals());
 
-    bytes[] memory _paths = new bytes[](1);
-    _paths[0] = abi.encodePacked(address(doge), uint24(2500), address(wbnb));
-    pathReaderV3.setPaths(_paths);
+    _setSwapHelperSwapInfoPCSV3(
+      address(doge),
+      address(wbnb),
+      abi.encodePacked(address(doge), uint24(2500), address(wbnb))
+    );
 
     // mock price doge on oracle doge = 0.0715291 * 1e18
     vm.mockCall(
@@ -339,29 +344,17 @@ contract SmartTreasury_Distribute is BaseFork {
   }
 
   function testCorrectness_WhenV3NoLiquidity_V2Liquidity_ShouldSupport() external {
-    // set path v2
+    // replace with path v2
     address[] memory _pathV2 = new address[](2);
     _pathV2[0] = address(wbnb);
     _pathV2[1] = address(usdt);
-    IUniSwapV2PathReader.PathParams[] memory _pathV2Param = new IUniSwapV2PathReader.PathParams[](1);
-    _pathV2Param[0] = IUniSwapV2PathReader.PathParams(address(routerV2), _pathV2);
-    pathReaderV2.setPaths(_pathV2Param);
+    _setSwapHelperSwapInfoPCSV2(address(wbnb), address(usdt), _pathV2);
 
     // top up wbnb to smart treasury
     deal(address(wbnb), address(smartTreasury), 30 ether);
 
-    // mock call that v3 path not exists
-    vm.mockCall(
-      address(pathReaderV3),
-      abi.encodeWithSelector(IUniSwapV3PathReader.paths.selector, address(wbnb), address(usdt)),
-      abi.encode(0)
-    );
-
     // expect amount out
-    uint256[] memory _expectedAmount = routerV2.getAmountsOut(
-      10 ether,
-      pathReaderV2.getPath(address(wbnb), address(usdt)).path
-    );
+    uint256[] memory _expectedAmount = routerV2.getAmountsOut(10 ether, _pathV2);
 
     address[] memory _tokens = new address[](1);
     _tokens[0] = address(wbnb);
