@@ -8,10 +8,10 @@ import { MMFlatSlopeModel2 } from "../../../contracts/money-market/interest-mode
 // solhint-disable func-name-mixedcase
 // solhint-disable contract-name-camelcase
 contract MMFlatSlopeModel2_Test is BaseTest {
-  MMFlatSlopeModel2 private _flatSlopeModel1;
+  MMFlatSlopeModel2 private _flatSlopeModel2;
 
   function setUp() external {
-    _flatSlopeModel1 = new MMFlatSlopeModel2();
+    _flatSlopeModel2 = new MMFlatSlopeModel2();
   }
 
   function _findInterestPerYear(uint256 _interestPerSec) internal pure returns (uint256) {
@@ -20,6 +20,6 @@ contract MMFlatSlopeModel2_Test is BaseTest {
 
   function testFuzz_getInterestRate(uint256 debt, uint256 floating) external {
     // when utilization is whatever, interest will always be 4.99% ~ 5.00%
-    assertEq(_findInterestPerYear(_flatSlopeModel1.getInterestRate(debt, floating)), 0.049999999994064000 ether);
+    assertEq(_findInterestPerYear(_flatSlopeModel2.getInterestRate(debt, floating)), 0.049999999994064000 ether);
   }
 }
