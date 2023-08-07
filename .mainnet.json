@@ -36,7 +36,8 @@
     "doubleSlope1": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314",
     "doubleSlope2": "0x89c53B34b5E6A1D0b2922941749e9Ee05ce58b42",
     "doubleSlope3": "0x4132392C57B9D2DE1BA393A03f23Fcb880Bf8EE1",
-    "flatSlope1": ""
+    "flatSlope1": "0x67e5308813382E4dd06246d3c72035209f6Bae3C",
+    "flatSlope2": ""
   },
   "sharedStrategies": {
     "pancakeswap": {
@@ -392,6 +393,6 @@
   "pathReader": {
     "pcsV3PathReader": "",
     "uniswapV2LikePathReader": ""
-  }
+  },
   "swapHelper": ""
 }

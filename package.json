@@ -72,6 +72,7 @@
     "exec:bsc_mainnet:double-slope-model2:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:double-slope-model3:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel3.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:flat-slope-model1:deploy": "forge script script/deployments/InterestModels/deploy/MMFlatSlopeModel1.s.sol --rpc-url bsc_mainnet --broadcast --slow",
+    "exec:bsc_mainnet:flat-slope-model2:deploy": "forge script script/deployments/InterestModels/deploy/MMFlatSlopeModel2.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:rewarder:deploy": "forge script script/deployments/Rewarder/deploy/Rewarder.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:rewarder:config:add-pool": "forge script script/deployments/Rewarder/config/AddPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:rewarder:config:set-pool": "forge script script/deployments/Rewarder/config/SetPool.s.sol --rpc-url bsc_mainnet --broadcast --slow",
