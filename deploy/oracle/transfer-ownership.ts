@@ -22,7 +22,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const deployer = await getDeployer();
   const multiSig = config.opMultiSig;
 
-  const alpacaV2Oracle = Ownable__factory.connect(config.oracle.alpacaV2Oracle, deployer);
   const alpacaV2Oracle02 = Ownable__factory.connect(config.oracle.alpacaV2Oracle02, deployer);
   const chainlinkOracle = Ownable__factory.connect(config.oracle.chainlinkOracle, deployer);
   const oracleMedianizer = Ownable__factory.connect(config.oracle.oracleMedianizer, deployer);
@@ -30,17 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("----------------------");
   console.log(">>> Transfer Oracles Ownership\n");
 
-  console.log(await alpacaV2Oracle.owner());
-  console.log(await alpacaV2Oracle02.owner());
-  console.log(await chainlinkOracle.owner());
-  console.log(await oracleMedianizer.owner());
-
   console.log(`> Transfering ownership from ${deployer.address} to multisig (${multiSig}}) ...\n`);
-
-  console.log("> alpacaV2Oracle");
-  const v2OracleTx = await alpacaV2Oracle.transferOwnership(multiSig);
-  await v2OracleTx.wait();
-  console.log(`> ✅ Tx hash: ${v2OracleTx.hash}\n`);
 
   console.log("> alpacaV2Oracle02");
   const v2Oracle02Tx = await alpacaV2Oracle02.transferOwnership(multiSig);
