@@ -97,7 +97,8 @@
     "exec:bsc_mainnet:money-market:upgrade:account-manager": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags UpgradeMoneyMarketAccountManager",
     "exec:bsc_mainnet:money-market:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferMoneyMarketOwnership",
     "exec:bsc_mainnet:oracle:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferOraclesOwnership",
-    "exec:bsc_mainnet:miniFL:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferMiniFLOwnership"
+    "exec:bsc_mainnet:miniFL:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferMiniFLOwnership",
+    "exec:bsc_mainnet:config:accept-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags AcceptOwnership"
   },
   "devDependencies": {
     "@safe-global/safe-core-sdk": "^3.3.3",
