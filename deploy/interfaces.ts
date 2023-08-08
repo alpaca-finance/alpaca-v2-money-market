@@ -12,6 +12,15 @@ export interface Config {
   proxyAdmin: string;
   timelock: string;
   opMultiSig: string;
+  oracle: Oracle;
+}
+
+export interface Oracle {
+  alpacaV2Oracle: string;
+  alpacaV2Oracle02: string;
+  chainlinkOracle: string;
+  oracleMedianizer: string;
+  simpleOracle: string;
 }
 
 export interface MoneyMarket {
@@ -34,6 +43,7 @@ export interface MoneyMarket {
 }
 
 export interface MiniFL {
+  proxy: string;
   pools: MiniFLPool[];
 }
 
