@@ -25,9 +25,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   Check all variables below before execute the deployment script
   */
 
-  const FACET = "LiquidationFacet";
+  const FACET = "BorrowFacet";
   const INITIALIZER_ADDRESS = ethers.constants.AddressZero;
-  const OLD_FACET_ADDRESS = "0xaB530549D03AE12A96292d749c75f7f719EA2f9D";
+  const OLD_FACET_ADDRESS = "0xdE6F41147Ab3749d1f8E82d267A1FfD8e7599A5D";
 
   const deployer = await getDeployer();
 
