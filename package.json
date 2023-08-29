@@ -129,7 +129,6 @@
     "exec:arbitrum_mainnet:money-market:config:set-oracle": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMSetOracle",
     "exec:arbitrum_mainnet:money-market:config:set-repurchase-reward-model": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMSetRepurchaseRewardModel",
     "exec:arbitrum_mainnet:money-market:config:set-risk-manager-ok": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMSetRiskManagersOk",
-    "exec:arbitrum_mainnet:money-market-account-manager:deploy": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MoneyMarketAccountManagerDeploy",
     "exec:arbitrum_mainnet:oracle-medianizer:deploy": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags OracleMedianizerDeploy",
     "exec:arbitrum_mainnet:fix-fee-model-500-bps:deploy": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMSetFixedFeeModel500BpsDeploy",
     "exec:arbitrum_mainnet:pancake-v2-liquidate-ib-strategy:deploy": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMPancakeswapV2IbTokenLiquidationStrategyDeploy"

@@ -27,8 +27,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`> 🟢 setMaxNumOfToken : ${numOfCollat} , ${numOfDebt} , ${numOfNonCollatDebt}`);
 
-  await iMoneyMarketFactory.setMaxNumOfToken(numOfCollat, numOfDebt, numOfNonCollatDebt);
+  const tx = await iMoneyMarketFactory.setMaxNumOfToken(numOfCollat, numOfDebt, numOfNonCollatDebt);
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log("✅ Done");
 };
 

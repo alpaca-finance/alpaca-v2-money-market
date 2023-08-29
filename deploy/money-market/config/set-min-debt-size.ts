@@ -26,8 +26,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`> 🟢 setMinDebtSize : ${minDebtSize.toString()}`);
 
-  await iMoneyMarketFactory.setMinDebtSize(minDebtSize);
+  const tx = await iMoneyMarketFactory.setMinDebtSize(minDebtSize);
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log("✅ Done");
 };
 

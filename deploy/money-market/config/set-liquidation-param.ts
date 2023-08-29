@@ -26,8 +26,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`> 🟢 setLiquidationParams : ${newMaxLiquidateBps} , ${newLiquidationThreshold}`);
 
-  await iMoneyMarketFactory.setLiquidationParams(newMaxLiquidateBps, newLiquidationThreshold);
+  const tx = await iMoneyMarketFactory.setLiquidationParams(newMaxLiquidateBps, newLiquidationThreshold);
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log("✅ Done");
 };
 

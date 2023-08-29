@@ -31,8 +31,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const poolDiamond = MMDiamondCutFacet__factory.connect(config.moneyMarket.moneyMarketDiamond, deployer);
 
-  await (await poolDiamond.diamondCut(facetCuts, ethers.constants.AddressZero, "0x")).wait();
+  const tx = await poolDiamond.diamondCut(facetCuts, ethers.constants.AddressZero, "0x");
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log(`Execute diamondCut for OwnershipFacet`);
 };
 

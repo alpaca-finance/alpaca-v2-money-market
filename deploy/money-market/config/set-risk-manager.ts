@@ -26,8 +26,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`> 🟢 setRiskManagersOk : ${riskManagers} , ${isOk}`);
 
-  await iMoneyMarketFactory.setRiskManagersOk(riskManagers, isOk);
+  const tx = await iMoneyMarketFactory.setRiskManagersOk(riskManagers, isOk);
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log("✅ Done");
 };
 

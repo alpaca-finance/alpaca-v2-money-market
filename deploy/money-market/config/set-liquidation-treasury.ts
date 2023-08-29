@@ -25,8 +25,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`> 🟢 setLiquidationTreasury : ${treasury}`);
 
-  await iMoneyMarketFactory.setLiquidationTreasury(treasury);
+  const tx = await iMoneyMarketFactory.setLiquidationTreasury(treasury);
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log("✅ Done");
 };
 

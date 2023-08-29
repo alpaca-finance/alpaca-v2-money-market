@@ -62,12 +62,6 @@ export class ConfigFileHelper {
     this._writeConfigFile(this.config);
   }
 
-  public setMoneyMarketAccountManagerDeploy(proxy: string, implementation: string): void {
-    this.config.moneyMarket.accountManager.proxy = proxy;
-    this.config.moneyMarket.accountManager.implementation = implementation;
-    this._writeConfigFile(this.config);
-  }
-
   public setOracleMedianizer(address: string): void {
     this.config.oracle.oracleMedianizer = address;
     this._writeConfigFile(this.config);

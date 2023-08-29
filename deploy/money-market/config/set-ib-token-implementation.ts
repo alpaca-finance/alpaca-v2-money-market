@@ -25,8 +25,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(`> 🟢 setIbTokenImplementation : ${ibTokenImplementation}`);
 
-  await iMoneyMarketFactory.setIbTokenImplementation(ibTokenImplementation);
+  const tx = await iMoneyMarketFactory.setIbTokenImplementation(ibTokenImplementation);
 
+  console.log(`> Tx is submitted: ${tx.hash}`);
+  console.log(`> Waiting for tx to be mined`);
+
+  await tx.wait();
+
+  console.log(`> Tx is mined`);
   console.log("✅ Done");
 };
 
