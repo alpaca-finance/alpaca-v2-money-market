@@ -40,6 +40,7 @@ contract OracleMedianizer is OwnableUpgradeable, IOracleMedianizer {
   error OracleMedianizer_NoValidSource();
   error OracleMedianizer_TooMuchDeviation();
 
+  /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
     _disableInitializers();
   }

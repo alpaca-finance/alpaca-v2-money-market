@@ -15,6 +15,11 @@ const config: HardhatUserConfig = {
       url: process.env.BSC_RPC_URL,
       accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
     },
+    arbitrum_mainnet: {
+      chainId: 42161,
+      url: process.env.ARB_RPC_URL,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+    },
   },
   solidity: {
     version: "0.8.19",

@@ -10,9 +10,12 @@ export interface Config {
   miniFL: MiniFL;
   rewarders: Rewarder[];
   proxyAdmin: string;
+  nativeRelayer: string;
   timelock: string;
   opMultiSig: string;
   oracle: Oracle;
+  sharedConfig: InterestModel;
+  usdPlaceholder: string;
 }
 
 export interface Oracle {
@@ -25,24 +28,15 @@ export interface Oracle {
 
 export interface MoneyMarket {
   moneyMarketDiamond: string;
-  facets: {
-    adminFacet: string;
-    borrowFacet: string;
-    collateralFacet: string;
-    diamondCutFacet: string;
-    diamondLoupeFacet: string;
-    flashloanFacet: string;
-    lendFacet: string;
-    liquidationFacet: string;
-    nonCollatBorrowFacet: string;
-    ownershipFacet: string;
-    viewFacet: string;
-  };
+  facets: MoneyMarketFacet;
   markets: Market[];
   accountManager: AccountManager;
+  interestBearingTokenImplementation: string;
+  debtTokenImplementation: string;
 }
 
 export interface MiniFL {
+  implementation: string;
   proxy: string;
   pools: MiniFLPool[];
 }
@@ -90,4 +84,27 @@ export interface TimelockTransaction {
   paramTypes: Array<string>;
   params: Array<any>;
   eta: string;
+}
+
+export interface MoneyMarketFacet {
+  adminFacet: string;
+  borrowFacet: string;
+  collateralFacet: string;
+  diamondCutFacet: string;
+  diamondLoupeFacet: string;
+  flashloanFacet: string;
+  lendFacet: string;
+  liquidationFacet: string;
+  nonCollatBorrowFacet: string;
+  ownershipFacet: string;
+  viewFacet: string;
+}
+
+export interface InterestModel {
+  fixFeeModel500Bps: string;
+  doubleSlope1: string;
+  doubleSlope2: string;
+  doubleSlope3: string;
+  flatSlope1: string;
+  flatSlope2: string;
 }

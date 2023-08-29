@@ -25,6 +25,7 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
   address public wNativeToken;
   address public ibWNativeToken;
 
+  /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
     _disableInitializers();
   }

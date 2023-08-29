@@ -1,0 +1,84 @@
+{
+  "proxyAdmin": "",
+  "nativeRelayer": "",
+  "timelock": "",
+  "opMultiSig": "",
+  "usdPlaceholder": "0x115dffFFfffffffffFFFffffFFffFfFfFFFFfFff",
+  "tokens": {
+    "weth": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+  },
+  "oracle": {
+    "alpacaV2Oracle": "",
+    "alpacaV2Oracle02": "0xd7b805E88c5F52EDE71a9b93F7048c8d632DBEd4",
+    "chainlinkOracle": "",
+    "oracleMedianizer": "0x311a522e43C035244e72247895F5C17e46CAB000",
+    "simpleOracle": ""
+  },
+  "sharedConfig": {
+    "fixFeeModel500Bps": "0x2431E2E84A4Fc15A2bAb3E1B97D8a9CC9cB848d7",
+    "doubleSlope1": "",
+    "doubleSlope2": "",
+    "doubleSlope3": "",
+    "flatSlope1": "",
+    "flatSlope2": ""
+  },
+  "sharedStrategies": {
+    "pancakeswap": {
+      "strategyLiquidate": "",
+      "strategyLiquidateIb": "",
+      "strategyLiquidateIbV3": ""
+    },
+    "strategySwapHelperLiquidateIb": ""
+  },
+  "yieldSources": {
+    "pancakeSwap": {
+      "routerV2": "",
+      "routerV3": "",
+      "factoryV3": ""
+    },
+    "thenaDex": {
+      "routerV2": "",
+      "routerV3": ""
+    }
+  },
+  "moneyMarket": {
+    "moneyMarketDiamond": "0x588c58d88319B2EDF7426006668cDfF60940F3C7",
+    "facets": {
+      "adminFacet": "0xe2880836faf7FaDF094418F9E9DdDe3d132243F1",
+      "borrowFacet": "0x97116a0f3ee811Bc6d7003Ad10980DD77FB1B50e",
+      "collateralFacet": "0xBBd3464C571db4315bebeE098381b687c8269314",
+      "diamondCutFacet": "0xCab46f1397fdf4b0F31CEF05345141E51F877EdB",
+      "diamondLoupeFacet": "0xeb186606c3cd50Ae425024BC939544D2515F00d3",
+      "flashloanFacet": "0xE1D2CA01bc88F325fF7266DD2165944f3CAf0D3D",
+      "lendFacet": "0x5379F32C8D5F663EACb61eeF63F722950294f452",
+      "liquidationFacet": "0xca1Cf7C64481B8C095828d380922505E5942C60D",
+      "nonCollatBorrowFacet": "0x3Af78AeB766059e2dB89654ed438a8d976CD2dc5",
+      "ownershipFacet": "0x607Ed45D4837e93158CD39aAfd292340Ed5F5D9F",
+      "viewFacet": "0x13C052C34BeAEd5f7C4856fAA4Da0544B9Df99a7"
+    },
+    "interestBearingTokenImplementation": "0x65Cc57347bA3761358Eb175540E9e5D39CbceFd8",
+    "debtTokenImplementation": "0x07DE1F788Fa7E0C215AA772d4429f47902640ef5",
+    "markets": [],
+    "accountManager": {
+      "implementation": "",
+      "proxy": ""
+    },
+    "repurchaser": ""
+  },
+  "miniFL": {
+    "implementation": "0x2D5408f2287BF9F9B05404794459a846651D0a59",
+    "proxy": "0xA625AB01B08ce023B2a342Dbb12a16f2C8489A8F",
+    "pools": []
+  },
+  "rewarders": [],
+  "moneyMarketReader": "",
+  "smartTreasury": {
+    "implementation": "",
+    "proxy": ""
+  },
+  "pathReader": {
+    "pcsV3PathReader": "",
+    "uniswapV2LikePathReader": ""
+  },
+  "swapHelper": ""
+}
