@@ -19,7 +19,7 @@ contract SetRiskManagersOkScript is BaseScript {
 
     bool isOk = true;
     address[] memory riskManagers = new address[](1);
-    riskManagers[0] = 0xC44f82b07Ab3E691F826951a6E335E1bC1bB0B51;
+    riskManagers[0] = 0x18F59e8dDDef9e000863082a37fc56a2a5475D01;
 
     //---- execution ----//
     _startDeployerBroadcast();
