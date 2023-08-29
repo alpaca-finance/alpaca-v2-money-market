@@ -100,6 +100,7 @@
     "exec:bsc_mainnet:money-market:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferMoneyMarketOwnership",
     "exec:bsc_mainnet:oracle:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferOraclesOwnership",
     "exec:bsc_mainnet:miniFL:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferMiniFLOwnership",
+    "exec:bsc_mainnet:config:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferOwnership",
     "exec:bsc_mainnet:config:accept-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags AcceptOwnership",
     "exec:arbitrum_mainnet:alpaca-v2-oracle-02:deploy": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMAlpacaV2Oracle02Deploy",
     "exec:arbitrum_mainnet:debt-token:deploy": "hardhat --network arbitrum_mainnet deploy --no-compile --reset --tags MMDebtTokenDeploy",

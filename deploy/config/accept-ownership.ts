@@ -23,18 +23,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     Check all variables below before execute the deployment script
   */
 
-  // verify that the target contract is correct
-  const targetContract = config.moneyMarket.moneyMarketDiamond;
+  const contractToAcceptOwnership = [config.moneyMarket.moneyMarketDiamond];
+
   // funcSig of "acceptOwnership()" should be 0x79ba5097
   const funcSig = ethers.utils.keccak256(utils.toUtf8Bytes("acceptOwnership()")).slice(0, 10);
 
   const deployerWallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY as string, deployer.provider);
 
-  const multiSig = new GnosisSafeMultiSigService(chainId, config.opMultiSig, deployerWallet);
-  const txHash = await multiSig.proposeTransaction(targetContract, "0", funcSig);
-
-  console.log(`> 🟢 Transaction Proposed`);
-  console.log(`> ✅ Tx hash: ${txHash}`);
+  for (const targetContract of contractToAcceptOwnership) {
+    const multiSig = new GnosisSafeMultiSigService(chainId, config.opMultiSig, deployerWallet);
+    const txHash = await multiSig.proposeTransaction(targetContract, "0", funcSig);
+    console.log(`> 🟢 Transaction Proposed Tx hash: ${txHash}`);
+  }
 };
 
 export default func;
