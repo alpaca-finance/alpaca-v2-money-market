@@ -42,10 +42,10 @@ contract SetMultiPrimarySourcesScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // ADA
+    // WBETH
     addSetMultiPrimarySources(
       SetMultiPrimarySourcesInput({
-        token0: ada,
+        token0: wbeth,
         token1: usdPlaceholder,
         maxPriceDeviation: 1e18,
         maxPriceStale: 1 days,

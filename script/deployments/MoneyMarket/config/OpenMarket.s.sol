@@ -31,16 +31,16 @@ contract OpenMarketScript is BaseScript {
     */
     _startDeployerBroadcast();
 
-    // ADA
+    // WBETH
     executeOpenMarket(
       OpenMarketInput({
-        token: ada,
-        interestModel: doubleSlope1,
+        token: wbeth,
+        interestModel: doubleSlope2,
         tier: LibConstant.AssetTier.COLLATERAL,
-        collateralFactor: 5000,
-        borrowingFactor: 7500,
-        maxCollateral: formatAmount(ada, 7_500_000),
-        maxBorrow: formatAmount(ada, 5_000_000)
+        collateralFactor: 8500,
+        borrowingFactor: 9000,
+        maxCollateral: formatAmount(wbeth, 50_000),
+        maxBorrow: formatAmount(wbeth, 45_000)
       })
     );
 
