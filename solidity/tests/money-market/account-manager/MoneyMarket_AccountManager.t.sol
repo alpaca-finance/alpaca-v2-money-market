@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import { MoneyMarket_BaseTest } from "../MoneyMarket_BaseTest.t.sol";
+import { MoneyMarket_BaseTest, ILendFacet } from "../MoneyMarket_BaseTest.t.sol";
 
 // interfaces
 import { IERC20 } from "../../../contracts/money-market/interfaces/IERC20.sol";
 import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
+import { IMoneyMarket } from "solidity/contracts/money-market/interfaces/IMoneyMarket.sol";
 
 contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
   function setUp() public override {
@@ -60,5 +61,29 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
     vm.stopPrank();
 
     assertEq(weth.balanceOf(ALICE), _nativeTokenBalance);
+  }
+
+  function testCorrectness_StakeFor_ShouldWork() external {
+    address vault = makeAddr("Vault");
+
+    uint256 depositAmount = 10 ether;
+    uint256 pid = IMoneyMarket(moneyMarketDiamond).getMiniFLPoolIdOfToken(address(ibWeth));
+
+    uint256 _stakeAmountBefore = miniFL.getUserAmountFundedBy(address(accountManager), ALICE, pid);
+
+    deal(address(weth), vault, depositAmount);
+    vm.startPrank(vault);
+    weth.approve(address(accountManager), depositAmount);
+    accountManager.deposit(address(weth), depositAmount);
+
+    uint256 ibReceived = ibWeth.balanceOf(vault);
+
+    ibWeth.approve(address(accountManager), ibReceived);
+    accountManager.stakeFor(ALICE, address(ibWeth), ibReceived);
+    vm.stopPrank();
+
+    uint256 _stakeAmountAfter = miniFL.getUserAmountFundedBy(address(accountManager), ALICE, pid);
+
+    assertEq(_stakeAmountAfter - _stakeAmountBefore, ibReceived);
   }
 }
