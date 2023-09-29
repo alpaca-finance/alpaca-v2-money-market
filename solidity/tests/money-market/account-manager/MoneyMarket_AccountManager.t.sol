@@ -66,15 +66,15 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
   function testCorrectness_StakeFor_ShouldWork() external {
     address vault = makeAddr("Vault");
 
-    uint256 stakeAmt = 10 ether;
+    uint256 depositAmount = 10 ether;
     uint256 pid = IMoneyMarket(moneyMarketDiamond).getMiniFLPoolIdOfToken(address(ibWeth));
 
     uint256 _stakeAmountBefore = miniFL.getUserAmountFundedBy(address(accountManager), ALICE, pid);
 
-    deal(address(weth), vault, stakeAmt);
+    deal(address(weth), vault, depositAmount);
     vm.startPrank(vault);
-    weth.approve(address(accountManager), stakeAmt);
-    accountManager.deposit(address(weth), stakeAmt);
+    weth.approve(address(accountManager), depositAmount);
+    accountManager.deposit(address(weth), depositAmount);
 
     uint256 ibReceived = ibWeth.balanceOf(vault);
 
@@ -84,6 +84,6 @@ contract MoneyMarket_AccountManagerTest is MoneyMarket_BaseTest {
 
     uint256 _stakeAmountAfter = miniFL.getUserAmountFundedBy(address(accountManager), ALICE, pid);
 
-    assertEq(_stakeAmountAfter - _stakeAmountBefore, stakeAmt);
+    assertEq(_stakeAmountAfter - _stakeAmountBefore, ibReceived);
   }
 }
