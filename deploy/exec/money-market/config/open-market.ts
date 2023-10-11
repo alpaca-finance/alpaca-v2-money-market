@@ -52,7 +52,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ];
 
   const deployer = await getDeployer();
-
+  let nonce = await deployer.getTransactionCount();
   const moneyMarket = IMoneyMarket__factory.connect(config.moneyMarket.moneyMarketDiamond, deployer);
 
   for (const input of openMarketInputs) {
@@ -79,14 +79,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     };
 
     console.log(`Opening Market: ${input.token}`);
-    const openMarketTx = await moneyMarket.openMarket(input.token, underlyingTokenConfigInput, ibTokenConfigInput);
+    const openMarketTx = await moneyMarket.openMarket(input.token, underlyingTokenConfigInput, ibTokenConfigInput, {
+      nonce: nonce++,
+    });
     await openMarketTx.wait();
-    console.log(`✅Done:${openMarketTx.hash}`);
+    console.log(`✅Done at tx: ${openMarketTx.hash}`);
 
     console.log(`Setting interestModel: ${input.token}`);
-    const setInterestModelTx = await moneyMarket.setInterestModel(input.token, input.interestModel);
+    const setInterestModelTx = await moneyMarket.setInterestModel(input.token, input.interestModel, { nonce: nonce++ });
     await setInterestModelTx.wait();
-    console.log(`✅Done:${setInterestModelTx.hash}`);
+    console.log(`✅Done at tx: ${setInterestModelTx.hash}`);
 
     const [ibToken, debtToken] = await Promise.all([
       moneyMarket.getIbTokenFromToken(input.token),

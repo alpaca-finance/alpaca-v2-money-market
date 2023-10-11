@@ -24,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const chainLinkOracle = IChainLinkPriceOracle__factory.connect(config.oracle.chainlinkOracle, deployer);
 
   const setPriceFeedTx = await chainLinkOracle.setPriceFeeds(TOKEN0S, TOKEN1S, SOURCES);
-  console.log(`✅Done: ${setPriceFeedTx.hash}`);
+  console.log(`✅Done at tx: ${setPriceFeedTx.hash}`);
 };
 
 export default func;
