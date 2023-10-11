@@ -14,7 +14,7 @@ async function main(
 
   const newMarket: Market = {
     name,
-    tier: reverseAssetTier[Number(tier) as AssetTier],
+    tier: AssetTier[Number(tier)],
     token,
     ibToken,
     debtToken,

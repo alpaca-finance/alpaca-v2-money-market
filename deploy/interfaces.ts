@@ -7,12 +7,27 @@ interface AccountManager extends UpgradableContract {}
 
 export interface Config {
   moneyMarket: MoneyMarket;
+  sharedConfig: SharedConfig;
+  tokens: Tokens;
   miniFL: MiniFL;
   rewarders: Rewarder[];
   proxyAdmin: string;
   timelock: string;
   opMultiSig: string;
   oracle: Oracle;
+}
+
+interface Tokens {
+  wbeth: string;
+}
+
+interface SharedConfig {
+  fixFeeModel500Bps: string;
+  doubleSlope1: string;
+  doubleSlope2: string;
+  doubleSlope3: string;
+  flatSlope1: string;
+  flatSlope2: string;
 }
 
 export interface Oracle {
@@ -69,7 +84,14 @@ export interface Rewarder {
   rewardToken: string;
 }
 
-export type AssetTier = 0 | 1 | 2 | 3;
+// export type AssetTier = 0 | 1 | 2 | 3;
+export enum AssetTier {
+  UNLISTED = 0,
+  ISOLATE = 1,
+  CROSS = 2,
+  COLLATERAL = 3,
+}
+
 type AssetTierString = "UNLISTED" | "ISOLATE" | "CROSS" | "COLLATERAL";
 export const reverseAssetTier: Record<AssetTier, AssetTierString> = {
   0: "UNLISTED",
