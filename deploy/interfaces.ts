@@ -6,6 +6,7 @@ interface UpgradableContract {
 interface AccountManager extends UpgradableContract {}
 
 export interface Config {
+  usdPlaceholder: string;
   moneyMarket: MoneyMarket;
   sharedConfig: SharedConfig;
   tokens: Tokens;
@@ -84,7 +85,6 @@ export interface Rewarder {
   rewardToken: string;
 }
 
-// export type AssetTier = 0 | 1 | 2 | 3;
 export enum AssetTier {
   UNLISTED = 0,
   ISOLATE = 1,
@@ -92,8 +92,7 @@ export enum AssetTier {
   COLLATERAL = 3,
 }
 
-type AssetTierString = "UNLISTED" | "ISOLATE" | "CROSS" | "COLLATERAL";
-export const reverseAssetTier: Record<AssetTier, AssetTierString> = {
+export const reverseAssetTier: Record<AssetTier, keyof typeof AssetTier> = {
   0: "UNLISTED",
   1: "ISOLATE",
   2: "CROSS",

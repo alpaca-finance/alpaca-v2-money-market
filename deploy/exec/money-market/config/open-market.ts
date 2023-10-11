@@ -1,3 +1,4 @@
+import { reverseAssetTier } from "./../../../interfaces";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getDeployer } from "../../../utils/deployer-helper";
@@ -38,7 +39,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       Check all variables below before execute the deployment script
   */
 
-  const inputs: OpenMarketInput[] = [
+  const openMarketInputs: OpenMarketInput[] = [
     {
       token: config.tokens.wbeth,
       interestModel: config.sharedConfig.doubleSlope2,
@@ -54,9 +55,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const moneyMarket = IMoneyMarket__factory.connect(config.moneyMarket.moneyMarketDiamond, deployer);
 
-  for (const input of inputs) {
+  for (const input of openMarketInputs) {
     const token = ERC20__factory.connect(input.token, deployer);
-    const tokenDecimal = await token.decimals();
+    const [tokenSymbol, tokenDecimal] = await Promise.all([token.symbol(), token.decimals()]);
 
     const maxBorrow = parseUnits(input.maxBorrow.toString(), tokenDecimal);
     const maxCollateral = parseUnits(input.maxCollateral.toString(), tokenDecimal);
@@ -86,6 +87,39 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const setInterestModelTx = await moneyMarket.setInterestModel(input.token, input.interestModel);
     await setInterestModelTx.wait();
     console.log(`✅Done:${setInterestModelTx.hash}`);
+
+    const [ibToken, debtToken] = await Promise.all([
+      moneyMarket.getIbTokenFromToken(input.token),
+      moneyMarket.getDebtTokenFromToken(input.token),
+    ]);
+
+    const [ibPId, debtPid] = await Promise.all([
+      moneyMarket.getMiniFLPoolIdOfToken(ibToken),
+      moneyMarket.getMiniFLPoolIdOfToken(debtToken),
+    ]);
+
+    console.log(`Writing new market and miniFL pools`);
+    configFileHelper.addNewMarket({
+      name: tokenSymbol,
+      tier: reverseAssetTier[input.tier as AssetTier],
+      token: input.token,
+      ibToken: ibToken,
+      debtToken: debtToken,
+      interestModel: input.interestModel,
+    });
+    configFileHelper.addMiniFLPool({
+      id: ibPId.toNumber(),
+      name: "ib" + tokenSymbol,
+      stakingToken: ibToken,
+      rewarders: [],
+    });
+    configFileHelper.addMiniFLPool({
+      id: debtPid.toNumber(),
+      name: "debt" + tokenSymbol,
+      stakingToken: debtToken,
+      rewarders: [],
+    });
+    console.log(`✅Done`);
   }
 };
 
