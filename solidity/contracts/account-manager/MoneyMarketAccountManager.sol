@@ -305,6 +305,25 @@ contract MoneyMarketAccountManager is IMoneyMarketAccountManager, OwnableUpgrade
     miniFL.deposit(msg.sender, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amountReceived);
   }
 
+  /// @notice Stake ibToken in miniFL on behalf of _account
+  /// @param _account Account to stake for.
+  /// @param _ibToken IbToken associate with miniFL pool.
+  /// @param _amount Amount to stake.
+  function stakeFor(
+    address _account,
+    address _ibToken,
+    uint256 _amount
+  ) external {
+    // transfer _ibToken to accountManager
+    IERC20(_ibToken).safeTransferFrom(msg.sender, address(this), _amount);
+
+    // approve allowance for miniFL
+    IERC20(_ibToken).safeApprove(address(miniFL), _amount);
+
+    // stake _ibToken at miniFL on bahalf of the _account
+    miniFL.deposit(_account, moneyMarket.getMiniFLPoolIdOfToken(_ibToken), _amount);
+  }
+
   /// @notice Unstake ibToken from miniFL and withdraw as native token from MoneyMarket
   /// @param _ibTokenAmount The amount to withdraw
   function unstakeAndWithdrawETH(uint256 _ibTokenAmount) external {
