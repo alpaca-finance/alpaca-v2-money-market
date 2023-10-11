@@ -77,9 +77,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       maxCollateral: maxCollateral,
     };
 
-    await moneyMarket.openMarket(input.token, underlyingTokenConfigInput, ibTokenConfigInput);
+    console.log(`Opening Market: ${input.token}`);
+    const openMarketTx = await moneyMarket.openMarket(input.token, underlyingTokenConfigInput, ibTokenConfigInput);
+    await openMarketTx.wait();
+    console.log(`✅Done:${openMarketTx.hash}`);
 
-    await moneyMarket.setInterestModel(input.token, input.interestModel);
+    console.log(`Setting interestModel: ${input.token}`);
+    const setInterestModelTx = await moneyMarket.setInterestModel(input.token, input.interestModel);
+    await setInterestModelTx.wait();
+    console.log(`✅Done:${setInterestModelTx.hash}`);
   }
 };
 
