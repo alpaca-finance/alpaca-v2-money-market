@@ -31,12 +31,12 @@ contract SetPriceFeedsScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    // ADA
+    // WBETH
     addSetPriceFeeds(
       SetPriceFeedsInput({
-        token0: ada,
+        token0: wbeth,
         token1: usdPlaceholder,
-        source: IAggregatorV3(0xa767f745331D267c7751297D982b050c93985627)
+        source: IAggregatorV3(0x97398272A927c56735F7bFCE95752540F5e23CCd)
       })
     );
 
