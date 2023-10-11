@@ -22,7 +22,6 @@
     "exec:bsc_mainnet:debt-token:deploy": "forge script script/deployments/DebtToken/deploy/DebtTokenImplementation.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:deploy": "forge script script/deployments/MoneyMarket/deploy/MoneyMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:cut:flash-loan-facet": "forge script script/deployments/MoneyMarket/diamond-cut/FlashloanFacetCut.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:money-market:config:open-market": "forge script script/deployments/MoneyMarket/config/OpenMarket.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-interest-model": "forge script script/deployments/MoneyMarket/config/SetInterestModel.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-fees": "forge script script/deployments/MoneyMarket/config/SetFees.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market:config:set-max-num-token": "forge script script/deployments/MoneyMarket/config/SetMaxNumOfToken.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -63,10 +62,8 @@
     "exec:bsc_mainnet:alpaca-v2-oracle:config:set-oracle": "forge script script/deployments/AlpacaV2Oracle/config/SetOracle.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:alpaca-v2-oracle02:deploy": "forge script script/deployments/AlpacaV2Oracle02/deploy/AlpacaV2Oracle02.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:oracle-medianizer:deploy": "forge script script/deployments/OracleMedianizer/deploy/OracleMedianizer.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:oracle-medianizer:config:set-multiple-primary-sources": "forge script script/deployments/OracleMedianizer/config/SetMultiPrimarySources.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:wnative-relayer:config:set-caller-ok": "forge script script/deployments/WNativeRelayer/config/setCallerOk.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:money-market-reader:deploy": "forge script script/deployments/MoneyMarketReader/deploy/MoneyMarketReader.s.sol --rpc-url bsc_mainnet --broadcast --slow",
-    "exec:bsc_mainnet:chainlink-price-oracle:config:set-price-feeds": "forge script script/deployments/ChainLinkOracle/config/SetPriceFeeds.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:fix-fee-model-500-bps:deploy": "forge script script/deployments/RepurchaseRewardModel/deploy/FixedFeeModel500Bps.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:triple-slope-model0:deploy": "forge script script/deployments/InterestModels/deploy/TripleSlopeModel0.s.sol --rpc-url bsc_mainnet --broadcast --slow",
     "exec:bsc_mainnet:double-slope-model1:deploy": "forge script script/deployments/InterestModels/deploy/MMDoubleSlopeModel1.s.sol --rpc-url bsc_mainnet --broadcast --slow",
@@ -97,7 +94,10 @@
     "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut",
     "exec:bsc_mainnet:money-market:upgrade:account-manager": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags UpgradeMoneyMarketAccountManager",
     "exec:bsc_mainnet:config:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferOwnership",
-    "exec:bsc_mainnet:config:accept-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags AcceptOwnership"
+    "exec:bsc_mainnet:config:accept-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags AcceptOwnership",
+    "exec:bsc_mainnet:money-market:config:open-market": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags OpenMarket",
+    "exec:bsc_mainnet:chainlink-price-oracle:config:set-price-feeds": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags SetPriceFeed",
+    "exec:bsc_mainnet:oracle-medianizer:config:set-multiple-primary-sources": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags SetMultiplePrimarySources"
   },
   "devDependencies": {
     "@safe-global/safe-core-sdk": "^3.3.3",
