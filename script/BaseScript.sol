@@ -91,6 +91,7 @@ abstract contract BaseScript is Script {
   address internal tusd;
   address internal usdt;
   address internal usdc;
+  address internal wbeth;
   address internal wbnb;
   address internal xrp;
 
@@ -172,6 +173,7 @@ abstract contract BaseScript is Script {
     tusd = abi.decode(configJson.parseRaw(".tokens.tusd"), (address));
     usdt = abi.decode(configJson.parseRaw(".tokens.usdt"), (address));
     usdc = abi.decode(configJson.parseRaw(".tokens.usdc"), (address));
+    wbeth = abi.decode(configJson.parseRaw(".tokens.wbeth"), (address));
     wbnb = abi.decode(configJson.parseRaw(".tokens.wbnb"), (address));
     xrp = abi.decode(configJson.parseRaw(".tokens.xrp"), (address));
   }
