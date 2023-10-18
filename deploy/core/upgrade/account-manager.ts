@@ -26,7 +26,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const TITLE = "upgrade_money_market_account_manager";
   const MONEY_MARKET_ACCOUNT_MANAGER = "MoneyMarketAccountManager";
-  const EXACT_ETA = "1686308400";
+  const EXACT_ETA = "1697713200";
 
   const config = new ConfigFileHelper().getConfig();
   const timelockTransactions: Array<TimelockTransaction> = [];

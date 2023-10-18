@@ -18,11 +18,11 @@ contract SetProtocolConfigScript is BaseScript {
   Check all variables below before execute the deployment script
     */
 
-    address _bank = 0xf21B938af2f70d0b9b79224632B781814938118e;
+    address _bank = 0xD0dfE9277B1DB02187557eAeD7e25F74eF2DE8f3;
     uint256 _borrowingPowerLimit = 10_000_000 ether;
     IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowInputs = new IAdminFacet.TokenBorrowLimitInput[](2);
-    _tokenBorrowInputs[0] = IAdminFacet.TokenBorrowLimitInput({ token: usdt, maxTokenBorrow: 10_000_000 ether });
-    _tokenBorrowInputs[1] = IAdminFacet.TokenBorrowLimitInput({ token: wbnb, maxTokenBorrow: 50_000 ether });
+    _tokenBorrowInputs[0] = IAdminFacet.TokenBorrowLimitInput({ token: eth, maxTokenBorrow: 5000 ether });
+    _tokenBorrowInputs[1] = IAdminFacet.TokenBorrowLimitInput({ token: btcb, maxTokenBorrow: 300 ether });
 
     IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInput = new IAdminFacet.ProtocolConfigInput[](1);
     _protocolConfigInput[0] = IAdminFacet.ProtocolConfigInput({
