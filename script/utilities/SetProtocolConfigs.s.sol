@@ -9,21 +9,20 @@ contract SetProtocolConfigsScript is BaseUtilsScript {
     _startDeployerBroadcast();
 
     //---- inputs ----//
-    IAdminFacet.TokenBorrowLimitInput[] memory tokenBorrowLimitInputs = new IAdminFacet.TokenBorrowLimitInput[](1);
-    tokenBorrowLimitInputs[0] = IAdminFacet.TokenBorrowLimitInput({
-      token: address(0),
-      maxTokenBorrow: 30e18 // be careful on decimals
-    });
+    address _bank = 0xD0dfE9277B1DB02187557eAeD7e25F74eF2DE8f3;
+    uint256 _borrowingPowerLimit = 10_000_000 ether;
+    IAdminFacet.TokenBorrowLimitInput[] memory _tokenBorrowInputs = new IAdminFacet.TokenBorrowLimitInput[](1);
+    _tokenBorrowInputs[0] = IAdminFacet.TokenBorrowLimitInput({ token: 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d, maxTokenBorrow: 10_000_000 ether });
 
-    IAdminFacet.ProtocolConfigInput[] memory protocolConfigInputs = new IAdminFacet.ProtocolConfigInput[](1);
-    protocolConfigInputs[0] = IAdminFacet.ProtocolConfigInput({
-      account: address(0),
-      tokenBorrowLimit: tokenBorrowLimitInputs,
-      borrowingPowerLimit: 1e30
+    IAdminFacet.ProtocolConfigInput[] memory _protocolConfigInput = new IAdminFacet.ProtocolConfigInput[](1);
+    _protocolConfigInput[0] = IAdminFacet.ProtocolConfigInput({
+      account: _bank,
+      borrowingPowerLimit: _borrowingPowerLimit,
+      tokenBorrowLimit: _tokenBorrowInputs
     });
 
     //---- execution ----//
-    moneyMarket.setProtocolConfigs(protocolConfigInputs);
+    moneyMarket.setProtocolConfigs(_protocolConfigInput);
 
     console.log("set non-collat protocol configs");
 

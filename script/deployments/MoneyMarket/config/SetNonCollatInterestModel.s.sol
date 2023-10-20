@@ -21,11 +21,10 @@ contract SetNonCollatInterestModelScript is BaseScript {
   ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
   Check all variables below before execute the deployment script
     */
-
-    address borrower = address(0);
+    address borrower = 0xD0dfE9277B1DB02187557eAeD7e25F74eF2DE8f3;
     SetInterestModelInput[2] memory _input = [
-      SetInterestModelInput({ token: usdt, interestModel: flatSlope1 }),
-      SetInterestModelInput({ token: wbnb, interestModel: flatSlope1 })
+      SetInterestModelInput({ token: eth, interestModel: flatSlope2 }),
+      SetInterestModelInput({ token: btcb, interestModel: flatSlope2 })
     ];
 
     //---- execution ----//
