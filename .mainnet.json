@@ -180,6 +180,14 @@
         "ibToken": "0x674d38092D177A9b074e5CAA5D45315eaAcEc790",
         "debtToken": "0xA57Ce447a14Ec8822105bF2c8f8456fcC0ba4dF4",
         "interestModel": "0xe44bDd3f0b69f2c294A0250825BCF31eE3af4314"
+      },
+      {
+        "name": "wBETH",
+        "tier": "COLLATERAL",
+        "token": "0xa2E3356610840701BDf5611a53974510Ae27E2e1",
+        "ibToken": "0x86be7A7dd35c0A0E10824E29e4bF862697337341",
+        "debtToken": "0x6F9E7e1d7e27102202Ab67147EbD3987c2FF710B",
+        "interestModel": "0x89c53B34b5E6A1D0b2922941749e9Ee05ce58b42"
       }
     ],
     "accountManager": {
@@ -370,6 +378,18 @@
         "id": 26,
         "name": "debtADA",
         "stakingToken": "0xA57Ce447a14Ec8822105bF2c8f8456fcC0ba4dF4",
+        "rewarders": []
+      },
+      {
+        "id": 27,
+        "name": "ibwBETH",
+        "stakingToken": "0x86be7A7dd35c0A0E10824E29e4bF862697337341",
+        "rewarders": []
+      },
+      {
+        "id": 28,
+        "name": "debtwBETH",
+        "stakingToken": "0x6F9E7e1d7e27102202Ab67147EbD3987c2FF710B",
         "rewarders": []
       }
     ]

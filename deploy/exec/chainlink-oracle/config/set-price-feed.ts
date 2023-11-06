@@ -16,6 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       ░░░╚═╝░░░╚═╝░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝╚═╝░░╚══╝░╚═════╝░
       Check all variables below before execute the deployment script
   */
+
   const TOKEN0S: string[] = [config.tokens.wbeth];
   const TOKEN1S: string[] = [config.usdPlaceholder];
   const SOURCES: string[] = ["0x97398272a927c56735f7bfce95752540f5e23ccd"];
