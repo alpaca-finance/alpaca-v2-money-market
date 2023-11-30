@@ -124,4 +124,10 @@ contract MoneyMarket_Lend_DepositTest is MoneyMarket_BaseTest {
     vm.prank(address(accountManager));
     lendFacet.deposit(ALICE, address(weth), 10 ether);
   }
+
+  function testRevert_UserDepositResultInTinyShare_ShouldRevert() external {
+    vm.startPrank(address(accountManager));
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_NoTinyShares.selector));
+    lendFacet.deposit(ALICE, address(weth), 0.01 ether);
+  }
 }
