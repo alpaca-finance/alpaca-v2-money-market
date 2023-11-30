@@ -80,12 +80,18 @@ contract LendFacet is ILendFacet {
     // Accrue interest so that ib amount calculation would be correct
     LibMoneyMarket01.accrueInterest(_token, moneyMarketDs);
 
+    uint256 _ibTotalSupplyBefore = IInterestBearingToken(_ibToken).totalSupply();
     // Calculate ib amount from underlyingAmount
     _ibAmount = LibShareUtil.valueToShare(
       _amount,
-      IInterestBearingToken(_ibToken).totalSupply(),
+      _ibTotalSupplyBefore,
       LibMoneyMarket01.getTotalToken(_token, moneyMarketDs) // already accrue
     );
+
+    // Validate tiny shares
+    if (_ibTotalSupplyBefore + _ibAmount <= 10**(IERC20(_ibToken).decimals() - 1)) {
+      revert LendFacet_NoTinyShares();
+    }
 
     // Increase underlying token balance
     // Safe to use unchecked because amount can't overflow (amount <= totalSupply)
@@ -129,6 +135,7 @@ contract LendFacet is ILendFacet {
     // Accrue interest so that ib amount calculation would be correct
     LibMoneyMarket01.accrueInterest(_underlyingToken, moneyMarketDs);
 
+    uint256 _ibTotalSupplyBefore = IInterestBearingToken(_ibToken).totalSupply();
     // Calculate `_underlyingToken` amount from ib amount
     _withdrawAmount = LibShareUtil.shareToValue(
       _shareAmount,
@@ -139,6 +146,12 @@ contract LendFacet is ILendFacet {
     // Revert if try to withdraw more than available balance
     if (_withdrawAmount > moneyMarketDs.reserves[_underlyingToken]) {
       revert LibMoneyMarket01.LibMoneyMarket01_NotEnoughToken();
+    }
+
+    // Validate tiny shares
+    uint256 _ibTotalSupplyAfter = _ibTotalSupplyBefore - _shareAmount;
+    if (_ibTotalSupplyAfter != 0 && _ibTotalSupplyAfter <= 10**(IERC20(_ibToken).decimals() - 1)) {
+      revert LendFacet_NoTinyShares();
     }
 
     // Reduce `_underlyingToken` balance

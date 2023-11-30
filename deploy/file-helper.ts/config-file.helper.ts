@@ -10,6 +10,11 @@ export class ConfigFileHelper {
     this.config = MainnetConfig;
   }
 
+  public setLendFacets(lendFacetAddress: string): void {
+    this.config.moneyMarket.facets.lendFacet = lendFacetAddress;
+    this._writeConfigFile(this.config);
+  }
+
   public addNewMarket(market: Market): void {
     this.config.moneyMarket.markets.push(market);
     this._writeConfigFile(this.config);

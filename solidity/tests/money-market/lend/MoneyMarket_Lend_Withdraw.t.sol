@@ -85,45 +85,6 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(ibWeth.totalSupply(), _expectedTotalShare);
   }
 
-  function testCorrectness_WhenTryToExploitTinySharesOnLendFacet_ShouldDepositWithdrawCorrectlyWithoutTinyShares()
-    external
-  {
-    // no tiny share exploit since we use reserves state variable internally instead of balanceOf
-
-    // exploiter deposit 1 wei weth, get 1 wei ibWeth back
-    vm.startPrank(ALICE);
-    accountManager.deposit(address(weth), 1);
-
-    assertEq(ibWeth.balanceOf(ALICE), 1);
-
-    // exploiter direct transfer 1B weth
-    weth.mint(ALICE, 1e10 ether);
-    weth.transfer(moneyMarketDiamond, 1e10 ether);
-    vm.stopPrank();
-
-    // user deposit 1M weth, get 1M ibWeth back
-    weth.mint(BOB, 1e7 ether);
-    vm.startPrank(BOB);
-    accountManager.deposit(address(weth), 1e7 ether);
-
-    assertEq(ibWeth.balanceOf(BOB), 1e7 ether);
-
-    // user withdraw 1M ibWeth, get 1M weth back
-    uint256 _bobWethBalanceBefore = weth.balanceOf(BOB);
-    accountManager.withdraw(address(ibWeth), 1e7 ether);
-
-    assertEq(weth.balanceOf(BOB) - _bobWethBalanceBefore, 1e7 ether);
-    vm.stopPrank();
-
-    // exploiter withdraw 1 wei ibWeth, get 1 wei weth back
-    uint256 _aliceWethBalanceBefore = weth.balanceOf(ALICE);
-
-    vm.prank(ALICE);
-    accountManager.withdraw(address(ibWeth), 1);
-
-    assertEq(weth.balanceOf(ALICE) - _aliceWethBalanceBefore, 1);
-  }
-
   function testCorrectness_WhenUnderlyingWasBorrowedAndAccrueInterest_AndUserPartialWithdraw_ShouldAccrueInterestAndTransferPrincipalWithInterestAndUpdateMMState()
     external
   {
@@ -193,5 +154,15 @@ contract MoneyMarket_Lend_WithdrawTest is MoneyMarket_BaseTest {
     assertEq(wNativeToken.balanceOf(moneyMarketDiamond), 5 ether);
 
     assertEq(ibWNative.balanceOf(ALICE), 5 ether);
+  }
+
+  function testRevert_WhenUserWithdrawResultInTinyShare_ShouldRevert() external {
+    vm.startPrank(ALICE);
+    // 1 wei away from tiny share
+    accountManager.deposit(address(usdc), 100001);
+
+    vm.expectRevert(abi.encodeWithSelector(ILendFacet.LendFacet_NoTinyShares.selector));
+    accountManager.withdraw(address(ibUsdc), 1);
+    vm.stopPrank();
   }
 }

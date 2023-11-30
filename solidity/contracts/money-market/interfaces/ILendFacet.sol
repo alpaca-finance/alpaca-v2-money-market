@@ -3,6 +3,7 @@ pragma solidity >=0.8.19;
 
 interface ILendFacet {
   error LendFacet_InvalidToken(address _token);
+  error LendFacet_NoTinyShares();
 
   function deposit(
     address _for,
