@@ -140,7 +140,7 @@ contract LendFacet is ILendFacet {
     _withdrawAmount = LibShareUtil.shareToValue(
       _shareAmount,
       LibMoneyMarket01.getTotalToken(_underlyingToken, moneyMarketDs), // already accrue
-      IInterestBearingToken(_ibToken).totalSupply()
+      _ibTotalSupplyBefore
     );
 
     // Revert if try to withdraw more than available balance
