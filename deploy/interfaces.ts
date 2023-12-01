@@ -19,6 +19,7 @@ export interface Config {
 }
 
 interface Tokens {
+  busd: string;
   wbeth: string;
 }
 
