@@ -94,6 +94,7 @@
     "exec:bsc_mainnet:money-market:diamond-cut": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags ExecuteDiamondCut",
     "exec:bsc_mainnet:money-market:upgrade:account-manager": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags UpgradeMoneyMarketAccountManager",
     "exec:bsc_mainnet:money-market:config:set-token-max-capacity": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags SetTokenMaxCapacity",
+    "exec:bsc_mainnet:money-market:config:set-token-config": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags SetTokenConfig",
     "exec:bsc_mainnet:config:transfer-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags TransferOwnership",
     "exec:bsc_mainnet:config:accept-ownership": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags AcceptOwnership",
     "exec:bsc_mainnet:money-market:config:open-market": "hardhat --network bsc_mainnet deploy --no-compile --reset --tags OpenMarket",
