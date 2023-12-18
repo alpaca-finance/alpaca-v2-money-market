@@ -502,12 +502,6 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
 
     assertEq(wethGlobalDebt, 2 ether);
 
-    (uint256 _aliceDebtShare, uint256 _aliceDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(
-      ALICE,
-      subAccount0,
-      address(weth)
-    );
-
     vm.stopPrank();
 
     vm.startPrank(BOB);
