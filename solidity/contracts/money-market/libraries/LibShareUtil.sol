@@ -33,7 +33,8 @@ library LibShareUtil {
   ) internal pure returns (uint256) {
     uint256 _shares = valueToShare(_tokenAmount, _totalShare, _totalValue);
     uint256 _shareValues = shareToValue(_shares, _totalValue, _totalShare);
-    if (_shareValues + 1 == _tokenAmount) {
+
+    if (_shareValues + 1 <= _tokenAmount) {
       _shares += 1;
     }
     return _shares;
@@ -46,7 +47,7 @@ library LibShareUtil {
   ) internal pure returns (uint256) {
     uint256 _values = shareToValue(_shareAmount, _totalValue, _totalShare);
     uint256 _valueShares = valueToShare(_values, _totalShare, _totalValue);
-    if (_valueShares + 1 == _shareAmount) {
+    if (_valueShares + 1 <= _shareAmount) {
       _values += 1;
     }
     return _values;

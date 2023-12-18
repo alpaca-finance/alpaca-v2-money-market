@@ -19,6 +19,8 @@ import { IMMOwnershipFacet } from "../../contracts/money-market/interfaces/IMMOw
 import { IMoneyMarketAccountManager } from "../../contracts/interfaces/IMoneyMarketAccountManager.sol";
 import { IFlashloanFacet } from "../../contracts/money-market/interfaces/IFlashloanFacet.sol";
 import { IERC20 } from "../../contracts/money-market/interfaces/IERC20.sol";
+import { TestHelperFacet } from "solidity/tests/money-market/utils/TestHelperFacet.sol";
+import { IMMDiamondCut } from "solidity/contracts/money-market/interfaces/IMMDiamondCut.sol";
 
 // mocks
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -46,6 +48,8 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
   ILiquidationFacet internal liquidationFacet;
   IMMOwnershipFacet internal MMOwnershipFacet;
   IFlashloanFacet internal flashloanFacet;
+  // helper facet for test only
+  TestHelperFacet internal testHelperFacet;
 
   MockAlpacaV2Oracle internal mockOracle;
 
@@ -63,6 +67,10 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
     liquidationFacet = ILiquidationFacet(moneyMarketDiamond);
     MMOwnershipFacet = IMMOwnershipFacet(moneyMarketDiamond);
     flashloanFacet = IFlashloanFacet(moneyMarketDiamond);
+
+    //
+    setUpTestHelperFacet();
+    testHelperFacet = TestHelperFacet(moneyMarketDiamond);
 
     address[] memory _whitelistedCallers = new address[](1);
     _whitelistedCallers[0] = moneyMarketDiamond;
@@ -236,5 +244,24 @@ abstract contract MoneyMarket_BaseTest is BaseTest {
 
     // set minimum debt required to borrow
     adminFacet.setMinDebtSize(normalizeEther(0.1 ether, usdDecimal));
+  }
+
+  function setUpTestHelperFacet() internal {
+    TestHelperFacet _testHelperFacet = new TestHelperFacet();
+    //
+    bytes4[] memory _selectors = new bytes4[](2);
+    _selectors[0] = TestHelperFacet.writeGlobalDebts.selector;
+    _selectors[1] = TestHelperFacet.writeoverCollatDebtValues.selector;
+
+    //
+    IMMDiamondCut.FacetCut[] memory _facetCuts = new IMMDiamondCut.FacetCut[](1);
+
+    _facetCuts[0] = IMMDiamondCut.FacetCut({
+      action: IMMDiamondCut.FacetCutAction.Add,
+      facetAddress: address(_testHelperFacet),
+      functionSelectors: _selectors
+    });
+
+    IMMDiamondCut(moneyMarketDiamond).diamondCut(_facetCuts, address(0), "");
   }
 }
