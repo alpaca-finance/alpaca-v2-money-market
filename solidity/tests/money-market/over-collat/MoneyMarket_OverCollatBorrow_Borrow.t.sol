@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import { MoneyMarket_BaseTest, MockERC20, console } from "../MoneyMarket_BaseTest.t.sol";
+import { FixedInterestRateModel, IInterestRateModel } from "../../../contracts/money-market/interest-models/FixedInterestRateModel.sol";
 
 // libraries
 import { LibMoneyMarket01 } from "../../../contracts/money-market/libraries/LibMoneyMarket01.sol";
@@ -416,7 +417,7 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     assertEq(_miniFL.getUserTotalAmountOf(_poolId, BOB), _borrowAmount);
   }
 
-  function testRevert_WhenDemoteMarket_UserHasMoreThanOneIsolate_ShouldNotBeAbleToBorrow() public {
+  function testRevert_WhenDemoteMarket_UserHasMoreThanOneIsolate_ShouldNotBeAbleToBorrow() external {
     // prepare
     usdc.mint(ALICE, 1e10);
     vm.prank(ALICE);
@@ -471,5 +472,55 @@ contract MoneyMarket_OverCollatBorrow_BorrowTest is MoneyMarket_BaseTest {
     accountManager.borrow(subAccount0, address(usdc), 1e8);
     vm.expectRevert(abi.encodeWithSelector(IBorrowFacet.BorrowFacet_InvalidAssetTier.selector));
     accountManager.borrow(subAccount0, address(btc), 0.01 ether);
+  }
+
+  function testCorrectness_WhenUerBorrowTokenFromMM_WithShareValueMoreThanTwo_MMShouldCalculateShareToAddCorrectly()
+    external
+  {
+    FixedInterestRateModel model = new FixedInterestRateModel(wethDecimal);
+    adminFacet.setInterestModel(address(weth), address(model));
+
+    deal(address(weth), ALICE, 20 ether);
+    vm.startPrank(ALICE);
+    // just add collateral for borrowing power
+    accountManager.addCollateralFor(ALICE, subAccount0, address(weth), normalizeEther(10 ether, wethDecimal));
+    accountManager.addCollateralFor(BOB, subAccount0, address(weth), normalizeEther(10 ether, wethDecimal));
+
+    uint256 _borrowAmount = 1.000000000000000001 ether;
+
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(_borrowAmount, wethDecimal));
+
+    vm.startPrank(moneyMarketDiamond);
+
+    // fabricate contract state for assertion
+    vm.warp(block.timestamp + 1000);
+    borrowFacet.accrueInterest(address(weth));
+    testHelperFacet.writeGlobalDebts(address(weth), 2 ether);
+    testHelperFacet.writeoverCollatDebtValues(address(weth), 2 ether);
+
+    uint256 wethGlobalDebt = viewFacet.getGlobalDebtValue(address(weth));
+
+    assertEq(wethGlobalDebt, 2 ether);
+
+    vm.stopPrank();
+
+    vm.startPrank(BOB);
+
+    accountManager.borrow(subAccount0, address(weth), normalizeEther(1.000000000000000002 ether, wethDecimal));
+
+    // shares = amount * share / totalDebtValue = 1.000000000000000002 * 1.000000000000000001 / 2.000000000000000000 = 0.500000000000000001
+    // sharesValue = _shares * _totalValue / _totalShare =  0.500000000000000001 * 2.000000000000000000 / 1.000000000000000001 = 1.000000000000000000
+    // sharesValue + 1 <= _tokenAmount = 1.000000000000000000 + 1 <= 1.000000000000000002
+    // _shares = _shares+1 = 0.500000000000000001 + 1 = 0.500000000000000002
+    (uint256 _bobDebtShare, uint256 _bobDebtAmount) = viewFacet.getOverCollatDebtShareAndAmountOf(
+      BOB,
+      subAccount0,
+      address(weth)
+    );
+
+    assertEq(_bobDebtShare, 0.500000000000000002 ether);
+    assertEq(_bobDebtAmount, 1.000000000000000002 ether);
+
+    vm.stopPrank();
   }
 }

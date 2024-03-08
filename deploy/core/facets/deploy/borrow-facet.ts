@@ -7,15 +7,15 @@ import { getDeployer } from "../../../utils/deployer-helper";
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const config = new ConfigFileHelper();
   const deployer = await getDeployer();
-  const LendFacet = await ethers.getContractFactory("LendFacet", deployer);
+  const BorrowFacet = await ethers.getContractFactory("BorrowFacet", deployer);
 
-  console.log(`Deploying LendFacet Contract`);
-  const lendFacet = await LendFacet.deploy();
-  await lendFacet.deployed();
-  console.log(`Deployed at: ${lendFacet.address}`);
+  console.log(`Deploying BorrowFacet Contract`);
+  const borrowFacet = await BorrowFacet.deploy();
+  await borrowFacet.deployed();
+  console.log(`Deployed at: ${borrowFacet.address}`);
 
-  config.setLendFacet(lendFacet.address);
+  config.setBorrowFacet(borrowFacet.address);
 };
 
 export default func;
-func.tags = ["LendFacetDeploy"];
+func.tags = ["BorrowFacetDeploy"];

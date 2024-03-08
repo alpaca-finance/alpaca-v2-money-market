@@ -69,6 +69,7 @@ abstract contract BaseScript is Script {
   address internal doubleSlope3;
   address internal flatSlope1;
   address internal flatSlope2;
+  address internal flatSlope3;
 
   // path reader
   address internal uniswapV2LikePathReader;
@@ -122,6 +123,7 @@ abstract contract BaseScript is Script {
     doubleSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.doubleSlope3"), (address));
     flatSlope1 = abi.decode(configJson.parseRaw(".sharedConfig.flatSlope1"), (address));
     flatSlope2 = abi.decode(configJson.parseRaw(".sharedConfig.flatSlope2"), (address));
+    flatSlope3 = abi.decode(configJson.parseRaw(".sharedConfig.flatSlope3"), (address));
 
     // path reader
     uniswapV2LikePathReader = abi.decode(configJson.parseRaw(".pathReader.uniswapV2LikePathReader"), (address));

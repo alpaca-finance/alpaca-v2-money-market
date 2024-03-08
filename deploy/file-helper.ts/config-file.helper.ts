@@ -10,8 +10,18 @@ export class ConfigFileHelper {
     this.config = MainnetConfig;
   }
 
-  public setLendFacets(lendFacetAddress: string): void {
+  public setLendFacet(lendFacetAddress: string): void {
     this.config.moneyMarket.facets.lendFacet = lendFacetAddress;
+    this._writeConfigFile(this.config);
+  }
+
+  public setBorrowFacet(borrowFacetAddress: string): void {
+    this.config.moneyMarket.facets.borrowFacet = borrowFacetAddress;
+    this._writeConfigFile(this.config);
+  }
+
+  public setLiquidationFacet(liquidationFacetAddress: string): void {
+    this.config.moneyMarket.facets.liquidationFacet = liquidationFacetAddress;
     this._writeConfigFile(this.config);
   }
 
