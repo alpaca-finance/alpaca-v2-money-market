@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL
 pragma solidity 0.8.19;
 
-import "solidity/tests/utils/StdJson.sol";
-import { Script, console } from "solidity/tests/utils/Script.sol";
+import { stdJson } from "lib/forge-std/src/StdJson.sol";
+import { Script, console } from "lib/forge-std/src/Script.sol";
 
 // libs
 import { LibMoneyMarketDeployment } from "./deployments/libraries/LibMoneyMarketDeployment.sol";

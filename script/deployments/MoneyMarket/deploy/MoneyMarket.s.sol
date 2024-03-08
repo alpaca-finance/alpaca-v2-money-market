@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "solidity/tests/utils/StdJson.sol";
-import "../../../BaseScript.sol";
+import { BaseScript, stdJson, IMoneyMarket } from "../../../BaseScript.sol";
 
 import { InterestBearingToken } from "solidity/contracts/money-market/InterestBearingToken.sol";
 import { DebtToken } from "solidity/contracts/money-market/DebtToken.sol";

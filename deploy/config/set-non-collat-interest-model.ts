@@ -21,8 +21,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const INPUTS = [
     {
       account: "0xD0dfE9277B1DB02187557eAeD7e25F74eF2DE8f3",
-      token: "",
-      model: "",
+      token: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+      model: "0xB0f78514edd28E2e1617a7479CCf7F0855aF979a",
     },
   ];
 
