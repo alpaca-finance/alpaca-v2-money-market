@@ -33,12 +33,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // BUSD
     {
       token: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
-      borrowingFactor: "5000",
+      borrowingFactor: "100",
     },
     // ibBUSD
     {
       token: "0x3f38BA29AcC107E6F0b059a17c9bAb0598d0f249",
-      collateralFactor: "4000",
+      collateralFactor: "0",
     },
   ];
 

@@ -68,7 +68,7 @@
       "diamondCutFacet": "0x2E28CbF8995969d4ea1F03FfB6f25dab8afEE45C",
       "diamondLoupeFacet": "0xaDB5Be7b114Ca6721e00778F97e615B85D095952",
       "flashloanFacet": "0xC934E6332f3af8B27da447eDa0273bd3867efAF2",
-      "lendFacet": "0x0d8AE68ee3eE728Ed7AE9E99Edc10f2cfc3959b1",
+      "lendFacet": "0xB12d1E49813e28B89E5C30A46942bCE068d1Ee75",
       "liquidationFacet": "0x891D268a3Adc285BAa1A8d8704167A865e76446f",
       "nonCollatBorrowFacet": "0xF22133299081534780777D1504A6B38955195b03",
       "ownershipFacet": "0x09E6Fb57dfB952D44D915a335c29A7F485Df4CDE",
